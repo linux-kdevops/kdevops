@@ -439,8 +439,8 @@ _check_dev_setup()
 {
 	mkdir -p $TEST_DIR
 
-	# Nothing to be done for NFS
-	if [ "$FSTYP" = "nfs" ]; then
+	# Nothing to be done for NFS or CIFS
+	if [ "$FSTYP" = "nfs" -o "$FSTYP" = "cifs" ]; then
 		return
 	fi
 
@@ -520,7 +520,7 @@ check_test_dev_setup()
 	fi
 
 	# FIXME: check server for reachability?
-	if [ "$FSTYP" = "nfs" ]; then
+	if [ "$FSTYP" = "nfs" -o "$FSTYP" = "cifs" ]; then
 		return
 	fi
 
@@ -548,7 +548,7 @@ check_dev_pool()
 {
 	DEV_POOL_RET=0
 
-	if [ "$FSTYP" = "nfs" ]; then
+	if [ "$FSTYP" = "nfs" -o "$FSTYP" = "cifs" ]; then
 		return 0
 	fi
 
