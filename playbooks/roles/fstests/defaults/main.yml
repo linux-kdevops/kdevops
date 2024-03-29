@@ -169,6 +169,12 @@ fstests_nfs_section_v41: False
 fstests_nfs_section_v40: False
 fstests_nfs_section_v3: False
 
+fstests_cifs_enable: False
+fstests_cifs_use_kdevops_smbd: False
+fstests_cifs_section_smb3: False
+fstests_cifs_section_smb3_seal: False
+fstests_cifs_section_smb3_sign: False
+
 fstests_tmpfs_enable: False
 fstests_tmpfs_test_dev: "/media/test"
 fstests_tmpfs_scratch_devpool: "/media/scratch"

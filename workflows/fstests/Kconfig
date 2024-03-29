@@ -30,6 +30,9 @@ config FSTESTS_TMPFS_ENABLE
 config FSTESTS_NFS_ENABLE
 	bool
 
+config FSTESTS_CIFS_ENABLE
+	bool
+
 config FSTESTS_USES_NO_DEVICES
 	bool
 
@@ -64,6 +67,12 @@ config FSTESTS_NFS
 	help
 	  This will target testing the Network File System (NFS).
 
+config FSTESTS_CIFS
+	bool "cifs"
+	select FSTESTS_CIFS_ENABLE
+	help
+	  This will target testing the Server Message Block (SMB) protocol.
+
 config FSTESTS_TMPFS
 	bool "tmpfs"
 	select FSTESTS_TMPFS_ENABLE
@@ -80,6 +89,7 @@ config FSTESTS_FSTYP
 	default "btrfs" if FSTESTS_BTRFS
 	default "ext4" if FSTESTS_EXT4
 	default "nfs" if FSTESTS_NFS
+	default "cifs" if FSTESTS_CIFS
 	default "tmpfs" if FSTESTS_TMPFS
 	help
 	  The filesystem to test. This will be automatically set depending on
@@ -267,6 +277,14 @@ endmenu
 
 endif # FSTESTS_NFS
 
+if FSTESTS_CIFS
+
+menu "Configure how CIFS should be tested"
+source "workflows/fstests/cifs/Kconfig"
+endmenu
+
+endif # FSTESTS_CIFS
+
 if FSTESTS_TMPFS
 
 menu "Configure how tmpfs should be tested"
@@ -326,7 +344,7 @@ config FSTESTS_TESTDEV_UNDER_DEVELOPMENT
 	  want to help develop and test new features which let you use
 	  real drives to test fstests with.
 
-if !FSTESTS_TMPFS && !FSTESTS_NFS
+if !FSTESTS_TMPFS && !FSTESTS_NFS && !FSTESTS_CIFS
 
 choice
 	prompt "Strategy for device pool"

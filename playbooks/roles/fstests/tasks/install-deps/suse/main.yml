@@ -247,3 +247,14 @@
     state: started
   when:
     - fstests_fstyp == "nfs"
+
+- name: Install cifs-utils
+  become: yes
+  become_method: sudo
+  ansible.builtin.package:
+    name:
+      - cifs-utils
+    state: present
+  when:
+    - repos_present|bool
+    - fstests_fstyp == "cifs"

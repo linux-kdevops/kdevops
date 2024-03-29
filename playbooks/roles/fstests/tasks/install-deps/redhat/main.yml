@@ -84,6 +84,7 @@
       - parted
       - nfs-utils
       - liburing-devel
+      - cifs-utils
 
 - name: Install xfsprogs-xfs_scrub
   become: yes

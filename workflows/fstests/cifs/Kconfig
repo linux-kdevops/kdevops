@@ -1,0 +1,83 @@
+config FSTESTS_USE_KDEVOPS_SMBD
+	bool "Test against the kdevops SMB server"
+	select KDEVOPS_SETUP_SMBD
+	default y
+	help
+	  Do you want to test against Linux smbd as deployed by kdevops?
+	  If so, select this option. If you want to test against another
+	  (already-deployed and reachable) server, disable this and specify
+	  the location.
+
+config FSTESTS_SMB_SERVER_HOST
+	string "Test Server hostname"
+	default ""
+	depends on !FSTESTS_USE_KDEVOPS_SMBD
+	help
+	  The SMB server hostname or address to test against. Note that
+	  the clients will expect that an appropriate hierarchy is already
+	  created for them to mount and use.
+	  FIXME: document how to make that.
+
+# Distributions actively maintaining CIFS support should select this and then
+# be careful to select any of the other HAVE_DISTRO_SMB_* below so that
+# testers can know what to test for.
+config HAVE_DISTRO_CIFS_PREFERS_MANUAL
+	bool
+	default n
+
+config FSTESTS_CIFS_MANUAL_COVERAGE
+	bool "Enable manual coverage selection"
+	default y if HAVE_DISTRO_CIFS_PREFERS_MANUAL
+	default n if !HAVE_DISTRO_CIFS_PREFERS_MANUAL
+	help
+	  By default we aim to spawn enough hosts to cover testing the full
+	  range of supported features upstream on the Linux kernel for SMB,
+	  and for you to also be able to do development on each section
+	  concurrently. Distributions however may override sensible defaults
+	  and only support certain features. Enabling this option lets you
+	  select and test only specific configurations.
+
+	  By default we enables all tests, but certain distributions may
+	  disable certain features and as such don't need to run certain
+	  type of tests.
+
+	  You can enable this to allow you to override the default test
+	  coverage.
+
+if FSTESTS_CIFS_MANUAL_COVERAGE
+
+config FSTESTS_CIFS_SECTION_SMB3
+	bool "Enable testing section: smb3"
+	default y
+	help
+	  Enabling this will test SMB3.
+
+config FSTESTS_CIFS_SECTION_SMB3_SEAL
+	bool "Enable testing section: smb3_seal"
+	default n
+	help
+	  Enabling this will test SMB3 with encryption.
+
+config FSTESTS_CIFS_SECTION_SMB3_SIGN
+	bool "Enable testing section: smb3_sign"
+	default n
+	help
+	  Enabling this will test SMB3 with signing.
+
+endif # FSTESTS_CIFS_MANUAL_COVERAGE
+
+if !FSTESTS_CIFS_MANUAL_COVERAGE
+
+config FSTESTS_CIFS_SECTION_SMB3
+	bool
+	default y
+
+config FSTESTS_CIFS_SECTION_SMB3_SEAL
+	bool
+	default n
+
+config FSTESTS_CIFS_SECTION_SMB3_SIGN
+	bool
+	default n
+
+endif # !FSTESTS_CIFS_MANUAL_COVERAGE

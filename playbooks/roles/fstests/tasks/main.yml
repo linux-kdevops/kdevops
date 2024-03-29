@@ -808,6 +808,45 @@
     - fstests_nfs_auth_flavor is defined
     - fstests_nfs_auth_flavor
 
+- name: Create SMB share for test vol
+  include_role:
+    name: smbd_add_share
+  vars:
+    server_host: "{{ fstests_smb_server_host }}"
+    share_volname: "{{ volname_prefix }}-t"
+    share_fstype: "{{ smbd_share_fstype }}"
+    share_size: 20g
+  when:
+    - fstests_fstyp == "cifs"
+    - fstests_cifs_use_kdevops_smbd|bool
+
+- name: Create SMB share for scratch vol
+  include_role:
+    name: smbd_add_share
+  vars:
+    server_host: "{{ fstests_smb_server_host }}"
+    share_volname: "{{ volname_prefix }}-s"
+    share_fstype: "{{ smbd_share_fstype }}"
+    share_size: 30g
+  when:
+    - fstests_fstyp == "cifs"
+    - fstests_cifs_use_kdevops_smbd|bool
+
+- name: Copy and force overwrite of the target filesystem fstests configuration for CIFS
+  tags: [ 'oscheck', 'fstests', 'run_tests', 'kdevops_fstests_setup', 'install' , 'generate-fstests-config' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  vars:
+    fstests_cifs_test_dev: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-t"
+    fstests_cifs_scratch_devpool: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-s"
+  template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: yes
+  when:
+    - fstests_fstyp == "cifs"
+
 - name: Reboot system before our test so we know everything is sane
   tags: [ 'oscheck', 'fstests', 'run_tests', 'reboot' ]
   become: yes

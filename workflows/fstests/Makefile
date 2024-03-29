@@ -58,6 +58,10 @@ ifeq (y,$(CONFIG_FSTESTS_NFS))
 include $(TOPDIR)/workflows/fstests/nfs/Makefile
 endif
 
+ifeq (y,$(CONFIG_FSTESTS_CIFS))
+include $(TOPDIR)/workflows/fstests/cifs/Makefile
+endif
+
 ifeq (y,$(CONFIG_FSTESTS_TMPFS))
 include $(TOPDIR)/workflows/fstests/tmpfs/Makefile
 endif

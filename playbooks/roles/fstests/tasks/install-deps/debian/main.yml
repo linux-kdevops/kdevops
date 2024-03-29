@@ -71,6 +71,7 @@
       - parted
       - nfs-common
       - xfsdump
+      - cifs-utils
     state: present
     update_cache: yes
   tags: [ 'fstests', 'deps' ]
