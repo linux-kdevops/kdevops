@@ -176,7 +176,7 @@ else
 	if [[ "$TEST_RTDEV" != "" ]]; then
 		RT_MKFS_OPTS="-r rtdev=$TEST_RTDEV"
 	fi
-	if [ $FSTYP = "nfs" ]; then
+	if [ $FSTYP = "nfs" -o $FSTYP = "cifs" ]; then
 		echo "$(basename $0) skipping mkfs"
 	else
 		echo "$(basename $0) mkfs for TEST_DEV:"
