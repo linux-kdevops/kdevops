@@ -1,0 +1,5 @@
+# SPDX-License-Identifier GPL-2.0+
+---
+share_user: "root"
+share_group: "root"
+share_mode: "u=rwx,g=rwx,o=rwxt"
