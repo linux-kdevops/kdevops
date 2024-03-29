@@ -1,0 +1,31 @@
+---
+- name: Get OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ansible_distribution}}.yml'
+        - '{{ansible_os_family}}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+
+- name: Determine which fsprogs package is needed for "{{ smbd_share_fstype }}"
+  set_fact:
+    fsprogs: "{{ fstype_userspace_progs[smbd_share_fstype] | default() }}"
+
+- name: Add {{ fsprogs }} to the smbd packages list
+  set_fact:
+    smbd_packages: "{{ smbd_packages + [fsprogs] }}"
+  when:
+    - fsprogs is defined
+    - fsprogs
+
+- name: Install smbd dependencies
+  become: yes
+  become_method: sudo
+  apt:
+    name: "{{ smbd_packages }}"
+    state: present
+    update_cache: yes
+  tags: [ 'deps' ]

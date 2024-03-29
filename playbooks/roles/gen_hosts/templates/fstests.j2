@@ -27,6 +27,12 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [nfsd:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
+{% if kdevops_smbd_enable %}
+[smbd]
+{{ kdevops_hosts_prefix }}-smbd
+[smbd:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
 {% if kdevops_krb5_enable %}
 [kdc]
 {{ kdevops_hosts_prefix }}-kdc

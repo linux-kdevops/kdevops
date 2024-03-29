@@ -55,6 +55,18 @@
   when:
     - kdevops_nfsd_enable|bool
 
+- name: Set smbd_nodes list
+  set_fact:
+    smbd_nodes: "{{ [ kdevops_host_prefix + '-smbd' ] }}"
+  when:
+    - kdevops_smbd_enable|bool
+
+- name: Add an smb server if one was selected
+  set_fact:
+    generic_nodes: "{{ generic_nodes + smbd_nodes }}"
+  when:
+    - kdevops_smbd_enable|bool
+
 - name: Set kdc_nodes list
   set_fact:
     kdc_nodes: "{{ [ kdevops_host_prefix + '-kdc' ] }}"
@@ -284,6 +296,13 @@
   when:
     - is_fstests|bool
     - kdevops_nfsd_enable|bool
+
+- name: Add the smb server if one was selected
+  set_fact:
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + smbd_nodes }}"
+  when:
+    - is_fstests|bool
+    - kdevops_smbd_enable|bool
 
 - name: Add the KRB5 KDC if one was selected
   set_fact:

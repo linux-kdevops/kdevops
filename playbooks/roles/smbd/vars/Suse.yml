@@ -1,0 +1,10 @@
+---
+smbd_packages:
+  - lvm2
+  - policycoreutils
+  - samba
+
+fstype_userspace_progs:
+  btrfs: btrfsprogs
+  ext4: e2fsprogs
+  xfs: xfsprogs

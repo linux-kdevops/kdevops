@@ -1,0 +1,12 @@
+---
+smbd_packages:
+  - checkpolicy
+  - lvm2
+  - policycoreutils
+  - python3-policycoreutils
+  - samba
+
+fstype_userspace_progs:
+  btrfs: btrfs-progs
+  ext4: e2fsprogs
+  xfs: xfsprogs
