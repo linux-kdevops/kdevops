@@ -88,7 +88,7 @@ if [[ "$CONFIG_VAGRANT_BOX_UPDATE_ON_BRINGUP" == "y" ]]; then
 		vagrant box update
 	fi
 fi
-if [[ "$CONFIG_VAGRANT_BOX_UPDATE_ON_BRINGUP" == "y" ]]; then
+if [[ "$CONFIG_VAGRANT_VALIDATE_BEFORE_BRINGUP" == "y" ]]; then
 	vagrant validate
 	if [[ $? -ne 0 ]]; then
 		echo "kdevops: Failed to validate Vagrantfile, stopping here"
