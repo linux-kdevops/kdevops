@@ -1,0 +1,18 @@
+---
+ltp_packages:
+  - gcc
+  - git
+  - make
+  - pkgconf
+  - autoconf
+  - automake
+  - bison
+  - flex
+  - m4
+  - ethtool
+  - nfs-utils
+  - kernel-headers
+  - glibc-headers
+  - libacl-devel
+  - libtirpc-devel
+  - openssl-devel

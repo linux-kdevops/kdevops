@@ -1,0 +1,12 @@
+---
+ltp_runltp_arg_dict:
+  cve: "-f cve"
+  fs: "-f fs"
+  fs-bind: "-f fs_bind"
+  fs-perms-simple: "-f fs_perms_simple"
+  fs-readonly: "-f fs_readonly"
+  nfs: "-f net.nfs"
+  notify: "-f syscalls -s notify"
+  rpc: "-f net.rpc_tests"
+  smack: "-f smack"
+  tirpc: "-f net.tirpc_tests"

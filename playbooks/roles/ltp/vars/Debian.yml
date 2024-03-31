@@ -1,0 +1,17 @@
+---
+ltp_packages:
+  - gcc
+  - git
+  - make
+  - pkgconf
+  - autoconf
+  - automake
+  - bison
+  - flex
+  - m4
+  - ethtool
+  - nfs-common
+  - libc6-dev
+  - rpcbind
+  - libtirpc-dev
+  - libssl-dev
