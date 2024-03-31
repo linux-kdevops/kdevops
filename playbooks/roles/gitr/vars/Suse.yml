@@ -1,0 +1,13 @@
+---
+gitr_packages:
+  - cvs
+  - cvsps
+  - gcc
+  - gettext
+  - git-core
+  - libcurl-devel
+  - libexpat-devel
+  - libopenssl-1_1-devel
+  - perl-Test-Harness
+  - subversion
+  - subversion-perl

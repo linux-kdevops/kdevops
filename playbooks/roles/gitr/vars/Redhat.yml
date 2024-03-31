@@ -1,0 +1,17 @@
+---
+gitr_packages:
+  - cvs
+  - cvsps
+  - expat-devel
+  - gcc
+  - gettext
+  - git-core
+  - git-email
+  - libcurl-devel
+  - openssl-devel
+  - perl-Memoize
+  - perl-Test-Harness
+  - perl-TAP-Harness-Archive
+  - subversion
+  - subversion-perl
+  - zlib-devel

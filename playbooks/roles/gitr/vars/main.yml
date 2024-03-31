@@ -1,0 +1,12 @@
+# SPDX-License-Identifier GPL-2.0+
+---
+# "test host" to "NFS version" mapping
+gitr_nfs_vers_dict:
+  nfs-v3:
+    - "vers=3"
+  nfs-v40:
+    - "vers=4.0"
+  nfs-v41:
+    - "vers=4.1"
+  nfs-v42:
+    - "vers=4.2"

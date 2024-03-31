@@ -26,13 +26,24 @@
   delegate_to: localhost
   run_once: true
 
-- name: Install dependencies for {{ ansible_os_family }}
+- name: Set OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+
+- name: Install dependencies for gitr
   tags: gitr
   become: true
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
-    name: "{{ gitr_os_family_packages[ansible_os_family] }}"
+    name: "{{ gitr_packages }}"
     state: present
 
 - name: Remove the old test file system

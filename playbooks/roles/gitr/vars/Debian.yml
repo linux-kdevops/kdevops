@@ -1,0 +1,13 @@
+---
+gitr_packages:
+  - cvs
+  - cvsps
+  - gcc
+  - gettext
+  - git-core
+  - libcurl4-openssl-dev
+  - libexpat1-dev
+  - libssl-dev
+  - libz-dev
+  - perl
+  - sqlite3
