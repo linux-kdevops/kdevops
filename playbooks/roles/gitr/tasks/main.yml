@@ -170,7 +170,7 @@
 
 - name: Run the full git regression suite
   tags: run_tests
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: "prove -Q --jobs {{ nproc.stdout }} ./t[0-9]*.sh"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
@@ -179,7 +179,7 @@
 
 - name: Run specific git regression tests
   tags: run_specific_tests
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: "prove {{ gitr_test_list }}"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
