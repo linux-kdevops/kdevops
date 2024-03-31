@@ -34,7 +34,7 @@
   tags: ['build', 'ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ ltp_os_family_packages[ansible_os_family] }}"
     state: present
@@ -48,7 +48,7 @@
   tags: ['build', 'ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ ltp_build_dir }}"
     state: absent
@@ -95,7 +95,7 @@
   tags: ['ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     state: directory
     path: "/opt"
@@ -112,7 +112,7 @@
   tags: ['ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: rpcbind.service
     state: started
@@ -122,7 +122,7 @@
   tags: ['ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.template:
     src: nfs.conf.j2
     dest: /etc/nfs.conf
@@ -134,7 +134,7 @@
   tags: ['ltp']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: nfs-server.service
     state: reloaded
@@ -144,7 +144,7 @@
   tags: ['run_tests']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   vars:
     ltp_test: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
   ansible.builtin.command:
@@ -156,7 +156,7 @@
   tags: ['copy_results']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "/opt/ltp/results/"
   register: results_files
@@ -176,7 +176,7 @@
   tags: ['copy_results']
   become: true
   become_flags: 'su - -c'
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "/opt/ltp/output/"
   register: output_files
