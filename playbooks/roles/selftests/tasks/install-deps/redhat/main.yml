@@ -1,0 +1,15 @@
+---
+- name: Install every single selftest build dependencies
+  become: yes
+  become_method: sudo
+  yum:
+    update_cache: yes
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - gcc
+      - bc
+      - sed
+      - rsync
+      - git-core
+      - glibc-devel.*i686
