@@ -2,6 +2,31 @@
 
 VARS="extra_vars.yaml"
 LAST_KERNEL_FILE="workflows/fstests/results/last-kernel.txt"
+RESULTS_DIR="$(dirname $LAST_KERNEL_FILE)"
+ARCHIVE_SYMLINK_DIR="$RESULTS_DIR/archive"
+ARCHIVE_NAME="kdevops-results-archive"
+GIT_RESULTS_ARCHIVE="$(echo $(dirname $PWD)/$ARCHIVE_NAME)"
+GIT_FSTESTS_RESULTS_ARCHIVE="$GIT_RESULTS_ARCHIVE/fstests"
+
+if [[ ! -d $GIT_RESULTS_ARCHIVE  ]]; then
+	echo "Missing $ARCHIVE_NAME, git clone the archive under $GIT_RESULTS_ARCHIVE"
+	exit 1
+fi
+
+if [[ ! -d $GIT_FSTESTS_RESULTS_ARCHIVE ]]; then
+	echo "Missing fstests archive on $GIT_FSTESTS_RESULTS_ARCHIVE"
+	exit 1
+fi
+
+if [[ ! -d $RESULTS_DIR ]]; then
+	echo "You have no fstests results yet. Enable fstests, run make-fstests-baseline and try again."
+	exit 1
+fi
+
+if [[ ! -L $ARCHIVE_SYMLINK_DIR ]]; then
+	echo "Creating symlink for you ..."
+	ln -s $GIT_FSTESTS_RESULTS_ARCHIVE $ARCHIVE_SYMLINK_DIR
+fi
 
 FILE_REQS="$VARS"
 FILE_REQS="$FILE_REQS $LAST_KERNEL_FILE"
