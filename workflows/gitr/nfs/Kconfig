@@ -34,7 +34,7 @@ if KDEVOPS_WORKFLOW_DEDICATE_GITR
 
 config GITR_NFS_SECTION_V42
 	bool "Enable testing section: nfs_v42"
-	default n
+	default y
 	help
 	  Create a target host to run the gitr workflow on an
 	  NFSv4.2 mount.
