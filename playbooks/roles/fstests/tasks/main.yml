@@ -18,10 +18,52 @@
 - name: Install dependencies
   include_tasks: install-deps/main.yml
 
-- name: Clone xfsprogs git repository
+- name: Check if there's an existing xfsprogs directory
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
+  stat:
+    path: "{{ fstests_xfs_xfsprogs_data }}"
+  register: xfsprogs_dir
+  tags: [ 'oscheck', 'git', 'fstests']
+  when: 'fstests_xfs_build_custom_xfsprogs|bool'
+
+- include_role:
+    name: common
+  when:
+    - infer_uid_and_group|bool
+
+- name: Get nproc
+  tags: [ 'oscheck', 'fstests', 'build']
+  command: "nproc"
+  register: nproc
+
+- name: Ensure xfsprogs is not root owned
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ fstests_xfs_xfsprogs_data }}"
+    state: directory
+    recurse: yes
+    follow: no
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+  tags: [ 'oscheck', 'git', 'fstests']
+  when:
+    - fstests_xfs_build_custom_xfsprogs|bool
+    - xfsprogs_dir.stat.exists
+
+- name: Clean old xfsprogs build
+  command: "git clean -f -x -d"
+  args:
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+  tags: [ 'oscheck', 'git', 'fstests']
+  when:
+    - fstests_xfs_build_custom_xfsprogs|bool
+    - xfsprogs_dir.stat.exists
+
+- name: Clone xfsprogs git repository
   git:
     repo: "{{ fstests_xfs_xfsprogs_git }}"
     dest: "{{ fstests_xfs_xfsprogs_data }}"
@@ -35,9 +77,6 @@
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
 
 - name: Configure xfsprogs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
   make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
     target: configure
@@ -45,11 +84,9 @@
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
 
 - name: Build xfsprogs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
   make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
+    jobs: "{{ nproc.stdout }}"
   tags: ['oscheck', 'fstests', 'build']
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
 
@@ -64,6 +101,68 @@
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
   tags: ['oscheck', 'fstests', 'build']
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
+
+- name: Check if there's an existing xfsdump directory
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  stat:
+    path: "{{ fstests_xfs_xfsprogs_data }}"
+  register: xfdump_dir
+  tags: [ 'oscheck', 'git', 'fstests']
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Ensure xfsdump is not root owned
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ data_path }}/xfsdump"
+    recurse: yes
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+  tags: [ 'fstests', 'deps' ]
+  when:
+    - fstests_xfsdump_build|bool
+    - xfdump_dir.stat.exists
+
+- name: Clean old xfsdump build
+  command: "git clean -f -x -d"
+  args:
+    chdir: "{{ data_path }}/xfsdump"
+  tags: [ 'oscheck', 'git', 'fstests']
+  when:
+    - fstests_xfs_build_custom_xfsprogs|bool
+    - xfsprogs_dir.stat.exists
+
+- name: git clone xfsdump
+  git:
+    repo: "{{ fstests_xfsdump_git }}"
+    dest: "{{ data_path }}/xfsdump"
+    update: yes
+    version: "{{ fstests_xfsdump_commit }}"
+  tags: [ 'fstests', 'deps' ]
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Build xfsdump
+  tags: [ 'fstests', 'deps' ]
+  make:
+    chdir: "{{ data_path }}/xfsdump"
+    jobs: "{{ nproc.stdout }}"
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Install xfsdump
+  become: yes
+  become_method: sudo
+  tags: [ 'fstests', 'deps' ]
+  make:
+    chdir: "{{ data_path }}/xfsdump"
+    target: install
+  when:
+    - fstests_xfsdump_build|bool
 
 - name: Setup $PATH environment variable to access custom xfsprogs binaries
   become: yes
@@ -158,11 +257,6 @@
   until: not result.failed
   tags: [ 'oscheck', 'git', 'fstests']
 
-- name: Get nproc
-  tags: [ 'oscheck', 'fstests', 'build']
-  command: "nproc"
-  register: nproc
-
 - name: Create {{ fstests_data_prefix }} if it does not exist
   tags: [ 'oscheck', 'fstests', 'install', 'root']
   become: yes
@@ -183,6 +277,11 @@
   command: "./configure --prefix={{ fstests_data_prefix }}"
   args:
     chdir: "{{ fstests_data }}"
+
+- name: Get nproc
+  tags: [ 'oscheck', 'fstests', 'build']
+  command: "nproc"
+  register: nproc
 
 - name: Build fstests
   tags: [ 'oscheck', 'fstests', 'build']

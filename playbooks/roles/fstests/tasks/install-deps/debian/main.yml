@@ -70,6 +70,7 @@
       - ncurses-dev
       - parted
       - nfs-common
+      - xfsdump
     state: present
     update_cache: yes
   tags: [ 'fstests', 'deps' ]
@@ -88,33 +89,6 @@
       - libselinux1-dev
       - libsepol-dev
       - libpcre2-dev
+      - pkg-config
+      - libblkid-dev
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
-
-# Debian testing has removed xfsdump. Build from sources until it is available
-# in Debian Testing repository
-- name: git clone xfsdump
-  git:
-    repo: "{{ fstests_xsfsdump_git }}"
-    dest: "{{ data_path }}/xfsdump"
-    update: yes
-    version: v3.1.10-fixed
-  tags: [ 'fstests', 'deps' ]
-
-- name: Get nproc
-  tags: [ 'oscheck', 'fstests', 'build']
-  command: "nproc"
-  register: nproc
-
-- name: Build xfsdump
-  tags: [ 'fstests', 'deps' ]
-  make:
-    chdir: "{{ data_path }}/xfsdump"
-    jobs: "{{ nproc.stdout }}"
-
-- name: Install xfsdump
-  become: yes
-  become_method: sudo
-  tags: [ 'fstests', 'deps' ]
-  make:
-    chdir: "{{ data_path }}/xfsdump"
-    target: install

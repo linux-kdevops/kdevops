@@ -30,10 +30,10 @@ config HAVE_DISTRO_XFS_SUPPORTS_RT
 	default n
 
 config FSTESTS_XFS_BUILD_CUSTOM_XFSPROGS
-	bool "Build and install custom Xfsprogs"
+	bool "Build and install custom xfsprogs"
 	default n
 	help
-	  Enable this option to build and install a custom version of Xfsprogs.
+	  Enable this option to build and install a custom version of xfsprogs.
 
 config HAVE_MIRROR_XFSPROGS
        bool
@@ -68,16 +68,32 @@ config FSTESTS_XFS_XFSPROGS_INSTALL_PATH
 	help
 	  Destination path to install Xfsprogs binaries
 
+config FSTESTS_XFS_BUILD_XFSDUMP
+	bool "Build and install xfsdump"
+	default n
+	help
+	  Enable this option to build and install a custom version of xfsdump.
+
 config HAVE_MIRROR_XFSDUMP
        bool
        depends on USE_LIBVIRT_MIRROR
        default $(shell, scripts/check_mirror_present.sh /mirror/xfsdump-dev.git)
 
 config FSTESTS_XFSDUMP_GIT_URL
-	string
+	string "The xfsdump git tree to clone"
+	depends on FSTESTS_XFS_BUILD_XFSDUMP
 	default DEFAULT_XFSDUMP_URL if !HAVE_MIRROR_XFSDUMP
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/xfsdump-dev.git) if HAVE_MIRROR_XFSDUMP && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/xfsdump-dev.git) if HAVE_MIRROR_XFSDUMP && GUESTFS
+	help
+	  The xfsdump git tree to clone
+
+config FSTESTS_XFSDUMP_COMMIT
+	string "The xfsdump commit to checkout"
+	default "master"
+	depends on FSTESTS_XFS_BUILD_XFSDUMP
+	help
+	  The Xfsprogs commit to checkout.
 
 config FSTESTS_XFS_QUOTA_ENABLED
 	bool "Enable XFS quota"
