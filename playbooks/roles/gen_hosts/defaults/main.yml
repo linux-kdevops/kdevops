@@ -26,6 +26,7 @@ kdevops_workflow_enable_cxl: False
 kdevops_workflow_enable_pynfs: False
 kdevops_workflow_enable_gitr: False
 kdevops_workflow_enable_ltp: False
+kdevops_workflow_enable_nfstest: false
 
 is_fstests: False
 fstests_fstyp: "bogus"
