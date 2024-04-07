@@ -135,7 +135,17 @@ To test a kernel using the ltp suite, enable the ltp workflow and then run:
   * `make ltp`
   * `make ltp-baseline`
 
-For more details see [kdevops gitr docs](docs/gitr.md)
+For more details see [kdevops ltp docs](docs/ltp.md)
+
+### Start running the nfstest suite in 2 commands
+
+To test a kernel using the nfstest suite, enable the nfstest workflow and
+then run:
+
+  * `make nfstest`
+  * `make nfstest-baseline`
+
+For more details see [kdevops nfstest docs](docs/nfstest.md)
 
 ### Runs some kernel selftests in a parallel manner
 

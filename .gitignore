@@ -62,6 +62,7 @@ workflows/demos/reboot-limit/results/
 
 workflows/gitr/results/
 workflows/ltp/results/
+workflows/nfstest/results/
 
 playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml
 # We should strive to ignore all and port them to the new mirrors.yaml

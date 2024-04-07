@@ -1,0 +1,87 @@
+if KDEVOPS_WORKFLOW_ENABLE_NFSTEST
+
+config NFSTEST_USE_KDEVOPS_NFSD
+	bool "Provision and use the kdevops NFS server"
+	select KDEVOPS_SETUP_NFSD
+	default y
+	help
+	  Select this option to have kdevops provision an additional
+	  target node to be used as the NFS server for testing.
+
+	  Say N if you have a reachable NFS server to test against, and
+	  specify that server's hostname using the
+	  NFSTEST_NFS_SERVER_HOST option.
+
+config NFSTEST_NFS_SERVER_HOST
+	string "Test NFS Server hostname"
+	default ""
+	depends on !NFSTEST_USE_KDEVOPS_NFSD
+	help
+	  The NFS server hostname or address to test against. Tests
+	  expect that an appropriate share is already available for
+	  them to mount and use.
+
+config NFSTEST_MNT
+	string "Where clients mount the file system under test"
+	default "/mnt/t"
+	help
+	  The directory over which to mount the file system under test.
+
+config NFSTEST_REPO
+	string "The nfstest repository"
+	default "git://git.linux-nfs.org/projects/mora/nfstest.git"
+	help
+	  The nfstest repository to clone.
+
+config NFSTEST_REPO_COMMIT
+	string "The version of nfstest to check out"
+	default "v3.2"
+	help
+	  The version of nfstest to be used for the test.
+
+if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
+
+config NFSTEST_TEST_GROUP_ALLOC
+	bool "Enable the nfstest_alloc testing section"
+	default n
+	help
+	  Provision a target node to test NFSv4.2 space reservation.
+
+config NFSTEST_TEST_GROUP_DIO
+	bool "Enable the nfstest_dio testing section"
+	default n
+	help
+	  Provision target nodes to run direct I/O tests.
+
+config NFSTEST_TEST_GROUP_INTEROP
+	bool "Enable the nfstest_interop testing section"
+	default y
+	help
+	  Provision target nodes to run NFS interoperability tests.
+
+config NFSTEST_TEST_GROUP_LOCK
+	bool "Enable the nfstest_lock testing section"
+	default n
+	help
+	  Provision target nodes to test NFS file locking.
+
+config NFSTEST_TEST_GROUP_POSIX
+	bool "Enable the nfstest_posix testing section"
+	default n
+	help
+	  Provision a target node to run POSIX file access tests.
+
+config NFSTEST_TEST_GROUP_SPARSE
+	bool "Enable the nfstest_sparse testing section"
+	help
+	  Provision a target node to test support for sparse files.
+
+config NFSTEST_TEST_GROUP_SSC
+	bool "Enable the nfstest_ssc testing section"
+	help
+	  Provision target nodes to test the operation of server-side
+	  copy.
+
+endif # KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
+
+endif # KDEVOPS_WORKFLOW_ENABLE_GITR

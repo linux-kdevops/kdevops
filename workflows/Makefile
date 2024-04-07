@@ -53,6 +53,11 @@ WORKFLOW_ARGS += kdevops_workflow_enable_ltp='True'
 include workflows/ltp/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_LTP == y
 
+ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST))
+WORKFLOW_ARGS += kdevops_workflow_enable_nfstest='True'
+include workflows/nfstest/Makefile
+endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST == y
+
 ANSIBLE_EXTRA_ARGS += $(WORKFLOW_ARGS)
 ANSIBLE_EXTRA_ARGS_SEPARATED += $(WORKFLOW_ARGS_SEPARATED)
 ANSIBLE_EXTRA_ARGS_DIRECT += $(WORKFLOW_ARGS_DIRECT)
