@@ -21,6 +21,11 @@ VAGRANT_ARGS += kdevops_vagrant='$(KDEVOPS_VAGRANT)'
 VAGRANT_ARGS += kdevops_vagrant_generated='$(KDEVOPS_VAGRANT_GENERATED)'
 VAGRANT_ARGS += kdevops_vagrant_template='$(KDEVOPS_VAGRANT_TEMPLATE)'
 
+ifneq (y,$(CONFIG_WORKFLOW_INFER_USER_AND_GROUP))
+VAGRANT_ARGS += data_user='vagrant'
+VAGRANT_ARGS += data_vagrant='vagrant'
+endif
+
 ifeq (y,$(CONFIG_HAVE_VAGRANT_BOX_URL))
 VAGRANT_PRIVATE_BOX_DEPS := vagrant_private_box_install
 else

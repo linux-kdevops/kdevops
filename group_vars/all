@@ -4,8 +4,8 @@
 # ansible/extra_vars.yml
 
 # Your default username to log in to systems
-data_user: vagrant
-data_group: vagrant
+data_user: kdevops
+data_group: kdevops
 
 data_home_dir: "/home/{{ data_user }}"
 
