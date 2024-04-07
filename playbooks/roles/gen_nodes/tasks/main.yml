@@ -227,6 +227,16 @@
   when:
     - is_ltp|bool
 
+- name: Generate a kdevops nodes file for the nfstest workflow
+  tags: hosts
+  ansible.builtin.include_role:
+    name: gen_nodes
+    tasks_from: nfstest
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_nfstest
+    - ansible_nodes_template.stat.exists
+
 - name: Set empty enabled test types list for fstests
   tags: [ 'hosts' ]
   set_fact:
