@@ -156,22 +156,16 @@
   register: result
   until: not result.failed
 
-- name: Get nproc on the target node
-  tags: vars
-  ansible.builtin.command: "{{ num_jobs }}"
-  register: nproc
-  changed_when: false
-
 - name: Build git on the target nodes
   tags: ['gitr', 'build']
   community.general.make:
     chdir: "{{ gitr_mnt }}/git"
-    jobs: "{{ nproc.stdout }}"
+    jobs: "{{ ansible_processor_nproc }}"
 
 - name: Run the full git regression suite
   tags: run_tests
   ansible.builtin.shell:
-    cmd: "prove -Q --jobs {{ nproc.stdout }} ./t[0-9]*.sh"
+    cmd: "prove -Q --jobs {{ ansible_processor_nproc }} ./t[0-9]*.sh"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false
