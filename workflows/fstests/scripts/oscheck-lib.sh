@@ -193,11 +193,17 @@ oscheck_run_osfile_read()
 
 oscheck_add_expunge_if_exists()
 {
+	FALLBACK_EXPUNGE="$(echo $1 | sed -e 's|+/|/|')"
 	if [ "$EXPUNGE_LIST" = "true" ]; then
 		echo "$1"
+		if [[ "$i" != "$FALLBACK_EXPUNGE" ]]; then
+			echo "$FALLBACK_EXPUNGE"
+		fi
 	fi
 	if [ -e $1 ]; then
 		EXPUNGE_FLAGS="$EXPUNGE_FLAGS -E ${1}"
+	elif [[ "$i" != "$FALLBACK_EXPUNGE" && -e $FALLBACK_EXPUNGE ]]; then
+		EXPUNGE_FLAGS="$EXPUNGE_FLAGS -E ${FALLBACK_EXPUNGE}"
 	fi
 }
 
