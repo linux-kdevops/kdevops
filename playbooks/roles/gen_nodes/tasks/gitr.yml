@@ -1,0 +1,28 @@
+---
+- name: Initialize the enabled nodes list for gitr
+  ansible.builtin.set_fact:
+    gitr_enabled_nodes: "{{ gitr_enabled_test_groups | ansible.builtin.split }}"
+
+- name: Expand the gitr node list to include -dev nodes
+  ansible.builtin.set_fact:
+    gitr_enabled_nodes: "{{ gitr_enabled_nodes + [item + '-dev'] }}"
+  with_items: "{{ gitr_enabled_test_groups | ansible.builtin.split }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+
+- name: Add the kdevops NFS server to the enabled nodes list
+  ansible.builtin.set_fact:
+    gitr_enabled_nodes: "{{ gitr_enabled_nodes + ['nfsd'] }}"
+  when:
+    - kdevops_nfsd_enable|bool
+
+- name: Generate the kdevops nodes file using {{ kdevops_nodes_template }}
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    all_generic_nodes: "{{ generic_nodes }}"
+    nodes: "{{ [kdevops_host_prefix + '-'] | product(gitr_enabled_nodes) | map('join') | list }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: "u=rw,g=r,o=r"
