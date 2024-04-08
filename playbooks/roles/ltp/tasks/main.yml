@@ -90,18 +90,12 @@
     chdir: "{{ ltp_build_dir }}"
     creates: include/config.h
 
-- name: Get nproc on the build system
-  tags: ['build', 'ltp']
-  ansible.builtin.command: "{{ num_jobs }}"
-  register: nproc
-  changed_when: false
-
 - name: Build ltp from source
   tags: ['build', 'ltp']
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: all
-    jobs: "{{ nproc.stdout }}"
+    jobs: "{{ ansible_processor_nproc }}"
 
 - name: Ensure /opt has correct permissions
   tags: ['ltp']
@@ -118,7 +112,7 @@
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: install
-    jobs: "{{ nproc.stdout }}"
+    jobs: "{{ ansible_processor_nproc }}"
 
 - name: Start the rpcbind service
   tags: ['ltp']
