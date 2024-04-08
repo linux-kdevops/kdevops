@@ -90,8 +90,6 @@ fstests_fstyp: "bogus"
 fs_config_role_path: "/dev/null"
 fs_config_data: "[section_1]"
 
-is_ltp: false
-
 bootlinux_9p: False
 bootlinux_9p_host_path: "/dev/null"
 bootlinux_9p_msize: 0
