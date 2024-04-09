@@ -113,7 +113,8 @@ do
 	# Copy the base image and prep it
 	ROOTIMG="$STORAGEDIR/$name/root.raw"
 	cp --reflink=auto $BASE_IMAGE $ROOTIMG
-	virt-sysprep -a $ROOTIMG --hostname $name --ssh-inject "kdevops:file:$SSH_KEY.pub"
+	TZ="$(timedatectl show -p Timezone --value)"
+	virt-sysprep -a $ROOTIMG --hostname $name --ssh-inject "kdevops:file:$SSH_KEY.pub" --timezone $TZ
 
 	if [[ "$CONFIG_LIBVIRT_ENABLE_LARGEIO" == "y" ]]; then
 		lbs_idx=1
