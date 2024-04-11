@@ -55,7 +55,7 @@
 - name: Install partition creation base tools
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - xfsprogs
       - e2fsprogs
