@@ -8,6 +8,10 @@ config DEFAULT_DBENCH_URL
 	string
 	default "https://github.com/linux-kdevops/dbench.git"
 
+config DEFAULT_NFSTEST_URL
+	string
+	default "git://git.linux-nfs.org/projects/mora/nfstest.git"
+
 config DEFAULT_XFSDUMP_URL
 	string
 	default "https://github.com/linux-kdevops/xfsdump-dev.git"
