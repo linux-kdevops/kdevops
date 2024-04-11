@@ -12,6 +12,10 @@ config DEFAULT_GIT_URL
 	string
 	default "https://git.kernel.org/pub/scm/git/git.git"
 
+config DEFAULT_LTP_URL
+	string
+	default "https://github.com/linux-test-project/ltp.git"
+
 config DEFAULT_NFSTEST_URL
 	string
 	default "git://git.linux-nfs.org/projects/mora/nfstest.git"
