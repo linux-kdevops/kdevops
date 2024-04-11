@@ -8,6 +8,7 @@ generic/388 # Hangs. SOAK_DURATION=9900
 generic/455 # F:1/12
 generic/457 # F:1/6
 generic/471
+generic/476 # Bad page state in workqueue btrfs-endio-write btrfs_work_helper SOAK_DURATION=9900 https://gist.github.com/mcgrof/76e026ca48b95922a365be3502fddf45
 generic/482 # metadata corruption: https://gist.github.com/dagmcr/9fc650327b2dafd89fabd45ede0a932d
 generic/648 # https://gist.githubusercontent.com/dagmcr/447a5030dde1f91206604f1b8ee9d2a5/raw/6c8568284b6c5c05920a132c73c67fd86dcbe6f8/gistfile1.txt
 generic/670
