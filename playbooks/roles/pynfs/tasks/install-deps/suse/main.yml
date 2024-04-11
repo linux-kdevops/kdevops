@@ -2,7 +2,7 @@
 - name: Install build dependencies for pynfs
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - gcc
       - git-core
