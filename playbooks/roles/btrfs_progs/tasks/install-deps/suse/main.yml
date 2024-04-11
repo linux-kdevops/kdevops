@@ -5,10 +5,10 @@
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
 
-- name: Install qemu build dependencies
+- name: Install btrfs-progs build dependencies
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - e2fsprogs-devel
       - libblkid-devel
