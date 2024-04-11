@@ -8,7 +8,7 @@
 - name: Install QEMU build dependencies
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - acpica
       - alsa-devel
@@ -415,5 +415,6 @@
       - xorgproto-devel
       - xz-devel
       - zlib-devel
+    state: present
   when:
     - is_tumbleweed
