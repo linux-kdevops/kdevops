@@ -2,8 +2,8 @@
 - name: Install ktls dependencies
   become: yes
   become_method: sudo
-  zypper:
-    state: present
+  ansible.builtin.package:
     name:
       - python3-cryptography
       - ktls-utils
+    state: present
