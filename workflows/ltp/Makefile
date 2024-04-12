@@ -15,6 +15,13 @@ else
 LTP_ARGS += ltp_tests_cve='False'
 endif # CONFIG_LTP_TESTS_CVE
 
+ifeq (y,$(CONFIG_LTP_TESTS_FCNTL))
+LTP_ARGS += ltp_tests_fcntl='True'
+LTP_ENABLED_TEST_GROUPS += fcntl
+else
+LTP_ARGS += ltp_tests_fcntl='False'
+endif # CONFIG_LTP_TESTS_FCNTL
+
 ifeq (y,$(CONFIG_LTP_TESTS_FS))
 LTP_ARGS += ltp_tests_fs='True'
 LTP_ENABLED_TEST_GROUPS += fs

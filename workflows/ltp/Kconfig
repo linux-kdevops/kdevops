@@ -9,6 +9,11 @@ config LTP_TESTS_CVE
 	help
 	  Run the CVE regression tests.
 
+config LTP_TESTS_FCNTL
+	bool "fcntl group"
+	help
+	  Run the fcntl unit tests.
+
 config LTP_TESTS_FS
 	bool "FS group"
 	help

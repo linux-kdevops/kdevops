@@ -1,6 +1,7 @@
 ---
 ltp_runltp_arg_dict:
   cve: "-f cve"
+  fcntl: "-f syscalls -s fcntl"
   fs: "-f fs"
   fs-bind: "-f fs_bind"
   fs-perms-simple: "-f fs_perms_simple"
