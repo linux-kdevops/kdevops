@@ -44,7 +44,7 @@
 - name: Install every single selftest build dependencies
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - git-core
       - gcc
