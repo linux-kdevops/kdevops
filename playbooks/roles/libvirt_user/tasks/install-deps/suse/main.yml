@@ -2,7 +2,7 @@
 - name: Install libvirt / kvm dependencies
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - libvirt
       - libvirt-daemon
