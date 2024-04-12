@@ -35,7 +35,7 @@
 - name: Install local dependencies for fstests command and control
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - python3-junit-xml
       - python3-pip
