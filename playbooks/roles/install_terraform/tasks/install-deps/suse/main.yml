@@ -33,9 +33,10 @@
 - name: Install vagrant and vagrant-libvirt from your tumbleweed repository
   become: yes
   become_method: sudo
-  zypper:
+  ansible.builtin.package:
     name:
       - terraform
+    state: present
   when:
     - not force_install_zip|bool
     - not force_install_if_present|bool
