@@ -101,6 +101,14 @@ def main():
         expunge_kernel_dir = args.outputdir + '/' + kernel + '/' + args.filesystem + '/'
         output_dir = expunge_kernel_dir + 'unassigned/'
         output_file = output_dir + section + '.txt'
+
+        base_kernel = kernel
+        if base_kernel.endswith("+"):
+            base_kernel = kernel.replace("+", "")
+            base_expunge_kernel_dir = args.outputdir + '/' + base_kernel + '/' + args.filesystem + '/'
+            base_output_dir = base_expunge_kernel_dir + 'unassigned/'
+            base_output_file = base_output_dir + section + '.txt'
+
         shortcut_kernel_dir = None
         shortcut_dir = None
         shortcut_file = None
@@ -163,7 +171,13 @@ def main():
                 output_dir = shortcut_dir
                 output_file = shortcut_file
                 expunge_kernel_dir = shortcut_kernel_dir
+            elif base_kernel != kernel and os.path.isdir(base_output_dir):
+                sys.stdout.write("<== expunges for %s not found but found base kernel %s expunge directory ==>\n" % (kernel, base_kernel))
+                expunge_kernel_dir = base_expunge_kernel_dir
+                output_dir = base_output_dir
+                output_file = base_output_file
             else:
+                sys.stdout.write("<== New expunge set for %s\n" % kernel)
                 os.makedirs(output_dir)
 
         if not os.path.isfile(output_file):
