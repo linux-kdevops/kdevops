@@ -126,7 +126,7 @@
   tags: gitr
   ansible.builtin.include_role:
     name: create_nfs_mount
-  vars:
+  vars:  # noqa: var-naming[no-role-prefix]
     nfs_mounted_on: "{{ gitr_mnt }}"
     nfs_server_hostname: "{{ gitr_nfs_server_host }}"
     nfs_server_export: "{{ nfsd_export_path }}/{{ gitr_nfs_server_export }}"
