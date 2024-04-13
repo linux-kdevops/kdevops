@@ -11,11 +11,16 @@
   failed_when: false
   tags: vars
 
-- name: Set the pathname of the local results directory
+- name: Set the name of the test group
   tags: vars
   ansible.builtin.set_fact:
     gitr_test_group: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
-    gitr_results_dir: "../workflows/gitr/results/"
+
+- name: Set the pathname of the local results directory
+  tags: vars
+  ansible.builtin.set_fact:
+    gitr_results_dir: "../workflows/gitr/results/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    gitr_run_uniqifier: "{{ ansible_date_time.iso8601_basic_short }}"
 
 - name: Ensure the local results directory exists
   tags: copy_results
@@ -204,14 +209,14 @@
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ gitr_results.stdout_lines|join('\n') }}\n"
-    dest: "{{ gitr_mnt }}/gitr.stdout"
+    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stdout"
     mode: "u=rw,g=r,o=r"
 
 - name: Save standard error to a file
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ gitr_results.stderr_lines|join('\n') }}\n"
-    dest: "{{ gitr_mnt }}/gitr.stderr"
+    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stderr"
     mode: "u=rw,g=r,o=r"
   when: gitr_results.rc != 0
 
@@ -219,7 +224,7 @@
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ rpc_results.stdout_lines|join('\n') }}\n"
-    dest: "{{ gitr_mnt }}/gitr.rpc"
+    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.rpc"
     mode: "u=rw,g=r,o=r"
   when:
     - gitr_fstype == "nfs"
@@ -229,7 +234,7 @@
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ xprt_results.stdout_lines|join('\n') }}\n"
-    dest: "{{ gitr_mnt }}/gitr.xprt"
+    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.xprt"
     mode: "u=rw,g=r,o=r"
   when:
     - gitr_fstype == "nfs"
@@ -238,16 +243,16 @@
 - name: Copy regression results to the control host
   tags: copy_results
   ansible.builtin.fetch:
-    src: "{{ gitr_mnt }}/gitr.stdout"
-    dest: "{{ gitr_results_dir }}/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stdout"
+    dest: "{{ gitr_results_dir }}"
     flat: true
     validate_checksum: false
 
 - name: Copy stderr to the control host
   tags: copy_results
   ansible.builtin.fetch:
-    src: "{{ gitr_mnt }}/gitr.stderr"
-    dest: "{{ gitr_results_dir }}/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stderr"
+    dest: "{{ gitr_results_dir }}"
     flat: true
     validate_checksum: false
   when: gitr_results.rc != 0
@@ -255,8 +260,8 @@
 - name: Copy RPC statistics to the control host
   tags: copy_results
   ansible.builtin.fetch:
-    src: "{{ gitr_mnt }}/gitr.rpc"
-    dest: "{{ gitr_results_dir }}/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.rpc"
+    dest: "{{ gitr_results_dir }}"
     flat: true
     validate_checksum: false
   when:
@@ -266,8 +271,8 @@
 - name: Copy transport statistics to the control host
   tags: copy_results
   ansible.builtin.fetch:
-    src: "{{ gitr_mnt }}/gitr.xprt"
-    dest: "{{ gitr_results_dir }}/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.xprt"
+    dest: "{{ gitr_results_dir }}"
     flat: true
     validate_checksum: false
   when:
