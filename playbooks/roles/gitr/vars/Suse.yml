@@ -9,5 +9,6 @@ gitr_packages:
   - libexpat-devel
   - libopenssl-1_1-devel
   - perl-Test-Harness
+  - perl-Test-Simple
   - subversion
   - subversion-perl

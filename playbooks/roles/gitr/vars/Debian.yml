@@ -8,6 +8,7 @@ gitr_packages:
   - libcurl4-openssl-dev
   - libexpat1-dev
   - libssl-dev
+  - libtest-most-perl
   - libz-dev
   - perl
   - sqlite3

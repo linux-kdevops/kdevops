@@ -10,8 +10,9 @@ gitr_packages:
   - libcurl-devel
   - openssl-devel
   - perl-Memoize
-  - perl-Test-Harness
   - perl-TAP-Harness-Archive
+  - perl-Test-Harness
+  - perl-Test-Simple
   - subversion
   - subversion-perl
   - zlib-devel
