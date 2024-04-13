@@ -164,6 +164,8 @@
 
 - name: Run the full git regression suite
   tags: run_tests
+  environment:
+    GIT_TEST_CLONE_2GB: "true"
   ansible.builtin.shell:
     cmd: "prove -Q --jobs {{ ansible_processor_nproc }} ./t[0-9]*.sh"
     chdir: "{{ gitr_mnt }}/git/t"
