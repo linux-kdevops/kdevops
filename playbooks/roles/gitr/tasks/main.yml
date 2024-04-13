@@ -172,7 +172,7 @@
   environment:
     GIT_TEST_CLONE_2GB: "true"
   ansible.builtin.shell:
-    cmd: "prove -Q --jobs {{ ansible_processor_nproc }} ./t[0-9]*.sh"
+    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz --jobs {{ ansible_processor_nproc }} ./t[0-9]*.sh"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false
@@ -181,7 +181,7 @@
 - name: Run specific git regression tests
   tags: run_specific_tests
   ansible.builtin.command:
-    cmd: "prove {{ gitr_test_list }}"
+    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz {{ gitr_test_list }}"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false
@@ -196,7 +196,7 @@
     - ansible_os_family == 'RedHat'
   changed_when: false
 
-- name: Capture transport statistics
+- name: Capture RPC transport statistics
   tags: copy_results
   ansible.builtin.command: "mountstats --xprt"
   register: xprt_results
@@ -205,11 +205,11 @@
     - ansible_os_family == 'RedHat'
   changed_when: false
 
-- name: Save git regression test output to a file
+- name: Save test summary output to a file
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ gitr_results.stdout_lines|join('\n') }}\n"
-    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stdout"
+    dest: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.summary"
     mode: "u=rw,g=r,o=r"
 
 - name: Save standard error to a file
@@ -230,7 +230,7 @@
     - gitr_fstype == "nfs"
     - ansible_os_family == 'RedHat'
 
-- name: Save transport statistics to a file
+- name: Save RPC transport statistics to a file
   tags: copy_results
   ansible.builtin.copy:
     content: "{{ xprt_results.stdout_lines|join('\n') }}\n"
@@ -240,15 +240,23 @@
     - gitr_fstype == "nfs"
     - ansible_os_family == 'RedHat'
 
-- name: Copy regression results to the control host
+- name: Copy the TAP archive to the control node
   tags: copy_results
   ansible.builtin.fetch:
-    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stdout"
+    src: "/tmp/{{ gitr_run_uniqifier }}.tgz"
+    dest: "{{ gitr_results_dir }}"
+    flat: true
+    validate_checksum: true
+
+- name: Copy summary results to the control node
+  tags: copy_results
+  ansible.builtin.fetch:
+    src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.summary"
     dest: "{{ gitr_results_dir }}"
     flat: true
     validate_checksum: false
 
-- name: Copy stderr to the control host
+- name: Copy stderr to the control node
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stderr"
@@ -257,7 +265,7 @@
     validate_checksum: false
   when: gitr_results.rc != 0
 
-- name: Copy RPC statistics to the control host
+- name: Copy RPC statistics to the control node
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.rpc"
@@ -268,7 +276,7 @@
     - gitr_fstype == "nfs"
     - ansible_os_family == 'RedHat'
 
-- name: Copy transport statistics to the control host
+- name: Copy RPC transport statistics to the control node
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.xprt"
