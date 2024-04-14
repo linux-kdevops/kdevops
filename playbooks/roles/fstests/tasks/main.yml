@@ -725,6 +725,8 @@
   tags: vars
   set_fact:
     volname_prefix: "{{ ansible_host }}-fstests"
+  when:
+    - fstests_fstyp == "nfs"
 
 - name: Create NFS export for test vol
   include_role:
