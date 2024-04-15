@@ -7,6 +7,7 @@ terraform.tfstate.backup
 crash.log
 
 */terraform.tfvars
+*/nodes.tf
 */terraform.tfstate
 */terraform.tfstate.backup
 */.terraform

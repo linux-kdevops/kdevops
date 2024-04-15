@@ -7,11 +7,6 @@ export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 KDEVOPS_PROVISION_METHOD		:= bringup_terraform
 KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_terraform
 
-KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/terraform_nodes.tf.j2
-KDEVOPS_NODES :=		terraform/nodes.tf
-
-TERRAFORM_EXTRA_VARS += kdevops_enable_terraform='True'
-
 export KDEVOPS_CLOUD_PROVIDER=aws
 ifeq (y,$(CONFIG_TERRAFORM_AWS))
 endif
@@ -28,6 +23,11 @@ ifeq (y,$(CONFIG_TERRAFORM_OPENSTACK))
 export KDEVOPS_CLOUD_PROVIDER=openstack
 endif
 
+KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/terraform_nodes.tf.j2
+KDEVOPS_NODES :=		terraform/$(KDEVOPS_CLOUD_PROVIDER)/nodes.tf
+
+TERRAFORM_EXTRA_VARS += kdevops_enable_terraform='True'
+
 TERRAFORM_EXTRA_VARS += kdevops_terraform_provider='$(KDEVOPS_CLOUD_PROVIDER)'
 
 TFVARS_TEMPLATE_DIR=playbooks/roles/gen_tfvars/templates
@@ -43,6 +43,7 @@ TERRAFORM_EXTRA_VARS += kdevops_terraform_tfvars_template_full_path='$(TOPDIR_PA
 TERRAFORM_EXTRA_VARS += kdevops_terraform_tfvars='$(KDEVOPS_TFVARS)'
 
 KDEVOPS_MRPROPER += terraform/$(KDEVOPS_CLOUD_PROVIDER)/.terraform.lock.hcl
+KDEVOPS_MRPROPER += $(KDEVOPS_NODES)
 
 DEFAULT_DEPS_REQS_EXTRA_VARS += $(KDEVOPS_TFVARS)
 
