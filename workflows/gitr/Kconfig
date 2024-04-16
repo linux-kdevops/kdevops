@@ -63,7 +63,7 @@ endif # GITR_TMPFS
 
 config GITR_MNT
 	string "Where to mount the file system under test"
-	default "/gitr"
+	default "/media/git"
 	help
 	  The directory over which to mount the file system under test.
 
