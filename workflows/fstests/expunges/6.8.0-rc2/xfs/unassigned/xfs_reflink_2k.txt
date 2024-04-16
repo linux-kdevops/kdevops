@@ -19,6 +19,7 @@ xfs/075
 xfs/155
 xfs/168
 xfs/188
+xfs/242 # F:1/2000 non-fatal failure cosmic ray? https://gist.github.com/mcgrof/6ef50311179a65221413a63c0cc8efd1
 xfs/270
 xfs/301
 xfs/502 # F:1/8 korg#218226 xfs assert fs/xfs/xfs_message.c:102
