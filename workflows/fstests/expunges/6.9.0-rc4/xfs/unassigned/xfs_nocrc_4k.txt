@@ -2,6 +2,7 @@ generic/245
 generic/269 # F:1/11
 generic/455
 generic/471
+generic/476 # fsstress + compaction hunk task
 generic/482 # F:1/6
 generic/607
 generic/645
