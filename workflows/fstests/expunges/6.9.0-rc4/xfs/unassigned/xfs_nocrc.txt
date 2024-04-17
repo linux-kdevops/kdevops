@@ -2,6 +2,7 @@ generic/245
 generic/269 # F:1/11
 generic/455 # F:1/18
 generic/471
+generic/476 # fsstress + compaction hunk task https://gist.github.com/mcgrof/f40a9f31a43793dac928ce287cfacfeb
 generic/607
 generic/622
 generic/645
