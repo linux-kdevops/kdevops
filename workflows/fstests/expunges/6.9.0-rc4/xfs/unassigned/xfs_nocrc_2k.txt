@@ -3,6 +3,7 @@ generic/273 # F:1/19
 generic/388 # korg#218224 XFS: Assertion failed: ip->i_nblocks == 0 file: fs/xfs/xfs_inode.c, line: 2359
 generic/455 # F:1/6
 generic/471
+generic/476 # fsstress + compaction hunk task https://gist.github.com/mcgrof/4dfa3264f513ce6ca398414326cfab84
 generic/607
 generic/645
 generic/682 # F:1/20
