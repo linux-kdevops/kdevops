@@ -1,3 +1,4 @@
+generic/048 # korg#218227 fsstress + compaction
 generic/175
 generic/245 # F:1/20
 generic/269 # SOAK_DURATION=9900
