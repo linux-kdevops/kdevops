@@ -1,0 +1,5 @@
+---
+# Our sensible defaults for the nfstest role.
+#
+kdevops_run_nfstest: False
+kdevops_workflows_dedicated_workflow: false

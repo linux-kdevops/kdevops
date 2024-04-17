@@ -1,0 +1,13 @@
+#!/bin/bash
+
+export PYTHONPATH="{{ nfstest_install_dir }}"
+cd {{ nfstest_install_dir }}/test/
+
+for vers in 4.2
+do
+  ./nfstest_sparse --runtest=all --createlog --nfsversion=${vers} \
+	--server={{ nfstest_nfs_server_host }} \
+	--export=/export/{{ nfstest_nfs_server_export }}
+done
+
+exit 0

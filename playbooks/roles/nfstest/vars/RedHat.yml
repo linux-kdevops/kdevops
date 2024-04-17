@@ -1,0 +1,5 @@
+---
+nfstest_packages:
+  - nfs-utils
+  - python-unversioned-command
+  - tcpdump

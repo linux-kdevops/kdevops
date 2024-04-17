@@ -1,0 +1,166 @@
+---
+- name: Include optional extra_vars
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  failed_when: false
+  tags: vars
+
+- name: Set OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+  tags: vars
+
+- name: Install dependencies for nfstest
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name: "{{ nfstest_packages }}"
+    state: present
+  tags: nfstest
+
+- name: Create the /data mount point on the target nodes
+  ansible.builtin.include_role:
+    name: create_data_partition
+  tags:
+    - data_partition
+    - nfstest
+
+- name: Set the pathname of the install directory
+  ansible.builtin.set_fact:
+    nfstest_install_dir: "{{ data_path }}/nfstest"
+  tags: vars
+
+- name: Remove existing nfstest install directory
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ nfstest_install_dir }}"
+    state: absent
+  tags: nfstest
+
+- name: Set the name of the NFS export for the test group
+  ansible.builtin.set_fact:
+    nfstest_nfs_server_export: "nfstest-{{ ansible_host }}"
+  when:
+    - nfstest_nfs_use_kdevops_nfsd|bool
+  tags: vars
+
+- name: Create the NFS export on the kdevops NFS server
+  ansible.builtin.include_role:
+    name: nfsd_add_export
+  vars: # noqa: var-naming[no-role-prefix]
+    server_host: "{{ nfstest_nfs_server_host }}"
+    export_volname: "{{ nfstest_nfs_server_export }}"
+    export_options: "{{ nfsd_export_options }}"
+    export_fstype: "{{ nfsd_export_fstype }}"
+    export_size: 10g
+  when:
+    - nfstest_nfs_use_kdevops_nfsd|bool
+  tags: nfstest
+
+- name: Create the test mount point on the target node
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    state: directory
+    path: "{{ nfstest_mnt }}"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rwx,o=rwx"
+  tags: nfstest
+
+- name: Clone the nfstest source code from {{ nfstest_repo }}
+  ansible.builtin.git:
+    repo: "{{ nfstest_repo }}"
+    dest: "{{ nfstest_install_dir }}"
+    version: "{{ nfstest_repo_commit }}"
+    update: true
+  retries: 3
+  delay: 5
+  register: clone_result
+  until: not clone_result.failed
+  tags: nfstest
+
+- name: Set the test group for the target node
+  ansible.builtin.set_fact:
+    nfstest_test_group: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags:
+    - run_tests
+    - copy_results
+
+- name: Copy the test group script to the target node
+  ansible.builtin.template:
+    src: "templates/{{ nfstest_test_group }}.sh.j2"
+    dest: "/tmp/runtest.sh"
+    force: true
+    mode: "u=rwx,g=rx,o=rx"
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags:
+    - run_tests
+
+- name: Run the test group script on the target node
+  ansible.builtin.command:
+    cmd: "/tmp/runtest.sh"
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags: run_tests
+
+- name: Set the pathname of the results directory
+  ansible.builtin.set_fact:
+    nfstest_results_dir: "../workflows/nfstest/results/{{ ansible_kernel }}"
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags: copy_results
+
+- name: Create the results directory on the control node
+  ansible.builtin.file:
+    path: "{{ nfstest_results_dir }}"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+  delegate_to: localhost
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags: copy_results
+
+- name: Look for output logs on the target node
+  ansible.builtin.find:
+    paths: "/tmp"
+    patterns: "nfstest*.log"
+    file_type: file
+  register: nfstest_logs
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags: copy_results
+
+- name: Copy the output logs to the control node
+  ansible.builtin.fetch:
+    src: "{{ item.path }}"
+    dest: "{{ nfstest_results_dir }}/{{ nfstest_test_group }}/"
+    flat: true
+  with_items: "{{ nfstest_logs.files }}"
+  loop_control:
+    label: "Copying {{ item.path | basename }} ..."
+  when:
+    - nfstest_logs.matched > 0
+    - kdevops_workflows_dedicated_workflow|bool
+  changed_when: false
+  tags: copy_results
