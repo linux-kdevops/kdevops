@@ -874,24 +874,15 @@
     state: present
   with_items:
     - sys
-    - 123456-fsgqa
-    - fsgqa
-    - fsgqa2
-    - daemon
-    - nobody
   loop_control:
-    label: "Ensuring the group {{ item }} exists"
+    label: "Ensuring that group {{ item }} exists"
 
-- name: Add missing users if not present
+- name: Add missing users for fstests
   tags: [ 'oscheck', 'fstests', 'install', 'root']
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  user:
-    name: "{{ item }}"
-    state: present
-    home: "/home/{{ item }}"
-    group: "{{ item }}"
+  ansible.builtin.command: "useradd --badname -d /home/{{ item }} -U {{ item }}"
   with_items:
     - 123456-fsgqa
     - fsgqa
@@ -899,7 +890,9 @@
     - daemon
     - nobody
   loop_control:
-    label: "Ensuring the user {{ item }} exists"
+    label: "Ensuring that user and group {{ item }} exists"
+  register: useradd_result
+  failed_when: useradd_result.rc != 0 and useradd_result.rc != 9
 
 - name: Verify section name {{ fstests_section }} exists on fstests config file
   vars:
