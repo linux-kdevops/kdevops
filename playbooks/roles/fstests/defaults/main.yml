@@ -91,6 +91,7 @@ fstests_tfp_copy_enable_list: False
 fstests_tfp_copy_size_limit_bytes: 10485760
 
 fstests_xfs_build_custom_xfsprogs: False
+fstests_xfs_xfsprogs_data: "{{ data_path }}/xfsprogs"
 fstests_xfs_section_crc: False
 fstests_xfs_section_crc_logdev: False
 fstests_xfs_section_crc_rtdev: False
@@ -193,3 +194,4 @@ devconfig_enable_systemd_journal_remote: False
 
 fstests_xfsdump_build: False
 fstests_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
+fstests_xfs_xfsprogs_data: "{{ data_path }}/xfsdump"

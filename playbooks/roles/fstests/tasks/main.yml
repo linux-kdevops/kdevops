@@ -107,7 +107,7 @@
   become_flags: 'su - -c'
   become_method: sudo
   stat:
-    path: "{{ fstests_xfs_xfsprogs_data }}"
+    path: "{{ fstests_xfs_xfsdump_data }}"
   register: xfdump_dir
   tags: [ 'oscheck', 'git', 'fstests']
   when:
@@ -133,13 +133,13 @@
     chdir: "{{ data_path }}/xfsdump"
   tags: [ 'oscheck', 'git', 'fstests']
   when:
-    - fstests_xfs_build_custom_xfsprogs|bool
-    - xfsprogs_dir.stat.exists
+    - fstests_xfsdump_build|bool
+    - xfdump_dir.stat.exists
 
 - name: git clone xfsdump
   git:
     repo: "{{ fstests_xfsdump_git }}"
-    dest: "{{ data_path }}/xfsdump"
+    dest: "{{ fstests_xfs_xfsprogs_data }}"
     update: yes
     version: "{{ fstests_xfsdump_commit }}"
   tags: [ 'fstests', 'deps' ]
@@ -149,7 +149,7 @@
 - name: Build xfsdump
   tags: [ 'fstests', 'deps' ]
   make:
-    chdir: "{{ data_path }}/xfsdump"
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
     jobs: "{{ nproc.stdout }}"
   when:
     - fstests_xfsdump_build|bool
@@ -159,7 +159,7 @@
   become_method: sudo
   tags: [ 'fstests', 'deps' ]
   make:
-    chdir: "{{ data_path }}/xfsdump"
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
     target: install
   when:
     - fstests_xfsdump_build|bool
