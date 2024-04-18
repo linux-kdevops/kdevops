@@ -11,6 +11,7 @@ ltp_packages:
   - m4
   - ethtool
   - nfs-common
+  - nfs-kernel-server
   - libc6-dev
   - rpcbind
   - libtirpc-dev
