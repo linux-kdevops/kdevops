@@ -157,6 +157,8 @@
   become: true
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
+  environment:
+    CREATE_ENTRIES: 1
   ansible.builtin.command:
     cmd: "/opt/ltp/runltp {{ ltp_runltp_arg_dict[ltp_test_group] }}"
   changed_when: true
