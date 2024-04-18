@@ -23,7 +23,9 @@ Then on a new clone of kdevops enable on `make menuconfig the option
 `CONFIG_KDEVOPS_FIRST_RUN`. That will pick up that you have the directory
 /mirror/ created and enable by default `CONFIG_INSTALL_LOCAL_LINUX_MIRROR`.
 Just exit after that from `make menuconfig` and run `make`. Be sure to
-read the other documentation about the `CONFIG_KDEVOPS_FIRST_RUN`.
+read the other documentation about the `CONFIG_KDEVOPS_FIRST_RUN` if
+you want help with local virtualization setup and its your first time
+using kdevops.
 
 *After* your first run, once you start to disable `CONFIG_KDEVOPS_FIRST_RUN`
 on future runs, *if* you have /mirror/ then kdevops will assume you want
@@ -43,12 +45,17 @@ mirroring using `make menuconfig` and enabling the kconfig option
 
 The following git trees are currently mirrored:
 
-  * QEMU main tree (qemu-project/qemu)
-  * The linux-next integration testing tree from Linux Next Group
-  (next/linux-next)
-  * The Linux kernel source tree from Linus Torvalds (torvalds/linux)
-  * The Linux kernel stable tree from the Stable Group (stable/linux)
-  * The Linux kernel mcgrof's tree (mcgrof/linux-next)
+  * kdevops
+  * qemu and at least one qemu fork
+  * linux-next
+  * torvalds/linux
+  * stable/linux
+  * Any few developer Linux kernel trees
+  * fstests
+  * kdevops's version of fstests
+  * blktests
+  * xfsprogs
+  * anything we use ...
 
 Root is only used to install the systemd socket activation git daemon.
 Socket activation just means the service will not run or consume memory
@@ -64,7 +71,7 @@ variability for this):
  * next/linux-next: every 6 hours
  * torvalds/linux: 10 minutes
  * stable/linux: every 2 hours
- * mcgrof/linux-next: every 6 hours
+ * developer kernel trees: every 6 hours
 
 ## Manual debugging
 
@@ -87,14 +94,7 @@ use kdevops in a two separate step phase right now:
     mirror setup. You may then want to also test other nodes on the
     network can git clone to it.
 
-## TODO
+## Mirroring more code
 
-Mirroring supports needs to be enhanced to support variability. Although
-we stuff the code into an Ansible directory, we don't in practice use it
-as such yet. The 'mirror' and 'install' targets need to be converted to
-Ansible role tasks. Then we can easily allow for variability.
-
-But in the cases that most folks are OK with a mirror on /mirror/ this
-should suffice.
-
-We *may* want to turn down the timers down a notch to not DOS git servers.
+Adding new git trees to mirror is easy, see for example the latest was
+[gitr mirror setup on kdevops](https://github.com/linux-kdevops/kdevops/commit/830f2705e70f0b44d1a8d893850a669fede2dd1c)

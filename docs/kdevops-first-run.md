@@ -1,11 +1,52 @@
 # Running kdevops for the first time
 
-You shouldn't need much except what is listed on our requirements page.
-However, if you are going to be using virtualization solutions or a cloud
-solution (which will require Terraform) you likely want to set up libvirt
-properly or have us try to install Terraform for you. We can help you do this.
+See [kdevops requirements](docs/requirements.md) first and install that.
 
-To help with this we have an option on Kconfig which you should enable if it is
+If you're using virtualization with guestfs we just need to verify your user can
+run guests, and setting this up varies distro-by-distro.
+
+# Manual check
+
+If you know what you are are doing you can do the setup yourself. Here is a
+checklist of things you need to do:
+
+  * your user is part of groups libvirt-qemu (if it exists), libvirt, kvm
+  * disable selinux or apparmor
+  * reboot
+
+## Dedicated storage pool
+
+You can use an existing storage pool, create one, or let kdevops create it
+for you. Let's say you want to be lazy and let kdevops create it for you,
+just empty out enough disk space on and let kdevops know you want it to create
+your storage pool for with by setting CONFIG_LIBVIRT_STORAGE_POOL_PATH_CUSTOM_MANUAL
+to a new directory under it. For example say /xfs1/ is a new partition create
+/xfs1/libvirt and ensure the appropriate libvirt group owns it and use that for
+this custom path. The benefit of this setup is that you can use the same
+dedicated partition for work with kdevops. After you do a first bringup with
+this storage pool, if you run 'make menuconfig' under any directory under
+/xfs1/ then kdevops will detect your existing storage pool and use that, so
+sensible defaults are used.
+
+### Mirror setup
+
+Consider enabling the local [kdevops mirror](docs/kdevops-mirror.md) if you
+think you're going to be using kdevops a bit.
+
+### First manual check
+
+To be sure things will work right, use the default after 'make menuconfig'
+and run 'make; make bringup'; if that fails consider reading below as you may
+have missed something.
+
+## Getting help with kdevops
+
+kdevops can help you verify your user can use virtualization correctly.
+
+# Enabling CONFIG_KDEVOPS_FIRST_RUN
+
+kdevops can help you verify virtualization will work correctly for your user. To
+help with this we have an option on Kconfig which you should enable if it is
 your first time running kdevops, the prompt is for CONFIG_KDEVOPS_FIRST_RUN:
 
 ```
@@ -19,11 +60,10 @@ requirements will be installed for you when you call 'make', after
 The way to use this 'first run' feature is to just enable the option, and
 keep running `make` until it stops telling you to fix things. The first run
 stuff verifies and ensures your user can bring up a virtualization guest as a
-regular user without needing root, *if* you've enabled local virtualization
-technologies. This is typically done by having your username be part of a few
-special groups, depending on your Linux distribution. Other than that, the
-other amount of work the `first run` stuff does is nags / complains are about
-disabling AppArmor / SELinux, and maybe needing to reboot.
+regular user without needing root. This is typically done by having your
+username be part of a few special groups, depending on your Linux distribution.
+Other than that, the other amount of work the `first run` stuff does is nags /
+complains are about disabling AppArmor / SELinux, and maybe needing to reboot.
 
 You should just disable the `CONFIG_KDEVOPS_FIRST_RUN` once kdevops stops
 complaining about things, and then just run `make mrproper` and never, *ever*
