@@ -194,4 +194,4 @@ devconfig_enable_systemd_journal_remote: False
 
 fstests_xfsdump_build: False
 fstests_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
-fstests_xfs_xfsprogs_data: "{{ data_path }}/xfsdump"
+fstests_xfsdump_data: "{{ data_path }}/xfsdump"

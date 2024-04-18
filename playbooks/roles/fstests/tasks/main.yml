@@ -107,7 +107,7 @@
   become_flags: 'su - -c'
   become_method: sudo
   stat:
-    path: "{{ fstests_xfs_xfsdump_data }}"
+    path: "{{ fstests_xfsdump_data }}"
   register: xfdump_dir
   tags: [ 'oscheck', 'git', 'fstests']
   when:
@@ -118,7 +118,7 @@
   become_flags: 'su - -c'
   become_method: sudo
   file:
-    path: "{{ data_path }}/xfsdump"
+    path: "{{ fstests_xfsdump_data }}"
     recurse: yes
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
@@ -130,7 +130,7 @@
 - name: Clean old xfsdump build
   command: "git clean -f -x -d"
   args:
-    chdir: "{{ data_path }}/xfsdump"
+    chdir: "{{ fstests_xfsdump_data }}"
   tags: [ 'oscheck', 'git', 'fstests']
   when:
     - fstests_xfsdump_build|bool
@@ -139,7 +139,7 @@
 - name: git clone xfsdump
   git:
     repo: "{{ fstests_xfsdump_git }}"
-    dest: "{{ fstests_xfs_xfsprogs_data }}"
+    dest: "{{ fstests_xfsdump_data }}"
     update: yes
     version: "{{ fstests_xfsdump_commit }}"
   tags: [ 'fstests', 'deps' ]
@@ -149,7 +149,7 @@
 - name: Build xfsdump
   tags: [ 'fstests', 'deps' ]
   make:
-    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+    chdir: "{{ fstests_xfsdump_data }}"
     jobs: "{{ nproc.stdout }}"
   when:
     - fstests_xfsdump_build|bool
@@ -159,7 +159,7 @@
   become_method: sudo
   tags: [ 'fstests', 'deps' ]
   make:
-    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+    chdir: "{{ fstests_xfsdump_data }}"
     target: install
   when:
     - fstests_xfsdump_build|bool
