@@ -5,6 +5,7 @@ generic/471
 generic/482 # F:1/8
 generic/531 # F:1/10 crash probably korg#218226
 generic/607
+generic/645
 generic/650 # F:1/5 korg#218226 xfs assert fs/xfs/xfs_message.c:102
 generic/681
 generic/682
