@@ -166,11 +166,6 @@
     - kdevops_workflow_enable_gitr
     - ansible_nodes_template.stat.exists
 
-- name: Initialize the enabled nodes list for ltp
-  tags: [ 'hosts' ]
-  set_fact:
-    is_ltp: True
-    ltp_enabled_nodes: "{{ ltp_enabled_test_groups|ansible.builtin.split }}"
 - name: Generate a kdevops nodes file for the ltp workflow
   tags: hosts
   ansible.builtin.include_role:
