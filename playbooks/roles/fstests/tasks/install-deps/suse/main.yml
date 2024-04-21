@@ -247,3 +247,7 @@
   when:
     - repos_present|bool
     - fstests_fstyp == "cifs"
+
+- name: Set the "--badname" arg
+  ansible.builtin.set_fact:
+    badname_arg: "--badname"

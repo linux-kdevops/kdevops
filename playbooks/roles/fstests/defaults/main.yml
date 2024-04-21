@@ -12,6 +12,7 @@ infer_uid_and_group: False
 oscheck_extra_args: ""
 limit_tests: ""
 dynamic_limit_tests:
+badname_arg: ""
 
 fstests_start_after: False
 fstests_start_after_test: ""

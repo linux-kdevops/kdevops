@@ -882,7 +882,7 @@
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  ansible.builtin.command: "useradd --badname -d /home/{{ item }} -U {{ item }}"
+  ansible.builtin.command: "useradd {{ badname_arg }} -d /home/{{ item }} -U {{ item }}"
   with_items:
     - 123456-fsgqa
     - fsgqa
