@@ -726,7 +726,8 @@
   set_fact:
     volname_prefix: "{{ ansible_host }}-fstests"
   when:
-    - fstests_fstyp == "nfs"
+    - fstests_fstyp == "nfs" or
+      fstests_fstyp == "cifs"
 
 - name: Create NFS export for test vol
   include_role:
