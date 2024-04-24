@@ -1,5 +1,5 @@
 ---
 nfstest_packages:
   - nfs-common
-  - python-is-python3
   - tcpdump
+  - git-core

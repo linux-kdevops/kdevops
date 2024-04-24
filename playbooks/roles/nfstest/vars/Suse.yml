@@ -2,3 +2,4 @@
 nfstest_packages:
   - nfs-utils
   - tcpdump
+  - git-core
