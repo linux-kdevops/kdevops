@@ -1,0 +1,61 @@
+---
+- name: Create an iSCSI LUN for the new export
+  vars:
+    iscsi_add_devname: "{{ export_volname }}"
+    iscsi_add_size: "{{ export_size }}"
+  ansible.builtin.include_role:
+    name: iscsi
+    tasks_from: add_lun
+
+- name: Rescan iSCSI LUNs on the NFS server
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ server_host }}"
+  community.general.open_iscsi:
+    rescan: true
+
+- name: Rescan iSCSI LUNs on the target node
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  community.general.open_iscsi:
+    rescan: true
+
+- name: Enumerate available SCSI devices on the NFS server
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ server_host }}"
+  ansible.builtin.command:
+    cmd: "lsblk -Snp -o MODEL,NAME"
+  register: lsblk_output
+  changed_when: false
+
+- name: Select the device that matches {{ export_volname }}
+  ansible.builtin.set_fact:
+    iscsi_device: "{{ item | split() | last }}"
+  loop: "{{ lsblk_output.stdout_lines }}"
+  when: export_volname in item
+
+- name: Format new iSCSI LUN for {{ export_fstype }}
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ server_host }}"
+  community.general.filesystem:
+    fstype: "{{ export_fstype }}"
+    dev: "{{ iscsi_device }}"
+
+- name: Mount iSCSI LUN under {{ nfsd_export_path }}
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ server_host }}"
+  throttle: 1  # running this in parallel can clobber fstab changes
+  ansible.posix.mount:
+    path: "{{ nfsd_export_path }}/{{ export_volname }}"
+    src: "{{ iscsi_device }}"
+    fstype: "{{ export_fstype }}"
+    opts: "_netdev"
+    state: mounted

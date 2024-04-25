@@ -1,7 +1,15 @@
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_NFSD))
 
+ifeq (y,$(CONFIG_NFSD_EXPORT_STORAGE_LOCAL))
+NFSD_EXTRA_ARGS += nfsd_export_storage_local=true
 NFSD_EXTRA_ARGS += nfsd_export_device_prefix='$(subst ",,$(CONFIG_NFSD_EXPORT_DEVICE_PREFIX))'
 NFSD_EXTRA_ARGS += nfsd_export_device_count='$(subst ",,$(CONFIG_NFSD_EXPORT_DEVICE_COUNT))'
+endif
+
+ifeq (y,$(CONFIG_NFSD_EXPORT_STORAGE_ISCSI))
+NFSD_EXTRA_ARGS += nfsd_export_storage_iscsi=true
+endif
+
 NFSD_EXTRA_ARGS += nfsd_export_fstype='$(subst ",,$(CONFIG_NFSD_EXPORT_FSTYPE))'
 NFSD_EXTRA_ARGS += nfsd_export_path='$(subst ",,$(CONFIG_NFSD_EXPORT_PATH))'
 NFSD_EXTRA_ARGS += nfsd_threads=$(CONFIG_NFSD_THREADS)

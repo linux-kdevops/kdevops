@@ -3,6 +3,14 @@
   ansible.builtin.include_tasks:
     file: storage/local.yml
   when:
+    - nfsd_export_storage_local|bool
+    - export_fstype != "tmpfs"
+
+- name: Add an iSCSI LUN for the new export
+  ansible.builtin.include_tasks:
+    file: storage/iscsi.yml
+  when:
+    - nfsd_export_storage_iscsi|bool
     - export_fstype != "tmpfs"
 
 - name: Add a tmpfs for the new export

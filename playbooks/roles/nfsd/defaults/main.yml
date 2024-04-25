@@ -8,4 +8,7 @@ nfsd_export_label: "export"
 nfsd_export_fs_opts: ""
 nfsd_lease_time: "90"
 
+nfsd_export_storage_local: false
+nfsd_export_storage_iscsi: false
+
 kdevops_krb5_enable: false
