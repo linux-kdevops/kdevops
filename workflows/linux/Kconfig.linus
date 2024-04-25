@@ -25,7 +25,7 @@ if BOOTLINUX_TREE_LINUS
 
 choice
 	prompt "Linus' tag or branch to use"
-	default BOOTLINUX_LINUS_69_RC4
+	default BOOTLINUX_LINUS_69_RC5
 
 config BOOTLINUX_LINUS_MASTER
 	bool "master"
@@ -62,6 +62,11 @@ config BOOTLINUX_LINUS_69_RC4
 	help
 	  Use the v6.9-rc4 tag.
 
+config BOOTLINUX_LINUS_69_RC5
+	bool "v6.9-rc5"
+	help
+	  Use the v6.9-rc5 tag.
+
 endchoice
 
 config BOOTLINUX_TREE_LINUS_TAG
@@ -73,6 +78,7 @@ config BOOTLINUX_TREE_LINUS_TAG
 	default "v6.8-rc2" if BOOTLINUX_LINUS_68_RC2
 	default "v6.9-rc2" if BOOTLINUX_LINUS_69_RC2
 	default "v6.9-rc4" if BOOTLINUX_LINUS_69_RC4
+	default "v6.9-rc5" if BOOTLINUX_LINUS_69_RC5
 
 config BOOTLINUX_TREE_LINUS_NAME
 	string
