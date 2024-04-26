@@ -157,6 +157,10 @@ ifeq (y,$(CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE))
 FSTESTS_BASELINE_EXTRA += journal-ln
 endif
 
+ifneq (,$(COUNT))
+DYNAMIC_RUNTIME_VARS += , "oscheck_extra_args": "-I $(COUNT)"
+endif
+
 fstests: $(FSTESTS_BASELINE_EXTRA)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l localhost,baseline,dev \
 		-f 30 -i hosts playbooks/fstests.yml --skip-tags run_tests,copy_results $(LIMIT_HOSTS)
