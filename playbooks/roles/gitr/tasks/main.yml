@@ -87,7 +87,7 @@
 - name: Set the export pathname
   tags: gitr
   ansible.builtin.set_fact:
-    gitr_nfs_server_export: "{{ ansible_host }}-gitr"
+    gitr_nfs_server_export: "{{ gitr_test_group }}-gitr"
   when:
     - gitr_nfs_use_kdevops_nfsd|bool
     - gitr_fstype == "nfs"

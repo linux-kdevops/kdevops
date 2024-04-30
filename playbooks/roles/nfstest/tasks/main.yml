@@ -53,9 +53,14 @@
     state: absent
   tags: nfstest
 
+- name: Set the test group for the target node
+  ansible.builtin.set_fact:
+    nfstest_test_group: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
+  tags: vars
+
 - name: Set the name of the NFS export for the test group
   ansible.builtin.set_fact:
-    nfstest_nfs_server_export: "nfstest-{{ ansible_host }}"
+    nfstest_nfs_server_export: "nfs-{{ nfstest_test_group }}"
   when:
     - nfstest_nfs_use_kdevops_nfsd|bool
   tags: vars
@@ -114,15 +119,6 @@
   when:
     - not kdevops_workflows_dedicated_workflow|bool
   tags: nfstest
-
-- name: Set the test group for the target node
-  ansible.builtin.set_fact:
-    nfstest_test_group: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
-  when:
-    - kdevops_workflows_dedicated_workflow|bool
-  tags:
-    - run_tests
-    - copy_results
 
 - name: Copy the test group script to the target node
   ansible.builtin.template:

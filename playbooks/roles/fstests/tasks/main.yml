@@ -724,7 +724,7 @@
 - name: Set the export volname prefix
   tags: vars
   set_fact:
-    volname_prefix: "{{ ansible_host }}-fstests"
+    volname_prefix: "{{ ansible_host|regex_replace(kdevops_host_prefix + '-') }}-fs"
   when:
     - fstests_fstyp == "nfs" or
       fstests_fstyp == "cifs"

@@ -80,7 +80,7 @@
   tags: [ 'vars' ]
   set_fact:
     nfsd_hostname: "{{ kdevops_host_prefix }}-nfsd"
-    volname_base: "{{ ansible_host }}-pynfs"
+    volname_base: "pynfs"
 
 - name: Create an export for NFSv4.0 testing
   tags: [ 'pynfs' ]
