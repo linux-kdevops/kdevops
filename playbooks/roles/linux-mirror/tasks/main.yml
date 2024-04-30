@@ -10,6 +10,11 @@
       skip: true
   tags: vars
 
+- name: Install dependencies for the linux-mirror role
+  ansible.builtin.include_tasks: install-deps/fedora/main.yml
+  when:
+    - ansible_distribution == 'Fedora'
+
 - name: Set up the mirrors.yaml based on preferences configured
   tags: [ 'mirror' ]
   template:

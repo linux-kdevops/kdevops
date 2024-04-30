@@ -1,0 +1,24 @@
+---
+- name: Install Fedora-specific dependencies
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - git-daemon
+    state: present
+  when:
+    - install_linux_mirror|bool
+
+- name: Open the firewall on control node for git traffic
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.posix.firewalld:
+    zone: libvirt
+    port: 9418/tcp
+    permanent: true
+    immediate: true
+    state: enabled
+  when:
+    - install_linux_mirror|bool
