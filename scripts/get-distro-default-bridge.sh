@@ -9,7 +9,7 @@ VIRT_TYPE=$2
 # a different deafult it should be easy for you to extend it here.
 
 if [[ "$VIRT_TYPE" == "vagrant" ]]; then
-	echo "http://192.168.124.1"
+	echo "192.168.124.1"
 else
 	echo "192.168.122.1"
 fi
