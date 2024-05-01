@@ -65,7 +65,22 @@
     path: "{{ ltp_build_dir }}"
     state: absent
 
-- name: Clone the ltp source code from {{ ltp_repo }}
+- name: Shallow-clone the ltp source code from {{ ltp_repo }}
+  tags: ['build', 'clone', 'git', 'ltp']
+  ansible.builtin.git:
+    repo: "{{ ltp_repo }}"
+    dest: "{{ ltp_build_dir }}"
+    version: "{{ ltp_repo_commit }}"
+    update: true
+    depth: 1
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+
+- name: Clone the full ltp source code tree from {{ ltp_repo }}
   tags: ['build', 'clone', 'git', 'ltp']
   ansible.builtin.git:
     repo: "{{ ltp_repo }}"
@@ -76,6 +91,8 @@
   delay: 5
   register: result
   until: not result.failed
+  when:
+    - not kdevops_workflows_dedicated_workflow|bool
 
 - name: Initialize autotools in the build directory
   tags: ['build', 'ltp']

@@ -41,7 +41,22 @@
     path: "{{ pynfs_data }}"
     state: absent
 
-- name: git clone pynfs
+- name: Shallow-clone the pynfs source code from {{ pynfs_git }}
+  tags: [ 'git', 'pynfs' ]
+  git:
+    repo: "{{ pynfs_git }}"
+    dest: "{{ pynfs_data }}"
+    update: yes
+    version: "{{ pynfs_git_tag }}"
+    depth: 1
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+
+- name: Clone the full pynfs source code tree from {{ pynfs_git }}
   tags: [ 'git', 'pynfs' ]
   git:
     repo: "{{ pynfs_git }}"
@@ -52,6 +67,8 @@
   delay: 5
   register: result
   until: not result.failed
+  when:
+    - not kdevops_workflows_dedicated_workflow|bool
 
 - name: Build pynfs
   tags: [ 'pynfs' ]

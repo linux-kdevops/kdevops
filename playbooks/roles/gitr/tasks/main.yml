@@ -149,7 +149,22 @@
     path: "{{ gitr_mnt }}/git"
     state: absent
 
-- name: Clone the git source code from {{ gitr_repo }}
+- name: Shallow-clone the git source code from {{ gitr_repo }}
+  tags: gitr
+  ansible.builtin.git:
+    repo: "{{ gitr_repo }}"
+    dest: "{{ gitr_mnt }}/git"
+    update: true
+    version: "{{ gitr_repo_commit }}"
+    depth: 1
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+
+- name: Clone the full git source code tree from {{ gitr_repo }}
   tags: gitr
   ansible.builtin.git:
     repo: "{{ gitr_repo }}"
@@ -160,6 +175,8 @@
   delay: 5
   register: result
   until: not result.failed
+  when:
+    - not kdevops_workflows_dedicated_workflow|bool
 
 - name: Build git on the target nodes
   tags: ['gitr', 'build']

@@ -85,16 +85,34 @@
     mode: "u=rwx,g=rwx,o=rwx"
   tags: nfstest
 
-- name: Clone the nfstest source code from {{ nfstest_repo }}
+- name: Shallow-clone the nfstest source code from {{ nfstest_repo }}
   ansible.builtin.git:
     repo: "{{ nfstest_repo }}"
     dest: "{{ nfstest_install_dir }}"
     version: "{{ nfstest_repo_commit }}"
+    depth: 1
     update: true
   retries: 3
   delay: 5
   register: clone_result
   until: not clone_result.failed
+  when:
+    - kdevops_workflows_dedicated_workflow|bool
+  tags: nfstest
+
+- name: Clone the full nfstest source code tree from {{ nfstest_repo }}
+  ansible.builtin.git:
+    repo: "{{ nfstest_repo }}"
+    dest: "{{ nfstest_install_dir }}"
+    version: "{{ nfstest_repo_commit }}"
+    depth: 1
+    update: true
+  retries: 3
+  delay: 5
+  register: clone_result
+  until: not clone_result.failed
+  when:
+    - not kdevops_workflows_dedicated_workflow|bool
   tags: nfstest
 
 - name: Set the test group for the target node
