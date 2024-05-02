@@ -106,6 +106,7 @@ endif # CONFIG_WORKFLOWS
 
 include scripts/rdma.Makefile
 include scripts/ktls.Makefile
+include scripts/iscsi.Makefile
 include scripts/nfsd.Makefile
 include scripts/smbd.Makefile
 include scripts/krb5.Makefile

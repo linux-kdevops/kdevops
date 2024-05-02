@@ -1,0 +1,5 @@
+---
+iscsi_target_packages:
+  - lvm2
+  - targetcli-fb
+  - sg3_utils

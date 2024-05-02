@@ -1,0 +1,6 @@
+---
+# Our sensible defaults for the iscsi role.
+iscsi_target_hostname: "{{ kdevops_host_prefix }}-iscsi"
+iscsi_target_pv_prefix: ""
+iscsi_target_pv_count: 0
+iscsi_target_vg_name: "iscsi_luns"

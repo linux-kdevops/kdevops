@@ -1,0 +1,44 @@
+# FIXME: need defaults for terraform hosts
+menuconfig KDEVOPS_ENABLE_ISCSI
+	bool "Set up an iSCSI target host"
+	default n
+	help
+	  Provision an additional target node as an iSCSI target.
+
+	  If you do not know what this means, say N.
+
+if KDEVOPS_ENABLE_ISCSI
+
+config ISCSI_TARGET_WWN
+	string "iSCSI target WWN"
+	default "iqn.2024-04.local.kdevops.nfsd:sn.34d73f601a65"
+	help
+	  This option specifies the World Wide Name (WWN) to be used
+	  when creating the iSCSI target on the NFS server.
+
+	  If you do not know what this means, the default is safe
+	  to use.
+
+config ISCSI_TARGET_PV_PREFIX
+	string "Prefix to use for iSCSI target LVM physical volume names"
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default ""
+	help
+	  This string is the prefix for LVM physical volume names.
+
+	  If you do not know what this means, the default is safe
+	  to use.
+
+config ISCSI_TARGET_PV_COUNT
+	int "Number of devices to add as LVM physical volumes"
+	default 3 if LIBVIRT
+	help
+	  The number of physical devices on the iSCSI target node to
+	  dedicate as LVM physical volumes.
+
+	  If you do not know what this means, the default is safe
+	  to use.
+
+endif

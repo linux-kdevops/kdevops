@@ -1,0 +1,58 @@
+---
+- name: Set OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+
+- name: Install dependencies for iSCSI initiator
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name: "{{ iscsi_initiator_packages }}"
+    state: present
+
+- name: Discover iSCSI targets and login
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  community.general.open_iscsi:
+    portal: "{{ iscsi_target_hostname }}"
+    show_nodes: true
+    discover: true
+    login: true
+
+- name: Get the target node's iSCSI initiator name
+  ansible.builtin.slurp:
+    src: /etc/iscsi/initiatorname.iscsi
+  register: initiator_name
+
+- name: Add an ACL on the iSCSI target for {{ initiator_name['content'] | b64decode | replace('InitiatorName=', '') }}
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  ansible.builtin.command:
+    argv:
+      - "targetcli"
+      - "iscsi/{{ iscsi_target_wwn }}/tpg1/acls/"
+      - "create"
+      - "{{ initiator_name['content'] | b64decode | replace('InitiatorName=', '') }}"
+  register: create_acl
+  changed_when: create_acl.rc == 0
+  failed_when: create_acl.rc != 0 and create_acl.rc != 1
+
+- name: Back up the iSCSI target configuration
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  ansible.builtin.command:
+    cmd: "targetctl save"
+  changed_when: true

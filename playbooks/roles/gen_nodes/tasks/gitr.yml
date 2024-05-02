@@ -16,6 +16,12 @@
   when:
     - kdevops_nfsd_enable|bool
 
+- name: Add an iSCSI target to the enabled nodes list
+  ansible.builtin.set_fact:
+    gitr_enabled_nodes: "{{ gitr_enabled_nodes + ['iscsi'] }}"
+  when:
+    - kdevops_enable_iscsi|bool
+
 - name: Generate the kdevops nodes file using {{ kdevops_nodes_template }}
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"

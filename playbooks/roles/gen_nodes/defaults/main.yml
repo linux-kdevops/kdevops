@@ -17,6 +17,7 @@ kdevops_workflow_enable_selftests: False
 kdevops_nfsd_enable: False
 kdevops_smbd_enable: False
 kdevops_krb5_enable: False
+kdevops_enable_iscsi: false
 
 virtualbox_provider: False
 libvirt_provider: False
@@ -84,6 +85,8 @@ libvirt_largeio_pow_limit: 12
 kdevops_workflows_dedicated_workflow: False
 kdevops_workflow_enable_fstests: False
 kdevops_workflow_enable_blktests: False
+
+iscsi_nodes: []
 
 is_fstests: False
 fstests_fstyp: "bogus"

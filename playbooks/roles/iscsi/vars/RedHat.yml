@@ -1,0 +1,9 @@
+---
+iscsi_target_packages:
+  - lvm2
+  - targetcli
+  - sg3_utils
+
+iscsi_initiator_packages:
+  - iscsi-initiator-utils
+  - libiscsi-utils

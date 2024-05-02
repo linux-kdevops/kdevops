@@ -43,6 +43,18 @@
   when:
     - kdevops_baseline_and_dev
 
+- name: Set iscsi_nodes list
+  ansible.builtin.set_fact:
+    iscsi_nodes: "{{ [kdevops_host_prefix + '-iscsi'] }}"
+  when:
+    - kdevops_enable_iscsi|bool
+
+- name: Add an iSCSI target
+  ansible.builtin.set_fact:
+    generic_nodes: "{{ generic_nodes + iscsi_nodes }}"
+  when:
+    - kdevops_enable_iscsi|bool
+
 - name: Set nfsd_nodes list
   set_fact:
     nfsd_nodes: "{{ [ kdevops_host_prefix + '-nfsd' ] }}"
@@ -130,7 +142,7 @@
   tags: [ 'nodes' ]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
-    all_generic_nodes: "{{ nfsd_nodes }}"
+    all_generic_nodes: "{{ nfsd_nodes + iscsi_nodes }}"
     nodes: "{{ all_generic_nodes }}"
   template:
     src: "{{ node_template }}"
@@ -262,6 +274,13 @@
   when:
     - is_fstests|bool
     - kdevops_smbd_enable|bool
+
+- name: Add an iSCSI target if one was selected
+  ansible.builtin.set_fact:
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + iscsi_nodes }}"
+  when:
+    - is_fstests|bool
+    - kdevops_enable_iscsi|bool
 
 - name: Add the KRB5 KDC if one was selected
   set_fact:

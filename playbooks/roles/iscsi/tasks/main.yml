@@ -1,0 +1,117 @@
+---
+- name: Set OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+
+- name: Install dependencies for iSCSI target
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name: "{{ iscsi_target_packages }}"
+    state: present
+
+- name: Initialize the list of local physical volumes
+  ansible.builtin.set_fact:
+    iscsi_lvm_pvs: []
+
+- name: Expand the list of local physical volumes
+  ansible.builtin.set_fact:
+    iscsi_lvm_pvs: "{{ iscsi_lvm_pvs + [iscsi_target_pv_prefix + item | string] }}"
+  with_items: "{{ range(1, iscsi_target_pv_count + 1) }}"
+  loop_control:
+    label: "Adding {{ iscsi_target_pv_prefix + item | string }} ..."
+
+- name: Create LVM volume group {{ iscsi_target_vg_name }}
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  community.general.lvg:
+    vg: "{{ iscsi_target_vg_name }}"
+    pvs: "{{ iscsi_lvm_pvs | join(',') }}"
+
+- name: Create a directory for storing iSCSI persistent reservations
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "/etc/target/pr"
+    state: directory
+    mode: "u=rwx"
+
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Disable firewalld
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd_service:
+    name: firewalld.service
+    state: stopped
+    enabled: false
+  when: '"firewalld.service" in ansible_facts.services'
+
+- name: Enable the systemd iSCSI service
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd_service:
+    name: target.service
+    state: started
+    enabled: true
+
+- name: Enable targetcli auto_save_on_exit
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "targetcli set global auto_save_on_exit=true"
+  register: autosave_enabled
+  changed_when: "'is now' in autosave_enabled.stdout"
+  failed_when: autosave_enabled.rc != 0
+
+- name: Create iSCSI target {{ iscsi_target_wwn }}
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "targetcli iscsi/ create {{ iscsi_target_wwn }}"
+  register: target_created
+  changed_when: target_created.rc == 0
+  failed_when: target_created.rc != 0 and target_created.rc != 1
+
+- name: Enable the target's generate_node_acls attribute
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "targetcli iscsi/{{ iscsi_target_wwn }}/tpg1 set attribute generate_node_acls=1"
+  register: node_acls
+  changed_when: "'is now' in node_acls.stdout"
+  failed_when: node_acls.rc != 0
+
+- name: Disable initiator authentication
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "targetcli iscsi/{{ iscsi_target_wwn }}/tpg1 set attribute authentication=0"
+  register: init_auth
+  changed_when: "'is now' in init_auth.stdout"
+  failed_when: init_auth.rc != 0
+
+- name: Back up the iSCSI target configuration
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "targetctl save"
+  changed_when: true

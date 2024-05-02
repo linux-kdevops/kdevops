@@ -123,3 +123,4 @@ config KDEVOPS_SETUP_KTLS
 source "kconfigs/Kconfig.nfsd"
 source "kconfigs/Kconfig.smbd"
 source "kconfigs/Kconfig.krb5"
+source "kconfigs/Kconfig.iscsi"

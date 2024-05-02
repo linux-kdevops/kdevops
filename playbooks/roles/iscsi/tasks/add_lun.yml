@@ -1,0 +1,50 @@
+---
+- name: Allocate an LVM logical device on the iSCSI target
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  community.general.lvol:
+    vg: "{{ iscsi_target_vg_name }}"
+    lv: "{{ iscsi_add_devname }}"
+    size: "{{ iscsi_add_size }}"
+
+- name: Create an iSCSI backstore for the new device
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  ansible.builtin.command:
+    argv:
+      - "targetcli"
+      - "backstores/block/"
+      - "create"
+      - "name={{ iscsi_add_devname }}"
+      - "dev=/dev/{{ iscsi_target_vg_name }}/{{ iscsi_add_devname }}"
+  register: create_backstore
+  changed_when: create_backstore.rc == 0
+  failed_when: create_backstore.rc != 0 and create_backstore.rc != 1
+
+- name: Create the new Logical Unit
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  ansible.builtin.command:
+    argv:
+      - "targetcli"
+      - "iscsi/{{ iscsi_target_wwn }}/tpg1/luns/"
+      - "create"
+      - "/backstores/block/{{ iscsi_add_devname }}"
+  register: create_lun
+  changed_when: create_lun.rc == 0
+  failed_when: create_lun.rc != 0 and create_lun.rc != 1
+
+- name: Back up the iSCSI target configuration
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  delegate_to: "{{ iscsi_target_hostname }}"
+  ansible.builtin.command:
+    cmd: "targetctl save"
+  changed_when: true
