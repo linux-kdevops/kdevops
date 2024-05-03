@@ -51,6 +51,13 @@
     name: "{{ gitr_packages }}"
     state: present
 
+- name: Set up an iSCSI initiator on the target node
+  ansible.builtin.include_role:
+    name: iscsi
+    tasks_from: add_initiator
+  when:
+    - gitr_nfs_pnfs_block_enable|bool
+
 - name: Remove the old test file system
   tags: gitr
   become: true

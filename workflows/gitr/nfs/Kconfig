@@ -30,6 +30,13 @@ config GITR_NFS_MOUNT_OPTS
 	  The mount options to use when mounting the file system
 	  under test.
 
+config GITR_NFS_PNFS_BLOCK_ENABLE
+	bool "Run tests with pNFS block"
+	default n
+	help
+	  Select this option to install dependencies needed to use
+	  pNFS block layouts when testing.
+
 if KDEVOPS_WORKFLOW_DEDICATE_GITR
 
 config GITR_NFS_SECTION_RDMA
