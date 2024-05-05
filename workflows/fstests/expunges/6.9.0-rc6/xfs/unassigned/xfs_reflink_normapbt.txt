@@ -18,6 +18,7 @@ xfs/033
 xfs/051 # F:1/11
 xfs/057 # Hung task https://gist.github.com/Panky-codes/5da03618792c10e0047d85f20004e000
 xfs/075
+xfs/155
 xfs/168 # SOAK_DURATION=9900 https://gist.github.com/mcgrof/eaa0567bf0d07726f89021231fd6616c
 xfs/188
 xfs/242 # F:1/15
