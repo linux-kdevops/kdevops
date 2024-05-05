@@ -123,9 +123,9 @@ endchoice
 
 config MIRROR_TORVALDS_URL
 	string
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git" if MIRROR_TORVALDS_GIT
-	default "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git" if MIRROR_TORVALDS_HTTPS
-	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux.git" if MIRROR_TORVALDS_HTTPS_GOOGLE
+	default DEFAULT_TORVALDS_GIT_URL if MIRROR_TORVALDS_GIT
+	default DEFAULT_TORVALDS_HTTPS_URL if MIRROR_TORVALDS_HTTPS
+	default DEFAULT_TORVALDS_HTTPS_GOOGLE_URL if MIRROR_TORVALDS_HTTPS_GOOGLE
 
 choice
 	prompt "Linux kdevops's linux fork protocol/source"

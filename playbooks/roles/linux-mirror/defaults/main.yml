@@ -17,3 +17,4 @@ defaults_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
 # not use git and instead https incase of firewall restrictions in some
 # environments.
 mirror_kdevops_url: "https://github.com/linux-kdevops/kdevops.git"
+mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
