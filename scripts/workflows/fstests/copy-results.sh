@@ -97,4 +97,4 @@ SHORT_DIR="${GIT_RESULTS_ARCHIVE#workflows/}"
 git add $SHORT_DIR
 echo Now just run:
 echo "cd $GIT_RESULTS_ARCHIVE"
-echo "git commit -a -s
+echo "git commit -a -s"
