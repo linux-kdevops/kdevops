@@ -12,6 +12,14 @@ config DEFAULT_GIT_URL
 	string
 	default "https://git.kernel.org/pub/scm/git/git.git"
 
+config DEFAULT_KDEVOPS_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/linux-kdevops/kdevops.git"
+
+config DEFAULT_KDEVOPS_GITLAB_HTTPS_URL
+	string
+	default "https://gitlab.com/linux-kdevops/kdevops.git"
+
 config DEFAULT_LTP_URL
 	string
 	default "https://github.com/linux-test-project/ltp.git"

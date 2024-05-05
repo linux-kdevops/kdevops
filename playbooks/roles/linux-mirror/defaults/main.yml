@@ -11,3 +11,9 @@ defaults_ltp_git: "https://github.com/linux-test-project/ltp.git"
 defaults_nfstest_git: "git://git.linux-nfs.org/projects/mora/nfstest.git"
 defaults_xfsprogs_git: "https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git"
 defaults_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
+
+# These are mirrors which have variability support, the above should be coverted
+# to these types so to support alternatives for sources and also the ability to
+# not use git and instead https incase of firewall restrictions in some
+# environments.
+mirror_kdevops_url: "https://github.com/linux-kdevops/kdevops.git"

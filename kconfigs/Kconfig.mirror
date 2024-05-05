@@ -85,8 +85,8 @@ endchoice
 
 config MIRROR_KDEVOPS_URL
 	string
-	default "https://github.com/linux-kdevops/kdevops.git" if MIRROR_KDEVOPS_HTTPS_GITHUB
-	default "https://gitlab.com/linux-kdevops/kdevops.git" if MIRROR_KDEVOPS_HTTPS_GITLAB
+	default DEFAULT_KDEVOPS_GITHUB_HTTPS_URL if MIRROR_KDEVOPS_HTTPS_GITHUB
+	default DEFAULT_KDEVOPS_GITLAB_HTTPS_URL if MIRROR_KDEVOPS_HTTPS_GITLAB
 
 choice
 	prompt "Linux mirror protocol"
