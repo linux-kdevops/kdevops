@@ -92,5 +92,9 @@ echo cp .config $MY_DIR/kdevops.config
 mkdir -p $MY_DIR
 cp $RESULTS_TARBALL $MY_DIR
 cp .config $MY_DIR/kdevops.config
-git add $MY_DIR
-echo Now just run: git commit -a -s
+cd $GIT_RESULTS_ARCHIVE
+SHORT_DIR="${GIT_RESULTS_ARCHIVE#workflows/}"
+git add $SHORT_DIR
+echo Now just run:
+echo "cd $GIT_RESULTS_ARCHIVE"
+echo "git commit -a -s
