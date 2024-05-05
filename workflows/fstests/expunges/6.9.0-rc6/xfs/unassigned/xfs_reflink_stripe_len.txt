@@ -14,10 +14,13 @@ generic/645
 generic/648 # https://gist.githubusercontent.com/dagmcr/447a5030dde1f91206604f1b8ee9d2a5/raw/6c8568284b6c5c05920a132c73c67fd86dcbe6f8/gistfile1.txt
 generic/670
 generic/682 # F:1/20
-xfs/033
+xfs/010
 xfs/013 # F:1/2 korg#218226 xfs assert fs/xfs/xfs_message.c:102
+xfs/033
+xfs/042
 xfs/051 # F:1/11
 xfs/075
+xfs/109
 xfs/168 # Hung task F:1/9 https://gist.github.com/mcgrof/2bd41f7fafd901507fe4b479c4d9a82f
 xfs/188
 xfs/242 # F:1/6
@@ -28,3 +31,4 @@ xfs/513
 xfs/559
 xfs/597
 xfs/598
+xfs/600
