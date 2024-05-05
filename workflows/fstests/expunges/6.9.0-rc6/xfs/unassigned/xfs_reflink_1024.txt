@@ -11,6 +11,7 @@ generic/670 # F:1/6
 generic/682 # F:1/20
 xfs/008
 xfs/009
+xfs/033 # F:1/10
 xfs/051 # F:1/11
 xfs/075
 xfs/155
