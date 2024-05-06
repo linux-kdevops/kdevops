@@ -12,6 +12,10 @@ config DISTRO_DEBIAN_TRIXIE
 	bool
 	default $(shell, scripts/os-debian-version.sh trixie)
 
+config DISTRO_DEBIAN_HAS_HOP1_SOURCES
+	bool
+	default $(shell, scripts/get-distro-has-hop-count-sources.sh 1)
+
 endif
 
 config DISTRO_FEDORA

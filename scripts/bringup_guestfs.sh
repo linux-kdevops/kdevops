@@ -156,6 +156,15 @@ build_custom_image()
 	# just build $virt-builder, which is the pristine upstream image.
 }
 
+copy_host_sources()
+{
+	TARGET_DIR="$(dirname $CONFIG_GUESTFS_DISTRO_SOURCE_AND_DEST_FILE)"
+	cat <<_EOT >>$cmdfile
+mkdir $TARGET_DIR
+copy-in $CONFIG_GUESTFS_DISTRO_SOURCE_AND_DEST_FILE:$TARGET_DIR
+_EOT
+}
+
 mkdir -p $STORAGEDIR
 mkdir -p $BASE_IMAGE_DIR
 
@@ -186,6 +195,10 @@ _EOT
 		cat <<_EOT >>$cmdfile
 copy-in $CONFIG_KDEVOPS_CUSTOM_YUM_REPOFILE:/etc/yum.repos.d
 _EOT
+	fi
+
+	if [[ "$CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST" == "y" ]]; then
+		copy_host_sources
 	fi
 
 # basic pre-install customization
