@@ -31,6 +31,14 @@ config GUESTFS_DEBIAN
 
 endchoice
 
+if GUESTFS_DEBIAN
+
+config GUESTFS_DEBIAN_BOX_SHORT
+        string
+        default "debian12" if GUESTFS_DEBIAN
+
+endif # GUESTFS_DEBIAN
+
 config VIRT_BUILDER_OS_VERSION
        string "virt-builder os-version"
        default "fedora-39" if GUESTFS_FEDORA
@@ -40,13 +48,5 @@ config VIRT_BUILDER_OS_VERSION
          build a root image for the guest. Run "virt-builder -l"
          to get a list of operating systems and versions supported
          by guestfs.
-
-if GUESTFS_DEBIAN
-
-config GUESTFS_DEBIAN_BOX_SHORT
-        string
-        default "debian12" if GUESTFS_DEBIAN
-
-endif
 
 endif # GUESTFS
