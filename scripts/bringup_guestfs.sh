@@ -189,6 +189,18 @@ copy-in $CONFIG_GUESTFS_DISTRO_SOURCE_AND_DEST_FILE:$TARGET_DIR
 _EOT
 }
 
+pre_install_customizations()
+{
+	cat <<_EOT >>$cmdfile
+install sudo,qemu-guest-agent,python3,bash
+run-command useradd -m kdevops -s /bin/bash
+append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
+edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
+run-command /usr/sbin/update-grub2
+root-password password:kdevops
+_EOT
+}
+
 mkdir -p $STORAGEDIR
 mkdir -p $BASE_IMAGE_DIR
 
@@ -218,15 +230,7 @@ if [ ! -f $BASE_IMAGE ]; then
 		copy_host_sources
 	fi
 
-# basic pre-install customization
-	cat <<_EOT >>$cmdfile
-install sudo,qemu-guest-agent,python3,bash
-run-command useradd -m kdevops -s /bin/bash
-append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
-edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
-run-command /usr/sbin/update-grub2
-root-password password:kdevops
-_EOT
+	pre_install_customizations
 
 	if [ $DO_UNREG -ne 0 ]; then
 		handle_rhel_unreg
