@@ -201,6 +201,19 @@ root-password password:kdevops
 _EOT
 }
 
+# Ugh, debian has to be told to bring up the network and regenerate ssh keys
+# Hope we get that interface name right!
+debian_pre_install_hacks()
+{
+	cat <<_EOT >>$cmdfile
+mkdir /etc/network/interfaces.d/
+append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
+append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
+append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
+firstboot-command dpkg-reconfigure openssh-server
+_EOT
+}
+
 mkdir -p $STORAGEDIR
 mkdir -p $BASE_IMAGE_DIR
 
@@ -236,16 +249,8 @@ if [ ! -f $BASE_IMAGE ]; then
 		handle_rhel_unreg
 	fi
 
-# Ugh, debian has to be told to bring up the network and regenerate ssh keys
-# Hope we get that interface name right!
 	if echo $OS_VERSION | grep -q '^debian'; then
-		cat <<_EOT >>$cmdfile
-mkdir /etc/network/interfaces.d/
-append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
-append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
-append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
-firstboot-command dpkg-reconfigure openssh-server
-_EOT
+		debian_pre_install_hacks
 	fi
 
 	echo "Generating new base image for ${OS_VERSION}"
