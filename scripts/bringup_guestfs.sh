@@ -62,6 +62,8 @@ _EOT
 install sudo,qemu-guest-agent,python3,bash
 run-command useradd -m kdevops -s /bin/bash
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
+edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
+run-command /usr/sbin/update-grub2
 _EOT
 
 	if [ $DO_UNREG -ne 0 ]; then
