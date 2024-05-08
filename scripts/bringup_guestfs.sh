@@ -173,6 +173,13 @@ sm-unregister
 _EOT
 }
 
+copy_yum_repo()
+{
+	cat <<_EOT >>$cmdfile
+copy-in $CONFIG_KDEVOPS_CUSTOM_YUM_REPOFILE:/etc/yum.repos.d
+_EOT
+}
+
 copy_host_sources()
 {
 	TARGET_DIR="$(dirname $CONFIG_GUESTFS_DISTRO_SOURCE_AND_DEST_FILE)"
@@ -204,9 +211,7 @@ if [ ! -f $BASE_IMAGE ]; then
 	fi
 
 	if [ -n "$CONFIG_KDEVOPS_CUSTOM_YUM_REPOFILE" ]; then
-		cat <<_EOT >>$cmdfile
-copy-in $CONFIG_KDEVOPS_CUSTOM_YUM_REPOFILE:/etc/yum.repos.d
-_EOT
+		copy_yum_repo
 	fi
 
 	if [[ "$CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST" == "y" ]]; then
