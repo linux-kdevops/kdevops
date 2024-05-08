@@ -1,5 +1,30 @@
 if GUESTFS
 
+config GUESTFS_HAS_CUSTOM_RAW_IMAGE
+	bool
+
+config GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
+	bool
+
+config GUESTFS_CUSTOM_RAW_IMAGE_URL
+	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE
+	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
+	string
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-generic-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-nocloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
+
+config GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
+	bool
+
+config GUESTFS_CUSTOM_RAW_IMAGE_SHA512SUMS_URL
+	string
+	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/SHA512SUMS" if GUESTFS_DEBIAN_TRIXIE
+
+config GUESTFS_HAS_CUSTOM_RAW_IMAGE_ROLLING
+	bool
+
 choice
 	prompt "Guestfs Linux distribution to use"
 	default GUESTFS_FEDORA if DISTRO_FEDORA || DISTRO_REDHAT
@@ -33,16 +58,81 @@ endchoice
 
 if GUESTFS_DEBIAN
 
+choice
+	prompt "Debian version"
+	default GUESTFS_DEBIAN_BUSTER
+
+config GUESTFS_DEBIAN_TRIXIE
+	bool "Debian 13 - Trixie"
+	select GUESTFS_HAS_CUSTOM_RAW_IMAGE
+	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
+	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
+	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_ROLLING
+	help
+	  Select this for debian trixie, debian 13. Since debian does not yet
+	  provie a virt-builder repo, we must download mock up our own URL
+	  for trixie release, as the default guestfs repo only has debian buster.
+	  We download the image for you once, and once its there we don't refresh
+	  it. We can later add support to force a refresh using the latest URL,
+	  as trixie is debian-testing and debian testing always has an new
+	  up to date image release, that is, its a rolling distribution release.
+
+	  This doesn't work yet.. it gets stuck on the grub prompt.
+
+config GUESTFS_DEBIAN_BUSTER
+	bool "Debian 12 - Buster"
+	help
+	  Select this for debian buster, debian 12.
+
+endchoice
+
+if GUESTFS_DEBIAN_TRIXIE
+
+choice
+	prompt "Debian trixie flavor"
+	default GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
+
+config GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
+	bool "debian-13-generic-amd64-daily"
+	help
+	  Should run in any environment using cloud-init, for e.g. OpenStack,
+	  DigitalOcean and also on bare metal.
+
+config GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
+	bool "debian-13-genericcloud-amd64-daily"
+	help
+	  Similar to generic. Should run in any virtualised environment. Is
+	  smaller than generic by excluding drivers for physical hardware.
+
+config GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
+	bool "debian-13-nocloud-amd64-daily"
+	help
+	  Mostly useful for testing the build process itself. Doesn't have
+	  cloud-init installed, but instead allows root login without a
+	  password.
+
+endchoice
+
+endif # GUESTFS_DEBIAN_TRIXIE
+
+config GUESTFS_DEBIAN_IMAGE_NAME
+	string
+	default "debian-13-generic-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
+	default "debian-13-genericcloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
+	default "debian-13-nocloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
+	default "debian-12" if GUESTFS_DEBIAN_BUSTER
+
 config GUESTFS_DEBIAN_BOX_SHORT
         string
-        default "debian12" if GUESTFS_DEBIAN
+        default "debian13" if GUESTFS_DEBIAN_TRIXIE
+        default "debian12" if GUESTFS_DEBIAN_BUSTER
 
 endif # GUESTFS_DEBIAN
 
 config VIRT_BUILDER_OS_VERSION
        string "virt-builder os-version"
        default "fedora-39" if GUESTFS_FEDORA
-       default "debian-12" if GUESTFS_DEBIAN
+       default GUESTFS_DEBIAN_IMAGE_NAME if GUESTFS_DEBIAN
        help
          Have virt-builder use this os-version string to
          build a root image for the guest. Run "virt-builder -l"

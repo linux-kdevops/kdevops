@@ -4,6 +4,10 @@ config DEFAULT_BLKTRACE_URL
 	string
 	default "https://git.kernel.dk/blktrace"
 
+config DEFAULT_DATE_ISO8601
+	string
+	default $(shell, date -I)
+
 config DEFAULT_DBENCH_URL
 	string
 	default "https://github.com/linux-kdevops/dbench.git"

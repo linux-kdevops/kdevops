@@ -2,6 +2,18 @@ config DISTRO_DEBIAN
 	bool
 	default $(shell, scripts/os-release-check.sh debian)
 
+if DISTRO_DEBIAN
+
+config DISTRO_DEBIAN_BUSTER
+	bool
+	default $(shell, scripts/os-debian-version.sh buster)
+
+config DISTRO_DEBIAN_TRIXIE
+	bool
+	default $(shell, scripts/os-debian-version.sh trixie)
+
+endif
+
 config DISTRO_FEDORA
 	bool
 	default $(shell, scripts/os-release-check.sh fedora)

@@ -30,8 +30,135 @@ GUESTFSDIR="${TOPDIR}/guestfs"
 OS_VERSION=${CONFIG_VIRT_BUILDER_OS_VERSION}
 BASE_IMAGE_DIR="${STORAGEDIR}/base_images"
 BASE_IMAGE="${BASE_IMAGE_DIR}/${OS_VERSION}.raw"
+
+build_custom_source()
+{
+	SOURCE_TMP=$(mktemp)
+	cat <<_EOT >$SOURCE_TMP
+[local]
+uri=file:///${CUSTOM_INDEX}
+proxy=off
+_EOT
+	sudo mv $SOURCE_TMP $CUSTOM_SOURCE
+}
+
+build_custom_index()
+{
+	cat <<_EOT >$CUSTOM_INDEX
+[$OS_VERSION]
+file=${OS_VERSION}.raw
+_EOT
+}
+
+fetch_custom_image()
+{
+	wget --directory-prefix=$CUSTOM_IMAGE_DIR $CONFIG_GUESTFS_CUSTOM_RAW_IMAGE_URL
+	if [[ $? -ne 0 ]]; then
+		echo -e "Could not download:\n$CONFIG_GUESTFS_CUSTOM_RAW_IMAGE_URL"
+		exit 1
+	fi
+}
+
+check_custom_image()
+{
+	SHA512SUMS_FILE="$(basename $CONFIG_GUESTFS_CUSTOM_RAW_IMAGE_SHA512SUMS_URL)"
+	CUSTOM_IMAGE_SHA512SUM="$CUSTOM_IMAGE_DIR/$SHA512SUMS_FILE"
+	if [[ ! -f $CUSTOM_IMAGE_SHA512SUM ]]; then
+		wget --directory-prefix=$CUSTOM_IMAGE_DIR $CONFIG_GUESTFS_CUSTOM_RAW_IMAGE_SHA512SUMS_URL
+		if [[ $? -ne 0 ]]; then
+			echo "Could not get sha512sum file: $CONFIG_GUESTFS_CUSTOM_RAW_IMAGE_SHA512SUMS_URL"
+			exit 1
+		fi
+	fi
+	echo "Checking $CUSTOM_IMAGE_DIR/$SHA512SUMS_FILE"
+
+	# This subshell let's us keep below in the current directory.
+	# sha512sum files are relative to the local directory
+	(cd $CUSTOM_IMAGE_DIR && sha512sum --ignore-missing -c $SHA512SUMS_FILE)
+	if [[ $? -ne 0 ]]; then
+		echo "Invalid SHA512SUM checksum for $CUSTOM_IMAGE as per $SHA512SUMS_FILE"
+		exit 1
+	fi
+	touch $CUSTOM_IMAGE_OK
+}
+
+# Ensure folks are not surprised. If you're using rolling distros you know what
+# you are doing. This gives us the right later to change this at will.
+#
+# In the future we can make this smoother, as we used to have it with vagrant
+# update, but for now downloading *once* for a rolling distro seems ok to start.
+# We give enough information so you can update.
+build_warn_rolling_distro()
+{
+	echo "------------------------------------------------------------------"
+	echo "This is a rolling distribution release! To upgrade just do:"
+	echo
+	echo "rm -rf ${CUSTOM_IMAGE}/*"
+	echo "rm -f  ${CUSTOM_SOURCE}"
+	echo "rm -f  ${CUSTOM_INDEX}"
+	echo
+	echo "Running guests always use their own copy. To rebuild your custom"
+	echo "base image from the custom image, also remove the base image:"
+	echo
+	echo "rm -f  ${BASE_IMAGE}"
+	echo
+	echo "This can always be done safely without affecting running guests."
+	echo "------------------------------------------------------------------"
+}
+
+build_custom_image()
+{
+	CUSTOM_IMAGE_DIR="${STORAGEDIR}/custom_images/${OS_VERSION}"
+	CUSTOM_IMAGE="${CUSTOM_IMAGE_DIR}/${OS_VERSION}.raw"
+	CUSTOM_IMAGE_OK="${CUSTOM_IMAGE_DIR}.ok"
+	CUSTOM_SOURCE="/etc/virt-builder/repos.d/kdevops-custom-images-${OS_VERSION}.conf"
+	CUSTOM_INDEX="${CUSTOM_IMAGE_DIR}/index"
+
+	mkdir -p ${CUSTOM_IMAGE_DIR}
+
+	if [[ ! -f $CUSTOM_IMAGE && "$CONFIG_GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL" == "y" ]]; then
+		fetch_custom_image
+	fi
+
+	if [[ ! -f $CUSTOM_IMAGE_OK && "$CONFIG_GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS" == "y" ]]; then
+		check_custom_image
+	fi
+
+	if [[ ! -f $CUSTOM_IMAGE ]]; then
+		echo "Custom image on path $CUSTOM_IMAGE not found"
+		exit 1
+	fi
+
+	if [[ ! -f $CUSTOM_SOURCE ]]; then
+		build_custom_source
+	fi
+
+	if [[ ! -f $CUSTOM_INDEX ]]; then
+		build_custom_index
+	fi
+
+	echo "Custom virt-builder source: $CUSTOM_SOURCE"
+	echo "Custom virt-builder index:  $CUSTOM_INDEX"
+	echo "Custom image source:        $CUSTOM_IMAGE"
+
+	if [[ "$CONFIG_GUESTFS_HAS_CUSTOM_RAW_IMAGE_ROLLING" == "y" ]]; then
+		build_warn_rolling_distro
+	fi
+
+	echo "Going to build index for $OS_VERSION ..."
+	virt-builder-repository --no-compression $CUSTOM_IMAGE_DIR
+	if [[ $? -ne 0 ]]; then
+		echo "Failed to build repository ..."
+		exit 1
+	fi
+
+	# Note, we don't build $BASE_IMAGE, virt-builder does that later. We
+	# just build $virt-builder, which is the pristine upstream image.
+}
+
 mkdir -p $STORAGEDIR
 mkdir -p $BASE_IMAGE_DIR
+
 if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
 	sudo chgrp -R $QEMU_GROUP $STORAGEDIR
 	sudo chmod -R g+rw $STORAGEDIR
@@ -41,6 +168,10 @@ fi
 cmdfile=$(mktemp)
 
 if [ ! -f $BASE_IMAGE ]; then
+	if [[ "$CONFIG_GUESTFS_HAS_CUSTOM_RAW_IMAGE" == "y" ]]; then
+		build_custom_image
+	fi
+
 	DO_UNREG=0
 	if echo $OS_VERSION | grep -q '^rhel'; then
 		if [ -n "$CONFIG_RHEL_ORG_ID" -a -n "$CONFIG_RHEL_ACTIVATION_KEY" ]; then
@@ -77,6 +208,7 @@ _EOT
 # Hope we get that interface name right!
 	if echo $OS_VERSION | grep -q '^debian'; then
 		cat <<_EOT >>$cmdfile
+mkdir /etc/network/interfaces.d/
 append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
 append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
 append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
