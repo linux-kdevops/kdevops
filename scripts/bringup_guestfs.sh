@@ -156,6 +156,23 @@ build_custom_image()
 	# just build $virt-builder, which is the pristine upstream image.
 }
 
+handle_rhel_activation()
+{
+	if [ -n "$CONFIG_RHEL_ORG_ID" -a -n "$CONFIG_RHEL_ACTIVATION_KEY" ]; then
+		DO_UNREG=1
+		cat <<_EOT >>$cmdfile
+run-command subscription-manager register --org=${CONFIG_RHEL_ORG_ID} --activationkey=${CONFIG_RHEL_ACTIVATION_KEY}
+_EOT
+	fi
+}
+
+handle_rhel_unreg()
+{
+	cat <<_EOT >>$cmdfile
+sm-unregister
+_EOT
+}
+
 copy_host_sources()
 {
 	TARGET_DIR="$(dirname $CONFIG_GUESTFS_DISTRO_SOURCE_AND_DEST_FILE)"
@@ -183,12 +200,7 @@ if [ ! -f $BASE_IMAGE ]; then
 
 	DO_UNREG=0
 	if echo $OS_VERSION | grep -q '^rhel'; then
-		if [ -n "$CONFIG_RHEL_ORG_ID" -a -n "$CONFIG_RHEL_ACTIVATION_KEY" ]; then
-			DO_UNREG=1
-			cat <<_EOT >>$cmdfile
-run-command subscription-manager register --org=${CONFIG_RHEL_ORG_ID} --activationkey=${CONFIG_RHEL_ACTIVATION_KEY}
-_EOT
-		fi
+		handle_rhel_activation
 	fi
 
 	if [ -n "$CONFIG_KDEVOPS_CUSTOM_YUM_REPOFILE" ]; then
@@ -212,9 +224,7 @@ root-password password:kdevops
 _EOT
 
 	if [ $DO_UNREG -ne 0 ]; then
-		cat <<_EOT >>$cmdfile
-sm-unregister
-_EOT
+		handle_rhel_unreg
 	fi
 
 # Ugh, debian has to be told to bring up the network and regenerate ssh keys
