@@ -191,6 +191,11 @@ _EOT
 
 pre_install_customizations()
 {
+	KDEVOPS_UID=""
+	TEST_UID=`id -u kdevops`
+	if [ $? -eq 0 ]; then
+		KDEVOPS_UID="-u ${TEST_UID}"
+	fi
 	if echo $OS_VERSION | grep -qE "^(rhel|fedora|centos)"; then
 		UPDATE_GRUB_CMD="/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
 	else
@@ -198,7 +203,7 @@ pre_install_customizations()
 	fi
 	cat <<_EOT >>$cmdfile
 install sudo,qemu-guest-agent,python3,bash
-run-command useradd -m kdevops -s /bin/bash
+run-command useradd ${KDEVOPS_UID} -s /bin/bash -m kdevops
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
 edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
 run-command $UPDATE_GRUB_CMD
