@@ -50,7 +50,7 @@ the drives can vary by type, so we have one macro by type of drive.
 				    libvirt_extra_storage_aio_cache_mode,
 				    kdevops_storage_pool_path) -%}
 <!-- These are virtio drives used for large IO experimentaiton, with LBS support -->
-{% set ns = namespace(lbs_idx=1)  %}
+{% set ns = namespace(lbs_idx=0)  %}
 {% set max_pbs = libvirt_largeio_logical_compat_size  * (2 ** libvirt_largeio_pow_limit) %}
 {% for n in range(0,libvirt_largeio_pow_limit+1) %}
 {% for x in range(0,libvirt_largeio_drives_per_space) %}
@@ -107,7 +107,7 @@ the drives can vary by type, so we have one macro by type of drive.
 				  libvirt_extra_storage_aio_cache_mode,
 				  kdevops_storage_pool_path) -%}
 <!-- These are NVMe drives used for large IO experimentaiton, with LBS support -->
-{% set ns = namespace(lbs_idx=1)  %}
+{% set ns = namespace(lbs_idx=0)  %}
 {% set max_pbs = libvirt_largeio_logical_compat_size  * (2 ** libvirt_largeio_pow_limit) %}
 {% for n in range(0,libvirt_largeio_pow_limit+1) %}
 {% for x in range(0,libvirt_largeio_drives_per_space) %}
