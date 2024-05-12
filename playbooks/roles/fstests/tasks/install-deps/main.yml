@@ -10,6 +10,9 @@
     - "{{ sparsefiles_path }}"
     - test
 
+- include_role:
+    name: pkg
+
 # tasks to install dependencies for oscheck
 - name: oscheck distribution ospecific setup
   import_tasks: tasks/install-deps/debian/main.yml

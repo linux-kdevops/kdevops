@@ -25,3 +25,5 @@ sparsefiles_path: "/media/sparse"
 sparsefiles_fstype: "xfs"
 sparsefiles_label: "sparse"
 sparsefiles_fs_opts: "-L {{ sparsefiles_label }}"
+
+pkg_libaio: "libaio1"
