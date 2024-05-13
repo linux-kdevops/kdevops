@@ -37,3 +37,5 @@ if [[ $HOP_COUNT -le $ACCEPTABLE_HOPS ]]; then
 	echo y
 	exit 0
 fi
+echo n
+exit 0
