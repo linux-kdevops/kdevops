@@ -54,6 +54,20 @@ extend-extra-args-devconfig:
 		echo "devconfig_systemd_watchdog_kexec_timeout: '$(CONFIG_KDEVOPS_DEVCONFIG_SYSTEMD_WATCHDOG_TIMEOUT_KEXEC)'" >> $(KDEVOPS_EXTRA_VARS) ;\
 	fi
 
+PHONY += devconfig
+devconfig: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i $(KDEVOPS_HOSTFILE) \
+		-l all,nfsd \
+		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)" \
+		--extra-vars '{ kdevops_cli_install: True }' \
+		$(LIMIT_HOSTS)
+
+devconfig-generic-help-menu:
+	@echo "devconfig          - Ensures generic system setup and is up to date"
+
+HELP_TARGETS+=devconfig-generic-help-menu
+
 ifeq (y,$(CONFIG_SYSCTL_TUNING))
 PHONY += sysctl-tunings
 sysctl-tunings: $(KDEVOPS_NODES)
