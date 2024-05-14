@@ -15,7 +15,12 @@ endif
 
 # Describes the Linux clone
 BOOTLINUX_ARGS	+= target_linux_git=$(TREE_URL)
+# ifeq (y,$(CONFIG_BOOTLINUX_CUSTOM_NAME))
+ifdef CONFIG_BOOTLINUX_CUSTOM_NAME
+BOOTLINUX_ARGS	+= target_linux_tree=$(CONFIG_BOOTLINUX_CUSTOM_NAME)
+else
 BOOTLINUX_ARGS	+= target_linux_tree=$(TREE_NAME)
+endif
 BOOTLINUX_ARGS	+= target_linux_tag=$(TREE_TAG)
 BOOTLINUX_ARGS	+= target_linux_config=$(TREE_CONFIG)
 BOOTLINUX_ARGS	+= target_linux_kernelrelease=$(TREE_KERNELRELEASE)
