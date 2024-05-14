@@ -3,9 +3,8 @@
   <memory unit='MiB'>{{ libvirt_mem_mb }}</memory>
   <currentMemory unit='MiB'>{{ libvirt_mem_mb }}</currentMemory>
   <vcpu placement='static'>{{ libvirt_vcpus_count }}</vcpu>
-  <os firmware='efi'>
+  <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <loader secure='yes'/>
     <boot dev='hd'/>
   </os>
   <features>
