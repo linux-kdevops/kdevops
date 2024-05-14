@@ -206,11 +206,12 @@ _EOT
 debian_pre_install_hacks()
 {
 	cat <<_EOT >>$cmdfile
+install isc-dhcp-client,ifupdown
 mkdir /etc/network/interfaces.d/
 append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
 append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
 append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
-firstboot-command dpkg-reconfigure openssh-server
+firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
 _EOT
 }
 
