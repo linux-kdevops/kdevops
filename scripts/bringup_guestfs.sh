@@ -211,7 +211,9 @@ mkdir /etc/network/interfaces.d/
 append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
 append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
 append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
+firstboot-command systemctl stop ssh
 firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
+firstboot-command systemctl start ssh
 _EOT
 }
 

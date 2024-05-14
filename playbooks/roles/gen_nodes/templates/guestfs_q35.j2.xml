@@ -3,10 +3,18 @@
   <memory unit='MiB'>{{ libvirt_mem_mb }}</memory>
   <currentMemory unit='MiB'>{{ libvirt_mem_mb }}</currentMemory>
   <vcpu placement='static'>{{ libvirt_vcpus_count }}</vcpu>
+{% if guestfs_requires_uefi %}
+  <os firmware='efi'>
+     <type arch='x86_64' machine='q35'>hvm</type>
+     <loader secure='yes'/>
+     <boot dev='hd'/>
+  </os>
+{% else %}
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
     <boot dev='hd'/>
   </os>
+{% endif %}
   <features>
     <acpi/>
     <apic/>
