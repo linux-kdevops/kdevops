@@ -189,9 +189,13 @@ config BOOTLINUX_TREE
 	default BOOTLINUX_CEL_TREE_URL if BOOTLINUX_TREE_CEL_LINUX
 	default BOOTLINUX_CUSTOM_URL if BOOTLINUX_CUSTOM
 
+config BOOTLINUX_TEST_MESSAGE_ID_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh B4_MESSAGE_ID)
+
 config BOOTLINUX_TEST_MESSAGE_ID
 	bool "Test mailing list message ID"
-	default n
+	default BOOTLINUX_TEST_MESSAGE_ID_SET_BY_CLI
 	select BOOTLINUX_TEST_MESSAGE_ID_INSTALL_B4 if BOOTLINUX_TEST_MESSAGE_ID
 	help
 	  When enabled, the b4 command from public-inbox will rebase the patches
@@ -203,7 +207,8 @@ config BOOTLINUX_TEST_MESSAGE_ID
 
 config BOOTLINUX_TEST_MESSAGE_ID_THREAD_ID
 	string "The message ID"
-	default ""
+	default $(shell, ./scripts/append-makefile-vars.sh $(B4_MESSAGE_ID)) if BOOTLINUX_TEST_MESSAGE_ID_SET_BY_CLI
+	default "" if !BOOTLINUX_TEST_MESSAGE_ID_SET_BY_CLI
 	depends on BOOTLINUX_TEST_MESSAGE_ID
 	help
 	  The message id that will be rebased on top of the baseline kernel in
