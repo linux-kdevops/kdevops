@@ -869,7 +869,7 @@ if FSTESTS_ENABLE_SOAK_DURATION
 
 choice
 	prompt "Soak duration value to use"
-	default FSTESTS_SOAK_DURATION_HIGH
+	default FSTESTS_SOAK_DURATION_LOW
 
 config FSTESTS_SOAK_DURATION_CUSTOM
 	bool "Custom"
