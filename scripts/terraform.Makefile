@@ -167,6 +167,7 @@ bringup_terraform:
 
 destroy_terraform:
 	$(Q)$(TOPDIR)/scripts/destroy_terraform.sh
+	$(Q)rm -f $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
