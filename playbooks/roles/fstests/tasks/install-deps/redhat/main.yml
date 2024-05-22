@@ -87,6 +87,7 @@
       - nfs-utils
       - liburing-devel
       - cifs-utils
+      - duperemove
 
 - name: Install xfsprogs-xfs_scrub
   become: yes
