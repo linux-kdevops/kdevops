@@ -13,6 +13,9 @@ endif # CONFIG_GITR_USE_KDEVOPS_NFSD
 
 GITR_ARGS += gitr_mount_opts='$(subst ",,$(CONFIG_GITR_NFS_MOUNT_OPTS))'
 
+ifeq (y,$(CONFIG_GITR_NFS_SECTION_RDMA))
+GITR_ENABLED_TEST_GROUPS += nfs-rdma
+endif
 ifeq (y,$(CONFIG_GITR_NFS_SECTION_V42))
 GITR_ENABLED_TEST_GROUPS += nfs-v42
 endif

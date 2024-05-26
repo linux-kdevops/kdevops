@@ -3,10 +3,12 @@
 # "test host" to "NFS version" mapping
 gitr_nfs_vers_dict:
   nfs-v3:
-    - "vers=3"
+    - "vers=3,proto=tcp"
   nfs-v40:
-    - "vers=4.0"
+    - "vers=4.0,proto=tcp"
   nfs-v41:
-    - "vers=4.1"
+    - "vers=4.1,proto=tcp"
   nfs-v42:
-    - "vers=4.2"
+    - "vers=4.2,proto=tcp"
+  nfs-rdma:
+    - "vers=4.1,proto=rdma"
