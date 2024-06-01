@@ -38,8 +38,7 @@ config GITR_NFS_SECTION_RDMA
 	help
 	  Provision a target node to run the gitr workflow on a mount
 	  using NFS/RDMA. Unless your target nodes have RDMA hardware
-	  already, you are likely to need to enable the
-	  CONFIG_KDEVOPS_SETUP_SIW option as well.
+	  already, enable one of the software RDMA options as well.
 
 config GITR_NFS_SECTION_V42
 	bool "Enable testing section: nfs_v42"
