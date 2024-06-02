@@ -1,0 +1,29 @@
+---
+- name: Include optional extra_vars
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  failed_when: false
+  tags: vars
+
+- name: Insert a udev rule to create an rxe device
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
+    src: "udev-rule.j2"
+    dest: "/usr/lib/udev/rules.d/99-rxe.rules"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: false
+
+- name: Reload the udev ruleset
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: "udevadm control --reload && udevadm trigger"
+  changed_when: true
