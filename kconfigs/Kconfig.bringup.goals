@@ -100,6 +100,16 @@ config KDEVOPS_SETUP_RDMA_SIW
 	  To use this device driver, enable the CONFIG_RDMA_SIW
 	  option in your test kernels.
 
+config KDEVOPS_SETUP_RDMA_RXE
+	bool "rxe"
+	help
+	  Provision software-emulated RDMA on target nodes via the
+	  kernel rxe.ko driver. rxe can be used with any standard
+	  Ethernet device, including virtio-net devices.
+
+	  To use this device driver, enable the CONFIG_RDMA_RXE
+	  option in your test kernels.
+
 endchoice
 
 config KDEVOPS_SETUP_KTLS
