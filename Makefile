@@ -104,7 +104,7 @@ ifeq (y,$(CONFIG_WORKFLOWS))
 include workflows/Makefile
 endif # CONFIG_WORKFLOWS
 
-include scripts/siw.Makefile
+include scripts/rdma.Makefile
 include scripts/ktls.Makefile
 include scripts/nfsd.Makefile
 include scripts/smbd.Makefile

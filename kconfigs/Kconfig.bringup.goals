@@ -77,16 +77,30 @@ config KDEVOPS_TRY_INSTALL_KDEV_TOOLS
 	  most kernel developers might prefer to have installed on target
 	  systems.
 
-config KDEVOPS_SETUP_SIW
-	bool "Configure soft iWARP on all test systems"
-	default n
+choice
+	prompt "Configure an RDMA device"
+	default KDEVOPS_SETUP_RDMA_NONE
 	help
-	  Configure software-emulated RDMA on all target hosts via the
+	  Provision an RDMA device on target nodes. The default is to
+	  provision no additional RDMA devices.
+
+config KDEVOPS_SETUP_RDMA_NONE
+	bool "none"
+	help
+	  Do not provision an additional RDMA device on target nodes.
+	  This is the default behavior.
+
+config KDEVOPS_SETUP_RDMA_SIW
+	bool "siw"
+	help
+	  Provision software-emulated RDMA on target nodes via the
 	  kernel siw.ko driver. siw can be used with any standard
 	  Ethernet device, including virtio-net devices.
 
-	  Because siw is currently not enabled in most Linux distro
-	  kernels, this option defaults to N.
+	  To use this device driver, enable the CONFIG_RDMA_SIW
+	  option in your test kernels.
+
+endchoice
 
 config KDEVOPS_SETUP_KTLS
 	bool "Configure ktls on the hosts with self-signed CA"

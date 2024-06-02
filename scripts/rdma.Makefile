@@ -1,4 +1,4 @@
-ifeq (y,$(CONFIG_KDEVOPS_SETUP_SIW))
+ifeq (y,$(CONFIG_KDEVOPS_SETUP_RDMA_SIW))
 
 siw:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --extra-vars=@./extra_vars.yaml \
