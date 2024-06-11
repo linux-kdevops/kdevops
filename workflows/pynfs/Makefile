@@ -8,6 +8,10 @@ PYNFS_ARGS += pynfs_git=$(PYNFS_GIT)
 PYNFS_GIT_TAG:=$(subst ",,$(CONFIG_PYNFS_GIT_TAG))
 PYNFS_ARGS += pynfs_git_tag=$(PYNFS_GIT_TAG)
 
+ifeq (y,$(CONFIG_PYNFS_PNFS_BLOCK))
+PYNFS_ARGS += pynfs_pnfs_block='True'
+endif # CONFIG_PYNFS_PNFS_BLOCK
+
 WORKFLOW_ARGS += $(PYNFS_ARGS)
 
 # The default is our workflow does not have kernel-ci enabled

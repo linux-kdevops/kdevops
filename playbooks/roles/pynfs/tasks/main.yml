@@ -121,6 +121,16 @@
     EXPORT_BASE: "{{ nfsd_hostname }}:{{ nfsd_export_path }}/{{ volname_base }}"
     ANSIBLE_HOST: "{{ ansible_host }}"
 
+- name: Run pynfs pNFS block tests
+  tags: [ 'run_tests' ]
+  script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs_block.sh"
+  environment:
+    PYNFS_DATA: "{{ pynfs_data }}"
+    EXPORT_BASE: "{{ nfsd_hostname }}:{{ nfsd_export_path }}/{{ volname_base }}"
+    ANSIBLE_HOST: "{{ ansible_host }}"
+  when:
+    - pynfs_pnfs_block|bool
+
 - name: Get used target kernel version
   tags: [ 'copy_results' ]
   command: "uname -r"
@@ -144,3 +154,4 @@
   with_items:
     - 4.0
     - 4.1
+    - block

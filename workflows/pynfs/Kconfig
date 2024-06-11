@@ -12,4 +12,11 @@ config PYNFS_GIT_TAG
 	help
 	  The tag, branch or sha1sum to check out.
 
+config PYNFS_PNFS_BLOCK
+	bool "Add the pNFS block tests"
+	default n
+	help
+	  Select this option to additionally run tests related to
+	  pNFS block layouts.
+
 endif # KDEVOPS_WORKFLOW_ENABLE_PYNFS
