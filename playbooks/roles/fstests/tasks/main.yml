@@ -33,7 +33,7 @@
     name: iscsi
     tasks_from: add_initiator
   when:
-    - fstests_nfs_pnfs_block_enable|bool
+    - fstests_nfs_section_pnfs|bool
 
 - include_role:
     name: common

@@ -46,12 +46,12 @@ config FSTESTS_NFS_MANUAL_COVERAGE
 
 if FSTESTS_NFS_MANUAL_COVERAGE
 
-config FSTESTS_NFS_PNFS_BLOCK_ENABLE
-	bool "Run tests with pNFS block"
+config FSTESTS_NFS_SECTION_PNFS
+	bool "Enable testing section: nfs_pnfs"
 	default n
 	help
-	  Install dependencies that are needed to test pNFS with block
-	  layouts.
+	  Enabling this will install dependencies that are needed to test
+	  pNFS with block layouts.
 
 config FSTESTS_NFS_SECTION_RDMA
 	bool "Enable testing section: nfs_rdma"

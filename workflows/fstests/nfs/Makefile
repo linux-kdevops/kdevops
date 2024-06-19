@@ -9,8 +9,8 @@ FSTESTS_ARGS += fstests_nfs_server_host='$(FSTESTS_NFS_SERVER_HOST)'
 ifeq (y,$(CONFIG_FSTESTS_NFS_SECTION_DEFAULT))
 FSTESTS_ARGS += fstests_nfs_section_default=True
 endif
-ifeq (y,$(CONFIG_FSTESTS_NFS_PNFS_BLOCK_ENABLE))
-FSTESTS_ARGS += fstests_nfs_pnfs_block_enable=True
+ifeq (y,$(CONFIG_FSTESTS_NFS_SECTION_PNFS))
+FSTESTS_ARGS += fstests_nfs_section_pnfs=True
 endif
 ifeq (y,$(CONFIG_FSTESTS_NFS_SECTION_RDMA))
 FSTESTS_ARGS += fstests_nfs_section_rdma=True
