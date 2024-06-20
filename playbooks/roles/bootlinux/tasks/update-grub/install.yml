@@ -131,13 +131,13 @@
 # is either you do the work to enhance the heuristic or live happy with the
 # assumption that grub2's default of picking the latest kernel is the best
 # option.
-- name: Try to find your target kernel's GRUB boot entry number now that the menu is flattened for {{ target_linux_tag }} using inferred KERNELRELEASE {{ kernelrelease.stdout}}
+- name: Try to find your target kernel's GRUB boot entry number now that the menu is flattened for {{ target_linux_ref }} using inferred KERNELRELEASE {{ kernelrelease.stdout}}
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
   shell: " {{ determine_default_kernel_id }} "
   vars:
-    target_kernel: "{{ target_linux_tag | replace('v', '') }}"
+    target_kernel: "{{ target_linux_ref | replace('v', '') }}"
   register: grub_boot_number_cmd
   tags: [ 'linux', 'git', 'config', 'saved' ]
   when: kernel_release_file.stat.exists
@@ -170,7 +170,7 @@
   debug:
     msg: "{{ target_kernel }} determined to be {{ target_boot_entry }} on the GRUB2 flat menu. Ran: grub-set-default {{ target_boot_entry }}"
   vars:
-    target_kernel: "{{ target_linux_tag | replace('v', '') }}"
+    target_kernel: "{{ target_linux_ref | replace('v', '') }}"
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
   tags: [ 'linux', 'git', 'config', 'saved' ]
   when:

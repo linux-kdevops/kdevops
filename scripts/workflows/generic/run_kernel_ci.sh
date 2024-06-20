@@ -50,7 +50,7 @@ kernel_ci_subject_topic()
 	if [[ "$CONFIG_KERNEL_CI_ADD_CUSTOM_SUBJECT_TOPIC" != "y" ]]; then
 		echo "kernel-ci on $(hostname)"
 	elif [[ "$CONFIG_KERNEL_CI_ADD_CUSTOM_SUBJECT_TOPIC_TAG" == "y" ]]; then
-		echo "kernel-ci on $(hostname) $CONFIG_KERNEL_CI_SUBJECT_TOPIC $CONFIG_BOOTLINUX_TREE_TAG"
+		echo "kernel-ci on $(hostname) $CONFIG_KERNEL_CI_SUBJECT_TOPIC $CONFIG_BOOTLINUX_TREE_REF"
 	else
 		echo "kernel-ci on $(hostname) $CONFIG_KERNEL_CI_SUBJECT_TOPIC"
 	fi

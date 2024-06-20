@@ -99,8 +99,8 @@ FSTESTS_ARGS += fstests_testdev_nvme_fallback_model_serial='True'
 endif
 
 ifeq (y,$(CONFIG_CONFIG_BOOTLINUX))
-TREE_TAG:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_TAG))
-FSTESTS_ARGS += fstests_perf_config='$(PROJECTRELEASE)-kernel-$(TREE_TAG)'
+TREE_REF:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_REF))
+FSTESTS_ARGS += fstests_perf_config='$(PROJECTRELEASE)-kernel-$(TREE_REF)'
 endif
 ifeq (,$(CONFIG_CONFIG_BOOTLINUX))
 FSTESTS_ARGS += fstests_perf_config='$(PROJECTRELEASE)-kernel-distro'

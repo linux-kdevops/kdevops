@@ -43,7 +43,7 @@ Role Variables
   * target_linux_tree: the name of the tree
   * target_linux_dir_path: where to place the tree on the target system
 
-  * target_linux_tag : the actual tag as used on linux, so v4.19.62
+  * target_linux_ref : the actual tag as used on linux, so v4.19.62
   * target_linux_extra_patch: if defined an extra patch to apply with git
      am prior to compilation
   * target_linux_config: the configuration file to use
@@ -87,7 +87,7 @@ You'd place the `pend-v4.19.58-fixes-20190716-v2.patch` file on the directory
 Now say you wantd to be explicit about a tag of Linux you'd want to use:
 
 ```
-ansible-playbook -i hosts -l dev --extra-vars "target_linux_tag=v4.19.21 "target_linux_extra_patch=try-v4.19.20-fixes-20190716-v1.patch" bootlinux.yml
+ansible-playbook -i hosts -l dev --extra-vars "target_linux_ref=v4.19.21 "target_linux_extra_patch=try-v4.19.20-fixes-20190716-v1.patch" bootlinux.yml
 ```
 
 To uninstall a kernel:

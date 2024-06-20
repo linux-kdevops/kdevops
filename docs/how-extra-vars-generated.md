@@ -60,19 +60,19 @@ This make it easy to just `git grep BOOTLINUX_ARGS` to see what is defined.
 TREE_URL:=$(subst ",,$(CONFIG_BOOTLINUX_TREE))
 TREE_NAME:=$(notdir $(TREE_URL))
 TREE_NAME:=$(subst .git,,$(TREE_NAME))
-TREE_TAG:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_TAG))
+TREE_REF:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_REF))
 TREE_LOCALVERSION:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_LOCALVERSION))
 TREE_SHALLOW_DEPTH:=$(subst ",,$(CONFIG_BOOTLINUX_SHALLOW_CLONE_DEPTH))
 
-TREE_CONFIG:=config-$(TREE_TAG)
+TREE_CONFIG:=config-$(TREE_REF)
 ifeq (y,$(CONFIG_BOOTLINUX_PURE_IOMAP))
-TREE_CONFIG:=config-$(TREE_TAG)-pure-iomap
+TREE_CONFIG:=config-$(TREE_REF)-pure-iomap
 endif
 
 # Describes the Linux clone
 BOOTLINUX_ARGS  += target_linux_git=$(TREE_URL)
 BOOTLINUX_ARGS  += target_linux_tree=$(TREE_NAME)
-BOOTLINUX_ARGS  += target_linux_tag=$(TREE_TAG)
+BOOTLINUX_ARGS  += target_linux_ref=$(TREE_REF)
 BOOTLINUX_ARGS  += target_linux_config=$(TREE_CONFIG)
 BOOTLINUX_ARGS  += target_linux_localversion=$(TREE_LOCALVERSION)
 ```

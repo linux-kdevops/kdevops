@@ -21,8 +21,8 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
         configured_kernel = None
         if "CONFIG_WORKFLOW_LINUX_DISTRO" in config:
             configured_kernel = "Distro-kernel"
-        elif "CONFIG_BOOTLINUX_TREE_TAG" in config:
-            configured_kernel = config["CONFIG_BOOTLINUX_TREE_TAG"].strip('\"')
+        elif "CONFIG_BOOTLINUX_TREE_REF" in config:
+            configured_kernel = config["CONFIG_BOOTLINUX_TREE_REF"].strip('\"')
         remote_path = "/var/log/journal/remote/"
         kernel = systemd_remote.get_uname(remote_path, host, configured_kernel)
         if kernel == configured_kernel:

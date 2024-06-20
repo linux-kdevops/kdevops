@@ -21,9 +21,9 @@ target_linux_tree: "linux-stable"
 target_linux_dir_path: "{{ data_path }}/{{ target_linux_tree }}"
 kdevops_baseline_and_dev: False
 
-target_linux_tag: "v4.19.133"
+target_linux_ref: "v4.19.133"
 target_linux_delta_file:
-target_linux_config: "config-{{ target_linux_tag }}"
+target_linux_config: "config-{{ target_linux_ref }}"
 make: "make"
 # Once ansible v2.10 becomes available we can move on to using
 # ansible_processor_nproc but that was merged in 2020:

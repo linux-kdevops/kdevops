@@ -80,7 +80,7 @@
     dest: "{{ target_linux_dir_path }}"
     update: yes
     depth: "{{ target_linux_shallow_depth }}"
-    version: "{{ target_linux_tag }}"
+    version: "{{ target_linux_ref }}"
   retries: 3
   delay: 5
   register: result
@@ -95,7 +95,7 @@
     dest: "{{ bootlinux_9p_host_path }}"
     update: yes
     depth: "{{ target_linux_shallow_depth }}"
-    version: "{{ target_linux_tag }}"
+    version: "{{ target_linux_ref }}"
   retries: 3
   delay: 5
   register: result
@@ -412,7 +412,7 @@
 
 - name: Check kernel uname for uninstall
   debug:
-    msg: "Target kernel {{ target_linux_tag }} Running kernel {{ running_kernel }}"
+    msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd_before.stdout_lines.0 }}"
   tags: [ 'uninstall-linux' ]
@@ -543,7 +543,7 @@
 
 - name: Check kernel uname
   debug:
-    msg: "Target kernel {{ target_linux_tag }} Running kernel {{ running_kernel }}"
+    msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd.stdout_lines.0 }}"
   tags: [ 'linux', 'git', 'config', 'uname' ]
