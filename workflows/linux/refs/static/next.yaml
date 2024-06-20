@@ -4,3 +4,11 @@ configs:
     config: BOOTLINUX_TREE_NEXT_REF_20240424
     ref: "next-20240424"
     help: "next-20240424"
+  - fs-current:
+    config: BOOTLINUX_TREE_NEXT_REF_FSCURRENT
+    ref: "fs-current"
+    help: "fs-current"
+  - fs-next:
+    config: BOOTLINUX_TREE_NEXT_REF_FSNEXT
+    ref: "fs-next"
+    help: "fs-next"
