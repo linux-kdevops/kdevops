@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+config HAVE_BOOTLINUX_TREE_LINUS_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.linus)
+
+config HAVE_BOOTLINUX_TREE_NEXT_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.next)
+
+config HAVE_BOOTLINUX_TREE_STABLE_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.stable)
+
+config HAVE_BOOTLINUX_TREE_MCGROF_LINUS_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.mcgrof-linus)
+
+config HAVE_BOOTLINUX_TREE_MCGROF_NEXT_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.mcgrof-next)
+
+config HAVE_BOOTLINUX_TREE_BTRFS_DEVEL_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.btrfs-devel)
+
+config HAVE_BOOTLINUX_TREE_CEL_LINUX_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.cel-linux)
+
+config HAVE_BOOTLINUX_TREE_JLAYTON_LINUX_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.jlayton-linux)
+
+config HAVE_BOOTLINUX_TREE_KDEVOPS_LINUS_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.kdevops-linus)

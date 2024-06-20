@@ -1,0 +1,10 @@
+---
+configs:
+  - lbs:
+    config: BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS
+    ref: "large-block-linus"
+    help: "Use the latest LBS branch based on Linus' tree."
+  - lbs-nodeb:
+    config: BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS_NOBDEV
+    ref: "large-block-linus-nobdev"
+    help: "Use the latest minimal branch for LBS which let's you use LBS devices with a sectorsize compatibility based on Linus' tree."

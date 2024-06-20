@@ -1,6 +1,8 @@
 config HAVE_SUPPORTS_PURE_IOMAP
 	bool
 
+source "kconfigs/workflows/Kconfig.bootlinux"
+
 config WORKFLOWS
 	bool "Enable different target workflows"
 	default y

@@ -1,0 +1,6 @@
+---
+configs:
+  - next-20240424:
+    config: BOOTLINUX_TREE_NEXT_REF_20240424
+    ref: "next-20240424"
+    help: "next-20240424"

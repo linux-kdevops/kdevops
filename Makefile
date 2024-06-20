@@ -174,6 +174,7 @@ endif
 
 include scripts/gen-hosts.Makefile
 include scripts/gen-nodes.Makefile
+include scripts/refs.Makefile
 
 # disable built-in rules for this
 .SUFFIXES:

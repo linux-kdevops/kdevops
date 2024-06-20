@@ -335,6 +335,7 @@ Below are sections which get into technical details of how kdevops works.
   * [Adding a new workflow to kdevops](docs/adding-a-new-workflow.md)
   * [Kconfig integration](docs/kconfig-integration.md)
   * [kdevops dynamic Kconfig support](docs/kdevops-dynamic-configuration.md)
+  * [kdevops Git Reference generation support](docs/kdevops-autorefs.md)
   * [Motivation behind kdevops](docs/motivations.md)
   * [Linux distribution support](docs/linux-distro-support.md)
   * [Overriding all Ansible role options with one file](docs/ansible-override.md)

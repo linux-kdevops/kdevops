@@ -1,0 +1,6 @@
+---
+configs:
+  - btrfs-devel:
+    config: BOOTLINUX_TREE_BTRFS_DEVEL_REF_BTRFSDEVEL
+    ref: "btrfs-devel"
+    help: "Use development branch."

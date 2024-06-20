@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# Automatically generated file
+
+if !HAVE_BOOTLINUX_TREE_MCGROF_LINUS_USER_REFS
+
+choice
+	prompt "Tag or branch to use"
+
+config BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS
+	bool "large-block-linus"
+	help
+	  Use the latest LBS branch based on Linus' tree.
+
+config BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS_NOBDEV
+	bool "large-block-linus-nobdev"
+	help
+	  Use the latest minimal branch for LBS which let's you use LBS devices with a sectorsize compatibility based on Linus' tree.
+
+endchoice
+
+config BOOTLINUX_TREE_MCGROF_LINUS_REF
+	string
+	default "large-block-linus" if BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS
+	default "large-block-linus-nobdev" if BOOTLINUX_TREE_MCGROF_LINUS_REF_LBS_NOBDEV
+
+endif # !HAVE_BOOTLINUX_TREE_MCGROF_LINUS_USER_REFS

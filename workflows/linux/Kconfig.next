@@ -1,8 +1,7 @@
 if BOOTLINUX_TREE_NEXT
 
-config BOOTLINUX_TREE_NEXT_REF
-	string "linux-next ref to pull"
-	default "next-20240424"
+source "workflows/linux/refs/default/Kconfig.next"
+source "workflows/linux/refs/user/Kconfig.next"
 
 config BOOTLINUX_TREE_NEXT_NAME
 	string

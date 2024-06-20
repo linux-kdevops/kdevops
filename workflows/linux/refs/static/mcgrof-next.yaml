@@ -1,0 +1,10 @@
+---
+configs:
+  - lbs:
+    config: BOOTLINUX_TREE_MCGROF_NEXT_REF_LBS
+    ref: "large-block-next"
+    help: "Use the latest stable LBS branch which enables all the bells and whistles for all types of LBS devices."
+  - lbs-nobdev:
+    config: BOOTLINUX_TREE_MCGROF_NEXT_REF_LBS_NOBDEV
+    ref: "large-block-nobdev"
+    help: "Use the latest minimal branch for LBS which let's you use LBS devices with a sectorsize compatibility"

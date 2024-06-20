@@ -1,0 +1,14 @@
+---
+configs:
+  - kdevops:
+    config: BOOTLINUX_TREE_JLAYTON_LINUX_REF_KDEVOPS
+    ref: "kdevops"
+    help: "Use the latest kdevops branch."
+  - iversion:
+    config: BOOTLINUX_TREE_JLAYTON_LINUX_REF_IVERSION
+    ref: "iversion-next"
+    help: "Use the iversion-next branch."
+  - custom:
+    config: BOOTLINUX_TREE_JLAYTON_LINUX_REF_CUSTOM
+    ref: BOOTLINUX_TREE_JLAYTON_LINUX_CUSTOM_REF_NAME
+    help: "Use a custom branch name."

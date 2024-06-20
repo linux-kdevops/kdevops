@@ -23,74 +23,8 @@ endchoice
 
 if BOOTLINUX_TREE_LINUS
 
-choice
-	prompt "Linus' tag or branch to use"
-	default BOOTLINUX_TREE_LINUS_69
-
-config BOOTLINUX_TREE_LINUS_MASTER
-	bool "master"
-	help
-	  Use the master branch, the top of Linus' tree.
-
-config BOOTLINUX_TREE_LINUS_66_RC4
-	bool "v6.6-rc4"
-	help
-	  Use the v6.6-rc4 tag.
-
-config BOOTLINUX_TREE_LINUS_66_RC5
-	bool "v6.6-rc5"
-	help
-	  Use the v6.6-rc5 tag.
-
-config BOOTLINUX_TREE_LINUS_66_RC2
-	bool "v6.6-rc2"
-	help
-	  Use the v6.6-rc2 tag.
-
-config BOOTLINUX_TREE_LINUS_68_RC2
-	bool "v6.8-rc2"
-	help
-	  Use the v6.8-rc2 tag.
-
-config BOOTLINUX_TREE_LINUS_69_RC2
-	bool "v6.9-rc2"
-	help
-	  Use the v6.9-rc2 tag.
-
-config BOOTLINUX_TREE_LINUS_69_RC4
-	bool "v6.9-rc4"
-	help
-	  Use the v6.9-rc4 tag.
-
-config BOOTLINUX_TREE_LINUS_69_RC5
-	bool "v6.9-rc5"
-	help
-	  Use the v6.9-rc5 tag.
-
-config BOOTLINUX_TREE_LINUS_69_RC6
-	bool "v6.9-rc6"
-	help
-	  Use the v6.9-rc6 tag.
-
-config BOOTLINUX_TREE_LINUS_69
-	bool "v6.9"
-	help
-	  Use the v6.9 tag.
-
-endchoice
-
-config BOOTLINUX_TREE_LINUS_REF
-	string
-	default "master" if BOOTLINUX_TREE_LINUS_MASTER
-	default "v6.6-rc2" if BOOTLINUX_TREE_LINUS_66_RC2
-	default "v6.6-rc4" if BOOTLINUX_TREE_LINUS_66_RC2
-	default "v6.6-rc5" if BOOTLINUX_TREE_LINUS_66_RC5
-	default "v6.8-rc2" if BOOTLINUX_TREE_LINUS_68_RC2
-	default "v6.9-rc2" if BOOTLINUX_TREE_LINUS_69_RC2
-	default "v6.9-rc4" if BOOTLINUX_TREE_LINUS_69_RC4
-	default "v6.9-rc5" if BOOTLINUX_TREE_LINUS_69_RC5
-	default "v6.9-rc6" if BOOTLINUX_TREE_LINUS_69_RC6
-	default "v6.9" if BOOTLINUX_TREE_LINUS_69
+source "workflows/linux/refs/default/Kconfig.linus"
+source "workflows/linux/refs/user/Kconfig.linus"
 
 config BOOTLINUX_TREE_LINUS_NAME
 	string

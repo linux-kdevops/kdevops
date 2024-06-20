@@ -1,25 +1,7 @@
 if BOOTLINUX_TREE_CEL_LINUX
 
-choice
-	prompt "cel-linux branch to use"
-	default BOOTLINUX_TREE_CEL_LINUX_NEXT
-
-config BOOTLINUX_TREE_CEL_LINUX_NEXT
-	bool "nfsd-next"
-	help
-	  Pull the nfsd-next branch.
-
-config BOOTLINUX_TREE_CEL_LINUX_FIXES
-	bool "nfsd-fixes"
-	help
-	  Pull the nfsd-fixes branch.
-
-config BOOTLINUX_TREE_CEL_LINUX_CUSTOM
-	bool "Custom branch name"
-	help
-	  Pull a custom branch name.
-
-endchoice
+source "workflows/linux/refs/default/Kconfig.cel-linux"
+source "workflows/linux/refs/user/Kconfig.cel-linux"
 
 config BOOTLINUX_TREE_CEL_LINUX_CUSTOM_NAME
 	string "Custom branch name"
@@ -27,12 +9,6 @@ config BOOTLINUX_TREE_CEL_LINUX_CUSTOM_NAME
 	depends on BOOTLINUX_TREE_CEL_LINUX_REF_CUSTOM
 	help
 	  Custom branch name to use for Chuck Lever's linux tree.
-
-config BOOTLINUX_TREE_CEL_LINUX_REF
-	string
-	default "nfsd-next" if BOOTLINUX_TREE_CEL_LINUX_NEXT
-	default "nfsd-fixes" if BOOTLINUX_TREE_CEL_LINUX_FIXES
-	default BOOTLINUX_TREE_CEL_LINUX_CUSTOM_NAME if BOOTLINUX_TREE_CEL_LINUX_CUSTOM
 
 config BOOTLINUX_TREE_CEL_LINUX_NAME
 	string

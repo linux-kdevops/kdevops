@@ -80,6 +80,11 @@ playbooks/roles/linux-mirror/linux-mirror-systemd/xfsprogs-mirror.timer
 #   yet.
 workflows/selftests/results/
 
+workflows/linux/refs/default/Kconfig.linus
+workflows/linux/refs/default/Kconfig.next
+workflows/linux/refs/default/Kconfig.stable
+workflows/linux/refs/user
+
 .kernel-ci.*
 .kotd.*
 
