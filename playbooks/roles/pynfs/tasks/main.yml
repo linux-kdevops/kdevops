@@ -142,7 +142,7 @@
     kernel_rev: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   run_once: true
 
-- name: Copy the latest results over when we're done
+- name: Copy the version-specific results to the control node
   tags: [ 'copy_results' ]
   become: yes
   become_flags: 'su - -c'
@@ -154,4 +154,17 @@
   with_items:
     - 4.0
     - 4.1
+
+- name: Copy the pNFS results to the control node
+  tags: [ 'copy_results' ]
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  fetch:
+    src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
+    dest: "{{ pynfs_workflow_dir }}/results/{{ kernel_rev }}-v{{ item }}.json"
+    flat: true
+  with_items:
     - block
+  when:
+    - pynfs_pnfs_block|bool
