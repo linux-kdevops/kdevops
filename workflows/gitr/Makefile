@@ -38,6 +38,24 @@ GITR_ARGS += gitr_test_list=$(subst ",,$(CONFIG_GITR_TEST_LIST))
 GITR_PLAY_TAGS := vars,run_specific_tests,copy_results
 endif
 
+ifeq (y,$(CONFIG_GITR_THREAD_SINGLE))
+GITR_ARGS += gitr_thread_single=True
+endif
+
+ifeq (y,$(CONFIG_GITR_THREAD_FAST))
+GITR_ARGS += gitr_thread_fast=True
+endif
+
+ifeq (y,$(CONFIG_GITR_THREAD_STRESS))
+GITR_ARGS += gitr_thread_stress=True
+endif
+
+ifeq (y,$(CONFIG_GITR_THREAD_CUSTOM))
+GITR_THREAD_COUNT:=$(subst ",,$(CONFIG_GITR_THREAD_CUSTOM_COUNT))
+GITR_ARGS += gitr_thread_count=$(GITR_THREAD_COUNT)
+GITR_ARGS += gitr_thread_custom=True
+endif
+
 WORKFLOW_ARGS_DIRECT += $(GITR_ARGS)
 
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_DEDICATE_GITR))

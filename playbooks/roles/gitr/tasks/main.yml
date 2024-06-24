@@ -206,12 +206,40 @@
     chdir: "{{ gitr_mnt }}/git"
     jobs: "{{ ansible_processor_nproc }}"
 
+- name: Set the test thread count (single)
+  tags: run_tests
+  ansible.builtin.set_fact:
+    gitr_test_thread_count: "1"
+  when:
+    - gitr_thread_single|bool
+
+- name: Set the test thread count (fast)
+  tags: run_tests
+  ansible.builtin.set_fact:
+    gitr_test_thread_count: "{{ ansible_processor_nproc }}"
+  when:
+    - gitr_thread_fast|bool
+
+- name: Set the test thread count (stress)
+  tags: run_tests
+  ansible.builtin.set_fact:
+    gitr_test_thread_count: "{{ ansible_processor_nproc * 2 }}"
+  when:
+    - gitr_thread_stress|bool
+
+- name: Set the test thread count (custom)
+  tags: run_tests
+  ansible.builtin.set_fact:
+    gitr_test_thread_count: "{{ gitr_thread_count }}"
+  when:
+    - gitr_thread_custom|bool
+
 - name: Run the full git regression suite
   tags: run_tests
   environment:
     GIT_TEST_CLONE_2GB: "true"
   ansible.builtin.shell:
-    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz --jobs {{ ansible_processor_nproc }} ./t[0-9]*.sh"
+    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz --jobs {{ gitr_test_thread_count }} ./t[0-9]*.sh"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false

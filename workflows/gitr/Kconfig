@@ -110,6 +110,48 @@ config GITR_TEST_LIST
 	  You can find a list of scripts that can be run in the t/
 	  directory of the git repo.
 
+choice
+	prompt "The number of test threads"
+	default GITR_THREAD_FAST
+
+config GITR_THREAD_SINGLE
+	bool "single"
+	help
+	  Run the test in single-threaded mode. This makes the test
+	  take a while, but is the most reliable way to run the
+	  test suite. What's more, single-threading makes it easier
+	  to sort the results and any failures. 
+
+config GITR_THREAD_FAST
+	bool "fast"
+	help
+	  Run the test with as many threads as there are CPUs on
+	  the target node. This gets through the testing faster
+	  than the single-thread test. This is the default.
+
+config GITR_THREAD_STRESS
+	bool "stress"
+	help
+	  Run the test with as twice as many threads as there are
+	  CPUs on the target node. This is recommended in t/README
+	  to stress the tool and underlying file system.
+
+config GITR_THREAD_CUSTOM
+	bool "custom"
+	help
+	  Run the test with a specific number of threads.
+
+endchoice
+
+if GITR_THREAD_CUSTOM
+config GITR_THREAD_CUSTOM_COUNT
+	int "Test thread count"
+	default 8
+	help
+	  Run the test with the number of threads specified by this
+	  option.
+endif # GITR_THREAD_CUSTOM
+
 endif # KDEVOPS_WORKFLOW_DEDICATE_GITR
 
 endif # KDEVOPS_WORKFLOW_ENABLE_GITR
