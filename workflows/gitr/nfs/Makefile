@@ -12,10 +12,10 @@ GITR_ARGS += gitr_nfs_use_kdevops_nfsd='False'
 endif # CONFIG_GITR_USE_KDEVOPS_NFSD
 
 GITR_ARGS += gitr_mount_opts='$(subst ",,$(CONFIG_GITR_NFS_MOUNT_OPTS))'
-ifeq (y,$(CONFIG_GITR_NFS_PNFS_BLOCK_ENABLE))
-GITR_ARGS += gitr_nfs_pnfs_block_enable='True'
-endif
 
+ifeq (y,$(CONFIG_GITR_NFS_SECTION_PNFS))
+GITR_ENABLED_TEST_GROUPS += nfs-pnfs
+endif
 ifeq (y,$(CONFIG_GITR_NFS_SECTION_RDMA))
 GITR_ENABLED_TEST_GROUPS += nfs-rdma
 endif

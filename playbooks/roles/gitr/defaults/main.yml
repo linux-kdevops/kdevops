@@ -12,4 +12,3 @@ gitr_uses_no_devices: False
 
 # NFS-specific defaults
 gitr_nfs_use_kdevops_nfsd: false
-gitr_nfs_pnfs_block_enable: false

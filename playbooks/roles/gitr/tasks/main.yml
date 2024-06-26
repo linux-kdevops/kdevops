@@ -56,7 +56,7 @@
     name: iscsi
     tasks_from: add_initiator
   when:
-    - gitr_nfs_pnfs_block_enable|bool
+    - gitr_test_group == "nfs-pnfs"
 
 - name: Remove the old test file system
   tags: gitr
@@ -91,13 +91,27 @@
   when:
     - gitr_fstype == "tmpfs"
 
-- name: Set the export pathname
+- name: Set the NFS export's pathname
   tags: gitr
   ansible.builtin.set_fact:
     gitr_nfs_server_export: "{{ gitr_test_group }}-gitr"
   when:
     - gitr_nfs_use_kdevops_nfsd|bool
     - gitr_fstype == "nfs"
+
+- name: Set the NFS export's fstype
+  tags: gitr
+  ansible.builtin.set_fact:
+    gitr_nfs_export_fstype: "{{ nfsd_export_fstype }}"
+  when:
+    - gitr_test_group != 'nfs-pnfs'
+
+- name: Set the NFS export's fstype
+  tags: gitr
+  ansible.builtin.set_fact:
+    gitr_nfs_export_fstype: "xfs"
+  when:
+    - gitr_test_group == 'nfs-pnfs'
 
 - name: Create an NFSD export for testing
   ansible.builtin.include_role:
@@ -106,9 +120,9 @@
     server_host: "{{ gitr_nfs_server_host }}"
     export_volname: "{{ gitr_nfs_server_export }}"
     export_options: "{{ nfsd_export_options }}"
-    export_fstype: "{{ nfsd_export_fstype }}"
+    export_fstype: "{{ gitr_nfs_export_fstype }}"
     export_size: 5g
-    export_pnfs: "{{ gitr_nfs_pnfs_block_enable | bool }}"
+    export_pnfs: "{{ (gitr_test_group == 'nfs-pnfs') | bool }}"
   when:
     - gitr_nfs_use_kdevops_nfsd|bool
     - gitr_fstype == "nfs"

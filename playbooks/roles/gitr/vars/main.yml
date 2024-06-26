@@ -12,3 +12,5 @@ gitr_nfs_vers_dict:
     - "vers=4.2,proto=tcp"
   nfs-rdma:
     - "vers=4.1,proto=rdma"
+  nfs-pnfs:
+    - "vers=4.1,proto=tcp"
