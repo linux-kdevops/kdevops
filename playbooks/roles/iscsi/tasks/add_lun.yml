@@ -45,6 +45,7 @@
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
+  throttle: 1  # running this in parallel can clobber the backup file
   ansible.builtin.command:
     cmd: "targetctl save"
   changed_when: true

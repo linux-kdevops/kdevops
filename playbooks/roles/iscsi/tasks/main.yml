@@ -112,6 +112,7 @@
   become: true
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
+  throttle: 1  # running this in parallel can clobber the backup file
   ansible.builtin.command:
     cmd: "targetctl save"
   changed_when: true
