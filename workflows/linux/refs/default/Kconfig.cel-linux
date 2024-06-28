@@ -12,9 +12,14 @@ config BOOTLINUX_TREE_CEL_LINUX_REF_NEXT
 	  Pull the nfsd-next branch.
 
 config BOOTLINUX_TREE_CEL_LINUX_REF_FIXES
-	bool "nfsd-fixed"
+	bool "nfsd-fixes"
 	help
-	  Pull the nfsd-fixed branch.
+	  Pull the nfsd-fixes branch.
+
+config BOOTLINUX_TREE_CEL_LINUX_REF_TESTING
+	bool "nfsd-testing"
+	help
+	  Pull the nfsd-testing branch.
 
 config BOOTLINUX_TREE_CEL_LINUX_REF_CUSTOM
 	bool "custom"
@@ -26,7 +31,8 @@ endchoice
 config BOOTLINUX_TREE_CEL_LINUX_REF
 	string
 	default "nfsd-next" if BOOTLINUX_TREE_CEL_LINUX_REF_NEXT
-	default "nfsd-fixed" if BOOTLINUX_TREE_CEL_LINUX_REF_FIXES
+	default "nfsd-fixes" if BOOTLINUX_TREE_CEL_LINUX_REF_FIXES
+	default "nfsd-testing" if BOOTLINUX_TREE_CEL_LINUX_REF_TESTING
 	default BOOTLINUX_CEL_LINUX_CUSTOM_REF_NAME if BOOTLINUX_TREE_CEL_LINUX_REF_CUSTOM
 
 endif # !HAVE_BOOTLINUX_TREE_CEL_LINUX_USER_REFS

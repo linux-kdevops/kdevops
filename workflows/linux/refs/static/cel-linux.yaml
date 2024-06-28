@@ -6,8 +6,12 @@ configs:
     help: "Pull the nfsd-next branch."
   - fixes:
     config: BOOTLINUX_TREE_CEL_LINUX_REF_FIXES
-    ref: "nfsd-fixed"
-    help: "Pull the nfsd-fixed branch."
+    ref: "nfsd-fixes"
+    help: "Pull the nfsd-fixes branch."
+  - testing:
+    config: BOOTLINUX_TREE_CEL_LINUX_REF_TESTING
+    ref: "nfsd-testing"
+    help: "Pull the nfsd-testing branch."
   - custom:
     config: BOOTLINUX_TREE_CEL_LINUX_REF_CUSTOM
     ref: BOOTLINUX_CEL_LINUX_CUSTOM_REF_NAME
