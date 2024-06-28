@@ -86,8 +86,7 @@
   set_fact:
     template_export_options: "{{ export_options }},pnfs"
   when:
-    - nfsd_export_storage_iscsi|bool
-    - export_fstype == "xfs"
+    - export_pnfs|bool
 
 - name: Create an exports.d file for the new fs
   become: yes

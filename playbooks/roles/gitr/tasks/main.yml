@@ -108,6 +108,7 @@
     export_options: "{{ nfsd_export_options }}"
     export_fstype: "{{ nfsd_export_fstype }}"
     export_size: 5g
+    export_pnfs: "{{ gitr_nfs_pnfs_block_enable | bool }}"
   when:
     - gitr_nfs_use_kdevops_nfsd|bool
     - gitr_fstype == "nfs"

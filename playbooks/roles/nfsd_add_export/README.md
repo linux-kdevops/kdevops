@@ -25,6 +25,7 @@ Role Variables
   * export_user: the owner of the new export
   * export_group: the owner group of the new export
   * export_mode: the mode bits for the new export's root directory
+  * export_pnfs: enable pNFS access to the new export
 
 Dependencies
 ------------
