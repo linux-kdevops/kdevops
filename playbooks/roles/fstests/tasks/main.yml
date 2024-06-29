@@ -736,6 +736,20 @@
     - fstests_fstyp == "nfs" or
       fstests_fstyp == "cifs"
 
+- name: Set the NFS export's fstype
+  tags: vars
+  set_fact:
+    fstests_nfs_export_fstype: "{{ nfsd_export_fstype }}"
+  when:
+    - not fstests_nfs_section_pnfs|bool
+
+- name: Set the NFS export's fstype
+  tags: vars
+  set_fact:
+    fstests_nfs_export_fstype: "xfs"
+  when:
+    - fstests_nfs_section_pnfs|bool
+
 - name: Create NFS export for test vol
   include_role:
     name: nfsd_add_export
@@ -743,7 +757,7 @@
     server_host: "{{ fstests_nfs_server_host }}"
     export_volname: "{{ volname_prefix }}-t"
     export_options: "{{ nfsd_export_options }}"
-    export_fstype: "{{ nfsd_export_fstype }}"
+    export_fstype: "{{ fstests_nfs_export_fstype }}"
     export_size: 20g
     export_pnfs: "{{ fstests_nfs_section_pnfs | bool }}"
   when:
@@ -757,7 +771,7 @@
     server_host: "{{ fstests_nfs_server_host }}"
     export_volname: "{{ volname_prefix }}-s"
     export_options: "{{ nfsd_export_options }}"
-    export_fstype: "{{ nfsd_export_fstype }}"
+    export_fstype: "{{ fstests_nfs_export_fstype }}"
     export_size: 30g
     export_pnfs: "{{ fstests_nfs_section_pnfs | bool }}"
   when:
