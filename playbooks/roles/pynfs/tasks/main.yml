@@ -104,6 +104,20 @@
     export_fstype: "{{ nfsd_export_fstype }}"
     export_size: 10g
 
+- name: Create an export for pNFS testing
+  tags: [ 'pynfs' ]
+  include_role:
+    name: nfsd_add_export
+  vars:
+    server_host: "{{ nfsd_hostname }}"
+    export_volname: "{{ volname_base }}-pnfs"
+    export_options: "{{ nfsd_export_options }}"
+    export_fstype: "xfs"
+    export_size: 10g
+    export_pnfs: true
+  when:
+    - pynfs_pnfs_block|bool
+
 - name: Wait until nfsd grace period ends
   tags: [ 'run_tests' ]
   delegate_to: "{{ nfsd_hostname }}"
