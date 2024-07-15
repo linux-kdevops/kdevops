@@ -10,6 +10,7 @@ import yaml
 import json
 import urllib.request
 import socket
+import re
 from typing import List, Union, Dict
 
 
@@ -306,7 +307,11 @@ def kreleases(args) -> None:
 
             for release in data["releases"]:
                 if release["moniker"] == args.moniker:
-                    reflist.append(release["version"])
+                    # Check if release.json is aa.bb.cc type
+                    if re.compile(r'^\d+\.\d+(\.\d+)?$').match(release["version"]):
+                        reflist.append("v" + release["version"])
+                    else:
+                        reflist.append(release["version"])
 
     ref_generator(args, reflist, _get_extraconfs(args))
 
