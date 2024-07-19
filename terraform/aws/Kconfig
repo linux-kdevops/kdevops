@@ -322,6 +322,14 @@ config TERRAFORM_AWS_INSTANCE_I4I_LARGE
 	  16 GiB RAM, 2 vcpus, 1 x 468 AWS Nitro SSD, 10 Gbps Net, 10 Gbps EBS.
 	  https://aws.amazon.com/ec2/instance-types/i4i/
 
+config TERRAFORM_AWS_INSTANCE_I4I_4XLARGE
+	bool "i4i.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  128 GiB RAM, 16 vcpus, 1 x 3,750 AWS Nitro SSD, 25 Gbps Net,
+	  10 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4i/
+
 config TERRAFORM_AWS_INSTANCE_I4I_METAL
 	depends on TARGET_ARCH_X86_64
 	bool "i4i.metal"
@@ -356,6 +364,7 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
 	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
 	default "i4i.large" if TERRAFORM_AWS_INSTANCE_I4I_LARGE
+	default "i4i.4xlarge" if TERRAFORM_AWS_INSTANCE_I4I_4XLARGE
 	default "i4i.metal" if TERRAFORM_AWS_INSTANCE_I4I_METAL
 	default "c7a.8xlarge" if TERRAFORM_AWS_INSTANCE_C7A_8XLARGE
 	default "c7a.metal-48xl" if TERRAFORM_AWS_INSTANCE_C7A_METAL_48XL
