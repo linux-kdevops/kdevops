@@ -178,6 +178,10 @@ def main():
         elif tag == "IOMMUGroup":
             IOMMUGroup = data
 
+    # Handle the last device
+    if sdevice and slot:
+        num_candidate_devices = add_new_device(slot, sdevice, IOMMUGroup, num_candidate_devices)
+
     add_pcie_kconfig_string(passthrough_prefix, num_candidate_devices, "NUM_DEVICES")
     os.unlink(lspci_output)
 
