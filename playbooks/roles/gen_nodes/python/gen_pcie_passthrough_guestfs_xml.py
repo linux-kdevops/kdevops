@@ -18,7 +18,7 @@ pcie_hotplug_template = """<!-- PCIE passthrough device -->
    <hostdev mode='subsystem' type='pci' managed='yes'>
       <driver name='vfio'/>
       <source>
-        <address domain='0x{domain}' bus='0x{bus}' slot='0x{slot}' function='0x{function}'/>
+        <address domain='{domain}' bus='{bus}' slot='{slot}' function='{function}'/>
       </source>
     </hostdev>
 <!-- End of PCIE passthrough device -->
@@ -49,10 +49,10 @@ def main():
             if 'domain' not in dev_keys or 'bus' not in dev_keys or 'slot' not in dev_keys or 'function' not in dev_keys:
                 raise Exception(f"Missing pcie attributes for device %s in %s" %
                                 (dev_key_name, yaml_nodes_file))
-            domain = dev.get('domain')
-            bus = dev.get('bus')
-            slot = dev.get('slot')
-            function = dev.get('function')
+            domain = hex(dev.get('domain'))
+            bus = hex(dev.get('bus'))
+            slot = hex(dev.get('slot'))
+            function = hex(dev.get('function'))
 
             pcie_xml = f"{extra_vars['guestfs_path']}/{name}/pcie_passthrough_" + dev_key_name + ".xml"
 
