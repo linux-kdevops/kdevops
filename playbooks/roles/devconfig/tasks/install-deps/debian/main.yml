@@ -3,7 +3,7 @@
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  command: "apt-get update  --allow-releaseinfo-change"
+  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false"
   register: release_info_changed
   changed_when: release_info_changed.rc == 0
   tags: [ 'apt', 'release-info-change' ]
