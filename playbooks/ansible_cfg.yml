@@ -1,0 +1,5 @@
+---
+- name: Ansible Configuration Role
+  hosts: localhost
+  roles:
+    - role: ansible_cfg

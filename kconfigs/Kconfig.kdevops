@@ -195,3 +195,7 @@ endmenu
 menu "Kernel continous integration configuration"
 source "kconfigs/Kconfig.kernel-ci"
 endmenu
+
+menu "Ansible Configuration"
+source "kconfigs/Kconfig.ansible_cfg"
+endmenu
