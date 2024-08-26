@@ -1,0 +1,103 @@
+menu "Ansible Callback Plugin Configuration"
+choice
+	prompt "Ansible Callback Plugin"
+	default ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
+	bool "Ansible Debug Callback Plugin"
+	help
+	  Debug: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/debug_module.html
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
+	bool "Ansible Dense Callback Plugin"
+	help
+	  Dense: https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html
+
+endchoice
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_STRING
+	string
+	output yaml
+	default "debug" if ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
+	default "dense" if ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_CHECK_MODE_MARKERS
+	bool "check_mode_markers"
+	output yaml
+	default n
+	help
+	  Toggle to control displaying markers when running in check mode.
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-check_mode_markers
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DISPLAY_FAILED_STDERR
+	bool "display_failed_stderr"
+	output yaml
+	default n
+	help
+	  Toggle to control whether failed and unreachable tasks are displayed to STDERR (vs. STDOUT).
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-display_failed_stderr
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DISPLAY_OK_HOSTS
+	bool "display_ok_hosts"
+	output yaml
+	default y
+	help
+	  Toggle to control displaying ‘ok’ task/host results in a task.
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-display_ok_hosts
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DISPLAY_SKIPPED_HOSTS
+	bool "display_skipped_hosts"
+	output yaml
+	default n
+	help
+	  Toggle to control displaying skipped task/host results in a task.
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-display_skipped_hosts
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_CUSTOM_STATS
+	bool "show_custom_stats"
+	output yaml
+	default n
+	help
+	  This adds the custom stats set via the set_stats plugin to the play recap
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-show_custom_stats
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_PER_HOST_START
+	bool "show_per_host_start"
+	output yaml
+	default n
+	help
+	  This adds output that shows when a task is started to execute for each host
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-show_per_host_start
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_TASK_PATH_ON_FAILURE
+	bool "show_task_path_on_failure"
+	output yaml
+	default n
+	help
+	  When a task fails, display the path to the file containing the failed task and
+	  the line number. This information is displayed automatically for every task when
+	  running with -vv or greater verbosity.
+	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-show_task_path_on_failure
+endmenu
+
+config ANSIBLE_CFG_DEPRECATION_WARNINGS
+	bool "deprecation_warnings"
+	output yaml
+	default y
+	help
+	  Toggle to control the showing of deprecation warnings
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#deprecation-warnings
+
+if DISTRO_OPENSUSE
+
+config ANSIBLE_CFG_RECONNECTION_RETRIES
+	string "reconnection_retries"
+	output yaml
+	default 2000
+	help
+	  Number of attempts to connect.
+	  Ansible retries connections only if it gets an SSH error with a return code of 255.
+	  Any errors with return codes other than 255 indicate an issue with program execution.
+	  https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ssh_connection.html#parameter-reconnection_retries
+
+endif # DISTRO_OPENSUSE

@@ -1,0 +1,14 @@
+[defaults]
+deprecation_warnings = {{ ansible_cfg_deprecation_warnings }}
+stdout_callback = {{ ansible_cfg_callback_plugin_string }}
+check_mode_markers = {{ ansible_cfg_callback_plugin_check_mode_markers }}
+display_failed_stderr = {{ ansible_cfg_callback_plugin_display_failed_stderr }}
+display_ok_hosts = {{ ansible_cfg_callback_plugin_display_ok_hosts }}
+display_skipped_hosts = {{ ansible_cfg_callback_plugin_display_skipped_hosts }}
+show_custom_stats = {{ ansible_cfg_callback_plugin_show_custom_stats }}
+show_per_host_start = {{ ansible_cfg_callback_plugin_show_per_host_start }}
+show_task_path_on_failure = {{ ansible_cfg_callback_plugin_show_task_path_on_failure }}
+{% if ansible_facts['distribution'] == 'openSUSE' %}
+[connection]
+retries = {{ ansible_cfg_reconnection_retries }}
+{% endif %}

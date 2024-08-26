@@ -72,6 +72,10 @@ M:	Daniel Gomez <da.gomez@samsung.com>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
+F:	ansible.cfg
+F:	kconfigs/Kconfig.ansible_cfg
+F:	playbooks/ansible_cfg.yml
+F:	playbooks/roles/ansible_cfg
 F:	scripts/ansible_av.py
 F:	scripts/ansible.Makefile
 

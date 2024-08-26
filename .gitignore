@@ -23,6 +23,8 @@ extra_vars.json
 .config
 .config.old
 
+ansible.cfg
+
 scripts/kconfig/.mconf-cfg
 scripts/workflows/fstests/lib/__pycache__/
 scripts/workflows/blktests/lib/__pycache__/
