@@ -61,12 +61,16 @@ config FSTESTS_NFS_SECTION_RDMA
 	  the target nodes have RDMA hardware already, enable one of
 	  the software RDMA options as well.
 
+	  This test uses an NFSv4.1 mount.
+
 config FSTESTS_NFS_SECTION_TLS
 	bool "Enable testing section: nfs_tls"
 	default n
 	depends on KDEVOPS_SETUP_KTLS
 	help
 	  Enabling this will test with the xprtsec=tls mount option.
+
+	  This test uses an NFSv4.1 mount.
 
 config FSTESTS_NFS_SECTION_NFSD
 	bool "Enable testing section: nfsd"
