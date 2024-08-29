@@ -254,8 +254,8 @@ config QEMU_BUILD_GIT
 	string "Git tree for QEMU to clone on localhost"
 	default "/mirror/qemu.git" if USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_UPSTREAM || QEMU_BUILD_MANUAL
 	default "/mirror/qemu-jic23.git" if USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_JIC23
-	default "https://gitlab.com/qemu-project/qemu.git" if !USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_UPSTREAM || QEMU_BUILD_MANUAL
-	default "https://gitlab.com/jic23/qemu.git" if !USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_JIC23
+	default DEFAULT_QEMU_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_UPSTREAM || QEMU_BUILD_MANUAL
+	default DEFAULT_QEMU_JIC23_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_BUILD_JIC23
 	help
 	  This is the git URL to use to clone and then build QEMU for you on
 	  your localhost.

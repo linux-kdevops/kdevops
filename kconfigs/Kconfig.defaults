@@ -28,6 +28,38 @@ config DEFAULT_KDEVOPS_LINUX_HTTPS_URL
 	string
 	default "https://github.com/linux-kdevops/linux.git"
 
+config DEFAULT_QEMU_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/qemu/qemu.git"
+
+config DEFAULT_QEMU_GITHUB_SSH_URL
+	string
+	default "ssh://git@github.com:qemu/qemu.git"
+
+config DEFAULT_QEMU_GITLAB_HTTPS_URL
+	string
+	default "https://gitlab.com/qemu-project/qemu.git"
+
+config DEFAULT_QEMU_GITLAB_SSH_URL
+	string
+	default "ssh://git@gitlab.com:qemu-project/qemu.git"
+
+config DEFAULT_QEMU_JIC23_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/jic23/qemu.git"
+
+config DEFAULT_QEMU_JIC23_GITHUB_SSH_URL
+	string
+	default "ssh://git@github.com:jic23/qemu.git"
+
+config DEFAULT_QEMU_JIC23_GITLAB_HTTPS_URL
+	string
+	default "https://gitlab.com/jic23/qemu.git"
+
+config DEFAULT_QEMU_JIC23_GITLAB_SSH_URL
+	string
+	default "ssh://git@gitlab.com:jic23/qemu.git"
+
 config DEFAULT_LINUX_NEXT_GIT_URL
 	string
 	default "git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"

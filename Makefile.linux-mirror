@@ -8,6 +8,8 @@ LINUX_MIRROR_ARGS += defaults_xfsdump_git='$(subst ",,$(CONFIG_DEFAULT_XFSDUMP_U
 LINUX_MIRROR_ARGS += mirror_kdevops_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))'
 LINUX_MIRROR_ARGS += mirror_kdevops_linus_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_LINUS_URL))'
 LINUX_MIRROR_ARGS += mirror_linux_next_url='$(subst ",,$(CONFIG_MIRROR_NEXT_URL))'
+LINUX_MIRROR_ARGS += mirror_qemu_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))'
+LINUX_MIRROR_ARGS += mirror_qemu_jic23_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))'
 LINUX_MIRROR_ARGS += mirror_mcgrof_linus_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_LINUS_URL))'
 LINUX_MIRROR_ARGS += mirror_mcgrof_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_URL))'
 LINUX_MIRROR_ARGS += mirror_stable_url='$(subst ",,$(CONFIG_MIRROR_STABLE_URL))'

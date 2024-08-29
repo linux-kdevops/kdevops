@@ -6,8 +6,6 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export QEMU		:= $(subst ",,$(CONFIG_MIRROR_QEMU_URL))
-export QEMU_JIC23	:= $(subst ",,$(CONFIG_MIRROR_QEMU_JIC23_URL))
 export KDEVOPS		:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))
 export FSTESTS		:= $(subst ",,$(CONFIG_MIRROR_FSTESTS_URL))
 export KDEVOPS_FSTESTS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_FSTESTS_URL))
@@ -23,27 +21,18 @@ TOOLS_TIMERS := fstests-mirror.timer
 TOOLS_TIMERS += kdevops-fstests-mirror.timer
 TOOLS_TIMERS += blktests-mirror.timer
 
-QEMU_SERVICES  := qemu-mirror.service
-QEMU_SERVICES  += qemu-jic23-mirror.service
-QEMU_TIMERS    := qemu-mirror.timer
-QEMU_TIMERS    += qemu-jic23-mirror.timer
-
 GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
-QEMU_TARGET     	:= $(MIRROR_PATH)/qemu.git
-QEMU_JIC23_TARGET	:= $(MIRROR_PATH)/qemu-jic23.git
 KDEVOPS_TARGET		:= $(MIRROR_PATH)/kdevops.git
 FSTESTS_TARGET		:= $(MIRROR_PATH)/fstests.git
 KDEVOPS_FSTESTS_TARGET	:= $(MIRROR_PATH)/kdevops/fstests.git
 BLKTESTS_TARGET		:= $(MIRROR_PATH)/blktests.git
 
-MIRROR_SERVICES += $(QEMU_SERVICES)
 MIRROR_SERVICES += $(KDEVOPS_SERVICES)
 MIRROR_SERVICES += $(TOOLS_SERVICES)
 
-MIRROR_TIMERS   += $(QEMU_TIMERS)
 MIRROR_TIMERS   += $(KDEVOPS_TIMERS)
 MIRROR_TIMERS   += $(TOOLS_TIMERS)
 
@@ -72,14 +61,6 @@ mirror:
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
 	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
 	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(QEMU_TARGET) ]; then \
-	  echo "          CLONE qemu-project/qemu" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(QEMU) $(QEMU_TARGET) ;\
-	fi
-	$(Q)if [ ! -d $(QEMU_JIC23_TARGET) ]; then \
-	  echo "          CLONE qemu-project/jic23-qemu" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(QEMU_JIC23) --reference /mirror/qemu.git $(QEMU_JIC23_TARGET) ;\
-	fi
 	$(Q)if [ ! -d $(KDEVOPS_TARGET) ]; then \
 	  echo "          CLONE linux-kdevops/kdevops" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(KDEVOPS) $(KDEVOPS_TARGET) ;\

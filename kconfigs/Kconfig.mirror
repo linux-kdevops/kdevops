@@ -342,10 +342,10 @@ endchoice
 
 config MIRROR_QEMU_URL
 	string
-	default "https://github.com/qemu/qemu.git" if MIRROR_QEMU_HTTPS_GITHUB
-	default "ssh://git@github.com:qemu/qemu.git" if MIRROR_QEMU_SSH_GITHUB
-	default "https://gitlab.com/qemu-project/qemu.git" if MIRROR_QEMU_HTTPS_GITLAB
-	default "ssh://git@gitlab.com:qemu-project/qemu.git" if MIRROR_QEMU_SSH_GITLAB
+	default DEFAULT_QEMU_GITHUB_HTTPS_URL if MIRROR_QEMU_HTTPS_GITHUB
+	default DEFAULT_QEMU_GITHUB_SSH_URL if MIRROR_QEMU_SSH_GITHUB
+	default DEFAULT_QEMU_GITLAB_HTTPS_URL if MIRROR_QEMU_HTTPS_GITLAB
+	default DEFAULT_QEMU_GITLAB_SSH_URL if MIRROR_QEMU_SSH_GITLAB
 
 choice
 	prompt "QEMU jic23 mirror protocol/source"
@@ -387,10 +387,10 @@ endchoice
 
 config MIRROR_QEMU_JIC23_URL
 	string
-	default "https://github.com/jic23/qemu.git" if MIRROR_QEMU_JIC23_HTTPS_GITHUB
-	default "ssh://git@github.com:jic23/qemu.git" if MIRROR_QEMU_JIC23_SSH_GITHUB
-	default "https://gitlab.com/jic23/qemu.git" if MIRROR_QEMU_JIC23_HTTPS_GITLAB
-	default "ssh://git@gitlab.com:jic23/qemu.git" if MIRROR_QEMU_JIC23_SSH_GITLAB
+	default DEFAULT_QEMU_JIC23_GITHUB_HTTPS_URL if MIRROR_QEMU_JIC23_HTTPS_GITHUB
+	default DEFAULT_QEMU_JIC23_GITHUB_SSH_URL if MIRROR_QEMU_JIC23_SSH_GITHUB
+	default DEFAULT_QEMU_JIC23_GITLAB_HTTPS_URL if MIRROR_QEMU_JIC23_HTTPS_GITLAB
+	default DEFAULT_QEMU_JIC23_GITLAB_SSH_URL if MIRROR_QEMU_JIC23_SSH_GITLAB
 
 choice
 	prompt "Tools - xfstests-dev.git mirror protocol/source"
