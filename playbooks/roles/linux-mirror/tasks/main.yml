@@ -57,7 +57,7 @@
 
 - name: Copy systemd service file to user systemd dir
   copy:
-    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name}}-mirror.service"
+    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     dest: "{{ mirror_user_system_dir }}/"
   with_items:
     - "{{ mirrors.get('mirrors') }}"
@@ -66,7 +66,7 @@
 
 - name: Copy systemd timer file to user systemd dir
   copy:
-    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name}}-mirror.timer"
+    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     dest: "{{ mirror_user_system_dir }}/"
   with_items:
     - "{{ mirrors.get('mirrors') }}"
@@ -75,22 +75,22 @@
 
 - name: Enable systemd unit for mirror services
   ansible.builtin.systemd_service:
-    name: "{{ item.short_name}}-mirror.service"
+    name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     state: started
     enabled: true
     scope: user
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Enabling {{ item.short_name}}-mirror.service unit ..."
+    label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.service unit ..."
 
 - name: Enable systemd unit for mirror timers
   ansible.builtin.systemd_service:
-    name: "{{ item.short_name }}-mirror.timer"
+    name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     state: started
     enabled: true
     scope: user
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Enabling {{ item.short_name}}-mirror.timer unit ..."
+    label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.timer unit ..."

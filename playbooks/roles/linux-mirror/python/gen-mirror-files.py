@@ -85,7 +85,7 @@ def main():
         if mirror.get('target') is None:
             raise Exception(f"Missing required target on mirror item #%d on file: %s" % (total, args.yaml_mirror))
 
-        short_name = mirror['short_name']
+        short_name = mirror['short_name'].replace("/", "-")
         url = mirror['url']
         target = mirror['target']
 
