@@ -8,7 +8,6 @@ endif
 
 export NEXT		:= $(subst ",,$(CONFIG_MIRROR_NEXT_URL))
 export KDEVOPS_LINUS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_LINUS_URL))
-export MCGROF		:= $(subst ",,$(CONFIG_MIRROR_MCGROF_URL))
 export QEMU		:= $(subst ",,$(CONFIG_MIRROR_QEMU_URL))
 export QEMU_JIC23	:= $(subst ",,$(CONFIG_MIRROR_QEMU_JIC23_URL))
 export KDEVOPS		:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))
@@ -18,11 +17,9 @@ export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
 
 LINUX_SERVICES += linux-next-mirror.service
 LINUX_SERVICES += kdevops-linus-mirror.service
-LINUX_SERVICES += mcgrof-next-mirror.service
 
 LINUX_TIMERS += linux-next-mirror.timer
 LINUX_TIMERS += kdevops-linus-mirror.timer
-LINUX_TIMERS += mcgrof-next-mirror.timer
 
 KDEVOPS_SERVICES  := kdevops-mirror.service
 KDEVOPS_TIMERS := kdevops-mirror.timer
@@ -45,7 +42,6 @@ LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
 NEXT_TARGET		:= $(MIRROR_PATH)/linux-next.git
 KDEVOPS_TARGET_LINUS	:= $(MIRROR_PATH)/kdevops-linus.git
-MCGROF_TARGET		:= $(MIRROR_PATH)/mcgrof-next.git
 QEMU_TARGET     	:= $(MIRROR_PATH)/qemu.git
 QEMU_JIC23_TARGET	:= $(MIRROR_PATH)/qemu-jic23.git
 KDEVOPS_TARGET		:= $(MIRROR_PATH)/kdevops.git
@@ -95,10 +91,6 @@ mirror:
 	$(Q)if [ ! -d $(KDEVOPS_TARGET_LINUS) ]; then \
 	  echo "          CLONE kdevops/linux" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(KDEVOPS_LINUS) --reference /mirror/linux.git $(KDEVOPS_TARGET_LINUS) ;\
-	fi
-	$(Q)if [ ! -d $(MCGROF_TARGET) ]; then \
-	  echo "          CLONE mcgrof/linux-next" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(MCGROF) --reference /mirror/linux.git $(MCGROF_TARGET) ;\
 	fi
 	$(Q)if [ ! -d $(QEMU_TARGET) ]; then \
 	  echo "          CLONE qemu-project/qemu" ;\
