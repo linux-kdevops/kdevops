@@ -6,19 +6,9 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
-
-TOOLS_SERVICES  := blktests-mirror.service
-TOOLS_TIMERS := blktests-mirror.timer
-
 GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
-
-BLKTESTS_TARGET		:= $(MIRROR_PATH)/blktests.git
-
-MIRROR_SERVICES += $(TOOLS_SERVICES)
-MIRROR_TIMERS   += $(TOOLS_TIMERS)
 
 ifeq ($(V),1)
 export Q=
@@ -43,26 +33,9 @@ mirror:
 		mkdir -p $(MIRROR_PATH)     ;\
 	fi
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
-	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
-	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(BLKTESTS_TARGET) ]; then \
-	  echo "          CLONE blktests" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(BLKTESTS) $(BLKTESTS_TARGET) ;\
-	fi
 
 install:
 	$(Q)mkdir -p $(USER_SYSTEM)
-	$(Q)cp $(MIRROR_SERVICES)   $(USER_SYSTEM)
-	$(Q)cp $(MIRROR_TIMERS)     $(USER_SYSTEM)
-	$(Q)for i in $(MIRROR_SERVICES); do           \
-		echo  "Enabling $$i" ;                \
-		systemctl --user enable  $$i ;        \
-	done
-	$(Q)for i in $(MIRROR_TIMERS); do             \
-		echo  "Enabling $$i" ;                \
-		systemctl --user enable $$i ;         \
-		systemctl --user start $$i ;          \
-	done
 	$(NQ) "          ENABLE git-daemon"
 	$(Q)sudo mkdir -p $(LOCAL_SYSTEMD)
 	$(Q)sudo cp $(GIT_DAEMON_FILES) $(LOCAL_SYSTEMD)

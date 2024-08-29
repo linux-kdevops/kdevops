@@ -7,6 +7,9 @@
 # dealt with through a second iteration by start-mirroring.py on this list.
 # Only references with two levels are supported.
 mirrors:
+  - short_name: "blktests"
+    url: "{{ mirror_blktests_url }}"
+    target: "blktests.git"
   - short_name: "blktrace"
     url: "{{ defaults_blktrace_git }}"
     target: "blktrace.git"

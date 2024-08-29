@@ -1,5 +1,9 @@
 # Please keep in alphabetical order
 
+config DEFAULT_BLKTESTS_URL
+	string
+	default "https://github.com/osandov/blktests.git"
+
 config DEFAULT_BLKTRACE_URL
 	string
 	default "https://git.kernel.dk/blktrace"

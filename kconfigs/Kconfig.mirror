@@ -462,7 +462,7 @@ config MIRROR_KDEVOPS_FSTESTS_URL
 
 config MIRROR_BLKTESTS_URL
 	string
-	default "https://github.com/osandov/blktests.git"
+	default DEFAULT_BLKTESTS_URL
 
 config MIRROR_XFSPROGS_URL
 	string

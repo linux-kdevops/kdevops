@@ -145,7 +145,7 @@ config HAVE_MIRROR_BLKTESTS
 
 config BLKTESTS_GIT
 	string "The blktests git tree to clone"
-	default "https://github.com/osandov/blktests.git" if !HAVE_MIRROR_BLKTESTS
+	default DEFAULT_BLKTESTS_URL if !HAVE_MIRROR_BLKTESTS
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/blktests.git) if HAVE_MIRROR_BLKTESTS && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/blktests.git) if HAVE_MIRROR_BLKTESTS && GUESTFS
 	help
