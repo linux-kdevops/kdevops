@@ -28,7 +28,7 @@ def mirror_entry(mirror, args):
     reference_args = []
 
     if mirror.get('reference'):
-        reference = mirror.get('reference')
+        reference = mirror_path + mirror.get('reference')
         reference_args = [ '--reference', reference ]
 
     if (args.verbose):
