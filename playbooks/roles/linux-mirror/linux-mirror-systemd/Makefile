@@ -6,16 +6,12 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export KDEVOPS_LINUS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_LINUS_URL))
 export QEMU		:= $(subst ",,$(CONFIG_MIRROR_QEMU_URL))
 export QEMU_JIC23	:= $(subst ",,$(CONFIG_MIRROR_QEMU_JIC23_URL))
 export KDEVOPS		:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))
 export FSTESTS		:= $(subst ",,$(CONFIG_MIRROR_FSTESTS_URL))
 export KDEVOPS_FSTESTS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_FSTESTS_URL))
 export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
-
-LINUX_SERVICES += kdevops-linus-mirror.service
-LINUX_TIMERS += kdevops-linus-mirror.timer
 
 KDEVOPS_SERVICES  := kdevops-mirror.service
 KDEVOPS_TIMERS := kdevops-mirror.timer
@@ -36,7 +32,6 @@ GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
-KDEVOPS_TARGET_LINUS	:= $(MIRROR_PATH)/kdevops-linus.git
 QEMU_TARGET     	:= $(MIRROR_PATH)/qemu.git
 QEMU_JIC23_TARGET	:= $(MIRROR_PATH)/qemu-jic23.git
 KDEVOPS_TARGET		:= $(MIRROR_PATH)/kdevops.git
@@ -44,12 +39,10 @@ FSTESTS_TARGET		:= $(MIRROR_PATH)/fstests.git
 KDEVOPS_FSTESTS_TARGET	:= $(MIRROR_PATH)/kdevops/fstests.git
 BLKTESTS_TARGET		:= $(MIRROR_PATH)/blktests.git
 
-MIRROR_SERVICES := $(LINUX_SERVICES)
 MIRROR_SERVICES += $(QEMU_SERVICES)
 MIRROR_SERVICES += $(KDEVOPS_SERVICES)
 MIRROR_SERVICES += $(TOOLS_SERVICES)
 
-MIRROR_TIMERS   := $(LINUX_TIMERS)
 MIRROR_TIMERS   += $(QEMU_TIMERS)
 MIRROR_TIMERS   += $(KDEVOPS_TIMERS)
 MIRROR_TIMERS   += $(TOOLS_TIMERS)
@@ -79,10 +72,6 @@ mirror:
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
 	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
 	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(KDEVOPS_TARGET_LINUS) ]; then \
-	  echo "          CLONE kdevops/linux" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(KDEVOPS_LINUS) --reference /mirror/linux.git $(KDEVOPS_TARGET_LINUS) ;\
-	fi
 	$(Q)if [ ! -d $(QEMU_TARGET) ]; then \
 	  echo "          CLONE qemu-project/qemu" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(QEMU) $(QEMU_TARGET) ;\

@@ -144,7 +144,7 @@ endchoice
 
 config MIRROR_KDEVOPS_LINUS_URL
 	string
-	default "https://github.com/linux-kdevops/linux.git" if MIRROR_KDEVOPS_LINUS_HTTPS
+	default DEFAULT_KDEVOPS_LINUX_HTTPS_URL if MIRROR_KDEVOPS_LINUS_HTTPS
 
 choice
 	prompt "Linux Next mirror protocol/source"

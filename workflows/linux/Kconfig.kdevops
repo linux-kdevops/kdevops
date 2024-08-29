@@ -5,7 +5,7 @@ source "workflows/linux/refs/user/Kconfig.kdevops-linus"
 
 config BOOTLINUX_TREE_KDEVOPS_URL
 	string
-	default "https://github.com/linux-kdevops/linux.git" if !USE_LOCAL_LINUX_MIRROR
+	default DEFAULT_KDEVOPS_LINUX_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR
 	default "/mirror/kdevops-linus.git" if USE_LIBVIRT_MIRROR && BOOTLINUX_9P
 
 config BOOTLINUX_TREE_KDEVOPS_NAME
