@@ -14,6 +14,7 @@
   ansible.builtin.include_tasks: install-deps/fedora/main.yml
   when:
     - ansible_distribution == 'Fedora'
+  tags: [ 'mirror' ]
 
 - name: Set up the mirrors.yaml based on preferences configured
   tags: [ 'mirror' ]
@@ -26,6 +27,23 @@
   when:
     - install_linux_mirror|bool
 
+- name: Set up the git daemon systemd service and socket files
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ local_systemd_path }}/{{ item }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  with_items:
+    - "git-daemon@.service"
+    - "git-daemon.socket"
+  when:
+    - install_linux_mirror|bool
+  tags: [ 'mirror' ]
+
 - name: Start mirroring
   delegate_to: localhost
   run_once: true
@@ -37,6 +55,7 @@
     chdir: "{{ topdir_path }}"
   when:
     - install_linux_mirror|bool
+  tags: [ 'mirror' ]
 
 - name: Generate systemd service and timer unit files
   delegate_to: localhost
@@ -49,11 +68,13 @@
     chdir: "{{ topdir_path }}"
   when:
     - install_linux_mirror|bool
+  tags: [ 'mirror' ]
 
 - name: load variables from yaml file
   include_vars:
     file: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml"
     name: mirrors
+  tags: [ 'mirror' , 'status-check' ]
 
 - name: Copy systemd service file to user systemd dir
   copy:
@@ -63,6 +84,7 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Installing {{ item.short_name}}-mirror.service user serice unit ..."
+  tags: [ 'mirror' ]
 
 - name: Copy systemd timer file to user systemd dir
   copy:
@@ -72,6 +94,7 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Installing {{ item.short_name}}-mirror.service user unit ..."
+  tags: [ 'mirror' ]
 
 - name: Enable systemd unit for mirror services
   ansible.builtin.systemd_service:
@@ -83,6 +106,7 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.service unit ..."
+  tags: [ 'mirror' ]
 
 - name: Enable systemd unit for mirror timers
   ansible.builtin.systemd_service:
@@ -94,3 +118,50 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.timer unit ..."
+  tags: [ 'mirror' ]
+
+- name: Check systemd unit status for mirror services
+  ansible.builtin.systemd_service:
+    name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
+    scope: user
+  register: mirror_service_status
+  with_items:
+    - "{{ mirrors.get('mirrors') }}"
+  loop_control:
+    label: "Checking service status for {{ item.short_name | regex_replace('/', '-') }}-mirror.service unit ..."
+  tags: [ 'status-check' ]
+
+- name: Service status
+  debug:
+    var: "{{ item }}.status.ActiveState"
+  with_items:
+    - "{{ mirror_service_status.item }}"
+  tags: [ 'status-check' ]
+
+- name: Check systemd unit status for mirror timers
+  ansible.builtin.systemd_service:
+    name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
+    scope: user
+  register: mirror_timer_status
+  with_items:
+    - "{{ mirrors.get('mirrors') }}"
+  loop_control:
+    label: "Checking service status for {{ item.short_name | regex_replace('/', '-') }}--mirror.timer ..."
+  tags: [ 'status-check' ]
+
+- name: Service timer status
+  debug:
+    var: "{{ item }}.status.ActiveState"
+  with_items:
+    - "{{ mirror_timer_status.item }}"
+  tags: [ 'status-check' ]
+
+- name: Enable git service systemd socket activation
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: "git-daemon.socket"
+    state: started
+    enabled: true
+  tags: [ 'mirror' ]
