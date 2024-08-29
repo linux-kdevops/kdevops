@@ -12,6 +12,26 @@ config DEFAULT_DBENCH_URL
 	string
 	default "https://github.com/linux-kdevops/dbench.git"
 
+config DEFAULT_FSTESTS_GIT_URL
+	string
+	default "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git"
+
+config DEFAULT_FSTESTS_HTTPS_URL
+	string
+	default "https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git"
+
+config DEFAULT_FSTESTS_GOOGLE_HTTPS_URL
+	string
+	default "https://kernel.googlesource.com/pub/scm/fs/xfs/xfstests-dev.git"
+
+config DEFAULT_FSTESTS_KDEVOPS_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/linux-kdevops/fstests.git"
+
+config DEFAULT_FSTESTS_KDEVOPS_GITLAB_HTTPS_URL
+	string
+	default "https://gitlab.com/linux-kdevops/fstests.git"
+
 config DEFAULT_GIT_URL
 	string
 	default "https://git.kernel.org/pub/scm/git/git.git"

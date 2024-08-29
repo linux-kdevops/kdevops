@@ -427,9 +427,9 @@ endchoice
 
 config MIRROR_FSTESTS_URL
 	string
-	default "git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git" if MIRROR_FSTESTS_GIT
-	default "https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git" if MIRROR_FSTESTS_HTTPS
-	default "https://kernel.googlesource.com/pub/scm/fs/xfs/xfstests-dev.git" if MIRROR_FSTESTS_HTTPS_GOOGLE
+	default DEFAULT_FSTESTS_GIT_URL if MIRROR_FSTESTS_GIT
+	default DEFAULT_FSTESTS_HTTPS_URL if MIRROR_FSTESTS_HTTPS
+	default DEFAULT_FSTESTS_GOOGLE_HTTPS_URL if MIRROR_FSTESTS_HTTPS_GOOGLE
 
 choice
 	prompt "Tools - kdevops/fstests.git mirror protocol/source"
@@ -457,8 +457,8 @@ endchoice
 
 config MIRROR_KDEVOPS_FSTESTS_URL
 	string
-	default "https://github.com/linux-kdevops/fstests.git" if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITHUB
-	default "https://gitlab.com/linux-kdevops/fstests.git" if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITLAB
+	default DEFAULT_FSTESTS_KDEVOPS_GITHUB_HTTPS_URL if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITHUB
+	default DEFAULT_FSTESTS_KDEVOPS_GITLAB_HTTPS_URL if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITLAB
 
 config MIRROR_BLKTESTS_URL
 	string
