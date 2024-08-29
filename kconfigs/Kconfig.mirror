@@ -259,9 +259,9 @@ endchoice
 
 config MIRROR_MCGROF_LINUS_URL
 	string
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git" if MIRROR_MCGROF_LINUS_GIT
-	default "https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git" if MIRROR_MCGROF_LINUS_HTTPS
-	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/mcgrof/linux.git" if MIRROR_MCGROF_LINUS_HTTPS_GOOGLE
+	default DEFAULT_MCGROF_LINUS_HTTPS_URL if MIRROR_MCGROF_LINUS_GIT
+	default DEFAULT_MCGROF_LINUS_HTTPS_URL if MIRROR_MCGROF_LINUS_HTTPS
+	default DEFAULT_MCGROF_LINUS_HTTPS_GOOGLE_URL if MIRROR_MCGROF_LINUS_HTTPS_GOOGLE
 
 choice
 	prompt "Linux stable mirror protocol/source"
