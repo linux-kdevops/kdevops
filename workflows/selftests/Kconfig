@@ -15,6 +15,9 @@ config SELFTESTS_MANUAL_COVERAGE
 
 if SELFTESTS_MANUAL_COVERAGE
 
+config SELFTESTS_TOOLS_BUILD_RADIX_TREE
+	bool
+
 config SELFTESTS_SECTION_FIRMWARE
 	bool "Firmware loader"
 	default y
@@ -27,11 +30,25 @@ config SELFTESTS_SECTION_KMOD
 	help
 	  This will create a host to test the kmod selftest.
 
+config SELFTESTS_SECTION_MAPLE
+	bool "Maple tree"
+	default y
+	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
+	help
+	  This will create a host to test the maple tree.
+
 config SELFTESTS_SECTION_SYSCTL
 	bool "sysctls"
 	default y
 	help
 	  This will create a host to test proc sysctls.
+
+config SELFTESTS_SECTION_XARRAY
+	bool "Xarray"
+	default y
+	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
+	help
+	  This will create a host to test the xarray.
 
 endif # SELFTESTS_MANUAL_COVERAGE
 

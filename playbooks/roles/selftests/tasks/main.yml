@@ -182,6 +182,18 @@
   when:
     - selftests_skip_run|bool
 
+- name: Run userspace selftests
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: "./run_kselftest.sh -s"
+  args:
+    chdir: "{{ selftests_workdir }}"
+  register: selftests_out
+  when:
+    - kdevops_run_selftests|bool
+
 - name: Run selftests
   tags: [ 'selftests', 'run_tests' ]
   become: yes

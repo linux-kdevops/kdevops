@@ -16,6 +16,10 @@ ifneq (,$(SKIP_REBOOT))
 DYNAMIC_RUNTIME_VARS += , "selftests_skip_reboot": True
 endif
 
+ifeq (y,$(CONFIG_SELFTESTS_TOOLS_BUILD_RADIX_TREE))
+SELFTESTS_ARGS += selftests_build_radix_tree='True'
+endif
+
 SELFTESTS_HELP_TARGETS := selftests-help-main
 SELFTESTS_LIMIT_TARGET :=
 KDEVOPS_HOSTS_PREFIX:=$(subst ",,$(CONFIG_KDEVOPS_HOSTS_PREFIX))
@@ -26,7 +30,9 @@ endif
 
 include $(TOPDIR)/workflows/selftests/tests/Makefile.firmware
 include $(TOPDIR)/workflows/selftests/tests/Makefile.kmod
+include $(TOPDIR)/workflows/selftests/tests/Makefile.maple
 include $(TOPDIR)/workflows/selftests/tests/Makefile.sysctl
+include $(TOPDIR)/workflows/selftests/tests/Makefile.xarray
 
 selftests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \

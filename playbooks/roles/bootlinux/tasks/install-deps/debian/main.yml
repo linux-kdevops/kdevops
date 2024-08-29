@@ -26,6 +26,7 @@
       - sed
       - libssl-dev
       - libelf-dev
+      - liburcu-dev
       - xfsprogs
       - e2fsprogs
       - btrfs-progs

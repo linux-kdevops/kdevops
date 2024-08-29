@@ -1,0 +1,9 @@
+ifeq (y,$(CONFIG_SELFTESTS_SECTION_MAPLE))
+SELFTESTS_HELP_TARGETS += selftests-help-menu-target-maple
+SELFTESTS_ARGS += selftests_section_maple='True'
+selftests-maple:
+	$(Q)$(MAKE) selftests-baseline HOSTS=$(KDEVOPS_HOSTS_PREFIX)-maple
+endif
+
+selftests-help-menu-target-maple:
+	@echo "selftests-maple                   - Runs selftests for the maple tree"

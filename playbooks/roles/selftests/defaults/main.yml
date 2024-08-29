@@ -13,10 +13,14 @@ kdevops_run_selftests: False
 run_tests_on_failures: False
 selftests_skip_run: False
 selftests_skip_reboot: False
+selftests_build_radix_tree: False
+selftests_radix_tree_dir: "tools/testing/radix-tree"
 
 selftests_section_firmware: False
 selftests_section_kmod: False
+selftests_section_maple: False
 selftests_section_sysctl: False
+selftests_section_xarray: False
 
 selftests_ksrc: "tools/testing/selftests/"
 selftests_data: "{{ target_linux_dir_path }}/{{ selftests_ksrc }}"

@@ -59,6 +59,7 @@
       - openssl
       - openssl-devel
       - dwarves
+      - userspace-rcu
       - zstd
 
 - name: Install btrfs-progs

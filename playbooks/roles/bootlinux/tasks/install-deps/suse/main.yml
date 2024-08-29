@@ -15,6 +15,7 @@
       - sed
       - libopenssl-devel
       - libelf-devel
+      - liburcu8
       - diffutils
       - net-tools
       - ncurses-devel
