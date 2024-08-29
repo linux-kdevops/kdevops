@@ -6,6 +6,7 @@ LINUX_MIRROR_ARGS += install_linux_mirror=True
 LINUX_MIRROR_ARGS += defaults_xfsprogs_git='$(subst ",,$(CONFIG_DEFAULT_XFSPROGS_URL))'
 LINUX_MIRROR_ARGS += defaults_xfsdump_git='$(subst ",,$(CONFIG_DEFAULT_XFSDUMP_URL))'
 LINUX_MIRROR_ARGS += mirror_kdevops_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))'
+LINUX_MIRROR_ARGS += mirror_linux_next_url='$(subst ",,$(CONFIG_MIRROR_NEXT_URL))'
 LINUX_MIRROR_ARGS += mirror_mcgrof_linus_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_LINUS_URL))'
 LINUX_MIRROR_ARGS += mirror_mcgrof_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_URL))'
 LINUX_MIRROR_ARGS += mirror_stable_url='$(subst ",,$(CONFIG_MIRROR_STABLE_URL))'

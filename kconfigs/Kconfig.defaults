@@ -24,6 +24,18 @@ config DEFAULT_KDEVOPS_GITLAB_HTTPS_URL
 	string
 	default "https://gitlab.com/linux-kdevops/kdevops.git"
 
+config DEFAULT_LINUX_NEXT_GIT_URL
+	string
+	default "git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+
+config DEFAULT_LINUX_NEXT_HTTPS_URL
+	string
+	default "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+
+config DEFAULT_LINUX_NEXT_HTTPS_GOOGLE_URL
+	string
+	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/linux-next.git"
+
 config DEFAULT_LTP_URL
 	string
 	default "https://github.com/linux-test-project/ltp.git"

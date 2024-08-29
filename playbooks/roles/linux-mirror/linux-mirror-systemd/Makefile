@@ -6,7 +6,6 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export NEXT		:= $(subst ",,$(CONFIG_MIRROR_NEXT_URL))
 export KDEVOPS_LINUS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_LINUS_URL))
 export QEMU		:= $(subst ",,$(CONFIG_MIRROR_QEMU_URL))
 export QEMU_JIC23	:= $(subst ",,$(CONFIG_MIRROR_QEMU_JIC23_URL))
@@ -15,10 +14,7 @@ export FSTESTS		:= $(subst ",,$(CONFIG_MIRROR_FSTESTS_URL))
 export KDEVOPS_FSTESTS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_FSTESTS_URL))
 export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
 
-LINUX_SERVICES += linux-next-mirror.service
 LINUX_SERVICES += kdevops-linus-mirror.service
-
-LINUX_TIMERS += linux-next-mirror.timer
 LINUX_TIMERS += kdevops-linus-mirror.timer
 
 KDEVOPS_SERVICES  := kdevops-mirror.service
@@ -40,7 +36,6 @@ GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
-NEXT_TARGET		:= $(MIRROR_PATH)/linux-next.git
 KDEVOPS_TARGET_LINUS	:= $(MIRROR_PATH)/kdevops-linus.git
 QEMU_TARGET     	:= $(MIRROR_PATH)/qemu.git
 QEMU_JIC23_TARGET	:= $(MIRROR_PATH)/qemu-jic23.git
@@ -84,10 +79,6 @@ mirror:
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
 	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
 	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(NEXT_TARGET) ]; then \
-	  echo "          CLONE next/linux-next" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(NEXT) --reference /mirror/linux.git $(NEXT_TARGET) ;\
-	fi
 	$(Q)if [ ! -d $(KDEVOPS_TARGET_LINUS) ]; then \
 	  echo "          CLONE kdevops/linux" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(KDEVOPS_LINUS) --reference /mirror/linux.git $(KDEVOPS_TARGET_LINUS) ;\

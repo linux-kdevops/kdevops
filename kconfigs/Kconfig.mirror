@@ -181,9 +181,9 @@ endchoice
 
 config MIRROR_NEXT_URL
 	string
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git" if MIRROR_NEXT_GIT
-	default "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git" if MIRROR_NEXT_HTTPS
-	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/linux-next.git" if MIRROR_NEXT_HTTPS
+	default DEFAULT_LINUX_NEXT_GIT_URL if MIRROR_NEXT_GIT
+	default DEFAULT_LINUX_NEXT_HTTPS_URL if MIRROR_NEXT_HTTPS
+	default DEFAULT_LINUX_NEXT_HTTPS_GOOGLE_URL if MIRROR_NEXT_HTTPS_GOOGLE
 
 choice
 	prompt "Linux mcgrof's linux-next fork protocol/source"
