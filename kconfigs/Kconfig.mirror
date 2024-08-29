@@ -298,9 +298,9 @@ endchoice
 
 config MIRROR_STABLE_URL
 	string
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git" if MIRROR_STABLE_GIT
-	default "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git" if MIRROR_STABLE_HTTPS
-	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux.git" if MIRROR_STABLE_HTTPS_GOOGLE
+	default DEFAULT_STABLE_GIT_URL if MIRROR_STABLE_GIT
+	default DEFAULT_STABLE_HTTPS_URL if MIRROR_STABLE_HTTPS
+	default DEFAULT_STABLE_HTTPS_GOOGLE_URL if MIRROR_STABLE_HTTPS_GOOGLE
 
 choice
 	prompt "QEMU mirror protocol/source"

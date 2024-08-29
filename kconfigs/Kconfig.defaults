@@ -44,6 +44,18 @@ config DEFAULT_TORVALDS_HTTPS_GOOGLE_URL
 	string
 	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux.git"
 
+config DEFAULT_STABLE_GIT_URL
+	string
+	default "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+
+config DEFAULT_STABLE_HTTPS_URL
+	string
+	default "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+
+config DEFAULT_STABLE_HTTPS_GOOGLE_URL
+	string
+	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux.git"
+
 config DEFAULT_XFSDUMP_URL
 	string
 	default "https://github.com/linux-kdevops/xfsdump-dev.git"

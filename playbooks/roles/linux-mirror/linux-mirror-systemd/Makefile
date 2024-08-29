@@ -6,7 +6,6 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export STABLE		:= $(subst ",,$(CONFIG_MIRROR_STABLE_URL))
 export NEXT		:= $(subst ",,$(CONFIG_MIRROR_NEXT_URL))
 export KDEVOPS_LINUS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_LINUS_URL))
 export MCGROF		:= $(subst ",,$(CONFIG_MIRROR_MCGROF_URL))
@@ -18,13 +17,11 @@ export FSTESTS		:= $(subst ",,$(CONFIG_MIRROR_FSTESTS_URL))
 export KDEVOPS_FSTESTS	:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_FSTESTS_URL))
 export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
 
-LINUX_SERVICES += linux-stable-mirror.service
 LINUX_SERVICES += linux-next-mirror.service
 LINUX_SERVICES += kdevops-linus-mirror.service
 LINUX_SERVICES += mcgrof-next-mirror.service
 LINUX_SERVICES += mcgrof-linus-mirror.service
 
-LINUX_TIMERS += linux-stable-mirror.timer
 LINUX_TIMERS += linux-next-mirror.timer
 LINUX_TIMERS += kdevops-linus-mirror.timer
 LINUX_TIMERS += mcgrof-next-mirror.timer
@@ -49,7 +46,6 @@ GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
-STABLE_TARGET		:= $(MIRROR_PATH)/linux-stable.git
 NEXT_TARGET		:= $(MIRROR_PATH)/linux-next.git
 KDEVOPS_TARGET_LINUS	:= $(MIRROR_PATH)/kdevops-linus.git
 MCGROF_TARGET_LINUS	:= $(MIRROR_PATH)/mcgrof-linus.git
@@ -96,10 +92,6 @@ mirror:
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
 	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
 	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(STABLE_TARGET) ]; then \
-	 echo "          CLONE stable/linux" ;\
-	 git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(STABLE) --reference /mirror/linux.git $(STABLE_TARGET) ;\
-	fi
 	$(Q)if [ ! -d $(NEXT_TARGET) ]; then \
 	  echo "          CLONE next/linux-next" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(NEXT) --reference /mirror/linux.git $(NEXT_TARGET) ;\
