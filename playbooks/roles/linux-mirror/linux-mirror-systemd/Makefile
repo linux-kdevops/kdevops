@@ -6,11 +6,7 @@ else
 include $(TOPDIR_PATH)/.config
 endif
 
-export KDEVOPS		:= $(subst ",,$(CONFIG_MIRROR_KDEVOPS_URL))
 export BLKTESTS		:= $(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))
-
-KDEVOPS_SERVICES  := kdevops-mirror.service
-KDEVOPS_TIMERS := kdevops-mirror.timer
 
 TOOLS_SERVICES  := blktests-mirror.service
 TOOLS_TIMERS := blktests-mirror.timer
@@ -19,13 +15,9 @@ GIT_DAEMON_FILES := git-daemon@.service
 GIT_DAEMON_FILES += git-daemon.socket
 LOCAL_SYSTEMD    := /usr/local/lib/systemd/system/
 
-KDEVOPS_TARGET		:= $(MIRROR_PATH)/kdevops.git
 BLKTESTS_TARGET		:= $(MIRROR_PATH)/blktests.git
 
-MIRROR_SERVICES += $(KDEVOPS_SERVICES)
 MIRROR_SERVICES += $(TOOLS_SERVICES)
-
-MIRROR_TIMERS   += $(KDEVOPS_TIMERS)
 MIRROR_TIMERS   += $(TOOLS_TIMERS)
 
 ifeq ($(V),1)
@@ -53,10 +45,6 @@ mirror:
 	$(NQ) "          Verify $(USER) can write onto $(MIRROR_PATH)"
 	$(Q)touch $(MIRROR_PATH)/ignore_kdevops
 	$(Q)rm -f $(MIRROR_PATH)/ignore_kdevops
-	$(Q)if [ ! -d $(KDEVOPS_TARGET) ]; then \
-	  echo "          CLONE linux-kdevops/kdevops" ;\
-	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(KDEVOPS) $(KDEVOPS_TARGET) ;\
-	fi
 	$(Q)if [ ! -d $(BLKTESTS_TARGET) ]; then \
 	  echo "          CLONE blktests" ;\
 	  git -C $(MIRROR_PATH) clone $(GIT_VERBOSE) --progress --mirror $(BLKTESTS) $(BLKTESTS_TARGET) ;\
