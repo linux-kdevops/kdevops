@@ -18,3 +18,6 @@ gitr_thread_single: false
 gitr_thread_fast: false
 gitr_thread_stress: false
 gitr_thread_custom: false
+
+cvsps_git: https://github.com/andreyvit/cvsps.git
+cvsps_data: "{{ data_path }}/cvsps"
