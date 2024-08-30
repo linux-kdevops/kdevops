@@ -111,41 +111,29 @@
       - net-snmp
       - trace-cmd
       - perf
+  when:
+    - devconfig_try_install_kdevtools|bool
 
-- name: Install btrfs-progs
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
-    name: "{{ packages }}"
-  retries: 3
-  delay: 5
-  register: result
-  until: result.rc == 0
-  vars:
-    packages:
-      - btrfs-progs
-  when: ansible_distribution == 'Fedora'
+- name: Add btrfs-progs to install package list
+  set_fact:
+    packages: "{{ packages + [ 'btrfs-progs' ] }}"
+  when:
+    - devconfig_try_install_kdevtools|bool
+    - ansible_distribution == 'Fedora'
 
 - name: Add GNU screen to install package list
   set_fact:
     packages: "{{ packages + [ 'screen' ] }}"
   when:
-    ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
+    - devconfig_try_install_kdevtools|bool
+    - ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Add Tmux to install package list
   set_fact:
     packages: "{{ packages + [ 'tmux' ] }}"
   when:
-    ansible_facts['os_family']|lower == 'redhat' or ansible_facts['distribution_major_version'] | int >= 8
-
-- name: Add systemd-journal-remote to install package list
-  set_fact:
-    packages: "{{ packages + [ 'systemd-journal-remote' ] }}"
-  when:
-    - devconfig_enable_systemd_journal_remote|bool
+    - devconfig_try_install_kdevtools|bool
     - ansible_facts['os_family']|lower == 'redhat' or ansible_facts['distribution_major_version'] | int >= 8
-  tags: journal-upload
 
 - name: Install packages we typically care about
   become: yes
