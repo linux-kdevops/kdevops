@@ -45,13 +45,12 @@ endef
 #$(patsubst $(firstword $(subst =, ,$(1)))=%,$(firstword $(subst =, ,$(1))):%,$(1))
 #$(patsubst $(firstword $(subst =, ,$(1))=)%,$(firstword $(subst =, , $(1):)%,$(1)),$(1))
 
-# We can transform most of .config things we need to using
-# looping on ANSIBLE_EXTRA_ARGS and converting those with
-# this target. If you need to do more complex fancy stuff
-# extend the EXTRA_VAR_INPUTS variable in your workflow with
-# your custom stuff.
+# extra_vars.yaml first gets the selective yaml entries which kconfig writes
+# to for us in KCONFIG_YAMLCFG, then we expand on it with more dynamic data.
+# We use awk NF to just remove empty lines.
 most_extra_vars:
-	@echo --- > $(KDEVOPS_EXTRA_VARS)
+	@awk NF $(KCONFIG_YAMLCFG) > $(KDEVOPS_EXTRA_VARS)
+	@echo "# end of of yamlconfig auto output yaml variables " >> $(KDEVOPS_EXTRA_VARS)
 	@$(foreach exp,$(ANSIBLE_EXTRA_ARGS),echo $(call YAML_ENTRY,$(subst =,: ,$(exp)) >> $(KDEVOPS_EXTRA_VARS)))
 
 # ANSIBLE_EXTRA_ARGS_SEPARATED is to be used for variables in .config

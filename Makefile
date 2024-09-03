@@ -9,6 +9,7 @@ EXTRAVERSION =
 all: deps
 
 export KCONFIG_DIR=$(CURDIR)/scripts/kconfig
+export KCONFIG_YAMLCFG=$(CURDIR)/.extra_vars_auto.yaml
 include $(KCONFIG_DIR)/kconfig.Makefile
 include Makefile.subtrees
 
@@ -250,7 +251,7 @@ mrproper:
 	$(Q)rm -f terraform/*/terraform.tfvars
 	$(Q)rm -f $(KDEVOPS_NODES)
 	$(Q)rm -f $(KDEVOPS_HOSTFILE) $(KDEVOPS_MRPROPER)
-	$(Q)rm -f .config .config.old extra_vars.yaml
+	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
 	$(Q)rm -rf include
 
