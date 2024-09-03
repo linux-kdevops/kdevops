@@ -1,4 +1,5 @@
 if VAGRANT
+
 choice
 	prompt "Vagrant virtualization technology to use"
 	default VAGRANT_LIBVIRT_SELECT
@@ -89,7 +90,7 @@ config VIRTUALBOX_EXTRA_DRIVE_FORMAT
 	default "vmdk" if VIRTUALBOX_EXTRA_DRIVE_VMDK
 	default "vhd" if VIRTUALBOX_EXTRA_DRIVE_VHD
 
-endif
+endif # VAGRANT_VIRTUALBOX
 
 config HAVE_SUSE_VAGRANT
 	bool

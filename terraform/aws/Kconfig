@@ -284,13 +284,6 @@ config TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
 	bool "is4gen.8xlarge"
 	depends on TARGET_ARCH_ARM64
 	help
-	  192 GiB RAM, 32 vCPUs, 4 x 7500 GiB NVMe SSD, 50 Gbps Net, 19 Gbps EBS.
-	  https://aws.amazon.com/ec2/instance-types/i4g/
-
-config TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
-	bool "is4gen.8xlarge"
-	depends on TARGET_ARCH_ARM64
-	help
 	  192 GiB RAM, 32 vCPUs, 4 x 7500 NVMe SSD, 50 Gbps Net, 19 Gbps EBS.
 	  https://aws.amazon.com/ec2/instance-types/i4g/
 
@@ -299,13 +292,6 @@ config TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
 	depends on TARGET_ARCH_ARM64
 	help
 	  8 GiB RAM, 2vCPUs, 1 x 937 GiB NVMe SSD, 25 Gbps Net, 9.5 Gbps EBS.
-	  https://aws.amazon.com/ec2/instance-types/i4g/
-
-config TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
-	bool "im4gn.4xlarge"
-	depends on TARGET_ARCH_ARM64
-	help
-	  64 GiB RAM, 16 vcpus, 1 x 7500 NVMe SSD, 25 Gbps Net, 9.5 Gbps EBS.
 	  https://aws.amazon.com/ec2/instance-types/i4g/
 
 config TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
