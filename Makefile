@@ -20,6 +20,7 @@ export KDEVOPS_VAGRANT :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
+include scripts/refs.Makefile
 
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates
 export KDEVOPS_NODES_TEMPLATE :=
@@ -174,7 +175,6 @@ endif
 
 include scripts/gen-hosts.Makefile
 include scripts/gen-nodes.Makefile
-include scripts/refs.Makefile
 
 # disable built-in rules for this
 .SUFFIXES:
