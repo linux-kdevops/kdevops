@@ -6,64 +6,72 @@
 #
 # Part of the https://github.com/mcgrof/kconfig.git
 
-CFLAGS=-Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
-LXDIALOG := lxdialog/checklist.o lxdialog/inputbox.o lxdialog/menubox.o lxdialog/textbox.o lxdialog/util.o lxdialog/yesno.o
+CFLAGS := -Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS += -O2 -fomit-frame-pointer
+CFLAGS += -I ./
+lxdialog        := $(addprefix lxdialog/, \
+		checklist.o inputbox.o menubox.o textbox.o util.o yesno.o)
 
-default: mconf
+kconfig: conf mconf nconf
 
-common-objs := confdata.o expr.o menu.o parser.tab.o lexer.lex.c \
-                   preprocess.o symbol.o util.o
+common-objs     := lexer.lex.o parser.tab.o confdata.o expr.o menu.o \
+		   preprocess.o symbol.o util.o
 
-lexer.lex.c: lexer.l
+lexer.lex.c: lexer.l parser.tab.h
 	@flex -olexer.lex.c -L lexer.l
 
-parser.tab.c: parser.y
+parser.tab.c parser.tab.h: parser.y
 	@bison -oparser.tab.c --defines=parser.tab.h -t -l parser.y
 
-conf: conf.o $(common-objs)
-	$(CC) -o conf $^
+conf: $(common-objs) conf.o
+	$(CC) -o conf -I./ $^
 
-mconf_CFLAGS :=  $(shell test -f $(CURDIR)/.mconf-cfg && . $(CURDIR)/.mconf-cfg && echo $$cflags) -DLOCALE
-mconf_LDFLAGS := $(shell test -f $(CURDIR)/.mconf-cfg && . $(CURDIR)/.mconf-cfg && echo $$libs)
-mconf: CFLAGS += ${mconf_CFLAGS}
+HOSTLDLIBS_nconf       = $(call read-file, nconf-libs)
+HOSTCFLAGS_nconf.o     = $(call read-file, nconf-cflags)
+nconf: CFLAGS += ${HOSTCFLAGS_nconf.o}
 
-nconf_CFLAGS :=  $(shell test -f $(CURDIR)/.nconf-cfg && . $(CURDIR)/.nconf-cfg && echo $$cflags) -DLOCALE
-nconf_LDFLAGS := $(shell test -f $(CURDIR)/.nconf-cfg && . $(CURDIR)/.nconf-cfg && echo $$libs)
-nconf: CFLAGS += ${nconf_CFLAGS}
+HOSTLDLIBS_mconf = $(call read-file, mconf-libs)
+$(foreach f, mconf.o $(lxdialog), \
+  $(eval HOSTCFLAGS_$f = $$(call read-file, mconf-cflags)))
+mconf: CFLAGS += ${HOSTCFLAGS_mconf.o}
 
+export HOSTPKG_CONFIG := pkg-config
 include $(CURDIR)/Kbuild.include
 # check if necessary packages are available, and configure build flags
-define filechk_conf_cfg
-	$(CURDIR)/$<
-endef
+cmd_conf_cfg = $(CURDIR)/$< $(addprefix $*conf-, cflags libs bin); touch $*conf-bin
 
-.%conf-cfg: %conf-cfg.sh
-	$(call filechk,conf_cfg)
+%conf-cflags %conf-libs %conf-bin: %conf-cfg.sh
+	$(call cmd,conf_cfg)
 
-MCONF_DEPS := mconf.o $(LXDIALOG) $(common-objs)
-mconf: .mconf-cfg conf $(MCONF_DEPS)
-	$(CC) -o mconf $(MCONF_DEPS) $(mconf_LDFLAGS)
+MCONF_DEPS := $(common-objs) mconf.o $(lxdialog) mnconf-common.o
+mconf:   | mconf-libs
+mconf.o: | mconf-cflags
+mconf: $(MCONF_DEPS) conf
+	$(CC) -o mconf -I./ $(MCONF_DEPS) $(HOSTLDLIBS_mconf)
 
-NCONF_DEPS := nconf.o nconf.gui.o parser.tab.c
-nconf: .nconf-cfg conf $(NCONF_DEPS)
-	$(CC) -o nconf $(NCONF_DEPS) $(nconf_LDFLAGS)
+NCONF_DEPS := $(common-objs) nconf.o nconf.gui.o mnconf-common.o
+nconf:   | nconf-libs
+nconf.o: | nconf-cflags
+nconf: $(NCONF_DEPS) conf
+	$(CC) -o nconf $(NCONF_DEPS) $(HOSTLDLIBS_nconf)
+
+clean-files := conf mconf conf
+clean-files += *.o lxdialog/*.o
+clean-files += parser.tab.c parser.tab.h .lex.c
+clean-files += *conf-cflags *conf-libs *conf-bin
 
 .PHONY: help
 help:
 	@echo "Configuration options:"
+	@echo "kconfig            - builds only requirements menuconfig and nconfig"
 	@echo "menuconfig         - demos the menuconfig functionality"
 	@echo "nconfig            - demos the nconfig functionality"
 	@echo "allyesconfig       - enables all bells and whistles"
 	@echo "allnoconfig        - disables all bells and whistles"
 	@echo "randconfig         - random configuration"
 	@echo "defconfig-*        - If you have files in the defconfig directory use default config from there"
-	@echo
-	@echo "Variable options:"
-	@echo "make V=n [targets] 1: verbose build (Makefile)"
-	@echo "                   2: verbose playbooks (Ansible)"
-	@echo "                   V=1 and V=2 can be combined with V=12"
 
 .PHONY: clean
 clean:
-	@rm -f conf mconf conf *.o lxdialog/*.o *.o parser.tab.c .mconf-cfg *.lex.c
+	@rm -f $(clean-files)
 	@rm -rf *.o.d

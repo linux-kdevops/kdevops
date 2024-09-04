@@ -22,3 +22,6 @@ parser.tab.c
 lxdialog/*.o.cmd
 lxdialog/*.o
 
+*conf-bin
+*conf-cflags
+*conf-libs
