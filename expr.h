@@ -132,6 +132,7 @@ struct symbol {
 #define SYMBOL_CHECK      0x0008  /* used during dependency checking */
 #define SYMBOL_VALID      0x0080  /* set when symbol.curr is calculated */
 #define SYMBOL_WRITE      0x0200  /* write symbol to file (KCONFIG_CONFIG) */
+#define SYMBOL_YAML       0x0400  /* write symbol to file (KCONFIG_YAMLCFG) */
 #define SYMBOL_WRITTEN    0x0800  /* track info to avoid double-write to .config */
 #define SYMBOL_CHECKED    0x2000  /* used during dependency checking */
 #define SYMBOL_WARNED     0x8000  /* warning has been issued */
