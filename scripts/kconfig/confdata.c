@@ -234,6 +234,20 @@ static const char *conf_get_rustccfg_name(void)
 	return name ? name : "include/generated/rustc_cfg";
 }
 
+static bool conf_yaml_enable_all(void)
+{
+	char *name = getenv("KCONFIG_YAMLCFG_ALL");
+
+	return name ? true: false;
+}
+
+static const char *conf_get_yaml_config_name(void)
+{
+	char *name = getenv("KCONFIG_YAMLCFG");
+
+	return name ? name : NULL;
+}
+
 static int conf_set_sym_val(struct symbol *sym, int def, int def_flags, char *p)
 {
 	char *p2;
@@ -624,9 +638,103 @@ static void __print_symbol(FILE *fp, struct symbol *sym, enum output_n output_n,
 	free(escaped);
 }
 
-static void print_symbol_for_dotconfig(FILE *fp, struct symbol *sym)
+static char *conf_name_to_yaml(struct symbol *sym)
+{
+	const char *name = sym->name;
+	size_t len = strlen(name);
+	size_t i, j = 0;
+	char *yaml_name = (char *) malloc(len + 1);
+
+	if (!yaml_name)
+		return NULL;
+
+	for (i = 0; i < len; i++) {
+		if (name[i] == '_')
+			yaml_name[j++] = '_';
+		else
+			yaml_name[j++] = tolower(name[i]);
+	}
+
+	yaml_name[j] = '\0';
+
+    return yaml_name;
+}
+
+static char *conf_value_to_yaml(struct symbol *sym, const char *val)
+{
+	char *yaml_value = NULL;
+
+	switch (sym->type) {
+	case S_INT:
+		yaml_value = strdup(val);
+		break;
+	case S_HEX:
+            asprintf(&yaml_value, "0x%s", val);
+            break;
+        case S_STRING:
+	    /* Wrap strings in quotes */
+            asprintf(&yaml_value, "\"%s\"", val);
+            break;
+        case S_BOOLEAN:
+        case S_TRISTATE:
+		if (strcmp(val, "y") == 0)
+			yaml_value = strdup("True");
+		else if (strcmp(val, "n") == 0)
+			yaml_value = strdup("False");
+		else
+			yaml_value = strdup(val); /* m in tristate */
+		break;
+        default:
+		/* In case type is unknown */
+		yaml_value = strdup(val);
+		break;
+	}
+
+	return yaml_value;
+}
+
+static void __print_yaml_symbol(FILE *fp, struct symbol *sym,
+				enum output_n output_n,
+				bool escape_string)
+{
+	const char *val;
+	char *yaml_config = NULL;
+	char *yaml_config_value = NULL;
+
+	if (!fp || sym->type == S_UNKNOWN)
+		return;
+	if (!conf_yaml_enable_all() && !(sym->flags & SYMBOL_YAML))
+		return;
+
+	val = sym_get_string_value(sym);
+
+	yaml_config = conf_name_to_yaml(sym);
+	if (!yaml_config)
+		return;
+
+	yaml_config_value = conf_value_to_yaml(sym, val);
+	if (!yaml_config_value) {
+		free(yaml_config);
+		return;
+	}
+
+	if ((sym->type == S_BOOLEAN || sym->type == S_TRISTATE) &&
+	    output_n != OUTPUT_N && *val == 'n') {
+		if (output_n == OUTPUT_N_AS_UNSET && conf_yaml_enable_all())
+			fprintf(fp, "# %s: False\n", yaml_config);
+		return;
+	}
+
+	fprintf(fp, "%s: %s\n", yaml_config, yaml_config_value);
+
+	free(yaml_config);
+	free(yaml_config_value);
+}
+
+static void print_symbol_for_dotconfig(FILE *fp, FILE *yaml, struct symbol *sym)
 {
 	__print_symbol(fp, sym, OUTPUT_N_AS_UNSET, true);
+	__print_yaml_symbol(yaml, sym, OUTPUT_N_AS_UNSET, true);
 }
 
 static void print_symbol_for_autoconf(FILE *fp, struct symbol *sym)
@@ -749,10 +857,23 @@ int conf_write_defconfig(const char *filename)
 	struct symbol *sym;
 	struct menu *menu;
 	FILE *out;
+	FILE *yaml_out = NULL;
+	const char *yaml_config = NULL;
+
+	yaml_config = conf_get_yaml_config_name();
 
 	out = fopen(filename, "w");
 	if (!out)
 		return 1;
+
+	if (yaml_config) {
+		yaml_out = fopen(yaml_config, "w");
+		if (!yaml_out) {
+			fclose(out);
+			return 1;
+		}
+		fprintf(yaml_out, "---\n");
+	}
 
 	sym_clear_all_valid();
 
@@ -784,21 +905,25 @@ int conf_write_defconfig(const char *filename)
 			if (sym == ds && sym_get_tristate_value(sym) == yes)
 				continue;
 		}
-		print_symbol_for_dotconfig(out, sym);
+		print_symbol_for_dotconfig(out, yaml_out, sym);
 	}
 	fclose(out);
+	if (yaml_out)
+		fclose(yaml_out);
 	return 0;
 }
 
 int conf_write(const char *name)
 {
 	FILE *out;
+	FILE *yaml_out = NULL;
 	struct symbol *sym;
 	struct menu *menu;
 	const char *str;
 	char tmpname[PATH_MAX + 1], oldname[PATH_MAX + 1];
 	char *env;
 	bool need_newline = false;
+	const char *yaml_config;
 
 	if (!name)
 		name = conf_get_configname();
@@ -816,17 +941,32 @@ int conf_write(const char *name)
 	if (make_parent_dir(name))
 		return -1;
 
+	yaml_config = conf_get_yaml_config_name();
+
 	env = getenv("KCONFIG_OVERWRITECONFIG");
 	if (env && *env) {
 		*tmpname = 0;
 		out = fopen(name, "w");
+		if (yaml_config)
+			yaml_out = fopen(yaml_config, "w");
 	} else {
 		snprintf(tmpname, sizeof(tmpname), "%s.%d.tmp",
 			 name, (int)getpid());
 		out = fopen(tmpname, "w");
+		if (yaml_config)
+			yaml_out = fopen(yaml_config, "w");
 	}
 	if (!out)
 		return 1;
+
+	if (yaml_config) {
+		if (!yaml_out) {
+			fclose(out);
+			return 1;
+		}
+		fprintf(yaml_out, "---\n");
+	}
+
 
 	conf_write_heading(out, &comment_style_pound);
 
@@ -853,9 +993,11 @@ int conf_write(const char *name)
 			if (need_newline) {
 				fprintf(out, "\n");
 				need_newline = false;
+				if (yaml_config)
+					fprintf(yaml_out, "\n");
 			}
 			sym->flags |= SYMBOL_WRITTEN;
-			print_symbol_for_dotconfig(out, sym);
+			print_symbol_for_dotconfig(out, yaml_out, sym);
 		}
 
 next:
@@ -880,6 +1022,8 @@ end_check:
 		}
 	}
 	fclose(out);
+	if (yaml_out)
+		fclose(yaml_out);
 
 	for_all_symbols(sym)
 		sym->flags &= ~SYMBOL_WRITTEN;
@@ -899,6 +1043,8 @@ end_check:
 	}
 
 	conf_message("configuration written to %s", name);
+	if (yaml_config)
+		conf_message("yaml configuration written to %s", yaml_config);
 
 	conf_set_changed(false);
 

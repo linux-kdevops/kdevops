@@ -70,6 +70,7 @@ struct menu *current_menu, *current_entry, *current_choice;
 %token T_MODULES
 %token T_ON
 %token T_OPEN_PAREN
+%token T_OUTPUT
 %token T_PLUS_EQUAL
 %token T_PROMPT
 %token T_RANGE
@@ -78,6 +79,7 @@ struct menu *current_menu, *current_entry, *current_choice;
 %token T_STRING
 %token T_TRISTATE
 %token T_VISIBLE
+%token T_YAML
 %token T_EOL
 %token <string> T_ASSIGN_VAL
 
@@ -233,6 +235,15 @@ config_option: T_MODULES T_EOL
 		zconf_error("symbol '%s' redefines option 'modules' already defined by symbol '%s'",
 			    current_entry->sym->name, modules_sym->name);
 	modules_sym = current_entry->sym;
+};
+
+/* When we want to output symbols as part of an additional output formats */
+
+config_option: T_OUTPUT T_YAML T_EOL
+{
+	printd(DEBUG_PARSE, "%s will be part of the yaml output file %s:%d:\n",
+	       current_entry->sym->name, cur_filename, cur_lineno);
+	current_entry->sym->flags |= SYMBOL_YAML;
 };
 
 /* choice entry */

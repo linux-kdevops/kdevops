@@ -121,6 +121,7 @@ n	[A-Za-z0-9_-]
 "menuconfig"		return T_MENUCONFIG;
 "modules"		return T_MODULES;
 "on"			return T_ON;
+"output"		return T_OUTPUT;
 "prompt"		return T_PROMPT;
 "range"			return T_RANGE;
 "select"		return T_SELECT;
@@ -128,6 +129,7 @@ n	[A-Za-z0-9_-]
 "string"		return T_STRING;
 "tristate"		return T_TRISTATE;
 "visible"		return T_VISIBLE;
+"yaml"			return T_YAML;
 "||"			return T_OR;
 "&&"			return T_AND;
 "="			return T_EQUAL;
