@@ -5,12 +5,22 @@
 {{ kdevops_host_prefix }}-{{ s }}-dev
 {% endif %}
 {% endfor %}
+{% if kdevops_nfsd_enable %}
+{% if kdevops_loopback_nfs_enable %}
+{{ kdevops_hosts_prefix }}-nfsd
+{% endif %}
+{% endif %}
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [baseline]
 {% for s in fstests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ s }}
 {% endfor %}
+{% if kdevops_nfsd_enable %}
+{% if kdevops_loopback_nfs_enable %}
+{{ kdevops_hosts_prefix }}-nfsd
+{% endif %}
+{% endif %}
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [dev]
@@ -18,6 +28,11 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
   {% for s in fstests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ s }}-dev
   {% endfor %}
+{% if kdevops_nfsd_enable %}
+{% if kdevops_loopback_nfs_enable %}
+{{ kdevops_hosts_prefix }}-nfsd
+{% endif %}
+{% endif %}
 {% endif %}
 [dev:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"

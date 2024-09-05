@@ -166,6 +166,7 @@ fstests_nfs_use_kdevops_nfsd: False
 fstests_nfs_section_pnfs: False
 fstests_nfs_section_rdma: False
 fstests_nfs_section_tls: False
+fstests_nfs_section_nfsd: False
 fstests_nfs_section_default: False
 fstests_nfs_section_v42: False
 fstests_nfs_section_v41: False

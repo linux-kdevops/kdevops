@@ -10,6 +10,10 @@ ifeq (y,$(CONFIG_NFSD_EXPORT_STORAGE_ISCSI))
 NFSD_EXTRA_ARGS += nfsd_export_storage_iscsi=true
 endif
 
+ifeq (y,$(CONFIG_FSTESTS_NFS_SECTION_NFSD))
+NFSD_EXTRA_ARGS += kdevops_loopback_nfs_enable=true
+endif
+
 NFSD_EXTRA_ARGS += nfsd_export_fstype='$(subst ",,$(CONFIG_NFSD_EXPORT_FSTYPE))'
 NFSD_EXTRA_ARGS += nfsd_export_path='$(subst ",,$(CONFIG_NFSD_EXPORT_PATH))'
 NFSD_EXTRA_ARGS += nfsd_threads=$(CONFIG_NFSD_THREADS)

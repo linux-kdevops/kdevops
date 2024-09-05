@@ -68,6 +68,16 @@ config FSTESTS_NFS_SECTION_TLS
 	help
 	  Enabling this will test with the xprtsec=tls mount option.
 
+config FSTESTS_NFS_SECTION_NFSD
+	bool "Enable testing section: nfsd"
+	output yaml
+	default n
+	depends on FSTESTS_USE_KDEVOPS_NFSD
+	help
+	  Enabling this will test with an NFS client running on the
+	  NFS server itself.  Note that this feature is currently
+	  hard-coded to use NFSv4.1.
+
 config FSTESTS_NFS_SECTION_V42
 	bool "Enable testing section: nfs_v42"
 	default y
