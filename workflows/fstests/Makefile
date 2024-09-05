@@ -1,9 +1,5 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-FSTESTS=$(subst ",,$(CONFIG_FSTESTS_DATA_TARGET))
-FSTESTS_SETUP_SYSTEM=$(subst ",,$(CONFIG_FSTESTS_SETUP_SYSTEM))
-FSTESTS_TEST_DEV=$(subst ",,$(CONFIG_FSTESTS_TEST_DEV))
-
 FSTESTS_ARGS	        :=
 FSTESTS_ARGS_SEPARATED	:=
 FSTESTS_ARGS_DIRECT :=
@@ -16,34 +12,12 @@ ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
 export KDEVOPS_HOSTS_TEMPLATE := fstests.j2
 endif
 
-FSTESTS_GIT:=$(subst ",,$(CONFIG_FSTESTS_GIT))
-FSTESTS_DATA:=$(subst ",,$(CONFIG_FSTESTS_DATA))
-FSTESTS_GIT_VERSION:=$(subst ",,$(CONFIG_FSTESTS_GIT_VERSION))
-FSTESTS_DATA_TARGET:=$(subst ",,$(CONFIG_FSTESTS_DATA_TARGET))
-
-FSTESTS_ARGS += fstests_git=$(FSTESTS_GIT)
-FSTESTS_ARGS += fstests_git_version=$(FSTESTS_GIT_VERSION)
 FSTESTS_ARGS += fstests_fstyp='$(FSTYP)'
 FS_CONFIG='$(FSTYP)/$(FSTYP).config'
 FSTESTS_ARGS += fs_config_role_path='roles/fstests/templates/$(FS_CONFIG)'
-FSTESTS_ARGS += fstests_data=\"$(FSTESTS_DATA)\"
-FSTESTS_ARGS += fstests_setup_system='$(FSTESTS_SETUP_SYSTEM)'
-FSTESTS_ARGS += fstests_data_target='$(FSTESTS_DATA_TARGET)'
 
 ifeq (y,$(CONFIG_FSTESTS_TFB_COPY_ENABLE))
 FSTESTS_ARGS += fstests_tfp_copy_enable='True'
-endif
-
-ifeq (y,$(CONFIG_FSTESTS_USES_NO_DEVICES))
-FSTESTS_ARGS += fstests_uses_no_devices='True'
-endif
-
-ifeq (y,$(CONFIG_FSTESTS_GENERATE_SIMPLE_CONFIG_ENABLE))
-FSTESTS_ARGS += fstests_generate_simple_config_enable='True'
-endif
-
-ifeq (y,$(CONFIG_FSTESTS_GENERATE_NVME_LIVE_CONFIG_ENABLE))
-FSTESTS_ARGS += fstests_generate_nvme_live_config_enable='True'
 endif
 
 ifeq (y,$(CONFIG_FSTESTS_XFS))
@@ -77,26 +51,6 @@ export FSTESTS_SPARSE_FILE_PATH:=
 export FSTESTS_SPARSE_FILENAME_PREFIX:=
 export FSTESTS_SCRATCH_MNT:=
 export FSTESTS_LOGWRITES_DEV:=
-
-FSTESTS_TEST_DIR:=$(subst ",,$(CONFIG_FSTESTS_TEST_DIR))
-FSTESTS_ARGS += fstests_test_dir='$(FSTESTS_TEST_DIR)'
-
-FSTESTS_SCRATCH_MNT:=$(subst ",,$(CONFIG_FSTESTS_SCRATCH_MNT))
-FSTESTS_ARGS += fstests_scratch_mnt='$(FSTESTS_SCRATCH_MNT)'
-
-# Only 1 real NVMe drive is required use PCIe passthrough with make dynconfig
-ifeq (y,$(CONFIG_FSTESTS_TESTDEV_NVME_PARTITION_EUIS))
-FSTESTS_ARGS += fstests_testdev_nvme_partition_euis='True'
-endif
-
-# 7 drives are needed, use PCIe passthrough onto the guest with make dynconfig
-ifeq (y,$(CONFIG_FSTESTS_TESTDEV_NVME_EUIS))
-FSTESTS_ARGS += fstests_testdev_nvme_euis='True'
-endif
-
-ifeq (y,$(CONFIG_FSTESTS_TESTDEV_NVME_FALLBACK_MODEL_SERIAL))
-FSTESTS_ARGS += fstests_testdev_nvme_fallback_model_serial='True'
-endif
 
 ifeq (y,$(CONFIG_CONFIG_BOOTLINUX))
 TREE_REF:=$(subst ",,$(CONFIG_BOOTLINUX_TREE_REF))

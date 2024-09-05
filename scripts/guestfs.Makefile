@@ -7,10 +7,6 @@ KDEVOPS_NODES :=		guestfs/kdevops_nodes.yaml
 
 export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 
-ifeq (y,$(CONFIG_GUESTFS_REQUIRES_UEFI))
-GUESTFS_ARGS += guestfs_requires_uefi=True
-endif
-
 GUESTFS_ARGS += kdevops_enable_guestfs=True
 GUESTFS_ARGS += guestfs_path='$(TOPDIR_PATH)/guestfs'
 GUESTFS_ARGS += data_home_dir=/home/kdevops

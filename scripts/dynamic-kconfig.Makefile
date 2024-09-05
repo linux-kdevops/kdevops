@@ -9,7 +9,7 @@ include $(TOPDIR)/scripts/dynamic-pci-kconfig.Makefile
 
 ANSIBLE_EXTRA_ARGS += $(DYNAMIC_KCONFIG_PCIE_ARGS)
 
-Kconfig: $(DYNAMIC_KCONFIG)
+Kconfig: _refs-default $(DYNAMIC_KCONFIG)
 
 dynamic-kconfig-help:
 	@echo "Dynamic kconfig targets:"

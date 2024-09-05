@@ -11,9 +11,6 @@ SSH_CONFIG_FILE:=$(subst ",,$(CONFIG_KDEVOPS_SSH_CONFIG))
 ANSIBLE_EXTRA_ARGS += sshconfig=$(CONFIG_KDEVOPS_SSH_CONFIG)
 endif
 
-KDEVOPS_HOSTS_PREFIX:=$(subst ",,$(CONFIG_KDEVOPS_HOSTS_PREFIX))
-ANSIBLE_EXTRA_ARGS += kdevops_host_prefix=$(KDEVOPS_HOSTS_PREFIX)
-
 PHONY += remove-ssh-key
 remove-ssh-key:
 	$(NQ) Removing key pair for $(KDEVOPS_SSH_PRIVKEY)

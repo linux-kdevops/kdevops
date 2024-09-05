@@ -57,6 +57,7 @@ config KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
 
 config KDEVOPS_HOSTS_PREFIX
 	string "The hostname prefix to use for nodes"
+	output yaml
 	default $(shell, ./scripts/append-makefile-vars.sh $(KDEVOPS_HOSTS_PREFIX)) if KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
 	default "kdevops" if !KDEVOPS_USE_DISTRO_HOSTS_PREFIX && !KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
 	default CUSTOM_DISTRO_HOST_PREFIX if KDEVOPS_USE_DISTRO_HOSTS_PREFIX && !KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
@@ -64,6 +65,12 @@ config KDEVOPS_HOSTS_PREFIX
 	  Each node used has an associated hostname. We use a prefix to
 	  help distinguish projects / goals for a set of nodes. You can use
 	  this to override the hostname prefix used.
+
+# old-yamlconfig-compat
+config KDEVOPS_HOST_PREFIX
+	string
+	output yaml
+	default KDEVOPS_HOSTS_PREFIX
 
 config KDEVOPS_CUSTOM_SSH_KEXALGORITHMS
 	string "The custom ssh config KexAlgorithms string to use"

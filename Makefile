@@ -9,6 +9,7 @@ EXTRAVERSION =
 all: deps
 
 export KCONFIG_DIR=$(CURDIR)/scripts/kconfig
+export KCONFIG_YAMLCFG=$(CURDIR)/.extra_vars_auto.yaml
 include $(KCONFIG_DIR)/kconfig.Makefile
 include Makefile.subtrees
 
@@ -20,6 +21,7 @@ export KDEVOPS_VAGRANT :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
+include scripts/refs.Makefile
 
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates
 export KDEVOPS_NODES_TEMPLATE :=
@@ -174,7 +176,6 @@ endif
 
 include scripts/gen-hosts.Makefile
 include scripts/gen-nodes.Makefile
-include scripts/refs.Makefile
 
 # disable built-in rules for this
 .SUFFIXES:
@@ -250,7 +251,7 @@ mrproper:
 	$(Q)rm -f terraform/*/terraform.tfvars
 	$(Q)rm -f $(KDEVOPS_NODES)
 	$(Q)rm -f $(KDEVOPS_HOSTFILE) $(KDEVOPS_MRPROPER)
-	$(Q)rm -f .config .config.old extra_vars.yaml
+	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
 	$(Q)rm -rf include
 

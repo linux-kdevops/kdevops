@@ -35,12 +35,15 @@ config FSTESTS_CIFS_ENABLE
 
 config FSTESTS_USES_NO_DEVICES
 	bool
+	output yaml
 
 config FSTESTS_GENERATE_SIMPLE_CONFIG_ENABLE
 	bool
+	output yaml
 
 config FSTESTS_GENERATE_NVME_LIVE_CONFIG_ENABLE
 	bool
+	output yaml
 
 choice
 	prompt "Target filesystem to test"
@@ -305,6 +308,7 @@ config HAVE_MIRROR_KDEVOPS_FSTESTS
 
 config FSTESTS_GIT
 	string "The fstests git tree to clone"
+	output yaml
 	default DEFAULT_FSTESTS_HTTPS_URL if !GIT_ALTERNATIVES && !HAVE_MIRROR_FSTESTS
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/fstests.git) if !GIT_ALTERNATIVES && HAVE_MIRROR_FSTESTS && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/fstests.git) if !GIT_ALTERNATIVES && HAVE_MIRROR_FSTESTS && GUESTFS
@@ -318,6 +322,7 @@ config FSTESTS_GIT
 
 config FSTESTS_DATA
 	string "Where to clone the fstests git tree to"
+	output yaml
 	default "{{data_path}}/fstests"
 	help
 	  This is the target location of where to clone the above git tree.
@@ -326,12 +331,14 @@ config FSTESTS_DATA
 
 config FSTESTS_GIT_VERSION
 	string "The fstests git tree version(branch/tag/commit)"
+	output yaml
 	default "HEAD"
 	help
 	  The fstests git tree version.
 
 config FSTESTS_DATA_TARGET
 	string "The target fstests install directory"
+	output yaml
 	default "/var/lib/xfstests"
 	help
 	  The directory where fstests will be installed. Modifying this probably
@@ -404,6 +411,7 @@ config FSTESTS_TESTDEV_SPARSEFILE_GENERATION
 
 config FSTESTS_TESTDEV_NVME_PARTITION_EUIS
 	bool "Use first real NVMe drive and create partitions"
+	output yaml
 	select EXTRA_STORAGE_SUPPORTS_512
 	select EXTRA_STORAGE_SUPPORTS_1K
 	select EXTRA_STORAGE_SUPPORTS_2K
@@ -493,6 +501,7 @@ endif # FSTESTS_TMPFS
 
 config FSTESTS_TESTDEV_NVME_FALLBACK_MODEL_SERIAL
 	bool "Fallback to using NVMe model an serial"
+	output yaml
 	depends on FSTESTS_TESTDEV_NVME_PARTITION_EUIS || FSTESTS_TESTDEV_NVME_EUIS
 	default y
 	help
@@ -626,6 +635,7 @@ config FSTESTS_TEST_DEV_ZNS
 
 config FSTESTS_TEST_DIR
 	string "The path to use for the fstests TEST_DIR variable"
+	output yaml
 	default "/media/test"
 	help
 	  To test with fstests one must set the TEST_DEV variable, this sets
@@ -648,6 +658,7 @@ config FSTESTS_SCRATCH_DEV_POOL_ZNS
 
 config FSTESTS_SCRATCH_MNT
 	string "The path to use for the fstests SCRATCH_MNT variable"
+	output yaml
 	default "/media/scratch"
 	help
 	  This sets the SCRATCH_MNT variable.

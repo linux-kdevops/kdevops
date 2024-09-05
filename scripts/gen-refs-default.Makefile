@@ -1,14 +1,12 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-REFS_TARGET_LNS := gen_default_refs_linus
-REFS_TARGET_LNS += gen_default_refs_next
-REFS_TARGET_LNS += gen_default_refs_stable
+REF_DEF_OBJS := $(addprefix $(TOPDIR)/workflows/linux/refs/default/, Kconfig.linus Kconfig.next Kconfig.stable)
+REF_DEF_SRC  := $(addprefix $(TOPDIR)/workflows/linux/refs/static/,  linus.yaml next.yaml stable.yaml)
 
 KRELEASES_FORCE := $(if $(filter --force,$(KRELEASES_FORCE)),--force,)
 
-.PHONY += gen_default_refs_linus
-gen_default_refs_linus:
-	$(Q)$(E) "Generating refs/default/Kconfig.$(patsubst gen_default_refs_%,%,$@)..."
+$(TOPDIR)/workflows/linux/refs/default/Kconfig.linus: $(TOPDIR)/workflows/linux/refs/static/linus.yaml
+	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_LINUS \
 		--output workflows/linux/refs/default/Kconfig.linus \
@@ -17,9 +15,8 @@ gen_default_refs_linus:
 		kreleases \
 		--moniker mainline
 
-.PHONY += gen_default_refs_next
-gen_default_refs_next:
-	$(Q)$(E) "Generating refs/default/Kconfig.$(patsubst gen_default_refs_%,%,$@)..."
+$(TOPDIR)/workflows/linux/refs/default/Kconfig.next: $(TOPDIR)/workflows/linux/refs/static/next.yaml
+	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_NEXT \
 		--output workflows/linux/refs/default/Kconfig.next \
@@ -28,9 +25,8 @@ gen_default_refs_next:
 		kreleases \
 		--moniker linux-next
 
-.PHONY += gen_default_refs_stable
-gen_default_refs_stable:
-	$(Q)$(E) "Generating refs/default/Kconfig.$(patsubst gen_default_refs_%,%,$@)..."
+$(TOPDIR)/workflows/linux/refs/default/Kconfig.stable: $(TOPDIR)/workflows/linux/refs/static/stable.yaml
+	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_STABLE \
 		--output workflows/linux/refs/default/Kconfig.stable \
@@ -39,14 +35,10 @@ gen_default_refs_stable:
 		kreleases \
 		--moniker stable
 
-_gen-default-refs-lns:
-	$(Q)$(E) "Generating refs/default/Kconfig.{linus,next,stable} files..."
-	$(Q)$(MAKE) $(REFS_TARGET_LNS) KRELEASES_FORCE="--force"
-
 PHONY += refs-default
-refs-default: _gen-default-refs-lns _gen-default-refs-development refs-user-clean
+refs-default: $(REF_DEF_OBJS) _gen-default-refs-development refs-user-clean
 
 PHONY += _refs-default
-_refs-default: _gen-default-refs-lns
+_refs-default: $(REF_DEF_OBJS)
 
 .PHONY: $(PHONY)
