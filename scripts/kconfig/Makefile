@@ -55,7 +55,7 @@ nconf.o: | nconf-cflags
 nconf: $(NCONF_DEPS) conf
 	$(CC) -o nconf $(NCONF_DEPS) $(HOSTLDLIBS_nconf)
 
-clean-files := conf mconf conf
+clean-files := conf mconf nconf
 clean-files += *.o lxdialog/*.o
 clean-files += parser.tab.c parser.tab.h .lex.c
 clean-files += *conf-cflags *conf-libs *conf-bin
