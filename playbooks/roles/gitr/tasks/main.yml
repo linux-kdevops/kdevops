@@ -183,7 +183,7 @@
     export_volname: "{{ gitr_nfs_server_export }}"
     export_options: "{{ nfsd_export_options }}"
     export_fstype: "{{ gitr_nfs_export_fstype }}"
-    export_size: 5g
+    export_size: 10g
     export_pnfs: "{{ (gitr_test_group == 'nfs-pnfs') | bool }}"
   when:
     - gitr_nfs_use_kdevops_nfsd|bool
