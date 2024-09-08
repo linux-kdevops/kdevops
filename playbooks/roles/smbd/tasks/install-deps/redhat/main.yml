@@ -30,4 +30,4 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded

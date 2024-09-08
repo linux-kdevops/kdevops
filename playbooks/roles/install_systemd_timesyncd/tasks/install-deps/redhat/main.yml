@@ -8,7 +8,7 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded
   when:
     - devconfig_enable_systemd_timesyncd|bool
   tags: timesyncd

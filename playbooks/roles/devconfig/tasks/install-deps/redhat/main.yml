@@ -42,7 +42,7 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded
   when:
     - devconfig_try_upgrade|bool
 
@@ -144,7 +144,7 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded
   when:
     - devconfig_try_install_kdevtools|bool
 
@@ -188,7 +188,7 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded
   when:
     - devconfig_enable_systemd_journal_remote|bool
     - ansible_facts['os_family']|lower == 'redhat' or ansible_facts['distribution_major_version'] | int >= 8
@@ -203,7 +203,7 @@
   retries: 3
   delay: 5
   register: result
-  until: result.rc == 0
+  until: result is succeeded
   when:
     - devconfig_enable_systemd_timesyncd|bool
   tags: timesyncd
