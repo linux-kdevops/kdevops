@@ -88,6 +88,9 @@
       - liburing-devel
       - cifs-utils
       - duperemove
+      - gettext
+      - ncurses
+      - ncurses-devel
 
 - name: Install xfsprogs-xfs_scrub
   become: yes
