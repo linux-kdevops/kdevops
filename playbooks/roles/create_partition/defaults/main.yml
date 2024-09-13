@@ -11,3 +11,4 @@ disk_setup_path: "/data"
 disk_setup_user: "root"
 disk_setup_group: "root"
 disk_setup_mode: "u=rwx,g=rwx,o=rwxt"
+disk_setup_env: {}
