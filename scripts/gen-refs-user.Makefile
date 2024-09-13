@@ -10,6 +10,7 @@ SRC_URI_HTTPS_BTRFS_DEVEL = https://github.com/kdave/btrfs-devel.git
 SRC_URI_HTTPS_CEL_LINUX = https://git.kernel.org/pub/scm/linux/kernel/git/cel/linux.git
 SRC_URI_HTTPS_JLAYTON_LINUX = https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git
 SRC_URI_HTTPS_KDEVOPS_LINUS = https://github.com/linux-kdevops/linux.git
+SRC_URI_HTTPS_VFS = https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
 
 REFS_TARGET_LINUS := gen_refs_linus
 REFS_TARGET_NEXT := gen_refs_next
@@ -21,6 +22,7 @@ REFS_TARGET_DEVELOPMENT += gen_refs_btrfs_devel
 REFS_TARGET_DEVELOPMENT += gen_refs_cel_linux
 REFS_TARGET_DEVELOPMENT += gen_refs_jlayton_linux
 REFS_TARGET_DEVELOPMENT += gen_refs_kdevops_linus
+REFS_TARGET_DEVELOPMENT += gen_refs_vfs
 
 REFS_COUNT := 15
 UREF_EXT ?= uref-
@@ -132,6 +134,18 @@ gen_refs_kdevops_linus:
 		--force \
 		gitref \
 		--repo $(SRC_URI_HTTPS_KDEVOPS_LINUS) \
+		--refs $(REFS_COUNT)
+
+PHONY += gen_refs_vfs
+gen_refs_vfs:
+	$(Q)$(E) "Generating refs/$(REFS_DIR)/Kconfig.$(subst _,-,$(patsubst gen_refs_%,%,$@)) ($(REFS_COUNT) refs)..."
+	$(Q)./scripts/generate_refs.py \
+		--prefix BOOTLINUX_TREE_VFS \
+		--output workflows/linux/refs/$(REFS_DIR)/Kconfig.vfs \
+		--extra workflows/linux/refs/static/vfs.yaml \
+		--force \
+		gitref \
+		--repo $(SRC_URI_HTTPS_VFS) \
 		--refs $(REFS_COUNT)
 
 PHONY += refs-user-clean

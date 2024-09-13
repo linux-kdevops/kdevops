@@ -1,0 +1,20 @@
+if BOOTLINUX_TREE_VFS
+
+source "workflows/linux/refs/default/Kconfig.vfs"
+
+endif # BOOTLINUX_TREE_MCGROF_LINUS
+
+if BOOTLINUX_TREE_VFS
+
+config BOOTLINUX_TREE_VFS_NAME
+	string
+	default "vfs" if BOOTLINUX_TREE_VFS
+
+config BOOTLINUX_TREE_VFS_URL
+	string
+	default DEFAULT_VFS_GIT_URL if BOOTLINUX_TREE_VFS && !USE_LOCAL_LINUX_MIRROR
+	default "/mirror/vfs.git" if BOOTLINUX_TREE_VFS && USE_LIBVIRT_MIRROR && BOOTLINUX_9P
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/vfs.git) if BOOTLINUX_TREE_VFS && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && VAGRANT
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/vfs.git) if BOOTLINUX_TREE_MCGROF_NEXT && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && GUESTFS
+
+endif # BOOTLINUX_TREE_VFS

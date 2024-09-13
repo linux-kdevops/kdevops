@@ -19,6 +19,11 @@ config BOOTLINUX_TREE_MCGROF_LINUS
 	help
 	  Branches in mcgrof's tree based on Linus' tree.
 
+config BOOTLINUX_TREE_VFS
+	bool "vfs"
+	help
+	  Branches in the vfs tree.
+
 endchoice
 
 if BOOTLINUX_TREE_LINUS

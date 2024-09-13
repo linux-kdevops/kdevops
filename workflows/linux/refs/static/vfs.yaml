@@ -1,0 +1,6 @@
+---
+configs:
+  - lbs:
+    config: BOOTLINUX_TREE_VFS_REF_LBS
+    ref: "vfs.blocksize"
+    help: "Use the vfs.blocksize branch based on the vfs tree."

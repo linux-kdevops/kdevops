@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# Automatically generated file
+
+if !HAVE_BOOTLINUX_TREE_VFS_USER_REFS
+
+choice
+	prompt "Tag or branch to use"
+
+config BOOTLINUX_TREE_VFS_REF_LBS
+	bool "vfs.blocksize"
+	help
+	  Use the vfs.blocksize branch based on the vfs tree.
+
+endchoice
+
+config BOOTLINUX_TREE_VFS_REF
+	string
+	default "vfs.blocksize" if BOOTLINUX_TREE_VFS_REF_LBS
+
+endif # !HAVE_BOOTLINUX_TREE_VFS_USER_REFS
