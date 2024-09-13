@@ -15,6 +15,7 @@ logtime.txt
 run.sh
 
 hosts
+.extra_vars_auto.yaml
 extra_vars.yaml
 extra_vars.yml
 extra_vars.json
