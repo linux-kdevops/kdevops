@@ -65,10 +65,9 @@ workflows/gitr/results/
 workflows/ltp/results/
 workflows/nfstest/results/
 
+playbooks/roles/linux-mirror/linux-mirror-systemd/*.service
+playbooks/roles/linux-mirror/linux-mirror-systemd/*.timer
 playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml
-# We should strive to ignore all and port them to the new mirrors.yaml
-playbooks/roles/linux-mirror/linux-mirror-systemd/xfsprogs-mirror.service
-playbooks/roles/linux-mirror/linux-mirror-systemd/xfsprogs-mirror.timer
 
 # For now we ignore all results as we have work to do:
 # - copy only data for failed tests
