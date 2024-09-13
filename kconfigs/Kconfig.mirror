@@ -460,6 +460,46 @@ config MIRROR_KDEVOPS_FSTESTS_URL
 	default DEFAULT_FSTESTS_KDEVOPS_GITHUB_HTTPS_URL if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITHUB
 	default DEFAULT_FSTESTS_KDEVOPS_GITLAB_HTTPS_URL if MIRROR_KDEVOPS_FSTESTS_HTTPS_GITLAB
 
+choice
+	prompt "Linux vfs kernel tree"
+	default MIRROR_VFS_GIT if MIRROR_GIT_WORKS
+	default MIRROR_VFS_HTTPS if !MIRROR_GIT_WORKS
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+
+config MIRROR_VFS_HTTPS
+	bool "HTTPS"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror. The URL is:
+
+	  https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+
+config MIRROR_VFS_HTTPS_GOOGLE
+	bool "HTTPS (Google)"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror and Google URL will be chosen. The URL is:
+
+	  https://kernel.googlesource.com/pub/scm/linux/kernel/git/vfs/vfs.git
+
+config MIRROR_VFS_GIT
+	bool "Git"
+	depends on MIRROR_GIT_WORKS
+	help
+	  If you enable this option then Git protocol will be used as the
+	  source of the mirror. The URL is:
+
+	  git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+
+endchoice
+
+config MIRROR_VFS_URL
+	string
+	output yaml
+	default DEFAULT_VFS_HTTPS_GIT if MIRROR_VFS_GIT
+	default DEFAULT_VFS_HTTPS_URL if MIRROR_VFS_HTTPS
+	default DEFAULT_VFS_HTTPS_GOOGLE_URL if MIRROR_VFS_HTTPS_GOOGLE
+
 config MIRROR_BLKTESTS_URL
 	string
 	default DEFAULT_BLKTESTS_URL
