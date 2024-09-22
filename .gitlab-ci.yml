@@ -1,0 +1,35 @@
+stages:
+  - simple-docker-tests
+
+.parallel-distro-template:
+  parallel:
+    matrix:
+      - DISTRO_NAME: "Debian Testing"
+        DISTRO_CONTAINER: "debian:testing"
+        PACKAGER: "apt-get install -y"
+      - DISTRO_NAME: "Fedora Latest"
+        DISTRO_CONTAINER: "fedora:latest"
+        PACKAGER: "dnf install -y"
+
+setup-distro-deps:
+  extends: .parallel-distro-template
+  stage: simple-docker-tests
+  image: $DISTRO_CONTAINER
+  script:
+    - echo "Running test on $DISTRO_NAME with container $DISTRO_CONTAINER"
+    - uname -a
+    - echo "Successfully ran on $DISTRO_NAME"
+    - echo "Going to install kdevops deps"
+    - |
+      # Determine kdevops deps based on the distribution
+      if [ "$DISTRO_CONTAINER" = "debian:testing" ]; then
+        apt-get update
+        $PACKAGER ansible make gcc ncurses-dev bison flex
+      elif [ "$DISTRO_CONTAINER" = "fedora:latest" ]; then
+        $PACKAGER ansible make gcc ncurses-devel bison flex
+      else
+        echo "Unknown distribution: $DISTRO_CONTAINER"
+        exit 1
+      fi
+    - echo "Running simple make targets on $DISTRO_NAME environment with $DISTRO_CONTAINER"
+    - make mrproper
