@@ -175,6 +175,13 @@ config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 	  This will dedicate your configuration to running only the
 	  nfstest workflow in separate target nodes per testing group.
 
+config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+	bool "sysbench"
+	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+	help
+	  This will dedicate your configuration to running only the
+	  sysbench workflow.
+
 endchoice
 
 endif
@@ -254,6 +261,14 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_NFSTEST
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
 	  Select this option if you want to provision nfstest on a
+	  single target node for by-hand testing.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH
+	bool "sysbench"
+	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
+	help
+	  Select this option if you want to provision sysbench on a
 	  single target node for by-hand testing.
 
 endif # !WORKFLOWS_DEDICATED_WORKFLOW
@@ -346,6 +361,17 @@ menu "Configure and run the nfstest suite"
 source "workflows/nfstest/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_NFSTEST
+
+config KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH || KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+
+if KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+menu "Configure and run the sysbench tests"
+source "workflows/sysbench/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
 
 config KDEVOPS_WORKFLOW_GIT_CLONES_KDEVOPS_GIT
 	bool

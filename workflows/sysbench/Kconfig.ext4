@@ -1,0 +1,124 @@
+config SYSBENCH_FS_EXT4
+	bool "ext4"
+	output yaml
+	help
+	  Enable if you want to test sysbench against ext4.
+
+if SYSBENCH_FS_EXT4
+
+config SYSBENCH_SUPPORTED_FILESYSTEM_EXT4
+	bool
+	output yaml
+	default y
+
+choice
+    prompt "EXT4 filesystem sector size to use"
+    default SYSBENCH_EXT4_SECTOR_SIZE_4K
+
+config SYSBENCH_EXT4_SECTOR_SIZE_512
+	bool "512 bytes"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_512
+	help
+	  Use 512 byte sector size.
+
+config SYSBENCH_EXT4_SECTOR_SIZE_4K
+	bool "4 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Use 4 KiB sector size.
+
+endchoice
+
+config SYSBENCH_EXT4_SECTOR_SIZE
+	string
+	output yaml
+	default "512" if SYSBENCH_EXT4_SECTOR_SIZE_512
+	default "4k"  if SYSBENCH_EXT4_SECTOR_SIZE_4K
+
+config SYSBENCH_EXT4_SECTION_4K
+	bool "ext4_4k"
+	output yaml
+	help
+	  This will create a host to test the sysbench on EXT4 with the
+	  following configuration which enables a 4k block size filesystem:
+
+	       mkfs.ext4 -F -b 4k
+
+config SYSBENCH_EXT4_SECTION_4K_CMD
+	string
+	depends on SYSBENCH_EXT4_SECTION_4K
+	output yaml
+	default "mkfs.ext4 -F -b 4k"
+
+config SYSBENCH_EXT4_SECTION_4K_DB_PAGE_SIZE
+	int
+	depends on SYSBENCH_EXT4_SECTION_4K
+	output yaml
+	default "4096"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_16K
+	bool "ext4_4k_bigalloc_16k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is 8k data block size:
+
+	       mkfs.ext4 -F -b 4k -O bigalloc -C 16k
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_16K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_16K
+	default "mkfs.ext4 -F -b 4k -O bigalloc -C 16k"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_16K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_16K
+	default "16384"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_32K
+	bool "ext4_4k_bigalloc_32k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is 4k data block size:
+
+	       mkfs.ext4 -F -b 4k -O bigalloc -C 32k
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_32K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_32K
+	default "mkfs.ext4 -F -b 4k -O bigalloc -C 32k"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_32K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_32K
+	default "32768"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_64K
+	bool "ext4_4k_bigalloc_64k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is 4k data block size:
+
+	       mkfs.ext4 -F -b 4k -O bigalloc -C 64k
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_64K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_64K
+	default "mkfs.ext4 -F -b 4k -O bigalloc -C 64k"
+
+config SYSBENCH_EXT4_SECTION_4K_BIGALLOC_64K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_EXT4_SECTION_4K_BIGALLOC_64K
+	default "65536"
+
+endif # SYSBENCH_FS_EXT4

@@ -1,0 +1,55 @@
+---
+sysbench_db_type: "mysql"
+sysbench_db_type_mysql: false
+sysbench_docker: false
+sysbench_type_mysql_docker: False
+sysbench_disk_setup_env: ""
+
+sysbench_fs_sector_size: "512"
+sysbench_device: "/dev/null"
+sysbench_fstype: "xfs"
+sysbench_fs_env: ""
+sysbench_label: "sysbench_db"
+sysbench_fs_opts: ""
+sysbench_mount_opts: ""
+sysbench_mnt: "/db"
+
+sysbench_mysql_table_engine: "innodb"
+
+sysbench_test_atomics: False
+sysbench_test_atomics_tps_variability: False
+
+sysbench_sectsize_size_env: ""
+
+sysbench_mysql_container_host_client_config_path:  "/data/my.cnf"
+sysbench_mysql_container_client_config: "/root/.my.cnf"
+
+sysbench_mysql_container_image_string: "mysql:8.0"
+sysbench_mysql_container_name: "mysql-sysbench"
+sysbench_mysql_container_python_path: "/usr/local/lib/python3.9/site-packages"
+sysbench_mysql_container_host_config_path: "/data/mysql.conf"
+sysbench_mysql_container_config: "/etc/my.cnf"
+sysbench_mysql_container_db_path: "/var/lib/mysql"
+sysbench_mysql_container_host_root_path: "/data/myql-container-root"
+
+sysbench_container_image_name: "severalnines/sysbench"
+sysbench_container_populate_name: "sysbench-populate"
+sysbench_container_run_benchmark: "sysbench-run"
+sysbench_local_db_port: 9901
+
+sysbench_root_db_password: "kdevops"
+sysbench_db_password: "kdevops"
+
+sysbench_cnf: "/etc/sysbench/conf.d/sysbench.cnf"
+sysbench_dir: "/var/lib/sysbench"
+
+sysbench_oltp_table_size: 100000
+sysbench_oltp_table_count: 24
+sysbench_report_interval: 2
+sysbench_threads: 128
+
+sysbench_telemetry_path: "/data/sysbench-telemetry"
+sysbench_docker_telemetry_path: "/data/sysbench-telemetry"
+
+sysbench_disable_doublewrite_auto: False
+sysbench_disable_doublewrite_always: False

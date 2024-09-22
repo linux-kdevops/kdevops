@@ -1,0 +1,31 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_first_found:
+    - files:
+      - "../extra_vars.yml"
+      - "../extra_vars.yaml"
+      - "../extra_vars.json"
+      skip: true
+  tags: vars
+
+- name: Update apt cache
+  become: yes
+  become_method: sudo
+  apt:
+    update_cache: yes
+  tags: deps
+
+- name: Install sysbench deps
+  become: yes
+  become_method: sudo
+  apt:
+    name:
+      - docker
+      - docker.io
+      - locales
+      - rsync
+    state: present
+    update_cache: yes
+  tags: [ 'deps' ]

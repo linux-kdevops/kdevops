@@ -103,6 +103,8 @@ bootlinux_9p_driver: "virtio-9p-pci"
 
 guestfs_requires_uefi: False
 
+kdevops_workflow_enable_sysbench: False
+
 pcie_passthrough_enable: False
 pcie_passthrough_target_type_first_guest: False
 pcie_passthrough_target_type_all_one_guest_name: False

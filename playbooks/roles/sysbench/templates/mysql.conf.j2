@@ -1,0 +1,94 @@
+[mysqld]
+# Testing for disabling innodb_doublewrite
+
+# We use the default
+# datadir                         = /var/lib/mysql/
+port                            = 3306
+performance_schema              = OFF
+max_prepared_stmt_count         = 128000
+character_set_server            = latin1
+collation_server                = latin1_swedish_ci
+transaction_isolation           = REPEATABLE-READ
+default_storage_engine          = InnoDB
+disable_log_bin
+skip_external_locking
+skip_name_resolve
+default-authentication-plugin=mysql_native_password
+
+# InnoDB Settings
+#
+# innodb_dedicated_server=ON is not compatible with innodb_flush_method=O_DIRECT
+# and so we do what we can. See the following values which MySQL does
+# recommand use when dedicated server is enabled, we just have to compute
+# on our own and test on our own:
+#
+# https://dev.mysql.com/doc/refman/8.0/en/innodb-dedicated-server.html
+#
+# Let us assume n1-standard-16 with 60GB RAM or AWS i4i.4xlarge with 128GB.
+# The recommended values seem very large in consideration for when we disable
+# innodb_doublewrite and use O_DIRECT, so likely could be adjusted. We strive
+# to provide generic configurations for these types of instances in this
+# example file for innodb_doublewrite=0.
+#
+# For systems with above 10 GiB RAM: 0.5625 * (RAM in GB)
+# n1-standard-16: 33.75G
+# i4i.4xlarge: 72G
+innodb_redo_log_capacity        = {{ sysbench_mysql_innoodb_redo_log_capacity }}
+
+# For systems with above 4 GiB RAM: 0.75 * (RAM in GB)
+# n1-standard-16: 45G
+# i4i.4xlarge: 96G
+innodb_buffer_pool_size         = {{ sysbench_mysql_innodb_buffer_pool_size }}
+
+# Take advantage of NVMe AWUPF >= 4k
+innodb_flush_method             = O_DIRECT
+innodb_page_size                = {{ sysbench_db_page_size }}
+innodb_doublewrite              = {{ sysbench_mysql_innodb_doublewrite }}
+
+innodb_file_per_table           = 1
+innodb_flush_log_at_trx_commit  = 0
+innodb_open_files               = 2000
+innodb_stats_on_metadata        = 0
+innodb_thread_concurrency       = 14
+
+innodb_max_dirty_pages_pct      = 90
+innodb_max_dirty_pages_pct_lwm  = 10
+innodb_use_native_aio           = 1
+innodb_stats_persistent         = 1
+innodb_spin_wait_delay          = 6
+innodb_max_purge_lag_delay      = 300000
+innodb_max_purge_lag            = 0
+innodb_checksum_algorithm       = none
+innodb_io_capacity              = 12000
+innodb_io_capacity_max          = 20000
+innodb_lru_scan_depth           = 9000
+innodb_change_buffering         = none
+innodb_read_only                = 0
+innodb_page_cleaners            = 4
+innodb_undo_log_truncate        = off
+innodb_read_io_threads          = 64
+innodb_write_io_threads         = 64
+innodb_adaptive_flushing        = 1
+innodb_flush_neighbors          = 0
+innodb_purge_threads            = 4
+innodb_adaptive_hash_index      = 0
+
+# Connection Settings
+max_connections                 = 4000
+table_open_cache                = 8000
+table_open_cache_instances      = 16
+back_log                        = 1500
+thread_cache_size               = 100
+thread_stack                    = 192K
+
+# Buffer Settings
+join_buffer_size                = 64M
+read_buffer_size                = 48M
+read_rnd_buffer_size            = 64M
+sort_buffer_size                = 64M
+
+# Search Settings
+ft_min_word_len                 = 3
+
+# Monitoring
+innodb_monitor_enable='%'

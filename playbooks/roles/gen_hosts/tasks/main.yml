@@ -261,3 +261,58 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
     - ansible_hosts_template.stat.exists
+
+- name: Collect dynamically supported filesystems
+  vars:
+    supported_filesystems_variables: "{{ vars | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
+    supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
+  set_fact:
+    sysbench_enabled_filesystems: "{{ supported_filesystems }}"
+    enabled_sysbench_tests: "{{ [] }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_sysbench
+
+- name: Collect enabled sysbench target sections for dynamically supported filesystems
+  loop: "{{ sysbench_enabled_filesystems }}"
+  loop_control:
+    loop_var: fs
+  vars:
+    fs_section_prefix: "sysbench_{{ fs }}_section_"
+    fs_section_variables: "{{ vars | dict2items | selectattr('key', 'search', '^' + fs_section_prefix) }}"
+    enabled_fs_sysbench: "{{ fs_section_variables | selectattr('value', 'eq', True) | map(attribute='key') | list }}"
+    enabled_fs_sections: "{{ enabled_fs_sysbench | map('regex_replace', 'sysbench_', '') }}"
+    enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') }}"
+    enabled_fs_node: "{{ enabled_fs | map('regex_replace', '_', '-') }}"
+  set_fact:
+    enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_sysbench
+
+- name: Generate the Ansible hosts file for a dedicated sysbench setup
+  tags: [ 'hosts' ]
+  template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_sysbench
+    - ansible_hosts_template.stat.exists
+
+- name: Verify if final host file exists
+  stat:
+    path: "{{ topdir_path }}/{{ kdevops_hosts }}"
+  register: final_hosts_file
+
+- name: Fail if the dedicated workflow has no rules for node configuration for hosts file configuration
+  tags: [ 'hosts' ]
+  fail:
+    msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - ansible_hosts_template.stat.exists
+    - not final_hosts_file.stat.exists

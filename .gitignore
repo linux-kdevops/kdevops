@@ -65,6 +65,8 @@ workflows/gitr/results/
 workflows/ltp/results/
 workflows/nfstest/results/
 
+workflows/sysbench/results/
+
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.service
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.timer
 playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml

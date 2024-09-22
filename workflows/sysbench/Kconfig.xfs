@@ -1,0 +1,162 @@
+config SYSBENCH_FS_XFS
+	bool "XFS"
+	output yaml
+	help
+	  Enable if you want to test sysbench against XFS.
+
+if SYSBENCH_FS_XFS
+
+config SYSBENCH_SUPPORTED_FILESYSTEM_XFS
+	bool
+	output yaml
+	default y
+
+choice
+    prompt "XFS filesystem sector size to use"
+    default SYSBENCH_XFS_SECTOR_SIZE_4K
+
+config SYSBENCH_XFS_SECTOR_SIZE_512
+	bool "512 bytes"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_512
+	help
+	  Use 512 byte sector size.
+
+config SYSBENCH_XFS_SECTOR_SIZE_4K
+	bool "4 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Use 4 KiB sector size.
+
+config SYSBENCH_XFS_SECTOR_SIZE_16K
+	bool "16 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 16 KiB sector size.
+
+config SYSBENCH_XFS_SECTOR_SIZE_32K
+	bool "32 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 32 KiB sector size.
+
+endchoice
+
+config SYSBENCH_XFS_SECTOR_SIZE
+	string
+	output yaml
+	default "512" if SYSBENCH_XFS_SECTOR_SIZE_512
+	default "4k"  if SYSBENCH_XFS_SECTOR_SIZE_4K
+	default "16k" if SYSBENCH_XFS_SECTOR_SIZE_16K
+	default "32k" if SYSBENCH_XFS_SECTOR_SIZE_32K
+
+config SYSBENCH_XFS_SECTION_REFLINK_4K
+	bool "xfs_reflink_4k"
+	output yaml
+	help
+	  This will create a host to test the sysbench on XFS with the
+	  following configuration which enables reflink using 4096 bytes
+	  block size.
+
+	      mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1, -b size=4k
+
+config SYSBENCH_XFS_SECTION_REFLINK_4K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_4K
+	default "mkfs.xfs -f -m reflink=1,rmapbt=1, -i sparse=1 -b size=4k"
+
+config SYSBENCH_XFS_SECTION_REFLINK_4K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_4K
+	default "4096"
+
+config SYSBENCH_XFS_SECTION_REFLINK_8K
+	bool "xfs_reflink_8k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is 8k data block size:
+
+	      mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=8k
+
+config SYSBENCH_XFS_SECTION_REFLINK_8K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_8K
+	default "mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=8k"
+
+config SYSBENCH_XFS_SECTION_REFLINK_8K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_8K
+	default "8192"
+
+config SYSBENCH_XFS_SECTION_REFLINK_16K
+	bool "xfs_reflink_16k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is 16k data block size:
+
+	      mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=16k
+
+config SYSBENCH_XFS_SECTION_REFLINK_16K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_16K
+	default "mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=16k"
+
+config SYSBENCH_XFS_SECTION_REFLINK_16K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_16K
+	default "16384"
+
+config SYSBENCH_XFS_SECTION_REFLINK_32K
+	bool "xfs_reflink_32k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is with 32k sector size
+
+	      mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=32k
+
+config SYSBENCH_XFS_SECTION_REFLINK_32K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_32K
+	default "mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=32k"
+
+config SYSBENCH_XFS_SECTION_REFLINK_32K_DB_PAGE_SIZE
+	int
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_32K
+	default "32768"
+
+config SYSBENCH_XFS_SECTION_REFLINK_64K
+	bool "xfs_reflink_64k"
+	output yaml
+	help
+	  This will create a host to test the sysbench with the following fs
+	  configuration, that is with 64k sector size
+
+	      mkfs.xfs -f -m reflink=1,rmapbt=1, -i sparse=1 -b size=64k
+
+config SYSBENCH_XFS_SECTION_REFLINK_64K_CMD
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_64K
+	default "mkfs.xfs -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=64k"
+
+config SYSBENCH_XFS_SECTION_REFLINK_64K_DB_PAGE_SIZE
+	string
+	output yaml
+	depends on SYSBENCH_XFS_SECTION_REFLINK_64K
+	default "65536"
+
+endif # SYSBENCH_FS_XFS

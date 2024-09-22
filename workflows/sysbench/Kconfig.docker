@@ -1,0 +1,148 @@
+choice
+	prompt "What type of sysbench docker container do you want to use?"
+	default SYSBENCH_TYPE_MYSQL_DOCKER
+
+config SYSBENCH_TYPE_MYSQL_DOCKER
+	bool "Use MySQL with Docker for Sysbench"
+	output yaml
+	select SYSBENCH_DB_TYPE_MYSQL
+	help
+	  Enable this option to run sysbench using MySQL inside a Docker
+	  container. The benefit is having to install less package
+	  dependencies.
+
+endchoice
+
+if SYSBENCH_TYPE_MYSQL_DOCKER
+
+choice
+	prompt "Which MySQL container image to use?"
+	default SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
+
+config SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
+	bool "mysql:8.0"
+	output yaml
+	help
+	  Uses mysql:8.0 as the docker image.
+
+endchoice
+
+config SYSBENCH_MYSQL_CONTAINER_IMAGE_STRING
+	string
+	output yaml
+	default "mysql:8.0" if SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
+
+config SYSBENCH_MYSQL_CONTAINER_NAME
+	string "The local MySQL container to use for MySQL"
+	default "mysql-sysbench"
+	output yaml
+	help
+	  Set the name for the MySQL Docker container.
+
+config SYSBENCH_MYSQL_CONTAINER_PYTHON_PATH
+	string "The MySQL container pytyhon path"
+	default "/usr/local/lib/python3.9/site-packages" if SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
+	output yaml
+	help
+	  To support telemetry analysis we use a set of python packages
+	  which we install with python pip, when these are installed locally
+	  we need to inform MySQL where they are so that the mysqlsh can
+	  find them. This can vary depending on the MySQL container image
+	  used.
+
+config SYSBENCH_MYSQL_CONTAINER_HOST_CLIENT_CONFIG_PATH
+	string "Path on node where we'll place the mysql client configuration"
+	default "/data/my.cnf"
+	output yaml
+	help
+	  When using a container, we'll use a volume to propagate the actual
+	  MySQL client configuration file used inside the container. This lets
+	  us make edits on the node.
+
+config SYSBENCH_MYSQL_CONTAINER_CLIENT_CONFIG
+	string "The MySQL container client configuraton file"
+	default "/root/.my.cnf"
+	output yaml
+	help
+	  This is where we will place the MySQL client configuration file on the
+	  target container. This can vary depending on the version of the
+	  docker container used.
+
+config SYSBENCH_MYSQL_CONTAINER_HOST_CONFIG_PATH
+	string "Path on node where we'll place the mysql server configuration"
+	default "/data/mysql.conf"
+	output yaml
+	help
+	  When using a container, we'll use a volume to propagate the actual
+	  MySQL configuration file used inside the container. This lets us make
+	  edits on the node.
+
+config SYSBENCH_MYSQL_CONTAINER_CONFIG
+	string "The MySQL container server configuration file"
+	default "/etc/my.cnf"
+	output yaml
+	help
+	  This is where we will place the MySQL configuration file on the
+	  target container. This can vary depending on the version of the
+	  docker container used.
+
+config SYSBENCH_MYSQL_CONTAINER_DB_PATH
+	string "MySQL container db path"
+	default "/var/lib/mysql" if SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
+	output yaml
+	help
+	  Where to place the database on the container.
+
+config SYSBENCH_MYSQL_CONTAINER_HOST_ROOT_PATH
+	string "Directory on the host to use as /root/ inside the container"
+	default "/data/myql-container-root"
+	output yaml
+	help
+	  When using a container, in order to support telemetry we rely on
+	  a mysqlsh plugin which we git clone on the node where we will
+	  run the container on. We use a container volume to let the container
+	  get access to this clone. This specificies the path on the node which
+	  we will use a docker volume passed onto the container as the
+	  /root/ directory.
+
+endif # SYSBENCH_TYPE_MYSQL_DOCKER
+
+choice
+	prompt "Which sysbench container image to use?"
+	default SYSBENCH_CONTAINER_SEVERALNINES_SYSBENCH
+
+config SYSBENCH_CONTAINER_SEVERALNINES_SYSBENCH
+	bool "severalnines/sysbench"
+	output yaml
+	help
+	  Use the severalnines/sysbench container when using sysbench.
+
+endchoice
+
+config SYSBENCH_CONTAINER_IMAGE_NAME
+	string
+	default "severalnines/sysbench" if SYSBENCH_CONTAINER_SEVERALNINES_SYSBENCH
+	output yaml
+
+config SYSBENCH_CONTAINER_NAME
+	string "The name of the container to use for sysbench"
+	default "sysbench-kdevops"
+	output yaml
+
+config SYSBENCH_LOCAL_DB_PORT
+	int "The actual local database port to use"
+	default "9901"
+	output yaml
+	help
+	  When using containers we may want to support running different
+	  databases. To support this and yet have the database be able to
+	  run on its own default database port we just use a local arbitrary
+	  port on the actual host, but inside the container the default port
+	  could be used.
+
+config SYSBENCH_DOCKER_TELEMETRY_PATH
+	string "The path to place telemetry information on the docker container"
+	default SYSBENCH_TELEMETRY_PATH
+	output yaml
+	help
+	  Where to place telemetry informaton inside the docker container.

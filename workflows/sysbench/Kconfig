@@ -1,0 +1,127 @@
+config SYSBENCH_DB_TYPE_MYSQL
+	bool
+	output yaml
+
+source "workflows/sysbench/Kconfig.fs"
+
+choice
+	prompt "What type of sysbench testing do you want to use"
+	default SYSBENCH_DOCKER
+
+config SYSBENCH_DOCKER
+	bool "Run Sysbench in Docker Container"
+	output yaml
+	select SYSBENCH_TYPE_MYSQL_DOCKER
+	help
+	  Run sysbench inside Docker containers.
+
+endchoice
+
+if SYSBENCH_DOCKER
+source "workflows/sysbench/Kconfig.docker"
+endif # SYSBENCH_DOCKER
+
+config SYSBENCH_DB_TYPE
+	string
+	output yaml
+	default "mysql" if SYSBENCH_DB_TYPE_MYSQL
+
+if SYSBENCH_DB_TYPE_MYSQL
+
+config SYSBENCH_MYSQL_TABLE_ENGINE
+	string "Sysbench MySQL table engine to use"
+	output yaml
+	default "innodb" if SYSBENCH_TYPE_MYSQL_DOCKER
+
+config SYSBENCH_MYSQL_INNOODB_REDO_LOG_CAPACITY
+	string "innodb_redo_log_capacity"
+	output yaml
+	default "1G" if SYSBENCH_TYPE_MYSQL_DOCKER
+	help
+	  innodb_dedicated_server=ON is not compatible with innodb_flush_method=O_DIRECT
+	  and so we do what we can. See the following values which MySQL does
+	  recommand use when dedicated server is enabled, we just have to compute
+	  on our own and test on our own:
+
+	  https://dev.mysql.com/doc/refman/8.0/en/innodb-dedicated-server.html
+
+	  Let us assume n1-standard-16 with 60GB RAM or AWS i4i.4xlarge with 128GB.
+	  The recommended values seem very large in consideration for when we disable
+	  innodb_doublewrite and use O_DIRECT, so likely could be adjusted. We strive
+	  to provide generic configurations for these types of instances in this
+	  example file for innodb_doublewrite=0.
+
+	  For systems with above 10 GiB RAM: 0.5625 * (RAM in GB)
+	  n1-standard-16: 33.75G
+	  i4i.4xlarge: 72G
+
+config SYSBENCH_MYSQL_INNODB_BUFFER_POOL_SIZE
+	string "innodb_buffer_pool_size"
+	output yaml
+	default "512M" if SYSBENCH_TYPE_MYSQL_DOCKER
+	help
+	  For systems with above 4 GiB RAM: 0.75 * (RAM in GB)
+	  n1-standard-16: 45G
+	  i4i.4xlarge: 96G
+
+endif # SYSBENCH_DB_TYPE_MYSQL
+
+config SYSBENCH_DB_NAME
+	string "Database name to use"
+	output yaml
+	default "sbtest"
+
+config SYSBENCH_DB_USERNAME
+	string "Database username to use"
+	output yaml
+	default "sbtest"
+
+config SYSBENCH_ROOT_DB_PASSWORD
+	string "The root database password to use"
+	output yaml
+	default "kdevops"
+
+config SYSBENCH_DB_PASSWORD
+	string "Database password to use for sysbench database"
+	output yaml
+	default "kdevops"
+
+config SYSBENCH_REPORT_INTERVAL
+	int "Sysbench report interval"
+	output yaml
+	default "2"
+
+config SYSBENCH_OLTP_TABLE_SIZE
+	int "Sysbench OLTP table size"
+	output yaml
+	default "100000"
+
+config SYSBENCH_OLTP_TABLE_COUNT
+	int "Sysbench OLTP table count"
+	output yaml
+	default "24"
+
+config SYSBENCH_THREADS
+	int "Sysbench number of threads"
+	output yaml
+	default "128"
+	help
+	  Set the number of threads for the sysbench test. Default is 128.
+
+config SYSBENCH_TEST_DURATION
+	int "Sysbench Test Duration (seconds)"
+	default 3600
+	output yaml
+	help
+	  Set the duration of the sysbench test in seconds. Default is 3600 (1 hour).
+
+config SYSBENCH_TELEMETRY_PATH
+	string "Where to collect telemetry information"
+	default "/data/sysbench-telemetry"
+	output yaml
+	help
+	  Set the path where to place telemetry information collected. By
+	  default we use a directory under /data/ directory as we strive
+	  to mkfs the filesystem mounted on /data/ as a separate filesystem
+	  than where we place the database. This is so we separate the IOs
+	  from telemetry and the database.
