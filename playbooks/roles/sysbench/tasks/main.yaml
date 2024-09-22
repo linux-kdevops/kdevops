@@ -196,21 +196,6 @@
     mode: "u=rw,g=r,o=r"
   when: 'sysbench_type_mysql_docker|bool'
 
-- name: Copy and template all files used for the /root/ directory on MySQL container
-  tags: ['setup']
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: "{{ sysbench_mysql_container_host_root_path }}/{{ item | basename }}"
-    mode: "u=rw,g=r,o=rwx"
-  with_fileglob:
-    - "templates/root-user/*"
-  loop_control:
-    label: "Copying {{ item | basename }} to {{ sysbench_mysql_container_host_root_path }}"
-  when: 'sysbench_type_mysql_docker|bool'
-
 - name: Create a few directories needed for telemetry inside the docker container
   tags: [ 'setup' ]
   become: yes
