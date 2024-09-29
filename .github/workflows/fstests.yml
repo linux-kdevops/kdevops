@@ -1,0 +1,46 @@
+name: Run kdevops on self-hosted runner
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  run-kdevops:
+    name: Run kdevops on Self-hosted Runner
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure git
+        run: |
+          git config --global --add safe.directory '*'
+
+      - name: Run kdevops defconfig-xfs_reflink_4k
+        run: |
+          make KDEVOPS_HOSTS_PREFIX="gh" defconfig-xfs_reflink_4k
+
+      - name: Run kdevops make
+        run: |
+          make -j$(nproc)
+
+      - name: Run kdevops make bringup
+        run: |
+          make bringup
+
+      - name: Run linux
+        run: |
+          make linux
+
+      - name: Run fstests
+        run: |
+          make fstests
+
+      - name: Run kdevops make destroy
+        run: |
+          make destroy
