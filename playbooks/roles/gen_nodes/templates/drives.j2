@@ -36,7 +36,7 @@ the drives can vary by type, so we have one macro by type of drive.
     <qemu:arg value="-drive"/>
     <qemu:arg value="file={{ kdevops_storage_pool_path }}/guestfs/{{ hostname }}/extra{{ n }}.{{ libvirt_extra_drive_format }},format={{ libvirt_extra_drive_format }},if=none,aio={{ libvirt_extra_storage_aio_mode }},cache={{ libvirt_extra_storage_aio_cache_mode }},id=drv{{ n }}"/>
     <qemu:arg value="-device"/>
-    <qemu:arg value="virtio-blk-pci,scsi=off,drive=drv{{ n }},id=virtio-drv{{ n }},serial=kdevops{{ n }},bus=pcie-port-for-virtio-{{ n }},addr=0x0,iothread=kdevops-virtio-iothread-{{ n }},logical_block_size={{ libvirt_extra_storage_virtio_logical_block_size }},physical_block_size={{ libvirt_extra_storage_virtio_physical_block_size }}"/>
+    <qemu:arg value="virtio-blk-pci,drive=drv{{ n }},id=virtio-drv{{ n }},serial=kdevops{{ n }},bus=pcie-port-for-virtio-{{ n }},addr=0x0,iothread=kdevops-virtio-iothread-{{ n }},logical_block_size={{ libvirt_extra_storage_virtio_logical_block_size }},physical_block_size={{ libvirt_extra_storage_virtio_physical_block_size }}"/>
 {% endfor %}
 <!-- End of virtio drives-->
 {%- endmacro -%}
@@ -69,7 +69,7 @@ the drives can vary by type, so we have one macro by type of drive.
     <qemu:arg value='-drive'/>
     <qemu:arg value='file={{ kdevops_storage_pool_path }}/guestfs/{{ hostname }}/extra{{ ns.lbs_idx }}.{{ libvirt_extra_drive_format }},format={{ libvirt_extra_drive_format }},if=none,aio={{ libvirt_extra_storage_aio_mode }},cache={{ libvirt_extra_storage_aio_cache_mode }},id=drv{{ ns.lbs_idx }}'/>
     <qemu:arg value='-device'/>
-    <qemu:arg value="virtio-blk-pci,scsi=off,drive=drv{{ ns.lbs_idx }},id=virtio-drv{{ ns.lbs_idx }},serial=kdevops{{ ns.lbs_idx }},bus=pcie-port-for-virtio-{{ ns.lbs_idx }},addr=0x0,iothread=kdevops-virtio-iothread-{{ ns.lbs_idx }},logical_block_size={{  ns4.lbs }},physical_block_size={{ ns2.pbs }}"/>
+    <qemu:arg value="virtio-blk-pci,drive=drv{{ ns.lbs_idx }},id=virtio-drv{{ ns.lbs_idx }},serial=kdevops{{ ns.lbs_idx }},bus=pcie-port-for-virtio-{{ ns.lbs_idx }},addr=0x0,iothread=kdevops-virtio-iothread-{{ ns.lbs_idx }},logical_block_size={{  ns4.lbs }},physical_block_size={{ ns2.pbs }}"/>
 {% endif %}
 {% set ns.lbs_idx = ns.lbs_idx + 1 %}
 {% endfor %}
