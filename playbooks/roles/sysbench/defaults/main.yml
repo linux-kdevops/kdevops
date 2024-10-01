@@ -14,6 +14,8 @@ sysbench_fs_opts: ""
 sysbench_mount_opts: ""
 sysbench_mnt: "/db"
 
+sysbench_host_is_baseline: False
+
 sysbench_mysql_table_engine: "innodb"
 
 sysbench_test_atomics: False

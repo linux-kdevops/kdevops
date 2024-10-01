@@ -12,6 +12,7 @@ TAGS_SYSBENCH_RUN += run_sysbench
 TAGS_SYSBENCH_RUN += telemetry
 TAGS_SYSBENCH_RUN += logs
 TAGS_SYSBENCH_RUN += results
+TAGS_SYSBENCH_RUN += plot
 
 # Tags for running sysbench tests
 TAGS_SYSBENCH_TEST := vars
@@ -53,6 +54,12 @@ sysbench-clean:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-i hosts playbooks/sysbench.yml \
 		--tags vars,clean
+
+# Optional in case you want to improve graphing
+sysbench-plot:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i hosts playbooks/sysbench.yml \
+		--tags vars,plot
 
 # Help target to show available options
 sysbench-help-menu:

@@ -42,6 +42,7 @@ def main():
     parser.add_argument('--legend2', type=str, default='innodb_doublewrite=OFF', help='Legend for the second file')
     parser.add_argument('--theme', type=str, default='dark_background', help='Matplotlib theme to use')
     parser.add_argument('--list-themes', action='store_true', help='List available matplotlib themes')
+    parser.add_argument('--output', type=str, default='a_vs_b.png', help='Path of file to save')
     parser.add_argument('--report-interval', type=int, default=1, help='Time interval in seconds for reporting')
 
     args = parser.parse_args()
@@ -90,7 +91,7 @@ def main():
     plt.ylim(0)
     plt.legend()
     plt.tight_layout()
-    plt.savefig('a_vs_b.png')
+    plt.savefig(args.output)
     #plt.show()
 
 if __name__ == '__main__':
