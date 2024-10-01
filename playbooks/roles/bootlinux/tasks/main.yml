@@ -210,6 +210,23 @@
     linux_config: "{{ target_linux_config }}"
   when: not config_kdevops.stat.exists
 
+- name: Check if specific kernel config exists for {{ target_linux_ref }}
+  stat:
+    path: "{{ role_path }}/templates/{{ target_linux_config }}"
+  register: kernel_config
+  delegate_to: localhost
+
+- name: Get latest linux-next config if specific config is not found
+  shell: "ls -1t {{ role_path }}/templates/config-next* | head -n 1"
+  register: latest_linux_next_config
+  delegate_to: localhost
+  when: not kernel_config.stat.exists
+
+- name: Use the specific kernel config or fallback to the latest linux-next
+  set_fact:
+    linux_config: "{{ target_linux_config if kernel_config.stat.exists else latest_linux_next_config.stdout }}"
+  delegate_to: localhost
+
 - name: Copy configuration for Linux {{ target_linux_tree }} on the client side
   template:
     src: "{{ linux_config }}"
