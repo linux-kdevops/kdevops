@@ -1,0 +1,20 @@
+if BOOTLINUX_TREE_MODULES
+
+source "workflows/linux/refs/default/Kconfig.modules"
+
+endif # BOOTLINUX_TREE_MODULES
+
+if BOOTLINUX_TREE_MODULES
+
+config BOOTLINUX_TREE_MODULES_NAME
+	string
+	default "modules" if BOOTLINUX_TREE_MODULES
+
+config BOOTLINUX_TREE_MODULES_URL
+	string
+	default DEFAULT_MODULES_GIT_URL if BOOTLINUX_TREE_VFS && !USE_LOCAL_LINUX_MIRROR
+	default "/mirror/modules.git" if BOOTLINUX_TREE_MODULES && USE_LIBVIRT_MIRROR && BOOTLINUX_9P
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/modules.git) if BOOTLINUX_TREE_MODULES && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && VAGRANT
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/modules.git) if BOOTLINUX_TREE_MODULES && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && GUESTFS
+
+endif # BOOTLINUX_TREE_MODULES

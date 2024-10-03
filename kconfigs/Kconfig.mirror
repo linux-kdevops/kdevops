@@ -264,6 +264,46 @@ config MIRROR_MCGROF_LINUS_URL
 	default DEFAULT_MCGROF_LINUS_HTTPS_GOOGLE_URL if MIRROR_MCGROF_LINUS_HTTPS_GOOGLE
 
 choice
+	prompt "Linux modules kernel tree"
+	default MIRROR_MODULES_GIT if MIRROR_GIT_WORKS
+	default MIRROR_MODULES_HTTPS if !MIRROR_GIT_WORKS
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+
+config MIRROR_MODULES_HTTPS
+	bool "HTTPS"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror. The URL is:
+
+	  https://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git
+
+config MIRROR_MODULES_HTTPS_GOOGLE
+	bool "HTTPS (Google)"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror and Google URL will be chosen. The URL is:
+
+	  https://kernel.googlesource.com/pub/scm/linux/kernel/git/modules/linux.git
+
+config MIRROR_MODULES_GIT
+	bool "Git"
+	depends on MIRROR_GIT_WORKS
+	help
+	  If you enable this option then Git protocol will be used as the
+	  source of the mirror. The URL is:
+
+	  git://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git
+
+endchoice
+
+config MIRROR_MODULES_URL
+	string
+	output yaml
+	default DEFAULT_MODULES_HTTPS_GIT if MIRROR_MODULES_GIT
+	default DEFAULT_MODULES_HTTPS_URL if MIRROR_MODULES_HTTPS
+	default DEFAULT_MODULES_HTTPS_GOOGLE_URL if MIRROR_MODULES_HTTPS_GOOGLE
+
+choice
 	prompt "Linux stable mirror protocol/source"
 	default MIRROR_STABLE_GIT if MIRROR_GIT_WORKS
 	default MIRROR_STABLE_HTTPS if !MIRROR_GIT_WORKS

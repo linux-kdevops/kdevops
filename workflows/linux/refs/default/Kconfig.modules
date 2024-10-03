@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# Automatically generated file
+
+if !HAVE_BOOTLINUX_TREE_MODULES_USER_REFS
+
+choice
+	prompt "Tag or branch to use"
+
+config BOOTLINUX_TREE_MODULES_NEXT_REF
+	bool "modules-next"
+	help
+	  Use the vfs.blocksize branch based on the vfs tree.
+
+endchoice
+
+config BOOTLINUX_TREE_MODULES_REF
+	string
+	default "modules-next" if BOOTLINUX_TREE_MODULES_NEXT_REF
+
+endif # !HAVE_BOOTLINUX_TREE_MODULES_USER_REFS

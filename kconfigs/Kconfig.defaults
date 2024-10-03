@@ -100,6 +100,18 @@ config DEFAULT_LTP_URL
 	string
 	default "https://github.com/linux-test-project/ltp.git"
 
+config DEFAULT_MODULES_GIT
+	string
+	default "git://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git"
+
+config DEFAULT_MODULES_HTTPS_GIT
+	string
+	default "https://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git"
+
+config DEFAULT_MODULES_HTTPS_GOOGLE_URL
+	string
+	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/modules/linux.git"
+
 config DEFAULT_MCGROF_LINUS_GIT_URL
 	string
 	default "https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git"

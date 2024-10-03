@@ -1,0 +1,6 @@
+---
+configs:
+  - modules-next:
+    config: BOOTLINUX_TREE_MODULES_NEXT_REF
+    ref: "modules-next"
+    help: "Use the modules-next branch based on the modules tree."

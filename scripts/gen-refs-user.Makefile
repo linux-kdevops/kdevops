@@ -6,6 +6,7 @@ SRC_URI_HTTPS_STABLE = https://git.kernel.org/pub/scm/linux/kernel/git/stable/li
 
 SRC_URI_HTTPS_MCGROF_LINUS = https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
 SRC_URI_HTTPS_MCGROF_NEXT = https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git
+SRC_URI_HTTPS_MODULES = https://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git
 SRC_URI_HTTPS_BTRFS_DEVEL = https://github.com/kdave/btrfs-devel.git
 SRC_URI_HTTPS_CEL_LINUX = https://git.kernel.org/pub/scm/linux/kernel/git/cel/linux.git
 SRC_URI_HTTPS_JLAYTON_LINUX = https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git
@@ -18,6 +19,7 @@ REFS_TARGET_STABLE := gen_refs_stable
 
 REFS_TARGET_DEVELOPMENT := gen_refs_mcgrof_linus
 REFS_TARGET_DEVELOPMENT += gen_refs_mcgrof_next
+REFS_TARGET_DEVELOPMENT += gen_refs_modules
 REFS_TARGET_DEVELOPMENT += gen_refs_btrfs_devel
 REFS_TARGET_DEVELOPMENT += gen_refs_cel_linux
 REFS_TARGET_DEVELOPMENT += gen_refs_jlayton_linux
@@ -86,6 +88,18 @@ gen_refs_mcgrof_next:
 		--force \
 		gitref \
 		--repo $(SRC_URI_HTTPS_MCGROF_NEXT) \
+		--refs $(REFS_COUNT)
+
+PHONY += gen_refs_modules
+gen_refs_modules:
+	$(Q)$(E) "Generating refs/$(REFS_DIR)/Kconfig.$(subst _,-,$(patsubst gen_refs_%,%,$@)) ($(REFS_COUNT) refs)..."
+	$(Q)./scripts/generate_refs.py \
+		--prefix BOOTLINUX_TREE_MODULES \
+		--output workflows/linux/refs/$(REFS_DIR)/Kconfig.modules \
+		--extra workflows/linux/refs/static/modules.yaml \
+		--force \
+		gitref \
+		--repo $(SRC_URI_HTTPS_VFS) \
 		--refs $(REFS_COUNT)
 
 PHONY += gen_refs_btrfs_devel
