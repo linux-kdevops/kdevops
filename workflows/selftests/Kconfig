@@ -20,32 +20,27 @@ config SELFTESTS_TOOLS_BUILD_RADIX_TREE
 
 config SELFTESTS_SECTION_FIRMWARE
 	bool "Firmware loader"
-	default y
 	help
 	  This will create a host to test the firmware loader.
 
 config SELFTESTS_SECTION_KMOD
 	bool "kmod - Kernel module loader usermode helper"
-	default y
 	help
 	  This will create a host to test the kmod selftest.
 
 config SELFTESTS_SECTION_MAPLE
 	bool "Maple tree"
-	default y
 	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
 	help
 	  This will create a host to test the maple tree.
 
 config SELFTESTS_SECTION_SYSCTL
 	bool "sysctls"
-	default y
 	help
 	  This will create a host to test proc sysctls.
 
 config SELFTESTS_SECTION_XARRAY
 	bool "Xarray"
-	default y
 	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
 	help
 	  This will create a host to test the xarray.
@@ -63,6 +58,10 @@ config SELFTESTS_SECTION_KMOD
 	default y
 
 config SELFTESTS_SECTION_SYSCTL
+	bool
+	default y
+
+config SELFTESTS_SECTION_XARRAY
 	bool
 	default y
 
