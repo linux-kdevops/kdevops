@@ -69,4 +69,21 @@ endif # !SELFTESTS_MANUAL_COVERAGE
 
 endmenu
 
+config SELFTESTS_SECTION_KMOD_TIMEOUT
+	int "kmod timeout"
+	output yaml
+	depends on SELFTESTS_SECTION_KMOD
+	default 165
+	help
+	  A default timeout of 45 seconds is used for runner, however each
+	  runner system configuration may also vary. So a timeout is very
+	  runner specific. Selftests are by design supposed to be relatively
+	  fast. In order to support some tests which may be longer and which
+	  can vary depending on the runner selftests support a custom timeout
+	  per runner. This will be used only for the kmod test:
+
+	  ./run_kselftest.sh --override-timeout <timeout>
+
+	  https://www.kernel.org/doc/Documentation/dev-tools/kselftest.rst
+
 endif # KDEVOPS_WORKFLOW_ENABLE_SELFTESTS

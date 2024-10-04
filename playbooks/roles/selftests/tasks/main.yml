@@ -139,7 +139,7 @@
     selftests_results_full_path: "{{ topdir_path }}/workflows/selftests/results/"
     selftests_workflow_dir: "../workflows/selftests"
     selftests_results_target: "../workflows/selftests/results/last-run/{{ last_kernel }}"
-  tags: [ 'selftests', 'run_tests', 'copy_results', 'prior_run', 'print_results' , 'augment_expunge_list' ]
+  tags: [ 'selftests', 'run_tests', 'copy_results', 'prior_run', 'print_results' , 'augment_expunge_list', 'vars' ]
 
 - name: Print uname for each host
   tags: [ 'selftests', 'run_tests' ]
@@ -182,6 +182,24 @@
   when:
     - selftests_skip_run|bool
 
+- name: Set variable we'd use for an override for a timeout for this test
+  vars:
+    selftest_name: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') }}"
+  set_fact:
+    selftest_timeout_variable: "{{ 'selftests_section_' + selftest_name + '_timeout' }}"
+  tags: ['vars']
+
+- name: Check if selftest timeout variable exists and is not empty
+  set_fact:
+    selftest_timeout_argument: "{{ '--override-timeout ' + (lookup('vars', selftest_timeout_variable, default='') | string) }}"
+  when: lookup('vars', selftest_timeout_variable, default='') != ""
+  tags: ['vars']
+
+- name: Log timeout argument used
+  debug:
+    msg: "{{ ansible_host }} could use {{ selftest_timeout_variable }} : using timeout argument {{ selftest_timeout_argument }}"
+  tags: ['vars']
+
 - name: Run userspace selftests
   tags: [ 'selftests', 'run_tests' ]
   become: yes
@@ -199,7 +217,7 @@
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  command: "./run_kselftest.sh -s"
+  command: "./run_kselftest.sh -s {{ selftest_timeout_argument }}"
   args:
     chdir: "{{ selftests_workdir }}"
   register: selftests_out
@@ -271,3 +289,59 @@
     label: "Copying {{ item_with_target }} ..."
   when:
     - output_log_files.matched > 0
+
+- name: Find all *.tap.log files in the selftests_results_target directory
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  find:
+    paths: "{{ selftests_results_target }}"
+    patterns: "*.tap.log"
+  register: tap_log_files
+
+- name: Read each tap.log file
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  slurp:
+    src: "{{ item.path }}"
+  with_items: "{{ tap_log_files.files }}"
+  register: tap_log_contents
+  loop_control:
+    label: "Reading {{ item.path }}"
+
+- name: Initialize tap_failures as an empty list
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  set_fact:
+    tap_failures: []
+
+- name: Read each tap.log file
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  slurp:
+    src: "{{ item.path }}"
+  with_items: "{{ tap_log_files.files }}"
+  register: tap_log_contents
+  loop_control:
+    label: "Reading {{ item.path }}"
+
+- name: Check for TAP failures in the content of each tap.log
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  set_fact:
+    tap_failures: "{{ tap_failures + [{'file': item.item.path, 'content': item.content | b64decode | string}] }}"
+  when: "'not ok' in (item.content | b64decode | string)"
+  with_items: "{{ tap_log_contents.results }}"
+  loop_control:
+    label: "Checking for failures in {{ item.item.path }}"
+
+- name: Fail if TAP failures are found
+  tags: [ 'selftests', 'check_results' ]
+  delegate_to: localhost
+  fail:
+    msg: |
+      Test failures detected in the following TAP logs:
+      {% for failure in tap_failures %}
+      {{ failure.file }}:
+      {{ failure.content | regex_findall('.*not ok.*') | join('\n') }}
+      {% endfor %}
+  when: tap_failures | length > 0

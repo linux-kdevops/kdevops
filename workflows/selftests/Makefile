@@ -44,12 +44,17 @@ selftests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l baseline playbooks/selftests.yml \
 		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
-		--tags vars,run_tests,copy_results $(LIMIT_HOSTS)
+		--tags vars,run_tests,copy_results,check_results $(LIMIT_HOSTS)
 
 selftests-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l baseline playbooks/selftests.yml \
-		--tags vars,copy_results $(LIMIT_HOSTS)
+		--tags vars,copy_results,check_results $(LIMIT_HOSTS)
+
+selftests-check-results:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-f 30 -i hosts -l baseline playbooks/selftests.yml \
+		--tags vars,check_results $(LIMIT_HOSTS)
 
 selftests-help-main:
 	@echo "Generic selftests options:"
