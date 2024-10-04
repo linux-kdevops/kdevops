@@ -152,11 +152,11 @@ config DEFAULT_STABLE_HTTPS_GOOGLE_URL
 	string
 	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux.git"
 
-config DEFAULT_VFS_GIT
+config DEFAULT_VFS_GIT_URL
 	string
 	default "git://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git"
 
-config DEFAULT_VFS_HTTPS_GIT
+config DEFAULT_VFS_HTTPS_URL
 	string
 	default "https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git"
 
