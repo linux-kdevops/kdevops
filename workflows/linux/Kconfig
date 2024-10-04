@@ -1,5 +1,13 @@
 if BOOTLINUX
 
+config BOOTLINUX_TREE_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh LINUX_TREE)
+
+config BOOTLINUX_TREE_REF_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh LINUX_TREE_REF)
+
 config BOOTLINUX_HAS_PURE_IOMAP_CONFIG
 	bool
 
@@ -103,7 +111,8 @@ endif # BOOTLINUX_9P
 
 choice
 	prompt "Type of development version of Linux to use"
-	default BOOTLINUX_DEV
+	default BOOTLINUX_DEV if !BOOTLINUX_TREE_SET_BY_CLI
+	default BOOTLINUX_CUSTOM if BOOTLINUX_TREE_SET_BY_CLI
 
 config BOOTLINUX_LINUS
 	bool "Linux releases based on Linus' tree"
@@ -147,18 +156,20 @@ if BOOTLINUX_CUSTOM
 
 config BOOTLINUX_TREE_CUSTOM_NAME
 	string "Custom Linux kernel tree name"
-	default "torvalds-linux"
+	default "linux"
 	help
 	  Short name to describe your custom tree. This will be used for the
 	  the path used to place linux on the nodes on /data/$BOOTLINUX_TREE_NAME.
 
 config BOOTLINUX_TREE_CUSTOM_URL
 	string "Custom git tree URL"
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_TREE)) if KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
+	default "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git" if !KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
 
 config BOOTLINUX_TREE_CUSTOM_REF
 	string "Custom Linux kernel tag or branch to use"
-	default "master"
+	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_TREE_REF)) if BOOTLINUX_TREE_REF_SET_BY_CLI
+	default "master" if !BOOTLINUX_TREE_REF_SET_BY_CLI
 	help
 	  The git ID or branch name to check out to compile linux.
 
@@ -255,7 +266,7 @@ config BOOTLINUX_TREE_LOCALVERSION
 
 config BOOTLINUX_SHALLOW_CLONE
 	bool "Shallow git clone"
-	default n
+	default BOOTLINUX_TREE_SET_BY_CLI
 	help
 	  If enabled the git tree cloned with be cloned using a shallow tree
 	  with history truncated. You want to enable this if you really don't
@@ -268,7 +279,8 @@ config BOOTLINUX_SHALLOW_CLONE
 
 config BOOTLINUX_SHALLOW_CLONE_DEPTH
 	int "Shallow git clone depth"
-	default 1
+	default 5 if BOOTLINUX_TREE_SET_BY_CLI
+	default 1 if !BOOTLINUX_TREE_SET_BY_CLI
 	depends on BOOTLINUX_SHALLOW_CLONE
 	help
 	  Create a shallow clone with a history truncated to the specified
