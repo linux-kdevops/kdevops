@@ -343,6 +343,46 @@ config MIRROR_STABLE_URL
 	default DEFAULT_STABLE_HTTPS_GOOGLE_URL if MIRROR_STABLE_HTTPS_GOOGLE
 
 choice
+	prompt "Linux xfs kernel tree"
+	default MIRROR_XFS_GIT if MIRROR_GIT_WORKS
+	default MIRROR_XFS_HTTPS if !MIRROR_GIT_WORKS
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+
+config MIRROR_XFS_HTTPS
+	bool "HTTPS"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror. The URL is:
+
+	  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+config MIRROR_XFS_HTTPS_GOOGLE
+	bool "HTTPS (Google)"
+	help
+	  If you enable this option then HTTPS will be used as the source
+	  of the mirror and Google URL will be chosen. The URL is:
+
+	  https://kernel.googlesource.com/pub/scm/fs/xfs/xfs-linux.git
+
+config MIRROR_XFS_GIT
+	bool "Git"
+	depends on MIRROR_GIT_WORKS
+	help
+	  If you enable this option then Git protocol will be used as the
+	  source of the mirror. The URL is:
+
+	  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+endchoice
+
+config MIRROR_XFS_URL
+	string
+	output yaml
+	default DEFAULT_XFS_HTTPS_GIT if MIRROR_XFS_GIT
+	default DEFAULT_XFS_HTTPS_URL if MIRROR_XFS_HTTPS
+	default DEFAULT_XFS_HTTPS_GOOGLE_URL if MIRROR_XFS_HTTPS_GOOGLE
+
+choice
 	prompt "QEMU mirror protocol/source"
 	default MIRROR_QEMU_HTTPS_GITLAB
 	depends on INSTALL_LOCAL_LINUX_MIRROR

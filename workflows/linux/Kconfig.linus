@@ -29,6 +29,11 @@ config BOOTLINUX_TREE_VFS
 	help
 	  Branches in the vfs tree.
 
+config BOOTLINUX_TREE_XFS
+	bool "xfs"
+	help
+	  Branches in the xfs tree.
+
 endchoice
 
 if BOOTLINUX_TREE_LINUS

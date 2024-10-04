@@ -1,0 +1,6 @@
+---
+configs:
+  - for-next:
+    config: BOOTLINUX_TREE_XFS_REF_NEXT
+    ref: "for-next"
+    help: "Use the for-next branch based on the xfs tree."
