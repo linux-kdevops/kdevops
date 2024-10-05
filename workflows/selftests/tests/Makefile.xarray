@@ -1,6 +1,5 @@
 ifeq (y,$(CONFIG_SELFTESTS_SECTION_XARRAY))
 SELFTESTS_HELP_TARGETS += selftests-help-menu-target-xarray
-SELFTESTS_ARGS += selftests_section_xarray='True'
 selftests-xarray:
 	$(Q)$(MAKE) selftests-baseline HOSTS=$(KDEVOPS_HOSTS_PREFIX)-xarray
 endif

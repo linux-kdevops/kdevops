@@ -2,8 +2,17 @@ if KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 
 menu "Configure what to test in selftests"
 
+config SELFTESTS_BUILD_RADIX_TREE
+	bool
+	output yaml
+
+config SELFTESTS_BUILD_SELFTESTS_DIR
+	bool
+	output yaml
+
 config SELFTESTS_MANUAL_COVERAGE
 	bool "Enable manual coverage selection"
+	output yaml
 	default y
 	help
 	  By default we aim to spawn enough hosts to cover testing the full
@@ -15,33 +24,38 @@ config SELFTESTS_MANUAL_COVERAGE
 
 if SELFTESTS_MANUAL_COVERAGE
 
-config SELFTESTS_TOOLS_BUILD_RADIX_TREE
-	bool
-
 config SELFTESTS_SECTION_FIRMWARE
 	bool "Firmware loader"
+	output yaml
+	select SELFTESTS_BUILD_SELFTESTS_DIR
 	help
 	  This will create a host to test the firmware loader.
 
 config SELFTESTS_SECTION_KMOD
 	bool "kmod - Kernel module loader usermode helper"
+	output yaml
+	select SELFTESTS_BUILD_SELFTESTS_DIR
 	help
 	  This will create a host to test the kmod selftest.
 
 config SELFTESTS_SECTION_MAPLE
 	bool "Maple tree"
-	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
+	output yaml
+	select SELFTESTS_BUILD_RADIX_TREE
 	help
 	  This will create a host to test the maple tree.
 
 config SELFTESTS_SECTION_SYSCTL
 	bool "sysctls"
+	output yaml
+	select SELFTESTS_BUILD_SELFTESTS_DIR
 	help
 	  This will create a host to test proc sysctls.
 
 config SELFTESTS_SECTION_XARRAY
 	bool "Xarray"
-	select SELFTESTS_TOOLS_BUILD_RADIX_TREE
+	output yaml
+	select SELFTESTS_BUILD_RADIX_TREE
 	help
 	  This will create a host to test the xarray.
 
@@ -51,18 +65,22 @@ if !SELFTESTS_MANUAL_COVERAGE
 
 config SELFTESTS_SECTION_FIRMWARE
 	bool
+	output yaml
 	default y
 
 config SELFTESTS_SECTION_KMOD
 	bool
+	output yaml
 	default y
 
 config SELFTESTS_SECTION_SYSCTL
 	bool
+	output yaml
 	default y
 
 config SELFTESTS_SECTION_XARRAY
 	bool
+	output yaml
 	default y
 
 endif # !SELFTESTS_MANUAL_COVERAGE

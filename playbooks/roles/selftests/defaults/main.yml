@@ -14,6 +14,7 @@ run_tests_on_failures: False
 selftests_skip_run: False
 selftests_skip_reboot: False
 selftests_build_radix_tree: False
+selftests_build_selftests_dir: False
 selftests_radix_tree_dir: "tools/testing/radix-tree"
 
 selftests_section_firmware: False
@@ -28,3 +29,9 @@ selftests_data_9p: "{{ bootlinux_9p_host_path }}/{{ selftests_ksrc }}"
 selftests_data_target: "{{ data_path }}/selftests/"
 selftests_workdir: "{{ selftests_data_target }}/kselftest/kselftest_install/"
 selftest_timeout_argument: ""
+
+selftest_userspace: False
+selftest_kernelspace: False
+
+selftest_xarray: False
+selftest_maple: False

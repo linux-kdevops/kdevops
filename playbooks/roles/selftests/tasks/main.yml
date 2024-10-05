@@ -24,6 +24,54 @@
   when:
     - bootlinux_9p|bool
 
+- name: Check if this node is in charge of running kernel or userspace tests
+  vars:
+    is_selftest_xarray: "{{ 'xarray' in ansible_host }}"
+    is_selftest_maple: "{{ 'maple' in ansible_host }}"
+  set_fact:
+    selftest_xarray: "{{ is_selftest_xarray }}"
+    selftest_maple: "{{ is_selftest_maple }}"
+  tags: ['vars']
+
+- name: Check if this node is in charge of userspace tests
+  vars:
+  set_fact:
+    selftest_userspace: "{{ selftest_xarray or selftest_maple }}"
+  tags: ['vars']
+
+- name: Check if this node is in charge of running kernel tests
+  set_fact:
+    selftest_kernelspace: "{{ not selftest_userspace }}"
+  tags: ['vars']
+
+- name: Debug kernelspace / userspace tests
+  debug:
+    msg: |
+      Host: {{ ansible_host }}
+      - selftest_xarray: {{ selftest_xarray }}
+      - selftest_maple: {{ selftest_maple }}
+      - selftest_kernelspace: {{ selftest_kernelspace }}
+      - selftest_userspace: {{ selftest_userspace }}
+  tags: ['run_tests']
+
+- name: Fail if both userspace and kernelspace are True
+  fail:
+    msg: "Both selftest_userspace and selftest_kernelspace are True for host {{ ansible_host }}. This is not expected."
+  when: selftest_userspace and selftest_kernelspace
+  tags: ['vars']
+
+- name: Fail if both userspace and kernelspace are False
+  fail:
+    msg: "Both selftest_userspace and selftest_kernelspace are False for host {{ ansible_host }}. This is not expected."
+  when: not selftest_userspace and not selftest_kernelspace
+  tags: ['vars']
+
+- name: Fail if selftest_kernelspace is true on incorrect host
+  fail:
+    msg: "Both selftest_userspace and selftest_kernelspace are True for host {{ ansible_host }}. This is not expected."
+  when: (selftest_kernelspace and (selftest_xarray or selftest_maple))
+  tags: ['vars']
+
 - name: Remove /lib/udev/rules.d/50-firmware.rules
   tags: [ 'selftests', 'deps' ]
   become: yes
@@ -52,9 +100,11 @@
     - bootlinux_9p|bool
 
 - name: Set the target selftest
+  vars:
+    all_tests: "{{ play_hosts | join(' ') | regex_replace('selftests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   set_fact:
     target_selftest: "{{ ansible_host | regex_replace('selftests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
-    all_selftest_targets: "{{ play_hosts | join(' ') | regex_replace('selftests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    all_selftest_targets: "{{ all_tests | regex_replace('maple') | regex_replace('xarray') }}"
   tags: [ 'selftests', 'vars' ]
 
 # We split building selftestss for two reasons because we can have the Linux
@@ -73,6 +123,28 @@
       FORCE_TARGETS: "1"
   when:
     - not bootlinux_9p|bool
+    - selftests_build_selftests_dir|bool
+
+- name: Build selftests
+  tags: [ 'selftests', 'build' ]
+  make:
+    chdir: "{{ selftests_data }}"
+    jobs: "{{ nproc.stdout }}"
+    params:
+      TARGETS: "{{ target_selftest }}"
+      FORCE_TARGETS: "1"
+  when:
+    - not bootlinux_9p|bool
+    - selftests_build_selftests_dir|bool
+
+- name: Build radix tree tools/testing/radix-tree
+  tags: [ 'selftests', 'build' ]
+  make:
+    chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
+    jobs: "{{ nproc.stdout }}"
+  when:
+    - not bootlinux_9p|bool
+    - selftests_build_radix_tree|bool
 
 # We build only what we need. This means if building on the host we peg all
 # the targets we want together so we can build all of them.
@@ -80,7 +152,7 @@
 #
 # Note that some targets will not fail with an error if dependencies are not
 # met.. so you should ensure that build-deps are met before adding a new target
-- name: Build selftests on host
+- name: Build selftests on host on {{ selftests_data_9p }}
   tags: [ 'selftests', 'build' ]
   make:
     chdir: "{{ selftests_data_9p }}"
@@ -92,6 +164,18 @@
   delegate_to: localhost
   when:
     - bootlinux_9p|bool
+    - selftests_build_selftests_dir|bool
+
+- name: Build radix tree tools/testing/radix-tree on host
+  tags: [ 'selftests', 'build' ]
+  command: "make -j{{ nproc.stdout }}"
+  args:
+    chdir: "{{ bootlinux_9p_host_path }}/tools/testing/radix-tree"
+  delegate_to: localhost
+  run_once: true
+  when:
+    - bootlinux_9p|bool
+    - selftests_build_radix_tree|bool
 
 # We use the target node only, not the host as if you've enaabled
 # 9p the path will be available and everything will have been built
@@ -108,6 +192,9 @@
     params:
       O: "{{ selftests_data_target }}"
       TARGETS: "{{ target_selftest }}"
+  when:
+    - selftests_build_radix_tree|bool
+    - selftest_kernelspace|bool
 
 - name: Reboot system before our test so we know everything is sane
   tags: [ 'selftests', 'run_tests', 'reboot' ]
@@ -187,32 +274,72 @@
     selftest_name: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') }}"
   set_fact:
     selftest_timeout_variable: "{{ 'selftests_section_' + selftest_name + '_timeout' }}"
-  tags: ['vars']
+  tags: ['vars' ]
 
 - name: Check if selftest timeout variable exists and is not empty
   set_fact:
     selftest_timeout_argument: "{{ '--override-timeout ' + (lookup('vars', selftest_timeout_variable, default='') | string) }}"
-  when: lookup('vars', selftest_timeout_variable, default='') != ""
+  when:
+    - selftest_kernelspace|bool
+    - lookup('vars', selftest_timeout_variable, default='') != ""
   tags: ['vars']
 
 - name: Log timeout argument used
   debug:
     msg: "{{ ansible_host }} could use {{ selftest_timeout_variable }} : using timeout argument {{ selftest_timeout_argument }}"
   tags: ['vars']
+  when:
+    - selftest_kernelspace|bool
 
 - name: Run userspace selftests
   tags: [ 'selftests', 'run_tests' ]
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  command: "./run_kselftest.sh -s"
+  command: "{{ command_to_run }}"
   args:
-    chdir: "{{ selftests_workdir }}"
-  register: selftests_out
+    chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
+  register: selftests_userspace_out
   when:
     - kdevops_run_selftests|bool
+    - selftests_build_radix_tree|bool
+    - selftest_userspace|bool
+  vars:
+    command_to_run: >
+      {%- if selftest_xarray  -%}
+      ./xarray
+      modprobe test_xarray
+      {%- elif selftest_maple -%}
+      ./maple
+      modprobe test_maple_tree
+      {%- else -%}
+      echo missing command
+      {%- endif -%}
 
-- name: Run selftests
+- name: Run kernel-side tests for special tests not in selftests
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: "{{ command_to_run }}"
+  args:
+    chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
+  register: selftests_module_out
+  when:
+    - kdevops_run_selftests|bool
+    - selftests_build_radix_tree|bool
+    - selftest_userspace|bool
+  vars:
+    command_to_run: >
+      {%- if selftest_xarray  -%}
+      modprobe test_xarray
+      {%- elif selftest_maple -%}
+      modprobe test_maple_tree
+      {%- else -%}
+      echo missing command
+      {%- endif -%}
+
+- name: Run kernelspace selftests
   tags: [ 'selftests', 'run_tests' ]
   become: yes
   become_flags: 'su - -c'
@@ -223,6 +350,22 @@
   register: selftests_out
   when:
     - kdevops_run_selftests|bool
+    - selftest_kernelspace|bool
+
+- name: Create empty directory for log collection for non-standard tests
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ selftests_workdir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when:
+    - kdevops_run_selftests|bool
+    - selftest_userspace|bool
 
 - name: Remove watchdog hint that tests have started
   local_action: file path="{{ selftests_workflow_target }}/.begin" state=absent
@@ -250,6 +393,22 @@
   tags: [ 'selftests', 'copy_results', 'augment_expunge_list' ]
   run_once: true
 
+- name: Gather kernel logs from each node
+  tags: [ 'selftests', 'copy_results' ]
+  become: yes
+  become_method: sudo
+  command: journalctl -k
+  register: journal_cmd
+
+- name: Save kernel logs to local file per node
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  copy:
+    content: "{{ journal_cmd.stdout }}"
+    dest: "{{ selftests_workdir }}/dmesg.log"
+  tags: [ 'selftests', 'copy_results' ]
+
 - name: Save selftest TAP output
   tags: [ 'selftests', 'run_tests' ]
   become: yes
@@ -258,8 +417,32 @@
   copy:
     content: "{{ selftests_out.stdout_lines|join('\n') }}"
     dest: "{{ selftests_workdir}}/tap.log"
+  when:
+    - selftest_kernelspace|bool
 
-- name: Look for the output.log and sefltest tap output files on {{ selftests_workdir }}
+- name: Save userspace test output
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  copy:
+    content: "{{ selftests_userspace_out.stdout_lines|join('\n') }}"
+    dest: "{{ selftests_workdir}}/userspace.log"
+  when:
+    - selftest_userspace|bool
+
+- name: Save module load test output
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  copy:
+    content: "{{ selftests_module_out.stdout_lines|join('\n') }}"
+    dest: "{{ selftests_workdir}}/module.log"
+  when:
+    - selftest_userspace|bool
+
+- name: Look for the test output logs files on {{ selftests_workdir }}
   tags: [ 'selftests', 'copy_results' ]
   become: yes
   become_flags: 'su - -c'
@@ -271,6 +454,9 @@
       - "output.log"
       - "kselftest-list.txt"
       - "tap.log"
+      - "userspace.log"
+      - "module.log"
+      - "dmesg.log"
   register: output_log_files
 
 - name: Copy the output files from {{ selftests_workdir }}
