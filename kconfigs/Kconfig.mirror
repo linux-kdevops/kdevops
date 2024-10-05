@@ -60,6 +60,14 @@ config MIRROR_GIT_WORKS
 	bool
 	default $(shell, ./scripts/test_git_firewall.sh)
 
+
+config LINUX_MIRROR_NFS
+	bool "Set up NFS server"
+	output yaml
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+	help
+	  Enable this if you want to set up your system as an NFS server.
+
 choice
 	prompt "kdevops mirror source"
 	default MIRROR_KDEVOPS_HTTPS_GITHUB

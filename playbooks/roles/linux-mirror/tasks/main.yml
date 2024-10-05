@@ -16,6 +16,14 @@
     - ansible_distribution == 'Fedora'
   tags: [ 'mirror' ]
 
+- name: Fail if linux_mirror_nfs is enabled but user is not root
+  fail:
+    msg: "NFS server setup is enabled, but you are not running as root. Please run as root to set up NFS."
+  when:
+    - linux_mirror_nfs | bool
+    - ansible_user_id != 'root'
+  tags: [ 'nfs', 'mirror' ]
+
 - name: Set up the mirrors.yaml based on preferences configured
   tags: [ 'mirror' ]
   template:
@@ -171,3 +179,104 @@
     state: started
     enabled: true
   tags: [ 'mirror' ]
+
+- name: Install NFS server packages (for root user and if NFS is enabled)
+  become: yes
+  ansible.builtin.package:
+    name:
+      - rpcbind
+    state: present
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Ensure rpcbind and NFS services are started and enabled (for root user and if NFS is enabled)
+  become: yes
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - rpcbind
+    - nfs-server
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Create the /mirror/ directory if it doesn't exist (for root user and if NFS is enabled)
+  become: yes
+  ansible.builtin.file:
+    path: /mirror/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Check if /mirror is already exported
+  become: yes
+  ansible.builtin.command:
+    cmd: exportfs
+  register: exportfs_output
+  changed_when: false
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Add /mirror to /etc/exports if not already exported
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    line: "/mirror/ *(ro,sync,no_root_squash,no_subtree_check)"
+    state: present
+    create: yes
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+    - "'/mirror' not in exportfs_output.stdout"
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Export the /mirror/ directory (for root user and if NFS is enabled)
+  become: yes
+  ansible.builtin.command:
+    cmd: exportfs -ra
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Check if firewalld is running
+  become: yes
+  ansible.builtin.command:
+    cmd: systemctl is-active firewalld
+  register: firewalld_status
+  ignore_errors: yes
+  changed_when: false
+  failed_when: firewalld_status.rc not in [0, 3, 4]  # rc=0 (active), rc=3 (inactive but not an error), 4 not present
+  when:
+    - linux_mirror_nfs | bool
+    - ansible_user_id == 'root'
+  tags: [ 'nfs', 'mirror' ]
+
+- name: Ensure NFS firewall rules are set (for root user and if NFS is enabled)
+  become: yes
+  ansible.builtin.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - nfs
+    - mountd
+    - rpc-bind
+  when:
+    - ansible_user_id == 'root'
+    - linux_mirror_nfs | bool
+    - firewalld_status.stdout == 'active'
+  tags: [ 'nfs', 'mirror' ]
