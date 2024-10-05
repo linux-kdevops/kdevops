@@ -225,11 +225,10 @@
       - rpcbind
     state: present
   when:
+    - not install_only_git_daemon|bool
     - ansible_user_id == 'root'
     - linux_mirror_nfs | bool
   tags: [ 'nfs', 'mirror' ]
-  when:
-    - not install_only_git_daemon|bool
 
 - name: Ensure rpcbind and NFS services are started and enabled (for root user and if NFS is enabled)
   become: yes
