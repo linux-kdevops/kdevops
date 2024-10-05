@@ -74,6 +74,15 @@
   when:
     - bootlinux_9p|bool
 
+- name: Add safe exception for a clone
+  command: "git config --global --add safe.directory {{ target_linux_git }}"
+  tags: [ 'linux', 'git', 'clone']
+  when:
+    - bootlinux_9p|bool
+    - target_linux_git is string and target_linux_git.startswith('/')
+  run_once: true
+  delegate_to: localhost
+
 - name: git clone {{ target_linux_tree }} on the client side
   git:
     repo: "{{ target_linux_git }}"
