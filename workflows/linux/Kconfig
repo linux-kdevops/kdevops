@@ -140,7 +140,7 @@ endchoice
 source "workflows/linux/Kconfig.linus"
 source "workflows/linux/Kconfig.stable"
 source "workflows/linux/Kconfig.dev"
-source "workflows/linux/Kconfig.modules
+source "workflows/linux/Kconfig.modules"
 source "workflows/linux/Kconfig.next"
 source "workflows/linux/Kconfig.vfs"
 source "workflows/linux/Kconfig.xfs"
