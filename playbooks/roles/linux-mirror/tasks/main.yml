@@ -76,24 +76,30 @@
     name: mirrors
   tags: [ 'mirror' , 'status-check' ]
 
-- name: Copy systemd service file to user systemd dir
-  copy:
-    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
-    dest: "{{ mirror_user_system_dir }}/"
-  with_items:
-    - "{{ mirrors.get('mirrors') }}"
-  loop_control:
-    label: "Installing {{ item.short_name}}-mirror.service user serice unit ..."
+- name: Set scope based on user (root uses system scope)
+  set_fact:
+    systemd_scope: "{{ 'system' if ansible_user_id == 'root' else 'user' }}"
+    systemd_dir: "{{ '/etc/systemd/system/' if ansible_user_id == 'root' else mirror_user_system_dir }}"
   tags: [ 'mirror' ]
 
-- name: Copy systemd timer file to user systemd dir
+- name: Copy systemd service file to user/system systemd dir
   copy:
-    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
-    dest: "{{ mirror_user_system_dir }}/"
+    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
+    dest: "{{ systemd_dir }}/"
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Installing {{ item.short_name}}-mirror.service user unit ..."
+    label: "Installing {{ item.short_name }}-mirror.service unit ..."
+  tags: [ 'mirror' ]
+
+- name: Copy systemd timer file to user/system systemd dir
+  copy:
+    src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
+    dest: "{{ systemd_dir }}/"
+  with_items:
+    - "{{ mirrors.get('mirrors') }}"
+  loop_control:
+    label: "Installing {{ item.short_name }}-mirror.timer unit ..."
   tags: [ 'mirror' ]
 
 - name: Enable systemd unit for mirror services
@@ -101,11 +107,11 @@
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     state: started
     enabled: true
-    scope: user
+    scope: "{{ systemd_scope }}"
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.service unit ..."
+    label: "Enabling {{ item.short_name }}-mirror.service unit ..."
   tags: [ 'mirror' ]
 
 - name: Enable systemd unit for mirror timers
@@ -113,11 +119,11 @@
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     state: started
     enabled: true
-    scope: user
+    scope: "{{ systemd_scope }}"
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Enabling {{ item.short_name | regex_replace('/', '-') }}-mirror.timer unit ..."
+    label: "Enabling {{ item.short_name }}-mirror.timer unit ..."
   tags: [ 'mirror' ]
 
 - name: Check systemd unit status for mirror services
