@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
-ifeq (y,$(CONFIG_INSTALL_LOCAL_LINUX_MIRROR))
+ifeq (y,$(CONFIG_MIRROR_INSTALL))
 
 LINUX_MIRROR_ARGS :=
 LINUX_MIRROR_ARGS += install_linux_mirror=True
+ifeq (y,$(CONFIG_INSTALL_LOCAL_LINUX_MIRROR))
 LINUX_MIRROR_ARGS += defaults_xfsprogs_git='$(subst ",,$(CONFIG_DEFAULT_XFSPROGS_URL))'
 LINUX_MIRROR_ARGS += defaults_xfsdump_git='$(subst ",,$(CONFIG_DEFAULT_XFSDUMP_URL))'
 LINUX_MIRROR_ARGS += mirror_blktests_url='$(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))'
@@ -17,6 +18,7 @@ LINUX_MIRROR_ARGS += mirror_mcgrof_linus_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_
 LINUX_MIRROR_ARGS += mirror_mcgrof_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_URL))'
 LINUX_MIRROR_ARGS += mirror_stable_url='$(subst ",,$(CONFIG_MIRROR_STABLE_URL))'
 LINUX_MIRROR_ARGS += mirror_torvalds_url='$(subst ",,$(CONFIG_MIRROR_TORVALDS_URL))'
+endif
 
 MIRROR_CODE      := $(TOPDIR)/playbooks/roles/linux-mirror/linux-mirror-systemd/
 

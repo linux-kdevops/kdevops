@@ -21,3 +21,5 @@ defaults_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
 mirror_kdevops_url: "https://github.com/linux-kdevops/kdevops.git"
 mirror_stable_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+
+install_only_git_daemon: false

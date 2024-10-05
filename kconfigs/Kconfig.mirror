@@ -25,9 +25,30 @@ config USE_LOCAL_LINUX_MIRROR
 	  the one which kdevops lets you set up, enable this option so that
 	  build targets can use it.
 
+config LINUX_MIRROR_MOUNTED_ON_NFS
+	bool
+	output yaml
+	default $(shell, ./scripts/check_mirror_nfs.sh /mirror)
+
+config INSTALL_ONLY_GIT_DAEMON
+	bool "Install only git daemon"
+	output yaml
+	default LINUX_MIRROR_MOUNTED_ON_NFS
+	select MIRROR_INSTALL
+	help
+	  If you have your /mirror/ setup as a mount point from another NFS
+	  server, you still want to set up a git daemon on the system locally
+	  so that guests can take advantage and leverage your NFS server.
+
+config MIRROR_INSTALL
+	bool
+	output yaml
+
 config INSTALL_LOCAL_LINUX_MIRROR
 	bool "Install local mirror setup"
 	default $(shell, scripts/check_mirror.sh INSTALL_LOCAL_LINUX_MIRROR)
+	depends on !LINUX_MIRROR_MOUNTED_ON_NFS
+	select MIRROR_INSTALL
 	help
 	  If you enable this kdevops will git clone the main Linux repos needed
 	  for Linux as bare git repositories and then install systemd units
@@ -59,7 +80,6 @@ config INSTALL_LOCAL_LINUX_MIRROR
 config MIRROR_GIT_WORKS
 	bool
 	default $(shell, ./scripts/test_git_firewall.sh)
-
 
 config LINUX_MIRROR_NFS
 	bool "Set up NFS server"
