@@ -216,15 +216,57 @@
   register: kernel_config
   delegate_to: localhost
 
-- name: Get latest linux-next config if specific config is not found
-  shell: "ls -1t {{ role_path }}/templates/config-next* | head -n 1"
-  register: latest_linux_next_config
+- name: Find all linux-next configs
+  find:
+    paths: "{{ role_path }}/templates"
+    patterns: "config-next*"
+    file_type: file
+    recurse: no
+  register: found_configs
   delegate_to: localhost
   when: not kernel_config.stat.exists
 
+- name: Extract the date from the filenames
+  set_fact:
+    configs_with_dates: "{{ configs_with_dates | default([]) + [{'file': item.path, 'date': (item.path | regex_search('config-next-(\\d{8})')).split('-')[-1]}] }}"
+  loop: "{{ found_configs.files }}"
+  when: item.path is search('config-next-(\\d{8})')
+  delegate_to: localhost
+
+- name: Sort configs based on date extracted from filename
+  set_fact:
+    sorted_configs: "{{ configs_with_dates | selectattr('date', 'defined') | sort(attribute='date', reverse=True) | map(attribute='file') | list }}"
+  when: configs_with_dates | length > 0
+  delegate_to: localhost
+
+- name: Set latest linux-next config if configs are found
+  set_fact:
+    latest_linux_next_config: "{{ sorted_configs[0] }}"
+  when: sorted_configs | length > 0
+  delegate_to: localhost
+
 - name: Use the specific kernel config or fallback to the latest linux-next
   set_fact:
-    linux_config: "{{ target_linux_config if kernel_config.stat.exists else latest_linux_next_config.stdout }}"
+    linux_config: "{{ target_linux_config | default('') if kernel_config.stat.exists else (latest_linux_next_config | default('') | basename) }}"
+  when: latest_linux_next_config is defined
+  delegate_to: localhost
+
+- name: Verify config used
+  debug:
+    msg: "Linux config used: {{ role_path }}/templates/{{ linux_config }}"
+  delegate_to: localhost
+
+- name: Verify that the Linux configuration file exists
+  stat:
+    path: "{{ role_path }}/templates/{{ linux_config }}"
+  register: config_stat
+  delegate_to: localhost
+  when: linux_config is defined
+
+- name: Fail if the configuration file does not exist
+  fail:
+    msg: "The configuration file {{ role_path }}/templates/{{ linux_config }} does not exist."
+  when: not config_stat.stat.exists
   delegate_to: localhost
 
 - name: Copy configuration for Linux {{ target_linux_tree }} on the client side
