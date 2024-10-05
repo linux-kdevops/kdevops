@@ -24,6 +24,14 @@ config SELFTESTS_MANUAL_COVERAGE
 
 if SELFTESTS_MANUAL_COVERAGE
 
+config SELFTESTS_TEST_BUNDLE_RADIX_TREE
+	bool "Test all tests related to kernel the radix tree"
+	output yaml
+	select SELFTESTS_SECTION_MAPLE
+	select SELFTESTS_SECTION_XARRAY
+	help
+	  This will ensure you test the radix tree in the kernel.
+
 config SELFTESTS_SECTION_FIRMWARE
 	bool "Firmware loader"
 	output yaml
