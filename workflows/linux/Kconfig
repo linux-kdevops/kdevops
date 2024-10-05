@@ -165,8 +165,8 @@ config BOOTLINUX_TREE_CUSTOM_NAME
 
 config BOOTLINUX_TREE_CUSTOM_URL
 	string "Custom git tree URL"
-	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_TREE)) if KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
-	default "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git" if !KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_TREE)) if BOOTLINUX_TREE_SET_BY_CLI
+	default "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git" if !BOOTLINUX_TREE_SET_BY_CLI
 
 config BOOTLINUX_TREE_CUSTOM_REF
 	string "Custom Linux kernel tag or branch to use"
