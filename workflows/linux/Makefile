@@ -92,6 +92,7 @@ PHONY += linux
 linux: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
 		'127.0.0.1,' $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux-local.yml \
+		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars="$(BOOTLINUX_ARGS)"
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
 		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
