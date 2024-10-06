@@ -31,6 +31,14 @@ OS_VERSION=${CONFIG_VIRT_BUILDER_OS_VERSION}
 BASE_IMAGE_DIR="${STORAGEDIR}/base_images"
 BASE_IMAGE="${BASE_IMAGE_DIR}/${OS_VERSION}.raw"
 
+if id -nG "$(whoami)" | grep -qw "$QEMU_GROUP"; then
+    echo "User $USER is part of the $QEMU_GROUP group."
+else
+    echo "Error: User $USER is not part of the $QEMU_GROUP group. Exiting..."
+    echo "Fix this and come back and try again."
+    exit 1
+fi
+
 build_custom_source()
 {
 	SOURCE_TMP=$(mktemp)
@@ -192,7 +200,7 @@ _EOT
 pre_install_customizations()
 {
 	KDEVOPS_UID=""
-	TEST_UID=`id -u kdevops`
+	TEST_UID=`id -u kdevops 2>&1 > /dev/null`
 	if [ $? -eq 0 ]; then
 		KDEVOPS_UID="-u ${TEST_UID}"
 	fi
@@ -227,8 +235,14 @@ firstboot-command systemctl start ssh
 _EOT
 }
 
-mkdir -p $STORAGEDIR
-mkdir -p $BASE_IMAGE_DIR
+USE_SUDO=""
+if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
+	USE_SUDO="sudo "
+fi
+
+$USE_SUDO mkdir -p $STORAGEDIR
+$USE_SUDO mkdir -p $BASE_IMAGE_DIR
+
 
 if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
 	sudo chgrp -R $QEMU_GROUP $STORAGEDIR
@@ -267,7 +281,7 @@ if [ ! -f $BASE_IMAGE ]; then
 	fi
 
 	echo "Generating new base image for ${OS_VERSION}"
-	virt-builder ${OS_VERSION} --arch `uname -m` -o $BASE_IMAGE --size 20G --format raw --commands-from-file $cmdfile
+	$USE_SUDO virt-builder ${OS_VERSION} --arch `uname -m` -o $BASE_IMAGE --size 20G --format raw --commands-from-file $cmdfile
 	if [[ $? -ne 0 ]]; then
 		echo "Failed to build custom image $BASE_IMAGE"
 		exit 1
@@ -303,7 +317,7 @@ do
 	ROOTIMG="$STORAGEDIR/$name/root.raw"
 	cp --reflink=auto $BASE_IMAGE $ROOTIMG
 	TZ="$(timedatectl show -p Timezone --value)"
-	virt-sysprep -a $ROOTIMG --hostname $name --ssh-inject "kdevops:file:$SSH_KEY.pub" --timezone $TZ
+	$USE_SUDO virt-sysprep -a $ROOTIMG --hostname $name --ssh-inject "kdevops:file:$SSH_KEY.pub" --timezone $TZ
 
 	if [[ "$CONFIG_LIBVIRT_ENABLE_LARGEIO" == "y" ]]; then
 		lbs_idx=0
