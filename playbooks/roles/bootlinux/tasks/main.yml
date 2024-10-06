@@ -87,6 +87,8 @@
   stat:
     path: "{{ bootlinux_9p_host_path }}"
   register: target_directory_stat
+  run_once: true
+  delegate_to: localhost
   when:
     - bootlinux_9p|bool
     - bootlinux_tree_set_by_cli|bool
@@ -94,6 +96,8 @@
 - name: Fail if target directory does not exist when using 9p and Linux CLI was set
   fail:
     msg: "The target directory {{ bootlinux_9p_host_path }} does not exist."
+  run_once: true
+  delegate_to: localhost
   when:
     - bootlinux_9p|bool
     - bootlinux_tree_set_by_cli|bool
