@@ -2,10 +2,12 @@ if BOOTLINUX
 
 config BOOTLINUX_TREE_SET_BY_CLI
 	bool
+	output yaml
 	default $(shell, scripts/check-cli-set-var.sh LINUX_TREE)
 
 config BOOTLINUX_TREE_REF_SET_BY_CLI
 	bool
+	output yaml
 	default $(shell, scripts/check-cli-set-var.sh LINUX_TREE_REF)
 
 config BOOTLINUX_HAS_PURE_IOMAP_CONFIG

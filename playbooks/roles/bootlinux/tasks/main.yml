@@ -83,6 +83,22 @@
   run_once: true
   delegate_to: localhost
 
+- name: Check if target directory exists when using 9p and Linux CLI was set
+  stat:
+    path: "{{ bootlinux_9p_host_path }}"
+  register: target_directory_stat
+  when:
+    - bootlinux_9p|bool
+    - bootlinux_tree_set_by_cli|bool
+
+- name: Fail if target directory does not exist when using 9p and Linux CLI was set
+  fail:
+    msg: "The target directory {{ bootlinux_9p_host_path }} does not exist."
+  when:
+    - bootlinux_9p|bool
+    - bootlinux_tree_set_by_cli|bool
+    - not target_directory_stat.stat.exists
+
 - name: git clone {{ target_linux_tree }} on the client side
   git:
     repo: "{{ target_linux_git }}"
@@ -112,6 +128,7 @@
   tags: [ 'linux', 'git', 'clone']
   when:
     - bootlinux_9p|bool
+    - not bootlinux_tree_set_by_cli|bool
   run_once: true
   delegate_to: localhost
 
