@@ -261,6 +261,7 @@
     configs_with_dates: "{{ configs_with_dates | default([]) + [{'file': item.path, 'date': (item.path | regex_search('config-next-(\\d{8})')).split('-')[-1]}] }}"
   loop: "{{ found_configs.files }}"
   when: item.path is search('config-next-(\\d{8})')
+  no_log: true
   delegate_to: localhost
 
 - name: Sort configs based on date extracted from filename
