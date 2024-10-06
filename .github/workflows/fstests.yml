@@ -41,6 +41,8 @@ jobs:
         run: |
           make fstests
 
+      # Always run
       - name: Run kdevops make destroy
+        if: always()  # This ensures the step runs even if previous steps failed
         run: |
           make destroy
