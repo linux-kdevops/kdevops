@@ -200,9 +200,9 @@ _EOT
 pre_install_customizations()
 {
 	KDEVOPS_UID=""
-	TEST_UID=`id -u kdevops 2>&1 > /dev/null`
+	id -u kdevops 2>&1 > /dev/null
 	if [ $? -eq 0 ]; then
-		KDEVOPS_UID="-u ${TEST_UID}"
+		KDEVOPS_UID="-u `id -u kdevops`"
 	fi
 	if echo $OS_VERSION | grep -qE "^(rhel|fedora|centos)"; then
 		UPDATE_GRUB_CMD="/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
