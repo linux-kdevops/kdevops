@@ -246,7 +246,7 @@
   register: kernel_config
   delegate_to: localhost
 
-- name: Find all linux-next configs
+- name: Find all linux-next configs if a your custom config-kdevops and ref config was not found
   find:
     paths: "{{ role_path }}/templates"
     patterns: "config-next*"
@@ -254,32 +254,45 @@
     recurse: no
   register: found_configs
   delegate_to: localhost
-  when: not kernel_config.stat.exists
+  when:
+    - not config_kdevops.stat.exists
+    - not kernel_config.stat.exists
 
 - name: Extract the date from the filenames
   set_fact:
     configs_with_dates: "{{ configs_with_dates | default([]) + [{'file': item.path, 'date': (item.path | regex_search('config-next-(\\d{8})')).split('-')[-1]}] }}"
   loop: "{{ found_configs.files }}"
-  when: item.path is search('config-next-(\\d{8})')
+  when:
+    - not config_kdevops.stat.exists
+    - not kernel_config.stat.exists
+    - item.path is search('config-next-(\\d{8})')
   no_log: true
   delegate_to: localhost
 
 - name: Sort configs based on date extracted from filename
   set_fact:
     sorted_configs: "{{ configs_with_dates | selectattr('date', 'defined') | sort(attribute='date', reverse=True) | map(attribute='file') | list }}"
-  when: configs_with_dates | length > 0
+  when:
+    - not config_kdevops.stat.exists
+    - not kernel_config.stat.exists
+    - configs_with_dates | length > 0
   delegate_to: localhost
 
 - name: Set latest linux-next config if configs are found
   set_fact:
     latest_linux_next_config: "{{ sorted_configs[0] }}"
-  when: sorted_configs | length > 0
+  when:
+    - not config_kdevops.stat.exists and not kernel_config.stat.exists
+    - sorted_configs | length > 0
   delegate_to: localhost
 
 - name: Use the specific kernel config or fallback to the latest linux-next
   set_fact:
     linux_config: "{{ target_linux_config | default('') if kernel_config.stat.exists else (latest_linux_next_config | default('') | basename) }}"
-  when: latest_linux_next_config is defined
+  when:
+    - not config_kdevops.stat.exists
+    - not kernel_config.stat.exists
+    - latest_linux_next_config is defined
   delegate_to: localhost
 
 - name: Verify config used
