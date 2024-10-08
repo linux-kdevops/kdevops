@@ -32,7 +32,7 @@ jobs:
           if [ "${{ matrix.distro_container }}" = "debian:testing" ]; then
             echo "Installing packages for Debian"
             apt-get update
-            apt-get install -y ansible make gcc ncurses-dev bison flex
+            apt-get install -y ansible-core make gcc ncurses-dev bison flex
           elif [ "${{ matrix.distro_container }}" = "fedora:latest" ]; then
             echo "Installing packages for Fedora"
             dnf install -y ansible make gcc ncurses-devel bison flex
