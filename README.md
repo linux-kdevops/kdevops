@@ -9,6 +9,7 @@ Table of Contents
       * [Start testing NFS with in 2 commands](#start-testing-nfs-with-in-2-commands)
       * [Runs some kernel selftests in a parallel manner](#runs-some-kernel-selftests-in-a-parallel-manner)
       * [CXL](#cxl)
+      * [sysbench](#sysbench)
    * [kdevops chats](#kdevops-chats)
    * [kdevops on discord](#kdevops-on-discord)
       * [kdevops IRC](#kdevops-irc)
@@ -169,6 +170,13 @@ There is CXL support. You can either use virtualized CXL devices or with
 to guests and create custom topologies. kdevops let you build and install
 the latest CXL enabled qemu version as well for you. For more details
 refer to [kdevops cxl docs](docs/cxl.md)
+
+### sysbench
+
+kdevops supports automation of sysbench tests on VMs with or without
+[PCIe passthrough](docs/libvirt-pcie-passthrough.md) and different cloud
+providers. For details refer to the
+[kdevops sysbench documentation](docs/sysbench/sysbench.md).
 
 ## kdevops chats
 
