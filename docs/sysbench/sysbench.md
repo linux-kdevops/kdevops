@@ -41,6 +41,7 @@ Just use:
 make defconfig-sysbench-mysql-atomic-tps-variability
 make -j$(nproc)
 make bringup
+make linux
 make sysbench
 make sysbench-test
 ```
