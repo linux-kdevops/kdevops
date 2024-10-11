@@ -83,7 +83,7 @@ if GUESTFS_DEBIAN
 
 choice
 	prompt "Debian version"
-	default GUESTFS_DEBIAN_BUSTER
+	default GUESTFS_DEBIAN_TRIXIE
 
 config GUESTFS_DEBIAN_TRIXIE
 	bool "Debian 13 - Trixie"
