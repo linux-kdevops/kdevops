@@ -233,6 +233,31 @@ firstboot-command systemctl stop ssh
 firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
 firstboot-command systemctl start ssh
 _EOT
+	# CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST will not work
+	# if etc/nsswitch.conf has a line like this:
+	#
+	# hosts:          files myhostname resolve [!UNAVAIL=return] dns
+	#
+	# We need DNS to be used so virb0 will be used for a DNS request
+	if [[ "$CONFIG_GUESTFS_DEBIAN_TRIXIE" == "y" ]]; then
+		cat <<_EOT >>$cmdfile
+edit /etc/nsswitch.conf:'s/^hosts:.*UNAVAIL=return.*dns/hosts: files myhostname resolve dns/'
+uninstall cloud-init
+write /etc/default/locale:LANG=en_US.UTF-8
+append-line /etc/default/locale:LANGUAGE=en_US:en
+write /etc/locale.gen:en_US.UTF-8 UTF-8
+firstboot-command locale-gen en_US.UTF-8
+firstboot-command update-locale LANG=en_US.UTF-8
+firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force locales
+firstboot-command systemctl stop ssh
+firstboot-command systemctl start ssh
+_EOT
+		if [[ "$CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST" == "y" ]]; then
+		cat <<_EOT >>$cmdfile
+delete /etc/apt/sources.list.d/debian.sources
+_EOT
+		fi
+	fi
 }
 
 USE_SUDO=""
