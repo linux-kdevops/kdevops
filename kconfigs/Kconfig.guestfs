@@ -10,6 +10,9 @@ config GUESTFS_REQUIRES_UEFI
 	bool
 	output yaml
 
+config GUESTFS_LACKS_9P
+	bool
+
 config GUESTFS_CUSTOM_RAW_IMAGE_URL
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
@@ -111,19 +114,26 @@ if GUESTFS_DEBIAN_TRIXIE
 
 choice
 	prompt "Debian trixie flavor"
-	default GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
+	default GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
 
 config GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
 	bool "debian-13-generic-amd64-daily"
 	help
 	  Should run in any environment using cloud-init, for e.g. OpenStack,
-	  DigitalOcean and also on bare metal.
+	  DigitalOcean and also on bare metal. This is the image you should
+	  try to use and stick to for kernel testing.
 
 config GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
 	bool "debian-13-genericcloud-amd64-daily"
 	help
 	  Similar to generic. Should run in any virtualised environment. Is
 	  smaller than generic by excluding drivers for physical hardware.
+	  Note that the 9p client filesystem module will not be available to
+	  you with this image and so you cannot leverage 9p for building
+	  Linux on the host. This image also requires a EFI boot loader
+	  and secure boot is enabled by default which means your custom
+	  kernels will need to be signed and this plumbing is not supported
+	  yet so you are on your own.
 
 config GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
 	bool "debian-13-nocloud-amd64-daily"
