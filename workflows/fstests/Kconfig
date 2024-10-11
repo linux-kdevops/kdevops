@@ -601,6 +601,7 @@ endif # FSTESTS_TESTDEV_SPARSEFILE_GENERATION
 
 config FSTESTS_TEST_DEV
 	string "The device to use TEST_DEV on fstests"
+	output yaml
 	default "/dev/loop16" if FSTESTS_TESTDEV_SPARSEFILE_GENERATION
 	depends on FSTESTS_TESTDEV_SPARSEFILE_GENERATION
 	help
