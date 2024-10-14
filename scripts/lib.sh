@@ -33,7 +33,8 @@ FSTESTS_STARTED_FILE="${TOPDIR}/workflows/fstests/.begin"
 BLKTESTS_STARTED_FILE="${TOPDIR}/workflows/blktests/.begin"
 REBOOT_LIMIT_STARTED_FILE="${TOPDIR}/workflows/demos/reboot-limit/.begin"
 
-if [[ "$CONFIG_KDEVOPS_WORKFLOW_FSTESTS" == "y" ]]; then
+if [[ "${CONFIG_KDEVOPS_WORKFLOW_ENABLE_FSTESTS+x}" && \
+	  "$CONFIG_KDEVOPS_WORKFLOW_ENABLE_FSTESTS" == "y" ]]; then
 	FSTYP="$CONFIG_FSTESTS_FSTYP"
 	TEST_DEV="$CONFIG_FSTESTS_TEST_DEV"
 fi
