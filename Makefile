@@ -235,6 +235,7 @@ $(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config $(KDEVOPS_NODES_TEMPLATE)
 DEFAULT_DEPS += $(LOCALHOST_SETUP_WORK)
 
 include scripts/tests.Makefile
+include scripts/ci.Makefile
 
 PHONY += clean
 clean:
