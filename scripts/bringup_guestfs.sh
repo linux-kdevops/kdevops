@@ -5,6 +5,16 @@
 source ${TOPDIR}/.config
 source ${TOPDIR}/scripts/lib.sh
 
+if [[ "${CONFIG_GUESTFS_BRINGUP_DEBUG_0+x}" && \
+	   "${CONFIG_GUESTFS_BRINGUP_DEBUG_0}" == "y" ]]; then
+	set -x
+fi
+
+if [[ "${CONFIG_GUESTFS_BRINGUP_DEBUG_1+x}" && \
+	  "${CONFIG_GUESTFS_BRINGUP_DEBUG_1}" == "y" ]]; then
+	set -euxo pipefail
+fi
+
 export LIBVIRT_DEFAULT_URI=$CONFIG_LIBVIRT_URI
 
 # We use the NVMe setting for virtio too (go figure), but IDE

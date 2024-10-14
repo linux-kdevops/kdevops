@@ -214,4 +214,25 @@ config VIRT_BUILDER_OS_VERSION
          to get a list of operating systems and versions supported
          by guestfs.
 
+choice
+	prompt "Guestfs bringup debug mode"
+	default GUESTFS_BRINGUP_DEBUG_DISABLED
+
+config GUESTFS_BRINGUP_DEBUG_DISABLED
+	bool "Disabled"
+	help
+	  Disables bringup debug.
+
+config GUESTFS_BRINGUP_DEBUG_0
+	bool "set -x"
+	help
+	  Enables 'set -x' when running scripts/guestfs_bringup.sh.
+
+config GUESTFS_BRINGUP_DEBUG_1
+	bool "set -euxo pipefile"
+	help
+	  Enables 'set -euxo pipefile' when running scripts/guestfs_bringup.sh.
+
+endchoice
+
 endif # GUESTFS
