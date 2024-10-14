@@ -234,14 +234,28 @@ firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=tru
 firstboot-command systemctl start ssh
 _EOT
 	# CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST will not work
-	# if etc/nsswitch.conf has a line like this:
+	# if /etc/nsswitch.conf has a line like this:
 	#
 	# hosts:          files myhostname resolve [!UNAVAIL=return] dns
 	#
 	# We need DNS to be used so virb0 will be used for a DNS request
+	# For the life of me I can't get the following line to work with
+	# the virt-builder command and so we do a full edit of the file for now
+	# edit /etc/nsswitch.conf:'s/\[!UNAVAIL=return\]//'
 	if [[ "$CONFIG_GUESTFS_DEBIAN_TRIXIE" == "y" ]]; then
 		cat <<_EOT >>$cmdfile
-edit /etc/nsswitch.conf:'s/^hosts:.*UNAVAIL=return.*dns/hosts: files myhostname resolve dns/'
+write /etc/nsswitch.conf: # kdevops generated /etc/nsswitch.conf
+append-line /etc/nsswitch.conf:passwd:         files
+append-line /etc/nsswitch.conf:group:          files
+append-line /etc/nsswitch.conf:shadow:         files
+append-line /etc/nsswitch.conf:gshadow:        files
+append-line /etc/nsswitch.conf:hosts:          files myhostname resolve dns
+append-line /etc/nsswitch.conf:networks:       files
+append-line /etc/nsswitch.conf:protocols:      db files
+append-line /etc/nsswitch.conf:services:       db files
+append-line /etc/nsswitch.conf:ethers:         db files
+append-line /etc/nsswitch.conf:rpc:            db files
+append-line /etc/nsswitch.conf:netgroup:       nis
 uninstall cloud-init
 write /etc/default/locale:LANG=en_US.UTF-8
 append-line /etc/default/locale:LANGUAGE=en_US:en
