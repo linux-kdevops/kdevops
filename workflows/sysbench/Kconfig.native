@@ -1,0 +1,138 @@
+choice
+	prompt "What type of sysbench do you want to use?"
+	default SYSBENCH_TYPE_POSTGRESQL_NATIVE
+
+config SYSBENCH_TYPE_POSTGRESQL_NATIVE
+	bool "Use PostgreSQL natively for Sysbench"
+	output yaml
+	select SYSBENCH_DB_TYPE_POSTGRESQL
+	help
+	  Enable this option to run sysbench using PostgreSQL natively
+	  in the Guest OS.
+
+endchoice
+
+if SYSBENCH_TYPE_POSTGRESQL_NATIVE
+
+choice
+	prompt "Which PostgreSQL version to use?"
+	default SYSBENCH_POSTGRESQL_VERSION_REL_17
+
+config SYSBENCH_POSTGRESQL_VERSION_REL_17
+	bool "PostgreSQL 17.m"
+	output yaml
+	help
+	  Uses latest 17 release available (e.g. 17.0).
+
+config SYSBENCH_POSTGRESQL_VERSION_REL_16
+	bool "PostgreSQL 16.m"
+	output yaml
+	help
+	  Uses latest 16 release available (e.g. 16.4).
+
+config SYSBENCH_POSTGRESQL_VERSION_REL_15
+	bool "PostgreSQL 15.m"
+	output yaml
+	help
+	  Uses latest 15 release available (e.g. 15.8).
+
+endchoice
+
+config SYSBENCH_POSTGRESQL_REF_STRING
+	string
+	output yaml
+	default "REL_17" if SYSBENCH_POSTGRESQL_VERSION_REL_17
+	default "REL_16" if SYSBENCH_POSTGRESQL_VERSION_REL_16
+	default "REL_15" if SYSBENCH_POSTGRESQL_VERSION_REL_15
+
+config SYSBENCH_POSTGRESQL_REPO_PATH
+	string "PostgreSQL repository path"
+	default "{{ data_path }}/postgresql"
+	output yaml
+	help
+	  Where to clone the PostgreSQL repository. This will be used as build directory
+	  as well.
+
+config SYSBENCH_POSTGRESQL_BLOCKSIZE
+	string "PostgreSQL Block Size"
+	default "8"
+	output yaml
+	help
+	  PostgreSQL block size in kilobytes (--with-blocksize=BLOCKSIZE).
+	  The value must be a power of 2 between 1 and 32 (kilobytes).
+	  This is a build configuration option.
+	  https://www.postgresql.org/docs/16/install-make.html#CONFIGURE-OPTION-WITH-BLOCKSIZE
+
+config SYSBENCH_POSTGRESQL_WAL_BLOCKSIZE
+	string "PostgreSQL WAL Block Size"
+	default "8"
+	output yaml
+	help
+	  PostgreSQL WAL block size in kilobytes (--with-wal-blocksize=BLOCKSIZE).
+	  The value must be a power of 2 between 1 and 64 (kilobytes).
+	  This is a build configuration option.
+	  https://www.postgresql.org/docs/16/install-make.html#CONFIGURE-OPTION-WITH-WAL-BLOCKSIZE
+
+config SYSBENCH_POSTGRESQL_USER
+	string "PostgreSQL benchmark user"
+	default "postgres"
+	output yaml
+	help
+	  User to run PostgreSQL database and benchmark.
+
+config SYSBENCH_POSTGRESQL_LOGFILE
+	string "PostgreSQL Log File"
+	default "{{ sysbench_mnt }}/postgresql/postgresql.log"
+	output yaml
+	help
+	  Where to place the server log output file.
+	  https://www.postgresql.org/docs/current/app-pg-ctl.html
+
+config SYSBENCH_POSTGRESQL_PGDATA
+	string "PostgreSQL Log File"
+	default "{{ sysbench_mnt }}/postgresql"
+	output yaml
+	help
+	  Specifies the file system location of the database configuration files.
+	  https://www.postgresql.org/docs/current/app-pg-ctl.html
+
+config SYSBENCH_POSTGRESQL_CONTROLDATA_LOGFILE
+	string "PostgreSQL Cluster Log File"
+	default "{{ sysbench_telemetry_path }}/controldata.log"
+	output yaml
+	help
+	  Where to place the control information of the database cluster.
+	  https://www.postgresql.org/docs/current/app-pgcontroldata.html
+
+config SYSBENCH_LOCAL_DB_PORT
+	int "The actual local database port to use"
+	default "5432"
+	output yaml
+	help
+	  PostgreSQL Database Port
+
+choice
+	prompt "What PostgreSQL configuration to use?"
+	default SYSBENCH_POSTGRESQL_CONF_DEFAULT
+
+config SYSBENCH_POSTGRESQL_CONF_DEFAULT
+	bool "Default"
+	help
+	  Use default configuration file.
+	  Check playbooks/roles/sysbench/templates/postgresql-conf-default.conf.j2.
+
+config SYSBENCH_POSTGRESQL_CONF_000
+	bool "Configuration-000"
+	help
+	  Use configuration file nr 0.
+	  Check playbooks/roles/sysbench/templates/postgresql-conf-000.conf.j2.
+
+endchoice
+
+config SYSBENCH_POSTGRESQL_CONFIGURATION
+	string
+	output yaml
+	default "postgresql-conf-default.conf" if SYSBENCH_POSTGRESQL_CONF_DEFAULT
+	default "postgresql-conf-000.conf" if SYSBENCH_POSTGRESQL_CONF_000
+
+endif # SYSBENCH_TYPE_POSTGRESQL_NATIVE

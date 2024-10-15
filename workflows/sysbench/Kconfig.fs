@@ -55,6 +55,9 @@ config SYSBENCH_TEST_ATOMICS_TPS_VARIABILITY
 
 endchoice
 
+
+if SYSBENCH_DB_TYPE_MYSQL
+
 choice
 	prompt "When do you want to disable innodb_doublewrite?"
 	default SYSBENCH_DISABLE_DOUBLEWRITE_AUTO
@@ -75,6 +78,33 @@ config SYSBENCH_DISABLE_DOUBLEWRITE_ALWAYS
 	  to test disabling the innodb_doublewrite enable this.
 
 endchoice
+
+endif # SYSBENCH_DB_TYPE_MYSQL
+
+if SYSBENCH_DB_TYPE_POSTGRESQL
+
+choice
+	prompt "When do you want to disable full_page_writes?"
+	default SYSBENCH_DISABLE_FULL_PAGE_WRITES_AUTO
+
+config SYSBENCH_DISABLE_FULL_PAGE_WRITES_AUTO
+	bool "Use hostname postfix"
+	output yaml
+	help
+	  To allow for A/B testing this option will only disable the
+	  full_page_writes on nodes which have a hostname which end
+	  with "-dev".
+
+config SYSBENCH_DISABLE_FULL_PAGE_WRITES_ALWAYS
+	bool "Disable it always"
+	output yaml
+	help
+	  If you don't want to spawn nodes to do A/B testing and just want
+	  to test disabling the full_page_writes enable this.
+
+endchoice
+
+endif # SYSBENCH_DB_TYPE_MYSQL
 
 config SYSBENCH_TEST_ATOMICS_XFS_16K_4KS_LBS
 	bool "XFS 16k LBS - 4k sector size"

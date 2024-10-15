@@ -55,3 +55,18 @@ sysbench_docker_telemetry_path: "/data/sysbench-telemetry"
 
 sysbench_disable_doublewrite_auto: False
 sysbench_disable_doublewrite_always: False
+
+sysbench_type_postgresql_native: false
+
+sysbench_postgresql_repo_path: "{{ data_path }}/postgresql"
+sysbench_postgresql_pgdata: "{{ sysbench_mnt }}/postgresql"
+sysbench_postgresql_logfile: "{{ sysbench_mnt }}/postgresql/postgresql.log"
+sysbench_postgresql_configuration: postgresql-conf-default.conf
+sysbench_postgresql_user: postgres
+
+# pg_controldata
+# https://www.postgresql.org/docs/current/app-pgcontroldata.html
+sysbench_postgresql_controldata_logfile: "{{ sysbench_telemetry_path }}/controldata.log"
+
+sysbench_disable_full_page_writes_auto: false
+sysbench_disable_full_page_writes_always: false

@@ -2,6 +2,10 @@ config SYSBENCH_DB_TYPE_MYSQL
 	bool
 	output yaml
 
+config SYSBENCH_DB_TYPE_POSTGRESQL
+	bool
+	output yaml
+
 source "workflows/sysbench/Kconfig.fs"
 
 choice
@@ -15,16 +19,28 @@ config SYSBENCH_DOCKER
 	help
 	  Run sysbench inside Docker containers.
 
+config SYSBENCH_NATIVE
+	bool "Run Sysbench natively in the Guest OS"
+	output yaml
+	select SYSBENCH_TYPE_POSTGRESQL_NATIVE
+	help
+	  Run sysbench natively in the Guest OS.
+
 endchoice
 
 if SYSBENCH_DOCKER
 source "workflows/sysbench/Kconfig.docker"
 endif # SYSBENCH_DOCKER
 
+if SYSBENCH_NATIVE
+source "workflows/sysbench/Kconfig.native"
+endif # SYSBENCH_NATIVE
+
 config SYSBENCH_DB_TYPE
 	string
 	output yaml
 	default "mysql" if SYSBENCH_DB_TYPE_MYSQL
+	default "pgsql" if SYSBENCH_DB_TYPE_POSTGRESQL
 
 if SYSBENCH_DB_TYPE_MYSQL
 
@@ -101,12 +117,43 @@ config SYSBENCH_OLTP_TABLE_COUNT
 	output yaml
 	default "24"
 
+choice
+	prompt "Number of threads?"
+	default SYSBENCH_THREADS_INTEGER if SYSBENCH_DB_TYPE_MYSQL
+	default SYSBENCH_THREADS_AUTO if SYSBENCH_DB_TYPE_POSTGRESQL
+
+config SYSBENCH_THREADS_INTEGER
+	bool "Manual"
+	help
+	  Configure the number of threads manually
+
+config SYSBENCH_THREADS_AUTO
+	bool "Auto"
+	help
+	  Configure the number of threads automatically using nproc
+
+endchoice
+
+if SYSBENCH_THREADS_INTEGER
+
 config SYSBENCH_THREADS
 	int "Sysbench number of threads"
 	output yaml
 	default "128"
 	help
 	  Set the number of threads for the sysbench test. Default is 128.
+
+endif # SYSBENCH_THREADS_INTEGER
+
+if SYSBENCH_THREADS_AUTO
+
+config SYSBENCH_THREADS
+	output yaml
+	default "0"
+	help
+	  Set the number of threads using nproc.
+
+endif # SYSBENCH_THREADS_AUTO
 
 config SYSBENCH_TEST_DURATION
 	int "Sysbench Test Duration (seconds)"
