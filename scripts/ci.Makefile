@@ -8,7 +8,7 @@ ifneq ($(wildcard .ci/build-test/$(BOOTLINUX_BASENAME)),)
 ifneq ($(wildcard .ci/test/$(BOOTLINUX_BASENAME)),)
 ifneq ($(wildcard .ci/results/$(BOOTLINUX_BASENAME)),)
 
-ci-build-test: build-test-$(BOOTLINUX_BASENAME)
+ci-build-test: ci-build-test-$(BOOTLINUX_BASENAME)
 
 PHONY += build-test
 
