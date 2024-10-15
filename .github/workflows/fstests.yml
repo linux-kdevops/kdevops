@@ -7,21 +7,21 @@ on:
   pull_request:
     branches:
       - '**'
+  workflow_dispatch:  # Add this for manual triggering of the workflow
 
 jobs:
   run-kdevops:
-    name: Run kdevops on Self-hosted Runner
-    runs-on: self-hosted
-
+    name: Run kdevops CI
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Configure git
         run: |
           git config --global --add safe.directory '*'
 
-      - name: Run kdevops defconfig-xfs_reflink_4k
+      - name: Run kdevops make defconfig-repo
         run: |
           make KDEVOPS_HOSTS_PREFIX="gh" defconfig-xfs_reflink_4k
 
@@ -33,15 +33,15 @@ jobs:
         run: |
           make bringup
 
-      - name: Run linux
+      - name: Build linux and boot test nodes on test kernel
         run: |
           make linux
 
-      - name: Run fstests
+      - name: Build fstests
         run: |
           make fstests
 
-      # Always run
+      # Ensure make destroy always runs, even on failure
       - name: Run kdevops make destroy
         if: always()  # This ensures the step runs even if previous steps failed
         run: |
