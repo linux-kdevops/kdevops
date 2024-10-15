@@ -10,6 +10,28 @@
   when:
     - devconfig_try_upgrade|bool
 
+- name: Configure APT to ignore `Valid-Until` timestamps on the host
+  delegate_to: localhost
+  run_once: true
+  become: yes
+  become_method: sudo
+  copy:
+    content: |
+      Acquire::Check-Valid-Until "false";
+    dest: /etc/apt/apt.conf.d/99ignore-release-date
+  when:
+    - guestfs_copy_sources_from_host_to_guest|bool
+
+- name: Configure APT to ignore `Valid-Until` timestamps on the target node
+  become: yes
+  become_method: sudo
+  copy:
+    content: |
+      Acquire::Check-Valid-Until "false";
+    dest: /etc/apt/apt.conf.d/99ignore-release-date
+  when:
+    - guestfs_copy_sources_from_host_to_guest|bool
+
 - name: Update apt cache and do dist-upgrade
   become: yes
   become_method: sudo
