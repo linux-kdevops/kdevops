@@ -193,7 +193,6 @@
       O: "{{ selftests_data_target }}"
       TARGETS: "{{ target_selftest }}"
   when:
-    - selftests_build_radix_tree|bool
     - selftest_kernelspace|bool
 
 - name: Reboot system before our test so we know everything is sane
