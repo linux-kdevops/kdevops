@@ -33,7 +33,7 @@ config SYSBENCH_MYSQL_TABLE_ENGINE
 	output yaml
 	default "innodb" if SYSBENCH_TYPE_MYSQL_DOCKER
 
-config SYSBENCH_MYSQL_INNOODB_REDO_LOG_CAPACITY
+config SYSBENCH_MYSQL_INNODB_REDO_LOG_CAPACITY
 	string "innodb_redo_log_capacity"
 	output yaml
 	default "1G" if SYSBENCH_TYPE_MYSQL_DOCKER
