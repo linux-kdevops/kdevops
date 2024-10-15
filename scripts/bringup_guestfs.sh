@@ -200,7 +200,7 @@ _EOT
 pre_install_customizations()
 {
 	KDEVOPS_UID=""
-	id -u kdevops 2>&1 > /dev/null
+	id -u kdevops > /dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		KDEVOPS_UID="-u `id -u kdevops`"
 	fi
