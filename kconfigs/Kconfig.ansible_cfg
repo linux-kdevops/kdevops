@@ -1,7 +1,7 @@
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
-	default ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
+	default ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
 
 config ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	bool "Ansible Debug Callback Plugin"
@@ -64,7 +64,7 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_CUSTOM_STATS
 config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_PER_HOST_START
 	bool "show_per_host_start"
 	output yaml
-	default n
+	default y
 	help
 	  This adds output that shows when a task is started to execute for each host
 	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-show_per_host_start
@@ -72,7 +72,7 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_PER_HOST_START
 config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_TASK_PATH_ON_FAILURE
 	bool "show_task_path_on_failure"
 	output yaml
-	default n
+	default y
 	help
 	  When a task fails, display the path to the file containing the failed task and
 	  the line number. This information is displayed automatically for every task when
