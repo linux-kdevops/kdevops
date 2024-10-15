@@ -12,8 +12,8 @@ config SYSBENCH_SUPPORTED_FILESYSTEM_XFS
 	default y
 
 choice
-    prompt "XFS filesystem sector size to use"
-    default SYSBENCH_XFS_SECTOR_SIZE_4K
+	prompt "XFS filesystem sector size to use"
+	default SYSBENCH_XFS_SECTOR_SIZE_4K
 
 config SYSBENCH_XFS_SECTOR_SIZE_512
 	bool "512 bytes"
