@@ -1,0 +1,3 @@
+[b4]
+  send-auto-to-cmd = "scripts/get_maintainer.pl --nogit --nogit-fallback --nogit-chief-penguins --norolestats --nol --no-tree"
+  send-auto-cc-cmd = "scripts/get_maintainer.pl --nogit --nogit-fallback --nogit-chief-penguins --norolestats --nom --no-tree"
