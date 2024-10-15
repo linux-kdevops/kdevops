@@ -40,7 +40,7 @@ config SYSBENCH_MYSQL_INNOODB_REDO_LOG_CAPACITY
 	help
 	  innodb_dedicated_server=ON is not compatible with innodb_flush_method=O_DIRECT
 	  and so we do what we can. See the following values which MySQL does
-	  recommand use when dedicated server is enabled, we just have to compute
+	  recommend use when dedicated server is enabled, we just have to compute
 	  on our own and test on our own:
 
 	  https://dev.mysql.com/doc/refman/8.0/en/innodb-dedicated-server.html

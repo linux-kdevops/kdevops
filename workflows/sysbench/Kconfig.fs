@@ -7,12 +7,12 @@ config SYSBENCH_TEST_ATOMICS
 	output yaml
 	select KDEVOPS_BASELINE_AND_DEV
 	help
-	  This type of test is aimed of testing the emperical value of support
+	  This type of test is aimed of testing the empirical value of support
 	  for large atomics on storage devices and its impact on databases.
-	  Most drives today support only power-fail safe gaurantees when writing
+	  Most drives today support only power-fail safe guarantees when writing
 	  up to 4 KiB. Drives which support 16 KiB atomic writes or larger can
 	  take advanage of software features in databases which typically
-	  do software work arounds to gaurantee writes above 4 KiB will be
+	  do software work arounds to guarantee writes above 4 KiB will be
 	  recoverable in case of power failure.
 
 	  Different database have different features one can disable if one has

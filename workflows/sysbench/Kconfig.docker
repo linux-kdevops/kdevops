@@ -40,7 +40,7 @@ config SYSBENCH_MYSQL_CONTAINER_NAME
 	  Set the name for the MySQL Docker container.
 
 config SYSBENCH_MYSQL_CONTAINER_PYTHON_PATH
-	string "The MySQL container pytyhon path"
+	string "The MySQL container python path"
 	default "/usr/local/lib/python3.9/site-packages" if SYSBENCH_MYSQL_CONTAINER_IMAGE_8_0
 	output yaml
 	help
@@ -60,7 +60,7 @@ config SYSBENCH_MYSQL_CONTAINER_HOST_CLIENT_CONFIG_PATH
 	  us make edits on the node.
 
 config SYSBENCH_MYSQL_CONTAINER_CLIENT_CONFIG
-	string "The MySQL container client configuraton file"
+	string "The MySQL container client configuration file"
 	default "/root/.my.cnf"
 	output yaml
 	help
@@ -101,7 +101,7 @@ config SYSBENCH_MYSQL_CONTAINER_HOST_ROOT_PATH
 	  When using a container, in order to support telemetry we rely on
 	  a mysqlsh plugin which we git clone on the node where we will
 	  run the container on. We use a container volume to let the container
-	  get access to this clone. This specificies the path on the node which
+	  get access to this clone. This specifies the path on the node which
 	  we will use a docker volume passed onto the container as the
 	  /root/ directory.
 
@@ -145,4 +145,4 @@ config SYSBENCH_DOCKER_TELEMETRY_PATH
 	default SYSBENCH_TELEMETRY_PATH
 	output yaml
 	help
-	  Where to place telemetry informaton inside the docker container.
+	  Where to place telemetry information inside the docker container.
