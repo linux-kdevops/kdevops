@@ -1,1 +1,1 @@
-make -j$(nproc) selftests-baseline
+make selftests-baseline
