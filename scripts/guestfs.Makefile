@@ -78,7 +78,7 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 		playbooks/bringup_guestfs.yml \
 		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml \
-		--tags network
+		--tags config-check,network
 	$(Q)$(TOPDIR)/scripts/bringup_guestfs.sh
 PHONY += bringup_guestfs
 

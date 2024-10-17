@@ -1,3 +1,43 @@
+- name: Verify we're configured {{ topdir_path }}/.config directory exists
+  stat:
+    path: "{{ topdir_path }}/.config"
+  register: config_file
+  tags: [ 'config-check' ]
+
+- name: Fail if {{ topdir_path }}/.config is not present
+  fail:
+    msg: "You have not configured kdevops yet, configure kdevops first."
+  when: not config_file.stat.exists or not config_file.stat.isreg
+  tags: [ 'config-check' ]
+
+- name: Check if guestfs directory exists
+  stat:
+    path: "{{ topdir_path }}/guestfs"
+  register: guestfs_dir_stat
+  tags: [ 'config-check' ]
+
+- name: Fail if guestfs directory does not exist
+  fail:
+    msg: "The guestfs directory does not exist. You must run make first."
+  when: not guestfs_dir_stat.stat.exists
+  tags: [ 'config-check' ]
+
+- name: Check for directories in {{ topdir_path }}/guestfs
+  find:
+    paths: "{{ topdir_path }}/guestfs"
+    file_type: directory
+    recurse: no
+    depth: 1
+  register: guestfs_subdirectories
+  when: guestfs_dir_stat.stat.exists
+  tags: [ 'config-check' ]
+
+- name: Fail if no directories found in {{ topdir_path }}/guestfs
+  fail:
+    msg: "No directories found in guestfs. You must run make first."
+  when: guestfs_subdirectories.matched == 0
+  tags: [ 'config-check' ]
+
 - name: Check for dnsmasq configuration files
   stat:
     path: "{{ item }}"
