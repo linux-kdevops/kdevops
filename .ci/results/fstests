@@ -1,1 +1,3 @@
 workflows/fstess/results/
+guestfs/*/*.xml
+guestfs/*/*.log
