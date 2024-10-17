@@ -1,3 +1,57 @@
+- name: Check for dnsmasq configuration files
+  stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/dnsmasq.conf
+    - /etc/dnsmasq.d
+  register: dnsmasq_config_files
+  when:
+    - distro_debian_based|bool
+  tags: [ 'network' ]
+
+- name: Fail if dnsmasq configuration files exist
+  fail:
+    msg: "dnsmasq configuration files or directories still exist. Please remove the following to fully uninstall dnsmasq:\n{{ dnsmasq_existing_files | join('\n') }}"
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_config_files.results | selectattr('stat.exists') | list | length > 0
+  tags: [ 'network' ]
+
+- name: Check dnsmasq service status
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: systemctl is-enabled dnsmasq
+  register: dnsmasq_enabled
+  failed_when: false
+  changed_when: false
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_existing_files | length > 0
+  tags: [ 'network' ]
+
+- name: Check if dnsmasq service is active
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: systemctl is-active dnsmasq
+  register: dnsmasq_active
+  failed_when: false
+  changed_when: false
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_existing_files | length > 0
+  tags: [ 'network' ]
+
+- name: Fail if dnsmasq service is enabled or active
+  fail:
+    msg: "dnsmasq service is {{ 'enabled' if dnsmasq_enabled.rc == 0 else 'active' if dnsmasq_active.rc == 0 else 'present' }}. Please ensure dnsmasq is fully uninstalled and disabled. Run 'sudo systemctl disable dnsmasq' and 'sudo systemctl stop dnsmasq' to disable and stop the service."
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_existing_files | length > 0
+    - (dnsmasq_enabled.rc == 0) or (dnsmasq_active.rc == 0)
+  tags: [ 'network' ]
+
 - name: Check if libvirt default network is running
   become: yes
   become_flags: 'su - -c'
