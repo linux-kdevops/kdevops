@@ -42,6 +42,7 @@ choice
 
 config LIBVIRT_URI_SYSTEM
 	bool "Use qemu:///system for the URI"
+	output yaml
 	help
 	  The first design behind libvirt is to use the system URI, that is,
 	  qemu:///system. All 'system' URIs (be it QEMU, lxc, uml, ...)

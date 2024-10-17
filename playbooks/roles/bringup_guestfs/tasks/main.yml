@@ -1,0 +1,20 @@
+- name: Check if libvirt default network is running
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  shell: virsh net-list | grep -q default
+  register: libvirt_default_net
+  ignore_errors: yes
+  when:
+    - 'libvirt_uri_system|bool'
+  tags: [ 'network' ]
+
+- name: Start the libvirt default network if not running
+  command: virsh net-start default
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  when:
+    - 'libvirt_uri_system|bool'
+    - libvirt_default_net.rc != 0
+  tags: [ 'network' ]
