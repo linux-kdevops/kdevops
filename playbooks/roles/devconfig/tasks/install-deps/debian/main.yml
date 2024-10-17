@@ -20,6 +20,7 @@
       Acquire::Check-Valid-Until "false";
     dest: /etc/apt/apt.conf.d/99ignore-release-date
   when:
+    - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Configure APT to ignore `Valid-Until` timestamps on the target node
@@ -30,6 +31,7 @@
       Acquire::Check-Valid-Until "false";
     dest: /etc/apt/apt.conf.d/99ignore-release-date
   when:
+    - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Update apt cache and do dist-upgrade

@@ -14,6 +14,7 @@ config DISTRO_DEBIAN_TRIXIE
 
 config DISTRO_DEBIAN_HAS_HOP1_SOURCES
 	bool
+	output yaml
 	default $(shell, scripts/get-distro-has-hop-count-sources.sh 1)
 
 endif
