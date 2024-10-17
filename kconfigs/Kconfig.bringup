@@ -1,6 +1,10 @@
 config BRINGUP_SUPPORTS_CXL
 	bool
 
+config KDEVOPS_ENABLE_GUESTFS
+	bool
+	output yaml
+
 choice
 	prompt "Node bring up method"
 	default GUESTFS
@@ -23,6 +27,7 @@ config VAGRANT
 
 config GUESTFS
 	bool "Use guestfs-tools for local virtualization via KVM and libvirt"
+	select KDEVOPS_ENABLE_GUESTFS
 	select EXTRA_STORAGE_SUPPORTS_LARGEIO
 	help
 	  This option will use libguestfs utilities instead of Vagrant to build

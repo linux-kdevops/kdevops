@@ -7,7 +7,6 @@ KDEVOPS_NODES :=		guestfs/kdevops_nodes.yaml
 
 export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 
-GUESTFS_ARGS += kdevops_enable_guestfs=True
 GUESTFS_ARGS += guestfs_path='$(TOPDIR_PATH)/guestfs'
 GUESTFS_ARGS += data_home_dir=/home/kdevops
 GUESTFS_ARGS += virtbuilder_os_version=$(CONFIG_VIRT_BUILDER_OS_VERSION)
