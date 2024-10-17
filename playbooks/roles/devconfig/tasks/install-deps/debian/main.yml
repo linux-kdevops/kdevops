@@ -34,6 +34,26 @@
     - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
+- name: Ensure we make Valid-Until trick take effect on host
+  delegate_to: localhost
+  run_once: true
+  become: yes
+  become_method: sudo
+  apt:
+    update_cache: yes
+  when:
+    - distro_debian_has_hop1_sources|bool
+    - guestfs_copy_sources_from_host_to_guest|bool
+
+- name: Ensure we make Valid-Until trick take effect on host
+  become: yes
+  become_method: sudo
+  apt:
+    update_cache: yes
+  when:
+    - distro_debian_has_hop1_sources|bool
+    - guestfs_copy_sources_from_host_to_guest|bool
+
 - name: Update apt cache and do dist-upgrade
   become: yes
   become_method: sudo
