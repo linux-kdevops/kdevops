@@ -1,15 +1,31 @@
+config DISTRO_DEBIAN_BASED
+	bool
+	output yaml
+
+config DISTRO_REDHAT_BASED
+	bool
+	output yaml
+
+config DISTRO_SUSE_BASED
+	bool
+	output yaml
+
 config DISTRO_DEBIAN
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh debian)
+	select DISTRO_DEBIAN_BASED
 
 if DISTRO_DEBIAN
 
 config DISTRO_DEBIAN_BUSTER
 	bool
+	output yaml
 	default $(shell, scripts/os-debian-version.sh buster)
 
 config DISTRO_DEBIAN_TRIXIE
 	bool
+	output yaml
 	default $(shell, scripts/os-debian-version.sh trixie)
 
 config DISTRO_DEBIAN_HAS_HOP1_SOURCES
@@ -21,20 +37,29 @@ endif
 
 config DISTRO_FEDORA
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh fedora)
+	select DISTRO_REDHAT_BASED
 
 config DISTRO_OPENSUSE
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh opensuse)
 
 config DISTRO_REDHAT
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh redhat)
+	select DISTRO_REDHAT_BASED
 
 config DISTRO_SUSE
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh suse)
+	select DISTRO_SUSE_BASED
 
 config DISTRO_UBUNTU
 	bool
+	output yaml
 	default $(shell, scripts/os-release-check.sh ubuntu)
+	select DISTRO_DEBIAN_BASED
