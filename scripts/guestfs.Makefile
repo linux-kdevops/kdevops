@@ -80,6 +80,12 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 		--extra-vars=@./extra_vars.yaml \
 		--tags config-check,network
 	$(Q)$(TOPDIR)/scripts/bringup_guestfs.sh
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+		--inventory localhost, \
+		playbooks/bringup_guestfs.yml \
+		-e 'ansible_python_interpreter=/usr/bin/python3' \
+		--extra-vars=@./extra_vars.yaml \
+		--tags console-permissions
 PHONY += bringup_guestfs
 
 destroy_guestfs:

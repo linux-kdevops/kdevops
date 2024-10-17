@@ -112,3 +112,41 @@
     - 'libvirt_uri_system|bool'
     - libvirt_default_net.rc != 0
   tags: [ 'network' ]
+
+- name: Get the actual user who invoked Ansible
+  command: whoami
+  register: reg_user
+  changed_when: false
+  when:
+    - 'libvirt_uri_system|bool'
+  tags: ['console-permissions']
+
+- name: Look for console.log files in guestfs subdirectories to check for CI enablement
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  find:
+    paths: "{{ topdir_path }}/guestfs"
+    patterns: "console.log"
+    file_type: file
+    recurse: yes
+  register: console_log_files
+  when:
+    - 'libvirt_uri_system|bool'
+  tags: ['console-permissions']
+
+- name: Ensure console.log files are owned by the main user for CI monitoring
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ item.path }}"
+    owner: "{{ reg_user.stdout }}"
+    group: "{{ reg_user.stdout }}"
+  loop: "{{ console_log_files.files }}"
+  loop_control:
+    label: "{{ item.path | regex_replace('^.*guestfs/', 'guestfs/') }}"
+  when:
+    - 'libvirt_uri_system|bool'
+    - console_log_files.matched > 0
+  tags: ['console-permissions']
