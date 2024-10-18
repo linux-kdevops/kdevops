@@ -38,6 +38,10 @@ journal-status:
 journal-ls:
 	@$(Q)./workflows/kdevops/scripts/jounal-ls.sh /var/log/journal/remote/
 
+journal-dump:
+	@$(Q)./workflows/kdevops/scripts/jounal-dump.sh /var/log/journal/remote/
+
+
 journal-ln:
 	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts  \
@@ -55,7 +59,10 @@ journal-help:
 	@echo "journal-status	   - Ensure systemd-journal-remote works"
 	@echo "journal-ls          - List journals available and sizes"
 	@echo "journal-ln          - Add symlinks with hostnames"
+	@echo "journal-dump        - Dump journal to local journal/ directory"
 
 HELP_TARGETS += journal-help
 
 endif
+journal-dump:
+	@echo Journal disabled consider enabling CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE

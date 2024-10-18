@@ -1,3 +1,4 @@
 workflows/selftests/results/
 guestfs/*/*.xml
 guestfs/*/*.log
+journal/*
