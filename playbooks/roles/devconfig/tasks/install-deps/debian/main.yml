@@ -3,12 +3,48 @@
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
-  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false"
+  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::AllowInsecureRepositories=true -o Acquire::MaxDate=10"
   register: release_info_changed
   changed_when: release_info_changed.rc == 0
   tags: [ 'apt', 'release-info-change' ]
   when:
     - devconfig_try_upgrade|bool
+
+- name: Check for UNAVAIL in /etc/nsswitch.conf hosts line
+  ansible.builtin.shell: grep -E '^hosts:.*UNAVAIL' /etc/nsswitch.conf
+  register: nsswitch_check
+  changed_when: false
+  failed_when: false
+  when:
+    - distro_debian_has_hop1_sources|bool
+    - guestfs_copy_sources_from_host_to_guest|bool
+
+- name: Write custom nsswitch.conf for hop1 mirror heuristic
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  ansible.builtin.copy:
+    content: |
+      # kdevops generated /etc/nsswitch.conf
+      passwd:         files
+      group:          files
+      shadow:         files
+      gshadow:        files
+      hosts:          files myhostname resolve dns
+      networks:       files
+      protocols:      db files
+      services:       db files
+      ethers:         db files
+      rpc:            db files
+      netgroup:       nis
+    dest: /etc/nsswitch.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - distro_debian_has_hop1_sources|bool
+    - guestfs_copy_sources_from_host_to_guest|bool
+    - nsswitch_check.rc == 0
 
 - name: Configure APT to ignore `Valid-Until` timestamps on the host
   delegate_to: localhost
@@ -18,6 +54,9 @@
   copy:
     content: |
       Acquire::Check-Valid-Until "false";
+      Acquire::Check-Date "false";
+      Acquire::AllowInsecureRepositories "true";
+      Acquire::MaxDate "10";
     dest: /etc/apt/apt.conf.d/99ignore-release-date
   when:
     - distro_debian_has_hop1_sources|bool
@@ -29,6 +68,9 @@
   copy:
     content: |
       Acquire::Check-Valid-Until "false";
+      Acquire::Check-Date "false";
+      Acquire::AllowInsecureRepositories "true";
+      Acquire::MaxDate "10";
     dest: /etc/apt/apt.conf.d/99ignore-release-date
   when:
     - distro_debian_has_hop1_sources|bool
@@ -45,9 +87,10 @@
     - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
-- name: Ensure we make Valid-Until trick take effect on host
+- name: Ensure we make Valid-Until trick take effect on target node
   become: yes
   become_method: sudo
+  become_flags: 'su - -c'
   apt:
     update_cache: yes
   when:
