@@ -1,4 +1,4 @@
-workflows/fstess/results/
+workflows/fstests/results/
 guestfs/*/*.xml
 guestfs/*/*.log
 journal/*
