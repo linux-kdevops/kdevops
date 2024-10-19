@@ -41,6 +41,30 @@ jobs:
         run: |
           make fstests
 
+      - name: Get the defined CI test results for this repository
+        if: always() # This ensures the step runs even if previous steps failed
+        run: |
+          cd kdevops
+          make journal-dump
+          make ci-results > results.txt
+          sed -i 's|^|kdevops/|' results.txt
+          cat results.txt
+
+      - name: Read results.txt and set environment variable
+        if: always() # This ensures the step runs even if previous steps failed
+        run: |
+          FILE_PATHS=$(cat kdevops/results.txt | tr '\n' '\n')
+          echo "FILE_PATHS<<EOF" >> $GITHUB_ENV
+          echo "$FILE_PATHS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Upload files listed in results.txt as artifacts
+        if: always() # This ensures the step runs even if previous steps failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: kdevops-ci-results
+          path: ${{ env.FILE_PATHS }}
+
       # Ensure make destroy always runs, even on failure
       - name: Run kdevops make destroy
         if: always()  # This ensures the step runs even if previous steps failed
