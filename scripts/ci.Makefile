@@ -3,7 +3,7 @@
 # Collection of CI build targets per kernel repo
 
 ifeq (y,$(CONFIG_BOOTLINUX))
-BOOTLINUX_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE))
+BOOTLINUX_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE) | sed 's/\.git$$//')
 ifneq ($(wildcard .ci/build-test/$(BOOTLINUX_BASENAME)),)
 ifneq ($(wildcard .ci/test/$(BOOTLINUX_BASENAME)),)
 ifneq ($(wildcard .ci/results/$(BOOTLINUX_BASENAME)),)
@@ -68,5 +68,14 @@ HELP_TARGETS += ci-results-help-menu
 
 endif # We have ci results entries
 endif # We have ci tests entries
+else
+ci-results:
+ci-test:
+ci-build-test:
 endif # We have ci build tests entries
-endif # CONFIG_BOOTLINUX
+
+else # CONFIG_BOOTLINUX
+ci-results:
+ci-test:
+ci-build-test:
+endif
