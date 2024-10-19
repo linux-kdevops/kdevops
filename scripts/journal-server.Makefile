@@ -63,6 +63,7 @@ journal-help:
 
 HELP_TARGETS += journal-help
 
-endif
+else
 journal-dump:
 	@echo Journal disabled consider enabling CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE
+endif
