@@ -184,9 +184,26 @@ config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 
 endchoice
 
+config KDEVOPS_WORKFLOW_NAME
+	string
+	output yaml
+	default "fstests" if KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
+	default "blktests" if KDEVOPS_WORKFLOW_DEDICATE_BLKTESTS
+	default "pynfs" if KDEVOPS_WORKFLOW_DEDICATE_PYNFS
+	default "selftests" if KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
+	default "gitr" if KDEVOPS_WORKFLOW_DEDICATE_GITR
+	default "ltp" if KDEVOPS_WORKFLOW_DEDICATE_LTP
+	default "nfstest" if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
+	default "sysbench" if KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+
 endif
 
 if !WORKFLOWS_DEDICATED_WORKFLOW
+
+config KDEVOPS_WORKFLOW_NAME
+	string
+	output yaml
+	default "mix"
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FSTESTS
 	bool "fstests"

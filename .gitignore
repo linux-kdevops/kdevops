@@ -93,3 +93,5 @@ workflows/linux/refs/user
 scripts/kconfig/.nconf-cfg
 .dynamic-kconfig.*
 vagrant/Kconfig.passthrough_libvirt.generated
+
+archive/
