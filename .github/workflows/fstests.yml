@@ -41,6 +41,10 @@ jobs:
         run: |
           make fstests
 
+      - name: Run just one fstest to verify we tests and test collection works
+        run: |
+          make fstests-baseline TESTS=generic/003
+
       - name: Get the defined CI test results for this repository
         if: always() # This ensures the step runs even if previous steps failed
         run: |
