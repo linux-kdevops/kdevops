@@ -126,6 +126,29 @@
     format: zip
     remove: no
 
+- name: Find archive files to verify
+  find:
+    paths: "{{ kdevops_results }}"
+    patterns:
+      - "*.zip"
+      - "*.xz"
+  register: archive_files
+
+- name: Get archive file stat
+  stat:
+    path: "{{ item.path }}"
+  register: archive_stats
+  loop: "{{ archive_files.files }}"
+
+- name: Display archive file information
+  debug:
+    msg: |
+      Found archive file:
+      Path: {{ item.stat.path }}
+      Size: {{ (item.stat.size / 1024 / 1024) | round(2) }} MB
+      Last modified: {{ item.stat.mtime | datetime }}
+  loop: "{{ archive_stats.results }}"
+
 - name: Check if kdevops-results-archive directory exists
   stat:
     path: "{{ kdevops_results_archive_dir }}"
