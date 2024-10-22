@@ -112,154 +112,42 @@
     chdir: "{{ topdir_path }}"
   when: ci_results.stdout_lines | length > 0
 
-- name: Create our archive/ tar.xz for our test results
+- name: Create our archive/ xz file for kdevops-results-archive
   archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ target_linux_ref }}.xz"
     format: xz
     remove: no
 
-- name: Create the same zip archive as well
+- name: Create the same archive/ zip file for web CI artifacts
   archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ target_linux_ref }}.zip"
     format: zip
     remove: no
 
-- name: Get SSH configuration for the kdevops archive repo
-  ansible.builtin.command: ssh -G {{ kdevops_results_repo_url_user }}@{{ kdevops_results_repo_path }}
-  register: ssh_archive_config_repo
+- name: Find archive files to verify
+  find:
+    paths: "{{ kdevops_results }}"
+    patterns:
+      - "*.zip"
+      - "*.xz"
+  register: archive_files
+
+- name: Get archive file stat
+  stat:
+    path: "{{ item.path }}"
+  register: archive_stats
+  loop: "{{ archive_files.files }}"
   changed_when: false
-
-- name: Extract kdevops archive repo IdentityFile
-  vars:
-    identity_file_lines: "{{ ssh_archive_config_repo.stdout_lines | select('match', '^identityfile ') }}"
-    identity_file_raw: "{{ identity_file_lines | first | regex_replace('^identityfile (.*)$', '\\1') }}"
-  ansible.builtin.set_fact:
-    kdevops_archive_identity_file: "{{ identity_file_raw | regex_replace('^~', lookup('env', 'HOME')) }}"
-
-- name: Check if the key used for the kdevops archive repo is installed
-  ansible.builtin.set_fact:
-    kdevops_archive_key_detected: "{{ kdevops_archive_key_name in (kdevops_archive_identity_file | basename) }}"
-
-- name: Inform user of how to set up the kdevops archive repo key
-  ansible.builtin.debug:
-    msg: |
-      ssh key archive test for {{ kdevops_results_repo_url }}:
-      We ran:
-
-        ssh -G {{ kdevops_results_repo_url_user }}@{{ kdevops_results_repo_path }} | grep identityfile
-
-      Missing key name: '{{ kdevops_archive_key_name }}'
-      Current IdentityFile:
-        {{ kdevops_archive_identity_file }}
-
-      To set up automatic kdevops repo archiving install something like
-      the following key for host {{ kdevops_archive_host }}:
-
-      Host {{ kdevops_results_repo_path }}
-          User {{ kdevops_results_repo_url_user }}
-          Hostname {{ kdevops_archive_host }}
-          IdentityFile {{ lookup('env', 'HOME') }}/.ssh/{{ kdevops_archive_key_name }}
-
-
-      Create the key first with something like:
-
-        ssh-keygen -t ed25519 -C "{{ kdevops_results_repo_url_user}}@{{ kdevops_results_repo_path }}" -f {{ lookup('env', 'HOME') }}/.ssh/{{ kdevops_archive_key_name }}
-
-      Then install it as deploy key for {{ kdevops_results_repo_path}}:
-
-      https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys
-
-      And then add the above to your {{ lookup('env', 'HOME') }}/.ssh/config
-
-  when:
-    - 'not kdevops_archive_key_detected|bool'
-    - 'bootlinux_tree_set_by_cli|bool'
-
-- name: Gracefully end if key is not found for automatic kdevops archiving
-  meta: end_play
-  when:
-    - not kdevops_archive_key_detected
-
-- name: Check if the detected kdevops archive repo key exists
-  ansible.builtin.stat:
-    path: "{{ kdevops_archive_identity_file }}"
-  register: ssh_key_file_lookup
-
-- name: Inform user of configured but not created key
-  ansible.builtin.debug:
-    msg: |
-      Key to be used missing: {{ kdevops_archive_identity_file }}
-      Create the key with something like:
-        ssh-keygen -t ed25519 -C "{{ kdevops_results_repo_url_user}}@{{ kdevops_results_repo_path }}" -f {{ lookup('env', 'HOME') }}/.ssh/{{ kdevops_archive_key_name }}
-  when:
-    - not ssh_key_file_lookup.stat.exists
-
-- name: Gracefully end if key does not exist
-  meta: end_play
-  when:
-    - not ssh_key_file_lookup.stat.exists
-
-- name: Check if kdevops results archive ssh key has a passphrase
-  ansible.builtin.command:
-    cmd: "ssh-keygen -y -f {{ kdevops_archive_identity_file }}"
-  register: ssh_key_check
-  ignore_errors: yes
-  changed_when: false
-  failed_when: false
   no_log: true
 
-- name: Set fact about SSH key passphrase status
-  ansible.builtin.set_fact:
-    kdevops_archive_key_has_passphrase: "{{ ssh_key_check.rc != 0 }}"
-
-- name: Inform user if key did not have a passphrase
-  ansible.builtin.debug:
-    msg: |
-      ssh key archive {{ kdevops_archive_identity_file }} for {{ kdevops_results_repo_url }}
-      does not have a passphrase. This not secure and not allowed. Giving up.
-  when:
-    - 'not kdevops_archive_key_has_passphrase|bool'
-
-- name: End if key did not have passphrase set up
-  meta: end_play
-  when:
-    - 'not kdevops_archive_key_has_passphrase|bool'
-
-- name: Gracefully end if the user did not set up a kdevops archive repo key
-  meta: end_play
-  when: not kdevops_archive_key_detected
-
-- name: Get fingerprint of the identity file for {{ kdevops_archive_key_name }}
-  ansible.builtin.command: ssh-keygen -lf "{{ kdevops_archive_identity_file }}"
-  register: kdevops_archive_fingerprint_output
-  changed_when: false
-  when:
-    - 'kdevops_archive_key_detected|bool'
-
-- name: Extract the {{ kdevops_archive_key_name }} fingerprint
-  ansible.builtin.set_fact:
-    kdevops_archive_key_fingerprint: "{{ kdevops_archive_fingerprint_output.stdout.split()[1] }}"
-  when:
-    - 'kdevops_archive_key_detected|bool'
-
-- name: List keys in ssh-agent
-  ansible.builtin.command: ssh-add -l
-  register: kdevops_archive_ssh_add_list
-  changed_when: false
-  when:
-    - 'kdevops_archive_key_detected|bool'
-
-- name: Check if key is loaded in ssh-agent
-  ansible.builtin.set_fact:
-    kdevops_archive_key_loaded: "{{ kdevops_archive_key_fingerprint in kdevops_archive_ssh_add_list.stdout }}"
-
-- name: Inform when we are achiving
-  ansible.builtin.debug:
-    msg: "Achievement unlocked: kdevops archive key set up, automatic kdevops archiving enabled."
-  when:
-    - 'kdevops_archive_key_loaded|bool'
+- name: Display archive file information
+  debug:
+    msg: "{{ item.stat.path }} ({{ (item.stat.size / 1024 / 1024) | round(2) }}MB)"
+  loop: "{{ archive_stats.results }}"
+  loop_control:
+    label: "{{ item.stat.path | basename }}"
 
 - name: Check if kdevops-results-archive directory exists
   stat:

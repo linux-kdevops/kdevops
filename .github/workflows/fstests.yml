@@ -17,6 +17,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set kdevops path
+        run: echo "KDEVOPS_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
       - name: Configure git
         run: |
           git config --global --add safe.directory '*'
@@ -51,25 +54,23 @@ jobs:
           cd kdevops
           make journal-dump
 
+      - name: Start SSH Agent
+        if: always()  # Ensure this step runs even if previous steps failed
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Build our kdevops archive results
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          cd kdevops
           make ci-archive
-
-      - name: Find and kdevops results zip file
-        if: always() # This ensures the step runs even if previous steps failed
-        run: |
-          ZIP_FILE=$(find kdevops/archive -name "*.zip" -type f | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
-          echo "KDEVOPS_ARTIFACT_PATH=$ZIP_FILE" >> $GITHUB_ENV
 
       - name: Upload our kdevops results archive
         if: always() # This ensures the step runs even if previous steps failed
         uses: actions/upload-artifact@v4
         with:
           name: kdevops-ci-results
-          path: ${{ env.KDEVOPS_ARTIFACT_PATH }}
+          path: ${{ env.KDEVOPS_PATH }}/archive/*.zip
 
       # Ensure make destroy always runs, even on failure
       - name: Run kdevops make destroy
