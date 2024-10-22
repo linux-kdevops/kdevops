@@ -139,6 +139,8 @@
     path: "{{ item.path }}"
   register: archive_stats
   loop: "{{ archive_files.files }}"
+  changed_when: false
+  no_log: true
 
 - name: Display archive file information
   debug:
