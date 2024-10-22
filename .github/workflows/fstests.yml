@@ -51,7 +51,6 @@ jobs:
       - name: Get systemd journal files
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          cd kdevops
           make journal-dump
 
       - name: Start SSH Agent
