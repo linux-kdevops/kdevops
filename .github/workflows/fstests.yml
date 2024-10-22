@@ -32,36 +32,22 @@ jobs:
         run: |
           make -j$(nproc)
 
-      - name: Run kdevops make bringup
-        run: |
-          make bringup
-
-      - name: Build linux and boot test nodes on test kernel
-        run: |
-          make linux
-
-      - name: Build fstests
-        run: |
-          make fstests
-
-      - name: Run just one fstest to verify we tests and test collection works
-        run: |
-          make fstests-baseline TESTS=generic/003
-
-      - name: Get systemd journal files
-        if: always() # This ensures the step runs even if previous steps failed
-        run: |
-          make journal-dump
+      - name: Start SSH Agent
+        if: always()  # Ensure this step runs even if previous steps failed
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-passphrase: ${{ secrets.SSH_PASSPHRASE }}
 
       - name: Build our kdevops archive results
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          make ci-archive
+          make ci-archive DEMO=1
 
       - name: Find and kdevops results zip file
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          ZIP_FILE=$(find kdevops/archive -name "*.zip" -type f | head -n 1)
+          ZIP_FILE=$(find ${{ env.KDEVOPS_PATH }}/archive -name "*.zip" -type f | head -n 1)
           echo "Found zip file: $ZIP_FILE"
           echo "KDEVOPS_ARTIFACT_PATH=$ZIP_FILE" >> $GITHUB_ENV
 
