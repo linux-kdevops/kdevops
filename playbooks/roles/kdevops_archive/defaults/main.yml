@@ -11,12 +11,6 @@ kdevops_results_archive_dir: "{{ topdir_path }}/../{{ kdevops_results_name }}"
 kdevops_archive_mirror_present: false
 kdevops_archive_host: "{{ kdevops_results_repo_path.split(':')[0] }}"
 kdevops_archive: "/mirror/{{ kdevops_results_name }}.git"
-kdevops_archive_key_loaded: False
-kdevops_archive_key_name: "kdevops_archive"
-kdevops_archive_identity_file: "/home/gh/.ssh/{{ kdevops_archive }}"
-kdevops_archive_key_detected: False
-kdevops_archive_key_fingerprint: ""
-kdevops_archive_key_has_passphrase: False
 kdevops_archive_demo: False
 bootlinux_tree_set_by_cli: False
 kdevops_archive_base: "selftests/gh/linux-modules-kpd/20241021"
