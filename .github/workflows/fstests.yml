@@ -43,19 +43,12 @@ jobs:
         run: |
           make ci-archive DEMO=1
 
-      - name: Find and kdevops results zip file
-        if: always() # This ensures the step runs even if previous steps failed
-        run: |
-          ZIP_FILE=$(find ${{ env.KDEVOPS_PATH }}/archive -name "*.zip" -type f | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
-          echo "KDEVOPS_ARTIFACT_PATH=$ZIP_FILE" >> $GITHUB_ENV
-
       - name: Upload our kdevops results archive
         if: always() # This ensures the step runs even if previous steps failed
         uses: actions/upload-artifact@v4
         with:
           name: kdevops-ci-results
-          path: ${{ env.KDEVOPS_PATH }}/${{ env.KDEVOPS_ARTIFACT_PATH }}
+          path: ${{ env.KDEVOPS_PATH }}/archive/*.zip
 
       # Ensure make destroy always runs, even on failure
       - name: Run kdevops make destroy

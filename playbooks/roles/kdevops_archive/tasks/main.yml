@@ -112,14 +112,14 @@
     chdir: "{{ topdir_path }}"
   when: ci_results.stdout_lines | length > 0
 
-- name: Create our archive/ tar.xz for our test results
+- name: Create our archive/ xz file for kdevops-results-archive
   archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ target_linux_ref }}.xz"
     format: xz
     remove: no
 
-- name: Create the same zip archive as well
+- name: Create the same archive/ zip file for web CI artifacts
   archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ target_linux_ref }}.zip"
