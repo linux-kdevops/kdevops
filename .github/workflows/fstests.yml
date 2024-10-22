@@ -26,7 +26,9 @@ jobs:
 
       - name: Run kdevops make defconfig-repo
         run: |
-          make KDEVOPS_HOSTS_PREFIX="gh" defconfig-xfs_reflink_4k
+          KDEVOPS_TREE_REF="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+          SHORT_PREFIX="$(echo ${KDEVOPS_TREE_REF:0:4})"
+          make KDEVOPS_HOSTS_PREFIX="$KDEVOPS_TREE_REF" defconfig-xfs_reflink_4k
 
       - name: Run kdevops make
         run: |
