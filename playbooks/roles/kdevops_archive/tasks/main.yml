@@ -147,9 +147,7 @@
     msg: |
       Found archive file:
       Path: {{ item.stat.path }}
-      Type: {{ item.stat.path | regex_replace('.*\\.(\\w+)$', '\\1') | upper }}
       Size: {{ (item.stat.size / 1024 / 1024) | round(2) }} MB
-      Last modified: {{ item.stat.mtime | strftime("%Y-%m-%d %H:%M:%S") }}
   loop: "{{ archive_stats.results }}"
 
 - name: Check if kdevops-results-archive directory exists
