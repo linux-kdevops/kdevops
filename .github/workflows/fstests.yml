@@ -16,7 +16,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
+      - name: Set kdevops path
+        run: echo "KDEVOPS_PATH=$GITHUB_WORKSPACE/kdevops" >> $GITHUB_ENV
+        
       - name: Configure git
         run: |
           git config --global --add safe.directory '*'
@@ -48,18 +51,19 @@ jobs:
       - name: Get systemd journal files
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          cd kdevops
+          cd $KDEVOPS_PATH
           make journal-dump
 
       - name: Build our kdevops archive results
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          cd kdevops
+          cd $KDEVOPS_PATH
           make ci-archive
 
       - name: Find and kdevops results zip file
         if: always() # This ensures the step runs even if previous steps failed
         run: |
+          cd $KDEVOPS_PATH
           ZIP_FILE=$(find kdevops/archive -name "*.zip" -type f | head -n 1)
           echo "Found zip file: $ZIP_FILE"
           echo "KDEVOPS_ARTIFACT_PATH=$ZIP_FILE" >> $GITHUB_ENV
@@ -69,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kdevops-ci-results
-          path: ${{ env.KDEVOPS_ARTIFACT_PATH }}
+          path: ${{ env.KDEVOPS_PATH }}/${{ env.KDEVOPS_ARTIFACT_PATH }}
 
       # Ensure make destroy always runs, even on failure
       - name: Run kdevops make destroy
