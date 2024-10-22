@@ -149,6 +149,8 @@
       Path: {{ item.stat.path }}
       Size: {{ (item.stat.size / 1024 / 1024) | round(2) }} MB
   loop: "{{ archive_stats.results }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
 
 - name: Check if kdevops-results-archive directory exists
   stat:
