@@ -1,4 +1,43 @@
 ---
+- name: Remove unattended-upgrades package
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  apt:
+    name: unattended-upgrades
+    state: absent
+
+- name: Remove optional unattended-upgrades configuration files if they exist
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/apt.conf.d/20auto-upgrades
+    - /etc/apt/apt.conf.d/02periodic
+    - /etc/apt/apt.conf.d/50unattended-upgrades
+    - /etc/apt/apt.conf.d/52unattended-upgrades-local
+  ignore_errors: yes
+
+- name: Stop and disable unattended-upgrades related services
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+    daemon_reload: yes
+  loop:
+    - unattended-upgrades
+    - apt-daily.service
+    - apt-daily.timer
+    - apt-daily-upgrade.service
+    - apt-daily-upgrade.timer
+  ignore_errors: yes
+
 - name: Allow for distro source change / upgrade
   become: yes
   become_flags: 'su - -c'
