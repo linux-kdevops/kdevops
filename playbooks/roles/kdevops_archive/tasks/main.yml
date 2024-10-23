@@ -1,5 +1,8 @@
 ---
 - name: Install git-lfs
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
   package:
     name: git-lfs
     state: present
