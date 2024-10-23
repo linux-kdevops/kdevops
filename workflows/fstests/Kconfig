@@ -1,5 +1,10 @@
 if KDEVOPS_WORKFLOW_ENABLE_FSTESTS
 
+config FSTESTS_SOAK_DURATION_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh SOAK_DURATION)
+
 config HAVE_DISTRO_PREFERS_FSTESTS_WATCHDOG
 	bool
 	default n
@@ -806,6 +811,7 @@ config FSTESTS_RUN_LARGE_DISK_TESTS
 
 config FSTESTS_ENABLE_SOAK_DURATION
 	bool "Enable custom soak duration time"
+	default FSTESTS_SOAK_DURATION_SET_BY_CLI
 	help
 	  Enable soak duration to be used during test execution. If you are not
 	  interested in extending your testing then leave this disabled.
@@ -881,7 +887,8 @@ if FSTESTS_ENABLE_SOAK_DURATION
 
 choice
 	prompt "Soak duration value to use"
-	default FSTESTS_SOAK_DURATION_LOW
+	default FSTESTS_SOAK_DURATION_LOW if !FSTESTS_SOAK_DURATION_SET_BY_CLI
+	default FSTESTS_SOAK_DURATION_CUSTOM if FSTESTS_SOAK_DURATION_SET_BY_CLI
 
 config FSTESTS_SOAK_DURATION_CUSTOM
 	bool "Custom"
@@ -925,7 +932,8 @@ endchoice
 
 config FSTESTS_SOAK_DURATION_CUSTOM_VAL
 	int "Custom soak duration value (seconds)"
-	default 0
+	default 0 if !FSTESTS_SOAK_DURATION_CUSTOM
+	default $(shell, ./scripts/append-makefile-vars.sh $(SOAK_DURATION)) if FSTESTS_SOAK_DURATION_CUSTOM
 	depends on FSTESTS_SOAK_DURATION_CUSTOM
 	help
 	  Enter your custom soak duration value in seconds.
