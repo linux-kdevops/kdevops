@@ -4,7 +4,9 @@
   become_flags: 'su - -c'
   become_method: sudo
   package:
-    name: git-lfs
+    name:
+      - git-lfs
+      - rsync
     state: present
 
 - name: Override kdevops archive repo url to demo URL if in demo mode
