@@ -1,4 +1,9 @@
 ---
+- name: Install git-lfs
+  package:
+    name: git-lfs
+    state: present
+
 - name: Override kdevops archive repo url to demo URL if in demo mode
   set_fact:
     kdevops_results_repo_url: "{{ kdevops_results_repo_url_demo }}"
@@ -288,11 +293,19 @@
     dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
     mode: '0644'
 
+- name: Ensure .xz files are tracked by Git LFS
+  command:
+    cmd: git lfs track "*.xz"
+  args:
+    chdir: "{{ kdevops_results_archive_dir }}"
+
 - name: Stage the new archive file
   command:
     cmd: git add "{{ kdevops_archive_prefix }}{{ target_linux_ref }}.xz"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
+  environment:
+    GIT_LFS_SKIP_SMUDGE: "0"
 
 - name: Set commit message
   set_fact:
@@ -310,12 +323,17 @@
     git commit -m "{{ commit_message }}"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
+  environment:
+    GIT_LFS_SKIP_SMUDGE: "0"
 
 - name: Push changes to remote repository
   command:
     cmd: git push origin main
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
+  environment:
+    GIT_LFS_SKIP_SMUDGE: "0"
+    GIT_LFS_FORCE: "1"
   register: git_push_result
   ignore_errors: yes
 
