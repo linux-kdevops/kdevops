@@ -417,6 +417,7 @@
     content: "{{ selftests_out.stdout_lines|join('\n') }}"
     dest: "{{ selftests_workdir}}/tap.log"
   when:
+    - kdevops_run_selftests|bool
     - selftest_kernelspace|bool
 
 - name: Save userspace test output
