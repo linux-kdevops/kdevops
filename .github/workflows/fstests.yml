@@ -17,6 +17,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set CI metadata for kdevops-results-archive
+        run: |
+          echo "$(basename ${{ github.repository }}" > ci.trigger
+          git log -1 --pretty=format:"%s" > ci.subject
+          # Start out pessimistic
+          echo "not ok" > ci.result
+          echo "Nothing to write home about." > ci.commit_extra
+
       - name: Set kdevops path
         run: echo "KDEVOPS_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
@@ -49,6 +57,7 @@ jobs:
       - name: Run just one fstest to verify we tests and test collection works
         run: |
           make fstests-baseline TESTS=generic/003
+          echo "ok" > ci.result
 
       - name: Get systemd journal files
         if: always() # This ensures the step runs even if previous steps failed
