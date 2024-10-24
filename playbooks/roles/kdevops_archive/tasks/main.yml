@@ -218,35 +218,40 @@
   when:
     - 'kdevops_archive_demo|bool'
 
+- name: Check if ci.trigger file exists
+  stat:
+    path: "{{ topdir_path }}/ci.trigger"
+  register: ci_trigger_file
+
+- name: Read ci.trigger file if it exists
+  slurp:
+    path: "{{ topdir_path }}/ci.trigger"
+  register: ci_trigger_content
+  when: ci_trigger_file.stat.exists
+
+- name: Set kdevops_archive_test_subject from ci.trigger
+  set_fact:
+    kdevops_archive_test_trigger: "{{ ci_trigger_content.content | b64decode | trim }}"
+  when: ci_trigger_file.stat.exists
+
+- name: Set kdevops_archive_test_subject in case ci.trigger is not set
+  set_fact:
+    kdevops_archive_test_trigger: "{{ target_linux_tree }}"
+  when: not ci_trigger_file.stat.exists
+
 - name: Get current date in YYYYMMDD format
   set_fact:
     current_date: "{{ '%Y%m%d' | strftime }}"
 
 - name: Construct base directory path
   set_fact:
-    kdevops_archive_base: "{{ kdevops_workflow_name }}/{{ current_user.stdout }}/{{ target_linux_tree }}/{{ current_date }}"
-
-- name: Get current date in YYYYMMDD format
-  set_fact:
-    current_date: "{{ '%Y%m%d' | strftime }}"
-
-- name: Construct base directory path
-  set_fact:
-    kdevops_archive_base: "{{ kdevops_workflow_name }}/{{ current_user.stdout }}/{{ target_linux_tree }}/{{ current_date }}"
+    kdevops_archive_base: "{{ kdevops_workflow_name }}/{{ current_user.stdout }}/{{ kdevops_archive_test_trigger }}/{{ current_date }}"
 
 - name: Ensure base directory exists
   file:
     path: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_base }}"
     state: directory
     mode: '0755'
-
-- name: Get current date in YYYYMMDD format
-  set_fact:
-    current_date: "{{ '%Y%m%d' | strftime }}"
-
-- name: Construct base directory path
-  set_fact:
-    kdevops_archive_base: "{{ kdevops_workflow_name }}/{{ current_user.stdout }}/{{ target_linux_tree }}/{{ current_date }}"
 
 - name: List all directories in base path
   find:
@@ -278,13 +283,43 @@
   set_fact:
     kdevops_archive_test_number: "{{ next_number }}"
 
-- name: Set complete archive prefix
-  set_fact:
-    kdevops_archive_prefix: "{{ kdevops_archive_base }}/{{ next_number }}/{{ target_linux_ref }}/"
+- name: Check if ci.subject file exists
+  stat:
+    path: "{{ topdir_path }}/ci.subject"
+  register: ci_subject_file
 
-- name: Set complete archive prefix
+- name: Read ci.subject file if it exists
+  slurp:
+    path: "{{ topdir_path }}/ci.subject"
+  register: ci_subject_content
+  when: ci_subject_file.stat.exists
+
+- name: Set kdevops_archive_test_subject from ci.subject
   set_fact:
-    kdevops_archive_prefix: "{{ kdevops_archive_base }}/{{ kdevops_archive_test_number }}/{{ target_linux_ref }}/"
+    kdevops_archive_test_subject: "{{ ci_subject_content.content | b64decode | trim }}"
+  when: ci_subject_file.stat.exists
+
+- name: Set best-effort heuristic subject in case ci.subject is not set
+  set_fact:
+    kdevops_archive_test_subject: "{{ target_linux_tree }} {{ target_linux_ref }} result #{{ kdevops_archive_test_number }}"
+  when: not ci_subject_file.stat.exists
+
+- name: Generate git-format-patch style filename from subject
+  set_fact:
+    kdevops_archive_ci_subject_patchform_name: >-
+      {{
+        (kdevops_archive_test_subject | lower
+        | regex_replace('[^a-z0-9]+', '-')
+        | regex_replace('^-+|-+$', '')
+        | regex_replace('-+', '-')
+        )[:52] ~ (
+          (kdevops_archive_test_subject | length > 52) | ternary('...', '')
+        )
+      }}
+
+- name: Set complete archive prefix with subject-based name
+  set_fact:
+    kdevops_archive_prefix: "{{ kdevops_archive_base }}/{{ kdevops_archive_test_number }}/{{ kdevops_archive_ci_subject_patchform_name }}/"
 
 - name: Create target directory if it doesn't exist
   file:
@@ -312,16 +347,63 @@
   environment:
     GIT_LFS_SKIP_SMUDGE: "0"
 
+- name: Check if ci.commit_extra file exists
+  stat:
+    path: "{{ topdir_path }}/ci.commit_extra"
+  register: ci_commit_file
+
+- name: Read ci.commit_extra file if it exists
+  slurp:
+    path: "{{ topdir_path }}/ci.commit_extra"
+  register: ci_commit_content
+  when: ci_commit_file.stat.exists
+
+- name: Set kdevops_archive_test_subject from ci.commit_extra
+  set_fact:
+    kdevops_archive_test_commit: "{{ ci_commit_content.content | b64decode | trim }}"
+  when: ci_commit_file.stat.exists
+
+- name: Set kdevops_archive_test_subject in case ci.commit_extra is not set
+  set_fact:
+    kdevops_archive_test_commit: "No extra test report details available."
+  when: not ci_commit_file.stat.exists
+
+- name: Check if ci.result file exists
+  stat:
+    path: "{{ topdir_path }}/ci.result"
+  register: ci_result_file
+
+- name: Read ci.result file if it exists
+  slurp:
+    path: "{{ topdir_path }}/ci.result"
+  register: ci_result_content
+  when: ci_result_file.stat.exists
+
+- name: Set kdevops_archive_ci_test_result from ci.result
+  set_fact:
+    kdevops_archive_ci_test_result: "{{ ci_result_content.content | b64decode | trim }}"
+  when: ci_result_file.stat.exists
+
+- name: Set kdevops_archive_ci_test_result in case ci.result is not set
+  set_fact:
+    kdevops_archive_ci_test_result: "unknown"
+  when: not ci_result_file.stat.exists
+
 - name: Set commit message
   set_fact:
     commit_message: |
-      {{ kdevops_workflow_name }}: {{ target_linux_tree }} {{ target_linux_ref }} result #{{ kdevops_archive_test_number }}
+      {{ kdevops_archive_test_trigger }}: {{ kdevops_archive_test_subject }}
 
       This adds test results for:
         workflow: {{ kdevops_workflow_name }}
         tree: {{ target_linux_tree }}
         ref: {{ target_linux_ref }}
         test number: {{ kdevops_archive_test_number }}
+        test result: {{ kdevops_archive_ci_test_result }}
+
+      Detailed test report:
+
+      {{ kdevops_archive_test_commit }}
 
 - name: Commit the archive
   shell: |
