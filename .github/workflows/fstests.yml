@@ -19,7 +19,7 @@ jobs:
 
       - name: Set CI metadata for kdevops-results-archive
         run: |
-          echo "$(basename ${{ github.repository }}" > ci.trigger
+          echo "$(basename ${{ github.repository }})" > ci.trigger
           git log -1 --pretty=format:"%s" > ci.subject
           # Start out pessimistic
           echo "not ok" > ci.result
