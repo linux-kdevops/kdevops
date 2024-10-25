@@ -14,6 +14,9 @@
     name: create_data_partition
   tags: [ 'oscheck', 'data_partition' ]
 
+- debug:
+    msg: "kdevops_run_fstests is {{ kdevops_run_fstests }}"
+
 # Distro specific
 - name: Install dependencies
   include_tasks: install-deps/main.yml
