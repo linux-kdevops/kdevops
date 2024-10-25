@@ -58,6 +58,7 @@ jobs:
         run: |
           make fstests-baseline TESTS=generic/003
           echo "ok" > ci.result
+          find workflows/fstests/results/last-run -name xunit_results.txt -type f -exec cat {} \; > ci.commit_extra || true
 
       - name: Get systemd journal files
         if: always() # This ensures the step runs even if previous steps failed
