@@ -5,10 +5,10 @@
 ifeq (,$(wildcard $(CURDIR)/.config))
 else
 
-DYNAMIC_RUNTIME_VARS :=
+ARCHIVE_DYNAMIC_RUNTIME_VARS :=
 
 ifneq (,$(DEMO))
-DYNAMIC_RUNTIME_VARS += \
+ARCHIVE_DYNAMIC_RUNTIME_VARS += \
 	"kdevops_archive_demo": True
 endif
 
@@ -17,6 +17,6 @@ ci-archive:
 		--inventory localhost, \
 		playbooks/kdevops_archive.yml \
 		-e 'ansible_python_interpreter=/usr/bin/python3' \
-		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars '{ $(ARCHIVE_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml
 endif

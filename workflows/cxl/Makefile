@@ -12,7 +12,7 @@ ifeq (y,$(CONFIG_QEMU_ENABLE_CXL_DEMO_DCD_TOPOLOGY_1))
 	CXL_ARGS += kdevops_qmp_str=$(CONFIG_QEMU_QMP_COMMAND_LINE_STRING)
 endif
 
-DYNAMIC_RUNTIME_VARS := "kdevops_run_cxl_tests": $(CONFIG_ENABLE_CXL_TEST)
+CXL_DYNAMIC_RUNTIME_VARS := "kdevops_run_cxl_tests": $(CONFIG_ENABLE_CXL_TEST)
 WORKFLOW_ARGS += $(CXL_ARGS)
 BOOTLINUX_CXL_HELP :=
 
@@ -28,14 +28,14 @@ cxl-test-probe:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts playbooks/cxl.yml \
 		--tags vars,cxl-test-prep,cxl-test-probe \
-		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars '{ $(CXL_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 cxl-test-meson:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts playbooks/cxl.yml \
 		--tags vars,cxl-test-prep,cxl-test-meson \
-		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars '{ $(CXL_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 cxl-results:

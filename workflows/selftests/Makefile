@@ -6,14 +6,14 @@ ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
 export KDEVOPS_HOSTS_TEMPLATE := selftests.j2
 endif
 
-DYNAMIC_RUNTIME_VARS := "kdevops_run_selftests": True
+SELFTESTS_DYNAMIC_RUNTIME_VARS := "kdevops_run_selftests": True
 
 ifneq (,$(SKIP_RUN))
-DYNAMIC_RUNTIME_VARS += , "selftests_skip_run": True
+SELFTESTS_DYNAMIC_RUNTIME_VARS += , "selftests_skip_run": True
 endif
 
 ifneq (,$(SKIP_REBOOT))
-DYNAMIC_RUNTIME_VARS += , "selftests_skip_reboot": True
+SELFTESTS_DYNAMIC_RUNTIME_VARS += , "selftests_skip_reboot": True
 endif
 
 SELFTESTS_HELP_TARGETS := selftests-help-main
@@ -39,7 +39,7 @@ selftests:
 selftests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l baseline playbooks/selftests.yml \
-		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars '{ $(SELFTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--tags vars,run_tests,copy_results,check_results $(LIMIT_HOSTS)
 
 selftests-results:

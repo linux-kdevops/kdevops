@@ -52,7 +52,7 @@ BOOTLINUX_ARGS	+= bootlinux_9p_mount_tag='$(subst ",,$(CONFIG_BOOTLINUX_9P_MOUNT
 LINUX_CLONE_DEFAULT_TYPE := linux-clone-9p
 endif
 
-# XXX: I can't seem to use after this DYNAMIC_RUNTIME_VARS += for other
+# XXX: I can't seem to use after this LINUX_DYNAMIC_RUNTIME_VARS += for other
 # future dynamic run time variables. So figure how the hell to do that
 # so we can enable other dynamic variables for other make targets other
 # than uninstall. For now this does it for us.
@@ -61,7 +61,7 @@ endif
 #
 # We use override as other subsystems may use this too.
 ifneq (,$(KVER))
-override DYNAMIC_RUNTIME_VARS = "uninstall_kernel_ver": "$(KVER)"
+override LINUX_DYNAMIC_RUNTIME_VARS = "uninstall_kernel_ver": "$(KVER)"
 endif
 
 BOOTLINUX_ARGS += bootlinux_cxl_test=$(CONFIG_ENABLE_CXL_TEST)
@@ -124,7 +124,7 @@ linux-uninstall:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
 		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags uninstall-linux,vars \
-		--extra-vars '{ "uninstall_kernel_enable": "True", $(DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars '{ "uninstall_kernel_enable": "True", $(LINUX_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 linux-clone-clients: $(KDEVOPS_NODES)
