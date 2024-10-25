@@ -80,9 +80,9 @@ FSTEST_KERNEL_CI_LOOP := scripts/workflows/fstests/run_kernel_ci.sh
 FSTEST_KERNEL_CI_LOOP_KOTD := scripts/workflows/fstests/run_kernel_ci_kotd.sh
 endif # CONFIG_KERNEL_CI
 
-DYNAMIC_RUNTIME_VARS := '"kdevops_run_fstests": True'
+DYNAMIC_RUNTIME_VARS := "kdevops_run_fstests": True
 ifneq (,$(RUN_FAILURES))
-DYNAMIC_RUNTIME_VARS += ', "run_tests_on_failures": True'
+DYNAMIC_RUNTIME_VARS += , "run_tests_on_failures": True
 endif
 
 ifneq (,$(SKIP_RUN))
@@ -129,7 +129,7 @@ fstests-baseline: $(FSTESTS_BASELINE_EXTRA)
 	$(Q)PYTHONUNBUFFERED=1 ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l baseline playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
-		--extra-vars $(DYNAMIC_RUNTIME_VARS) \
+		--extra-vars '{ $(DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-loop: $(KDEVOPS_EXTRA_VARS)
@@ -143,7 +143,8 @@ fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
 		-f 30 -i hosts -l baseline playbooks/fstests.yml \
 		--tags run_tests,copy_results \
 		--skip-tags git_update \
-		--extra-vars $(DYNAMIC_RUNTIME_VARS) \
+		--extra-vars \
+		'{ $(DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)
 
@@ -152,7 +153,8 @@ fstests-baseline-run-oscheck-only: $(KDEVOPS_EXTRA_VARS)
 		-f 30 -i hosts -l baseline playbooks/fstests.yml \
 		--tags run_tests,copy_results \
 		--skip-tags git_update,reboot,clean_results \
-		--extra-vars $(DYNAMIC_RUNTIME_VARS) \
+		--extra-vars \
+		'{ $(DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)
 
@@ -176,7 +178,8 @@ fstests-dev: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l dev playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
-		--extra-vars $(DYNAMIC_RUNTIME_VARS) \
+		--extra-vars \
+		'{ $(DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
