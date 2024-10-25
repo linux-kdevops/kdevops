@@ -362,9 +362,6 @@
     mode: '0755'
     owner: root
     group: root
-  when:
-    - kdevops_run_selftests|bool
-    - selftest_userspace|bool
 
 - name: Remove watchdog hint that tests have started
   local_action: file path="{{ selftests_workflow_target }}/.begin" state=absent
