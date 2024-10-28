@@ -122,17 +122,38 @@
     chdir: "{{ topdir_path }}"
   when: ci_results.stdout_lines | length > 0
 
+- name: Check if ci.ref file exists
+  stat:
+    path: "{{ topdir_path }}/ci.ref"
+  register: ci_ref_file
+
+- name: Read ci.ref file if it exists
+  slurp:
+    path: "{{ topdir_path }}/ci.ref"
+  register: ci_ref_content
+  when: ci_ref_file.stat.exists
+
+- name: Set kdevops_archive_test_ref from ci.ref
+  set_fact:
+    kdevops_archive_test_ref: "{{ ci_ref_content.content | b64decode | trim }}"
+  when: ci_ref_file.stat.exists
+
+- name: Set kdevops_archive_test_ref in case ci.ref is not set
+  set_fact:
+    kdevops_archive_test_ref: "{{ target_linux_tree }}"
+  when: not ci_ref_file.stat.exists
+
 - name: Create our archive/ xz file for kdevops-results-archive
   archive:
     path: "{{ kdevops_results_local }}"
-    dest: "{{ kdevops_results }}/{{ target_linux_ref }}.xz"
+    dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     format: xz
     remove: no
 
 - name: Create the same archive/ zip file for web CI artifacts
   archive:
     path: "{{ kdevops_results_local }}"
-    dest: "{{ kdevops_results }}/{{ target_linux_ref }}.zip"
+    dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.zip"
     format: zip
     remove: no
 
@@ -234,7 +255,7 @@
     kdevops_archive_test_trigger: "{{ ci_trigger_content.content | b64decode | trim }}"
   when: ci_trigger_file.stat.exists
 
-- name: Set kdevops_archive_test_subject in case ci.trigger is not set
+- name: Set kdevops_archive_test_trigger in case ci.trigger is not set
   set_fact:
     kdevops_archive_test_trigger: "{{ target_linux_tree }}"
   when: not ci_trigger_file.stat.exists
@@ -301,7 +322,7 @@
 
 - name: Set best-effort heuristic subject in case ci.subject is not set
   set_fact:
-    kdevops_archive_test_subject: "{{ target_linux_tree }} {{ target_linux_ref }} result #{{ kdevops_archive_test_number }}"
+    kdevops_archive_test_subject: "{{ target_linux_tree }} {{ kdevops_archive_test_ref }} result #{{ kdevops_archive_test_number }}"
   when: not ci_subject_file.stat.exists
 
 - name: Generate git-format-patch style filename from subject
@@ -329,7 +350,7 @@
 
 - name: Copy archive to target directory
   copy:
-    src: "{{ kdevops_results }}/{{ target_linux_ref }}.xz"
+    src: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
     mode: '0644'
 
@@ -341,7 +362,7 @@
 
 - name: Stage the new archive file
   command:
-    cmd: git add "{{ kdevops_archive_prefix }}{{ target_linux_ref }}.xz"
+    cmd: git add "{{ kdevops_archive_prefix }}{{ kdevops_archive_test_ref }}.xz"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
   environment:
@@ -397,7 +418,7 @@
       This adds test results for:
         workflow: {{ kdevops_workflow_name }}
         tree: {{ target_linux_tree }}
-        ref: {{ target_linux_ref }}
+        ref: {{ kdevops_archive_test_ref }}
         test number: {{ kdevops_archive_test_number }}
         test result: {{ kdevops_archive_ci_test_result }}
 
