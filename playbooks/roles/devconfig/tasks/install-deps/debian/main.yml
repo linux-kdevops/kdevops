@@ -6,6 +6,10 @@
   apt:
     name: unattended-upgrades
     state: absent
+  register: removal_result
+  retries: 20
+  delay: 30
+  until: removal_result is not failed
 
 - name: Remove optional unattended-upgrades configuration files if they exist
   become: yes
