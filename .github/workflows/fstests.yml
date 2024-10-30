@@ -31,11 +31,13 @@ jobs:
       - name: Configure git
         run: |
           git config --global --add safe.directory '*'
+          git config --global user.name "kdevops"
+          git config --global user.email "kdevops@lists.linux.dev"
 
       - name: Run kdevops make defconfig-repo
         run: |
           KDEVOPS_TREE_REF="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
-          SHORT_PREFIX="$(echo ${KDEVOPS_TREE_REF:0:4})"
+          SHORT_PREFIX="$(echo ${KDEVOPS_TREE_REF:0:12})"
           make KDEVOPS_HOSTS_PREFIX="$SHORT_PREFIX" defconfig-xfs_reflink_4k
 
       - name: Run kdevops make
