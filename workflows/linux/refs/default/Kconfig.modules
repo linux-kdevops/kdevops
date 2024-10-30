@@ -6,15 +6,15 @@ if !HAVE_BOOTLINUX_TREE_MODULES_USER_REFS
 choice
 	prompt "Tag or branch to use"
 
-config BOOTLINUX_TREE_MODULES_NEXT_REF
+config BOOTLINUX_TREE_MODULES_REF_NEXT
 	bool "modules-next"
 	help
-	  Use the vfs.blocksize branch based on the vfs tree.
+	  Use the modules-next branch based on the modules tree.
 
 endchoice
 
 config BOOTLINUX_TREE_MODULES_REF
 	string
-	default "modules-next" if BOOTLINUX_TREE_MODULES_NEXT_REF
+	default "modules-next" if BOOTLINUX_TREE_MODULES_REF_NEXT
 
 endif # !HAVE_BOOTLINUX_TREE_MODULES_USER_REFS

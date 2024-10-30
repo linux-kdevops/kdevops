@@ -6,7 +6,7 @@ if !HAVE_BOOTLINUX_TREE_XFS_USER_REFS
 choice
 	prompt "Tag or branch to use"
 
-config BOOTLINUX_TREE_XFS_NEXT_REF
+config BOOTLINUX_TREE_XFS_REF_NEXT
 	bool "for-next"
 	help
 	  Use the for-next branch based on the xfs tree.
@@ -15,6 +15,6 @@ endchoice
 
 config BOOTLINUX_TREE_XFS_REF
 	string
-	default "for-next" if BOOTLINUX_TREE_XFS_NEXT_REF
+	default "for-next" if BOOTLINUX_TREE_XFS_REF_NEXT
 
 endif # !HAVE_BOOTLINUX_TREE_XFS_USER_REFS
