@@ -189,27 +189,35 @@
   stat:
     path: "{{ kdevops_archive }}"
   register: mirror_dir
-  when:
-    - not archive_dir.stat.exists
 
 - name: Set kdevops_archive_mirror_present based on mirror directory existence
   set_fact:
     kdevops_archive_mirror_present: "{{ mirror_dir.stat.exists }}"
   when:
-    - not archive_dir.stat.exists
     - mirror_dir.stat.exists
 
-- name: Clone kdevops-results-archive repository with git LFS
-  git:
-    repo: "{{ kdevops_results_repo_url }}"
-    dest: "{{ kdevops_results_archive_dir }}"
-    version: main
-  environment:
-    GIT_LFS_SKIP_SMUDGE: "1"
+- name: Remove kdevops-results-archive always to account for epochs changes
+  file:
+    path: "{{ kdevops_results_archive_dir }}"
+    state: absent
   when:
-    - not archive_dir.stat.exists
-    - not kdevops_archive_mirror_present
-  register: git_clone_result
+    - archive_dir.stat.exists
+
+- name: Inform user Committing to kdevops-results-archive requires a mirror setup
+  ansible.builtin.debug:
+    msg: |
+      The local git mirror {{ kdevops_archive }} is required to account
+      for epochs, when an epoch happens we rename the old repository and a new
+      one is created with the same name which may or may not have a new key
+      arrangement. A fresh local clone is always done so to ensure we remove
+      the old local data.
+  when:
+    - not kdevops_archive_mirror_present | bool
+
+- name: Committing to kdevops-results-archive not possible
+  meta: end_play
+  when:
+    - not kdevops_archive_mirror_present|bool
 
 - name: Clone kdevops-results-archive repository with git LFS and use the local mirror
   git:
@@ -220,18 +228,8 @@
   environment:
     GIT_LFS_SKIP_SMUDGE: "1"
   when:
-    - not archive_dir.stat.exists
     - kdevops_archive_mirror_present
   register: git_clone_result
-
-- name: Update kdevops-results-archive repository
-  git:
-    repo: "{{ kdevops_results_repo_url }}"
-    dest: "{{ kdevops_results_archive_dir }}"
-    update: yes
-    force: yes
-  environment:
-    GIT_LFS_SKIP_SMUDGE: "1"
 
 - name: Remind user this is a demo
   ansible.builtin.debug:
