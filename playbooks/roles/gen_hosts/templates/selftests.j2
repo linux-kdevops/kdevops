@@ -15,7 +15,7 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [dev]
 {% if kdevops_baseline_and_dev %}
-  {% for test_type in blktests_enabled_test_types %}
+  {% for test_type in selftests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ test_type }}-dev
   {% endfor %}
 {% endif %}
