@@ -13,3 +13,4 @@
       - rsync
       - git-core
       - glibc-devel.*i686
+      - make
