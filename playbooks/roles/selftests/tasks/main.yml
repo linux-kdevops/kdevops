@@ -83,6 +83,18 @@
   when:
     - selftests_section_firmware|bool
 
+- name: Create /lib/firmware directory
+  tags: [ 'selftests', 'deps' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "/lib/firmware"
+    state: directory
+    mode: '0755'
+  when:
+    - selftests_section_firmware|bool
+
 - include_role:
     name: create_data_partition
   tags: [ 'data_partition' ]
