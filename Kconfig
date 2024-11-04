@@ -5,6 +5,11 @@
 
 mainmenu "$(PROJECT) $(PROJECTRELEASE)"
 
+config TOPDIR_PATH
+	string
+	output yaml
+	default $(shell, echo $TOPDIR_PATH)
+
 config HAVE_KDEVOPS_CUSTOM_DEFAULTS
 	bool
 	default n
