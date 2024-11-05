@@ -5,6 +5,11 @@ config FSTESTS_SOAK_DURATION_SET_BY_CLI
 	output yaml
 	default $(shell, scripts/check-cli-set-var.sh SOAK_DURATION)
 
+config FSTESTS_GROUP_TESTS_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh FSTESTS_GROUP)
+
 config HAVE_DISTRO_PREFERS_FSTESTS_WATCHDOG
 	bool
 	default n
@@ -759,7 +764,9 @@ config FSTESTS_RUN_CUSTOM_GROUP_TESTS
 	string "Run a custom group of fstests"
 	default "auto" if FSTESTS_RUN_AUTO_GROUP_TESTS
 	depends on FSTESTS_RUN_TESTS
-	depends on !FSTESTS_ENABLE_RUN_CUSTOM_TESTS
+	depends on FSTESTS_ENABLE_RUN_CUSTOM_TESTS
+	default $(shell, ./scripts/append-makefile-vars.sh $(FSTESTS_GROUP)) if FSTESTS_ENABLE_RUN_CUSTOM_TESTS && FSTESTS_GROUP_TESTS_SET_BY_CLI
+	default "auto" if FSTESTS_ENABLE_RUN_CUSTOM_TESTS && !FSTESTS_GROUP_TESTS_SET_BY_CLI
 	help
 	  To configure fstests to run specific group of tests instead of the
 	  'auto' group.
@@ -774,7 +781,7 @@ config FSTESTS_EXCLUDE_TEST_GROUPS
 config FSTESTS_ENABLE_RUN_CUSTOM_TESTS
 	bool "Enable running custom tests"
 	depends on FSTESTS_RUN_TESTS
-	default n
+	default FSTESTS_GROUP_TESTS_SET_BY_CLI
 	help
 	  Enable this only if you want to always run custom tests.
 	  In the future we will support the ability to dynamically run
