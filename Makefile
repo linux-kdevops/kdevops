@@ -237,6 +237,7 @@ DEFAULT_DEPS += $(LOCALHOST_SETUP_WORK)
 include scripts/tests.Makefile
 include scripts/ci.Makefile
 include scripts/archive.Makefile
+include scripts/defconfig.Makefile
 
 PHONY += clean
 clean:
