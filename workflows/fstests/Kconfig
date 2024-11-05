@@ -933,7 +933,7 @@ endchoice
 config FSTESTS_SOAK_DURATION_CUSTOM_VAL
 	int "Custom soak duration value (seconds)"
 	default 0 if !FSTESTS_SOAK_DURATION_CUSTOM
-	default $(shell, ./scripts/append-makefile-vars.sh $(SOAK_DURATION)) if FSTESTS_SOAK_DURATION_CUSTOM
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(SOAK_DURATION)) if FSTESTS_SOAK_DURATION_CUSTOM
 	depends on FSTESTS_SOAK_DURATION_CUSTOM
 	help
 	  Enter your custom soak duration value in seconds.
