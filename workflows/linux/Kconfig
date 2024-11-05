@@ -276,7 +276,7 @@ config BOOTLINUX_TREE_LOCALVERSION
 
 config BOOTLINUX_SHALLOW_CLONE
 	bool "Shallow git clone"
-	default BOOTLINUX_TREE_SET_BY_CLI
+	default y
 	help
 	  If enabled the git tree cloned with be cloned using a shallow tree
 	  with history truncated. You want to enable this if you really don't
@@ -289,7 +289,7 @@ config BOOTLINUX_SHALLOW_CLONE
 
 config BOOTLINUX_SHALLOW_CLONE_DEPTH
 	int "Shallow git clone depth"
-	default 5 if BOOTLINUX_TREE_SET_BY_CLI
+	default 30 if BOOTLINUX_TREE_SET_BY_CLI
 	default 1 if !BOOTLINUX_TREE_SET_BY_CLI
 	depends on BOOTLINUX_SHALLOW_CLONE
 	help
