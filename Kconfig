@@ -10,6 +10,16 @@ config TOPDIR_PATH
 	output yaml
 	default $(shell, echo $TOPDIR_PATH)
 
+config TOPDIR_PATH_HAS_SHA256SUM
+	bool
+	output yaml
+	default y
+
+config TOPDIR_PATH_SHA256SUM
+	string
+	output yaml
+	default $(shell, ./scripts/compute_sha256sum.sh $(TOPDIR_PATH))
+
 config HAVE_KDEVOPS_CUSTOM_DEFAULTS
 	bool
 	default n

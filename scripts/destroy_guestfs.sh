@@ -27,6 +27,10 @@ if [ -f "$GUESTFSDIR/kdevops_nodes.yaml" ]; then
 	done
 fi
 
-rm -f ~/.ssh/config_kdevops_$CONFIG_KDEVOPS_HOSTS_PREFIX
+if [[ "$CONFIG_TOPDIR_PATH_HAS_SHA256SUM" == "y" ]]; then
+	rm -f ~/.ssh/config_kdevops_$CONFIG_TOPDIR_PATH_SHA256SUM
+else
+	rm -f ~/.ssh/config_kdevops_$CONFIG_KDEVOPS_HOSTS_PREFIX
+fi
 rm -f $GUESTFSDIR/.provisioned_once
 rm -f $GUESTFSDIR/kdevops_nodes.yaml
