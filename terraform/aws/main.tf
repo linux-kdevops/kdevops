@@ -51,6 +51,22 @@ resource "aws_security_group" "kdevops_sec_group" {
   }
 }
 
+resource "aws_security_group" "kdevops_internal_group" {
+  name   = "kdevops_isg"
+  vpc_id = aws_vpc.kdevops_vpc.id
+
+  # Allow all traffic between hosts in the security group
+  ingress {
+    cidr_blocks = [
+      "10.0.0.0/16",
+    ]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+  }
+}
+
+
 resource "aws_key_pair" "kdevops_keypair" {
   key_name   = var.ssh_keyname
   public_key = var.ssh_pubkey_data != "" ? var.ssh_pubkey_data : var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
@@ -110,7 +126,10 @@ resource "aws_instance" "kdevops_instance" {
   count           = local.kdevops_num_boxes
   ami             = data.aws_ami.distro.id
   instance_type   = var.aws_instance_type
-  security_groups = [aws_security_group.kdevops_sec_group.id]
+  security_groups = [
+	aws_security_group.kdevops_sec_group.id,
+	aws_security_group.kdevops_internal_group.id
+  ]
   key_name        = var.ssh_keyname
   subnet_id       = aws_subnet.kdevops_subnet.id
   user_data_base64 = element(
