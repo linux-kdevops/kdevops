@@ -25,6 +25,7 @@ SELFTESTS_HELP_TARGETS += selftests-help-menu-targets
 endif
 
 include $(TOPDIR)/workflows/selftests/tests/Makefile.firmware
+include $(TOPDIR)/workflows/selftests/tests/Makefile.module
 include $(TOPDIR)/workflows/selftests/tests/Makefile.kmod
 include $(TOPDIR)/workflows/selftests/tests/Makefile.maple
 include $(TOPDIR)/workflows/selftests/tests/Makefile.sysctl

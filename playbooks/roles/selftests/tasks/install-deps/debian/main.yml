@@ -20,6 +20,7 @@
       - libc6-dev-i386
       - rsync
       - make
+      - linux-perf
     state: present
     update_cache: yes
   tags: [ 'selftests', 'deps' ]

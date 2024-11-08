@@ -46,6 +46,13 @@ config SELFTESTS_SECTION_KMOD
 	help
 	  This will create a host to test the kmod selftest.
 
+config SELFTESTS_SECTION_MODULE
+	bool "module - run all module seleftses"
+	output yaml
+	select SELFTESTS_BUILD_SELFTESTS_DIR
+	help
+	  This test all module selftets.
+
 config SELFTESTS_SECTION_MAPLE
 	bool "Maple tree"
 	output yaml
@@ -77,6 +84,11 @@ config SELFTESTS_SECTION_FIRMWARE
 	default y
 
 config SELFTESTS_SECTION_KMOD
+	bool
+	output yaml
+	default y
+
+config SELFTESTS_SECTION_MODULE
 	bool
 	output yaml
 	default y

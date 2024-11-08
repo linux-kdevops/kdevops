@@ -54,6 +54,7 @@
       - rsync
       - gcc-32bit
       - glibc-devel-static-32bit
+      - perf
     state: present
   when:
     - repos_present|bool

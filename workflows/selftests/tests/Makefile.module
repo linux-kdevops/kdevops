@@ -1,0 +1,8 @@
+ifeq (y,$(CONFIG_SELFTESTS_SECTION_MODULE))
+SELFTESTS_HELP_TARGETS += selftests-help-menu-target-module
+selftests-module:
+	$(Q)$(MAKE) selftests-baseline HOSTS=$(KDEVOPS_HOSTS_PREFIX)-module
+endif
+
+selftests-help-menu-target-modules:
+	@echo "selftests-module                 - Runs selftests for module"
