@@ -280,6 +280,13 @@ choice
 	default TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE if TARGET_ARCH_X86_64
 	default TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM if TARGET_ARCH_ARM64
 
+config TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	bool "m5ad.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 GiB RAM, 8 vcpus, 1 10 GiB main drive, and one additional
+	  300 GiB NVMe drive.
+
 config TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
 	bool "m5ad.4xlarge"
 	depends on TARGET_ARCH_X86_64
@@ -355,6 +362,7 @@ endchoice
 
 config TERRAFORM_AWS_INSTANCE_TYPE
 	string
+	default "m5ad.2xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
 	default "m5ad.4xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
 	default "is4gen.medium" if TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
 	default "is4gen.8xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
