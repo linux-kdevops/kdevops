@@ -184,3 +184,33 @@ resource "aws_route_table_association" "kdevops_rt_assoc" {
   route_table_id = aws_route_table.kdevops_rt.id
 }
 
+resource "aws_vpc_dhcp_options" "kdevops_dhcp_opts" {
+  domain_name         = "kdevops.local"
+  domain_name_servers = ["AmazonProvidedDNS"]
+
+  tags = {
+    Name = "kdevops_dhcp_opts"
+  }
+}
+
+resource "aws_vpc_dhcp_options_association" "kdevops_dhcp_association" {
+  vpc_id          = aws_vpc.kdevops_vpc.id
+  dhcp_options_id = aws_vpc_dhcp_options.kdevops_dhcp_opts.id
+}
+
+resource "aws_route53_zone" "kdevops_private_zone" {
+  name = "kdevops.local"
+  vpc {
+    vpc_id = aws_vpc.kdevops_vpc.id
+  }
+}
+
+resource "aws_route53_record" "kdevops_dns_record" {
+  count   = local.kdevops_num_boxes
+  zone_id = aws_route53_zone.kdevops_private_zone.zone_id
+  name    = "${element(var.kdevops_nodes, count.index)}.kdevops.local"
+  type    = "A"
+  ttl     = "300"
+  records = ["${element(aws_instance.kdevops_instance.*.private_ip, count.index)}"]
+}
+
