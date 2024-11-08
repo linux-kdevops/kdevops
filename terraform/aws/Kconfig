@@ -281,10 +281,10 @@ choice
 	default TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM if TARGET_ARCH_ARM64
 
 config TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
-	bool "m5ad.4xlarge - $0.824 per Hour"
+	bool "m5ad.4xlarge"
 	depends on TARGET_ARCH_X86_64
 	help
-	  61 GiB RAM, 16 vcpus, 1 8 GiB main drive, and two additional
+	  64 GiB RAM, 16 vcpus, 1 10 GiB main drive, and two additional
 	  300 GiB NVMe drives.
 
 config TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
