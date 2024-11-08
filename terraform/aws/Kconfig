@@ -4,6 +4,11 @@ choice
 	prompt "AWS region to use"
 	default TERRAFORM_AWS_US_WEST_2
 
+config TERRAFORM_AWS_US_EAST_1
+	bool "us-east-1 - N. Virginia"
+	help
+	  This option will set the AWS region to us-east-1.
+
 config TERRAFORM_AWS_US_WEST_1
 	bool "us-west-1 - North California"
 	help
@@ -54,6 +59,7 @@ config TERRAFORM_AWS_REGION
 	string
 	default "us-west-2" if TERRAFORM_AWS_US_WEST_2
 	default "us-west-1" if TERRAFORM_AWS_US_WEST_1
+	default "us-east-1" if TERRAFORM_AWS_US_EAST_1
 
 if TERRAFORM_AWS_US_WEST_2
 
@@ -93,6 +99,7 @@ config TERRAFORM_AWS_AV_REGION
 	default "us-west-1b" if TERRAFORM_AWS_AV_REGION_WEST_1B
 	default "us-west-2b" if TERRAFORM_AWS_AV_REGION_WEST_2B
 	default "us-west-2d" if TERRAFORM_AWS_AV_REGION_WEST_2D
+	default "us-east-1a" if TERRAFORM_AWS_US_EAST_1
 
 choice
 	prompt "AWS AMI owner"
@@ -120,6 +127,12 @@ config TERRAFORM_AWS_AMI_AMAZON_ARM64
 config TERRAFORM_AWS_RHEL9_X86_64
 	bool "RHEL9 x86_64 - ami-0dda7e535b65b6469"
 	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_WEST_2
+	help
+	  This option will set AWS AMI owner to RHEL9 for x86_64.
+
+config TERRAFORM_AWS_RHEL9_X86_64_EAST
+	bool "RHEL9 x86_64 - ami-0de7e7cc68b747751"
+	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_EAST_1
 	help
 	  This option will set AWS AMI owner to RHEL9 for x86_64.
 
@@ -209,7 +222,7 @@ config TERRAFORM_AWS_AMI_OWNER
 	string
 	default TERRAFORM_AWS_AMI_DEBIAN_OWNER if TERRAFORM_AWS_AMI_DEBIAN
 	default "137112412989" if TERRAFORM_AWS_AMI_AMAZON_X86_64 || TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64
+	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64 || TERRAFORM_AWS_RHEL9_X86_64_EAST
 	default "013907871322" if TERRAFORM_AWS_SLE15_SP4_X86_64 || TERRAFORM_AWS_SLE15_SP4_ARM64
 	help
 	  This option will set AWS AMI owner.
@@ -225,6 +238,7 @@ config TERRAFORM_AWS_NS
 	default "al2023-*-x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_AMI_AMAZON_X86_64
 	default "al2023-*-arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_AMI_AMAZON_ARM64
 	default "RHEL-9.*x86_64-*" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_RHEL9_X86_64
+	default "RHEL-9.*x86_64-*" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_RHEL9_X86_64_EAST
 	default "RHEL-9.*arm64-*" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_RHEL9_ARM64
 	default "suse-sles-15-sp4-*x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_SLE15_SP4_X86_64
 	default "suse-sles-15-sp4-*arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_SLE15_SP4_ARM64
