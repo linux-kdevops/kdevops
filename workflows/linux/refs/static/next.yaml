@@ -1,9 +1,9 @@
 ---
 configs:
-  - next-20240424:
-    config: BOOTLINUX_TREE_NEXT_REF_20240424
-    ref: "next-20240424"
-    help: "next-20240424"
+  - next-20241108:
+    config: BOOTLINUX_TREE_NEXT_REF_20241108
+    ref: "next-20241108"
+    help: "The latest linux-next we manually compile tested and have a config for."
   - fs-current:
     config: BOOTLINUX_TREE_NEXT_REF_FSCURRENT
     ref: "fs-current"
