@@ -20,7 +20,7 @@ config HAVE_DISTRO_PREFERS_FSTESTS_WATCHDOG_KILL
 
 config HAVE_DISTRO_PREFERS_FSTESTS_WATCHDOG_RESET
 	bool
-	default n
+	default BOOTLINUX_TREE_SET_BY_CLI
 
 # This nameless bool is done so that when kconfig gets support to output a yaml
 # file we can simply remove the respective makefile entry which queries for this
