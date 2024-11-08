@@ -6,7 +6,7 @@ if !HAVE_KERNEL_CI_CUSTOM_DEFAULTS
 
 config KERNEL_CI_DEFAULT_STEADY_STATE_GOAL
 	int
-	default 100
+	default 1
 
 endif
 
@@ -14,15 +14,23 @@ config KERNEL_CI
 	bool "Enable kernel continous integration"
 	default y
 	help
-	  If you have the goal to run a test not just once but in an ongoing
-	  basis to verify if you have found a regression by updating your kernel
-	  in between each test loop you are essentially doing kernel continous
-	  integration (kernel-ci) and can enable this to assist you with this.
-	  Enabling this will allow you to run test loops per workflow, for
-	  instance, if such workflows support kernel-ci. Workflows support
-	  kernel-ci by implementing a Makefile target for a test with a "loop"
-	  postfix. For instance, to run the fstests kernel-ci loop you would
-	  just run:
+	  Each subsystem may have its own way to run a test for a longer
+	  period of time. Such is the case for fstests, for fstests this is
+	  the soak duration. Only a few tests leverage soak duration, that is
+	  a test must be designed to leverage soak duration to use it.
+
+	  For subsystems which don't have the same concept or in case you want
+	  to run a a full set of configured tests over and over again, you can
+	  enable the this mechanism.
+
+	  This is enabled by default so to leverage of optional subsystem
+	  specific watchdogs, which may reset a system in case of a crash. The
+	  default number of loops is just 1 so to account for this sensible
+	  default.
+
+	  Workflows support kdevops kernel-ci by implementing a Makefile target
+	  for a test with a "loop" postfix. For instance, to run the fstests
+	  kernel-ci loop you would just run:
 
 	    make fstests-baseline-loop
 
@@ -49,7 +57,7 @@ if KERNEL_CI_ENABLE_STEADY_STATE
 
 config KERNEL_CI_STEADY_STATE_GOAL
 	int "Generic kernel-ci steady-state goal"
-	default 100 if !HAVE_KERNEL_CI_CUSTOM_DEFAULTS
+	default 1 if !HAVE_KERNEL_CI_CUSTOM_DEFAULTS
 	default KERNEL_CI_DEFAULT_STEADY_STATE_GOAL if HAVE_KERNEL_CI_CUSTOM_DEFAULTS
 	help
 	  The maximum number of possitive successes to have before bailing out

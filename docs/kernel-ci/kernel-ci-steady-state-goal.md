@@ -41,7 +41,7 @@ the system resources available, but a release is also time constrained. To
 test a kernel to verify no regressions have occurred one is then also
 constrained by the amount of time it takes to make a new kernel release.
 
-Using the [PHB Crystall Ball](http://phb-crystal-ball.org/) we know that
+Using the [PHB Crystall Ball](https://deb.tandrin.de/phb-crystal-ball.htm) we know that
 based on the last 65 kernel releases we have an an average development time of
 67 days, so a little over two months. The maximum possible number of
 regression tests to run for a kernel release then is bound by how many
@@ -64,7 +64,7 @@ has been achieved.
 
 We borrow the "steady state" term used for IO performance stabilization
 to define reaching a positive test goal. We define a steady state test goal
-as the the number times we wish to run a full test suite any without failure,
+as the number times we wish to run a full test suite any without failure,
 after which we optionally send an email report.
 
 A steady state testing goal is bounded by the minimum amount of time it takes
@@ -84,37 +84,28 @@ for a test suite is subsystem / test-suite specific.
 
 ## Steady state test goal for ftsests
 
-Experience with fstests on kdevops shows that on average it takes about 5 days
-to run 100 fstest tests, regardless of the filesytem we support, whether that
-is for btrfs, xfs or ext4. We want to fix an issue before a kernel is released
-and since achieving multiple steady state test goals are commulative, getting
-a report about once a week for failures seems sensible. We therefore currently
-recommend a steady state goal of 100 for fstests, and this would represent
-running fstests successfully on one system for one filesystem 100 times. The
-actual confidence in this baseline ends up being the cumulative number of times
-we can accomplish this steady state over a slew of dedicated kernel-ci systems.
+fstests already leverage its own solution for running tests which may be flaky,
+it supports soak duration time limit which defines the amount of time any test
+which supports soak duration should spin running itself on the test. Not all
+tests support soak duration.
+
+By default we use a steady state of 1, meaning only 1 loop running fstests.
+To create higher confidence in a test you may want consider just using a higher
+soak duration.
 
 ## Steady state test goal for blktests
 
-About 100 test can complete with blktests in about 1 day, and so the steady
-state test goal for blktests is currently set to 100. If we wanted to match
-the timing with fstests we would use a steady state of 500, so that it also
-takes 5 days to achieve steady state. We currently ended up deciding to
-recommend to use a steady state goal of 100 instead of 500 for blktets since we
-can have new linux-next release as often as once a day even though a full kernel
-is released about every two months. Lowering the steady state in this case
-allows us to try to do an upgrade to the latest KOTD more regularly, and
-therefore spot regressions more easily on the block layer. This of course
-however means getting reports daily about results though.
+blktests lacks the concept of soak duration so a steady state of 100 for
+example can be used, that'll complete within 1-2 days.
 
 ## Updating a kernel on the kernel-ci loop
 
-Continous integration means we should be testing continously test. There are
+Continuous integration means we should be testing continuously. There are
 different ways to do this. One way is to for example target a set of tests
-based on codepaths modified. Another is trigger all tests based on any new
-kernel released.
+based on code paths modified. Another is trigger all tests based on any new
+kernel released. Yet another is to test based on patches posted.
 
-To start off a kernel-ci system can start by running tests continously and
+To start off a kernel-ci system can start by running tests continuously and
 update the kernel after each steady state goal is reached. This means that if
 no new kernel is released by the time we achieve our steady state test goal,
 we simply will augment the confidence in our baseline for the last kernel
@@ -124,7 +115,7 @@ tested.
 
 To help increase confidence in our baseline we can increase the amount of
 systems available to run the same tests. Our confidence in our baseline then
-can be inreased by adding more systems to our test infrastructure. So for
+can be increased by adding more systems to our test infrastructure. So for
 instance, one kernel-ci system may be running fstests for btrfs with a steady
 state goal of 100. Having two systems running the same test with the same
 steady state goal of 100 means that if the tests in these two systems are
