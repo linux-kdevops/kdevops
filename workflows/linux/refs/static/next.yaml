@@ -1,5 +1,9 @@
 ---
 configs:
+  - master:
+    config: BOOTLINUX_TREE_NEXT_REF_MASTER
+    ref: "master"
+    help: "The latest and greatest linux-next"
   - next-20241108:
     config: BOOTLINUX_TREE_NEXT_REF_20241108
     ref: "next-20241108"
