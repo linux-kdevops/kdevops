@@ -166,6 +166,7 @@
   ansible.builtin.set_fact:
     gitr_nfs_export_fstype: "{{ nfsd_export_fstype }}"
   when:
+    - gitr_fstype == "nfs"
     - gitr_test_group != 'nfs-pnfs'
 
 - name: Set the NFS export's fstype
