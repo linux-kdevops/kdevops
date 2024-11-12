@@ -175,12 +175,26 @@ trigger manual workflows.
     </td>
   </tr>
 </table>
+
 Then just click on the green button which says `Run workflow`. You can either just
-wait for thes test to complete or you can also access the console of the runner
+wait for the test to complete or you can also access the console of the runner
 and watch live with a status of each machine being tested, a different target
 node will run each test filesystem profile.
 
 ![0008-run-tests-wait.png](/docs/kernel-ci/fstests-workflow/0008-run-tests-wait.png)
+
+Below is a real example of an interaction with an existing ongoing fstests test
+for XFS development. kdevops leverages a custom test specific watchdog in
+kdevops for fstests the
+[fstests_watchdog.py](https://github.com/linux-kdevops/kdevops/blob/main/scripts/workflows/fstests/fstests_watchdog.py).
+For documentation refer to the
+[fstests Kconfig](https://github.com/linux-kdevops/kdevops/blob/main/workflows/fstests/Kconfig)
+on the related `FSTESTS_WATCHDOG` options and `SOAK_DURATION`. Live monitoring
+is only useful for tests which take a long time, like fstests, or blktests.
+Each test which takes a long time to run should consider implementing its own
+watchdog to allow test progress monitoring.
+
+![example kdevops fstests CI watchdog live run](/docs/kernel-ci/fstests-workflow/0009-watchdog-example-2024-11-12.png)
 
 # kernel-patches-daemon support
 
