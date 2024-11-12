@@ -85,41 +85,98 @@ representation of what this looks like.
 ```
 
 # What's possible at a glance
-
 Here's what's possible. The variability that kdevops supports through
 the adoption of Linux kconfig, it let's you expose that variability directly
 from the github action. You can git push a tree, and then customize specifics
 of your workflow test.
 
-![0001-fstests-run-workflow.png](/docs/kernel-ci/fstests-workflow/0001-fstests-run-workflow.png)
+Support for enabling ``Run workflow`` to be available to your CI requires the default
+branch used for the repository to have in place an existing `.github/*/*.yml` with the
+`workflow_dispatch` enabled. Only privileged users of the repository will be able to
+trigger manual workflows.
 
-Here is the drop down menu you get:
+<img src="/docs/kernel-ci/fstests-workflow/0001-fstests-run-workflow.png" width=1024 align=center alt="001-fstests-run-workflow.png">
 
-![0002-drop-down-menu.png](/docs/kernel-ci/fstests-workflow/0002-drop-down-menu.png)
 
-You can pick the branch which you want the test to run. Each branch in turn can
-have custom input options of its own.
-
-![0003-pick-branch.png](/docs/kernel-ci/fstests-workflow/0003-pick-branch.png)
-
-For filesystem testing you can customize the soak duration used.
-
-![0004-pick-soak.png](/docs/kernel-ci/fstests-workflow/0004-pick-soak.png)
-
-You can pick the specific group you want to test:
-
-![0005-pick-group.png](/docs/kernel-ci/fstests-workflow/0005-pick-group.png)
-
-You can pick one of the existing tests:
-
-![0006-pick-test.png](/docs/kernel-ci/fstests-workflow/0006-pick-test.png)
-
-You can also just specify the group of tests you want manually, ie a custom
-test:
-
-![0007-custom-tests.png](/docs/kernel-ci/fstests-workflow/0007-custom-tests.png)
-
-You then just sit and wait but you can also access the console of the runner
+<table>
+  <tr>
+    <th>Description</th>
+    <th>Options</th>
+  </tr>
+  <tr>
+    <td>
+      Here is the first drop down menu once you click on "Run workflow" button.
+      With it you can now see different test variability options. Most
+      of the test variability options you've defined through Kconfig on kdevops
+      can become live realtime test variability options you can now configure from your CI.
+    </td>
+    <td>
+      <img src="/docs/kernel-ci/fstests-workflow/0002-drop-down-menu.png" alt="First drop down menu">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      You can pick the branch which you want the test to run. Each branch in turn can
+       have custom input options of its own. So for example a tree which lacks LBS can
+       support can avoid having the options to test 16k, 32k and 64k block size filesystems.
+    </td>
+    <td>
+      <img src="/docs/kernel-ci/fstests-workflow/0003-pick-branch.png" alt="0003-pick-branch.png">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      You can configure a custom soak duration, by default no soak duration is used.
+      If enabled kdevops manages to enable soak duraiton by setting an environment variable
+      which will be read at `make defconfig` time. Support for this was added to kdevops
+      through commit
+      <a href="https://github.com/linux-kdevops/kdevops/commit/e6294385d2b3b6">
+        commit e6294385d2b3b6 ("fstests: add support for overriding soak duration through CLI")
+      </a>.
+      See also related fix
+      <a href="https://github.com/linux-kdevops/kdevops/commit/59aee5697ea0">
+      commit 59aee5697ea0 ("fstests/Kconfig: use int-specific default for CLI SOAK_DURATION")
+      </a>.
+    </td>
+    <td>
+     <img src="/docs/kernel-ci/fstests-workflow/0004-pick-soak.png" alt="Pick soak duration">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      You can pick the specific test group you want to test, as well, the default in kdevops is to
+      test the group "auto".
+    </td>
+    <td>
+      <img src="/docs/kernel-ci/fstests-workflow/0005-pick-group.png" alt="Pick test group">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      You can select one of all suported tests to run as well, when you do this only that specific
+      test will run, that's it. By default all test are run which are part of the "auto" group as
+      that is the default test group kdevops uses.
+    </td>
+    <td>
+      <img src="/docs/kernel-ci/fstests-workflow/0006-pick-test.png" alt="Pick your test">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      If you are working on something specific, you may know you want to only test
+      a few select tests, but you may not want to run a full test group or only
+      pick one test. From the drop down menu on "Select additional test coverage" pick
+      "custom". In the field "Enter custom test" put the list of tests you want to test
+      each test separated by a space. In this example we'll run a test with only
+      generic/003 and generic/750.
+    </td>
+    <td>
+      <img src="/docs/kernel-ci/fstests-workflow/0007-custom-tests.png" alt="Custom tests">
+    </td>
+  </tr>
+</table>
+Then just click on the green button which says `Run workflow`. You can either just
+wait for thes test to complete or you can also access the console of the runner
 and watch live with a status of each machine being tested, a different target
 node will run each test filesystem profile.
 
