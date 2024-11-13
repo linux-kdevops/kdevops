@@ -1,0 +1,9 @@
+# kdevops generated 89-ethernet.network
+# Enable DHCPv4 and DHCPv6 on all physical ethernet links
+# systemd-networkd-wait-online.service likes to fail on an empty /etc/systemd/network/
+# and we may leverage systemd-networkd-wait-online.service for other services.
+[Match]
+Kind=!*
+Type=ether
+[Network]
+DHCP=yes
