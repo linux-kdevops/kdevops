@@ -11,8 +11,11 @@ mailing lists
 [kernel-patches-daemon](https://github.com/facebookincubator/kernel-patches-daemon)
 (kpd) can optionally be used and is supported.
 
-Both github and gitlab actions are optionally supported so to leverage
-triggering tests on custom repositories with custom branches. Either kpd
+The CI part of github and gitlab are called Github actions and GitLab Pipelines
+respectively. To keep things simple we refer to both as ``git CI solutions``.
+Both ``git CI solutions`` are optionally supported to leverage
+triggering tests on custom repositories with custom branches. Either
+[kpd](https://github.com/facebookincubator/kernel-patches-daemon)
 can push custom branches to test or developers can manually push custom
 branches to test. Once confidence on a CI pipeline is high, tests against
 new Linux releases can also be automated.
@@ -84,117 +87,27 @@ representation of what this looks like.
                              +--------------------------+
 ```
 
-# What's possible at a glance
-Here's what's possible. The variability that kdevops supports through
-the adoption of Linux kconfig, it let's you expose that variability directly
-from the github action. You can git push a tree, and then customize specifics
-of your workflow test.
+# Active kdevops CIs
 
-Support for enabling ``Run workflow`` to be available to your CI requires the default
-branch used for the repository to have in place an existing `.github/*/*.yml` with the
-`workflow_dispatch` enabled. Only privileged users of the repository will be able to
-trigger manual workflows.
+The below are active kdevops CIs used to help developers proactively test
+patches either from the mailing list for different Linux kernel subsystems,
+or to help increase confidence in a branch to be used as a pull request sent
+to Linus. We also have kdevops's own CI. Each CI has its own use case and
+documented as such. The kdevops tree has its CI built-in to the main branch
+of the development tree. However, to enable to Linux kernel development trees
+to *use* kdevops to run tests, the [kdevops-ci tree](kdevops-ci-tree.md) is
+can merged into development tree before pushing onto kdevops CI enabled trees.
+Read first the [kdevops-ci tree documentation](kdevops-ci-tree.md). The list
+of active CI trees leveraging all this and their respective documentation
+are:
 
-<img src="/docs/kernel-ci/fstests-workflow/0001-fstests-run-workflow.png" width=1024 align=center alt="001-fstests-run-workflow.png">
-
-
-<table>
-  <tr>
-    <th>Description</th>
-    <th>Options</th>
-  </tr>
-  <tr>
-    <td>
-      Here is the first drop down menu once you click on "Run workflow" button.
-      With it you can now see different test variability options. Most
-      of the test variability options you've defined through Kconfig on kdevops
-      can become live realtime test variability options you can now configure from your CI.
-    </td>
-    <td>
-      <img src="/docs/kernel-ci/fstests-workflow/0002-drop-down-menu.png" alt="First drop down menu">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      You can pick the branch which you want the test to run. Each branch in turn can
-       have custom input options of its own. So for example a tree which lacks LBS can
-       support can avoid having the options to test 16k, 32k and 64k block size filesystems.
-    </td>
-    <td>
-      <img src="/docs/kernel-ci/fstests-workflow/0003-pick-branch.png" alt="0003-pick-branch.png">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      You can configure a custom soak duration, by default no soak duration is used.
-      If enabled kdevops manages to enable soak duraiton by setting an environment variable
-      which will be read at `make defconfig` time. Support for this was added to kdevops
-      through commit
-      <a href="https://github.com/linux-kdevops/kdevops/commit/e6294385d2b3b6">
-        commit e6294385d2b3b6 ("fstests: add support for overriding soak duration through CLI")
-      </a>.
-      See also related fix
-      <a href="https://github.com/linux-kdevops/kdevops/commit/59aee5697ea0">
-      commit 59aee5697ea0 ("fstests/Kconfig: use int-specific default for CLI SOAK_DURATION")
-      </a>.
-    </td>
-    <td>
-     <img src="/docs/kernel-ci/fstests-workflow/0004-pick-soak.png" alt="Pick soak duration">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      You can pick the specific test group you want to test, as well, the default in kdevops is to
-      test the group "auto".
-    </td>
-    <td>
-      <img src="/docs/kernel-ci/fstests-workflow/0005-pick-group.png" alt="Pick test group">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      You can select one of all suported tests to run as well, when you do this only that specific
-      test will run, that's it. By default all test are run which are part of the "auto" group as
-      that is the default test group kdevops uses.
-    </td>
-    <td>
-      <img src="/docs/kernel-ci/fstests-workflow/0006-pick-test.png" alt="Pick your test">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      If you are working on something specific, you may know you want to only test
-      a few select tests, but you may not want to run a full test group or only
-      pick one test. From the drop down menu on "Select additional test coverage" pick
-      "custom". In the field "Enter custom test" put the list of tests you want to test
-      each test separated by a space. In this example we'll run a test with only
-      generic/003 and generic/750.
-    </td>
-    <td>
-      <img src="/docs/kernel-ci/fstests-workflow/0007-custom-tests.png" alt="Custom tests">
-    </td>
-  </tr>
-</table>
-
-Then just click on the green button which says `Run workflow`. You can either just
-wait for the test to complete or you can also access the console of the runner
-and watch live with a status of each machine being tested, a different target
-node will run each test filesystem profile.
-
-![0008-run-tests-wait.png](/docs/kernel-ci/fstests-workflow/0008-run-tests-wait.png)
-
-Below is a real example of an interaction with an existing ongoing fstests test
-for XFS development. kdevops leverages a custom test specific watchdog in
-kdevops for fstests the
-[fstests_watchdog.py](https://github.com/linux-kdevops/kdevops/blob/main/scripts/workflows/fstests/fstests_watchdog.py).
-For documentation refer to the
-[fstests Kconfig](https://github.com/linux-kdevops/kdevops/blob/main/workflows/fstests/Kconfig)
-on the related `FSTESTS_WATCHDOG` options and `SOAK_DURATION`. Live monitoring
-is only useful for tests which take a long time, like fstests, or blktests.
-Each test which takes a long time to run should consider implementing its own
-watchdog to allow test progress monitoring.
-
-![example kdevops fstests CI watchdog live run](/docs/kernel-ci/fstests-workflow/0009-watchdog-example-2024-11-12.png)
+  * [kdevops CI](kdevops-ci.md)
+  * [Linux kernel filesystem kdevops CI](linux-filesystems-kdevops-CI-testing.md)
+      * [Linux kernel XFS kdevops CI](linux-xfs-kdevops-ci.md)
+  * Linux kernel simple subsystems:
+      * [Linux kernel modules kdevops CI](linux-modules-kdevops-ci.md)
+      * [Linux kernel firmware loader kdevops CI](linux-firmware-kdevops-ci.md)
+  * [Linux kernel mm kdevops CI](linux-mm-kdevops-ci.md)
 
 # kernel-patches-daemon support
 
