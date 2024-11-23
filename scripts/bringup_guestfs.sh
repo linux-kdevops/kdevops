@@ -250,15 +250,6 @@ uninstall cloud-init
 write /etc/default/locale:LANG=en_US.UTF-8
 append-line /etc/default/locale:LANGUAGE=en_US:en
 write /etc/locale.gen:en_US.UTF-8 UTF-8
-write /etc/systemd/network/89-ethernet.network: # kdevops generated 89-ethernet.network
-append-line write /etc/systemd/network/89-ethernet.network:# Enable DHCPv4 and DHCPv6 on all physical ethernet links
-append-line write /etc/systemd/network/89-ethernet.network:# systemd-networkd-wait-online.service likes to fail on an empty /etc/systemd/network/
-append-line write /etc/systemd/network/89-ethernet.network:# and we may leverage systemd-networkd-wait-online.service for other services.
-append-line write /etc/systemd/network/89-ethernet.network:[Match]
-append-line write /etc/systemd/network/89-ethernet.network:Kind=!*
-append-line write /etc/systemd/network/89-ethernet.network:Type=ether
-append-line write /etc/systemd/network/89-ethernet.network:[Network]
-append-line write /etc/systemd/network/89-ethernet.network:DHCP=yes
 firstboot-command locale-gen en_US.UTF-8
 firstboot-command update-locale LANG=en_US.UTF-8
 firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force locales
