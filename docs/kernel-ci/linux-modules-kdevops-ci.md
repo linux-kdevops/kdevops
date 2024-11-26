@@ -30,3 +30,8 @@ You can see linux-modules-kpd test results here:
 
   * [Ephemeral  interactive linux-modules-kpd CI results](https://github.com/linux-kdevops/linux-modules-kpd/actions)
   * [Persistent kdevops-results-archive linux-modules-kpd test results](https://github.com/search?q=repo%3Alinux-kdevops%2Fkdevops-results-archive+is%3Acommit+%22linux-modules-kpd%3A%22&type=commits)
+
+### How to add new selftests for modules to this CI:
+
+  * Add the new Linux kernel selftests under `tools/testing/selftests/module/`
+  * That's it!
