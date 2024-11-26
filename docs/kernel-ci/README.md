@@ -24,67 +24,43 @@ Both self-hosted runners and cloud solutions can be used. Manually running
 kdevops tests is also possible. Below we provide an ASCII art image
 representation of what this looks like.
 
-```
-+---------------------------------------------+    +---------------------------
-|                Mailing List Patches         |    |  Direct dev branch pushes |
-|---------------------------------------------|    |---------------------------|-
-| - Patches submitted to mailing lists        |    | - Developers push         |
-| - Example: linux-modules vger list          |    |   branches directly       |
-+----------------------+----------------------+    +-------------------+-------
-               |                                             |
-               |                                             |
-               v                                             v
-     +----------------+                 +--------------------------+
-     |   Patchwork    |                 |        Topic KPD Tree    |
-     |----------------|                 |--------------------------|
-     | - Tracks patch |                 | - Receives branches from |
-     |   submissions  |                 |   dev-tree from KPD App  |
-     | - Sends series |                 |   and direct developer   |
-     |   to GitHub    |                 |   pushes                 |
-     +----------------+                 | - Adds `kdevops-ci` as   |
-           |                            |   the first commit for   |
-           |                            |   patches from Patchwork |
-           v                            | - Developers merge       |
-     +--------------------------+       |  `kdevops-ci` as the     |
-     |     GitHub KPD Topic     |--->   |last step in their dev    |
-     |          App             |       +----------+--------------+
-     |--------------------------+                  |
-     | - Adds `kdevops-ci` as   |                  |
-     |   the first commit and   |                  |
-     |   applies patch series   |                  |
-     | - Pushes branch to KPD   |                  |
-     |   topic tree             |                  |
-     +--------------------------+                  |
-                                                   |
-                                                   v
-                           +--------------------------+
-                           |  github CI / gitlab CI   |
-                           |--------------------------|
-                           | - Executes CI workflows  |
-                           |   on topic branches      |
-                           | - Uses kdevops for       |
-                           |   testing workflows      |
-                           | - Uploads zip artifacts  |
-                           +--------------------------+
-                                      |
-                                      v
-                            +--------------------------+
-                            |          kdevops         |
-                            |--------------------------|
-                            | - Orchestrates testing   |
-                            |   configurations         |
-                            | - Manages ansible tasks  |
-                            | - pushes the results to
-                            |   kdevops-results-archive|
-                            +--------------------------+
-                                        |
-                                        v
-                             +--------------------------+
-                             |  kdevops-results-archive |
-                             |--------------------------|
-                             | - Archives results in    |
-                             |   using (git LFS)        |
-                             +--------------------------+
+  * [Alternative ASCII flow chart](kdevops-ci-ascii-flow-chart.md)
+
+```mermaid
+flowchart TD
+    ML[Mailing List Patches] -->|Submit| PW[Patchwork]
+    DP[Direct dev branch pushes] -->|Push| KT[Topic KPD Tree]
+
+    subgraph Patch Processing
+        PW -->|Send series| GA[GitHub KPD Topic App]
+        GA -->|Push branch| KT
+    end
+
+    subgraph Topic Tree Management
+        KT -->|Trigger| CI[GitHub CI / GitLab CI]
+    end
+
+    subgraph Testing and Results
+        CI -->|Execute workflows| KD[kdevops]
+        KD -->|Archive results| KRA[kdevops-results-archive]
+    end
+
+    %% Node descriptions
+    ML -->|"- Patches submitted to mailing lists\n- Example: linux-modules vger list"|ML
+    PW -->|"- Tracks patch submissions\n- Sends series to GitHub"|PW
+    GA -->|"- Adds 'kdevops-ci' as first commit\n- Applies patch series\n- Pushes branch to KPD topic tree"|GA
+    KT -->|"- Receives branches from dev-tree\n- Adds 'kdevops-ci' as first commit\n- Developers merge 'kdevops-ci'"|KT
+    CI -->|"- Executes CI workflows\n- Uses kdevops for testing\n- Uploads zip artifacts"|CI
+    KD -->|"- Orchestrates testing configs\n- Manages ansible tasks\n- Pushes results"|KD
+    KRA -->|"- Archives results using git LFS"|KRA
+
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef process fill:#e1f3e1,stroke:#333,stroke-width:2px;
+    classDef storage fill:#e1e1f3,stroke:#333,stroke-width:2px;
+
+    class ML,DP default;
+    class PW,GA,KT,CI,KD process;
+    class KRA storage;
 ```
 
 # Active kdevops CIs
