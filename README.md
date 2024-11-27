@@ -249,7 +249,7 @@ Below is kdevops' recommended documentation reading.
 
 # kdevops kernel-ci support
 
-kdevops supports its own kernel continous integration support, so to allow
+kdevops supports its own kernel continuous integration support, so to allow
 Linux developers and Linux distributions to keep track of issues present in
 any of supported kdevops workflows and be able to tell when new regressions
 are detected. Note though that kernel-ci for kdevops is only implemented on
@@ -348,7 +348,7 @@ Below are sections which get into technical details of how kdevops works.
   * [Linux distribution support](docs/linux-distro-support.md)
   * [Overriding all Ansible role options with one file](docs/ansible-override.md)
   * [kdevops Vagrant support](docs/kdevops-vagrant.md)
-  * [kdevops terraform suppor - cloud setup with kdevops](docs/kdevops-terraform.md)
+  * [kdevops terraform support - cloud setup with kdevops](docs/kdevops-terraform.md)
   * [kdevops local Ansible roles](docs/ansible-roles.md)
   * [Tutorial on building your own custom Vagrant boxes](docs/custom-vagrant-boxes.md)
 
