@@ -5,6 +5,7 @@
   when:
     - ansible_distribution == 'RedHat'
     - not devconfig_custom_yum_repofile
+    - kdevops_enable_guestfs
 
 - name: Select the Oracle Linux CodeReady Builder repo
   ansible.builtin.set_fact:
@@ -12,6 +13,7 @@
   when:
     - ansible_distribution == 'OracleLinux'
     - not devconfig_custom_yum_repofile
+    - kdevops_enable_guestfs
 
 - name: Select the CentOS CodeReady Builder repo
   ansible.builtin.set_fact:
@@ -19,6 +21,17 @@
   when:
     - ansible_distribution == 'CentOS'
     - not devconfig_custom_yum_repofile
+    - kdevops_enable_guestfs
+
+# Probably need one of these for each cloud provider
+- name: Select the AWS RHEL CodeReady Builder repo
+  ansible.builtin.set_fact:
+    codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-rhui-rpms"
+  when:
+    - ansible_distribution == 'RedHat'
+    - not devconfig_custom_yum_repofile
+    - kdevops_enable_terraform
+    - kdevops_terraform_provider == "aws"
 
 - name: Enable the selected CodeReady Builder repo
   become: true
