@@ -748,6 +748,7 @@
   set_fact:
     fstests_nfs_export_fstype: "xfs"
   when:
+    - fstests_fstyp == "nfs"
     - fstests_nfs_section_pnfs|bool
 
 - name: Create NFS export for test vol
