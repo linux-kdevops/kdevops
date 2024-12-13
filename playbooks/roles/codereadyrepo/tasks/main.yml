@@ -6,6 +6,13 @@
     - ansible_distribution == 'RedHat'
     - not devconfig_custom_yum_repofile
 
+- name: Select the Oracle Linux CodeReady Builder repo
+  ansible.builtin.set_fact:
+    codeready_repo: "ol9_codeready_builder"
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - not devconfig_custom_yum_repofile
+
 - name: Select the CentOS CodeReady Builder repo
   ansible.builtin.set_fact:
     codeready_repo: "crb"
