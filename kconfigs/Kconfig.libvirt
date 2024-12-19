@@ -528,6 +528,7 @@ choice
 
 config LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
 	bool "NVMe"
+	output yaml
 	help
 	  Use the QEMU NVMe driver for extra storage drives. We always expect
 	  to use this as we expect *could* be outperforming the virtio driver.
@@ -537,6 +538,7 @@ config LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
 
 config LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 	bool "virtio"
+	output yaml
 	help
 	  Use the QEMU virtio driver for extra storage drives. Use this if you
 	  are having issues with "NVMe timeouts" issues when testing in a loop
@@ -545,6 +547,7 @@ config LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 
 config LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
 	bool "ide"
+	output yaml
 	help
 	  Use the QEMU ide driver for extra storage drives. This is useful for
 	  really old Linux distributions that lack the virtio backend driver.

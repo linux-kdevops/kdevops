@@ -48,16 +48,6 @@ GEN_NODES_EXTRA_ARGS += libvirt_storage_pool_name='$(subst ",,$(CONFIG_LIBVIRT_S
 GEN_NODES_EXTRA_ARGS += libvirt_storage_pool_path='$(subst ",,$(CONFIG_KDEVOPS_STORAGE_POOL_PATH))'
 endif
 
-ifeq (y,$(CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_IDE))
-GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_drive_nvme='False'
-GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_drive_ide='True'
-endif
-
-ifeq (y,$(CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO))
-GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_drive_nvme='False'
-GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_drive_virtio='True'
-endif
-
 GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_aio_mode='$(subst ",,$(CONFIG_LIBVIRT_AIO_MODE))'
 GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_aio_cache_mode='$(subst ",,$(CONFIG_LIBVIRT_AIO_CACHE_MODE))'
 
