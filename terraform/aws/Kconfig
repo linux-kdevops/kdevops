@@ -39,7 +39,7 @@ config TERRAFORM_AWS_US_WEST_2
 
 	  "OwnerId": "137112412989"
 
-	  And that is what vaule to use for that ami-0efa651876de2a5ce
+	  And that is what value to use for ami-0efa651876de2a5ce
 	  for the TERRAFORM_AWS_AMI_OWNER. To get the ami-* for your regions
 	  just go to your EC2 console, that console will be associated with
 	  a region already. You have to change regions if you want to look
@@ -237,8 +237,7 @@ config TERRAFORM_AWS_NS
 	default "debian-stretch-hvm-arm64-*" if TERRAFORM_AWS_NS_DEBIAN_STRETCH_ARM64
 	default "al2023-*-x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_AMI_AMAZON_X86_64
 	default "al2023-*-arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "RHEL-9.*x86_64-*" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_RHEL9_X86_64
-	default "RHEL-9.*x86_64-*" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_RHEL9_X86_64_EAST
+	default "RHEL-9.*x86_64-*" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_X86_64_EAST
 	default "RHEL-9.*arm64-*" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_RHEL9_ARM64
 	default "suse-sles-15-sp4-*x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_SLE15_SP4_X86_64
 	default "suse-sles-15-sp4-*arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_SLE15_SP4_ARM64
