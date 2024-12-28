@@ -42,6 +42,12 @@
       paths:
         - 'vars'
 
+- name: Enable the CodeReady repo
+  ansible.builtin.include_role:
+    name: codereadyrepo
+  when:
+    - ansible_os_family == "RedHat"
+
 - name: Install dependencies for ltp
   tags: ['build', 'ltp']
   become: true
