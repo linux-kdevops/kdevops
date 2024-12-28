@@ -118,7 +118,7 @@
   when:
     - not bootlinux_9p|bool
 
-- name: git clone {{ target_linux_tree }} on the host side
+- name: git clone {{ target_linux_tree }} on the control node
   git:
     repo: "{{ target_linux_git }}"
     dest: "{{ bootlinux_9p_host_path }}"
@@ -148,7 +148,7 @@
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
 
-- name: Copy kernel delta if requested on the host side
+- name: Copy kernel delta if requested on the control node
   template:
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ bootlinux_9p_host_path }}/{{ target_linux_extra_patch }}"
@@ -169,7 +169,7 @@
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
 
-- name: Apply kernel delta if requested on the host side
+- name: Apply kernel delta if requested on the control node
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
@@ -211,7 +211,7 @@
     - target_linux_apply_patch_message_id | length > 0
     - bootlinux_b4_am_this_host|bool
 
-- name: Apply message patch set if requested on the host side
+- name: Apply message patch set if requested on the control node
   shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
@@ -324,7 +324,7 @@
   when:
     - not bootlinux_9p|bool
 
-- name: Copy configuration for Linux {{ target_linux_tree }} on the host side
+- name: Copy configuration for Linux {{ target_linux_tree }} on the control node
   template:
     src: "{{ linux_config }}"
     dest: "{{ bootlinux_9p_host_path }}/.config"
@@ -342,7 +342,7 @@
     - not bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
 
-- name: Set kernel localversion if requested on the host side
+- name: Set kernel localversion if requested on the control node
   shell: "echo {{ target_linux_localversion }} > {{ bootlinux_9p_host_path }}/localversion"
   tags: [ 'linux', 'git', 'config' ]
   when:
@@ -365,7 +365,7 @@
   when:
     - not bootlinux_9p|bool
 
-- name: Configure Linux {{ target_linux_tree }} on the host side
+- name: Configure Linux {{ target_linux_tree }} on the control node
   shell: |
     set -o pipefail
     yes "" | make oldconfig
@@ -419,7 +419,7 @@
     - not bootlinux_9p|bool
     - snaik_oil_file.stat.exists
 
-- name: Get nproc on the host side
+- name: Get nproc on the control node
   command: "{{ num_jobs }}"
   tags: [ 'linux', 'build-linux', 'configure', 'cxl-build' ]
   register: nproc_9p
@@ -450,7 +450,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the host side using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
   make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
@@ -463,7 +463,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the host side using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
   make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
@@ -474,7 +474,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} cxl_test on the host side using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} cxl_test on the control node using {{ nproc_9p.stdout }} threads
   make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
