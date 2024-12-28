@@ -103,7 +103,7 @@
     - bootlinux_tree_set_by_cli|bool
     - not target_directory_stat.stat.exists
 
-- name: git clone {{ target_linux_tree }} on the client side
+- name: git clone {{ target_linux_tree }} on the target nodes
   git:
     repo: "{{ target_linux_git }}"
     dest: "{{ target_linux_dir_path }}"
@@ -136,7 +136,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Copy kernel delta if requested on the client side
+- name: Copy kernel delta if requested on the target nodes
   template:
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ target_linux_dir_path }}/{{ target_linux_extra_patch }}"
@@ -160,7 +160,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Apply kernel delta if requested on the client side
+- name: Apply kernel delta if requested on the target nodes
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ target_linux_dir_path }}"
@@ -200,7 +200,7 @@
   when:
     - target_linux_apply_patch_message_id is defined
 
-- name: Apply message patch set if requested on the client side
+- name: Apply message patch set if requested on the target nodes
   shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
   args:
     chdir: "{{ target_linux_dir_path }}"
@@ -313,7 +313,7 @@
   when: not config_stat.stat.exists
   delegate_to: localhost
 
-- name: Copy configuration for Linux {{ target_linux_tree }} on the client side
+- name: Copy configuration for Linux {{ target_linux_tree }} to the target nodes
   template:
     src: "{{ linux_config }}"
     dest: "{{ target_linux_dir_path }}/.config"
@@ -335,7 +335,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Set kernel localversion if requested on the client side
+- name: Set kernel localversion if requested on the target nodes
   shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
   tags: [ 'linux', 'git', 'config' ]
   when:
@@ -351,7 +351,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Configure Linux {{ target_linux_tree }} on the client side
+- name: Configure Linux {{ target_linux_tree }} on the target nodes
   shell: |
     set -o pipefail
     yes "" | make oldconfig
@@ -381,7 +381,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} on the client side
+- name: Build {{ target_linux_tree }} on the target nodes
   command: "{{ target_linux_make_cmd }}"
   register: build
   changed_when: "build.rc == 0"
@@ -391,7 +391,7 @@
   when:
     - not bootlinux_9p|bool
 
-- name: Build {{ target_linux_tree }} cxl_test on the client side
+- name: Build {{ target_linux_tree }} cxl_test on the target nodes
   command: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
   register: build_cxl_test
   changed_when: "build_cxl_test.rc == 0"
@@ -603,7 +603,7 @@
   tags: [ 'linux', 'git', 'config', 'saved' ]
   when: ansible_facts['os_family']|lower == 'redhat'
 
-- name: Install {{ target_linux_tree }} on the client side
+- name: Install {{ target_linux_tree }} on the target nodes
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
@@ -614,7 +614,7 @@
     chdir: "{{ target_linux_dir_path }}"
   tags: [ 'linux', 'install-linux' ]
 
-- name: Install {{ target_linux_tree }} cxl_test on the client side
+- name: Install {{ target_linux_tree }} cxl_test on the target nodes
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
