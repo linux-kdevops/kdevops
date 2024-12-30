@@ -1,5 +1,23 @@
 if TERRAFORM_AWS
 
+config TERRAFORM_AWS_PROFILE
+	prompt "AWS profile to use"
+	string
+	default "default"
+	help
+	  This option sets the value of the Terraform aws_profile
+	  variable. The AWS profile specifies an IAM user and secret
+	  key that Terraform uses to authenticate to AWS.
+
+	  AWS profiles are set up in ~/.aws/credentials using the
+	  "aws configure" command. You may also edit this file by
+	  hand, if you're daring.
+
+	  The default value of this Kconfig option selects the
+	  "default" profile, which is fine when using only a single
+	  AWS profile. Change the value of this option to select an
+	  alternate profile / login credentials.
+
 choice
 	prompt "AWS region to use"
 	default TERRAFORM_AWS_US_WEST_2

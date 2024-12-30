@@ -238,10 +238,10 @@ aws_access_key_id = SOME_ACCESS_KEY
 aws_secret_access_key = SECRET_KEY
 ```
 
-The profile above is "default", and you can multiple profiles. By default
-our Terraform's AWS vars.tf assumes ~/.aws/credentials as the default
-credentials location, and the profile as "default". If this is different
-for you, you can override with the variables:
+The profile above is "default", and you can have multiple profiles. By
+default our Terraform's AWS vars.tf assumes ~/.aws/credentials as the
+default credentials location, and the profile as "default". If this is
+different for you, you can override with the variables:
 
 ```
 aws_shared_credentials_file
