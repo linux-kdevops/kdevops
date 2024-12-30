@@ -42,18 +42,18 @@ variable "ssh_pubkey_data" {
 #
 # Using this filter glob lets us get the latest ami for this owner / release.
 variable "aws_name_search" {
-  description = "Youre AWS AMI search name filter"
+  description = "Your AWS AMI search name filter"
   default     = "debian-stretch-hvm-x86_64-*"
 }
 
 # This has to match your preferred image filter above too.
 variable "aws_virt_type" {
-  description = "Youre AWS preferred virtualization type"
+  description = "Your AWS preferred virtualization type"
   default     = "hvm"
 }
 
 variable "aws_ami_owner" {
-  description = "Youre AWS AMI image owner"
+  description = "Your AWS AMI image owner"
 
   # Debian
   default = "379101102735"
