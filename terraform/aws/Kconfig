@@ -342,6 +342,66 @@ config TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
 
 	  See https://aws.amazon.com/ec2/instance-types/m5/ for details.
 
+config TERRAFORM_AWS_INSTANCE_M7A_MEDIUM
+	bool "m7a.medium"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 GiB RAM, 1 AMD Ryzen vcpu, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_LARGE
+	bool "m7a.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 GiB RAM, 2 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	bool "m7a.xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 GiB RAM, 4 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_2XLARGE
+	bool "m7a.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 GiB RAM, 8 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_4XLARGE
+	bool "m7a.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  64 GiB RAM, 16 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
 config TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
 	bool "is4gen.medium"
 	depends on TARGET_ARCH_ARM64
@@ -414,6 +474,12 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "m5ad.xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_XLARGE
 	default "m5ad.2xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
 	default "m5ad.4xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "m7a.medium" if TERRAFORM_AWS_INSTANCE_M7A_MEDIUM
+	default "m7a.large" if TERRAFORM_AWS_INSTANCE_M7A_LARGE
+	default "m7a.xlarge" if TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	default "m7a.xlarge" if TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	default "m7a.2xlarge" if TERRAFORM_AWS_INSTANCE_M7A_2XLARGE
+	default "m7a.4xlarge" if TERRAFORM_AWS_INSTANCE_M7A_4XLARGE
 	default "is4gen.medium" if TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
 	default "is4gen.8xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
 	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
