@@ -10,7 +10,7 @@
       skip: true
   tags: vars
 
-- name: Wait for hosts to become available
+- name: Wait for target nodes to become reachable
   wait_for_connection:
 
 - name: Gather network facts

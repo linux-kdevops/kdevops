@@ -10,7 +10,7 @@
       skip: true
   tags: vars,vars_simple,vars_extra
 
-- name: Wait for {{ ansible_host }} to be available
+- name: Wait for target nodes to become reachable
   wait_for_connection:
 
 - name: Gathering facts
