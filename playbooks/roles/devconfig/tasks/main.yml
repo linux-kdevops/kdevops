@@ -31,10 +31,10 @@
 
 # Distro specific
 - name: Install dependencies
-  import_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
 
 - name: Configure custom repositories and install packages
-  import_tasks: config-custom-repos-and-packages/main.yml
+  ansible.builtin.include_tasks: config-custom-repos-and-packages/main.yml
   when:
     - ansible_facts['os_family']|lower == 'redhat'
 
@@ -447,7 +447,7 @@
   tags: [ 'console' ]
 
 - name: Update your boot GRUB file if necessary
-  import_tasks: update-grub/main.yml
+  ansible.builtin.include_tasks: update-grub/main.yml
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
@@ -637,7 +637,7 @@
   tags: [ 'sysctl' ]
 
 - name: Rev the kernel to the latest distribution kotd
-  import_tasks: kotd-rev-kernel/main.yml
+  ansible.builtin.include_tasks: kotd-rev-kernel/main.yml
   when:
     - devconfig_enable_kotd|bool
   tags: [ 'kotd' ]

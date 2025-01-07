@@ -24,21 +24,23 @@
       skip: true
   tags: vars
 
-# tasks to setup up repos, register system if needed and install
-# preferred devtools packages.
-- name: Distribution specific setup
-  tags: vars_simple
-  import_tasks: debian/main.yml
+- name: Debian-specific setup
+  ansible.builtin.include_tasks: debian/main.yml
   when:
-    - ansible_facts['os_family']|lower == 'debian'
+    - ansible_os_family == "Debian"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
-- import_tasks: suse/main.yml
   tags: vars_simple
+
+- name: SuSE-specific setup
+  ansible.builtin.include_tasks: suse/main.yml
   when:
-    - ansible_facts['os_family']|lower == 'suse'
+    - ansible_os_family == "Suse"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
-- import_tasks: redhat/main.yml
   tags: vars_simple
+
+- name: Red Hat-specific setup
+  ansible.builtin.include_tasks: redhat/main.yml
   when:
-    - ansible_facts['os_family']|lower == 'redhat'
+    - ansible_os_family == "RedHat"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
+  tags: vars_simple
