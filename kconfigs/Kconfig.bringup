@@ -9,22 +9,6 @@ choice
 	prompt "Node bring up method"
 	default GUESTFS
 
-config VAGRANT
-	bool "Vagrant for local virtualization (KVM / VirtualBox)"
-	select KDEVOPS_SSH_CONFIG_UPDATE_STRICT
-	select EXTRA_STORAGE_SUPPORTS_ZNS
-	select EXTRA_STORAGE_SUPPORTS_LARGEIO
-	select BRINGUP_SUPPORTS_CXL
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will enable use of Vagrant. Enable this if you want to
-	  use local virtualization technologies such as KVM with libvirt or
-	  VirtualBox. Enabling this feature will enable you to select which
-	  target guests to use, and configures things for you. It will also
-	  ensure dependencies are installed for Vagrant when running:
-
-	    make deps
-
 config GUESTFS
 	bool "Use guestfs-tools for local virtualization via KVM and libvirt"
 	select KDEVOPS_ENABLE_GUESTFS
