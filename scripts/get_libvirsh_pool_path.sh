@@ -17,7 +17,7 @@ POOL_LIST=""
 get_pool_vars
 VIRSH_WORKS=$(virsh_works)
 if [[ "$VIRSH_WORKS" == "n" ]]; then
-	echo "default"
+	echo "$(pwd)/default"
 	exit
 fi
 
