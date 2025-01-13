@@ -13,6 +13,7 @@
     name:
       - libvirt-daemon
       - libvirt-daemon-system
+      - libvirt-daemon-config-network
       - libvirt-clients
       - qemu-kvm
       - qemu-system-x86
