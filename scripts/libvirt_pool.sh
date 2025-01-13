@@ -1,6 +1,26 @@
 #!/bin/bash
 # Helpers to work with virsh pools
 
+get_can_sudo()
+{
+	# Heuristic to see if the current user can sudo
+	# -n : This is the non-interactive argument in sudo and will prevent
+	#      sudo from prompting the user for any kind of input.
+	# -v : This tries to update the users cache credentials but also has
+	#      distinct output for users with and without sudo:
+	#      1. Without sudo the output is
+	#         "Sorry, user __USER__ may not run sudo..."
+	#      2. With sudo it has two messages: one for paswordless sudo and
+	#         one passwordfull sudo. But we ignore the distinction as both
+	#         of these mean that can_sudo is "y".
+	if [[ $(sudo -nv 2>&1 | grep 'may not' > /dev/null) -eq 0 ]]; then
+		echo "n"
+		exit
+	fi
+	echo "y"
+	exit
+}
+
 get_pool_vars()
 {
 	if [[ -f $OS_FILE ]]; then
@@ -10,10 +30,7 @@ get_pool_vars()
 		fi
 	fi
 
-	SUDO_ASKPASS=/bin/false sudo -A whoami > /dev/null 2>&1
-	if [[ $? -eq 0 ]]; then
-		CAN_SUDO="y"
-	fi
+	CAN_SUDO=get_can_sudo
 
 	if [[ "$USES_QEMU_USER_SESSION" != "y" ]]; then
 		REQ_SUDO="sudo"
