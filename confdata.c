@@ -669,14 +669,16 @@ static char *conf_value_to_yaml(struct symbol *sym, const char *val)
 		yaml_value = strdup(val);
 		break;
 	case S_HEX:
-            asprintf(&yaml_value, "0x%s", val);
-            break;
-        case S_STRING:
-	    /* Wrap strings in quotes */
-            asprintf(&yaml_value, "\"%s\"", val);
-            break;
-        case S_BOOLEAN:
-        case S_TRISTATE:
+		if (asprintf(&yaml_value, "0x%s", val) < 0)
+			return NULL;
+		break;
+	case S_STRING:
+		/* Wrap strings in quotes */
+		if (asprintf(&yaml_value, "\"%s\"", val) < 0)
+			return NULL;
+		break;
+	case S_BOOLEAN:
+	case S_TRISTATE:
 		if (strcmp(val, "y") == 0)
 			yaml_value = strdup("True");
 		else if (strcmp(val, "n") == 0)
