@@ -23,3 +23,5 @@ mirror_stable_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux
 mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 
 install_only_git_daemon: false
+
+linux_mirror_nfs: False
