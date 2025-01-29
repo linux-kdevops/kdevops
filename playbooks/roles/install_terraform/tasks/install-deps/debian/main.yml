@@ -6,6 +6,15 @@
   failed_when: terraform_present.rc != 0 and terraform_present.rc != 1
   tags: [ 'terraform', 'verify' ]
 
+- name: Install Terraform Dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - unzip
+    state: present
+    update_cache: true
+
 - name: Download Terraform from the latest release and install locally
   become: yes
   become_method: sudo
