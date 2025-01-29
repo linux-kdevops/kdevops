@@ -10,11 +10,6 @@ BINARY_DEPS += sudo
 BINARY_DEPS += make
 BINARY_DEPS += nc
 BINARY_DEPS += ansible-playbook
-ifneq (y,$(CONFIG_KDEVOPS_FIRST_RUN))
-ifeq (y,$(CONFIG_GUESTFS))
-BINARY_DEPS += virt-builder
-endif
-endif
 
 BINARY_DEPS_VCHECKS := $(subst $(TOPDIR)/,,$(wildcard $(TOPDIR)/scripts/version_check/*))
 

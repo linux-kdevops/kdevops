@@ -1,0 +1,17 @@
+---
+- name: Debian-specific setup
+  ansible.builtin.include_tasks: debian/main.yml
+  when: ansible_facts['os_family']|lower == 'debian'
+  tags: ['install-deps']
+
+- name: SuSE-specific setup
+  ansible.builtin.include_tasks: suse/main.yml
+  when: ansible_facts['os_family']|lower == 'suse'
+  tags: ['install-deps']
+
+- name: Fedora/Red Hat Enterprise-specific setup
+  ansible.builtin.include_tasks: redhat/main.yml
+  when:
+    - ansible_facts['os_family']|lower == 'redhat'
+    - ansible_facts['distribution']|lower != "fedora"
+  tags: ['install-deps']

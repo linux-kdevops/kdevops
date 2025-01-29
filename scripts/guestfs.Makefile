@@ -47,6 +47,7 @@ ANSIBLE_EXTRA_ARGS += $(GUESTFS_ARGS)
 GUESTFS_BRINGUP_DEPS :=
 GUESTFS_BRINGUP_DEPS +=  $(9P_HOST_CLONE)
 GUESTFS_BRINGUP_DEPS +=  $(LIBVIRT_PCIE_PASSTHROUGH)
+GUESTFS_BRINGUP_DEPS +=  install_libguestfs
 
 KDEVOPS_PROVISION_METHOD		:= bringup_guestfs
 KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_guestfs
@@ -71,6 +72,14 @@ $(KDEVOPS_PROVISIONED_SSH):
 	fi
 	$(Q)ansible $(ANSIBLE_VERBOSE) -i hosts all -e 'ansible_python_interpreter=/usr/bin/python3' -m wait_for_connection
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
+
+install_libguestfs:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+		--inventory localhost, \
+		playbooks/bringup_guestfs.yml \
+		-e 'ansible_python_interpreter=/usr/bin/python3' \
+		--extra-vars=@./extra_vars.yaml \
+		--tags install-deps
 
 bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \

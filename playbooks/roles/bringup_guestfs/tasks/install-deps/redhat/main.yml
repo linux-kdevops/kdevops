@@ -1,0 +1,11 @@
+---
+- name: Install libguestfs on Fedora/RedHat
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    update_cache: true
+    name:
+      - libguestfs-tools
+      - dhcpcd
+    state: present
+  tags: ['install-deps']

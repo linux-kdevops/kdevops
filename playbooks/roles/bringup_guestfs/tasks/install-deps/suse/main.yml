@@ -1,0 +1,10 @@
+---
+- name: Install libguestfs on SUSE
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - libguestfs-tools
+      - dhcpcd
+    state: present
+  tags: ['install-deps']
