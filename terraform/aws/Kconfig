@@ -21,6 +21,18 @@ config TERRAFORM_AWS_PROFILE
 choice
 	prompt "AWS region to use"
 	default TERRAFORM_AWS_US_WEST_2
+	help
+	  Use this option to select the AWS region that is
+	  geographically closest to you.
+
+	  Once selected, you can stick with the default AV region,
+	  chosen by kdevops, or use:
+
+	    aws ec2 describe-availability-zones --region <region-name>
+
+	  to list the Availability Zones that are enabled for your
+	  AWS account. Enter your selection from this list using the
+	  TERRAFORM_AWS_AV_REGION menu.
 
 config TERRAFORM_AWS_US_EAST_1
 	bool "us-east-1 - N. Virginia"
