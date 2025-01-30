@@ -91,6 +91,46 @@ config TERRAFORM_AWS_REGION
 	default "us-west-1" if TERRAFORM_AWS_US_WEST_1
 	default "us-east-1" if TERRAFORM_AWS_US_EAST_1
 
+if TERRAFORM_AWS_US_EAST_1
+
+choice
+	prompt "AWS East 1 availability zone to use"
+	default TERRAFORM_AWS_AV_REGION_EAST_1A
+
+config TERRAFORM_AWS_AV_REGION_EAST_1A
+	bool "us-east-1a"
+	help
+	  This option selects us-east-1a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1B
+	bool "us-east-1b"
+	help
+	  This option selects us-east-1b availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1C
+	bool "us-east-1c"
+	help
+	  This option selects us-east-1c availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1D
+	bool "us-east-1d"
+	help
+	  This option selects us-east-1d availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1E
+	bool "us-east-1e"
+	help
+	  This option selects us-east-1e availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1F
+	bool "us-east-1f"
+	help
+	  This option selects us-east-1f availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_US_EAST_1
+
 if TERRAFORM_AWS_US_WEST_2
 
 choice
@@ -129,7 +169,12 @@ config TERRAFORM_AWS_AV_REGION
 	default "us-west-1b" if TERRAFORM_AWS_AV_REGION_WEST_1B
 	default "us-west-2b" if TERRAFORM_AWS_AV_REGION_WEST_2B
 	default "us-west-2d" if TERRAFORM_AWS_AV_REGION_WEST_2D
-	default "us-east-1a" if TERRAFORM_AWS_US_EAST_1
+	default "us-east-1a" if TERRAFORM_AWS_AV_REGION_EAST_1A
+	default "us-east-1b" if TERRAFORM_AWS_AV_REGION_EAST_1B
+	default "us-east-1c" if TERRAFORM_AWS_AV_REGION_EAST_1C
+	default "us-east-1d" if TERRAFORM_AWS_AV_REGION_EAST_1D
+	default "us-east-1e" if TERRAFORM_AWS_AV_REGION_EAST_1E
+	default "us-east-1f" if TERRAFORM_AWS_AV_REGION_EAST_1F
 
 choice
 	prompt "AWS AMI owner"
