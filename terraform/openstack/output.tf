@@ -1,3 +1,5 @@
+# All generic output goes here
+
 data "null_data_source" "group_hostnames_and_ips" {
   count = local.kdevops_num_boxes
   inputs = {
