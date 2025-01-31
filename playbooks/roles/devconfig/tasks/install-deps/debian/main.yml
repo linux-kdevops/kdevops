@@ -1,4 +1,52 @@
 ---
+- name: Update package lists
+  become: true
+  become_method: sudo
+  ansible.builtin.shell:
+    cmd: >
+      DEBIAN_FRONTEND=noninteractive apt
+      -o Acquire::Check-Valid-Until=false update
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution_release == "trixie"
+  tags: vars_simple
+  register: apt_update_result
+  retries: 5
+  delay: 10
+  until: apt_update_result.rc == 0
+
+- name: Install required packages
+  become: true
+  become_method: sudo
+  ansible.builtin.shell:
+    cmd: >
+      DEBIAN_FRONTEND=noninteractive apt install -y
+      python3-setuptools libapt-pkg-dev python3-pip git
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution_release == "trixie"
+  tags: vars_simple
+
+- name: Install python-apt from Git with pip3
+  become: true
+  become_method: sudo
+  ansible.builtin.shell:
+    cmd: >
+      pip3 install
+      git+https://salsa.debian.org/apt-team/python-apt.git@2.9.6
+      --break-system-packages
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_distribution_release == "trixie"
+  tags: vars_simple
+
+- name: Hold python3-apt package version
+  become: yes
+  ansible.builtin.command: apt-mark hold python3-apt
+  when:
+    - ansible_os_family == "Debian"
+  tags: vars_simple
+
 - name: Remove unattended-upgrades package
   become: yes
   become_flags: 'su - -c'
