@@ -245,6 +245,18 @@ config TERRAFORM_AWS_FEDORA40_ARM64
 	help
 	  This option sets the AWS AMI owner to Fedora 40 for ARM 64-bit.
 
+config TERRAFORM_AWS_FEDORA41_X86_64
+	bool "Fedora 41 on x86_64"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option sets the AWS AMI owner to Fedora 41 for x86_64.
+
+config TERRAFORM_AWS_FEDORA41_ARM64
+	bool "Fedora 41 on aarch64"
+	depends on TARGET_ARCH_ARM64
+	help
+	  This option sets the AWS AMI owner to Fedora 41 for ARM 64-bit.
+
 config TERRAFORM_AWS_RHEL9_X86_64
 	bool "RHEL9 x86_64"
 	depends on TARGET_ARCH_X86_64
@@ -340,6 +352,7 @@ config TERRAFORM_AWS_AMI_OWNER
 	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64
 	default "013907871322" if TERRAFORM_AWS_SLE15_SP4_X86_64 || TERRAFORM_AWS_SLE15_SP4_ARM64
 	default "125523088429" if TERRAFORM_AWS_FEDORA40_X86_64 || TERRAFORM_AWS_FEDORA40_ARM64
+	default "125523088429" if TERRAFORM_AWS_FEDORA41_X86_64 || TERRAFORM_AWS_FEDORA41_ARM64
 	help
 	  This option specifies the AWS AMI owner.
 
@@ -357,6 +370,8 @@ config TERRAFORM_AWS_NS
 	default "RHEL-9.*arm64-*" if TERRAFORM_AWS_RHEL9_ARM64
 	default "Fedora-Cloud-Base-AmazonEC2.x86_64-40-*" if TERRAFORM_AWS_FEDORA40_X86_64
 	default "Fedora-Cloud-Base-AmazonEC2.aarch64-40-*" if TERRAFORM_AWS_FEDORA40_ARM64
+	default "Fedora-Cloud-Base-AmazonEC2.x86_64-41-*" if TERRAFORM_AWS_FEDORA41_X86_64
+	default "Fedora-Cloud-Base-AmazonEC2.aarch64-41-*" if TERRAFORM_AWS_FEDORA41_ARM64
 	default "suse-sles-15-sp4-*x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_SLE15_SP4_X86_64
 	default "suse-sles-15-sp4-*arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_SLE15_SP4_ARM64
 	help
