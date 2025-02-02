@@ -28,6 +28,7 @@
     tasks_from: add_initiator
   when:
     - nfsd_export_storage_iscsi|bool
+    - nfsd_export_fstype != "tmpfs"
 
 - name: Build string of devices to use as PVs
   set_fact:
@@ -47,6 +48,7 @@
     pvs: "{{ nfsd_lvm_pvs | join(',') }}"
   when:
     - nfsd_export_storage_local|bool
+    - nfsd_export_fstype != "tmpfs"
 
 - name: Create {{ nfsd_export_path }}
   become: yes
