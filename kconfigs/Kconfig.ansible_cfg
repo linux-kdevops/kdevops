@@ -6,6 +6,10 @@ config ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_INTERPRETER_PYTHON)
 
+config ANSIBLE_CFG_FORKS_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_FORKS)
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
@@ -171,6 +175,37 @@ config ANSIBLE_CFG_INTERPRETER_PYTHON_STRING
 	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#envvar-ANSIBLE_PYTHON_INTERPRETER
 
 endmenu
+
+config ANSIBLE_CFG_FORKS_CUSTOM
+	bool "Enable a custom Ansible forks setting"
+	default n
+	help
+	  When this setting is enabled, specify the maximum number
+	  of concurrent Ansible tasks (forks) via Kconfig. When this
+	  setting is disabled, kdevops chooses a default value that
+	  can be overridden with "ANSIBLE_CFG_FORKS=NN" on the
+	  "make" command line.
+
+if ANSIBLE_CFG_FORKS_CUSTOM
+
+config ANSIBLE_CFG_FORKS
+	int "forks"
+	output yaml
+	help
+	  Set the maximum number of concurrent Ansible tasks (forks).
+	  https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_strategies.html#setting-the-number-of-forks
+
+endif # ANSIBLE_CFG_FORKS_CUSTOM
+
+if !ANSIBLE_CFG_FORKS_CUSTOM
+
+config ANSIBLE_CFG_FORKS
+	int
+	output yaml
+	default 10 if !ANSIBLE_CFG_FORKS_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(ANSIBLE_CFG_FORKS)) if ANSIBLE_CFG_FORKS_SET_BY_CLI
+
+endif # !ANSIBLE_CFG_FORKS_CUSTOM
 
 if DISTRO_OPENSUSE
 
