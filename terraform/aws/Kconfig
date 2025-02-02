@@ -39,6 +39,11 @@ config TERRAFORM_AWS_US_EAST_1
 	help
 	  This option will set the AWS region to us-east-1.
 
+config TERRAFORM_AWS_US_EAST_2
+	bool "us-east-2 - Ohio"
+	help
+	  This option will set the AWS region to us-east-2.
+
 config TERRAFORM_AWS_US_WEST_1
 	bool "us-west-1 - North California"
 	help
@@ -89,6 +94,7 @@ config TERRAFORM_AWS_REGION
 	string
 	default "us-west-2" if TERRAFORM_AWS_US_WEST_2
 	default "us-west-1" if TERRAFORM_AWS_US_WEST_1
+	default "us-east-2" if TERRAFORM_AWS_US_EAST_2
 	default "us-east-1" if TERRAFORM_AWS_US_EAST_1
 
 if TERRAFORM_AWS_US_EAST_1
@@ -130,6 +136,31 @@ config TERRAFORM_AWS_AV_REGION_EAST_1F
 endchoice
 
 endif # TERRAFORM_AWS_US_EAST_1
+
+if TERRAFORM_AWS_US_EAST_2
+
+choice
+	prompt "AWS East 2 availability zone to use"
+	default TERRAFORM_AWS_AV_REGION_EAST_2A
+
+config TERRAFORM_AWS_AV_REGION_EAST_2A
+	bool "us-east-2a"
+	help
+	  This option selects us-east-2a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_2B
+	bool "us-east-2b"
+	help
+	  This option selects us-east-2a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_2C
+	bool "us-east-2c"
+	help
+	  This option selects us-east-2c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_US_EAST_2
 
 if TERRAFORM_AWS_US_WEST_2
 
@@ -175,6 +206,9 @@ config TERRAFORM_AWS_AV_REGION
 	default "us-east-1d" if TERRAFORM_AWS_AV_REGION_EAST_1D
 	default "us-east-1e" if TERRAFORM_AWS_AV_REGION_EAST_1E
 	default "us-east-1f" if TERRAFORM_AWS_AV_REGION_EAST_1F
+	default "us-east-2a" if TERRAFORM_AWS_AV_REGION_EAST_2A
+	default "us-east-2b" if TERRAFORM_AWS_AV_REGION_EAST_2B
+	default "us-east-2c" if TERRAFORM_AWS_AV_REGION_EAST_2C
 
 choice
 	prompt "AWS AMI owner"
@@ -212,20 +246,14 @@ config TERRAFORM_AWS_FEDORA40_ARM64
 	  This option sets the AWS AMI owner to Fedora 40 for ARM 64-bit.
 
 config TERRAFORM_AWS_RHEL9_X86_64
-	bool "RHEL9 x86_64 - ami-0dda7e535b65b6469"
-	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_WEST_2
-	help
-	  This option will set AWS AMI owner to RHEL9 for x86_64.
-
-config TERRAFORM_AWS_RHEL9_X86_64_EAST
-	bool "RHEL9 x86_64 - ami-0de7e7cc68b747751"
-	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_EAST_1
+	bool "RHEL9 x86_64"
+	depends on TARGET_ARCH_X86_64
 	help
 	  This option will set AWS AMI owner to RHEL9 for x86_64.
 
 config TERRAFORM_AWS_RHEL9_ARM64
-	bool "RHEL9 ARM 64 - ami-08911268ee09cb08e"
-	depends on TARGET_ARCH_ARM64 && TERRAFORM_AWS_US_WEST_2
+	bool "RHEL9 ARM 64"
+	depends on TARGET_ARCH_ARM64
 	help
 	  This option will set AWS AMI owner to RHEL9 for ARM64
 
@@ -309,7 +337,7 @@ config TERRAFORM_AWS_AMI_OWNER
 	string
 	default TERRAFORM_AWS_AMI_DEBIAN_OWNER if TERRAFORM_AWS_AMI_DEBIAN
 	default "137112412989" if TERRAFORM_AWS_AMI_AMAZON_X86_64 || TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64 || TERRAFORM_AWS_RHEL9_X86_64_EAST
+	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64
 	default "013907871322" if TERRAFORM_AWS_SLE15_SP4_X86_64 || TERRAFORM_AWS_SLE15_SP4_ARM64
 	default "125523088429" if TERRAFORM_AWS_FEDORA40_X86_64 || TERRAFORM_AWS_FEDORA40_ARM64
 	help
@@ -325,8 +353,8 @@ config TERRAFORM_AWS_NS
 	default "debian-stretch-hvm-arm64-*" if TERRAFORM_AWS_NS_DEBIAN_STRETCH_ARM64
 	default "al2023-*-x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_AMI_AMAZON_X86_64
 	default "al2023-*-arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "RHEL-9.*x86_64-*" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_X86_64_EAST
-	default "RHEL-9.*arm64-*" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_RHEL9_ARM64
+	default "RHEL-9.*x86_64-*" if TERRAFORM_AWS_RHEL9_X86_64
+	default "RHEL-9.*arm64-*" if TERRAFORM_AWS_RHEL9_ARM64
 	default "Fedora-Cloud-Base-AmazonEC2.x86_64-40-*" if TERRAFORM_AWS_FEDORA40_X86_64
 	default "Fedora-Cloud-Base-AmazonEC2.aarch64-40-*" if TERRAFORM_AWS_FEDORA40_ARM64
 	default "suse-sles-15-sp4-*x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_SLE15_SP4_X86_64
