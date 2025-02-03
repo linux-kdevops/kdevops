@@ -46,10 +46,6 @@ export Q=@
 export NQ=echo
 endif
 
-ifneq ($(findstring 2, $(V)),)
-  export ANSIBLE_VERBOSE := '-vvv'
-endif
-
 include Makefile.min_deps
 DEFAULT_DEPS += $(KDEVOPS_DEPCHECK)
 
@@ -61,6 +57,8 @@ ANSIBLE_EXTRA_ARGS :=
 ANSIBLE_EXTRA_ARGS_SEPARATED :=
 ANSIBLE_EXTRA_ARGS_DIRECT :=
 include Makefile.extra_vars
+
+include scripts/ansible.Makefile
 
 LIMIT_HOSTS :=
 ifneq (,$(HOSTS))

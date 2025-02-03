@@ -67,6 +67,14 @@ Maintainers List
           first. When adding to this list, please keep the entries in
           alphabetical order.
 
+ANSIBLE WRAPPER
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	scripts/ansible_av.py
+F:	scripts/ansible.Makefile
+
 GITREF
 M:	Daniel Gomez <da.gomez@samsung.com>
 L:	kdevops@lists.linux.dev

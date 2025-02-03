@@ -70,6 +70,10 @@ help:
 	@echo "allnoconfig        - disables all bells and whistles"
 	@echo "randconfig         - random configuration"
 	@echo "defconfig-*        - If you have files in the defconfig directory use default config from there"
+	@echo
+	@echo "Variable options:"
+	@echo "make V=n [targets] 1:      verbose build (Makefile)"
+	@echo "make AV=n [targets] 0-6:   verbose build (Ansible)"
 
 .PHONY: clean
 clean:
