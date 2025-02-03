@@ -8,13 +8,13 @@ clean: $(clean-subdirs)
 
 PHONY += mrproper
 mrproper:
-	@$(Q)rm -rf $(CURDIR)/include/config/
-	@$(Q)rm -rf $(CURDIR)/include/generated/
-	@$(Q)rm -f .config
+	$(Q)rm -rf $(CURDIR)/include/config/
+	$(Q)rm -rf $(CURDIR)/include/generated/
+	$(Q)rm -f .config
 
 version-check: include/config/project.release
-	@$(Q)echo Version: $(PROJECTVERSION)
-	@$(Q)echo Release: $(PROJECTRELEASE)
+	$(Q)echo Version: $(PROJECTVERSION)
+	$(Q)echo Release: $(PROJECTRELEASE)
 PHONY += version-check
 
 PHONY += help
