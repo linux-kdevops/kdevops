@@ -1,10 +1,8 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
 ifeq ($(V),1)
-export Q=@
 export E=echo
 else
-export Q=@
 export E=true
 endif
 
