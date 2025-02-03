@@ -11,39 +11,39 @@ ANSIBLE_EXTRA_ARGS += devconfig_systemd_journal_use_http='True'
 endif
 
 journal-client:
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts  \
 		--extra-vars '{ kdevops_cli_install: True }' \
 		--tags vars_simple,journal \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 journal-server:
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_systemd_journal_remote.yml \
 		-e 'ansible_python_interpreter=/usr/bin/python3'
 
 journal-restart:
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts  \
 		--tags vars_extra,journal-upload-restart \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 journal-status:
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts  \
 		--tags vars_extra,journal-status \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 journal-ls:
-	@$(Q)./workflows/kdevops/scripts/jounal-ls.sh /var/log/journal/remote/
+	$(Q)./workflows/kdevops/scripts/jounal-ls.sh /var/log/journal/remote/
 
 journal-dump:
-	@$(Q)./workflows/kdevops/scripts/jounal-dump.sh /var/log/journal/remote/
+	$(Q)./workflows/kdevops/scripts/jounal-dump.sh /var/log/journal/remote/
 
 
 journal-ln:
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts  \
 		--tags vars_extra,journal_ln \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
