@@ -18,11 +18,24 @@ config KDEVOPS_SSH_CONFIG_UPDATE
 if KDEVOPS_SSH_CONFIG_UPDATE
 
 config KDEVOPS_SSH_CONFIG
-	string "The ssh configuration file to update for systems created"
+	string "The controller's ssh configuration file"
 	default "~/.ssh/config"
 	help
-	  The ssh configuration file we should update, for each of the systems
-	  created.
+	  The pathname of the Ansible controller's ssh configuration file.
+	  kdevops may add an Include directive to this file that refers to a
+	  separate file where target node ssh configuration is managed.
+
+config KDEVOPS_SSH_CONFIG_PREFIX
+	string "Pathname prefix to an Ansible-managed ssh config file"
+	output yaml
+	default "~/.ssh/config_kdevops_"
+	help
+	  The pathname of a file into which Ansible inserts ssh configuration
+	  information for the target nodes during the "make bringup" step. On
+	  "make destroy" this file is destroyed.
+
+	  This file is kept in the controller's .ssh directory by default,
+	  but can be moved to other locations if desired.
 
 config KDEVOPS_SSH_CONFIG_UPDATE_STRICT
 	bool "Use strict configuration settings when adding each host"
