@@ -111,7 +111,7 @@ build_custom_image()
 	CUSTOM_IMAGE="${CUSTOM_IMAGE_DIR}/${OS_VERSION}.raw"
 	CUSTOM_IMAGE_OK="${CUSTOM_IMAGE_DIR}.ok"
 	CUSTOM_SOURCE="/etc/virt-builder/repos.d/kdevops-custom-images-${OS_VERSION}.conf"
-	CUSTOM_INDEX="${CUSTOM_IMAGE_DIR}/index"
+	CUSTOM_INDEX="$(realpath ${CUSTOM_IMAGE_DIR}/index)"
 
 	mkdir -p ${CUSTOM_IMAGE_DIR}
 
