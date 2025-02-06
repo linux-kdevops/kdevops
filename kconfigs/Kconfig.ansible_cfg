@@ -1,7 +1,12 @@
+config ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_CALLBACK_PLUGIN)
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
-	default ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
+	default ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE if !ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
+	default ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM if ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
 
 config ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	bool "Ansible Debug Callback Plugin"
@@ -13,13 +18,28 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
 	help
 	  Dense: https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html
 
+config ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
+	bool "Custom Ansible Callback Plugin"
+	help
+	  This will let you enter in your own Ansible callback plugin
+
 endchoice
+
+if ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM_NAME
+	string "Custom Ansible Callback Plugin Name"
+	default $(shell, ./scripts/append-makefile-vars.sh $(ANSIBLE_CFG_CALLBACK_PLUGIN)) if ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
+	default "dense" if !ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
+
+endif # ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
 
 config ANSIBLE_CFG_CALLBACK_PLUGIN_STRING
 	string
 	output yaml
 	default "debug" if ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	default "dense" if ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
+	default ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM_NAME if ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
 
 config ANSIBLE_CFG_CALLBACK_PLUGIN_CHECK_MODE_MARKERS
 	bool "check_mode_markers"
