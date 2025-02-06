@@ -14,7 +14,8 @@ IMG_FMT="qcow2"
 if [ "${CONFIG_LIBVIRT_EXTRA_DRIVE_FORMAT_RAW}" = "y" ]; then
 	IMG_FMT="raw"
 fi
-STORAGEDIR="${CONFIG_KDEVOPS_STORAGE_POOL_PATH}/kdevops/guestfs"
+STORAGETOPDIR="${CONFIG_KDEVOPS_STORAGE_POOL_PATH}"
+STORAGEDIR="${STORAGETOPDIR}/kdevops/guestfs"
 QEMU_GROUP=$CONFIG_LIBVIRT_QEMU_GROUP
 GUESTFSDIR="${TOPDIR}/guestfs"
 OS_VERSION=${CONFIG_VIRT_BUILDER_OS_VERSION}
@@ -274,9 +275,9 @@ $USE_SUDO mkdir -p $BASE_IMAGE_DIR
 
 
 if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
-	sudo chgrp -R $QEMU_GROUP $STORAGEDIR
-	sudo chmod -R g+rw $STORAGEDIR
-	sudo chmod -R g+s $STORAGEDIR
+	sudo chown -R $(whoami):$QEMU_GROUP $STORAGETOPDIR
+	sudo chmod -R g+rw $STORAGETOPDIR
+	sudo chmod -R g+s $STORAGETOPDIR
 fi
 
 cmdfile=$(mktemp)
