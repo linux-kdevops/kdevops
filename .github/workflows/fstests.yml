@@ -39,6 +39,7 @@ jobs:
           KDEVOPS_TREE_REF="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
           SHORT_PREFIX="$(echo ${KDEVOPS_TREE_REF:0:12})"
           make KDEVOPS_HOSTS_PREFIX="$SHORT_PREFIX" defconfig-xfs_reflink_4k
+          ANSIBLE_CFG_CALLBACK_PLUGIN="debug"
 
       - name: Run kdevops make
         run: |
