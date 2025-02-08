@@ -1,7 +1,7 @@
 config WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
 	bool "Enable custom device to use to create the workflow data parition"
 	help
-	  Only enable this if you want to override the defaut data device.
+	  Enable this if you want to override the default data device.
 	  Typically we have enough heuristics with kconfig to get this right
 	  for you.
 
@@ -13,7 +13,7 @@ config WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
 	  System install. This lets you easily re-OS a system and keep the
 	  data workflow around.
 
-	  This options lets you specify the device name to use to create the
+	  This option lets you specify the device name to use to create the
 	  workflow data partition used. The type of data placed on this
 	  partition conists of git trees cloned, for example the Linux kernel
 	  sources if you are developing on Linux, or the fstests git tree if
@@ -21,7 +21,7 @@ config WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
 	  your target workflows.
 
 config WORKFLOW_DATA_DEVICE_CUSTOM
-	string "Custom device to use to create the workflow data parition"
+	string "Custom device to use to create the workflow data partition"
 	default "/dev/nvme0n1"
 	depends on WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
 	help
