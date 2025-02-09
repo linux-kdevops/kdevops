@@ -1,6 +1,5 @@
 ---
 iscsi_target_packages:
-  - lvm2
   - targetcli
   - sg3_utils
 

@@ -18,24 +18,13 @@
     name: "{{ iscsi_target_packages }}"
     state: present
 
-- name: Initialize the list of local physical volumes
-  ansible.builtin.set_fact:
-    iscsi_lvm_pvs: []
-
-- name: Expand the list of local physical volumes
-  ansible.builtin.set_fact:
-    iscsi_lvm_pvs: "{{ iscsi_lvm_pvs + [iscsi_target_pv_prefix + item | string] }}"
-  with_items: "{{ range(1, iscsi_target_pv_count + 1) }}"
-  loop_control:
-    label: "Adding {{ iscsi_target_pv_prefix + item | string }} ..."
-
-- name: Create LVM volume group {{ iscsi_target_vg_name }}
-  become: true
-  become_flags: 'su - -c'
-  become_method: ansible.builtin.sudo
-  community.general.lvg:
-    vg: "{{ iscsi_target_vg_name }}"
-    pvs: "{{ iscsi_lvm_pvs | join(',') }}"
+- name: Set up a volume group on local block devices
+  ansible.builtin.include_role:
+    name: volume_group
+  vars:
+    volume_group_name: "{{ iscsi_target_vg_name }}"
+    volume_device_prefix: "{{ iscsi_target_pv_prefix }}"
+    volume_device_count: "{{ iscsi_target_pv_count }}"
 
 - name: Create a directory for storing iSCSI persistent reservations
   become: true

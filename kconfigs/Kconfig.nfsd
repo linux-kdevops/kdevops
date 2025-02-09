@@ -67,14 +67,14 @@ config NFSD_LEASE_TIME
 	  complete faster.
 
 choice
-	prompt "Local or external physical storage"
+	prompt "Persistent storage for exported file systems"
 	default NFSD_EXPORT_STORAGE_LOCAL
 
 config NFSD_EXPORT_STORAGE_LOCAL
 	bool "Local"
 	help
-	  Exported file systems will reside on physical storage
-	  local to the NFS server itself.
+	  Exported file systems will reside on block devices local
+	  to the NFS server itself.
 
 config NFSD_EXPORT_STORAGE_ISCSI
 	bool "iSCSI"

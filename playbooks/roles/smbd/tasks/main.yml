@@ -22,22 +22,13 @@
     group: root
     mode: 0644
 
-- name: Build string of devices to use as PVs
-  set_fact:
-    smbd_lvm_pvs: "{{ smbd_lvm_pvs + [ smbd_share_device_prefix + item|string ] }}"
-  with_items: "{{ range(1, smbd_share_device_count + 1) }}"
-
-- name: Print the PV list
-  ansible.builtin.debug:
-    var: smbd_lvm_pvs
-
-- name: Create a new LVM VG
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  community.general.lvg:
-    vg: "shares"
-    pvs: "{{ smbd_lvm_pvs | join(',') }}"
+- name: Set up a volume group on local block devices
+  ansbiel.builtin.include_role:
+    name: volume_group
+  var:
+    volume_group_name: "shares"
+    volume_device_prefix: "{{ smbd_share_device_prefix }}"
+    volume_device_count: "{{ smbd_share_device_count }}"
 
 - name: Create {{ smbd_share_path }}
   become: yes

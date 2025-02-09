@@ -30,22 +30,13 @@
     - nfsd_export_storage_iscsi|bool
     - nfsd_export_fstype != "tmpfs"
 
-- name: Build string of devices to use as PVs
-  set_fact:
-    nfsd_lvm_pvs: "{{ nfsd_lvm_pvs + [ nfsd_export_device_prefix + item|string ] }}"
-  with_items: "{{ range(1, nfsd_export_device_count + 1) }}"
-  loop_control:
-    label: "Physical volume: {{ nfsd_export_device_prefix + item|string }}"
-  when:
-    - nfsd_export_storage_local|bool
-
-- name: Create a new LVM VG
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  community.general.lvg:
-    vg: "exports"
-    pvs: "{{ nfsd_lvm_pvs | join(',') }}"
+- name: Set up a volume group on local block devices
+  ansible.builtin.include_role:
+    name: volume_group
+  vars:
+    volume_group_name: "exports"
+    volume_device_prefix: "{{ nfsd_export_device_prefix }}"
+    volume_device_count: "{{ nfsd_export_device_count }}"
   when:
     - nfsd_export_storage_local|bool
     - nfsd_export_fstype != "tmpfs"

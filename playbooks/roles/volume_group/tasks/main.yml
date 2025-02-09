@@ -1,0 +1,31 @@
+---
+- name: Gather hardware facts
+  ansible.builtin.gather_facts:
+    gather_subset:
+      - "!all"
+      - "!min"
+      - "hardware"
+
+- name: Install dependencies for LVM support
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - lvm2
+    state: present
+
+- name: Enumerate block devices to provision as physical volumes
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + [volume_device_prefix + item | string] }}"
+  with_items: "{{ range(1, volume_device_count + 1) }}"
+  loop_control:
+    label: "Block device: {{ volume_device_prefix + item | string }}"
+
+- name: Create an LVM Volume Group
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  community.general.lvg:
+    vg: "{{ volume_group_name }}"
+    pvs: "{{ physical_volumes | join(',') }}"
