@@ -23,8 +23,6 @@
     name: volume_group
   vars:
     volume_group_name: "{{ iscsi_target_vg_name }}"
-    volume_device_prefix: "{{ iscsi_target_pv_prefix }}"
-    volume_device_count: "{{ iscsi_target_pv_count }}"
 
 - name: Create a directory for storing iSCSI persistent reservations
   become: true

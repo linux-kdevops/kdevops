@@ -27,8 +27,6 @@
     name: volume_group
   vars:
     volume_group_name: "shares"
-    volume_device_prefix: "{{ smbd_share_device_prefix }}"
-    volume_device_count: "{{ smbd_share_device_count }}"
 
 - name: Create {{ smbd_share_path }}
   become: yes

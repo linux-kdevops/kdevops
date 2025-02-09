@@ -15,12 +15,17 @@
       - lvm2
     state: present
 
-- name: Enumerate block devices to provision as physical volumes
-  ansible.builtin.set_fact:
-    physical_volumes: "{{ physical_volumes + [volume_device_prefix + item | string] }}"
-  with_items: "{{ range(1, volume_device_count + 1) }}"
-  loop_control:
-    label: "Block device: {{ volume_device_prefix + item | string }}"
+- name: Enumerate block devices on the target nodes
+  ansible.builtin.include_tasks:
+    file: "guestfs.yml"
+  when:
+    - kdevops_enable_guestfs|bool
+
+- name: Verify there are remaining candidates to use for physical volumes
+  ansible.builtin.fail:
+    msg: No local block devices are available for an LVM volume group.
+  when:
+    - physical_volumes|length == 0
 
 - name: Create an LVM Volume Group
   become: true

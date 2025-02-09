@@ -35,8 +35,6 @@
     name: volume_group
   vars:
     volume_group_name: "exports"
-    volume_device_prefix: "{{ nfsd_export_device_prefix }}"
-    volume_device_count: "{{ nfsd_export_device_count }}"
   when:
     - nfsd_export_storage_local|bool
     - nfsd_export_fstype != "tmpfs"

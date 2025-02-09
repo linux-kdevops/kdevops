@@ -1,7 +1,5 @@
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_SMBD))
 
-SMBD_EXTRA_ARGS += smbd_share_device_prefix='$(subst ",,$(CONFIG_SMBD_SHARE_DEVICE_PREFIX))'
-SMBD_EXTRA_ARGS += smbd_share_device_count='$(subst ",,$(CONFIG_SMBD_SHARE_DEVICE_COUNT))'
 SMBD_EXTRA_ARGS += smbd_share_fstype='$(subst ",,$(CONFIG_SMBD_SHARE_FSTYPE))'
 SMBD_EXTRA_ARGS += smbd_share_path='$(subst ",,$(CONFIG_SMBD_SHARE_PATH))'
 SMBD_EXTRA_ARGS += smb_root_pw='$(subst ",,$(CONFIG_SMB_ROOT_PW))'

@@ -1,0 +1,59 @@
+---
+# Select unused block devices under /dev/disk/by-id/ .
+#
+# Avoid these two block devices:
+# 1. The block device where the root partition resides. For
+#    guestfs, this device is /dev/vda and is not listed under
+#    /dev/disk/by-id/
+# 2. The block device where the /data partition resides. For
+#    guestfs, this device is named by a path to a symlink
+#    under /dev/disk/by-id/
+#
+
+- name: Set the NVMe device search pattern
+  ansible.builtin.set_fact:
+    by_id_pattern: "nvme-QEMU_NVMe_Ctrl_kdevops*"
+  when:
+    - libvirt_extra_storage_drive_nvme is defined
+    - libvirt_extra_storage_drive_nvme|bool
+
+- name: Set the virtio block device search pattern
+  ansible.builtin.set_fact:
+    by_id_pattern: "virtio-kdevops*"
+  when:
+    - libvirt_extra_storage_drive_virtio is defined
+    - libvirt_extra_storage_drive_virtio|bool
+
+- name: Set the IDE device search pattern
+  ansible.builtin.set_fact:
+    by_id_pattern: "ata-QEMU_HARDDISK_kdevops*"
+  when:
+    - libvirt_extra_storage_drive_ide is defined
+    - libvirt_extra_storage_drive_ide|bool
+
+- name: Verify there are block devices to search
+  ansible.builtin.fail:
+    msg: No supported block devices are available for NFSD.
+  when:
+    - by_id_pattern is not defined
+
+- name: Show the pathname of the data device
+  ansible.builtin.debug:
+    msg: "Reserved device for /data: {{ data_device }}"
+
+- name: Discover usable block devices
+  ansible.builtin.find:
+    paths: /dev/disk/by-id
+    file_type: link
+    patterns: "{{ by_id_pattern }}"
+    excludes: "{{ data_device | basename }},*_?,*-part?"
+  register: device_ids
+  failed_when:
+    - device_ids.failed or device_ids.matched == 0
+
+- name: Build a list of block devices to provision as PVs
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + [item.path] }}"
+  loop: "{{ device_ids.files }}"
+  loop_control:
+    label: "Block device: {{ item.path }}"

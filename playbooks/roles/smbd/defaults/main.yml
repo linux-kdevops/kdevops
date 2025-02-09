@@ -1,4 +1,2 @@
 ---
-smbd_share_device_prefix: ""
-smbd_share_device_count: 0
 smbd_share_label: "share"

@@ -1,2 +1,4 @@
 ---
+kdevops_enable_guestfs: false
+
 physical_volumes: []
