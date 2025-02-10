@@ -111,9 +111,8 @@ build_custom_image()
 	CUSTOM_IMAGE="${CUSTOM_IMAGE_DIR}/${OS_VERSION}.raw"
 	CUSTOM_IMAGE_OK="${CUSTOM_IMAGE_DIR}.ok"
 	CUSTOM_SOURCE="/etc/virt-builder/repos.d/kdevops-custom-images-${OS_VERSION}.conf"
-	CUSTOM_INDEX="$(realpath ${CUSTOM_IMAGE_DIR}/index)"
-
 	mkdir -p ${CUSTOM_IMAGE_DIR}
+	CUSTOM_INDEX="$(realpath ${CUSTOM_IMAGE_DIR}/index)"
 
 	if [[ ! -f $CUSTOM_IMAGE && "$CONFIG_GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL" == "y" ]]; then
 		fetch_custom_image
