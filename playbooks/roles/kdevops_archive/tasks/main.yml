@@ -408,8 +408,15 @@
     kdevops_archive_ci_test_result: "unknown"
   when: not ci_result_file.stat.exists
 
+- name: Create a temporary file for commit message
+  ansible.builtin.tempfile:
+    state: file
+    suffix: txt
+    prefix: kdevops_commit_msg_
+  register: tmp_commit_msg
+
 - name: Set commit message
-  set_fact:
+  ansible.builtin.set_fact:
     commit_message: |
       {{ kdevops_archive_test_trigger }}: {{ kdevops_archive_test_subject }}
 
@@ -424,13 +431,24 @@
 
       {{ kdevops_archive_test_commit }}
 
+- name: Copy commit message into temporary file
+  ansible.builtin.copy:
+    content: "{{ commit_message }}"
+    dest: "{{ tmp_commit_msg.path }}"
+    mode: '0644'
+
 - name: Commit the archive
-  shell: |
-    git commit -m "{{ commit_message }}"
+  ansible.builtin.shell: |
+    git commit --file "{{ tmp_commit_msg.path }}"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
   environment:
     GIT_LFS_SKIP_SMUDGE: "0"
+
+- name: Remove temporary file with commit message
+  ansible.builtin.file:
+    path: "{{ tmp_commit_msg.path }}"
+    state: absent
 
 - name: Push changes to remote repository
   command:
