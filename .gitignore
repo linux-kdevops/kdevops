@@ -40,6 +40,8 @@ ansible/roles/*/vars/main.yml
 
 python/*.pyc
 
+.terraform.lock.hcl
+
 workflows/fstests/*/*.config
 
 playbooks/secret.yml
