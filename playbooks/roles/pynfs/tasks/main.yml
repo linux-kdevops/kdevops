@@ -70,11 +70,6 @@
   when:
     - not kdevops_workflows_dedicated_workflow|bool
 
-- name: Install xdrlib3
-  tags: [ 'pynfs' ]
-  ansible.builtin.pip:
-    name: xdrlib3
-
 - name: Build pynfs
   tags: [ 'pynfs' ]
   command: ./setup.py build

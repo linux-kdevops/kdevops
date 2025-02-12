@@ -12,6 +12,7 @@
       - swig
       - python3-gssapi
       - python3-ply
+      - python3-standard-xdr-lib
     state: present
     update_cache: yes
   tags: [ 'pynfs', 'deps' ]
