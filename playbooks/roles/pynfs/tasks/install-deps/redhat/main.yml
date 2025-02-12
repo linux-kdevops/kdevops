@@ -23,3 +23,7 @@
       - swig
       - python3-gssapi
       - python3-ply
+
+- name: Install xdrlib3
+  ansible.builtin.pip:
+    name: xdrlib3

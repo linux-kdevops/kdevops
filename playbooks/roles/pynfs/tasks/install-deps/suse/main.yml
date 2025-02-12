@@ -13,3 +13,7 @@
       - python3-gssapi
       - python3-ply
     state: present
+
+- name: Install xdrlib3
+  ansible.builtin.pip:
+    name: xdrlib3
