@@ -1,0 +1,18 @@
+---
+- name: Bring up terraform resources
+  community.general.terraform:
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    state: present
+    force_init: true
+  tags:
+    - bringup
+
+- name: Destroy terraform resources
+  delegate_to: localhost
+  run_once: true
+  community.general.terraform:
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    state: absent
+    force_init: true
+  tags:
+    - destroy

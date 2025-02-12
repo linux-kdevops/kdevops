@@ -164,10 +164,18 @@ endif # CONFIG_TERRAFORM_SSH_CONFIG_GENKEY
 ANSIBLE_EXTRA_ARGS += $(TERRAFORM_EXTRA_VARS)
 
 bringup_terraform:
-	$(Q)$(TOPDIR)/scripts/bringup_terraform.sh
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--connection=local --inventory localhost, \
+		playbooks/terraform.yml --tags bringup \
+		--extra-vars=@./extra_vars.yaml \
+		-e 'ansible_python_interpreter=/usr/bin/python3'
 
 destroy_terraform:
-	$(Q)$(TOPDIR)/scripts/destroy_terraform.sh
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--connection=local -i $(KDEVOPS_HOSTFILE) \
+		playbooks/terraform.yml --tags destroy \
+		--extra-vars=@./extra_vars.yaml \
+		-e 'ansible_python_interpreter=/usr/bin/python3'
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
