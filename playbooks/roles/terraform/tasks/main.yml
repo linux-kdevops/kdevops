@@ -16,3 +16,12 @@
     force_init: true
   tags:
     - destroy
+
+- name: Remove the ephemeral ssh config file on the control host
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ kdevops_ssh_config }}"
+    state: absent
+  tags:
+    - destroy

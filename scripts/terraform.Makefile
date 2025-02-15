@@ -176,7 +176,7 @@ destroy_terraform:
 		playbooks/terraform.yml --tags destroy \
 		--extra-vars=@./extra_vars.yaml \
 		-e 'ansible_python_interpreter=/usr/bin/python3'
-	$(Q)rm -f $(KDEVOPS_PROVISIONED_DEVCONFIG)
+	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
