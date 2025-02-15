@@ -1,0 +1,3 @@
+---
+ssh_config_kexalgorithms: ""
+kdevops_terraform_ssh_config_genkey_overwrite: false

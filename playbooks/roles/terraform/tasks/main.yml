@@ -7,6 +7,65 @@
   tags:
     - bringup
 
+- name: Retrieve the public_ip_map from terraform
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.command:
+    chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    cmd: "terraform output -json public_ip_map"
+  register: terraform_output
+  changed_when: false
+  when:
+    - kdevops_terraform_ssh_config_genkey_overwrite|bool
+  tags:
+    - ssh
+
+- name: Convert the retrieved public_ip_map into a dictionary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.set_fact:
+    public_ip_map: "{{ terraform_output.stdout | from_json }}"
+  when:
+    - kdevops_terraform_ssh_config_genkey_overwrite|bool
+  tags:
+    - ssh
+
+- name: Add each target node's ssh Host entry on the control host
+  delegate_to: localhost
+  throttle: 1
+  ansible.builtin.blockinfile:
+    block: "{{ lookup('template', 'ssh_config.j2') }}"
+    create: true
+    dest: "{{ kdevops_ssh_config }}"
+    insertafter: "EOF"
+    marker: "# {mark} host configuration for {{ inventory_hostname }}"
+    mode: "u=rw,g=r,o=r"
+  when:
+    - kdevops_terraform_ssh_config_genkey_overwrite|bool
+  tags:
+    - ssh
+
+- name: Ensure the Include directive is present on the controller
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.blockinfile:
+    path: "{{ sshconfig }}"
+    insertbefore: BOF
+    append_newline: true
+    marker: "# {mark} Managed by kdevops"
+    mode: "u=rw,g=r,o=r"
+    block: "Include {{ kdevops_ssh_config_prefix }}*"
+  when:
+    - kdevops_terraform_ssh_config_genkey_overwrite|bool
+  tags:
+    - ssh
+
+- name: Wait for target nodes to become reachable
+  ansible.builtin.wait_for_connection:
+    timeout: 60
+  tags:
+    - ssh
+
 - name: Destroy terraform resources
   delegate_to: localhost
   run_once: true

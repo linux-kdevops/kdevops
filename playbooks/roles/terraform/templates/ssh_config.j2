@@ -1,0 +1,15 @@
+Host {{ inventory_hostname }} {{ public_ip_map[inventory_hostname] }}
+	HostName {{ public_ip_map[inventory_hostname] }}
+	User {{ kdevops_terraform_ssh_config_user }}
+	Port 22
+	IdentityFile {{ kdevops_terraform_ssh_config_privkey_file }}
+{% if ssh_config_kexalgorithms %}
+	KexAlgorithms {{ ssh_config_kexalgorithms }}
+{% endif %}
+{% if kdevops_terraform_ssh_config_update_strict %}
+	UserKnownHostsFile /dev/null
+	StrictHostKeyChecking no
+	PasswordAuthentication no
+	IdentitiesOnly yes
+	LogLevel FATAL
+{% endif %}

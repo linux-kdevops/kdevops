@@ -25,8 +25,9 @@ KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/terraform_nodes.tf.
 KDEVOPS_NODES :=		terraform/$(KDEVOPS_CLOUD_PROVIDER)/nodes.tf
 
 TERRAFORM_EXTRA_VARS += kdevops_enable_terraform='True'
-
 TERRAFORM_EXTRA_VARS += kdevops_terraform_provider='$(KDEVOPS_CLOUD_PROVIDER)'
+
+export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 
 TFVARS_TEMPLATE_DIR=playbooks/roles/gen_tfvars/templates
 TFVARS_FILE_NAME=terraform.tfvars
@@ -145,17 +146,17 @@ endif
 
 endif # CONFIG_KDEVOPS_SSH_CONFIG_UPDATE
 
-TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_pubkey_file='$(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_PUBKEY_FILE))'
-TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_user='$(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_USER))'
+export KDEVOPS_SSH_PUBKEY:=$(shell realpath $(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_PUBKEY_FILE)))
+TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_pubkey_file='$(KDEVOPS_SSH_PUBKEY)'
+TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_user='$(SSH_CONFIG_USER)'
 
 ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY))
-export KDEVOPS_SSH_PUBKEY:=$(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_PUBKEY_FILE))
-# We have to do shell expansion. Oh, life is so hard.
-export KDEVOPS_SSH_PUBKEY:=$(subst ~,$(HOME),$(KDEVOPS_SSH_PUBKEY))
 export KDEVOPS_SSH_PRIVKEY:=$(basename $(KDEVOPS_SSH_PUBKEY))
+TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_privkey_file='$(KDEVOPS_SSH_PRIVKEY)'
 
 ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE))
 DEFAULT_DEPS += remove-ssh-key
+TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_genkey_overwrite='True'
 endif
 
 DEFAULT_DEPS += $(KDEVOPS_SSH_PRIVKEY)
@@ -169,6 +170,14 @@ bringup_terraform:
 		playbooks/terraform.yml --tags bringup \
 		--extra-vars=@./extra_vars.yaml \
 		-e 'ansible_python_interpreter=/usr/bin/python3'
+
+$(KDEVOPS_PROVISIONED_SSH):
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) \
+		playbooks/terraform.yml --tags ssh \
+		--extra-vars=@./extra_vars.yaml \
+		-e 'ansible_python_interpreter=/usr/bin/python3'
+	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
