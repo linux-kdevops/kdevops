@@ -33,6 +33,27 @@ config FSTESTS_EXT4_SECTION_DEFAULTS
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem.
 
+config FSTESTS_EXT4_SECTION_1K
+	bool "Enable testing section: ext4_1k"
+	default y
+	help
+	  Enabling this will test ext4 with the default options for the mkfs.ext4
+	  to create the filesystem but with 1k block size.
+
+config FSTESTS_EXT4_SECTION_2K
+	bool "Enable testing section: ext4_2k"
+	default y
+	help
+	  Enabling this will test ext4 with the default options for the mkfs.ext4
+	  to create the filesystem but with 1k block size.
+
+config FSTESTS_EXT4_SECTION_4K
+	bool "Enable testing section: ext4_4k"
+	default y
+	help
+	  Enabling this will test ext4 with the default options for the mkfs.ext4
+	  to create the filesystem but with 1k block size.
+
 config FSTESTS_EXT4_SECTION_ADVANCED_FEATURES
 	bool "Enable testing section: ext4_advanced_features"
 	default y
