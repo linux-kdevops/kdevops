@@ -13,7 +13,6 @@
   when:
     - ansible_distribution == 'OracleLinux'
     - not devconfig_custom_yum_repofile
-    - kdevops_enable_guestfs
 
 - name: Select the CentOS CodeReady Builder repo
   ansible.builtin.set_fact:
@@ -23,7 +22,6 @@
     - not devconfig_custom_yum_repofile
     - kdevops_enable_guestfs
 
-# Probably need one of these for each cloud provider
 - name: Select the AWS RHEL CodeReady Builder repo
   ansible.builtin.set_fact:
     codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-rhui-rpms"
@@ -32,6 +30,12 @@
     - not devconfig_custom_yum_repofile
     - kdevops_enable_terraform
     - kdevops_terraform_provider == "aws"
+
+- name: The distribution/provisioner combo isn't recognized
+  ansible.builtin.fail:
+    msg: The selection heuristic failed to find a CodeReady Builder repo.
+  when:
+    - codeready_repo is not defined
 
 - name: Enable the selected CodeReady Builder repo
   become: true
@@ -43,6 +47,4 @@
       - "--enable"
       - "{{ codeready_repo }}"
   register: dnf_result
-  when:
-    - codeready_repo is defined
   changed_when: dnf_result is success
