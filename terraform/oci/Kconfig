@@ -92,6 +92,7 @@ config TERRAFORM_OCI_SUBNET_OCID
 
 config TERRAFORM_OCI_DATA_VOLUME_DISPLAY_NAME
 	string "Display name to use for the data volume"
+	default "data"
 	help
 	  Human readable data volume instance name
 	  Read this:
@@ -99,6 +100,7 @@ config TERRAFORM_OCI_DATA_VOLUME_DISPLAY_NAME
 
 config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 	string "Data volume's device file name"
+	default "/dev/oracleoci/oraclevdb"
 	help
 	  Data volume's device file name
 	  Read this:
@@ -106,6 +108,7 @@ config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 
 config TERRAFORM_OCI_SPARSE_VOLUME_DISPLAY_NAME
 	string "Display name to use for the sparse volume"
+	default "sparse"
 	help
 	  Human readable sparse volume instance name
 	  Read this:
@@ -113,6 +116,7 @@ config TERRAFORM_OCI_SPARSE_VOLUME_DISPLAY_NAME
 
 config TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME
 	string "Sparse volume's device file name"
+	default "/dev/oracleoci/oraclevdc"
 	help
 	  Sparse volume's device file name
 	  Read this:
