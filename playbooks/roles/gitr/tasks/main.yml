@@ -36,82 +36,10 @@
   delegate_to: localhost
   run_once: true
 
-- name: Set OS-specific variables
-  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
-  vars:
-    params:
-      files:
-        - '{{ ansible_distribution }}.yml'
-        - '{{ ansible_os_family }}.yml'
-        - default.yml
-      paths:
-        - 'vars'
-
-- name: Update gitr depencies for RHEL/Centos
+- name: Install dependencies for the git regression tests
   tags: gitr
-  ansible.builtin.set_fact:
-    gitr_packages: "{{ gitr_packages + ['perl-App-cpanminus'] }}"
-  when:
-    - ansible_distribution != "Fedora"
-
-- name: Update gitr dependencies for Fedora
-  tags: gitr
-  ansible.builtin.set_fact:
-    gitr_packages: "{{ gitr_packages + ['cvsps', 'perl-TAP-Harness-Archive'] }}"
-  when:
-    - ansible_distribution == "Fedora"
-
-- name: Install dependencies for gitr
-  tags: gitr
-  become: true
-  become_flags: 'su - -c'
-  become_method: ansible.builtin.sudo
-  ansible.builtin.package:
-    name: "{{ gitr_packages }}"
-    state: present
-
-- name: Install CPAN modules for gitr
-  tags: gitr
-  become: true
-  become_flags: 'su - -c'
-  become_method: ansible.builtin.sudo
-  community.general.cpanm:
-    name: "{{ item }}"
-  with_items: "{{ gitr_cpan_modules }}"
-  when:
-    - ansible_distribution != "Fedora"
-
-- name: git clone cvsps
-  tags: gitr
-  ansible.builtin.git:
-    repo: "{{ cvsps_git }}"
-    dest: "{{ cvsps_data }}"
-    update: true
-  retries: 3
-  delay: 5
-  register: result
-  until: not result.failed
-  when:
-    - ansible_distribution != "Fedora"
-
-- name: Build cvsps
-  tags: gitr
-  community.general.make:
-    chdir: "{{ cvsps_data }}"
-    jobs: "{{ ansible_processor_nproc }}"
-  when:
-    - ansible_distribution != "Fedora"
-
-- name: Install cvsps
-  tags: gitr
-  become: true
-  become_flags: 'su - -c'
-  become_method: ansible.builtin.sudo
-  community.general.make:
-    target: install
-    chdir: "{{ cvsps_data }}"
-  when:
-    - ansible_distribution != "Fedora"
+  ansible.builtin.include_tasks:
+    file: install-deps/main.yml
 
 - name: Set up an iSCSI initiator on the target node
   ansible.builtin.include_role:

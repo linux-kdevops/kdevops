@@ -1,0 +1,26 @@
+---
+- name: Set OS-specific variables
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - default.yml
+      paths:
+        - 'vars'
+
+- name: Debian-specific setup
+  ansible.builtin.include_tasks: debian/main.yml
+  when:
+    - ansible_os_family == "Debian"
+
+- name: SuSE-specific setup
+  ansible.builtin.include_tasks: suse/main.yml
+  when:
+    - ansible_os_family == "Suse"
+
+- name: Red Hat-specific setup
+  ansible.builtin.include_tasks: redhat/main.yml
+  when:
+    - ansible_os_family == "RedHat"

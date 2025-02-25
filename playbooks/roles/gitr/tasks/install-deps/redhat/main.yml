@@ -1,0 +1,56 @@
+---
+- name: Update gitr dependencies for RHEL/Centos
+  ansible.builtin.set_fact:
+    gitr_packages: "{{ gitr_packages + ['perl-App-cpanminus'] }}"
+  when:
+    - ansible_distribution != "Fedora"
+
+- name: Update gitr dependencies for Fedora
+  ansible.builtin.set_fact:
+    gitr_packages: "{{ gitr_packages + ['cvsps', 'perl-TAP-Harness-Archive'] }}"
+  when:
+    - ansible_distribution == "Fedora"
+
+- name: Install dependencies for gitr
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name: "{{ gitr_packages }}"
+    state: present
+
+- name: Install CPAN modules for gitr
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  community.general.cpanm:
+    name: "{{ item }}"
+  with_items: "{{ gitr_cpan_modules }}"
+  when:
+    - ansible_distribution != "Fedora"
+
+- name: Download and install cvsps
+  when: ansible_distribution != "Fedora"
+  block:
+    - name: Clone the cvsps source code
+      ansible.builtin.git:
+        repo: "{{ cvsps_git }}"
+        dest: "{{ cvsps_data }}"
+        update: true
+      retries: 3
+      delay: 5
+      register: clone
+      until: clone is succeeded
+
+    - name: Build cvsps
+      community.general.make:
+        chdir: "{{ cvsps_data }}"
+        jobs: "{{ ansible_processor_nproc }}"
+
+    - name: Install cvsps
+      become: true
+      become_flags: 'su - -c'
+      become_method: ansible.builtin.sudo
+      community.general.make:
+        target: install
+        chdir: "{{ cvsps_data }}"
