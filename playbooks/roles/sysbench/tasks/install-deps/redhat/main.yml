@@ -3,20 +3,11 @@
   ansible.builtin.include_role:
     name: codereadyrepo
 
-- name: Install epel-release if we're not on Fedora
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
-    name: "{{ packages }}"
-  retries: 3
-  delay: 5
-  register: result
-  until: result is succeeded
-  vars:
-    packages:
-      - epel-release
-  when: ansible_distribution != "Fedora"
+- name: Enable installation of packages from EPEL
+  ansible.builtin.include_role:
+    name: epel-release
+  when:
+    - ansible_distribution != "Fedora"
 
 - name: Install docker
   become: yes

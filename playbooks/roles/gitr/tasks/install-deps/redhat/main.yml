@@ -1,4 +1,10 @@
 ---
+- name: Enable installation of packages from EPEL
+  ansible.builtin.include_role:
+    name: epel-release
+  when:
+    - ansible_distribution != "Fedora"
+
 - name: Update gitr dependencies for RHEL/Centos
   ansible.builtin.set_fact:
     gitr_packages: "{{ gitr_packages + ['perl-App-cpanminus'] }}"

@@ -42,6 +42,7 @@
     file: install-deps/main.yml
 
 - name: Set up an iSCSI initiator on the target node
+  tags: gitr
   ansible.builtin.include_role:
     name: iscsi
     tasks_from: add_initiator
