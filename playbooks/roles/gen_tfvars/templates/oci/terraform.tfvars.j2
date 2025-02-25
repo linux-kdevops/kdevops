@@ -12,7 +12,10 @@ oci_instance_flex_memory_in_gbs = {{ terraform_oci_instance_flex_memory_in_gbs }
 {% endif %}
 oci_os_image_ocid = "{{ terraform_oci_os_image_ocid }}"
 oci_assign_public_ip = {{ terraform_oci_assign_public_ip | lower }}
+oci_use_existing_vcn = {{ terraform_oci_use_existing_vcn | lower }}
+{% if terraform_oci_use_existing_vcn %}
 oci_subnet_ocid = "{{ terraform_oci_subnet_ocid }}"
+{% endif %}
 oci_volumes_per_instance = {{ terraform_oci_volumes_per_instance }}
 oci_volumes_size = {{ terraform_oci_volumes_size }}
 oci_data_volume_device_file_name = "{{ terraform_oci_data_volume_device_file_name }}"

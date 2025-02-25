@@ -51,8 +51,14 @@ variable "oci_assign_public_ip" {
 }
 
 variable "oci_subnet_ocid" {
+  default     = null
   description = "Subnet OCID"
   type        = string
+}
+
+variable "oci_use_existing_vcn" {
+  description = "Use a pre-existing VCN"
+  type        = bool
 }
 
 variable "oci_volumes_per_instance" {

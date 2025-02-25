@@ -7,6 +7,23 @@ config TERRAFORM_OCI_ASSIGN_PUBLIC_IP
 	  assigned to each instance. Leave it unset to prevent your
 	  instances from being accessible on the public internet.
 
+config TERRAFORM_OCI_USE_EXISTING_VCN
+	bool "Attach instances to an existing VCN"
+	output yaml
+	default y
+	help
+	  If your tenancy administrator prefers to create and secure
+	  the network resources used within a compartment, or your
+	  tenancy has special networking requirements, enable this
+	  option. Then enter the OCID of the existing subnet in the
+	  TERRAFORM_OCI_SUBNET_OCID option below. kdevops will join
+	  its compute instances to that subnet.
+
+	  Disable this option if you'd like kdevops to create a
+	  secure VPN and subnet automatically.
+
+if TERRAFORM_OCI_USE_EXISTING_VCN
+
 config TERRAFORM_OCI_SUBNET_OCID
 	string "OCI Subnet OCID"
 	output yaml
@@ -18,3 +35,5 @@ config TERRAFORM_OCI_SUBNET_OCID
 	  kdevops does not manage this resource. Before running
 	  "make bringup", the subnet must already exist and your OCI
 	  user must have permission to attach to it.
+
+endif # TERRAFORM_OCI_USE_EXISTING_VCN
