@@ -51,3 +51,115 @@ module "volumes" {
   vol_volume_count        = var.oci_volumes_per_instance
   vol_volume_size         = var.oci_volumes_size
 }
+
+resource "oci_core_vcn" "kdevops_vcn" {
+  cidr_blocks = [
+    "10.0.0.0/16",
+  ]
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  display_name   = "kdevops VCN"
+  dns_label      = "kdevops"
+  is_ipv6enabled = false
+}
+
+resource "oci_core_internet_gateway" "kdevops_internet_gateway" {
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  display_name   = "kdevops internet gateway"
+  vcn_id         = oci_core_vcn.kdevops_vcn.id
+}
+
+resource "oci_core_dhcp_options" "kdevops_dhcp_options" {
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  display_name   = "kdevops dhcp options"
+  vcn_id         = oci_core_vcn.kdevops_vcn.id
+
+  options {
+    type        = "DomainNameServer"
+    server_type = "VcnLocalPlusInternet"
+  }
+  options {
+    type                = "SearchDomain"
+    search_domain_names = ["kdevops.oraclevcn.com"]
+  }
+}
+
+resource "oci_core_route_table" "kdevops_route_table" {
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  display_name   = "kdevops route table"
+  vcn_id         = oci_core_vcn.kdevops_vcn.id
+  route_rules {
+    destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_internet_gateway.kdevops_internet_gateway.id
+  }
+}
+
+resource "oci_core_security_list" "kdevops_security_list" {
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  display_name   = "kdevops security list"
+  vcn_id         = oci_core_vcn.kdevops_vcn.id
+
+  egress_security_rules {
+    description      = "Allow all outbound traffic"
+    destination      = "0.0.0.0/0"
+    destination_type = "CIDR_BLOCK"
+    protocol         = "all"
+    stateless        = false
+  }
+
+  ingress_security_rules {
+    description = "Enable Path MTU Discovery to work"
+    icmp_options {
+      code = 4
+      type = 3
+    }
+    protocol    = 1
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    stateless   = false
+  }
+  ingress_security_rules {
+    description = "Allow applications within VCN to fail fast"
+    icmp_options {
+      type = 3
+    }
+    protocol    = 1
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
+    stateless   = false
+  }
+  ingress_security_rules {
+    description = "Enable instance management via Ansible"
+    protocol    = 6
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    stateless   = false
+    tcp_options {
+      min = 22
+      max = 22
+    }
+  }
+  ingress_security_rules {
+    description = "Allow VCN-local TCP traffic for ports: all"
+    protocol    = 6
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
+    stateless   = false
+    tcp_options {
+      min = 1
+      max = 65535
+    }
+  }
+}
+
+resource "oci_core_subnet" "kdevops_subnet" {
+  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
+  cidr_block          = "10.0.0.0/24"
+  compartment_id      = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  dhcp_options_id     = oci_core_dhcp_options.kdevops_dhcp_options.id
+  dns_label           = "runners"
+  display_name        = "kdevops subnet"
+  route_table_id      = oci_core_route_table.kdevops_route_table.id
+  security_list_ids   = ["${oci_core_security_list.kdevops_security_list.id}"]
+  vcn_id              = oci_core_vcn.kdevops_vcn.id
+}
