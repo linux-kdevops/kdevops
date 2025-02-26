@@ -1,17 +1,86 @@
 choice
-	prompt "Choose Azure resource location to use"
-	default TERRAFORM_AZURE_WEST_US
-
-config TERRAFORM_AZURE_WEST_US
-	bool "westus"
+	prompt "Azure resource location"
+	default TERRAFORM_AZURE_REGION_WESTUS
 	help
-	  This option will set the azure resource location to westus.
+	  Choose the region and data center which will host your
+	  kdevops resouces. A current list of Azure region codes can
+	  be generated via the Azure CLI:
+
+	  "az account list-locations -o table"
+
+	  Azure chooses an availability zone for your resources
+	  automatically.
+
+config TERRAFORM_AZURE_REGION_CENTRALUS
+	bool "Central US"
+	help
+	  This option selects the Central US region, located in the
+	  US state of Iowa and paired with the East US 2 region.
+
+config TERRAFORM_AZURE_REGION_EASTUS
+	bool "East US"
+	help
+	  This option selects the East US region, located in the
+	  US state of Virgina and paired with the West US region.
+
+config TERRAFORM_AZURE_REGION_EASTUS2
+	bool "East US 2"
+	help
+	  This option selects the East US 2 region, located in
+	  the US state of Virgina and paired with the Central US
+	  region.
+
+config TERRAFORM_AZURE_REGION_NORTHCENTRALUS
+	bool "North Central US"
+	help
+	  This option selects the North Central US region, located
+	  in the US state of Illinois and paired with the South
+	  Central US region.
+
+config TERRAFORM_AZURE_REGION_SOUTHCENTRALUS
+	bool "South Central US"
+	help
+	  This option selects the South Central US region, located
+	  in the US state of Texas and paired with the North Central
+	  US region.
+
+config TERRAFORM_AZURE_REGION_WESTUS
+	bool "West US"
+	help
+	  This option selects the West US region, located in the US
+	  state of California and paired with the East US region.
+
+config TERRAFORM_AZURE_REGION_WESTUS2
+	bool "West US 2"
+	help
+	  This option selects the West US 2 region, located in the
+	  US state of Washington and paired with the West Central
+	  US region.
+
+config TERRAFORM_AZURE_REGION_WESTUS3
+	bool "West US 3"
+	help
+	  This option selects the West US 3 region, located in the
+	  US state of Arizona and paired with the East US region.
+
+config TERRAFORM_AZURE_REGION_WESTCENTRALUS
+	bool "West Central US"
+	help
+	  This option selects the (US) West Central US region,
+	  located in the US state of Wyoming and paired with the
+	  West US 2 region.
 
 endchoice
 
 config TERRAFORM_AZURE_LOCATION
 	string
 	output yaml
-	default "westus" if TERRAFORM_AZURE_WEST_US
-	help
-	  This option will set the azure resource location.
+	default "centralus" if TERRAFORM_AZURE_REGION_CENTRALUS
+	default "eastus" if TERRAFORM_AZURE_REGION_EASTUS
+	default "eastus2" if TERRAFORM_AZURE_REGION_EASTUS2
+	default "northcentralus" if TERRAFORM_AZURE_REGION_NORTHCENTRALUS
+	default "southcentralus" if TERRAFORM_AZURE_REGION_SOUTHCENTRALUS
+	default "westus" if TERRAFORM_AZURE_REGION_WESTUS
+	default "westus2" if TERRAFORM_AZURE_REGION_WESTUS2
+	default "westus3" if TERRAFORM_AZURE_REGION_WESTUS3
+	default "westcentralus" if TERRAFORM_AZURE_REGION_WESTCENTRALUS
