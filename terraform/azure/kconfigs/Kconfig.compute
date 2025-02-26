@@ -97,11 +97,14 @@ config TERRAFORM_AZURE_VM_SIZE
 choice
 	prompt "Azure image publisher"
 	default TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+	help
+	  This option specifies the publisher of the boot image used to
+	  create the kdevops target nodes.
 
 config TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 	bool "Debian"
 	help
-	  This option will set the image publisher to Debian.
+	  This option sets the boot image publisher to "Debian".
 
 endchoice
 
@@ -110,45 +113,4 @@ config TERRAFORM_AZURE_IMAGE_PUBLISHER
 	output yaml
 	default "Debian" if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 
-if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
-
-choice
-	prompt "Azure image offer"
-	default TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10 if DISTRO_DEBIAN
-
-config TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
-	bool "debian-10"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option sets the image offer from credativ to debian-10.
-
-endchoice
-
-if TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
-
-choice
-	prompt "Azure debian image SKU"
-	default TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
-
-config TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
-	bool "10"
-	help
-	  This option sets the image sku to 10.
-
-endchoice
-
-endif # TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
-
-endif
-
-config TERRAFORM_AZURE_IMAGE_OFFER
-	string
-	output yaml
-	default "debian-10" if TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
-
-config TERRAFORM_AZURE_IMAGE_SKU
-	string "Azure image SKU"
-	output yaml
-	default "10" if TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
-	help
-	  This option will set azure image sku to use.
+source "terraform/azure/kconfigs/publishers/Kconfig.debian"

@@ -1,0 +1,60 @@
+if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "Debian release"
+	default TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_11
+	help
+	  This option specifies which of a publisher's offers to use
+	  when creating kdevops compute instances.
+
+config TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_10
+	bool "debian-10 (x86)"
+	help
+	  This option sets the OS image to Debian 10 (Buster).
+
+config TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_11
+	bool "debian-11 (x86)"
+	help
+	  This option sets the OS image to Debian 11 (Bullseye).
+
+config TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_12
+	bool "debian-12 (x86)"
+	help
+	  This option sets the OS image to Debian 12 (Bookworm).
+
+config TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_13_DAILY
+	bool "debian-13-daily (x86)"
+	help
+	  This option sets the OS image to Debian 13's daily build.
+
+config TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_SID_DAILY
+	bool "debian-sid-daily (x86)"
+	help
+	  This option sets the OS image to the Debian unstable daily
+	  build.
+
+endchoice
+
+config TERRAFORM_AZURE_IMAGE_OFFER
+	string
+	output yaml
+	default "debian-10" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_10
+	default "debian-11" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_11
+	default "debian-12" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_12
+	default "debian-13-daily" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_13_DAILY
+	default "debian-sid-daily" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_SID_DAILY
+
+config TERRAFORM_AZURE_IMAGE_SKU
+	string
+	output yaml
+	default "10" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_10
+	default "11" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_11
+	default "12" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_12
+	default "13" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_13_DAILY
+	default "sid" if TERRAFORM_AZURE_IMAGE_LINUX_DEBIAN_SID_DAILY
+
+endif # TARGET_ARCH_X86_64
+
+endif # TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
