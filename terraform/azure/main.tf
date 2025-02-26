@@ -140,7 +140,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
     #name                 = "${format("kdevops-main-disk-%s", element(azurerm_virtual_machine.kdevops_vm.*.name, count.index))}"
     name                 = format("kdevops-main-disk-%02d", count.index + 1)
     caching              = "ReadWrite"
-    storage_account_type = var.managed_disk_type
+    storage_account_type = "Premium_LRS"
     #disk_size_gb         = 64
   }
 
@@ -174,7 +174,7 @@ resource "azurerm_managed_disk" "kdevops_data_disk" {
   location             = var.resource_location
   resource_group_name  = azurerm_resource_group.kdevops_group.name
   create_option        = "Empty"
-  storage_account_type = var.managed_disk_type
+  storage_account_type = "Premium_LRS"
   disk_size_gb         = 100
 }
 
@@ -193,7 +193,7 @@ resource "azurerm_managed_disk" "kdevops_scratch_disk" {
   location             = var.resource_location
   resource_group_name  = azurerm_resource_group.kdevops_group.name
   create_option        = "Empty"
-  storage_account_type = var.managed_disk_type
+  storage_account_type = "Premium_LRS"
   disk_size_gb         = 100
 }
 

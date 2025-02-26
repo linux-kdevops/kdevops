@@ -31,7 +31,6 @@ terraform_aws_ebs_volume_type: "invalid"
 
 terraform_azure_resource_location: "invalid"
 terraform_azure_vm_size: "invalid"
-terraform_azure_managed_disk_type: "invalid"
 terraform_azure_image_publisher: "invalid"
 terraform_azure_image_offer: "invalid"
 terraform_azure_image_sku: "invalid"

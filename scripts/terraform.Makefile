@@ -67,7 +67,6 @@ endif
 ifeq (y,$(CONFIG_TERRAFORM_AZURE))
 TERRAFORM_EXTRA_VARS += terraform_azure_resource_location=$(subst ",,$(CONFIG_TERRAFORM_AZURE_RESOURCE_LOCATION))
 TERRAFORM_EXTRA_VARS += terraform_azure_vm_size=$(subst ",,$(CONFIG_TERRAFORM_AZURE_VM_SIZE))
-TERRAFORM_EXTRA_VARS += terraform_azure_managed_disk_type=$(subst ",,$(CONFIG_TERRAFORM_AZURE_MANAGED_DISK_TYPE))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_publisher=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_PUBLISHER))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_offer=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_OFFER))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_sku=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_SKU))

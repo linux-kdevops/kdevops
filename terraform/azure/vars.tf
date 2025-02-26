@@ -40,11 +40,6 @@ variable "vmsize" {
   default     = "Standard_DS3_v2"
 }
 
-variable "managed_disk_type" {
-  description = "Managed disk type"
-  default     = "Premium_LRS"
-}
-
 variable "image_publisher" {
   description = "Storage image publisher"
   default     = "Debian"

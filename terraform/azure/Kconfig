@@ -43,23 +43,6 @@ config TERRAFORM_AZURE_VM_SIZE
 	  This option will set the azure vm image size.
 
 choice
-	prompt "Azure managed disk type"
-	default TERRAFORM_AZURE_MANAGED_DISK_PREMIUM_LRS
-
-config TERRAFORM_AZURE_MANAGED_DISK_PREMIUM_LRS
-	bool "Premium_LRS"
-	help
-	  This option will set the azure vm image size to Standard_DS1_v2.
-
-endchoice
-
-config TERRAFORM_AZURE_MANAGED_DISK_TYPE
-	string "Azure managed disk type"
-	default "Premium_LRS" if TERRAFORM_AZURE_MANAGED_DISK_PREMIUM_LRS
-	help
-	  This option will set azure managed disk type.
-
-choice
 	prompt "Azure image publisher"
 	default TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 
