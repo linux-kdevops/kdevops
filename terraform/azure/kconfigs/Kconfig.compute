@@ -1,18 +1,81 @@
 choice
 	prompt "Azure vmsize"
 	default TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
+	help
+	  This option chooses the size of the virtual machine instances
+	  to be created for the kdevops target nodes.
 
 config TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
 	bool "Standard_DS1_v2"
 	depends on TARGET_ARCH_X86_64
 	help
-	  This option will set the azure vm image size to Standard_DS1_v2.
+	  This virtual machine size has one vCPU and 3.5GB of memory.
+	  Azure documentation notes that this size is part of a
+	  previous generation series, and is to become unavailable
+	  after May 1, 2028.
 
 config TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
 	bool "Standard_DS3_v2"
 	depends on TARGET_ARCH_X86_64
 	help
-	  This option will set the azure vm image size to Standard_DS3_v2.
+	  This virtual machine size has four vCPUs and 14GB of memory.
+	  Azure documentation notes that this size is part of a
+	  previous generation series, and is to become unavailable
+	  after May 1, 2028.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V3
+	bool "Standard_D2s_v3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has two vCPUs and 8GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V3
+	bool "Standard_D4s_v3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has four vCPUs and 16GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V3
+	bool "Standard_D8s_v3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has eight vCPUs and 32GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V4
+	bool "Standard_D2s_v4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has two vCPUs and 8GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V4
+	bool "Standard_D4s_v4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has four vCPUs and 16GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V4
+	bool "Standard_D8s_v4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has eight vCPUs and 32GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V6
+	bool "Standard_D2s_v6"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has two vCPUs and 8GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V6
+	bool "Standard_D4s_v6"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has four vCPUs and 16GB of memory.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V6
+	bool "Standard_D8s_v6"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This virtual machine size has eight vCPUs and 32GB of memory.
 
 endchoice
 
@@ -21,6 +84,15 @@ config TERRAFORM_AZURE_VM_SIZE
 	output yaml
 	default "Standard_DS1_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
 	default "Standard_DS3_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
+	default "Standard_D2s_v3" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V3
+	default "Standard_D4s_v3" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V3
+	default "Standard_D8s_v3" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V3
+	default "Standard_D2s_v4" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V4
+	default "Standard_D4s_v4" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V4
+	default "Standard_D8s_v4" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V4
+	default "Standard_D2s_v6" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D2S_V6
+	default "Standard_D4s_v6" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D4S_V6
+	default "Standard_D8s_v6" if TERRAFORM_AZURE_VM_SIZE_STANDARD_D8S_V6
 
 choice
 	prompt "Azure image publisher"
