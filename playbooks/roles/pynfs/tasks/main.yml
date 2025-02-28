@@ -12,6 +12,8 @@
 - name: Set the path where we collect our local pynfs results
   set_fact:
     pynfs_workflow_dir: "../workflows/pynfs"
+    pynfs_results_full_path: "{{ topdir_path }}/workflows/pynfs/results"
+    pynfs_results_target: "../workflows/pynfs/results/last-run/"
   tags: [ 'vars' ]
 
 - name: Clean up our localhost results directory and files
@@ -127,6 +129,16 @@
   delay: 1
   until: result.rc == 0
 
+- name: Clean up our localhost results/last-run directory
+  local_action: file path="{{ pynfs_results_target }}/" state=absent
+  run_once: true
+  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+
+- name: Create empty last-run directory
+  local_action: file path="{{ pynfs_results_target }}/" state=directory
+  run_once: true
+  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+
 - name: Run pynfs
   tags: [ 'run_tests' ]
   script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs.sh"
@@ -156,6 +168,11 @@
     kernel_rev: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   run_once: true
 
+- name: Document used target kernel version
+  local_action: "shell echo {{ kernel_rev }} > {{ pynfs_results_target }}/../last-kernel.txt"
+  tags: [ 'run_tests', 'copy_results', 'print_results' ]
+  run_once: true
+
 - name: Copy the version-specific results to the control node
   tags: [ 'copy_results' ]
   become: yes
@@ -163,7 +180,7 @@
   become_method: sudo
   fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
-    dest: "{{ pynfs_workflow_dir }}/results/{{ kernel_rev }}-v{{ item }}.json"
+    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
     flat: yes
   with_items:
     - 4.0
@@ -176,9 +193,26 @@
   become_method: ansible.builtin.sudo
   fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
-    dest: "{{ pynfs_workflow_dir }}/results/{{ kernel_rev }}-v{{ item }}.json"
+    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
     flat: true
   with_items:
     - block
   when:
     - pynfs_pnfs_block|bool
+
+- name: Verify last-run kernel directory exists
+  tags: [ 'copy_results' ]
+  delegate_to: localhost
+  stat:
+    path: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}"
+  register: last_run_kernel_dir
+
+- name: Copy over the last-run into the results directory for archiving into kdevops
+  copy:
+    src: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}"
+    dest: "{{ pynfs_results_full_path }}/"
+  run_once: true
+  tags: [ 'copy_results' ]
+  delegate_to: localhost
+  when:
+    - last_run_kernel_dir.stat.exists
