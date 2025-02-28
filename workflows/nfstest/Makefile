@@ -53,6 +53,24 @@ NFSTEST_KERNEL_CI_LOOP      := scripts/workflows/nfstest/run_kernel_ci.sh
 NFSTEST_KERNEL_CI_LOOP_KOTD := scripts/workflows/nfstest/run_kernel_ci_kotd.sh
 endif # CONFIG_KERNEL_CI
 
+ifndef LAST_KERNEL
+LAST_KERNEL := $(shell cat workflows/nfstest/results/last-kernel.txt 2>/dev/null)
+endif
+
+ifeq ($(LAST_KERNEL), $(shell cat workflows/nfstest/results/last-kernel.txt 2>/dev/null))
+FIND_PATH := workflows/nfstest/results/last-run
+else
+FIND_PATH := workflows/nfstest/results/$(LAST_KERNEL)
+endif
+
+ifndef PATTERN
+PATTERN := -name "*.log"
+endif
+
+ifndef XARGS_ARGS
+XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
+endif
+
 nfstest:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts playbooks/nfstest.yml \
@@ -87,6 +105,11 @@ nfstest-dev-reset:
 		-f 30 -i hosts -l dev playbooks/nfstest.yml \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml
+
+nfstest-show-results:
+	@find $(FIND_PATH) -type f $(PATTERN) \
+		| xargs $(XARGS_ARGS) \
+		| sed '$${/^$$/d;}'
 
 nfstest-help-menu:
 	@echo "nfstest options:"
