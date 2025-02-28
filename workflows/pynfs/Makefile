@@ -24,6 +24,24 @@ PYNFS_KERNEL_CI_LOOP      := scripts/workflows/pynfs/run_kernel_ci.sh
 PYNFS_KERNEL_CI_LOOP_KOTD := scripts/workflows/pynfs/run_kernel_ci_kotd.sh
 endif # CONFIG_KERNEL_CI
 
+ifndef LAST_KERNEL
+LAST_KERNEL := $(shell cat workflows/pynfs/results/last-kernel.txt 2>/dev/null)
+endif
+
+ifeq ($(LAST_KERNEL), $(shell cat workflows/pynfs/results/last-kernel.txt 2>/dev/null))
+FIND_PATH := workflows/pynfs/results/last-run
+else
+FIND_PATH := workflows/pynfs/results/$(LAST_KERNEL)
+endif
+
+ifndef PATTERN
+PATTERN := -name "*.json"
+endif
+
+ifndef XARGS_ARGS
+XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
+endif
+
 # Makefile for pynfs targets
 pynfs:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
@@ -62,6 +80,11 @@ pynfs-dev-kernelci:
 pynfs-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l dev playbooks/pynfs.yml --tags vars,reset --extra-vars=@./extra_vars.yaml
+
+pynfs-show-results:
+	@find $(FIND_PATH) -type f $(PATTERN) \
+		| xargs $(XARGS_ARGS) \
+		| sed '$${/^$$/d;}'
 
 pynfs-help-menu:
 	@echo "pynfs options:"
