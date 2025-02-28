@@ -115,6 +115,28 @@ ifneq (,$(COUNT))
 FSTESTS_DYNAMIC_RUNTIME_VARS += , "oscheck_extra_args": "-I $(COUNT)"
 endif
 
+ifndef LAST_KERNEL
+LAST_KERNEL := $(shell cat workflows/fstests/results/last-kernel.txt 2>/dev/null)
+endif
+
+ifeq ($(LAST_KERNEL), $(shell cat workflows/fstests/results/last-kernel.txt 2>/dev/null))
+FIND_PATH := workflows/fstests/results/last-run
+else
+FIND_PATH := workflows/fstests/results/$(LAST_KERNEL)
+endif
+
+ifndef PATTERN
+PATTERN := -name xunit_results.txt
+endif
+
+ifndef XARGS_ARGS
+ifeq (-name xunit_results.txt,$(PATTERN))
+XARGS_ARGS := cat
+else
+XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
+endif
+endif
+
 fstests: $(FSTESTS_BASELINE_EXTRA)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l localhost,baseline,dev \
 		-f 30 -i hosts playbooks/fstests.yml --skip-tags run_tests,copy_results $(LIMIT_HOSTS)
@@ -217,6 +239,11 @@ fstests-dev-results: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars '{ kdevops_run_fstests: True }' \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)
+
+fstests-show-results:
+	@find $(FIND_PATH) -type f $(PATTERN) \
+		| xargs $(XARGS_ARGS) \
+		| sed '$${/^$$/d;}'
 
 fstests-help-menu:
 	@echo "fstests options:"
