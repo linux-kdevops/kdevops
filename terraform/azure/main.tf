@@ -89,29 +89,6 @@ resource "azurerm_network_interface" "kdevops_nic" {
   }
 }
 
-resource "random_id" "randomId" {
-  count = local.kdevops_num_boxes
-  keepers = {
-    # Generate a new ID only when a new resource group is defined
-    resource_group = azurerm_resource_group.kdevops_group.name
-  }
-
-  byte_length = 8
-}
-
-resource "azurerm_storage_account" "kdevops_storageaccount" {
-  count                    = local.kdevops_num_boxes
-  name                     = "diag${element(random_id.randomId.*.hex, count.index)}"
-  resource_group_name      = azurerm_resource_group.kdevops_group.name
-  location                 = var.resource_location
-  account_replication_type = "LRS"
-  account_tier             = "Standard"
-
-  tags = {
-    environment = "kdevops tests"
-  }
-}
-
 resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   count = local.kdevops_num_boxes
 
@@ -154,13 +131,6 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   admin_ssh_key {
     username   = var.ssh_config_user
     public_key = var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
-  }
-
-  boot_diagnostics {
-    storage_account_uri = element(
-      azurerm_storage_account.kdevops_storageaccount.*.primary_blob_endpoint,
-      count.index,
-    )
   }
 
   tags = {
