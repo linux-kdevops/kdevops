@@ -70,6 +70,24 @@ GITR_KERNEL_CI_LOOP      := scripts/workflows/gitr/run_kernel_ci.sh
 GITR_KERNEL_CI_LOOP_KOTD := scripts/workflows/gitr/run_kernel_ci_kotd.sh
 endif # CONFIG_KERNEL_CI
 
+ifndef LAST_KERNEL
+LAST_KERNEL := $(shell cat workflows/gitr/results/last-kernel.txt 2>/dev/null)
+endif
+
+ifeq ($(LAST_KERNEL), $(shell cat workflows/gitr/results/last-kernel.txt 2>/dev/null))
+FIND_PATH := workflows/gitr/results/last-run
+else
+FIND_PATH := workflows/gitr/results/$(LAST_KERNEL)
+endif
+
+ifndef PATTERN
+PATTERN := -name "*.summary"
+endif
+
+ifndef XARGS_ARGS
+XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
+endif
+
 gitr:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
 		-f 30 -i hosts playbooks/gitr.yml \
@@ -102,6 +120,11 @@ gitr-dev-kernelci:
 gitr-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-f 30 -i hosts -l dev playbooks/gitr.yml --tags vars,reset --extra-vars=@./extra_vars.yaml
+
+gitr-show-results:
+	@find $(FIND_PATH) -type f $(PATTERN) \
+		| xargs $(XARGS_ARGS) \
+		| sed '$${/^$$/d;}'
 
 gitr-help-menu:
 	@echo "gitr options:"
