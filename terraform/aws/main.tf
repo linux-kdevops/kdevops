@@ -126,9 +126,9 @@ resource "aws_instance" "kdevops_instance" {
   count           = local.kdevops_num_boxes
   ami             = data.aws_ami.distro.id
   instance_type   = var.aws_instance_type
-  security_groups = [
-	aws_security_group.kdevops_sec_group.id,
-	aws_security_group.kdevops_internal_group.id
+  vpc_security_group_ids = [
+    aws_security_group.kdevops_sec_group.id,
+    aws_security_group.kdevops_internal_group.id
   ]
   key_name        = var.ssh_keyname
   subnet_id       = aws_subnet.kdevops_subnet.id
