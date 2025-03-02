@@ -2,6 +2,8 @@
 - name: Enable the CodeReady repo
   ansible.builtin.include_role:
     name: codereadyrepo
+  when:
+    - ansible_distribution != "Fedora"
 
 - name: Enable installation of packages from EPEL
   ansible.builtin.include_role:

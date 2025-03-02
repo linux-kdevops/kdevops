@@ -47,6 +47,7 @@
     name: codereadyrepo
   when:
     - ansible_os_family == "RedHat"
+    - ansible_distribution != "Fedora"
 
 - name: Install dependencies for ltp
   tags: ['build', 'ltp']

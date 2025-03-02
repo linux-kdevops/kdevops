@@ -2,6 +2,8 @@
 - name: Enable the CodeReady repo
   ansible.builtin.include_role:
     name: codereadyrepo
+  when:
+    ansible_distribution != "Fedora"
 
 - name: Install build dependencies for pynfs
   become: yes
