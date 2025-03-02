@@ -24,17 +24,43 @@
 - name: Set the pathname of the local results directory
   tags: vars
   ansible.builtin.set_fact:
-    gitr_results_dir: "../workflows/gitr/results/{{ ansible_kernel }}/{{ gitr_test_group }}/"
+    gitr_results_full_path: "{{ topdir_path }}/workflows/gitr/results"
+    gitr_results_target: "../workflows/gitr/results/last-run"
     gitr_run_uniqifier: "{{ ansible_date_time.iso8601_basic_short }}"
+
+- name: Clean up our localhost results/last-run directory
+  local_action: file path="{{ gitr_results_target }}/" state=absent
+  run_once: true
+  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+
+- name: Create empty last-run directory
+  local_action: file path="{{ gitr_results_target }}/" state=directory
+  run_once: true
+  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+
+- name: Get used target kernel version
+  tags: [ 'copy_results' ]
+  command: "uname -r"
+  register: uname_cmd
+
+- name: Store last kernel variable
+  tags: [ 'copy_results' ]
+  set_fact:
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+  run_once: true
+
+- name: Document used target kernel version
+  local_action: "shell echo {{ last_kernel }} > {{ gitr_results_target }}/../last-kernel.txt"
+  tags: [ 'run_tests', 'copy_results', 'print_results' ]
+  run_once: true
 
 - name: Ensure the local results directory exists
   tags: copy_results
   ansible.builtin.file:
-    path: "{{ gitr_results_dir }}"
+    path: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}"
     state: directory
     mode: "u=rwx,g=rx,o=rx"
   delegate_to: localhost
-  run_once: true
 
 - name: Install dependencies for the git regression tests
   tags: gitr
@@ -303,7 +329,7 @@
   tags: copy_results
   ansible.builtin.fetch:
     src: "/tmp/{{ gitr_run_uniqifier }}.tgz"
-    dest: "{{ gitr_results_dir }}"
+    dest: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}/"
     flat: true
     validate_checksum: true
 
@@ -311,7 +337,7 @@
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.summary"
-    dest: "{{ gitr_results_dir }}"
+    dest: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}/"
     flat: true
     validate_checksum: false
 
@@ -319,7 +345,7 @@
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.stderr"
-    dest: "{{ gitr_results_dir }}"
+    dest: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}/"
     flat: true
     validate_checksum: false
   when: gitr_results.rc != 0
@@ -328,7 +354,7 @@
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.rpc"
-    dest: "{{ gitr_results_dir }}"
+    dest: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}/"
     flat: true
     validate_checksum: false
   when:
@@ -339,9 +365,26 @@
   tags: copy_results
   ansible.builtin.fetch:
     src: "{{ gitr_mnt }}/{{ gitr_run_uniqifier }}.xprt"
-    dest: "{{ gitr_results_dir }}"
+    dest: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}/{{ gitr_test_group }}/"
     flat: true
     validate_checksum: false
   when:
     - gitr_fstype == "nfs"
     - ansible_os_family == 'RedHat'
+
+- name: Verify last-run kernel directory exists
+  tags: [ 'copy_results' ]
+  delegate_to: localhost
+  stat:
+    path: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}"
+  register: last_run_kernel_dir
+
+- name: Copy over the last-run into the results directory for archiving into kdevops
+  copy:
+    src: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}"
+    dest: "{{ gitr_results_full_path }}/"
+  run_once: true
+  tags: [ 'copy_results' ]
+  delegate_to: localhost
+  when:
+    - last_run_kernel_dir.stat.exists
