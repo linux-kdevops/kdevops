@@ -1,0 +1,24 @@
+---
+#
+# To guarantee idempotency, these steps have to generate the exact
+# same physical_volumes list every time they are run.
+#
+# Azure managed disks appear under /dev/disk/azure/scsi1. The root
+# block device is not included in that group of disks. Choose from
+# any of those, minus {{ data_device }}, to construct our LVM.
+#
+
+- name: Enumerate managed disks attached to this instance
+  ansible.builtin.find:
+    paths: "/dev/disk/azure/scsi1"
+    file_type: "link"
+  register: managed_disks
+
+- name: Add unused managed disks to the physical volume list
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + [item.path] }}"
+  when:
+    - item.path != data_device
+  loop: "{{ managed_disks.files }}"
+  loop_control:
+    label: "Adding managed disk: {{ item.path }}"

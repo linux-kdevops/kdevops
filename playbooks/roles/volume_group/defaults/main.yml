@@ -4,3 +4,4 @@ kdevops_enable_terraform: false
 
 physical_volumes: []
 ebs_volume_ids: []
+tmp_device: "missing"
