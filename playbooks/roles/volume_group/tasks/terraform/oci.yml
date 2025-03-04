@@ -1,0 +1,38 @@
+---
+#
+# To guarantee idempotency, these steps have to generate the exact
+# same physical_volumes list every time they are run.
+#
+# Skip the block device on which the root filesystem resides, and
+# skip the device that is to be used for /data. These devices all
+# show up under /dev/oracleoci/ .
+#
+
+- name: Detect the root device
+  ansible.builtin.stat:
+    path: "/dev/oracleoci/oraclevda"
+  register: stat_output
+
+- name: Save the name of the root device
+  ansible.builtin.set_fact:
+    instance_root_device: "{{ stat_output.stat.lnk_source.split('/dev/').1 }}"
+
+- name: Detect the data device
+  ansible.builtin.stat:
+    path: "{{ data_device }}"
+  register: stat_output
+
+- name: Save the name of the data device
+  ansible.builtin.set_fact:
+    instance_data_device: "{{ stat_output.stat.lnk_source.split('/dev/').1 }}"
+
+- name: Add unused extra volumes to the volume list
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + ['/dev/' + item.key] }}"
+  when:
+    - item.value.model == "BlockVolume"
+    - item.key != instance_root_device
+    - item.key != instance_data_device
+  loop_control:
+    label: "Adding block device: /dev/{{ item.key }}"
+  with_dict: "{{ ansible_devices }}"
