@@ -3,3 +3,4 @@ kdevops_enable_guestfs: false
 kdevops_enable_terraform: false
 
 physical_volumes: []
+ebs_volume_ids: []

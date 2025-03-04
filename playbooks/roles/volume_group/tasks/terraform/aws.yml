@@ -1,0 +1,50 @@
+---
+#
+# To guarantee idempotency, these steps have to generate the exact
+# same physical_volumes list every time they are run.
+#
+# On AWS, normally the root device is /dev/nvme0n1 and the data
+# device is /dev/nvme1n1. However, this is not always the case:
+# block volumes can be attached to an instance in any order, thus
+# may appear as any device named /dev/nvmeNn1. Thus these names
+# are not fixed and cannot be depended upon to locate specific
+# devices or their content.
+#
+# The block device name attached to each volume is fixed by
+# terraform but not exposed to Ansible or the guest. It has to be
+# extracted from terraform state and matched to a volume ID, which
+# appears as the device serial number.
+#
+# The root EBS device is not included in terraform's block device
+# map, so is easily avoided.
+#
+
+- name: Retrieve the block_device_map from terraform
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.command:
+    chdir: "{{ topdir_path }}/terraform/aws/"
+    cmd: "terraform output -json block_device_map"
+  register: terraform_output
+  changed_when: false
+
+# FIXME: Stuff "/dev/sdf" into the data_device variable for AWS
+- name: Exclude the device that will house the /data file system
+  vars:
+    block_device_dict: "{{ terraform_output.stdout | from_json }}"
+    local_map: "{{ block_device_dict[inventory_hostname] }}"
+  ansible.builtin.set_fact:
+    ebs_volume_ids: "{{ ebs_volume_ids + [ item.value | regex_replace('-', '') ] }}"
+  when:
+    item.key != "/dev/sdf"
+  with_dict: "{{ local_map }}"
+
+- name: Add unused EBS volumes to the volume list
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + ['/dev/' + item.key] }}"
+  when:
+    - item.value.model == "Amazon Elastic Block Store"
+    - item.value.serial in ebs_volume_ids
+  loop_control:
+    label: "Adding block device: /dev/{{ item.key }}"
+  with_dict: "{{ ansible_devices }}"
