@@ -1,0 +1,31 @@
+---
+#
+# To guarantee idempotency, these steps have to generate the exact
+# same physical_volumes list every time they are run.
+#
+# Attached compute volumes are visible to the instance under
+# "/dev/disk/by-id/" by the names "google-persistent-disk-N".
+#
+# Skip the block device on which the root filesystem resides. This
+# device is always named /dev/disk/by-id/google-persistent-disk-0 .
+# Skip the device that is to be used for /data. This device is always
+# named /dev/disk/by-id/google-persistent-disk-1 .
+#
+
+- name: Enumerate compute volumes attached to this instance
+  ansible.builtin.find:
+    paths: "/dev/disk/by-id"
+    file_type: "link"
+    patterns: "google-persistent-disk-[0-9]*$"
+    use_regex: true
+  register: compute_volumes
+
+- name: Add unused compute volumes to the physical volume list
+  ansible.builtin.set_fact:
+    physical_volumes: "{{ physical_volumes + [item.path] }}"
+  when:
+    - item.path != data_device
+    - item.path != "/dev/disk/by-id/google-persistent-disk-0"
+  loop: "{{ compute_volumes.files }}"
+  loop_control:
+    label: "Adding compute volume: {{ item.path }}"
