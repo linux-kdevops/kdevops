@@ -21,6 +21,12 @@
   when:
     - kdevops_enable_guestfs|bool
 
+- name: Enumerate block devices on the target nodes
+  ansible.builtin.include_tasks:
+    file: "terraform/{{ kdevops_terraform_provider }}.yml"
+  when:
+    - kdevops_enable_terraform|bool
+
 - name: Verify there are remaining candidates to use for physical volumes
   ansible.builtin.fail:
     msg: No local block devices are available for an LVM volume group.
