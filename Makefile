@@ -95,6 +95,7 @@ LOCALHOST_SETUP_WORK :=
 ANSIBLE_EXTRA_ARGS += $(LOCAL_DEVELOPMENT_ARGS)
 
 include scripts/provision.Makefile
+include scripts/firstconfig.Makefile
 include scripts/systemd-timesync.Makefile
 include scripts/journal-server.Makefile
 include scripts/update_etc_hosts.Makefile
