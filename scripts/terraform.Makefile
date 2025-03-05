@@ -105,10 +105,17 @@ else
 TERRAFORM_EXTRA_VARS += terraform_oci_assign_public_ip=false
 endif
 TERRAFORM_EXTRA_VARS += terraform_oci_subnet_ocid=$(subst ",,$(CONFIG_TERRAFORM_OCI_SUBNET_OCID))
+
+ifeq (y, $(CONFIG_TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA))
+TERRAFORM_EXTRA_VARS += terraform_oci_volumes_enable_extra=true
+else
+TERRAFORM_EXTRA_VARS += terraform_oci_volumes_enable_extra=false
 TERRAFORM_EXTRA_VARS += terraform_oci_data_volume_display_name=$(subst ",,$(CONFIG_TERRAFORM_OCI_DATA_VOLUME_DISPLAY_NAME))
-TERRAFORM_EXTRA_VARS += terraform_oci_data_volume_device_file_name=$(subst ",,$(CONFIG_TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME))
 TERRAFORM_EXTRA_VARS += terraform_oci_sparse_volume_display_name=$(subst ",,$(CONFIG_TERRAFORM_OCI_SPARSE_VOLUME_DISPLAY_NAME))
+endif
+TERRAFORM_EXTRA_VARS += terraform_oci_data_volume_device_file_name=$(subst ",,$(CONFIG_TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME))
 TERRAFORM_EXTRA_VARS += terraform_oci_sparse_volume_device_file_name=$(subst ",,$(CONFIG_TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME))
+
 endif
 
 ifeq (y,$(CONFIG_TERRAFORM_OPENSTACK))

@@ -90,6 +90,153 @@ config TERRAFORM_OCI_SUBNET_OCID
 	  Read this:
 	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
 
+config TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
+	bool "Enable additional block devices"
+	default n
+	help
+	  Enable this to provision up to 10 extra block devices
+	  on each target node.
+
+if TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
+
+choice
+	prompt "Count of extra block volumes"
+	default TERRAFORM_OCI_VOLUMES_PER_INSTANCE_4
+	help
+	  The count of extra block devices attached to each target
+	  node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_2
+	bool "2"
+	help
+	  Provision 2 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_3
+	bool "3"
+	help
+	  Provision 3 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_4
+	bool "4"
+	help
+	  Provision 4 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_5
+	bool "5"
+	help
+	  Provision 5 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_6
+	bool "6"
+	help
+	  Provision 6 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_7
+	bool "7"
+	help
+	  Provision 7 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_8
+	bool "8"
+	help
+	  Provision 8 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_9
+	bool "9"
+	help
+	  Provision 9 extra volumes per target node.
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE_10
+	bool "10"
+	help
+	  Provision 10 extra volumes per target node.
+
+endchoice
+
+config TERRAFORM_OCI_VOLUMES_PER_INSTANCE
+	int
+	output yaml
+	default 2 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_2
+	default 3 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_3
+	default 4 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_4
+	default 5 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_5
+	default 6 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_6
+	default 7 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_7
+	default 8 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_8
+	default 9 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_9
+	default 10 if TERRAFORM_OCI_VOLUMES_PER_INSTANCE_10
+
+choice
+	prompt "Volume size for each additional volume"
+	default TERRAFORM_OCI_VOLUMES_SIZE_50G
+	help
+	  OCI implements volume sizes between 50G and 32T. In some
+	  cases, 50G volumes are in the free tier.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_50G
+	bool "50G"
+	help
+	  Extra block volumes are 50 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_64G
+	bool "64G"
+	help
+	  Extra block volumes are 64 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_128G
+	bool "128G"
+	help
+	  Extra block volumes are 128 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_256G
+	bool "256G"
+	help
+	  Extra block volumes are 256 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_512G
+	bool "512G"
+	help
+	  Extra block volumes are 512 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_1024G
+	bool "1024G"
+	help
+	  Extra block volumes are 1024 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_2048G
+	bool "2048G"
+	help
+	  Extra block volumes are 2048 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_4096G
+	bool "4096G"
+	help
+	  Extra block volumes are 4096 GiB in size.
+
+config TERRAFORM_OCI_VOLUMES_SIZE_8192G
+	bool "8192G"
+	help
+	  Extra block volumes are 8192 GiB in size.
+
+endchoice
+
+config TERRAFORM_OCI_VOLUMES_SIZE
+	int
+	output yaml
+	default 50 if TERRAFORM_OCI_VOLUMES_SIZE_50G
+	default 64 if TERRAFORM_OCI_VOLUMES_SIZE_64G
+	default 128 if TERRAFORM_OCI_VOLUMES_SIZE_128G
+	default 256 if TERRAFORM_OCI_VOLUMES_SIZE_256G
+	default 512 if TERRAFORM_OCI_VOLUMES_SIZE_512G
+	default 1024 if TERRAFORM_OCI_VOLUMES_SIZE_1024G
+	default 2048 if TERRAFORM_OCI_VOLUMES_SIZE_2048G
+	default 4096 if TERRAFORM_OCI_VOLUMES_SIZE_4096G
+	default 8192 if TERRAFORM_OCI_VOLUMES_SIZE_8192G
+
+endif # TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
+
+if !TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
+
 config TERRAFORM_OCI_DATA_VOLUME_DISPLAY_NAME
 	string "Display name to use for the data volume"
 	default "data"
@@ -97,6 +244,8 @@ config TERRAFORM_OCI_DATA_VOLUME_DISPLAY_NAME
 	  Human readable data volume instance name
 	  Read this:
 	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+
+endif # !TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
 
 config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 	string "Data volume's device file name"
@@ -106,6 +255,8 @@ config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 	  Read this:
 	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
 
+if !TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
+
 config TERRAFORM_OCI_SPARSE_VOLUME_DISPLAY_NAME
 	string "Display name to use for the sparse volume"
 	default "sparse"
@@ -113,6 +264,8 @@ config TERRAFORM_OCI_SPARSE_VOLUME_DISPLAY_NAME
 	  Human readable sparse volume instance name
 	  Read this:
 	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+
+endif # !TERRAFORM_OCI_VOLUMES_ENABLE_EXTRA
 
 config TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME
 	string "Sparse volume's device file name"

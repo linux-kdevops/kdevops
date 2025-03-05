@@ -70,6 +70,23 @@ variable "oci_subnet_ocid" {
   default = ""
 }
 
+variable "oci_volumes_enable_extra" {
+  description = "Create additional block volumes per instance"
+  default     = false
+}
+
+variable "oci_volumes_per_instance" {
+  description = "The count of additional block volumes per instance"
+  type        = number
+  default     = 0
+}
+
+variable "oci_volumes_size" {
+  description = "The size of additional block volumes, in gibibytes"
+  type        = number
+  default     = 0
+}
+
 variable "oci_data_volume_display_name" {
   description = "Display name to use for the data volume"
   default = "data"
