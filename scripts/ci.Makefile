@@ -2,13 +2,20 @@
 
 # Collection of CI build targets per kernel repo
 
+CI_WORKFLOW ?=
 ifeq (y,$(CONFIG_BOOTLINUX))
-BOOTLINUX_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE) | sed 's/\.git$$//')
-ifneq ($(wildcard .ci/build-test/$(BOOTLINUX_BASENAME)),)
-ifneq ($(wildcard .ci/test/$(BOOTLINUX_BASENAME)),)
-ifneq ($(wildcard .ci/results/$(BOOTLINUX_BASENAME)),)
 
-ci-build-test: ci-build-test-$(BOOTLINUX_BASENAME)
+ifeq ($(strip $(CI_WORKFLOW)),)
+CI_WORKFLOW_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE) | sed 's/\.git$$//')
+else
+CI_WORKFLOW_BASENAME := $(shell basename $(CI_WORKFLOW))
+endif
+
+ifneq ($(wildcard .ci/build-test/$(CI_WORKFLOW_BASENAME)),)
+ifneq ($(wildcard .ci/test/$(CI_WORKFLOW_BASENAME)),)
+ifneq ($(wildcard .ci/results/$(CI_WORKFLOW_BASENAME)),)
+
+ci-build-test: ci-build-test-$(CI_WORKFLOW_BASENAME)
 
 PHONY += build-test
 
@@ -17,51 +24,51 @@ ci-build-test-%::
 		while IFS= read -r line || [ -n "$$line" ]; do \
 		echo "Running: $$line"; \
 		$$line; \
-	  done < .ci/build-test/$(BOOTLINUX_BASENAME); \
+	  done < .ci/build-test/$(CI_WORKFLOW_BASENAME); \
 
 ci-build-test-help-menu:
-	@echo "kdevops built-in CI build tests for $(BOOTLINUX_BASENAME):"
+	@echo "kdevops built-in CI build tests for $(CI_WORKFLOW_BASENAME):"
 	@echo "ci-build-test - Git clones a linux git tree, build Linux, installs and reboots into it"
 	@while IFS= read -r line || [ -n "$$line" ]; do \
 		echo -e "\t$$line"; \
-		done < .ci/build-test/$(BOOTLINUX_BASENAME)
+		done < .ci/build-test/$(CI_WORKFLOW_BASENAME)
 	@echo
 
 HELP_TARGETS += ci-build-test-help-menu
 
-ci-test: ci-test-$(BOOTLINUX_BASENAME)
+ci-test: ci-test-$(CI_WORKFLOW_BASENAME)
 
 ci-test-%::
 	@set -e; \
 		while IFS= read -r line || [ -n "$$line" ]; do \
 		echo "Running: $$line"; \
 		$$line; \
-	  done < .ci/test/$(BOOTLINUX_BASENAME); \
+	  done < .ci/test/$(CI_WORKFLOW_BASENAME); \
 
 ci-test-help-menu:
-	@echo "kdevops built-in run time tests for $(BOOTLINUX_BASENAME):"
+	@echo "kdevops built-in run time tests for $(CI_WORKFLOW_BASENAME):"
 	@echo "ci-test       - Git clones a linux git tree, build Linux, installs and reboots into it"
 	@while IFS= read -r line || [ -n "$$line" ]; do \
 		echo -e "\t$$line"; \
-		done < .ci/test/$(BOOTLINUX_BASENAME)
+		done < .ci/test/$(CI_WORKFLOW_BASENAME)
 	@echo
 
 HELP_TARGETS += ci-test-help-menu
 
-ci-results: ci-results-$(BOOTLINUX_BASENAME)
+ci-results: ci-results-$(CI_WORKFLOW_BASENAME)
 
 ci-results-%::
 	@set -e; \
 		while IFS= read -r line || [ -n "$$line" ]; do \
 		echo -e "$$line"; \
-	done < .ci/results/$(BOOTLINUX_BASENAME)
+	done < .ci/results/$(CI_WORKFLOW_BASENAME)
 
 ci-results-help-menu:
-	@echo "kdevops built-in results tests for $(BOOTLINUX_BASENAME) can be found in directories:"
+	@echo "kdevops built-in results tests for $(CI_WORKFLOW_BASENAME) can be found in directories:"
 	@echo "ci-results    - List of directories where you can find test results"
 	@while IFS= read -r line || [ -n "$$line" ]; do \
 		echo -e "\t$$line"; \
-		done < .ci/results/$(BOOTLINUX_BASENAME)
+		done < .ci/results/$(CI_WORKFLOW_BASENAME)
 	@echo
 
 HELP_TARGETS += ci-results-help-menu
