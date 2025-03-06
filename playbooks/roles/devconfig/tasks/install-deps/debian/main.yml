@@ -3,7 +3,12 @@
   become: yes
   become_method: sudo
   ansible.builtin.apt:
-    upgrade: full
+    upgrade: "yes"
+    lock_timeout: 120
+  register: apt_upgrade
+  until: apt_upgrade is success
+  retries: 5
+  delay: 60
   tags: firstconfig
 
 - name: Remove unattended-upgrades package
