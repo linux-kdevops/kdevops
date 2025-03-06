@@ -59,3 +59,15 @@ variable "image_version" {
   description = "Storage image version"
   default     = "latest"
 }
+
+variable "managed_disks_per_instance" {
+  description = "Count of managed disks per VM instance"
+  type        = number
+  default     = 0
+}
+
+variable "managed_disks_size" {
+  description = "Size of each managed disk, in gibibytes"
+  type        = number
+  default     = 0
+}

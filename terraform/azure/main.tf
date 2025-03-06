@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "kdevops_group" {
 }
 
 locals {
-	kdevops_private_net = format("%s/%d", var.private_net_prefix, var.private_net_mask)
+  kdevops_private_net = format("%s/%d", var.private_net_prefix, var.private_net_mask)
 }
 
 resource "azurerm_virtual_network" "kdevops_network" {
@@ -168,40 +168,14 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   }
 }
 
-resource "azurerm_managed_disk" "kdevops_data_disk" {
-  count                = local.kdevops_num_boxes
-  name                 = format("kdevops-data-disk-%02d", count.index + 1)
-  location             = var.resource_location
-  resource_group_name  = azurerm_resource_group.kdevops_group.name
-  create_option        = "Empty"
-  storage_account_type = "Premium_LRS"
-  disk_size_gb         = 100
-}
+module "managed_disks" {
+  count                   = local.kdevops_num_boxes
+  source                  = "./managed_disks"
 
-resource "azurerm_virtual_machine_data_disk_attachment" "kdevops_data_disk" {
-  count                     = local.kdevops_num_boxes
-  managed_disk_id           = azurerm_managed_disk.kdevops_data_disk[count.index].id
-  virtual_machine_id        = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
-  caching                   = "None"
-  write_accelerator_enabled = false
-  lun                       = 0
-}
-
-resource "azurerm_managed_disk" "kdevops_scratch_disk" {
-  count                = local.kdevops_num_boxes
-  name                 = format("kdevops-scratch-disk-%02d", count.index + 1)
-  location             = var.resource_location
-  resource_group_name  = azurerm_resource_group.kdevops_group.name
-  create_option        = "Empty"
-  storage_account_type = "Premium_LRS"
-  disk_size_gb         = 100
-}
-
-resource "azurerm_virtual_machine_data_disk_attachment" "kdevops_scratch_disk" {
-  count                     = local.kdevops_num_boxes
-  managed_disk_id           = azurerm_managed_disk.kdevops_scratch_disk[count.index].id
-  virtual_machine_id        = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
-  caching                   = "None"
-  write_accelerator_enabled = false
-  lun                       = 1
+  md_disk_size            = var.managed_disks_size
+  md_disk_count           = var.managed_disks_per_instance
+  md_location             = var.resource_location
+  md_resource_group_name  = azurerm_resource_group.kdevops_group.name
+  md_virtual_machine_id   = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
+  md_virtual_machine_name = element(azurerm_linux_virtual_machine.kdevops_vm.*.name, count.index)
 }

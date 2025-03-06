@@ -155,7 +155,156 @@ config TERRAFORM_AZURE_APPLICATION_ID
 	help
 	  The application ID to use.
 
+choice
+	prompt "Count of extra managed disks"
+	default TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_4
+	help
+	  The count of managed disks attached to each target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_2
+	bool "2"
+	help
+	  Provision 2 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_3
+	bool "3"
+	help
+	  Provision 3 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_4
+	bool "4"
+	help
+	  Provision 4 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_5
+	bool "5"
+	help
+	  Provision 5 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_6
+	bool "6"
+	help
+	  Provision 6 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_7
+	bool "7"
+	help
+	  Provision 7 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_8
+	bool "8"
+	help
+	  Provision 8 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_9
+	bool "9"
+	help
+	  Provision 9 extra managed disks per target node.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_10
+	bool "10"
+	help
+	  Provision 10 extra managed disks per target node.
+
+endchoice
+
+config TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE
+	int
+	output yaml
+	default 2 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_2
+	default 3 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_3
+	default 4 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_4
+	default 5 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_5
+	default 6 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_6
+	default 7 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_7
+	default 8 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_8
+	default 9 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_9
+	default 10 if TERRAFORM_AZURE_MANAGED_DISKS_PER_INSTANCE_10
+
+choice
+	prompt "Volume size for each additional volume"
+	default TERRAFORM_AZURE_MANAGED_DISKS_SIZE_64G
+	help
+	  This option selects the size (in gibibytes) of managed
+	  disks create for the target nodes.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_4G
+	bool "4G"
+	help
+	  Managed disks are 4 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_8G
+	bool "8G"
+	help
+	  Managed disks are 8 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_16G
+	bool "16G"
+	help
+	  Managed disks are 16 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_32G
+	bool "32G"
+	help
+	  Managed disks are 32 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_64G
+	bool "64G"
+	help
+	  Managed disks are 64 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_128G
+	bool "128G"
+	help
+	  Managed disks are 128 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_256G
+	bool "256G"
+	help
+	  Managed disks are 256 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_512G
+	bool "512G"
+	help
+	  Managed disks are 512 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_1024G
+	bool "1024G"
+	help
+	  Managed disks are 1024 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_2048G
+	bool "2048G"
+	help
+	  Managed disks are 2048 GiB in size.
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE_4096G
+	bool "4096G"
+	help
+	  Managed disks are 4096 GiB in size.
+
+endchoice
+
+config TERRAFORM_AZURE_MANAGED_DISKS_SIZE
+	int
+	output yaml
+	default 4 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_4G
+	default 8 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_8G
+	default 16 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_16G
+	default 32 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_32G
+	default 64 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_64G
+	default 128 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_128G
+	default 256 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_256G
+	default 512 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_512G
+	default 1024 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_1024G
+	default 2048 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_2048G
+	default 4096 if TERRAFORM_AZURE_MANAGED_DISKS_SIZE_4096G
+
 config TERRAFORM_AZURE_DATA_VOLUME_DEVICE_FILE_NAME
-	string "/dev/sdc"
+	string "Device name for the /data file system"
+	default "/dev/sdc"
+	help
+	  This option sets the name of the block device on each target
+	  node that is to be used for the /data file system.
 
 endif # TERRAFORM_AZURE
