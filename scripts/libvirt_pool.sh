@@ -13,12 +13,10 @@ get_can_sudo()
 	#      2. With sudo it has two messages: one for paswordless sudo and
 	#         one passwordfull sudo. But we ignore the distinction as both
 	#         of these mean that can_sudo is "y".
-	if [[ $(sudo -nv 2>&1 | grep 'may not' > /dev/null) -eq 0 ]]; then
+	if sudo -nv 2>&1 | grep -q 'may not'; then
 		echo "n"
-		exit
 	fi
 	echo "y"
-	exit
 }
 
 get_pool_vars()
@@ -30,7 +28,7 @@ get_pool_vars()
 		fi
 	fi
 
-	CAN_SUDO=get_can_sudo
+	CAN_SUDO="$(get_can_sudo)"
 
 	if [[ "$USES_QEMU_USER_SESSION" != "y" ]]; then
 		REQ_SUDO="sudo"
