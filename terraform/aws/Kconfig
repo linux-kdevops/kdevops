@@ -688,8 +688,11 @@ config TERRAFORM_AWS_EBS_NUM_VOLUMES_PER_INSTANCE
 	default 10 if TERRAFORM_AWS_EBS_NUM_VOLUMES_PER_INSTANCE_10
 
 choice
-	prompt "Type for all EBS volumes"
+	prompt "Device type for all EBS volumes"
 	default TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
+	help
+	  This setting specifies the type of device to provision
+	  for EBS volumes attached to kdevops instances.
 
 config TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
 	bool "gp2"
@@ -703,21 +706,47 @@ config TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
 	  All extra EBS volumes are "General Purpose SSD volumes",
 	  version 3.
 
+config TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
+	bool "io1"
+	help
+	  All extra EBS volumes are "Provisioned IOPS SSD volumes"
+	  version 1.
+
+config TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
+	bool "io2"
+	help
+	  All extra EBS volumes are "Provisioned IOPS SSD volumes"
+	  version 2.
+
 endchoice
 
 config TERRAFORM_AWS_EBS_VOLUME_TYPE
 	string
 	default "gp2" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
 	default "gp3" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
+	default "io1" if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
+	default "io2" if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
+
+config TERRAFORM_AWS_EBS_VOLUME_NEEDS_IOPS
+	bool
+	default n if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
+	default n if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
+	default y if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
+	default y if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
+
+if TERRAFORM_AWS_EBS_VOLUME_NEEDS_IOPS
+
+config TERRAFORM_AWS_EBS_VOLUME_IOPS
+	int "IOPS provisioned for EBS volumes"
+	help
+	  This setting specifies the IOPS to be provisioned for each
+	  extra EBS volume.
+
+endif
 
 choice
-	prompt "Volume size to for all EBS volumes"
+	prompt "Volume size for all EBS volumes"
 	default TERRAFORM_AWS_EBS_VOLUME_SIZE_32G
-
-config TERRAFORM_AWS_EBS_VOLUME_SIZE_2G
-	bool "2G"
-	help
-	  Use 2 GiB EBS volumes.
 
 config TERRAFORM_AWS_EBS_VOLUME_SIZE_4G
 	bool "4G"
@@ -783,7 +812,6 @@ endchoice
 
 config TERRAFORM_TERRAFORM_AWS_EBS_VOLUME_SIZE
 	int
-	default 2 if TERRAFORM_AWS_EBS_VOLUME_SIZE_2G
 	default 4 if TERRAFORM_AWS_EBS_VOLUME_SIZE_4G
 	default 8 if TERRAFORM_AWS_EBS_VOLUME_SIZE_8G
 	default 16 if TERRAFORM_AWS_EBS_VOLUME_SIZE_16G

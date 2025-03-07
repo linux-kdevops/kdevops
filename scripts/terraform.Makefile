@@ -60,6 +60,12 @@ TERRAFORM_EXTRA_VARS += terraform_aws_enable_ebs='True'
 TERRAFORM_EXTRA_VARS += terraform_aws_ebs_num_volumes_per_instance=$(subst ",,$(CONFIG_TERRAFORM_AWS_EBS_NUM_VOLUMES_PER_INSTANCE))
 TERRAFORM_EXTRA_VARS += terraform_aws_ebs_volume_size=$(subst ",,$(CONFIG_TERRAFORM_TERRAFORM_AWS_EBS_VOLUME_SIZE))
 TERRAFORM_EXTRA_VARS += terraform_aws_ebs_volume_type=$(subst ",,$(CONFIG_TERRAFORM_AWS_EBS_VOLUME_TYPE))
+ifeq (y,$(CONFIG_TERRAFORM_AWS_EBS_VOLUME_NEEDS_IOPS))
+TERRAFORM_EXTRA_VARS += terraform_aws_ebs_volume_needs_iops=true
+TERRAFORM_EXTRA_VARS += terraform_aws_ebs_volume_iops=$(subst ",,$(CONFIG_TERRAFORM_AWS_EBS_VOLUME_IOPS))
+else
+TERRAFORM_EXTRA_VARS += terraform_aws_ebs_volume_needs_iops=false
+endif
 endif # CONFIG_TERRAFORM_AWS_ENABLE_EBS_VOLUMES
 
 endif

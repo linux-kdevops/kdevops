@@ -147,6 +147,7 @@ resource "aws_ebs_volume" "kdevops_vols" {
   availability_zone = var.aws_availability_region
   size              = var.aws_ebs_volume_size
   type              = var.aws_ebs_volume_type
+  iops              = var.aws_ebs_volume_iops
 }
 
 resource "aws_volume_attachment" "kdevops_att" {

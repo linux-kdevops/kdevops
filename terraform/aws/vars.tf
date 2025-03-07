@@ -109,6 +109,12 @@ variable "aws_ebs_volume_type" {
   default     = "gp2"
 }
 
+variable "aws_ebs_volume_iops" {
+  description = "IOPS reserved for each EBS volume"
+  type        = number
+  default     = null
+}
+
 # We had to use this as aws terraform provider doesn't have a way to set
 # the hostname. local-exec works too, but this is what we went with.
 variable "user_data_enabled" {
