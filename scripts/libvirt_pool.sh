@@ -15,6 +15,7 @@ get_can_sudo()
 	#         of these mean that can_sudo is "y".
 	if sudo -nv 2>&1 | grep -q 'may not'; then
 		echo "n"
+		return
 	fi
 	echo "y"
 }
