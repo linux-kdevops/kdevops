@@ -688,6 +688,29 @@ config TERRAFORM_AWS_EBS_NUM_VOLUMES_PER_INSTANCE
 	default 10 if TERRAFORM_AWS_EBS_NUM_VOLUMES_PER_INSTANCE_10
 
 choice
+	prompt "Type for all EBS volumes"
+	default TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
+
+config TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
+	bool "gp2"
+	help
+	  All extra EBS volumes are "General Purpose SSD volumes",
+	  version 2.
+
+config TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
+	bool "gp3"
+	help
+	  All extra EBS volumes are "General Purpose SSD volumes",
+	  version 3.
+
+endchoice
+
+config TERRAFORM_AWS_EBS_VOLUME_TYPE
+	string
+	default "gp2" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
+	default "gp3" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
+
+choice
 	prompt "Volume size to for all EBS volumes"
 	default TERRAFORM_AWS_EBS_VOLUME_SIZE_32G
 

@@ -104,6 +104,11 @@ variable "aws_ebs_volume_size" {
   default     = "4"
 }
 
+variable "aws_ebs_volume_type" {
+  description = "Type of each of the EBS volumes"
+  default     = "gp2"
+}
+
 # We had to use this as aws terraform provider doesn't have a way to set
 # the hostname. local-exec works too, but this is what we went with.
 variable "user_data_enabled" {
