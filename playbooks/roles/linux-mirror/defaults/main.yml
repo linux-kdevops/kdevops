@@ -14,12 +14,13 @@ defaults_nfstest_git: "git://git.linux-nfs.org/projects/mora/nfstest.git"
 defaults_xfsprogs_git: "https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git"
 defaults_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
 
-# These are mirrors which have variability support, the above should be coverted
+# These are mirrors which have variability support. The above should be converted
 # to these types so to support alternatives for sources and also the ability to
-# not use git and instead https incase of firewall restrictions in some
+# not use git and instead https in case of firewall restrictions in some
 # environments.
 mirror_kdevops_url: "https://github.com/linux-kdevops/kdevops.git"
 mirror_stable_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+mirror_stable_rc_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
 mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 
 install_only_git_daemon: false
