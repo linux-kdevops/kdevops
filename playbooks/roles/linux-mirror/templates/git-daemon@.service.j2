@@ -7,3 +7,4 @@ ExecStart=-/usr/bin/git daemon --verbose --init-timeout=10 --timeout=5 --inetd -
 StandardInput=socket
 StandardOutput=inherit
 StandardError=journal
+User={{ ansible_user_id }}
