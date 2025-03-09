@@ -9,6 +9,11 @@
     state: present
   when:
     - install_linux_mirror|bool
+  tags: [ 'mirror' ]
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+  tags: [ 'mirror' ]
 
 - name: Open the firewall on control node for git traffic
   become: true
@@ -22,3 +27,6 @@
     state: enabled
   when:
     - install_linux_mirror|bool
+    - '"firewalld.service" in ansible_facts.services'
+    - ansible_facts.services['firewalld.service'].state == "enabled"
+  tags: [ 'mirror' ]
