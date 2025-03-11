@@ -17,6 +17,7 @@ LINUX_MIRROR_ARGS += mirror_qemu_jic23_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_U
 LINUX_MIRROR_ARGS += mirror_mcgrof_linus_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_LINUS_URL))'
 LINUX_MIRROR_ARGS += mirror_mcgrof_url='$(subst ",,$(CONFIG_MIRROR_MCGROF_URL))'
 LINUX_MIRROR_ARGS += mirror_stable_url='$(subst ",,$(CONFIG_MIRROR_STABLE_URL))'
+LINUX_MIRROR_ARGS += mirror_stable_rc_url='$(subst ",,$(CONFIG_MIRROR_STABLE_RC_URL))'
 LINUX_MIRROR_ARGS += mirror_torvalds_url='$(subst ",,$(CONFIG_MIRROR_TORVALDS_URL))'
 endif
 

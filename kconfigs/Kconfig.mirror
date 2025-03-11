@@ -371,6 +371,47 @@ config MIRROR_STABLE_URL
 	default DEFAULT_STABLE_HTTPS_GOOGLE_URL if MIRROR_STABLE_HTTPS_GOOGLE
 
 choice
+	prompt "Linux stable rc mirror protocol/source"
+	default MIRROR_STABLE_RC_GIT if MIRROR_GIT_WORKS
+	default MIRROR_STABLE_RC_HTTPS if !MIRROR_GIT_WORKS
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+
+config MIRROR_STABLE_RC_HTTPS
+	bool "HTTPS (kernel.org)"
+	help
+	  If you enable this option then the mirror will use HTTPS to access 
+	  the linux-stable-rc repository on git.kernel.org. The full URL is:
+
+	  https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
+
+config MIRROR_STABLE_RC_HTTPS_GOOGLE
+	bool "HTTPS (Google)"
+	help
+	  If you enable this option then the mirror will use HTTPS to access 
+	  the linux-stable-rc repository on kernel.googlesource.com The full
+	  URL is:
+
+	  https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
+
+config MIRROR_STABLE_RC_GIT
+	bool "Git (kernel.org)"
+	depends on MIRROR_GIT_WORKS
+	help
+	  If you enable this option then the mirror will use the GIT protocol
+	  to access the linux-stable-rc repository on git.kernel.org. The
+	  full URL is:
+
+	  git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
+
+endchoice
+
+config MIRROR_STABLE_RC_URL
+	string
+	default DEFAULT_STABLE_RC_GIT_URL if MIRROR_STABLE_RC_GIT
+	default DEFAULT_STABLE_RC_HTTPS_URL if MIRROR_STABLE_RC_HTTPS
+	default DEFAULT_STABLE_RC_HTTPS_GOOGLE_URL if MIRROR_STABLE_RC_HTTPS_GOOGLE
+
+choice
 	prompt "Linux xfs kernel tree"
 	default MIRROR_XFS_GIT if MIRROR_GIT_WORKS
 	default MIRROR_XFS_HTTPS if !MIRROR_GIT_WORKS
