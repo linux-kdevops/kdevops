@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# Automatically generated file
+
+if !HAVE_BOOTLINUX_TREE_STABLE_RC_USER_REFS
+
+choice
+	prompt "Tag or branch to use"
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_54
+	bool "queue/5.4"
+	help
+	  Pull the queue/5.4 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_510
+	bool "queue/5.10"
+	help
+	  Pull the queue/5.10 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_515
+	bool "queue/5.15"
+	help
+	  Pull the queue/5.15 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_61
+	bool "queue/6.1"
+	help
+	  Pull the queue/6.1 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_66
+	bool "queue/6.6"
+	help
+	  Pull the queue/6.6 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_612
+	bool "queue/6.12"
+	help
+	  Pull the queue/6.12 branch.
+
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_613
+	bool "queue/6.13"
+	help
+	  Pull the queue/6.13 branch.
+
+endchoice
+
+config BOOTLINUX_TREE_STABLE_RC_REF
+	string
+	default "queue/5.4" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_54
+	default "queue/5.10" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_510
+	default "queue/5.15" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_515
+	default "queue/6.1" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_61
+	default "queue/6.6" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_66
+	default "queue/6.12" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_612
+	default "queue/6.13" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_613
+
+endif # !HAVE_BOOTLINUX_TREE_STABLE_RC_USER_REFS

@@ -1,0 +1,30 @@
+---
+configs:
+  - queue-5.4:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_54
+    ref: "queue/5.4"
+    help: "Pull the queue/5.4 branch."
+  - queue-5.10:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_510
+    ref: "queue/5.10"
+    help: "Pull the queue/5.10 branch."
+  - queue-5.15:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_515
+    ref: "queue/5.15"
+    help: "Pull the queue/5.15 branch."
+  - queue-6.1:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_61
+    ref: "queue/6.1"
+    help: "Pull the queue/6.1 branch."
+  - queue-6.6:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_66
+    ref: "queue/6.6"
+    help: "Pull the queue/6.6 branch."
+  - queue-6.12:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_612
+    ref: "queue/6.12"
+    help: "Pull the queue/6.12 branch."
+  - queue-6.13:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_613
+    ref: "queue/6.13"
+    help: "Pull the queue/6.13 branch."

@@ -1,0 +1,31 @@
+if BOOTLINUX_STABLE_RC
+
+choice
+	prompt "Linux stable release candidate tree to use"
+	default BOOTLINUX_TREE_STABLE_RC
+
+config BOOTLINUX_TREE_STABLE_RC
+	bool "linux-stable-rc"
+	help
+	  Use the linux-stable release candidate tree.
+
+endchoice
+
+if BOOTLINUX_TREE_STABLE_RC
+
+source "workflows/linux/refs/default/Kconfig.stable_rc"
+source "workflows/linux/refs/user/Kconfig.stable_rc"
+
+endif # BOOTLINUX_TREE_STABLE_RC
+
+config BOOTLINUX_TREE_STABLE_RC_NAME
+	string
+	default "linux-stable-rc" if BOOTLINUX_TREE_STABLE_RC
+
+config BOOTLINUX_TREE_STABLE_RC_URL
+	string
+	default DEFAULT_STABLE_RC_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/linux-stable-rc.git) if USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && GUESTFS
+	default "/mirror/linux-stable-rc.git" if USE_LIBVIRT_MIRROR && BOOTLINUX_9P
+
+endif # BOOTLINUX_STABLE_RC

@@ -13,6 +13,7 @@ SRC_URI_HTTPS_JLAYTON_LINUX = https://git.kernel.org/pub/scm/linux/kernel/git/jl
 SRC_URI_HTTPS_KDEVOPS_LINUS = https://github.com/linux-kdevops/linux.git
 SRC_URI_HTTPS_VFS = https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
 SRC_URI_HTTPS_XFS = https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+SRC_URI_HTTPS_STABLE_RC = https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git
 
 REFS_TARGET_LINUS := gen_refs_linus
 REFS_TARGET_NEXT := gen_refs_next
@@ -27,6 +28,7 @@ REFS_TARGET_DEVELOPMENT += gen_refs_jlayton_linux
 REFS_TARGET_DEVELOPMENT += gen_refs_kdevops_linus
 REFS_TARGET_DEVELOPMENT += gen_refs_vfs
 REFS_TARGET_DEVELOPMENT += gen_refs_xfs
+REFS_TARGET_DEVELOPMENT += gen_refs_stable_rc
 
 REFS_COUNT := 15
 UREF_EXT ?= uref-
@@ -66,6 +68,18 @@ gen_refs_stable:
 		--force \
 		gitref \
 		--repo $(SRC_URI_HTTPS_STABLE) \
+		--refs $(REFS_COUNT)
+
+PHONY += gen_refs_stable_rc
+gen_refs_stable_rc:
+	$(Q)$(E) "Generating refs/$(REFS_DIR)/Kconfig.$(subst _,-,$(patsubst gen_refs_%,%,$@)) ($(REFS_COUNT) refs)..."
+	$(Q)./scripts/generate_refs.py \
+		--prefix BOOTLINUX_TREE_STABLE_RC \
+		--output workflows/linux/refs/$(REFS_DIR)/Kconfig.stable_rc \
+		--extra workflows/linux/refs/static/stable_rc.yaml \
+		--force \
+		gitref \
+		--repo $(SRC_URI_HTTPS_STABLE_RC) \
 		--refs $(REFS_COUNT)
 
 PHONY += gen_refs_mcgrof_linus
@@ -183,14 +197,14 @@ refs-user-clean:
 	fi
 
 _gen-user-refs:
-	$(Q)$(E) "Generating refs/user/Kconfig.{linus,next,stable,mcgrof-linus,mcgrof-next,btrfs-devel,cel-linux-jlayton-linux-kdevops-linus} files..."
-	$(Q)$(MAKE) REFS_COUNT=15 REFS_DIR="user" $(REFS_TARGET_LINUS) $(REFS_TARGET_NEXT) $(REFS_TARGET_STABLE) $(REFS_TARGET_DEVELOPMENT)
+	$(Q)$(E) "Generating refs/user/Kconfig.{linus,next,stable,stable_rc,mcgrof-linus,mcgrof-next,btrfs-devel,cel-linux,jlayton-linux,kdevops-linus} files..."
+	$(Q)$(MAKE) REFS_COUNT=15 REFS_DIR="user" $(REFS_TARGET_LINUS) $(REFS_TARGET_NEXT) $(REFS_TARGET_STABLE) $(REFS_TARGET_STABLE_RC) $(REFS_TARGET_DEVELOPMENT)
 
 PHONY += refs-user
 refs-user: _gen-user-refs
 
 _gen-default-refs-development:
-	$(Q)$(E) "Generating refs/default/Kconfig-{mcgrof-linus,mcgrof-next,btrfs-devel,cel-linux-jlayton-linux-kdevops-linus} files..."
+	$(Q)$(E) "Generating refs/default/Kconfig-{mcgrof-linus,mcgrof-next,btrfs-devel,cel-linux,jlayton-linux,kdevops-linus,stable_rc} files..."
 	$(Q)$(MAKE) REFS_COUNT=0 REFS_DIR="default" $(REFS_TARGET_DEVELOPMENT)
 
 .PHONY: $(PHONY)

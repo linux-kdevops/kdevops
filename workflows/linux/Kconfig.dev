@@ -10,6 +10,11 @@ config BOOTLINUX_TREE_NEXT
 	help
 	  Use the linux-next tree.
 
+config BOOTLINUX_STABLE_RC
+	bool "Stable Linux release candidates"
+	help
+	  Use the linux-stable-rc tree.
+
 config BOOTLINUX_TREE_BTRFS_DEVEL
 	bool "btrfs-devel"
 	help

@@ -12,6 +12,10 @@ config HAVE_BOOTLINUX_TREE_STABLE_USER_REFS
 	bool
 	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.stable)
 
+config HAVE_BOOTLINUX_TREE_STABLE_RC_USER_REFS
+	bool
+	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.stable_rc)
+
 config HAVE_BOOTLINUX_TREE_MCGROF_LINUS_USER_REFS
 	bool
 	default $(shell, scripts/check_file_empty.sh workflows/linux/refs/user/Kconfig.mcgrof-linus)
