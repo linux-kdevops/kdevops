@@ -72,17 +72,29 @@ config HAVE_MIRROR_GIT
 	depends on USE_LIBVIRT_MIRROR
 	default $(shell, scripts/check_mirror_present.sh /mirror/git.git)
 
+config GITR_REPO_CUSTOM
+	bool "Clone a custom version of the git source code"
+	default n
+	help
+	  Choose Y to enter a custom URL to clone from. Choose N to clone
+	  from the master git source code on git.kernel.org or a local
+	  mirror (chosen automatically).
+
+config GITR_REPO_URL
+	string "The URL of the custom git source code repository to clone"
+	depends on GITR_REPO_CUSTOM
+	help
+	  Enter the URL of the git source code repository to clone.
+
 config GITR_REPO
-	string "The git tool repository to clone"
-	default DEFAULT_GIT_URL if !HAVE_MIRROR_GIT
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/git.git) if HAVE_MIRROR_GIT && VAGRANT
+	string
+	default DEFAULT_GIT_URL if !GITR_REPO_CUSTOM && !HAVE_MIRROR_GIT
+	default GITR_REPO_URL if GITR_REPO_CUSTOM
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/git.git) if HAVE_MIRROR_GIT && GUESTFS
-        help
-	  The git tool repository to clone.
 
 config GITR_REPO_COMMIT
 	string "The version of git to check out"
-	default "v2.46.0"
+	default "v2.48.1"
 	help
 	  The commit to be used for the test.
 
