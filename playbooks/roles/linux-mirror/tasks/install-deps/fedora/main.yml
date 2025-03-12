@@ -28,5 +28,5 @@
   when:
     - install_linux_mirror|bool
     - '"firewalld.service" in ansible_facts.services'
-    - ansible_facts.services['firewalld.service'].state == "enabled"
+    - ansible_facts.services['firewalld.service'].status == "enabled"
   tags: [ 'mirror' ]
