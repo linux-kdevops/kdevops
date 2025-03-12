@@ -3,7 +3,7 @@ if BOOTLINUX_TREE_CEL_LINUX
 source "workflows/linux/refs/default/Kconfig.cel-linux"
 source "workflows/linux/refs/user/Kconfig.cel-linux"
 
-config BOOTLINUX_CEL_LINUX_CUSTOM_REF_NAME
+config BOOTLINUX_TREE_CEL_LINUX_CUSTOM_REF_NAME
 	string "Custom branch name"
 	default "custom"
 	depends on BOOTLINUX_TREE_CEL_LINUX_REF_CUSTOM
