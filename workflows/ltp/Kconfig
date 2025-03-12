@@ -68,13 +68,25 @@ config HAVE_MIRROR_LTP
 	depends on USE_LIBVIRT_MIRROR
 	default $(shell, scripts/check_mirror_present.sh /mirror/ltp.git)
 
-config LTP_REPO
-	string "The ltp repository to clone"
-	default DEFAULT_LTP_URL if !HAVE_MIRROR_LTP
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/ltp.git) if HAVE_MIRROR_LTP && VAGRANT
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/ltp.git) if HAVE_MIRROR_LTP && GUESTFS
+config LTP_REPO_CUSTOM
+	bool "Clone a custom version of the ltp source code"
+	default n
 	help
-	  The ltp repository to clone.
+	  Choose Y to enter a custom URL to clone from. Choose N to clone
+	  from the master ltp source code on github.com or a local mirror
+	  (chosen automatically).
+
+config LTP_REPO_URL
+	string "The URL of the custom ltp source code repository to clone"
+	depends on LTP_REPO_CUSTOM
+	help
+	  Enter the URL of the ltp source code repository to clone.
+
+config LTP_REPO
+	string
+	default DEFAULT_LTP_URL if !LTP_REPO_CUSTOM && !HAVE_MIRROR_LTP
+	default LTP_REPO_URL if LTP_REPO_CUSTOM
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/ltp.git) if HAVE_MIRROR_LTP && GUESTFS
 
 config LTP_REPO_COMMIT
 	string "The version of ltp to check out"
