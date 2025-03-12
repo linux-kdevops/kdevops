@@ -6,6 +6,7 @@ LINUX_MIRROR_ARGS += install_linux_mirror=True
 ifeq (y,$(CONFIG_INSTALL_LOCAL_LINUX_MIRROR))
 LINUX_MIRROR_ARGS += defaults_xfsprogs_git='$(subst ",,$(CONFIG_DEFAULT_XFSPROGS_URL))'
 LINUX_MIRROR_ARGS += defaults_xfsdump_git='$(subst ",,$(CONFIG_DEFAULT_XFSDUMP_URL))'
+LINUX_MIRROR_ARGS += defaults_pynfs_git='$(subst ",,$(CONFIG_DEFAULT_PYNFS_GIT_URL))'
 LINUX_MIRROR_ARGS += mirror_blktests_url='$(subst ",,$(CONFIG_MIRROR_BLKTESTS_URL))'
 LINUX_MIRROR_ARGS += mirror_fstests_url='$(subst ",,$(CONFIG_MIRROR_FSTESTS_URL))'
 LINUX_MIRROR_ARGS += mirror_kdevops_fstests_url='$(subst ",,$(CONFIG_MIRROR_KDEVOPS_FSTESTS_URL))'

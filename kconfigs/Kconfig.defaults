@@ -52,6 +52,10 @@ config DEFAULT_KDEVOPS_LINUX_HTTPS_URL
 	string
 	default "https://github.com/linux-kdevops/linux.git"
 
+config DEFAULT_PYNFS_GIT_URL
+	string
+	default "git://git.linux-nfs.org/projects/cdmackay/pynfs.git"
+
 config DEFAULT_QEMU_GITHUB_HTTPS_URL
 	string
 	default "https://github.com/qemu/qemu.git"
