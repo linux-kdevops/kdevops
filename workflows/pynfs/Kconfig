@@ -1,10 +1,29 @@
 if KDEVOPS_WORKFLOW_ENABLE_PYNFS
 
-config PYNFS_GIT
-	string "pynfs git tree to clone"
-	default "git://git.linux-nfs.org/projects/cdmackay/pynfs.git"
+config HAVE_MIRROR_PYNFS
+	bool
+	depends on USE_LIBVIRT_MIRROR
+	default $(shell, scripts/check_mirror_present.sh /mirror/pynfs.git)
+
+config PYNFS_REPO_CUSTOM
+	bool "Clone a custom version of the pynfs source code"
+	default n
 	help
-	  The pynfs git tree to clone.
+	  Choose N to clone the master pynfs source code repo from either
+	  git.linux-nfs.org or a local mirror. Choose Y to enter a custom
+	  URL to clone.
+
+config PYNFS_REPO_URL
+	string "The URL of the custom pynfs source code repository to clone"
+	depends on PYNFS_REPO_CUSTOM
+	help
+	  Enter the URL of the pynfs source code repository to clone.
+
+config PYNFS_GIT
+	string
+	default DEFAULT_PYNFS_GIT_URL if !PYNFS_REPO_CUSTOM && !HAVE_MIRROR_PYNFS
+	default PYNFS_REPO_URL if PYNFS_REPO_CUSTOM
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/pynfs.git) if HAVE_MIRROR_PYNFS && GUESTFS
 
 config PYNFS_GIT_TAG
 	string "tag, branch or sha1sum"
