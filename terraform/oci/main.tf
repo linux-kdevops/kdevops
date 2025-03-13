@@ -67,22 +67,14 @@ resource "oci_core_volume_attachment" "kdevops_sparse_disk_attachment" {
   device = var.oci_sparse_volume_device_file_name
 }
 
-resource "oci_core_volume" "kdevops_volume_extra" {
-  count               = var.oci_volumes_enable_extra == "false" ? 0 : local.kdevops_num_boxes * var.oci_volumes_per_instance
-  availability_domain = var.oci_availablity_domain
-  display_name        = format("kdevops_volume%02d", count.index + 1)
-  compartment_id      = var.oci_compartment_ocid
-  size_in_gbs         = var.oci_volumes_size
-}
+module "volumes" {
+  count  = var.oci_volumes_enable_extra == "true" ? local.kdevops_num_boxes : 0
+  source = "./volumes"
 
-locals {
-  volume_name_suffixes = [ "b", "c", "d", "e", "f", "g", "h", "i", "j", "k" ]
-}
-
-resource "oci_core_volume_attachment" "kdevops_volume_extra_att" {
-  count           = var.oci_volumes_enable_extra == "false" ? 0 : local.kdevops_num_boxes * var.oci_volumes_per_instance
-  attachment_type = "paravirtualized"
-  instance_id     = element(oci_core_instance.kdevops_instance.*.id, count.index)
-  volume_id       = element(oci_core_volume.kdevops_volume_extra.*.id, count.index)
-  device          = format("/dev/oracleoci/oraclevd%s", element(local.volume_name_suffixes, count.index))
+  vol_availability_domain = var.oci_availablity_domain
+  vol_compartment_ocid    = var.oci_compartment_ocid
+  vol_instance_id         = element(oci_core_instance.kdevops_instance.*.id, count.index)
+  vol_instance_name       = element(var.kdevops_nodes, count.index)
+  vol_volume_count        = var.oci_volumes_per_instance
+  vol_volume_size         = var.oci_volumes_size
 }
