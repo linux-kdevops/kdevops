@@ -14,7 +14,7 @@ choice
 
 	  to list the Availability Zones that are enabled for your
 	  AWS account. Enter your selection from this list using the
-	  TERRAFORM_AWS_AV_REGION menu.
+	  TERRAFORM_AWS_AV_ZONE menu.
 
 	  If you wish to expand on the region list, send a patch after
 	  reading this list:
@@ -90,38 +90,38 @@ config TERRAFORM_AWS_REGION
 if TERRAFORM_AWS_REGION_US_EAST_1
 
 choice
-	prompt "AWS East 1 availability zone to use"
-	default TERRAFORM_AWS_AV_REGION_EAST_1A
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_US_EAST_1A
 
-config TERRAFORM_AWS_AV_REGION_EAST_1A
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1A
 	bool "us-east-1a"
 	help
-	  This option selects us-east-1a availability zone.
+	  This option selects the us-east-1a availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_1B
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1B
 	bool "us-east-1b"
 	help
-	  This option selects us-east-1b availability zone.
+	  This option selects the us-east-1b availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_1C
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1C
 	bool "us-east-1c"
 	help
-	  This option selects us-east-1c availability zone.
+	  This option selects the us-east-1c availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_1D
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1D
 	bool "us-east-1d"
 	help
-	  This option selects us-east-1d availability zone.
+	  This option selects the us-east-1d availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_1E
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1E
 	bool "us-east-1e"
 	help
-	  This option selects us-east-1e availability zone.
+	  This option selects the us-east-1e availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_1F
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1F
 	bool "us-east-1f"
 	help
-	  This option selects us-east-1f availability zone.
+	  This option selects the us-east-1f availability zone.
 
 endchoice
 
@@ -130,23 +130,23 @@ endif # TERRAFORM_AWS_REGION_US_EAST_1
 if TERRAFORM_AWS_REGION_US_EAST_2
 
 choice
-	prompt "AWS East 2 availability zone to use"
-	default TERRAFORM_AWS_AV_REGION_EAST_2A
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_US_EAST_2A
 
-config TERRAFORM_AWS_AV_REGION_EAST_2A
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2A
 	bool "us-east-2a"
 	help
-	  This option selects us-east-2a availability zone.
+	  This option selects the us-east-2a availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_2B
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2B
 	bool "us-east-2b"
 	help
-	  This option selects us-east-2a availability zone.
+	  This option selects the us-east-2a availability zone.
 
-config TERRAFORM_AWS_AV_REGION_EAST_2C
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2C
 	bool "us-east-2c"
 	help
-	  This option selects us-east-2c availability zone.
+	  This option selects the us-east-2c availability zone.
 
 endchoice
 
@@ -155,47 +155,47 @@ endif # TERRAFORM_AWS_REGION_US_EAST_2
 if TERRAFORM_AWS_REGION_US_WEST_2
 
 choice
-	prompt "AWS West 2 AV region to use"
-	default TERRAFORM_AWS_AV_REGION_WEST_2B
-
-config TERRAFORM_AWS_AV_REGION_WEST_1B
-	bool "us-west-1b"
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_US_WEST_2B
 	help
-	  This option will set the AWS AV region to us-west-1b.
-	  This option will set the AWS availablity region to the specified
-	  value.
-
+	  This option sets the AWS availablity zone to the specified value.
 	  If you wish to expand on this list send a patch after reading this
 	  list:
 
 	  https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
 	  https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
 
-config TERRAFORM_AWS_AV_REGION_WEST_2B
+config TERRAFORM_AWS_AV_ZONE_US_WEST_1B
+	bool "us-west-1b"
+	help
+	  This option selects the us-west-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2B
 	bool "us-west-2b"
 	help
-	  This option will set the AWS AV region to us-west-2b.
+	  This option selects the us-west-2b availability zone.
 
-config TERRAFORM_AWS_AV_REGION_WEST_2D
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2D
 	bool "us-west-2d"
 	help
-	  This option will set the AWS AV region to us-west-2d.
+	  This option selects the us-west-2d availability zone.
 
 endchoice
 
 endif # TERRAFORM_AWS_REGION_US_WEST_2
 
-config TERRAFORM_AWS_AV_REGION
+config TERRAFORM_AWS_AV_ZONE
 	string
-	default "us-west-1b" if TERRAFORM_AWS_AV_REGION_WEST_1B
-	default "us-west-2b" if TERRAFORM_AWS_AV_REGION_WEST_2B
-	default "us-west-2d" if TERRAFORM_AWS_AV_REGION_WEST_2D
-	default "us-east-1a" if TERRAFORM_AWS_AV_REGION_EAST_1A
-	default "us-east-1b" if TERRAFORM_AWS_AV_REGION_EAST_1B
-	default "us-east-1c" if TERRAFORM_AWS_AV_REGION_EAST_1C
-	default "us-east-1d" if TERRAFORM_AWS_AV_REGION_EAST_1D
-	default "us-east-1e" if TERRAFORM_AWS_AV_REGION_EAST_1E
-	default "us-east-1f" if TERRAFORM_AWS_AV_REGION_EAST_1F
-	default "us-east-2a" if TERRAFORM_AWS_AV_REGION_EAST_2A
-	default "us-east-2b" if TERRAFORM_AWS_AV_REGION_EAST_2B
-	default "us-east-2c" if TERRAFORM_AWS_AV_REGION_EAST_2C
+	output yaml
+	default "us-east-1a" if TERRAFORM_AWS_AV_ZONE_US_EAST_1A
+	default "us-east-1b" if TERRAFORM_AWS_AV_ZONE_US_EAST_1B
+	default "us-east-1c" if TERRAFORM_AWS_AV_ZONE_US_EAST_1C
+	default "us-east-1d" if TERRAFORM_AWS_AV_ZONE_US_EAST_1D
+	default "us-east-1e" if TERRAFORM_AWS_AV_ZONE_US_EAST_1E
+	default "us-east-1f" if TERRAFORM_AWS_AV_ZONE_US_EAST_1F
+	default "us-east-2a" if TERRAFORM_AWS_AV_ZONE_US_EAST_2A
+	default "us-east-2b" if TERRAFORM_AWS_AV_ZONE_US_EAST_2B
+	default "us-east-2c" if TERRAFORM_AWS_AV_ZONE_US_EAST_2C
+	default "us-west-1b" if TERRAFORM_AWS_AV_ZONE_US_WEST_1B
+	default "us-west-2b" if TERRAFORM_AWS_AV_ZONE_US_WEST_2B
+	default "us-west-2d" if TERRAFORM_AWS_AV_ZONE_US_WEST_2D

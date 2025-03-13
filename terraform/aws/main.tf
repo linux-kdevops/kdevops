@@ -23,7 +23,7 @@ resource "aws_vpc" "kdevops_vpc" {
 resource "aws_subnet" "kdevops_subnet" {
   cidr_block        = cidrsubnet(aws_vpc.kdevops_vpc.cidr_block, 3, 1)
   vpc_id            = aws_vpc.kdevops_vpc.id
-  availability_zone = var.aws_availability_region
+  availability_zone = var.aws_availability_zone
 }
 
 resource "aws_security_group" "kdevops_sec_group" {
@@ -141,7 +141,7 @@ resource "aws_instance" "kdevops_instance" {
 module "kdevops_ebs_volumes" {
   count                 = var.aws_enable_ebs == "true" ? local.kdevops_num_boxes : 0
   source                = "./kdevops_ebs_volumes"
-  vol_availability_zone = var.aws_availability_region
+  vol_availability_zone = var.aws_availability_zone
   vol_count             = var.aws_ebs_num_volumes_per_instance
   vol_instance_id       = element(aws_instance.kdevops_instance.*.id, count.index)
   vol_iops              = var.aws_ebs_volume_iops
