@@ -273,13 +273,6 @@ fi
 $USE_SUDO mkdir -p $STORAGEDIR
 $USE_SUDO mkdir -p $BASE_IMAGE_DIR
 
-
-if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
-	sudo chown -R $(whoami):$QEMU_GROUP $STORAGETOPDIR
-	sudo chmod -R g+rw $STORAGETOPDIR
-	sudo chmod -R g+s $STORAGETOPDIR
-fi
-
 cmdfile=$(mktemp)
 
 if [ ! -f $BASE_IMAGE ]; then
