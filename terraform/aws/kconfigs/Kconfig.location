@@ -56,6 +56,36 @@ config TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	  This option specifies the Canada central-1 region.
 	  The data center is located in Montreal, Quebec.
 
+config TERRAFORM_AWS_REGION_EU_CENTRAL_1
+	bool "eu-central-1 - Frankfurt"
+	help
+	  This option specifies the European Union central-1 region.
+	  The data center is located in Frankfurt, Germany.
+
+config TERRAFORM_AWS_REGION_EU_NORTH_1
+	bool "eu-north-1 - Stockholm"
+	help
+	  This option specifies the European Union north-1 region.
+	  The data center is located in Stockholm, Sweden.
+
+config TERRAFORM_AWS_REGION_EU_WEST_1
+	bool "eu-west-1 - Ireland"
+	help
+	  This option specifies the European Union west-1 region.
+	  The data center is located in Dublin, Republic of Ireland.
+
+config TERRAFORM_AWS_REGION_EU_WEST_2
+	bool "eu-west-2 - London"
+	help
+	  This option specifies the European Union west-2 region.
+	  The data center is located in London, United Kingdom.
+
+config TERRAFORM_AWS_REGION_EU_WEST_3
+	bool "eu-west-3 - Paris"
+	help
+	  This option specifies the European Union west-3 region.
+	  The data center is located in Paris, France.
+
 config TERRAFORM_AWS_REGION_SA_EAST_1
 	bool "sa-east-1 - Sao Paulo"
 	help
@@ -95,6 +125,11 @@ config TERRAFORM_AWS_REGION
 	string
 	output yaml
 	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
+	default "eu-central-1" if TERRAFORM_AWS_REGION_EU_CENTRAL_1
+	default "eu-north-1" if TERRAFORM_AWS_REGION_EU_NORTH_1
+	default "eu-west-1" if TERRAFORM_AWS_REGION_EU_WEST_1
+	default "eu-west-2" if TERRAFORM_AWS_REGION_EU_WEST_2
+	default "eu-west-3" if TERRAFORM_AWS_REGION_EU_WEST_3
 	default "sa-east-1" if TERRAFORM_AWS_REGION_SA_EAST_1
 	default "us-east-1" if TERRAFORM_AWS_REGION_US_EAST_1
 	default "us-east-2" if TERRAFORM_AWS_REGION_US_EAST_2
@@ -125,6 +160,131 @@ config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
 endchoice
 
 endif # TERRAFORM_AWS_REGION_CA_CENTRAL_1
+
+if TERRAFORM_AWS_REGION_EU_CENTRAL_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
+	bool "eu-central-1a"
+	help
+	  This option selects the eu-central-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1B
+	bool "eu-central-1b"
+	help
+	  This option selects the eu-central-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1C
+	bool "eu-central-1c"
+	help
+	  This option selects the eu-central-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_EU_CENTRAL_1
+
+if TERRAFORM_AWS_REGION_EU_NORTH_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
+	bool "eu-north-1a"
+	help
+	  This option selects the eu-north-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1B
+	bool "eu-north-1b"
+	help
+	  This option selects the eu-north-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1C
+	bool "eu-north-1c"
+	help
+	  This option selects the eu-north-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_EU_NORTH_1
+
+if TERRAFORM_AWS_REGION_EU_WEST_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
+	bool "eu-west-1a"
+	help
+	  This option selects the eu-west-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1B
+	bool "eu-west-1b"
+	help
+	  This option selects the eu-west-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1C
+	bool "eu-west-1c"
+	help
+	  This option selects the eu-west-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_1
+
+if TERRAFORM_AWS_REGION_EU_WEST_2
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
+	bool "eu-west-2a"
+	help
+	  This option selects the eu-west-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2B
+	bool "eu-west-2b"
+	help
+	  This option selects the eu-west-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2C
+	bool "eu-west-2c"
+	help
+	  This option selects the eu-west-2c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_2
+
+if TERRAFORM_AWS_REGION_EU_WEST_3
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
+	bool "eu-west-3a"
+	help
+	  This option selects the eu-west-3a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3B
+	bool "eu-west-3b"
+	help
+	  This option selects the eu-west-3b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3C
+	bool "eu-west-3c"
+	help
+	  This option selects the eu-west-3c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_3
 
 if TERRAFORM_AWS_REGION_SA_EAST_1
 
@@ -254,6 +414,21 @@ config TERRAFORM_AWS_AV_ZONE
 	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
 	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
 	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
+	default "eu-central-1a" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
+	default "eu-central-1b" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1B
+	default "eu-central-1c" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1C
+	default "eu-north-1a" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
+	default "eu-north-1b" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1B
+	default "eu-north-1c" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1C
+	default "eu-west-1a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
+	default "eu-west-1b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1B
+	default "eu-west-1c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1C
+	default "eu-west-2a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
+	default "eu-west-2b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2B
+	default "eu-west-2c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2C
+	default "eu-west-3a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
+	default "eu-west-3b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3B
+	default "eu-west-3c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3C
 	default "sa-east-1a" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
 	default "sa-east-1b" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
 	default "sa-east-1c" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
