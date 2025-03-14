@@ -140,7 +140,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
 
 module "kdevops_managed_disks" {
   count                   = local.kdevops_num_boxes
-  md_disk_size            = var.managed_disks_size
+  md_disk_size            = var.azure_managed_disks_size
   md_disk_count           = var.azure_managed_disks_per_instance
   md_location             = var.azure_location
   md_resource_group_name  = azurerm_resource_group.kdevops_group.name
