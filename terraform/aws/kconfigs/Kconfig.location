@@ -68,6 +68,24 @@ config TERRAFORM_AWS_REGION_AP_NORTHEAST_3
 	  This option specifies the Asia-Pacific northeast-3 region.
 	  The data center is located in Osaka, Japan.
 
+config TERRAFORM_AWS_REGION_AP_SOUTH_1
+	bool "ap-south-1 - Mumbai"
+	help
+	  This option specifies the Asia-Pacific south-1 region.
+	  The data center is located in Mumbai, India.
+
+config TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+	bool "ap-southeast-1 - Singapore"
+	help
+	  This option specifies the Asia-Pacific southeast-1 region.
+	  The data center is located in the Republic of Singapore.
+
+config TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+	bool "ap-southeast-1 - Sydney"
+	help
+	  This option specifies the Asia-Pacific southeast-2 region.
+	  The data center is located in Sydney, Australia.
+
 config TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	bool "ca-central-1 - Central"
 	help
@@ -145,6 +163,9 @@ config TERRAFORM_AWS_REGION
 	default "ap-northeast-1" if TERRAFORM_AWS_REGION_AP_NORTHEAST_1
 	default "ap-northeast-2" if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
 	default "ap-northeast-3" if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+	default "ap-south-1" if TERRAFORM_AWS_REGION_AP_SOUTH_1
+	default "ap-southeast-1" if TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+	default "ap-southeast-2" if TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
 	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	default "eu-central-1" if TERRAFORM_AWS_REGION_EU_CENTRAL_1
 	default "eu-north-1" if TERRAFORM_AWS_REGION_EU_NORTH_1
@@ -236,6 +257,81 @@ config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
 endchoice
 
 endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+
+if TERRAFORM_AWS_REGION_AP_SOUTH_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
+	bool "ap-south-1a"
+	help
+	  This option selects the ap-south-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1B
+	bool "ap-south-1b"
+	help
+	  This option selects the ap-south-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1C
+	bool "ap-south-1c"
+	help
+	  This option selects the ap-south-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTH_1
+
+if TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
+	bool "ap-southeast-1a"
+	help
+	  This option selects the ap-southeast-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1B
+	bool "ap-southeast-1b"
+	help
+	  This option selects the ap-southeast-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1C
+	bool "ap-southeast-1c"
+	help
+	  This option selects the ap-southeast-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+
+if TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
+	bool "ap-southeast-2a"
+	help
+	  This option selects the ap-southeast-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2B
+	bool "ap-southeast-2b"
+	help
+	  This option selects the ap-southeast-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2C
+	bool "ap-southeast-2c"
+	help
+	  This option selects the ap-southeast-2c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
 
 if TERRAFORM_AWS_REGION_CA_CENTRAL_1
 
@@ -522,6 +618,15 @@ config TERRAFORM_AWS_AV_ZONE
 	default "ap-northeast-3a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
 	default "ap-northeast-3b" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
 	default "ap-northeast-3c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
+	default "ap-south-1a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
+	default "ap-south-1b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1B
+	default "ap-south-1c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1C
+	default "ap-southeast-1a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
+	default "ap-southeast-1b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1B
+	default "ap-southeast-1c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1C
+	default "ap-southeast-2a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
+	default "ap-southeast-2b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2B
+	default "ap-southeast-2c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2C
 	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
 	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
 	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
