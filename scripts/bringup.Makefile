@@ -22,11 +22,14 @@ endif
 
 bringup: $(KDEVOPS_BRING_UP_DEPS)
 
+status: $(KDEVOPS_STATUS_DEPS)
+
 destroy: $(KDEVOPS_DESTROY_DEPS)
 
 bringup-help-menu:
 	@echo "Bringup targets:"
 	@echo "bringup            - Brings up target hosts"
+	@echo "status             - Reports the status of target hosts"
 	@echo "destroy            - Destroy all target hosts"
 	@echo "cleancache	  - Remove all cached images"
 	@echo ""

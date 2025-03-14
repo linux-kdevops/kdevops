@@ -4,6 +4,10 @@
 # systems will be up after this.
 KDEVOPS_PROVISION_METHOD :=
 
+# Provisioning methods should set this to their target which will report
+# the status of target nodes
+KDEVOPS_PROVISION_STATUS_METHOD :=
+
 # Provisioning methods should set this to their target which will ensure
 # the systems will be removed after this
 KDEVOPS_PROVISION_DESTROY_METHOD :=
@@ -85,5 +89,7 @@ $(KDEVOPS_PROVISIONED_DEVCONFIG):
 # Anything deps after this is dealt with on each respective workflow.
 KDEVOPS_BRING_UP_DEPS += $(KDEVOPS_PROVISION_METHOD)
 KDEVOPS_BRING_UP_DEPS += $(KDEVOPS_PROVISIONED_SSH)
+
+KDEVOPS_STATUS_DEPS += $(KDEVOPS_PROVISION_STATUS_METHOD)
 
 KDEVOPS_DESTROY_DEPS += $(KDEVOPS_PROVISION_DESTROY_METHOD)

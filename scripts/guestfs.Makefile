@@ -50,6 +50,7 @@ GUESTFS_BRINGUP_DEPS +=  $(LIBVIRT_PCIE_PASSTHROUGH)
 GUESTFS_BRINGUP_DEPS +=  install_libguestfs
 
 KDEVOPS_PROVISION_METHOD		:= bringup_guestfs
+KDEVOPS_PROVISION_STATUS_METHOD		:= status_guestfs
 KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_guestfs
 
 9p_linux_clone:
@@ -96,6 +97,10 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 		--extra-vars=@./extra_vars.yaml \
 		--tags console-permissions
 PHONY += bringup_guestfs
+
+status_guestfs:
+	$(Q)scripts/status_guestfs.sh
+PHONY += status_guestfs
 
 destroy_guestfs:
 	$(Q)$(TOPDIR)/scripts/destroy_guestfs.sh

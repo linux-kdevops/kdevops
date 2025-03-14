@@ -3,6 +3,7 @@
 TERRAFORM_EXTRA_VARS :=
 
 KDEVOPS_PROVISION_METHOD		:= bringup_terraform
+KDEVOPS_PROVISION_STATUS_METHOD		:= status_terraform
 KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_terraform
 
 export KDEVOPS_CLOUD_PROVIDER=aws
@@ -191,6 +192,9 @@ $(KDEVOPS_PROVISIONED_SSH):
 		--extra-vars=@./extra_vars.yaml \
 		-e 'ansible_python_interpreter=/usr/bin/python3'
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
+
+status_terraform:
+	$(Q)scripts/status_terraform.sh $(KDEVOPS_CLOUD_PROVIDER)
 
 destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
