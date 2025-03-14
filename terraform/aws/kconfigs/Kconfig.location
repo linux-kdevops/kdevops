@@ -50,6 +50,12 @@ choice
 	  aws ec2 describe-images --image-ids ami-0699f753302dd8b00 | grep OwnerId
 	    "OwnerId": "137112412989",
 
+config TERRAFORM_AWS_REGION_CA_CENTRAL_1
+	bool "ca-central-1 - Central"
+	help
+	  This option specifies the Canada central-1 region.
+	  The data center is located in Montreal, Quebec.
+
 config TERRAFORM_AWS_REGION_US_EAST_1
 	bool "us-east-1 - N. Virginia"
 	help
@@ -82,10 +88,36 @@ endchoice
 config TERRAFORM_AWS_REGION
 	string
 	output yaml
+	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	default "us-east-1" if TERRAFORM_AWS_REGION_US_EAST_1
 	default "us-east-2" if TERRAFORM_AWS_REGION_US_EAST_2
 	default "us-west-1" if TERRAFORM_AWS_REGION_US_WEST_1
 	default "us-west-2" if TERRAFORM_AWS_REGION_US_WEST_2
+
+if TERRAFORM_AWS_REGION_CA_CENTRAL_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
+	bool "ca-central-1a"
+	help
+	  This option selects the ca-central-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
+	bool "ca-central-1b"
+	help
+	  This option selects the ca-central-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
+	bool "ca-central-1d"
+	help
+	  This option selects the ca-central-1d availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_CA_CENTRAL_1
 
 if TERRAFORM_AWS_REGION_US_EAST_1
 
@@ -187,6 +219,9 @@ endif # TERRAFORM_AWS_REGION_US_WEST_2
 config TERRAFORM_AWS_AV_ZONE
 	string
 	output yaml
+	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
+	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
+	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
 	default "us-east-1a" if TERRAFORM_AWS_AV_ZONE_US_EAST_1A
 	default "us-east-1b" if TERRAFORM_AWS_AV_ZONE_US_EAST_1B
 	default "us-east-1c" if TERRAFORM_AWS_AV_ZONE_US_EAST_1C
