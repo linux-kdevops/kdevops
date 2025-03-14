@@ -23,9 +23,9 @@
     mode: 0644
 
 - name: Set up a volume group on local block devices
-  ansbiel.builtin.include_role:
+  ansible.builtin.include_role:
     name: volume_group
-  var:
+  vars:
     volume_group_name: "shares"
     volume_device_prefix: "{{ smbd_share_device_prefix }}"
     volume_device_count: "{{ smbd_share_device_count }}"
