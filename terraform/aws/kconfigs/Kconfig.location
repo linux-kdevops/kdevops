@@ -56,6 +56,12 @@ config TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	  This option specifies the Canada central-1 region.
 	  The data center is located in Montreal, Quebec.
 
+config TERRAFORM_AWS_REGION_SA_EAST_1
+	bool "sa-east-1 - Sao Paulo"
+	help
+	  This option specifies the South America east-1 region.
+	  The data center is located in São Paulo, Brazil.
+
 config TERRAFORM_AWS_REGION_US_EAST_1
 	bool "us-east-1 - N. Virginia"
 	help
@@ -89,6 +95,7 @@ config TERRAFORM_AWS_REGION
 	string
 	output yaml
 	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
+	default "sa-east-1" if TERRAFORM_AWS_REGION_SA_EAST_1
 	default "us-east-1" if TERRAFORM_AWS_REGION_US_EAST_1
 	default "us-east-2" if TERRAFORM_AWS_REGION_US_EAST_2
 	default "us-west-1" if TERRAFORM_AWS_REGION_US_WEST_1
@@ -118,6 +125,31 @@ config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
 endchoice
 
 endif # TERRAFORM_AWS_REGION_CA_CENTRAL_1
+
+if TERRAFORM_AWS_REGION_SA_EAST_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
+	bool "sa-east-1a"
+	help
+	  This option selects the sa-east-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
+	bool "sa-east-1b"
+	help
+	  This option selects the sa-east-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
+	bool "sa-east-1c"
+	help
+	  This option selects the sa-east-1c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_SA_EAST_1
 
 if TERRAFORM_AWS_REGION_US_EAST_1
 
@@ -222,6 +254,9 @@ config TERRAFORM_AWS_AV_ZONE
 	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
 	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
 	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
+	default "sa-east-1a" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
+	default "sa-east-1b" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
+	default "sa-east-1c" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
 	default "us-east-1a" if TERRAFORM_AWS_AV_ZONE_US_EAST_1A
 	default "us-east-1b" if TERRAFORM_AWS_AV_ZONE_US_EAST_1B
 	default "us-east-1c" if TERRAFORM_AWS_AV_ZONE_US_EAST_1C
