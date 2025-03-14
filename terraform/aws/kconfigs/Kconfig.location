@@ -50,6 +50,24 @@ choice
 	  aws ec2 describe-images --image-ids ami-0699f753302dd8b00 | grep OwnerId
 	    "OwnerId": "137112412989",
 
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+	bool "ap-northeast-1 - Tokyo"
+	help
+	  This option specifies the Asia-Pacific northeast-1 region.
+	  The data center is located in Tokyo, Japan.
+
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+	bool "ap-northeast-2 - Seoul"
+	help
+	  This option specifies the Asia-Pacific northeast-2 region.
+	  The data center is located in Seoul, South Korea.
+
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+	bool "ap-northeast-3 - Osaka"
+	help
+	  This option specifies the Asia-Pacific northeast-3 region.
+	  The data center is located in Osaka, Japan.
+
 config TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	bool "ca-central-1 - Central"
 	help
@@ -124,6 +142,9 @@ endchoice
 config TERRAFORM_AWS_REGION
 	string
 	output yaml
+	default "ap-northeast-1" if TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+	default "ap-northeast-2" if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+	default "ap-northeast-3" if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
 	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
 	default "eu-central-1" if TERRAFORM_AWS_REGION_EU_CENTRAL_1
 	default "eu-north-1" if TERRAFORM_AWS_REGION_EU_NORTH_1
@@ -135,6 +156,86 @@ config TERRAFORM_AWS_REGION
 	default "us-east-2" if TERRAFORM_AWS_REGION_US_EAST_2
 	default "us-west-1" if TERRAFORM_AWS_REGION_US_WEST_1
 	default "us-west-2" if TERRAFORM_AWS_REGION_US_WEST_2
+
+if TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
+	bool "ap-northeast-1a"
+	help
+	  This option selects the ap-northeast-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1C
+	bool "ap-northeast-1c"
+	help
+	  This option selects the ap-northeast-1c availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1D
+	bool "ap-northeast-1d"
+	help
+	  This option selects the ap-northeast-1d availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+
+if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
+	bool "ap-northeast-2a"
+	help
+	  This option selects the ap-northeast-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2B
+	bool "ap-northeast-2b"
+	help
+	  This option selects the ap-northeast-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2C
+	bool "ap-northeast-2c"
+	help
+	  This option selects the ap-northeast-2c availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2D
+	bool "ap-northeast-2d"
+	help
+	  This option selects the ap-northeast-2d availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+
+if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
+	bool "ap-northeast-3a"
+	help
+	  This option selects the ap-northeast-3a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
+	bool "ap-northeast-3b"
+	help
+	  This option selects the ap-northeast-3b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
+	bool "ap-northeast-3c"
+	help
+	  This option selects the ap-northeast-3c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_3
 
 if TERRAFORM_AWS_REGION_CA_CENTRAL_1
 
@@ -411,6 +512,16 @@ endif # TERRAFORM_AWS_REGION_US_WEST_2
 config TERRAFORM_AWS_AV_ZONE
 	string
 	output yaml
+	default "ap-northeast-1a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
+	default "ap-northeast-1c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1C
+	default "ap-northeast-1d" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1D
+	default "ap-northeast-2a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
+	default "ap-northeast-2b" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2B
+	default "ap-northeast-2c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2C
+	default "ap-northeast-2d" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2D
+	default "ap-northeast-3a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
+	default "ap-northeast-3b" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
+	default "ap-northeast-3c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
 	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
 	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
 	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
