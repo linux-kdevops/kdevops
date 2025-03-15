@@ -1,11 +1,12 @@
 config TERRAFORM_AWS_PROFILE
-	prompt "AWS profile to use"
-	string
+	string "AWS authentication profile to use"
+	output yaml
 	default "default"
 	help
-	  This option sets the value of the Terraform aws_profile
-	  variable. The AWS profile specifies an IAM user and secret
-	  key that Terraform uses to authenticate to AWS.
+	  This option sets the value of the terraform provider's
+	  aws_profile argument. An AWS profile specifies the IAM
+	  user and secret key that both terraform and the "aws"
+	  command line utility use to authenticate to AWS.
 
 	  AWS profiles are set up in ~/.aws/credentials using the
 	  "aws configure" command. You may also edit this file by
