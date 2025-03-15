@@ -36,11 +36,16 @@ source "terraform/gce/kconfigs/machines/Kconfig.n2-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-highcpu"
 
-config TERRAFORM_GCE_IMAGE
-	string "GCE image to use"
-	default "debian-cloud/debian-10" if DISTRO_DEBIAN
-	default "debian-cloud/debian-10" if !DISTRO_DEBIAN
+choice
+	prompt "OS Distributor"
+	default TERRAFORM_GCE_DISTRO_DEBIAN
 	help
-	  This option will set GCE image to debian-cloud/debian-10.
+	  Select the Linux distribution for the OS base image of the
+	  instances to be created.
 
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#image
+config TERRAFORM_GCE_DISTRO_DEBIAN
+	bool "Debian"
+
+endchoice
+
+source "terraform/gce/kconfigs/images/Kconfig.debian"

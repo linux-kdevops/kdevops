@@ -3,6 +3,21 @@ variable "gce_credentials" {
   type        = string
 }
 
+variable "gce_image_family" {
+  description = "Release of Linux distribution"
+  type        = string
+}
+
+variable "gce_image_project" {
+  description = "Name of Linux distribution"
+  type        = string
+}
+
+variable "gce_image_size" {
+  description = "Size of image, in GiB"
+  type        = number
+}
+
 variable "gce_image_type" {
   description = "Type of image disk"
   type        = string
@@ -25,11 +40,6 @@ variable "gce_region" {
 
 variable "gce_zone" {
   description = "Availability zone"
-  type        = string
-}
-
-variable "image_name" {
-  description = "Name of image to use"
   type        = string
 }
 

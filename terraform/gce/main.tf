@@ -1,3 +1,8 @@
+data "google_compute_image" "kdevops_image" {
+  project = var.gce_image_project
+  family  = var.gce_image_family
+}
+
 resource "google_compute_instance" "kdevops_instance" {
   count        = local.kdevops_num_boxes
   name         = element(var.kdevops_nodes, count.index)
@@ -8,7 +13,8 @@ resource "google_compute_instance" "kdevops_instance" {
 
   boot_disk {
     initialize_params {
-      image = var.image_name
+      image = data.google_compute_image.kdevops_image.self_link
+      size  = var.gce_image_size
       type  = var.gce_image_type
     }
   }
