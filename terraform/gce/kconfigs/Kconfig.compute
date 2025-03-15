@@ -1,0 +1,38 @@
+choice
+	prompt "Choose GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	help
+	  This option will set the GCE machine type. For other machine types,
+	  refer to this page:
+
+	  https://cloud.google.com/compute/docs/machine-types
+
+	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#machine_type
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	bool "n1-standard-1"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option will set the GCE machine type to n1-standard-1.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	bool "n1-standard-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option will set the GCE machine type to n1-standard-8.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	default "n1-standard-1" if TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+
+config TERRAFORM_GCE_IMAGE
+	string "GCE image to use"
+	default "debian-cloud/debian-10" if DISTRO_DEBIAN
+	default "debian-cloud/debian-10" if !DISTRO_DEBIAN
+	help
+	  This option will set GCE image to debian-cloud/debian-10.
+
+	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#image

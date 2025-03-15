@@ -3,39 +3,12 @@ if TERRAFORM_GCE
 menu "Resource Location"
 source "terraform/gce/kconfigs/Kconfig.location"
 endmenu
+menu "Compute"
+source "terraform/gce/kconfigs/Kconfig.compute"
+endmenu
 menu "Identity & Access"
 source "terraform/gce/kconfigs/Kconfig.identity"
 endmenu
-
-choice
-	prompt "Choose GCE Machine type"
-	default TERRAFORM_GCE_MACHINE_N1_STANDARD_8
-
-config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
-	bool "n1-standard-1"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will set the GCE machine type to n1-standard-1.
-
-config TERRAFORM_GCE_MACHINE_N1_STANDARD_8
-	bool "n1-standard-8"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will set the GCE machine type to n1-standard-8.
-
-endchoice
-
-config TERRAFORM_GCE_MACHINE_TYPE
-	string
-	default "n1-standard-1" if TERRAFORM_GCE_MACHINE_N1_STANDARD_1
-	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
-	help
-	  This option will set the GCE machine type. For other machine types,
-	  refer to this page:
-
-	  https://cloud.google.com/compute/docs/machine-types
-
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#machine_type
 
 config TERRAFORM_GCE_SCRATCH_DISK_INTERFACE
 	string "GCE scratch disk interface to use"
@@ -44,15 +17,6 @@ config TERRAFORM_GCE_SCRATCH_DISK_INTERFACE
 	  This option will set GCE scratch disk interface.
 
 	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#scratch_disk
-
-config TERRAFORM_GCE_IMAGE
-	string "GCE image to use"
-	default "debian-cloud/debian-10" if DISTRO_DEBIAN
-	default "debian-cloud/debian-10" if !DISTRO_DEBIAN
-	help
-	  This option will set GCE image to debian-cloud/debian-10.
-
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#image
 
 config TERRAFORM_GCE_DATA_VOLUME_DEVICE_FILE_NAME
 	string
