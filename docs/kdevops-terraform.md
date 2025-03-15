@@ -294,7 +294,7 @@ credentials = /home/foo/path/to/some.json
 ```
 
 https://www.terraform.io/docs/providers/google/getting_started.html
-https://www.terraform.io/docs/providers/google/index.html
+https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 https://cloud.google.com/iam/docs/granting-roles-to-service-accounts#granting_access_to_a_service_account_for_a_resource
 
 ### OCI - Oracle Cloud Infrastructure

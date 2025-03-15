@@ -14,15 +14,16 @@ config TERRAFORM_GCE_PROJECT
 
 	  Note: kdevops does not permit blanks in this name.
 
-config TERRAFORM_GCE_JSON_CREDENTIALS_PATH
-	string "GCE json credential file path"
-	default "account.json"
+config TERRAFORM_GCE_CREDENTIALS
+	string "Pathname to credentials file"
+	output yaml
 	help
-	  Path to the GCE json credentials file. Refer to the following links
-	  for documentation about this:
+	  A service account key is a private key that enables an
+	  application to authenticate as a service account. Specify
+	  the absolute pathname to the file containing your service
+	  account key here.
 
-	    o https://www.terraform.io/docs/providers/google/getting_started.html
-	    o https://www.terraform.io/docs/providers/google/index.html
-	    o https://cloud.google.com/community/tutorials/getting-started-on-gcp-with-terraform
-	    o https://cloud.google.com/iam/docs/creating-managing-service-account-keys
-	    o https://cloud.google.com/iam/docs/granting-roles-to-service-accounts#granting_access_to_a_service_account_for_a_resource
+	  Your project administrator can create a service account
+	  key by following the steps listed here:
+
+	  https://cloud.google.com/iam/docs/creating-managing-service-account-keys

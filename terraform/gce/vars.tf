@@ -1,10 +1,10 @@
-variable "gce_project" {
-  description = "Your project name"
+variable "gce_credentials" {
+  description = "Path to the your service account JSON credentials file"
   type        = string
 }
 
-variable "credentials" {
-  description = "Path to the your service account json credentials file"
+variable "gce_project" {
+  description = "Your project name"
   type        = string
 }
 

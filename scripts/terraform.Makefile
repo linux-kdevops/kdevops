@@ -89,7 +89,6 @@ ifeq (y,$(CONFIG_TERRAFORM_GCE))
 TERRAFORM_EXTRA_VARS += terraform_gce_machine_type=$(subst ",,$(CONFIG_TERRAFORM_GCE_MACHINE_TYPE))
 TERRAFORM_EXTRA_VARS += terraform_gce_scatch_disk_type=$(subst ",,$(CONFIG_TERRAFORM_GCE_SCRATCH_DISK_INTERFACE))
 TERRAFORM_EXTRA_VARS += terraform_gce_image_name=$(subst ",,$(CONFIG_TERRAFORM_GCE_IMAGE))
-TERRAFORM_EXTRA_VARS += terraform_gce_credentials=$(subst ",,$(CONFIG_TERRAFORM_GCE_JSON_CREDENTIALS_PATH))
 endif
 
 ifeq (y,$(CONFIG_TERRAFORM_OCI))
