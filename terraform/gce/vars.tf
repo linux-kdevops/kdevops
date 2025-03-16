@@ -8,10 +8,13 @@ variable "credentials" {
   type        = string
 }
 
-# https://cloud.google.com/compute/docs/regions-zones/
-# This is LA, California
-variable "region" {
-  description = "Region location"
+variable "gce_region" {
+  description = "Geographic Region"
+  type        = string
+}
+
+variable "gce_zone" {
+  description = "Availability zone"
   type        = string
 }
 

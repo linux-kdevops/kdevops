@@ -10,5 +10,6 @@ terraform {
 provider "google" {
   credentials = file(var.credentials)
   project     = var.project
-  region      = var.region
+  region      = var.gce_region
+  zone        = var.gce_zone
 }
