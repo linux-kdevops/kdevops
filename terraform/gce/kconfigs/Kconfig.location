@@ -24,14 +24,4 @@ config TERRAFORM_GCE_REGION
 	output yaml
 	default "us-west2" if TERRAFORM_GCE_REGION_US_WEST2
 
-config TERRAFORM_GCE_ZONE
-	string "GCE zone"
-	output yaml
-	default "us-west2-c"
-	help
-	  This option sets the GCE availability zone. For more
-	  examples:
-
-	  https://cloud.google.com/compute/docs/regions-zones/
-
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#zone
+source "terraform/gce/kconfigs/zones/Kconfig.us-west2"

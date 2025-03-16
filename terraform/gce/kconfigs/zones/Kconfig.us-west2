@@ -1,0 +1,27 @@
+if TERRAFORM_GCE_REGION_US_WEST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_WEST2_C
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_WEST2_A
+	bool "us-west2-a"
+
+config TERRAFORM_GCE_ZONE_US_WEST2_B
+	bool "us-west2-b"
+
+config TERRAFORM_GCE_ZONE_US_WEST2_C
+	bool "us-west2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-west2-a" if TERRAFORM_GCE_ZONE_US_WEST2_A
+	default "us-west2-b" if TERRAFORM_GCE_ZONE_US_WEST2_B
+	default "us-west2-c" if TERRAFORM_GCE_ZONE_US_WEST2_C
+
+endif # TERRAFORM_GCE_REGION_US_WEST2
