@@ -49,7 +49,11 @@ config TERRAFORM_GCE_DISTRO_CENTOS
 config TERRAFORM_GCE_DISTRO_DEBIAN
 	bool "Debian"
 
+config TERRAFORM_GCE_DISTRO_FEDORA
+	bool "Fedora"
+
 endchoice
 
 source "terraform/gce/kconfigs/images/Kconfig.centos"
 source "terraform/gce/kconfigs/images/Kconfig.debian"
+source "terraform/gce/kconfigs/images/Kconfig.fedora"
