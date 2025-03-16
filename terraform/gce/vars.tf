@@ -3,6 +3,11 @@ variable "gce_credentials" {
   type        = string
 }
 
+variable "gce_machine_type" {
+  description = "Machine type"
+  type        = string
+}
+
 variable "gce_project" {
   description = "Your project name"
   type        = string
@@ -15,12 +20,6 @@ variable "gce_region" {
 
 variable "gce_zone" {
   description = "Availability zone"
-  type        = string
-}
-
-# https://cloud.google.com/compute/docs/machine-types
-variable "machine_type" {
-  description = "Machine type"
   type        = string
 }
 

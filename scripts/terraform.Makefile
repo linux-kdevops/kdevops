@@ -86,7 +86,6 @@ TERRAFORM_EXTRA_VARS += terraform_azure_tenant_id=$(subst ",,$(CONFIG_TERRAFORM_
 endif
 
 ifeq (y,$(CONFIG_TERRAFORM_GCE))
-TERRAFORM_EXTRA_VARS += terraform_gce_machine_type=$(subst ",,$(CONFIG_TERRAFORM_GCE_MACHINE_TYPE))
 TERRAFORM_EXTRA_VARS += terraform_gce_scatch_disk_type=$(subst ",,$(CONFIG_TERRAFORM_GCE_SCRATCH_DISK_INTERFACE))
 TERRAFORM_EXTRA_VARS += terraform_gce_image_name=$(subst ",,$(CONFIG_TERRAFORM_GCE_IMAGE))
 endif

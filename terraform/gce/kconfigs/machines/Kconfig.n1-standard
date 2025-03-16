@@ -1,0 +1,28 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	help
+	  This option sets the GCE machine type. For other machine types,
+	  refer to this page:
+
+	  https://cloud.google.com/compute/docs/machine-types
+
+	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#machine_type
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	bool "n1-standard-1"
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	bool "n1-standard-8"
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n1-standard-1" if TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD

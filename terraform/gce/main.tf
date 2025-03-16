@@ -1,7 +1,7 @@
 resource "google_compute_instance" "kdevops_instance" {
   count        = local.kdevops_num_boxes
   name         = element(var.kdevops_nodes, count.index)
-  machine_type = var.machine_type
+  machine_type = var.gce_machine_type
   zone         = var.gce_zone
 
   tags = ["kdevops"]
