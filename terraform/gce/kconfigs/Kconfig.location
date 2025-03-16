@@ -1,10 +1,28 @@
-config TERRAFORM_GCE_REGION
-	string "GCE region"
-	output yaml
-	default "us-west2"
+choice
+	prompt "GCE region"
+	default TERRAFORM_GCE_REGION_US_WEST2
 	help
-	  This option sets the GCE geographic region. For more examples:
+	  GCE regions are collections of co-located zones. Zones have
+	  high-bandwidth, low-latency network connections to other
+	  zones within the same region.
+
+	  For details:
 	  https://cloud.google.com/compute/docs/regions-zones/
+
+	  For guidance selecting a region to use, try:
+	  https://cloud.withgoogle.com/region-picker/
+
+config TERRAFORM_GCE_REGION_US_WEST2
+	bool "us-west2"
+	help
+	  Los Angeles, California, USA
+
+endchoice
+
+config TERRAFORM_GCE_REGION
+	string
+	output yaml
+	default "us-west2" if TERRAFORM_GCE_REGION_US_WEST2
 
 config TERRAFORM_GCE_ZONE
 	string "GCE zone"
