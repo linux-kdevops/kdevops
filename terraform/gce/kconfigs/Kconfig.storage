@@ -1,11 +1,211 @@
-config TERRAFORM_GCE_SCRATCH_DISK_INTERFACE
-	string "GCE scratch disk interface to use"
-	default "NVME"
-	help
-	  This option will set GCE scratch disk interface.
+choice
+	prompt "Count of attached disks per instance"
+	default TERRAFORM_GCE_DISK_COUNT_2
 
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#scratch_disk
+config TERRAFORM_GCE_DISK_COUNT_0
+	bool "No persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_1
+	bool "1 persistent disk"
+
+config TERRAFORM_GCE_DISK_COUNT_2
+	bool "2 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_3
+	bool "3 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_4
+	bool "4 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_5
+	bool "5 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_6
+	bool "6 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_7
+	bool "7 persistent disks"
+
+config TERRAFORM_GCE_DISK_COUNT_8
+	bool "8 persistent disks"
+
+endchoice
+
+config TERRAFORM_GCE_DISK_COUNT
+	int
+	output yaml
+	default 0 if TERRAFORM_GCE_DISK_COUNT_0
+	default 1 if TERRAFORM_GCE_DISK_COUNT_1
+	default 2 if TERRAFORM_GCE_DISK_COUNT_2
+	default 3 if TERRAFORM_GCE_DISK_COUNT_3
+	default 4 if TERRAFORM_GCE_DISK_COUNT_4
+	default 5 if TERRAFORM_GCE_DISK_COUNT_5
+	default 6 if TERRAFORM_GCE_DISK_COUNT_6
+	default 7 if TERRAFORM_GCE_DISK_COUNT_7
+	default 8 if TERRAFORM_GCE_DISK_COUNT_8
+
+config TERRAFORM_GCE_DISK_NEEDS_IOPS
+	bool
+	default n
+
+config TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
+	bool
+	default n
+
+choice
+	prompt "Performance class of attached disks"
+	default TERRAFORM_GCE_DISK_TYPE_PD_BALANCED
+	help
+	  Select the type of disk that is attached to your
+	  instances. Note: A performance class selection might not
+	  be supported by all machine families.
+
+config TERRAFORM_GCE_DISK_TYPE_PD_BALANCED
+	bool "Balanced Persistent Disk"
+	help
+	  For most VM shapes, except very large ones, these disks
+	  have the same maximum IOPS as SSD Persistent Disk and
+	  lower IOPS per GiB. This disk type offers performance
+	  levels suitable for most general-purpose applications
+	  at a price point between that of standard and performance
+	  (pd-ssd) Persistent Disk.
+
+	  Backed by solid-state drives (SSD).
+
+config TERRAFORM_GCE_DISK_TYPE_PD_SSD
+	bool "Performance Persistent Disk"
+	help
+	  Suitable for enterprise applications and high-performance
+	  databases that require lower latency and more IOPS than
+	  standard Persistent Disk provides.
+
+	  Backed by solid-state drives (SSD).
+
+config TERRAFORM_GCE_DISK_TYPE_PD_STANDARD
+	bool "Standard Persistent Disk"
+	help
+	  Suitable for large data processing workloads that primarily
+	  use sequential I/Os.
+
+	  Backed by standard hard disk drives (HDD).
+
+config TERRAFORM_GCE_DISK_TYPE_PD_EXTREME
+	bool "Extreme Persistent Disk"
+	select TERRAFORM_GCE_DISK_NEEDS_IOPS
+	help
+	  Offers consistently high performance for both random
+	  access workloads and bulk throughput. Designed for
+	  high-end database workloads.
+
+	  Backed by solid-state drives (SSD).
+
+config TERRAFORM_GCE_DISK_TYPE_HYPERDISK_BALANCED
+	bool "Hyperdisk Balanced"
+	select TERRAFORM_GCE_DISK_NEEDS_IOPS
+	select TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
+	help
+	  Hyperdisk Balanced is a good fit for a wide range of use
+	  cases such as LOB applications, web applications, and
+	  medium-tier databases that don't require the performance
+	  of Hyperdisk Extreme.
+
+config TERRAFORM_GCE_DISK_TYPE_HYPERDISK_EXTREME
+	bool "Hyperdisk Extreme"
+	select TERRAFORM_GCE_DISK_NEEDS_IOPS
+	select TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
+	help
+	  Use Hyperdisk Extreme if Extreme Persistent Disk isn't
+	  supported or doesn't provide enough performance. Hyperdisk
+	  Extreme disks feature higher maximum IOPS and throughput
+	  along with low sub-millisecond latencies, and offer high
+	  performance for the most demanding workloads, such as high
+	  performance databases.
+
+config TERRAFORM_GCE_DISK_TYPE_HYPERDISK_THROUGHPUT
+	bool "Hyperdisk Throughput"
+	help
+	  For scale-out analytics workloads like Hadoop and Kafka,
+	  cold storage, and data drives for cost sensitive apps, use
+	  Hyperdisk Throughput.
+
+endchoice
+
+config TERRAFORM_GCE_DISK_TYPE
+	string
+	output yaml
+	default "pd-balanced" if TERRAFORM_GCE_DISK_TYPE_PD_BALANCED
+	default "pd-ssd" if TERRAFORM_GCE_DISK_TYPE_PD_SSD
+	default "pd-standard" if TERRAFORM_GCE_DISK_TYPE_PD_STANDARD
+	default "pd-extreme" if TERRAFORM_GCE_DISK_TYPE_PD_EXTREME
+	default "hyperdisk-balanced" if TERRAFORM_GCE_DISK_TYPE_HYPERDISK_BALANCED
+	default "hyperdisk-extreme" if TERRAFORM_GCE_DISK_TYPE_HYPERDISK_EXTREME
+	default "hyperdisk-throughput" if TERRAFORM_GCE_DISK_TYPE_HYPERDISK_THROUGHPUT
+
+choice
+	prompt "Size of each attached disk, in GB"
+	default TERRAFORM_GCE_DISK_SIZE_128GB
+
+config TERRAFORM_GCE_DISK_SIZE_8GB
+	bool "8 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_16GB
+	bool "16 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_32GB
+	bool "32 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_64GB
+	bool "64 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_128GB
+	bool "128 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_256GB
+	bool "256 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_512GB
+	bool "512 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_1024GB
+	bool "1024 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_2048GB
+	bool "2048 GB"
+
+config TERRAFORM_GCE_DISK_SIZE_4096GB
+	bool "4096 GB"
+
+endchoice
+
+config TERRAFORM_GCE_DISK_SIZE
+	int
+	output yaml
+	default 8 if TERRAFORM_GCE_DISK_SIZE_8GB
+	default 16 if TERRAFORM_GCE_DISK_SIZE_16GB
+	default 32 if TERRAFORM_GCE_DISK_SIZE_32GB
+	default 64 if TERRAFORM_GCE_DISK_SIZE_64GB
+	default 128 if TERRAFORM_GCE_DISK_SIZE_128GB
+	default 256 if TERRAFORM_GCE_DISK_SIZE_256GB
+	default 512 if TERRAFORM_GCE_DISK_SIZE_512GB
+	default 1024 if TERRAFORM_GCE_DISK_SIZE_1024GB
+	default 2048 if TERRAFORM_GCE_DISK_SIZE_2048GB
+	default 4096 if TERRAFORM_GCE_DISK_SIZE_4096GB
+
+config TERRAFORM_GCE_DISK_IOPS
+	int "Provisioned IOPS for each attached disk"
+	output yaml
+	range 125 120000
+	default 240
+	depends on TERRAFORM_GCE_DISK_NEEDS_IOPS
+
+config TERRAFORM_GCE_DISK_THROUGHPUT
+	int "Provisioned throughput for each attached disk"
+	output yaml
+	range 125 600
+	default 240
+	depends on TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
 
 config TERRAFORM_GCE_DATA_VOLUME_DEVICE_FILE_NAME
 	string
-	default "/dev/nvme0n1"
+	output yaml
+	default "/dev/disk/by-id/google-persistent-disk-1"

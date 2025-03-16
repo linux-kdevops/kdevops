@@ -7,7 +7,15 @@ gce_image_project = "{{ terraform_gce_image_project }}"
 gce_image_family = "{{ terraform_gce_image_family }}"
 gce_image_size = "{{ terraform_gce_image_size }}"
 gce_image_type = "{{ terraform_gce_image_type }}"
-scratch_disk_interface = "{{ terraform_gce_scatch_disk_type }}"
+gce_disk_count = {{ terraform_gce_disk_count }}
+gce_disk_size = {{ terraform_gce_disk_size }}
+gce_disk_type = "{{ terraform_gce_disk_type }}"
+{% if terraform_gce_disk_iops is defined %}
+gce_disk_iops = {{ terraform_gce_disk_iops }}
+{% endif %}
+{% if terraform_gce_disk_throughput is defined %}
+gce_disk_throughput = {{ terraform_gce_disk_throughput }}
+{% endif %}
 
 ssh_config_pubkey_file = "{{ kdevops_terraform_ssh_config_pubkey_file }}"
 ssh_config_user = "{{ kdevops_terraform_ssh_config_user }}"

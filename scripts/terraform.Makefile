@@ -85,10 +85,6 @@ TERRAFORM_EXTRA_VARS += terraform_azure_subscription_id=$(subst ",,$(CONFIG_TERR
 TERRAFORM_EXTRA_VARS += terraform_azure_tenant_id=$(subst ",,$(CONFIG_TERRAFORM_AZURE_TENANT_ID))
 endif
 
-ifeq (y,$(CONFIG_TERRAFORM_GCE))
-TERRAFORM_EXTRA_VARS += terraform_gce_scatch_disk_type=$(subst ",,$(CONFIG_TERRAFORM_GCE_SCRATCH_DISK_INTERFACE))
-endif
-
 ifeq (y,$(CONFIG_TERRAFORM_OCI))
 TERRAFORM_EXTRA_VARS += terraform_oci_region=$(subst ",,$(CONFIG_TERRAFORM_OCI_REGION))
 TERRAFORM_EXTRA_VARS += terraform_oci_tenancy_ocid=$(subst ",,$(CONFIG_TERRAFORM_OCI_TENANCY_OCID))
