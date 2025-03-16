@@ -1,0 +1,51 @@
+if TERRAFORM_GCE_DISTRO_SLES
+
+config TERRAFORM_GCE_IMAGE_PROJECT
+	string
+	output yaml
+	default "suse-cloud"
+
+config TERRAFORM_GCE_IMAGE_SIZE
+	int
+	output yaml
+	default 10
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "OS image to use"
+
+config TERRAFORM_GCE_IMAGE_SLES_12_X86_64
+	bool "SUSE Linux Enterprise Server 12 (x86)"
+
+config TERRAFORM_GCE_IMAGE_SLES_15_X86_64
+	bool "SUSE Linux Enterprise Server 15 (x86)"
+
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+	default "sles-12" if TERRAFORM_GCE_IMAGE_SLES_12_X86_64
+	default "sles-15" if TERRAFORM_GCE_IMAGE_SLES_15_X86_64
+
+endif # TARGET_ARCH_X86_64
+
+if TARGET_ARCH_ARM64
+
+choice
+	prompt "OS image to use"
+
+config TERRAFORM_GCE_IMAGE_SLES_15_ARM64
+	bool "SUSE Linux Enterprise Server 15 (arm64)"
+
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+	default "sles-15-arm64" if TERRAFORM_GCE_IMAGE_SLES_15_ARM64
+
+endif # TARGET_ARCH_ARM64
+
+endif # TERRAFORM_GCE_DISTRO_SLES
