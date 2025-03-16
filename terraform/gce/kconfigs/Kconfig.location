@@ -12,6 +12,11 @@ choice
 	  For guidance selecting a region to use, try:
 	  https://cloud.withgoogle.com/region-picker/
 
+config TERRAFORM_GCE_REGION_US_CENTRAL1
+	bool "us-central1"
+	help
+	  Council Bluffs, Iowa, USA
+
 config TERRAFORM_GCE_REGION_US_WEST1
 	bool "us-west1"
 	help
@@ -37,11 +42,13 @@ endchoice
 config TERRAFORM_GCE_REGION
 	string
 	output yaml
+	default "us-central1" if TERRAFORM_GCE_REGION_US_CENTRAL1
 	default "us-west1" if TERRAFORM_GCE_REGION_US_WEST1
 	default "us-west2" if TERRAFORM_GCE_REGION_US_WEST2
 	default "us-west3" if TERRAFORM_GCE_REGION_US_WEST3
 	default "us-west4" if TERRAFORM_GCE_REGION_US_WEST4
 
+source "terraform/gce/kconfigs/zones/Kconfig.us-central1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-west1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-west2"
 source "terraform/gce/kconfigs/zones/Kconfig.us-west3"
