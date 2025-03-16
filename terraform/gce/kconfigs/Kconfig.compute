@@ -43,9 +43,13 @@ choice
 	  Select the Linux distribution for the OS base image of the
 	  instances to be created.
 
+config TERRAFORM_GCE_DISTRO_CENTOS
+	bool "CentOS"
+
 config TERRAFORM_GCE_DISTRO_DEBIAN
 	bool "Debian"
 
 endchoice
 
+source "terraform/gce/kconfigs/images/Kconfig.centos"
 source "terraform/gce/kconfigs/images/Kconfig.debian"
