@@ -1,0 +1,53 @@
+if TERRAFORM_GCE_DISTRO_ROCKY
+
+config TERRAFORM_GCE_IMAGE_PROJECT
+	string
+	output yaml
+	default "rocky-linux-cloud"
+
+config TERRAFORM_GCE_IMAGE_SIZE
+	int
+	output yaml
+	default 20
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "OS image to use"
+	default TERRAFORM_GCE_IMAGE_ROCKY_8_X86_64
+
+config TERRAFORM_GCE_IMAGE_ROCKY_8_X86_64
+	bool "Rocky Linux 8 (x86)"
+
+config TERRAFORM_GCE_IMAGE_ROCKY_9_X86_64
+	bool "Rocky Linux 9 (x86)"
+
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+	default "rocky-linux-8" if TERRAFORM_GCE_IMAGE_ROCKY_8_X86_64
+	default "rocky-linux-9" if TERRAFORM_GCE_IMAGE_ROCKY_9_X86_64
+
+endif # TARGET_ARCH_X86_64
+
+if TARGET_ARCH_ARM64
+
+choice
+	prompt "OS image to use"
+	default TERRAFORM_GCE_IMAGE_ROCKY_9_ARM64
+
+config TERRAFORM_GCE_IMAGE_ROCKY_9_ARM64
+	bool "Rocky Linux 9 (arm64)"
+
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+	default "rocky-linux-9-arm64" if TERRAFORM_GCE_IMAGE_ROCKY_9_ARM64
+
+endif # TARGET_ARCH_ARM64
+
+endif # TERRAFORM_GCE_DISTRO_ROCKY
