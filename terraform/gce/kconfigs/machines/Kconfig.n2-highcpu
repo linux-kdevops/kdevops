@@ -1,0 +1,53 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	help
+	  This option sets the GCE machine type. For other machine
+	  types, refer to this page:
+
+	  https://cloud.google.com/compute/docs/machine-types
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_2
+	bool "n2-highcpu-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPU (1 core) and 2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	bool "n2-highcpu-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPU (2 core) and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_8
+	bool "n2-highcpu-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPU (4 cores) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
+	bool "n2-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPU (8 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
+	bool "n2-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPU (16 cores) and 32GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n2-highcpu-2" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_2
+	default "n2-highcpu-4" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	default "n2-highcpu-8" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_8
+	default "n2-highcpu-16" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
+	default "n2-highcpu-32" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
