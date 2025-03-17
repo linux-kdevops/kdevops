@@ -29,7 +29,7 @@ resource "google_compute_instance" "kdevops_instance" {
   }
 
   metadata = {
-    sshKeys = format("%s:%s", var.ssh_config_user, file(var.ssh_config_pubkey_file))
+    ssh-keys = format("%s:%s", var.ssh_config_user, file(var.ssh_config_pubkey_file))
   }
 
   metadata_startup_script = "echo hi > /test.txt"
