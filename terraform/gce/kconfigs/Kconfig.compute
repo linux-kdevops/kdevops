@@ -17,10 +17,17 @@ config TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
 	help
 	  General purpose computing on Intel Cascade Lake CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_N2D_HIGHCPU
+	bool "N2D High CPU family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  General purpose computing on AMD Milan CPUs.
+
 endchoice
 
 source "terraform/gce/kconfigs/machines/Kconfig.n1-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
 
 config TERRAFORM_GCE_IMAGE
 	string "GCE image to use"
