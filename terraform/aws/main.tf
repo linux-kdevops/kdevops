@@ -142,19 +142,15 @@ resource "aws_instance" "kdevops_instance" {
   }
 }
 
-resource "aws_ebs_volume" "kdevops_vols" {
-  count             = var.aws_enable_ebs == "true" ? local.kdevops_num_boxes * var.aws_ebs_num_volumes_per_instance : 0
-  availability_zone = var.aws_availability_region
-  size              = var.aws_ebs_volume_size
-  type              = var.aws_ebs_volume_type
-  iops              = var.aws_ebs_volume_iops
-}
-
-resource "aws_volume_attachment" "kdevops_att" {
-  count       = var.aws_enable_ebs == "true" ? local.kdevops_num_boxes * var.aws_ebs_num_volumes_per_instance : 0
-  device_name = element(var.aws_ebs_device_names, count.index)
-  volume_id   = element(aws_ebs_volume.kdevops_vols.*.id, count.index)
-  instance_id = element(aws_instance.kdevops_instance.*.id, count.index)
+module "kdevops_ebs_volumes" {
+  count                 = var.aws_enable_ebs == "true" ? local.kdevops_num_boxes : 0
+  source                = "./kdevops_ebs_volumes"
+  vol_availability_zone = var.aws_availability_region
+  vol_count             = var.aws_ebs_num_volumes_per_instance
+  vol_instance_id       = element(aws_instance.kdevops_instance.*.id, count.index)
+  vol_iops              = var.aws_ebs_volume_iops
+  vol_size              = var.aws_ebs_volume_size
+  vol_type              = var.aws_ebs_volume_type
 }
 
 resource "aws_eip" "kdevops_eip" {

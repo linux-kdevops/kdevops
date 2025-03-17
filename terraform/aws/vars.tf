@@ -76,24 +76,6 @@ variable "aws_ebs_num_volumes_per_instance" {
   default     = "1"
 }
 
-# Sigh.. These are required! And oh my, what a mess this is...
-#
-# Notes: on a t2.micro with 2 hosts we should use /dev/sdh /dev/sdh in this
-# this list, but note that this will actually map to /dev/xvdh on both hosts.
-# And if you don't do that, and you use /dev/sdh, dev/sdi here then the
-# first host will get /dev/xvdh and the second one /dev/xvdi
-#
-# The first aws instance type to support nvme is the c5d.large with just one
-# nvme drive. But subsequent EBS drivers get pegged as nvme as well. *And*
-# even if you want to use nvme, you must use /dev/sdh /dev/sdh here...
-#
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
-variable "aws_ebs_device_names" {
-  description = "The EBS device names to use"
-  type        = list(string)
-  default     = [ "/dev/sdf", "/dev/sdg", "/dev/sdh", "/dev/sdi", "/dev/sdj", "/dev/sdk", "/dev/sdl", "/dev/sdm", "/dev/sdn", "/dev/sdo", "/dev/sdp" ]
-}
-
 # The t2.micro comes with 8 GiB of storage.
 # For more storage we need to use EBS.
 # AWS Free Tier includes 30GB of Storage, 2 million I/Os, and 1GB of snapshot
