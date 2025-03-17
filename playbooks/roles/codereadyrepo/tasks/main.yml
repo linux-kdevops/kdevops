@@ -22,7 +22,6 @@
         codeready_repo: "crb"
       when:
         - ansible_distribution == 'CentOS'
-        - kdevops_enable_guestfs
 
     - name: Select the AWS RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
