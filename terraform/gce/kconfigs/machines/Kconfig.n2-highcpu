@@ -50,4 +50,9 @@ config TERRAFORM_GCE_MACHINE_TYPE
 	default "n2-highcpu-16" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
 	default "n2-highcpu-32" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
 
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
 endif # TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU

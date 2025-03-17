@@ -9,6 +9,7 @@ resource "google_compute_instance" "kdevops_instance" {
   boot_disk {
     initialize_params {
       image = var.image_name
+      type  = var.gce_image_type
     }
   }
 

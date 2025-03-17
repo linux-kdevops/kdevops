@@ -3,6 +3,11 @@ variable "gce_credentials" {
   type        = string
 }
 
+variable "gce_image_type" {
+  description = "Type of image disk"
+  type        = string
+}
+
 variable "gce_machine_type" {
   description = "Machine type"
   type        = string

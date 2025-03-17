@@ -47,4 +47,9 @@ config TERRAFORM_GCE_MACHINE_TYPE
 	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
 	default "n1-standard-16" if TERRAFORM_GCE_MACHINE_N1_STANDARD_16
 
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
 endif # TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD
