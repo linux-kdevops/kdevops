@@ -18,6 +18,11 @@ variable "md_resource_group_name" {
   description = "Azure resource group name"
 }
 
+variable "md_tier" {
+  type        = string
+  description = "Performance tier of managed disks"
+}
+
 variable "md_virtual_machine_id" {
   type        = string
   description = "Azure ID of the virtual machine to attach the disks to"

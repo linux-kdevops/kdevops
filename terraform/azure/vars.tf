@@ -28,6 +28,11 @@ variable "azure_managed_disks_size" {
   type        = number
 }
 
+variable "azure_managed_disks_tier" {
+  description = "Performance tier of managed disks"
+  type        = string
+}
+
 variable "azure_subscription_id" {
   description = "Your Azure subscription ID"
   type        = string

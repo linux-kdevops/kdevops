@@ -144,6 +144,7 @@ module "kdevops_managed_disks" {
   md_disk_count           = var.azure_managed_disks_per_instance
   md_location             = var.azure_location
   md_resource_group_name  = azurerm_resource_group.kdevops_group.name
+  md_tier                 = var.azure_managed_disks_tier
   md_virtual_machine_id   = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
   md_virtual_machine_name = element(azurerm_linux_virtual_machine.kdevops_vm.*.name, count.index)
   source                  = "./kdevops_managed_disks"
