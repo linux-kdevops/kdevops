@@ -11,10 +11,9 @@ resource "azurerm_managed_disk" "kdevops_managed_disk" {
 
 resource "azurerm_virtual_machine_data_disk_attachment" "kdevops_disk_attachment" {
   count                     = var.md_disk_count
-
+  caching                   = "ReadWrite"
+  lun                       = count.index
   managed_disk_id           = azurerm_managed_disk.kdevops_managed_disk[count.index].id
   virtual_machine_id        = var.md_virtual_machine_id
-  caching                   = "None"
   write_accelerator_enabled = false
-  lun                       = count.index
 }
