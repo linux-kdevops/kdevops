@@ -7,3 +7,9 @@ output "public_ip_map" {
   description = "The public IP addresses assigned to each instance"
   value       = zipmap(var.kdevops_nodes[*], aws_eip.kdevops_eip[*].public_ip)
 }
+
+output "block_device_map" {
+  description = "The block devices assigned to each instance"
+  value       = zipmap(var.kdevops_nodes[*],
+                       module.kdevops_ebs_volumes[*].ebs_volume_map)
+}
