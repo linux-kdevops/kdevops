@@ -138,14 +138,13 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   }
 }
 
-module "managed_disks" {
+module "kdevops_managed_disks" {
   count                   = local.kdevops_num_boxes
-  source                  = "./managed_disks"
-
   md_disk_size            = var.managed_disks_size
   md_disk_count           = var.managed_disks_per_instance
   md_location             = var.resource_location
   md_resource_group_name  = azurerm_resource_group.kdevops_group.name
   md_virtual_machine_id   = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
   md_virtual_machine_name = element(azurerm_linux_virtual_machine.kdevops_vm.*.name, count.index)
+  source                  = "./kdevops_managed_disks"
 }
