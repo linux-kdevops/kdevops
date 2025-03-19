@@ -1,0 +1,191 @@
+choice
+	prompt "AWS region to use"
+	default TERRAFORM_AWS_US_WEST_2
+	help
+	  Use this option to select the AWS region that is
+	  geographically closest to you.
+
+	  Once selected, you can stick with the default AV region,
+	  chosen by kdevops, or use:
+
+	    aws ec2 describe-availability-zones --region <region-name>
+
+	  to list the Availability Zones that are enabled for your
+	  AWS account. Enter your selection from this list using the
+	  TERRAFORM_AWS_AV_REGION menu.
+
+config TERRAFORM_AWS_US_EAST_1
+	bool "us-east-1 - N. Virginia"
+	help
+	  This option will set the AWS region to us-east-1.
+
+config TERRAFORM_AWS_US_EAST_2
+	bool "us-east-2 - Ohio"
+	help
+	  This option will set the AWS region to us-east-2.
+
+config TERRAFORM_AWS_US_WEST_1
+	bool "us-west-1 - North California"
+	help
+	  This option will set the AWS region to us-west-1.
+
+config TERRAFORM_AWS_US_WEST_2
+	bool "us-west-2 - Oregon"
+	help
+	  This option will set the AWS region to us-west-2.
+
+	  If you wish to expand on this list send a patch after reading
+	  this list:
+
+	  https://docs.aws.amazon.com/general/latest/gr/rande.html
+
+	  Note that if you change region the AMI may change as well even
+	  for the same distribution. At least that applies to Amazon EC2
+	  optimized images. Use the AWS console, to set that up it will
+	  ask you for your credentials and then a region. Before adding
+	  an entry for ami image be sure you are on the region and then
+	  query with something like:
+
+	  aws ec2 describe-images --image-ids ami-0efa651876de2a5ce
+
+	  For instance, this AMI belongs to us-west-2 only. us-east* have
+	  other AMIs for the same Amazon 2023 EC2 image. The output from
+	  here tells me:
+
+	  "OwnerId": "137112412989"
+
+	  And that is what value to use for ami-0efa651876de2a5ce
+	  for the TERRAFORM_AWS_AMI_OWNER. To get the ami-* for your regions
+	  just go to your EC2 console, that console will be associated with
+	  a region already. You have to change regions if you want to look
+	  for AMIs in other regions. There are for example two different
+	  ami-* values for Amazon Linux 2023 for different regions. However
+	  they values can be same. For example below are the us-west-2 queries
+	  for Amazon Linux 2023 for x86_64 and then for ARM64.
+
+	  aws ec2 describe-images --image-ids ami-0efa651876de2a5ce | grep OwnerId
+	    "OwnerId": "137112412989",
+	  aws ec2 describe-images --image-ids ami-0699f753302dd8b00 | grep OwnerId
+	    "OwnerId": "137112412989",
+
+endchoice
+
+config TERRAFORM_AWS_REGION
+	string
+	default "us-west-2" if TERRAFORM_AWS_US_WEST_2
+	default "us-west-1" if TERRAFORM_AWS_US_WEST_1
+	default "us-east-2" if TERRAFORM_AWS_US_EAST_2
+	default "us-east-1" if TERRAFORM_AWS_US_EAST_1
+
+if TERRAFORM_AWS_US_EAST_1
+
+choice
+	prompt "AWS East 1 availability zone to use"
+	default TERRAFORM_AWS_AV_REGION_EAST_1A
+
+config TERRAFORM_AWS_AV_REGION_EAST_1A
+	bool "us-east-1a"
+	help
+	  This option selects us-east-1a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1B
+	bool "us-east-1b"
+	help
+	  This option selects us-east-1b availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1C
+	bool "us-east-1c"
+	help
+	  This option selects us-east-1c availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1D
+	bool "us-east-1d"
+	help
+	  This option selects us-east-1d availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1E
+	bool "us-east-1e"
+	help
+	  This option selects us-east-1e availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_1F
+	bool "us-east-1f"
+	help
+	  This option selects us-east-1f availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_US_EAST_1
+
+if TERRAFORM_AWS_US_EAST_2
+
+choice
+	prompt "AWS East 2 availability zone to use"
+	default TERRAFORM_AWS_AV_REGION_EAST_2A
+
+config TERRAFORM_AWS_AV_REGION_EAST_2A
+	bool "us-east-2a"
+	help
+	  This option selects us-east-2a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_2B
+	bool "us-east-2b"
+	help
+	  This option selects us-east-2a availability zone.
+
+config TERRAFORM_AWS_AV_REGION_EAST_2C
+	bool "us-east-2c"
+	help
+	  This option selects us-east-2c availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_US_EAST_2
+
+if TERRAFORM_AWS_US_WEST_2
+
+choice
+	prompt "AWS West 2 AV region to use"
+	default TERRAFORM_AWS_AV_REGION_WEST_2B
+
+config TERRAFORM_AWS_AV_REGION_WEST_1B
+	bool "us-west-1b"
+	help
+	  This option will set the AWS AV region to us-west-1b.
+	  This option will set the AWS availablity region to the specified
+	  value.
+
+	  If you wish to expand on this list send a patch after reading this
+	  list:
+
+	  https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
+	  https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
+
+config TERRAFORM_AWS_AV_REGION_WEST_2B
+	bool "us-west-2b"
+	help
+	  This option will set the AWS AV region to us-west-2b.
+
+config TERRAFORM_AWS_AV_REGION_WEST_2D
+	bool "us-west-2d"
+	help
+	  This option will set the AWS AV region to us-west-2d.
+
+endchoice
+
+endif # TERRAFORM_AWS_US_WEST_2
+
+config TERRAFORM_AWS_AV_REGION
+	string
+	default "us-west-1b" if TERRAFORM_AWS_AV_REGION_WEST_1B
+	default "us-west-2b" if TERRAFORM_AWS_AV_REGION_WEST_2B
+	default "us-west-2d" if TERRAFORM_AWS_AV_REGION_WEST_2D
+	default "us-east-1a" if TERRAFORM_AWS_AV_REGION_EAST_1A
+	default "us-east-1b" if TERRAFORM_AWS_AV_REGION_EAST_1B
+	default "us-east-1c" if TERRAFORM_AWS_AV_REGION_EAST_1C
+	default "us-east-1d" if TERRAFORM_AWS_AV_REGION_EAST_1D
+	default "us-east-1e" if TERRAFORM_AWS_AV_REGION_EAST_1E
+	default "us-east-1f" if TERRAFORM_AWS_AV_REGION_EAST_1F
+	default "us-east-2a" if TERRAFORM_AWS_AV_REGION_EAST_2A
+	default "us-east-2b" if TERRAFORM_AWS_AV_REGION_EAST_2B
+	default "us-east-2c" if TERRAFORM_AWS_AV_REGION_EAST_2C
