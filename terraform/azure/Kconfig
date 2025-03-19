@@ -302,7 +302,7 @@ config TERRAFORM_AZURE_MANAGED_DISKS_SIZE
 
 config TERRAFORM_AZURE_DATA_VOLUME_DEVICE_FILE_NAME
 	string "Device name for the /data file system"
-	default "/dev/sdc"
+	default "/dev/disk/azure/scsi1/lun0"
 	help
 	  This option sets the name of the block device on each target
 	  node that is to be used for the /data file system.
