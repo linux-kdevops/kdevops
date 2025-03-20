@@ -1,0 +1,93 @@
+choice
+	prompt "Azure vmsize"
+	default TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
+	bool "Standard_DS1_v2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option will set the azure vm image size to Standard_DS1_v2.
+
+config TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
+	bool "Standard_DS3_v2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option will set the azure vm image size to Standard_DS3_v2.
+
+endchoice
+
+config TERRAFORM_AZURE_VM_SIZE
+	string "Azure vm size"
+	default "Standard_DS1_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
+	default "Standard_DS3_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
+	help
+	  This option will set the azure vm image size.
+
+choice
+	prompt "Azure image publisher"
+	default TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+
+config TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+	bool "Debian"
+	help
+	  This option will set the image publisher to Debian.
+
+endchoice
+
+config TERRAFORM_AZURE_IMAGE_PUBLISHER
+	string "The azure image publisher"
+	default "Debian" if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+	help
+	  This option will set path to the image publisher.
+
+if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+
+choice
+	prompt "Azure image offer"
+	default TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10 if DISTRO_DEBIAN
+
+config TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
+	bool "debian-10"
+	depends on TARGET_ARCH_X86_64
+	help
+	  This option sets the image offer from credativ to debian-10.
+
+endchoice
+
+if TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
+
+choice
+	prompt "Azure debian image SKU"
+	default TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
+
+config TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
+	bool "10"
+	help
+	  This option sets the image sku to 10.
+
+endchoice
+
+endif # TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
+
+endif
+
+config TERRAFORM_AZURE_IMAGE_OFFER
+	string "Azure image offer to use"
+	default "debian-10" if TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
+	help
+	  This option will set image offer. For more debian offers read:
+
+	  https://wiki.debian.org/Cloud/MicrosoftAzure
+
+config TERRAFORM_AZURE_IMAGE_SKU
+	string "Azure image SKU"
+	default "10" if TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
+	help
+	  This option will set azure image sku to use.
+
+config TERRAFORM_AZURE_IMAGE_VERSION
+	string "Azure image version"
+	default "latest"
+	help
+	  This option will set azure image version to use. Its a good idea to
+	  use "latest" here.
