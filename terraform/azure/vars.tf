@@ -8,7 +8,7 @@ variable "azure_subscription_id" {
   type        = string
 }
 
-variable "vmsize" {
+variable "azure_vmsize" {
   description = "VM size"
   type        = string
 }

@@ -17,11 +17,10 @@ config TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
 endchoice
 
 config TERRAFORM_AZURE_VM_SIZE
-	string "Azure vm size"
+	string
+	output yaml
 	default "Standard_DS1_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
 	default "Standard_DS3_v2" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
-	help
-	  This option will set the azure vm image size.
 
 choice
 	prompt "Azure image publisher"

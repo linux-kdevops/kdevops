@@ -105,7 +105,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   location                        = var.azure_location
   resource_group_name             = azurerm_resource_group.kdevops_group.name
   network_interface_ids           = [element(azurerm_network_interface.kdevops_nic.*.id, count.index)]
-  size                            = var.vmsize
+  size                            = var.azure_vmsize
   admin_username                  = var.ssh_config_user
   disable_password_authentication = true
 
