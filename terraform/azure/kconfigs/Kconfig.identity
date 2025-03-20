@@ -1,5 +1,9 @@
 config TERRAFORM_AZURE_SUBSCRIPTION_ID
 	string "Azure subscription ID"
-	default "anotherGUID"
+	output yaml
 	help
-	  The subscription ID to use.
+	  This option specifies the Azure subscription ID to use.
+	  Retrieve your subscription ID by following these
+	  instructions:
+
+	  https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id

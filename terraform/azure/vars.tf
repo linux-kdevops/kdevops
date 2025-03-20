@@ -1,5 +1,5 @@
-variable "subscription_id" {
-  description = "Your subscription ID"
+variable "azure_subscription_id" {
+  description = "Your Azure subscription ID"
   type        = string
 }
 
