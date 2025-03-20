@@ -168,24 +168,10 @@ $ openssl x509 -signkey "service-principal.key" -in "service-principal.csr" -req
 $ openssl pkcs12 -export -out "service-principal.pfx" -inkey "service-principal.key" -in "service-principal.crt"
 ```
 
-Use the documentation to get your tenant ID, the application id, the
-subscription ID. You will need this to set these variables up:
+Use the documentation to get your subscription ID, tenant ID, and
+application id. Set these values via "make menuconfig" in the
+Terraform Providers submenu.
 
-```
-$ cat terraform.tfvars
-client_certificate_path = "./service-principal.pfx"
-client_certificate_password = "my-cool-password"
-tenant_id = "SOME-GUID"
-application_id = "SOME-GUID"
-subscription_id = "SOME-GUID"
-
-ssh_config_pubkey_file = "~/.ssh/minicloud.pub"
-ssh_config_user = "yourcoolusername"
-ssh_config = "~/.ssh/config"
-ssh_config_update = "true"
-ssh_config_use_strict_settings = "true"
-ssh_config_backup = "true"
-```
 
 ### Openstack
 
