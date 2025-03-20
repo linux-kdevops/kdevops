@@ -1,25 +1,11 @@
 if TERRAFORM_AZURE
 
+menu "Resource Location"
+source "terraform/azure/kconfigs/Kconfig.location"
+endmenu
 menu "Identity & Access"
 source "terraform/azure/kconfigs/Kconfig.identity"
 endmenu
-
-choice
-	prompt "Choose Azure resource location to use"
-	default TERRAFORM_AZURE_WEST_US
-
-config TERRAFORM_AZURE_WEST_US
-	bool "westus"
-	help
-	  This option will set the azure resource location to westus.
-
-endchoice
-
-config TERRAFORM_AZURE_RESOURCE_LOCATION
-	string "Azure resource location"
-	default "westus" if TERRAFORM_AZURE_WEST_US
-	help
-	  This option will set the azure resource location.
 
 choice
 	prompt "Azure vmsize"
