@@ -148,6 +148,7 @@ config TERRAFORM_AZURE_IMAGE_OFFER
 
 config TERRAFORM_AZURE_IMAGE_SKU
 	string "Azure image SKU"
+	output yaml
 	default "10" if TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
 	help
 	  This option will set azure image sku to use.

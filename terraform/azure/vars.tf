@@ -13,6 +13,11 @@ variable "azure_image_publisher" {
   type        = string
 }
 
+variable "azure_image_sku" {
+  description = "OS image SKU"
+  type        = string
+}
+
 variable "azure_subscription_id" {
   description = "Your Azure subscription ID"
   type        = string
@@ -20,11 +25,6 @@ variable "azure_subscription_id" {
 
 variable "azure_vmsize" {
   description = "VM size"
-  type        = string
-}
-
-variable "image_sku" {
-  description = "Storage image sku"
   type        = string
 }
 
