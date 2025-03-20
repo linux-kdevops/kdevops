@@ -15,7 +15,7 @@ locals {
 
 resource "azurerm_virtual_network" "kdevops_network" {
   name                = "kdevops_net"
-  address_space       = [ local.kdevops_private_net ]
+  address_space       = [local.kdevops_private_net]
   location            = var.resource_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
 
@@ -28,7 +28,7 @@ resource "azurerm_subnet" "kdevops_subnet" {
   name                 = "kdevops_subnet"
   resource_group_name  = azurerm_resource_group.kdevops_group.name
   virtual_network_name = azurerm_virtual_network.kdevops_network.name
-  address_prefixes     = [ local.kdevops_private_net ]
+  address_prefixes     = [local.kdevops_private_net]
 }
 
 resource "azurerm_public_ip" "kdevops_publicip" {
