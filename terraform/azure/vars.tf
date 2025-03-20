@@ -28,11 +28,6 @@ variable "azure_vmsize" {
   type        = string
 }
 
-variable "image_version" {
-  description = "Storage image version"
-  type        = string
-}
-
 variable "managed_disks_per_instance" {
   description = "Count of managed disks per VM instance"
   type        = number

@@ -71,10 +71,6 @@ endif # CONFIG_TERRAFORM_AWS_ENABLE_EBS_VOLUMES
 
 endif
 
-ifeq (y,$(CONFIG_TERRAFORM_AZURE))
-TERRAFORM_EXTRA_VARS += terraform_azure_image_version=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_VERSION))
-endif
-
 ifeq (y,$(CONFIG_TERRAFORM_OCI))
 TERRAFORM_EXTRA_VARS += terraform_oci_region=$(subst ",,$(CONFIG_TERRAFORM_OCI_REGION))
 TERRAFORM_EXTRA_VARS += terraform_oci_tenancy_ocid=$(subst ",,$(CONFIG_TERRAFORM_OCI_TENANCY_OCID))

@@ -125,7 +125,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
     publisher = var.azure_image_publisher
     offer     = var.azure_image_offer
     sku       = var.azure_image_sku
-    version   = var.image_version
+    version   = "latest"
   }
 
   admin_ssh_key {

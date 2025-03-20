@@ -152,10 +152,3 @@ config TERRAFORM_AZURE_IMAGE_SKU
 	default "10" if TERRAFORM_AZURE_IMAGE_DEBIAN_SKU_10
 	help
 	  This option will set azure image sku to use.
-
-config TERRAFORM_AZURE_IMAGE_VERSION
-	string "Azure image version"
-	default "latest"
-	help
-	  This option will set azure image version to use. Its a good idea to
-	  use "latest" here.
