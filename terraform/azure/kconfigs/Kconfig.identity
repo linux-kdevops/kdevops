@@ -1,0 +1,43 @@
+config TERRAFORM_AZURE_CLIENT_CERT_PATH
+	string "Azure client certificate path"
+	default "./service-principal.pfx"
+	help
+	  Path to the service principal PFX file for this application. For
+	  details on how to create this and associate it with your account
+	  read this:
+
+	  https://www.terraform.io/docs/providers/azurerm/auth/service_principal_client_certificate.html
+	  https://github.com/terraform-providers/terraform-provider-azurerm.git
+
+	  But the skinny of of how to create it:
+
+	  openssl req -newkey rsa:4096 -nodes -keyout "service-principal.key" -out "service-principal.csr"
+	  openssl x509 -signkey "service-principal.key" -in "service-principal.csr" -req -days 365 -out "service-principal.crt"
+	  openssl pkcs12 -export -out "service-principal.pfx" -inkey "service-principal.key" -in "service-principal.crt"
+
+	  Then use the documentation to get your tentant ID, the applicaiton id,
+	  the subscription ID.
+
+config TERRAFORM_AZURE_CLIENT_CERT_PASSWD
+	string "Azure client certificate password"
+	default "some-password"
+	help
+	  The password to the service principal PFX file.
+
+config TERRAFORM_AZURE_SUBSCRIPTION_ID
+	string "Azure subscription ID"
+	default "anotherGUID"
+	help
+	  The subscription ID to use.
+
+config TERRAFORM_AZURE_TENANT_ID
+	string "Azure tenant ID"
+	default "anotherGUID"
+	help
+	  The tentant ID to use.
+
+config TERRAFORM_AZURE_APPLICATION_ID
+	string "Azure client application ID"
+	default "someGUID"
+	help
+	  The application ID to use.
