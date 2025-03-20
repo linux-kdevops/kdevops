@@ -106,10 +106,9 @@ config TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 endchoice
 
 config TERRAFORM_AZURE_IMAGE_PUBLISHER
-	string "The azure image publisher"
+	string
+	output yaml
 	default "Debian" if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
-	help
-	  This option will set path to the image publisher.
 
 if TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 

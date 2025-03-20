@@ -72,7 +72,6 @@ endif # CONFIG_TERRAFORM_AWS_ENABLE_EBS_VOLUMES
 endif
 
 ifeq (y,$(CONFIG_TERRAFORM_AZURE))
-TERRAFORM_EXTRA_VARS += terraform_azure_image_publisher=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_PUBLISHER))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_offer=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_OFFER))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_sku=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_SKU))
 TERRAFORM_EXTRA_VARS += terraform_azure_image_version=$(subst ",,$(CONFIG_TERRAFORM_AZURE_IMAGE_VERSION))
