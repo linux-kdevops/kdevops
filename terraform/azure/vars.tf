@@ -3,6 +3,11 @@ variable "azure_location" {
   type        = string
 }
 
+variable "azure_image_offer" {
+  description = "OS image offer"
+  type        = string
+}
+
 variable "azure_image_publisher" {
   description = "OS image publisher"
   type        = string
@@ -15,11 +20,6 @@ variable "azure_subscription_id" {
 
 variable "azure_vmsize" {
   description = "VM size"
-  type        = string
-}
-
-variable "image_offer" {
-  description = "Storage image offer"
   type        = string
 }
 

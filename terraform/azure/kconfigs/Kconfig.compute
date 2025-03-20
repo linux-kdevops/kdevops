@@ -142,12 +142,9 @@ endif # TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
 endif
 
 config TERRAFORM_AZURE_IMAGE_OFFER
-	string "Azure image offer to use"
+	string
+	output yaml
 	default "debian-10" if TERRAFORM_AZURE_IMAGE_OFFER_DEBIAN_10
-	help
-	  This option will set image offer. For more debian offers read:
-
-	  https://wiki.debian.org/Cloud/MicrosoftAzure
 
 config TERRAFORM_AZURE_IMAGE_SKU
 	string "Azure image SKU"

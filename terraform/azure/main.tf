@@ -123,7 +123,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
 
   source_image_reference {
     publisher = var.azure_image_publisher
-    offer     = var.image_offer
+    offer     = var.azure_image_offer
     sku       = var.image_sku
     version   = var.image_version
   }
