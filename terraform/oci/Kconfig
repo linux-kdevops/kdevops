@@ -3,35 +3,12 @@ if TERRAFORM_OCI
 menu "Resource location"
 source "terraform/oci/kconfigs/Kconfig.location"
 endmenu
+menu "Compute"
+source "terraform/oci/kconfigs/Kconfig.compute"
+endmenu
 menu "Identity & Access"
 source "terraform/oci/kconfigs/Kconfig.identity"
 endmenu
-
-config TERRAFORM_OCI_SHAPE
-	string "OCI shape name"
-	help
-	  The name of the shape
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
-
-config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
-	int "Number of flexiable instance OCPUs"
-	default 2
-	help
-	  The number of OCPUs to use per flexible instance.
-
-config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
-	int "How much RAM to use per flexible instance in GB"
-	default 4
-	help
-	  How much GiB of RAM to use per flexible instance.
-
-config TERRAFORM_OCI_OS_IMAGE_OCID
-	string "OCI OS image OCID"
-	help
-	  The OCI ID of the OS image to use.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
 
 config TERRAFORM_OCI_ASSIGN_PUBLIC_IP
 	bool "Assign public IP address to the cloud instance"
