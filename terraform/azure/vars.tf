@@ -1,10 +1,10 @@
-variable "azure_subscription_id" {
-  description = "Your Azure subscription ID"
+variable "azure_location" {
+  description = "Azure resource location"
   type        = string
 }
 
-variable "resource_location" {
-  description = "Resource location"
+variable "azure_subscription_id" {
+  description = "Your Azure subscription ID"
   type        = string
 }
 

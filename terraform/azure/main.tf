@@ -2,7 +2,7 @@
 
 resource "azurerm_resource_group" "kdevops_group" {
   name     = "kdevops_resource_group"
-  location = var.resource_location
+  location = var.azure_location
 
   tags = {
     environment = "kdevops tests"
@@ -16,7 +16,7 @@ locals {
 resource "azurerm_virtual_network" "kdevops_network" {
   name                = "kdevops_net"
   address_space       = [local.kdevops_private_net]
-  location            = var.resource_location
+  location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
 
   tags = {
@@ -34,7 +34,7 @@ resource "azurerm_subnet" "kdevops_subnet" {
 resource "azurerm_public_ip" "kdevops_publicip" {
   count               = local.kdevops_num_boxes
   name                = format("kdevops_pub_ip_%02d", count.index + 1)
-  location            = var.resource_location
+  location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
   allocation_method   = "Static"
 
@@ -45,7 +45,7 @@ resource "azurerm_public_ip" "kdevops_publicip" {
 
 resource "azurerm_network_security_group" "kdevops_sg" {
   name                = "kdevops_network_security_group"
-  location            = var.resource_location
+  location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
 
   security_rule {
@@ -74,7 +74,7 @@ resource "azurerm_network_interface_security_group_association" "kdevops_sg_asso
 resource "azurerm_network_interface" "kdevops_nic" {
   count               = local.kdevops_num_boxes
   name                = format("kdevops_nic_%02d", count.index + 1)
-  location            = var.resource_location
+  location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
 
   ip_configuration {
@@ -102,7 +102,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   # The "%7D" is the lingering nagging trailing "}" at the end of the string,
   # we just remove it.
   name                            = element(var.kdevops_nodes, count.index)
-  location                        = var.resource_location
+  location                        = var.azure_location
   resource_group_name             = azurerm_resource_group.kdevops_group.name
   network_interface_ids           = [element(azurerm_network_interface.kdevops_nic.*.id, count.index)]
   size                            = var.vmsize
@@ -142,7 +142,7 @@ module "kdevops_managed_disks" {
   count                   = local.kdevops_num_boxes
   md_disk_size            = var.managed_disks_size
   md_disk_count           = var.managed_disks_per_instance
-  md_location             = var.resource_location
+  md_location             = var.azure_location
   md_resource_group_name  = azurerm_resource_group.kdevops_group.name
   md_virtual_machine_id   = element(azurerm_linux_virtual_machine.kdevops_vm.*.id, count.index)
   md_virtual_machine_name = element(azurerm_linux_virtual_machine.kdevops_vm.*.name, count.index)

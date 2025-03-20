@@ -9,8 +9,9 @@ config TERRAFORM_AZURE_WEST_US
 
 endchoice
 
-config TERRAFORM_AZURE_RESOURCE_LOCATION
-	string "Azure resource location"
+config TERRAFORM_AZURE_LOCATION
+	string
+	output yaml
 	default "westus" if TERRAFORM_AZURE_WEST_US
 	help
 	  This option will set the azure resource location.
