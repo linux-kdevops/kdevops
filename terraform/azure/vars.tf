@@ -23,13 +23,6 @@ variable "tenant_id" {
   default     = "someLONGGUID"
 }
 
-variable "ssh_pubkey_data" {
-  description = "The ssh public key data"
-
-  # for instance it coudl be "ssh-rsa AAetcccc"
-  default = ""
-}
-
 variable "resource_location" {
   description = "Resource location"
   default     = "westus"
