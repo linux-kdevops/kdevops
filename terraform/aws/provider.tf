@@ -7,17 +7,14 @@ terraform {
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "~>3.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "~>2.1"
+      version = "~>5"
     }
   }
 }
 
 provider "aws" {
-  shared_credentials_file = var.aws_shared_credentials_file
-  region                  = var.aws_region
-  profile                 = var.aws_profile
+  profile                  = var.aws_profile
+  region                   = var.aws_region
+  shared_config_files      = [var.aws_shared_config_file]
+  shared_credentials_files = [var.aws_shared_credentials_file]
 }

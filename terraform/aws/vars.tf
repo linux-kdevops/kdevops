@@ -97,6 +97,20 @@ variable "aws_ebs_volume_iops" {
   default     = null
 }
 
+# So far there hasn't been a need to configure this value
+variable "aws_shared_config_file" {
+  description = "Shared AWS configuration file"
+  type        = string
+  default     = "~/.aws/conf"
+}
+
+# So far there hasn't been a need to configure this value
+variable "aws_shared_credentials_file" {
+  description = "Shared AWS credentials file"
+  type        = string
+  default     = "~/.aws/credentials"
+}
+
 # We had to use this as aws terraform provider doesn't have a way to set
 # the hostname. local-exec works too, but this is what we went with.
 variable "user_data_enabled" {
@@ -122,11 +136,6 @@ variable "user_data_admin_enable_hostnamectl" {
 variable "user_data_admin_enable_host_file" {
   description = "Should /etc/hosts also be appended with the new hostname with the localhost address?"
   default     = "yes"
-}
-
-variable "aws_shared_credentials_file" {
-  description = "Shared aws credentials file"
-  default     = "~/.aws/credentials"
 }
 
 variable "aws_profile" {

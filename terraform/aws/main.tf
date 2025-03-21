@@ -156,7 +156,7 @@ module "kdevops_ebs_volumes" {
 resource "aws_eip" "kdevops_eip" {
   count    = local.kdevops_num_boxes
   instance = element(aws_instance.kdevops_instance.*.id, count.index)
-  vpc      = true
+  domain   = "vpc"
 }
 
 resource "aws_internet_gateway" "kdevops_gw" {
