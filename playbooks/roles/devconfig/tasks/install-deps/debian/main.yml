@@ -3,6 +3,7 @@
   become: yes
   become_method: sudo
   ansible.builtin.apt:
+    update_cache: true
     upgrade: "yes"
     lock_timeout: 120
   register: apt_upgrade
