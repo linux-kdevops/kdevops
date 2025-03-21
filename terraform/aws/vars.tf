@@ -46,12 +46,6 @@ variable "aws_name_search" {
   type        = string
 }
 
-# This has to match your preferred image filter above too.
-variable "aws_virt_type" {
-  description = "Your AWS preferred virtualization type"
-  type        = string
-}
-
 variable "aws_ami_owner" {
   description = "Your AWS AMI image owner"
   type        = string

@@ -53,7 +53,6 @@ TERRAFORM_EXTRA_VARS += terraform_aws_region=$(subst ",,$(CONFIG_TERRAFORM_AWS_R
 TERRAFORM_EXTRA_VARS += terraform_aws_av_region=$(subst ",,$(CONFIG_TERRAFORM_AWS_AV_REGION))
 TERRAFORM_EXTRA_VARS += terraform_aws_ami_owner=$(subst ",,$(CONFIG_TERRAFORM_AWS_AMI_OWNER))
 TERRAFORM_EXTRA_VARS += terraform_aws_ns='$(CONFIG_TERRAFORM_AWS_NS)'
-TERRAFORM_EXTRA_VARS += terraform_aws_virt_type=$(subst ",,$(CONFIG_TERRAFORM_AWS_VIRT_TYPE))
 TERRAFORM_EXTRA_VARS += terraform_aws_instance_type=$(subst ",,$(CONFIG_TERRAFORM_AWS_INSTANCE_TYPE))
 
 ifeq (y,$(CONFIG_TERRAFORM_AWS_ENABLE_EBS_VOLUMES))

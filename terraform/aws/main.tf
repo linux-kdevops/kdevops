@@ -1,17 +1,13 @@
-# aws main terraform
-
-data "aws_ami" "distro" {
+data "aws_ami" "kdevops_ami" {
   most_recent = true
   filter {
     name   = "name"
     values = [var.aws_name_search]
   }
-
   filter {
     name   = "virtualization-type"
-    values = [var.aws_virt_type]
+    values = ["hvm"]
   }
-
   owners = [var.aws_ami_owner]
 }
 
@@ -123,9 +119,9 @@ data "template_cloudinit_config" "kdevops_config" {
 }
 
 resource "aws_instance" "kdevops_instance" {
-  count           = local.kdevops_num_boxes
-  ami             = data.aws_ami.distro.id
-  instance_type   = var.aws_instance_type
+  count         = local.kdevops_num_boxes
+  ami           = data.aws_ami.kdevops_ami.id
+  instance_type = var.aws_instance_type
   vpc_security_group_ids = [
     aws_security_group.kdevops_sec_group.id,
     aws_security_group.kdevops_internal_group.id
