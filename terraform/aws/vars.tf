@@ -60,9 +60,9 @@ variable "aws_enable_ebs" {
   type        = string
 }
 
-variable "aws_ebs_num_volumes_per_instance" {
+variable "aws_ebs_volumes_per_instance" {
   description = "Number of EBS volumes to create per instance"
-  type        = string
+  type        = number
 }
 
 # The t2.micro comes with 8 GiB of storage.

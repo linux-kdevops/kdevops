@@ -5,7 +5,7 @@ aws_name_search = "{{ terraform_aws_ns }}"
 aws_ami_owner = "{{ terraform_aws_ami_owner }}"
 aws_instance_type = "{{ terraform_aws_instance_type }}"
 aws_enable_ebs = "{{ terraform_aws_enable_ebs | lower }}"
-aws_ebs_num_volumes_per_instance = "{{ terraform_aws_ebs_num_volumes_per_instance }}"
+aws_ebs_volumes_per_instance = "{{ terraform_aws_ebs_volumes_per_instance }}"
 aws_ebs_volume_size = "{{ terraform_aws_ebs_volume_size }}"
 aws_ebs_volume_type = "{{ terraform_aws_ebs_volume_type }}"
 {% if terraform_aws_ebs_volume_needs_iops %}
