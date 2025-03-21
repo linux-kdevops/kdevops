@@ -90,6 +90,7 @@ endchoice
 
 config TERRAFORM_AWS_EBS_VOLUME_TYPE
 	string
+	output yaml
 	default "gp2" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
 	default "gp3" if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
 	default "io1" if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
