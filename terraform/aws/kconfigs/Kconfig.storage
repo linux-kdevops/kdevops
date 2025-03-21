@@ -96,22 +96,17 @@ config TERRAFORM_AWS_EBS_VOLUME_TYPE
 	default "io1" if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
 	default "io2" if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
 
-config TERRAFORM_AWS_EBS_VOLUME_NEEDS_IOPS
-	bool
-	default n if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP2
-	default n if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3
-	default y if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
-	default y if TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
-
-if TERRAFORM_AWS_EBS_VOLUME_NEEDS_IOPS
+if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3 || TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1 || TERRAFORM_AWS_EBS_VOLUME_TYPE_IO2
 
 config TERRAFORM_AWS_EBS_VOLUME_IOPS
 	int "IOPS provisioned for EBS volumes"
+	output yaml
+	default 3000
 	help
 	  This setting specifies the IOPS to be provisioned for each
 	  extra EBS volume.
 
-endif
+endif # TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3 || TERRAFORM_AWS_EBS_ ...
 
 choice
 	prompt "Volume size for all EBS volumes"
