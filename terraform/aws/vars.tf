@@ -65,14 +65,9 @@ variable "aws_ebs_volumes_per_instance" {
   type        = number
 }
 
-# The t2.micro comes with 8 GiB of storage.
-# For more storage we need to use EBS.
-# AWS Free Tier includes 30GB of Storage, 2 million I/Os, and 1GB of snapshot
-# storage with Amazon Elastic Block Store (EBS).
-#
 variable "aws_ebs_volume_size" {
   description = "Size in GiB for each of the volumes"
-  type        = string
+  type        = number
 }
 
 variable "aws_ebs_volume_type" {
