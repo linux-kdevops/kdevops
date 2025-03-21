@@ -44,7 +44,7 @@ variable "aws_name_search" {
 }
 
 variable "aws_ami_owner" {
-  description = "Your AWS AMI image owner"
+  description = "An AWS AMI image owner or owner alias"
   type        = string
 }
 

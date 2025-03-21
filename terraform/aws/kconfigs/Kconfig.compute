@@ -83,168 +83,36 @@ source "terraform/aws/kconfigs/instance-types/Kconfig.im4gn"
 source "terraform/aws/kconfigs/instance-types/Kconfig.c7a"
 
 choice
-	prompt "AWS AMI owner"
-	default TERRAFORM_AWS_AMI_DEBIAN if DISTRO_DEBIAN
-	default TERRAFORM_AWS_AMI_AMAZON_X86_64 if TARGET_ARCH_X86_64
-	default TERRAFORM_AWS_AMI_AMAZON_ARM64 if TARGET_ARCH_ARM64
+	prompt "Linux distribution"
+	default TERRAFORM_AWS_DISTRO_DEBIAN
+	help
+	  Select a popular Linux distribution to install on your
+	  instances, or use the "Custom AMI image" selection to
+	  choose an image that is off the beaten path.
 
-config TERRAFORM_AWS_AMI_DEBIAN
+config TERRAFORM_AWS_DISTRO_AMAZON
+	bool "Amazon Linux"
+
+config TERRAFORM_AWS_DISTRO_DEBIAN
 	bool "Debian"
-	help
-	  This option will set AWS AMI owner to Debian.
 
-config TERRAFORM_AWS_AMI_AMAZON_X86_64
-	bool "Amazon Linux 2023 x86_64 - ami-0efa651876de2a5ce"
-	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_WEST_2
-	help
-	  This option will set AWS AMI owner to Amazon EC2 images for x86_64.
+config TERRAFORM_AWS_DISTRO_FEDORA
+	bool "Fedora Core"
 
-config TERRAFORM_AWS_AMI_AMAZON_ARM64
-	bool "Amazon Linux 2023 ARM64 - ami-0699f753302dd8b00"
-	depends on TARGET_ARCH_ARM64 && TERRAFORM_AWS_US_WEST_2
-	help
-	  This option will set AWS AMI owner to Amazon EC2 images for arm64.
+config TERRAFORM_AWS_DISTRO_RHEL
+	bool "Red Hat Enterprise Linux"
 
-config TERRAFORM_AWS_FEDORA40_X86_64
-	bool "Fedora 40 on x86_64"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option sets the AWS AMI owner to Fedora 40 for x86_64.
+config TERRAFORM_AWS_DISTRO_SLES
+	bool "Suse Linux Enterprise Server"
 
-config TERRAFORM_AWS_FEDORA40_ARM64
-	bool "Fedora 40 on aarch64"
-	depends on TARGET_ARCH_ARM64
-	help
-	  This option sets the AWS AMI owner to Fedora 40 for ARM 64-bit.
-
-config TERRAFORM_AWS_FEDORA41_X86_64
-	bool "Fedora 41 on x86_64"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option sets the AWS AMI owner to Fedora 41 for x86_64.
-
-config TERRAFORM_AWS_FEDORA41_ARM64
-	bool "Fedora 41 on aarch64"
-	depends on TARGET_ARCH_ARM64
-	help
-	  This option sets the AWS AMI owner to Fedora 41 for ARM 64-bit.
-
-config TERRAFORM_AWS_RHEL9_X86_64
-	bool "RHEL9 x86_64"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will set AWS AMI owner to RHEL9 for x86_64.
-
-config TERRAFORM_AWS_RHEL9_ARM64
-	bool "RHEL9 ARM 64"
-	depends on TARGET_ARCH_ARM64
-	help
-	  This option will set AWS AMI owner to RHEL9 for ARM64
-
-config TERRAFORM_AWS_SLE15_SP4_X86_64
-	bool "SUSE Linux Enterprise Server 15 SP4 x86_64 - ami-079ba66a5e9f2b70e"
-	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_US_WEST_2
-	help
-	  This option will set AWS AMI owner to SLE15-SP4 for x86_64.
-
-config TERRAFORM_AWS_SLE15_SP4_ARM64
-	bool "SUSE Linux Enterprise Server 15 SP4 ARM64 - ami-00f902c807805f51a"
-	depends on TARGET_ARCH_ARM64 && TERRAFORM_AWS_US_WEST_2
-	help
-	  This option will set AWS AMI owner to SLE15-SP4 for arm64.
+config TERRAFORM_AWS_DISTRO_CUSTOM
+	bool "Custom AMI image"
 
 endchoice
 
-if TERRAFORM_AWS_AMI_DEBIAN
-
-choice
-	prompt "AWS debian release to use"
-	default TERRAFORM_AWS_NS_DEBIAN_12_X86_64 if TARGET_ARCH_X86_64
-	default TERRAFORM_AWS_NS_DEBIAN_12_ARM64 if TARGET_ARCH_ARM64
-
-config TERRAFORM_AWS_NS_DEBIAN_12_X86_64
-	bool "Debian 12 - Bookworm x86_64"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will set aws name search to debian-12-hvm-amd64-*
-	  Note, to expand on this get the AMI owner ID and then you can
-	  see what is available with something like this:
-
-	  aws ec2 describe-images --owners 136693071363  --query 'Images[*].[Description]'
-
-	  In theory we should be able to just automate Kconfig language then
-	  for AWS for a distro using 'make dynconfig' on kdevops.
-
-config TERRAFORM_AWS_NS_DEBIAN_12_ARM64
-	bool "Debian 12 - Bookworm ARM64"
-	depends on TARGET_ARCH_ARM64
-	help
-	  This option will set aws name search to debian-12-hvm-arm64-*
-
-config TERRAFORM_AWS_NS_DEBIAN_11_X86_64
-	bool "Debian 11 - Bullseye x86_64"
-	depends on TARGET_ARCH_X86_64
-	help
-	  This option will set aws name search to debian-11-hvm-amd64-*
-
-config TERRAFORM_AWS_NS_DEBIAN_11_ARM64
-	bool "Debian 11 - Bullseye arm64"
-	depends on TARGET_ARCH_ARM64
-	help
-	  This option will set aws name search to debian-11-hvm-arm64-*
-
-endchoice
-
-endif
-
-config TERRAFORM_AWS_AMI_OWNER
-	string
-	default "136693071363" if TERRAFORM_AWS_NS_DEBIAN_11_X86_64 || TERRAFORM_AWS_NS_DEBIAN_11_ARM64
-	default "136693071363" if TERRAFORM_AWS_NS_DEBIAN_12_X86_64 || TERRAFORM_AWS_NS_DEBIAN_12_ARM64
-	default "137112412989" if TERRAFORM_AWS_AMI_AMAZON_X86_64 || TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "309956199498" if TERRAFORM_AWS_RHEL9_X86_64 || TERRAFORM_AWS_RHEL9_ARM64
-	default "013907871322" if TERRAFORM_AWS_SLE15_SP4_X86_64 || TERRAFORM_AWS_SLE15_SP4_ARM64
-	default "125523088429" if TERRAFORM_AWS_FEDORA40_X86_64 || TERRAFORM_AWS_FEDORA40_ARM64
-	default "125523088429" if TERRAFORM_AWS_FEDORA41_X86_64 || TERRAFORM_AWS_FEDORA41_ARM64
-
-config TERRAFORM_AWS_NS
-	string
-	default "debian-12-amd64-*" if TERRAFORM_AWS_NS_DEBIAN_12_X86_64
-	default "debian-12-arm64-*" if TERRAFORM_AWS_NS_DEBIAN_12_ARM64
-	default "debian-11-amd64-*" if TERRAFORM_AWS_NS_DEBIAN_11_X86_64
-	default "debian-11-arm64-*" if TERRAFORM_AWS_NS_DEBIAN_11_ARM64
-	default "al2023-*-x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_AMI_AMAZON_X86_64
-	default "al2023-*-arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_AMI_AMAZON_ARM64
-	default "RHEL-9.*x86_64-*" if TERRAFORM_AWS_RHEL9_X86_64
-	default "RHEL-9.*arm64-*" if TERRAFORM_AWS_RHEL9_ARM64
-	default "Fedora-Cloud-Base-AmazonEC2.x86_64-40-*" if TERRAFORM_AWS_FEDORA40_X86_64
-	default "Fedora-Cloud-Base-AmazonEC2.aarch64-40-*" if TERRAFORM_AWS_FEDORA40_ARM64
-	default "Fedora-Cloud-Base-AmazonEC2.x86_64-41-*" if TERRAFORM_AWS_FEDORA41_X86_64
-	default "Fedora-Cloud-Base-AmazonEC2.aarch64-41-*" if TERRAFORM_AWS_FEDORA41_ARM64
-	default "suse-sles-15-sp4-*x86_64" if TARGET_ARCH_X86_64 && TERRAFORM_AWS_SLE15_SP4_X86_64
-	default "suse-sles-15-sp4-*arm64" if TARGET_ARCH_ARM64 && TERRAFORM_AWS_SLE15_SP4_ARM64
-	help
-	  This option will set aws image search to use. Using this filter glob
-	  lets us get the latest ami for this owner / release.
-
-	  For debian updates you can use this list for AMI updates:
-
-	  https://wiki.debian.org/Cloud/AmazonEC2Image/Stretch
-
-	  If you want to expand on this list or just use a value yourself here
-	  read:
-
-	  https://letslearndevops.com/2018/08/23/terraform-get-latest-centos-ami/
-
-	  To get filter values you can first setup aws cli:
-
-	  https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration
-
-	  Get your image ami id, for debian 9 amd64 on the us-west1 this is
-	  ami-0adbaf2e0ce044437 so you can run:
-
-	  aws ec2 describe-images --image-ids ami-0adbaf2e0ce044437 | grep Name
-
-	  For details:
-
-	  https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+source "terraform/aws/kconfigs/distros/Kconfig.amazon"
+source "terraform/aws/kconfigs/distros/Kconfig.debian"
+source "terraform/aws/kconfigs/distros/Kconfig.fedora"
+source "terraform/aws/kconfigs/distros/Kconfig.rhel"
+source "terraform/aws/kconfigs/distros/Kconfig.sles"
+source "terraform/aws/kconfigs/distros/Kconfig.custom"
