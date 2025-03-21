@@ -4,8 +4,8 @@ choice
 	prompt "AWS instance size"
 	default TERRAFORM_AWS_INSTANCE_SIZE_C7A_8XLARGE
 	help
-	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
-	  option and adjusting the size and number of additional devices.
+	  Add storage by increasing the number of EBS volumes per
+	  instance.
 
 config TERRAFORM_AWS_INSTANCE_SIZE_C7A_8XLARGE
 	bool "c7a.8xlarge"

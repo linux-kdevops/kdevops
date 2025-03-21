@@ -17,8 +17,6 @@ terraform_private_net_enabled: "false"
 terraform_private_net_prefix: ""
 terraform_private_net_mask: 0
 
-terraform_aws_enable_ebs: False
-
 terraform_oci_region: "invalid"
 terraform_oci_tenancy_ocid: "invalid"
 terraform_oci_user_ocid: "invalid"

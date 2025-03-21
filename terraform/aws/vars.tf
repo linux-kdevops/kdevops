@@ -55,11 +55,6 @@ variable "aws_instance_type" {
   type        = string
 }
 
-variable "aws_enable_ebs" {
-  description = "Whether or not to enable EBS"
-  type        = string
-}
-
 variable "aws_ebs_volumes_per_instance" {
   description = "Number of EBS volumes to create per instance"
   type        = number

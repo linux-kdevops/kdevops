@@ -139,7 +139,7 @@ resource "aws_instance" "kdevops_instance" {
 }
 
 module "kdevops_ebs_volumes" {
-  count                 = var.aws_enable_ebs == "true" ? local.kdevops_num_boxes : 0
+  count                 = var.aws_ebs_volumes_per_instance > 0 ? local.kdevops_num_boxes : 0
   source                = "./kdevops_ebs_volumes"
   vol_availability_zone = var.aws_availability_zone
   vol_count             = var.aws_ebs_volumes_per_instance
