@@ -146,6 +146,7 @@ module "kdevops_ebs_volumes" {
   vol_instance_id       = element(aws_instance.kdevops_instance.*.id, count.index)
   vol_iops              = var.aws_ebs_volume_iops
   vol_size              = var.aws_ebs_volume_size
+  vol_throughput        = var.aws_ebs_volume_throughput
   vol_type              = var.aws_ebs_volume_type
 }
 

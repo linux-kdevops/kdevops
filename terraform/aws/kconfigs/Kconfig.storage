@@ -105,6 +105,21 @@ config TERRAFORM_AWS_EBS_VOLUME_IOPS
 
 endif # TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3 || TERRAFORM_AWS_EBS_ ...
 
+if TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3 || TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
+
+config TERRAFORM_AWS_EBS_VOLUME_THROUGHPUT
+	int "Throughput provisioned for EBS volumes"
+	output yaml
+	default 125
+	range 125 1000
+	help
+	  This setting specifies the maximum throughput, in
+	  megabytes per second, to be provisioned for each extra EBS
+	  volume. The maximum setting allowed by AWS varies with the
+	  number and type of EBS volumes attached to each instance.
+
+endif # TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3 || TERRAFORM_AWS_EBS_VOLUME_TYPE_IO1
+
 choice
 	prompt "Volume size for all EBS volumes"
 	default TERRAFORM_AWS_EBS_VOLUME_SIZE_32G

@@ -65,6 +65,12 @@ variable "aws_ebs_volume_size" {
   type        = number
 }
 
+variable "aws_ebs_volume_throughput" {
+  description = "Throughput reserved for each EBS volume"
+  type        = number
+  default     = null
+}
+
 variable "aws_ebs_volume_type" {
   description = "Type of each of the EBS volumes"
   type        = string

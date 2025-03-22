@@ -10,6 +10,9 @@ aws_ebs_volume_type = "{{ terraform_aws_ebs_volume_type }}"
 {% if terraform_aws_ebs_volume_iops is defined %}
 aws_ebs_volume_iops = {{ terraform_aws_ebs_volume_iops }}
 {% endif %}
+{% if aws_ebs_volume_throughput is defined %}
+aws_ebs_volume_throughput = {{ terraform_aws_ebs_volume_throughput }}
+{% endif %}
 
 ssh_config_pubkey_file = "{{ kdevops_terraform_ssh_config_pubkey_file }}"
 ssh_config_user = "{{ kdevops_terraform_ssh_config_user }}"

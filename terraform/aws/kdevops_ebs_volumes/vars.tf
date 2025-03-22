@@ -23,6 +23,11 @@ variable "vol_size" {
   type        = number
 }
 
+variable "vol_throughput" {
+  description = "Provisioned throughput for each attached volume, in MBS"
+  type        = number
+}
+
 variable "vol_type" {
   description = "Device type of each attached volume"
   type        = string

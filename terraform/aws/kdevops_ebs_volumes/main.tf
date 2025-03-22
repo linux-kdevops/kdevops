@@ -9,6 +9,7 @@ resource "aws_ebs_volume" "kdevops_volume" {
   iops                 = var.vol_iops
   multi_attach_enabled = false
   size                 = var.vol_size
+  throughput           = var.vol_throughput
   type                 = var.vol_type
 }
 
