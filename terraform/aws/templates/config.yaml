@@ -1,6 +1,6 @@
 # cloud-init override configuration
 preserve_hostname: false
-manage_etc_hosts: true
+manage_etc_hosts: false
 hostname: ${new_hostname}
 
 system_info:
