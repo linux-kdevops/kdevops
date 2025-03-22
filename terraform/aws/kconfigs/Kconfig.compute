@@ -1,0 +1,203 @@
+choice
+	prompt "AWS instance type"
+	default TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE if TARGET_ARCH_X86_64
+	default TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM if TARGET_ARCH_ARM64
+
+config TERRAFORM_AWS_INSTANCE_M5AD_LARGE
+	bool "m5ad.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 GiB RAM, 2 AMD vcpus, 1 10 GiB main drive, up to 10 Gbps
+	  network speed, and one 75 GiB NVMe drive.
+
+	  Add more storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m5/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M5AD_XLARGE
+	bool "m5ad.xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 GiB RAM, 4 AMD vcpus, 1 10 GiB main drive, up to 10 Gbps
+	  network speed, and one 150 GiB NVMe drive.
+
+	  Add more storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m5/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	bool "m5ad.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 GiB RAM, 8 AMD vcpus, 1 10 GiB main drive, up to 10 Gbps
+	  network speed, and one 300 GiB NVMe drive.
+
+	  Add more storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m5/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	bool "m5ad.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  64 GiB RAM, 16 AMD vcpus, 1 10 GiB main drive, up to 10 Gbps
+	  and two 300 GiB NVMe drives.
+
+	  Add more storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m5/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_MEDIUM
+	bool "m7a.medium"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 GiB RAM, 1 AMD Ryzen vcpu, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_LARGE
+	bool "m7a.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 GiB RAM, 2 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	bool "m7a.xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 GiB RAM, 4 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_2XLARGE
+	bool "m7a.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 GiB RAM, 8 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_M7A_4XLARGE
+	bool "m7a.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  64 GiB RAM, 16 AMD Ryzen vcpus, 1 10 GiB main drive, and up to
+	  12.5 Gbs network speed.
+
+	  Add storage by selecting the TERRAFORM_AWS_ENABLE_EBS_VOLUMES
+	  option and adjusting the size and number of additional devices.
+
+	  See https://aws.amazon.com/ec2/instance-types/m7a/ for details.
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
+	bool "is4gen.medium"
+	depends on TARGET_ARCH_ARM64
+	help
+	  6 GiB RAM, 1vCPU, 1 x 937 GiB NVMe SSD, 25 Gbps Net, 9.6 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4g/
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
+	bool "is4gen.8xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  192 GiB RAM, 32 vCPUs, 4 x 7500 NVMe SSD, 50 Gbps Net, 19 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4g/
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
+	bool "im4gn.large"
+	depends on TARGET_ARCH_ARM64
+	help
+	  8 GiB RAM, 2vCPUs, 1 x 937 GiB NVMe SSD, 25 Gbps Net, 9.5 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4g/
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	bool "im4gn.4xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  64 GiB RAM, 16 vcpus, 1 x 7500 NVMe SSD, 25 Gbps Net, 9.5 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4g/
+
+config TERRAFORM_AWS_INSTANCE_I4I_LARGE
+	bool "i4i.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 GiB RAM, 2 vcpus, 1 x 468 AWS Nitro SSD, 10 Gbps Net, 10 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4i/
+
+config TERRAFORM_AWS_INSTANCE_I4I_4XLARGE
+	bool "i4i.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  128 GiB RAM, 16 vcpus, 1 x 3,750 AWS Nitro SSD, 25 Gbps Net,
+	  10 Gbps EBS.
+	  https://aws.amazon.com/ec2/instance-types/i4i/
+
+config TERRAFORM_AWS_INSTANCE_I4I_METAL
+	depends on TARGET_ARCH_X86_64
+	bool "i4i.metal"
+	help
+	  1024 GiB RAM, 128 real cpus?, 8 x 3,750 AWS Nitro SSD,
+	  75 Gbps Net, 40 Gbps EBS. The bees' knees I guess.
+	  https://aws.amazon.com/ec2/instance-types/i4i/
+
+config TERRAFORM_AWS_INSTANCE_C7A_8XLARGE
+	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_AV_REGION_WEST_2D
+	bool "c7a.8xlarge"
+	help
+	  32 core, 64 GiB RAM, EBS drives.
+
+config TERRAFORM_AWS_INSTANCE_C7A_METAL_48XL
+	depends on TARGET_ARCH_X86_64 && TERRAFORM_AWS_AV_REGION_WEST_2D
+	bool "c7a.metal-48xl"
+	help
+	  192 core, 384 GiB RAM, EBS drive.
+	  https://aws.amazon.com/ec2/instance-types/c7a/
+
+endchoice
+
+config TERRAFORM_AWS_INSTANCE_TYPE
+	string
+	default "m5ad.large" if TERRAFORM_AWS_INSTANCE_M5AD_LARGE
+	default "m5ad.xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_XLARGE
+	default "m5ad.2xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "m5ad.4xlarge" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "m7a.medium" if TERRAFORM_AWS_INSTANCE_M7A_MEDIUM
+	default "m7a.large" if TERRAFORM_AWS_INSTANCE_M7A_LARGE
+	default "m7a.xlarge" if TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	default "m7a.xlarge" if TERRAFORM_AWS_INSTANCE_M7A_XLARGE
+	default "m7a.2xlarge" if TERRAFORM_AWS_INSTANCE_M7A_2XLARGE
+	default "m7a.4xlarge" if TERRAFORM_AWS_INSTANCE_M7A_4XLARGE
+	default "is4gen.medium" if TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
+	default "is4gen.8xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
+	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	default "is4gen.8xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
+	default "im4gn.large" if TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
+	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	default "i4i.large" if TERRAFORM_AWS_INSTANCE_I4I_LARGE
+	default "i4i.4xlarge" if TERRAFORM_AWS_INSTANCE_I4I_4XLARGE
+	default "i4i.metal" if TERRAFORM_AWS_INSTANCE_I4I_METAL
+	default "c7a.8xlarge" if TERRAFORM_AWS_INSTANCE_C7A_8XLARGE
+	default "c7a.metal-48xl" if TERRAFORM_AWS_INSTANCE_C7A_METAL_48XL
