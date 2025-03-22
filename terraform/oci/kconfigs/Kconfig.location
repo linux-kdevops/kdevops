@@ -42,24 +42,14 @@ config TERRAFORM_OCI_REGION_SJC
 
 endchoice
 
-config TERRAFORM_OCI_REGION
-	string
-	output yaml
-	default "ap-hyderabad-1" if TERRAFORM_OCI_REGION_HYD
-	default "ap-mumbai-1" if TERRAFORM_OCI_REGION_BOM
-	default "ca-montreal-1" if TERRAFORM_OCI_REGION_YUL
-	default "ca-toronto-1" if TERRAFORM_OCI_REGION_YYZ
-	default "us-ashburn-1" if TERRAFORM_OCI_REGION_IAD
-	default "us-chicago-1" if TERRAFORM_OCI_REGION_ORD
-	default "us-phoenix-1" if TERRAFORM_OCI_REGION_PHX
-	default "us-sanjose-1" if TERRAFORM_OCI_REGION_SJC
-
-config TERRAFORM_OCI_AVAILABLITY_DOMAIN
-	string "OCI availablity domain"
-	help
-	  The name of the availability domain.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+source "terraform/oci/kconfigs/regions/Kconfig.ap-hyderabad-1"
+source "terraform/oci/kconfigs/regions/Kconfig.ap-mumbai-1"
+source "terraform/oci/kconfigs/regions/Kconfig.ca-montreal-1"
+source "terraform/oci/kconfigs/regions/Kconfig.ca-toronto-1"
+source "terraform/oci/kconfigs/regions/Kconfig.us-ashburn-1"
+source "terraform/oci/kconfigs/regions/Kconfig.us-chicago-1"
+source "terraform/oci/kconfigs/regions/Kconfig.us-phoenix-1"
+source "terraform/oci/kconfigs/regions/Kconfig.us-sanjose-1"
 
 config TERRAFORM_OCI_COMPARTMENT_OCID
 	string "OCI compartment OCID"

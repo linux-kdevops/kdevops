@@ -1,0 +1,28 @@
+if TERRAFORM_OCI_REGION_HYD
+
+config TERRAFORM_OCI_REGION
+	string
+	output yaml
+	default "ap-hyderabad-1"
+
+choice
+	prompt "Availability Domain"
+	default TERRAFORM_OCI_REGION_HYD_AD1
+	help
+	  The number of the Availability Domain. This number
+	  corresponds to the integer at the end of the Availability
+	  Domain name.
+
+	  The OCI Fault Domain is chosen automatically.
+
+config TERRAFORM_OCI_REGION_HYD_AD1
+	bool "1"
+
+endchoice
+
+config TERRAFORM_OCI_AD_NUMBER
+	int
+	output yaml
+	default 1 if TERRAFORM_OCI_REGION_HYD_1_AD1
+
+endif # TERRAFORM_OCI_REGION_HYD_1

@@ -1,7 +1,12 @@
+data "oci_identity_availability_domain" "kdevops_av_domain" {
+  ad_number      = var.oci_ad_number
+  compartment_id = var.oci_tenancy_ocid
+}
+
 resource "oci_core_instance" "kdevops_instance" {
   count = local.kdevops_num_boxes
 
-  availability_domain = var.oci_availablity_domain
+  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
   compartment_id = var.oci_compartment_ocid
   shape = var.oci_shape
   shape_config {
@@ -30,9 +35,8 @@ resource "oci_core_instance" "kdevops_instance" {
 resource "oci_core_volume" "kdevops_data_disk" {
   count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
 
+  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
   compartment_id = var.oci_compartment_ocid
-
-  availability_domain = var.oci_availablity_domain
   display_name = var.oci_data_volume_display_name
   size_in_gbs = 50
 }
@@ -40,9 +44,8 @@ resource "oci_core_volume" "kdevops_data_disk" {
 resource "oci_core_volume" "kdevops_sparse_disk" {
   count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
 
+  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
   compartment_id = var.oci_compartment_ocid
-
-  availability_domain = var.oci_availablity_domain
   display_name = var.oci_sparse_volume_display_name
   size_in_gbs = 120
 }
@@ -71,7 +74,7 @@ module "volumes" {
   count  = var.oci_volumes_enable_extra == "true" ? local.kdevops_num_boxes : 0
   source = "./volumes"
 
-  vol_availability_domain = var.oci_availablity_domain
+  vol_availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
   vol_compartment_ocid    = var.oci_compartment_ocid
   vol_instance_id         = element(oci_core_instance.kdevops_instance.*.id, count.index)
   vol_instance_name       = element(var.kdevops_nodes, count.index)

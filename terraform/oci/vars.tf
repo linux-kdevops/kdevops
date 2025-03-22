@@ -1,3 +1,8 @@
+variable "oci_ad_number" {
+  description = "Suffix number of availability domain"
+  type        = number
+}
+
 variable "oci_config_file_profile" {
   description = "Entry in ~/.oci/config to use for API authentication"
   type        = string
@@ -10,11 +15,6 @@ variable "oci_region" {
 
 variable "oci_tenancy_ocid" {
   description = "OCID of your tenancy"
-  type        = string
-}
-
-variable "oci_availablity_domain" {
-  description = "Name of availability domain"
   type        = string
 }
 
