@@ -1,9 +1,58 @@
-config TERRAFORM_OCI_REGION
-	string "OCI Region"
+choice
+	prompt "OCI Region"
+	default TERRAFORM_OCI_REGION_ORD
 	help
-	  This option will set the OCI resource location.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+	  A region is a collection of geographically co-located data
+	  centers that share data and hardware resources. For more
+	  information:
+
+	  https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
+
+	  Using this menu, select the region in which you wish to
+	  deploy your kdevops resources. Your tenancy must be
+	  subscribed to the region you select here. Use:
+
+	    $ oci iam region-subscription list
+
+	  for a list of regions to which your tenancy subscribes.
+
+config TERRAFORM_OCI_REGION_HYD
+	bool "India South (Hyderabad)"
+
+config TERRAFORM_OCI_REGION_BOM
+	bool "India West (Mumbai)"
+
+config TERRAFORM_OCI_REGION_YUL
+	bool "Canada Southeast (Montreal)"
+
+config TERRAFORM_OCI_REGION_YYZ
+	bool "Canada Southeast (Toronto)"
+
+config TERRAFORM_OCI_REGION_IAD
+	bool "US East (Ashburn)"
+
+config TERRAFORM_OCI_REGION_ORD
+	bool "US Midwest (Chicago)"
+
+config TERRAFORM_OCI_REGION_PHX
+	bool "US West (Phoenix)"
+
+config TERRAFORM_OCI_REGION_SJC
+	bool "US West (San Jose)"
+
+endchoice
+
+config TERRAFORM_OCI_REGION
+	string
+	output yaml
+	default "ap-hyderabad-1" if TERRAFORM_OCI_REGION_HYD
+	default "ap-mumbai-1" if TERRAFORM_OCI_REGION_BOM
+	default "ca-montreal-1" if TERRAFORM_OCI_REGION_YUL
+	default "ca-toronto-1" if TERRAFORM_OCI_REGION_YYZ
+	default "us-ashburn-1" if TERRAFORM_OCI_REGION_IAD
+	default "us-chicago-1" if TERRAFORM_OCI_REGION_ORD
+	default "us-phoenix-1" if TERRAFORM_OCI_REGION_PHX
+	default "us-sanjose-1" if TERRAFORM_OCI_REGION_SJC
 
 config TERRAFORM_OCI_AVAILABLITY_DOMAIN
 	string "OCI availablity domain"
