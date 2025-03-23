@@ -37,7 +37,7 @@ if [[ "$CONFIG_LIBVIRT" != "y" ]]; then
 fi
 
 if [[ $# -eq 0 ]]; then
-	KDEVOPS_POOL_PATH="$CONFIG_KDEVOPS_STORAGE_POOL_PATH"
+	KDEVOPS_POOL_PATH="$CONFIG_LIBVIRT_STORAGE_POOL_PATH"
 elif [[ $# -eq 1 ]]; then
 	if [[ "$1" == "--help" ]]; then
 		echo "Usage: $0"

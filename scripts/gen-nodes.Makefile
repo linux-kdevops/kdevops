@@ -42,12 +42,6 @@ GEN_NODES_EXTRA_ARGS += libvirt_session_management_network_device='$(subst ",,$(
 GEN_NODES_EXTRA_ARGS += libvirt_session_public_network_dev='$(subst ",,$(CONFIG_LIBVIRT_SESSION_PUBLIC_NETWORK_DEV))'
 endif
 
-ifeq (y,$(CONFIG_LIBVIRT_STORAGE_POOL_CREATE))
-GEN_NODES_EXTRA_ARGS += libvirt_storage_pool_create='True'
-GEN_NODES_EXTRA_ARGS += libvirt_storage_pool_name='$(subst ",,$(CONFIG_LIBVIRT_STORAGE_POOL_NAME))'
-GEN_NODES_EXTRA_ARGS += libvirt_storage_pool_path='$(subst ",,$(CONFIG_KDEVOPS_STORAGE_POOL_PATH))'
-endif
-
 GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_aio_mode='$(subst ",,$(CONFIG_LIBVIRT_AIO_MODE))'
 GEN_NODES_EXTRA_ARGS += libvirt_extra_storage_aio_cache_mode='$(subst ",,$(CONFIG_LIBVIRT_AIO_CACHE_MODE))'
 

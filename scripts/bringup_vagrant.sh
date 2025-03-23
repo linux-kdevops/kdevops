@@ -55,7 +55,7 @@ vagrant_check_dups()
 			# instances *and* we know one does not exist in another
 			# directory for this user.
 
-			kdevops_pool_path="$CONFIG_KDEVOPS_STORAGE_POOL_PATH"
+			kdevops_pool_path="$CONFIG_LIBVIRT_STORAGE_POOL_PATH"
 			# For libvirt we can do one more global sanity check
 			if [[ "$CONFIG_LIBVIRT" == "y" ]]; then
 				possible_image="${kdevops_pool_path}/vagrant_${instance}.img"

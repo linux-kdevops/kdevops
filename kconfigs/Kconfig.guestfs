@@ -1,5 +1,10 @@
 if GUESTFS
 
+config STORAGE_POOL_PATH
+	string
+	output yaml
+	default LIBVIRT_STORAGE_POOL_PATH
+
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	bool
 

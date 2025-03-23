@@ -18,7 +18,7 @@ rm -rf .vagrant
 # doing so we don't check for global dups or anything like that.
 UNINIT_CURRENT_INSTANCES=$(vagrant status --machine-readable | grep ",state," | grep not_created | awk -F "," '{print $2}')
 for i in $UNINIT_CURRENT_INSTANCES; do
-	UNINIT_INSTANCE_SPARE_DRIVE_DIR="${CONFIG_KDEVOPS_STORAGE_POOL_PATH}/kdevops/$i"
+	UNINIT_INSTANCE_SPARE_DRIVE_DIR="${CONFIG_LIBVIRT_STORAGE_POOL_PATH}/kdevops/$i"
 	if [[ -d $UNINIT_INSTANCE_SPARE_DRIVE_DIR ]]; then
 		echo "Found unitialized (possibly old) instance spare drive directory, removing it ... $i"
 		rm -rf $UNINIT_INSTANCE_SPARE_DRIVE_DIR

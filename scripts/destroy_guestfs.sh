@@ -7,7 +7,7 @@ source ${TOPDIR}/scripts/lib.sh
 
 export LIBVIRT_DEFAULT_URI=$CONFIG_LIBVIRT_URI
 
-STORAGEDIR="${CONFIG_KDEVOPS_STORAGE_POOL_PATH}/kdevops/guestfs"
+STORAGEDIR="${CONFIG_LIBVIRT_STORAGE_POOL_PATH}/kdevops/guestfs"
 GUESTFSDIR="${TOPDIR}/guestfs"
 
 if [ -f "$GUESTFSDIR/kdevops_nodes.yaml" ]; then

@@ -155,12 +155,19 @@ config LIBVIRT_QEMU_GROUP
 	default "qemu" if !DISTRO_DEBIAN && !DISTRO_UBUNTU
 	default "libvirt-qemu" if DISTRO_DEBIAN || DISTRO_UBUNTU
 
-config KDEVOPS_STORAGE_POOL_PATH
+
+config LIBVIRT_STORAGE_POOL_PATH
 	string
+	output yaml
 	default LIBVIRT_STORAGE_POOL_PATH_AUTO if LIBVIRT && !LIBVIRT_STORAGE_POOL_PATH_CUSTOM_MANUAL
 	default LIBVIRT_STORAGE_POOL_PATH_AUTO if LIBVIRT && LIBVIRT_STORAGE_POOL_PATH_CUSTOM_CWD
 	default LIBVIRT_STORAGE_POOL_PATH_CUSTOM if LIBVIRT && LIBVIRT_STORAGE_POOL_PATH_CUSTOM_MANUAL
 	default VIRTUALBOX_STORAGE_POOL_PATH_CUSTOM if VAGRANT_VIRTUALBOX
+
+config KDEVOPS_STORAGE_POOL_PATH
+	string
+	output yaml
+	default "{{ libvirt_storage_pool_path }}/kdevops"
 
 config QEMU_BIN_PATH
 	string
@@ -1052,6 +1059,7 @@ endif
 
 config LIBVIRT_STORAGE_POOL_CREATE
 	bool "Should we build a custom storage pool for you?"
+	output yaml
 	default n if !LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	default $(shell, ./scripts/get_libvirsh_pool_enabled.sh) if LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	help
@@ -1063,6 +1071,7 @@ config LIBVIRT_STORAGE_POOL_CREATE
 
 config LIBVIRT_STORAGE_POOL_NAME
 	string "Libvirt storage pool name"
+	output yaml
 	depends on LIBVIRT_STORAGE_POOL_CREATE
 	default "default" if !LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	default $(shell, ./scripts/get_libvirsh_pool_name.sh) if LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED

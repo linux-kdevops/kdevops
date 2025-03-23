@@ -44,11 +44,6 @@ ifeq (y,$(CONFIG_VAGRANT_VIRTUALBOX))
 VAGRANT_ARGS += virtualbox_provider=True
 endif
 
-STORAGE_POOL_PATH:=$(subst ",,$(CONFIG_KDEVOPS_STORAGE_POOL_PATH))
-KDEVOPS_STORAGE_POOL_PATH:=$(STORAGE_POOL_PATH)/kdevops
-VAGRANT_ARGS += storage_pool_path=$(STORAGE_POOL_PATH)
-VAGRANT_ARGS += kdevops_storage_pool_path=$(KDEVOPS_STORAGE_POOL_PATH)
-
 VAGRANT_9P_HOST_CLONE :=
 ifeq (y,$(CONFIG_BOOTLINUX_9P))
 VAGRANT_9P_HOST_CLONE := vagrant_9p_linux_clone
