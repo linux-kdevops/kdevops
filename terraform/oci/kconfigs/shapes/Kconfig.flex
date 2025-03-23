@@ -73,10 +73,22 @@ config TERRAFORM_OCI_SHAPE
 	default "VM.Optimized3.Flex" if TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
 
 config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
-	int "Number of flexible instance OCPUs"
+	int "Instance CPU count"
+	output yaml
 	default 2
 	help
-	  The number of OCPUs to use per flexible instance.
+	  The Oracle CPU (OCPU) represents physical CPU cores and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, runs two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
 
 config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
 	int "How much RAM to use per flexible instance in GB"
