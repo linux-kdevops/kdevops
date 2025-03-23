@@ -1,4 +1,26 @@
 ---
+- name: Check if unattended-upgrades is installed
+  command: dpkg-query -W -f='${Status}' unattended-upgrades
+  register: unattended_upgrade_status
+  ignore_errors: true
+  changed_when: false
+
+- name: Set fact if unattended-upgrades is installed
+  set_fact:
+    unattended_upgrades_installed: "{{ 'install ok installed' in unattended_upgrade_status.stdout }}"
+
+- name: Verify unattended-upgrades is not installed
+  fail:
+    msg: |
+      The unattended-upgrades package is installed on the base image, this
+      can cause tons of issues with CIs. Fix this by running the following
+      commands:
+
+      make cleancache
+      make bringup
+  when:
+    - unattended_upgrades_installed|bool
+
 - name: Upgrade Packages
   become: yes
   become_method: sudo
