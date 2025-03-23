@@ -91,7 +91,10 @@ config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
 	  and AMD) and OCI Ampere Compute processors.
 
 config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
-	int "How much RAM to use per flexible instance in GB"
+	int "Instance memory size"
+	output yaml
 	default 4
 	help
-	  How much GiB of RAM to use per flexible instance.
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUS in each
+	  instance.
