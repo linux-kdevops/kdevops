@@ -223,6 +223,7 @@ firstboot-command systemctl stop ssh
 firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
 firstboot-command systemctl start ssh
 firstboot-command apt update && apt upgrade --yes
+uninstall unattended-upgrades
 _EOT
 	# CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST will not work
 	# if /etc/nsswitch.conf has a line like this:
