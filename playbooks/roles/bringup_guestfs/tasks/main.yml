@@ -42,6 +42,82 @@
   when: guestfs_subdirectories.matched == 0
   tags: [ 'config-check' ]
 
+- name: Create storage pool path directory if (libvirt session uri)
+  file:
+    path: "{{ libvirt_storage_pool_path }}"
+    state: directory
+  when: 'not libvirt_uri_system|bool'
+  tags: ['storage-pool-path']
+
+- name: Create storage pool path directory and set group if using (libvirt system uri)
+  file:
+    path: "{{ libvirt_storage_pool_path }}"
+    state: directory
+    owner: root
+    group: "{{ libvirt_qemu_group }}"
+    mode: "0775"
+  when: 'libvirt_uri_system|bool'
+  tags: ['storage-pool-path']
+
+- name: Create kdevops guestfs storage directory if missing (libvirt session uri)
+  file:
+    path: "{{ guestfs_base_image_dir }}"
+    state: directory
+    mode: '0755'
+  tags: ['storage-pool-path']
+  when:
+    - 'not libvirt_uri_system|bool'
+
+- name: Create kdevops guestfs storage directory if missing (libvirt system uri)
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ guestfs_base_image_dir }}"
+    state: directory
+    mode: '0775'
+    group: "{{ libvirt_qemu_group }}"
+  tags: ['storage-pool-path']
+  when:
+    - 'libvirt_uri_system|bool'
+
+- name: Check if directory is owned by the correct group (libvirt system uri)
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: stat -c '%G' "{{ libvirt_storage_pool_path }}"
+  register: dir_group
+  changed_when: false
+  tags: ['storage-pool-path']
+  when:
+    - 'libvirt_uri_system|bool'
+
+- name: Check if directory has group write permissions (libvirt system uri)
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: stat -c '%A' "{{ libvirt_storage_pool_path }}"
+  register: dir_perms
+  changed_when: false
+  tags: ['storage-pool-path']
+  when:
+    - 'libvirt_uri_system|bool'
+
+- name: Verify storage pool path directory is group-writable (libvirt system uri)
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  fail:
+    msg: |
+      The permissions for {{ libvirt_storage_pool_path }} should be group
+      writeable by the group used by libvirt: {{ libvirt_qemu_group }}
+      Current group: {{ dir_group.stdout }}
+      Current permissions: {{ dir_perms.stdout }}
+  tags: ['storage-pool-path']
+  when:
+    - 'libvirt_uri_system|bool'
+    - (dir_group.stdout != libvirt_qemu_group) or (dir_perms.stdout[5] != 'w')
+
 - name: Check for dnsmasq configuration files
   stat:
     path: "{{ item }}"

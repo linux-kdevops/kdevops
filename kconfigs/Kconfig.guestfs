@@ -5,6 +5,16 @@ config STORAGE_POOL_PATH
 	output yaml
 	default LIBVIRT_STORAGE_POOL_PATH
 
+config GUESTFS_STORAGE_DIR
+	string
+	output yaml
+	default "{{ kdevops_storage_pool_path }}/kdevops/guestfs"
+
+config GUESTFS_BASE_IMAGE_DIR
+	string
+	output yaml
+	default "{{ guestfs_storage_dir }}/base_images"
+
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	bool
 

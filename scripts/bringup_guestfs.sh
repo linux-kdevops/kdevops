@@ -271,9 +271,6 @@ if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
 	USE_SUDO="sudo "
 fi
 
-$USE_SUDO mkdir -p $STORAGEDIR
-$USE_SUDO mkdir -p $BASE_IMAGE_DIR
-
 cmdfile=$(mktemp)
 
 if [ ! -f $BASE_IMAGE ]; then
