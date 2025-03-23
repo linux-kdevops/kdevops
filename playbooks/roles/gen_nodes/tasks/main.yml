@@ -18,6 +18,11 @@
   command: "id -g -n"
   register: my_group
 
+- name: Fail if kdevops_host_prefix contains a dash
+  fail:
+    msg: "Invalid kdevops_host_prefix '{{ kdevops_host_prefix }}'. The prefix cannot contain a dash ('-')."
+  when: kdevops_host_prefix is search("-")
+
 - name: Create guestfs directory
   ansible.builtin.file:
     path: "{{ guestfs_path }}"
