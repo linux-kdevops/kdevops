@@ -30,6 +30,7 @@ config NEEDS_LOCAL_DEVELOPMENT_PATH
 
 config KDEVOPS_FIRST_RUN
 	bool "Is this your first time running kdevops on this system?"
+	output yaml
 	default n
 	help
 	  When you run kdevops for the first time we can enable options
