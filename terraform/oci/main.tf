@@ -1,3 +1,11 @@
+data "oci_identity_compartments" "kdevops_compartment" {
+  access_level              = "ANY"
+  compartment_id            = var.oci_tenancy_ocid
+  compartment_id_in_subtree = true
+  name                      = var.oci_compartment_name
+  state                     = "ACTIVE"
+}
+
 data "oci_identity_availability_domain" "kdevops_av_domain" {
   ad_number      = var.oci_ad_number
   compartment_id = var.oci_tenancy_ocid
@@ -7,8 +15,8 @@ resource "oci_core_instance" "kdevops_instance" {
   count = local.kdevops_num_boxes
 
   availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  compartment_id = var.oci_compartment_ocid
-  shape = var.oci_shape
+  compartment_id      = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
+  shape               = var.oci_shape
   shape_config {
     memory_in_gbs = var.oci_instance_flex_memory_in_gbs
     ocpus = var.oci_instance_flex_ocpus
@@ -36,7 +44,7 @@ resource "oci_core_volume" "kdevops_data_disk" {
   count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
 
   availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  compartment_id = var.oci_compartment_ocid
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
   display_name = var.oci_data_volume_display_name
   size_in_gbs = 50
 }
@@ -45,7 +53,7 @@ resource "oci_core_volume" "kdevops_sparse_disk" {
   count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
 
   availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  compartment_id = var.oci_compartment_ocid
+  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
   display_name = var.oci_sparse_volume_display_name
   size_in_gbs = 120
 }
@@ -75,7 +83,7 @@ module "volumes" {
   source = "./volumes"
 
   vol_availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  vol_compartment_ocid    = var.oci_compartment_ocid
+  vol_compartment_ocid    = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
   vol_instance_id         = element(oci_core_instance.kdevops_instance.*.id, count.index)
   vol_instance_name       = element(var.kdevops_nodes, count.index)
   vol_volume_count        = var.oci_volumes_per_instance

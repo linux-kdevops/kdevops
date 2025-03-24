@@ -3,6 +3,11 @@ variable "oci_ad_number" {
   type        = number
 }
 
+variable "oci_compartment_name" {
+  description = "Name of compartment in which to create resources"
+  type        = string
+}
+
 variable "oci_config_file_profile" {
   description = "Entry in ~/.oci/config to use for API authentication"
   type        = string
@@ -15,11 +20,6 @@ variable "oci_region" {
 
 variable "oci_tenancy_ocid" {
   description = "OCID of your tenancy"
-  type        = string
-}
-
-variable "oci_compartment_ocid" {
-  description = "OCID of compartment"
   type        = string
 }
 
