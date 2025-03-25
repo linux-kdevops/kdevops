@@ -13,16 +13,10 @@ oci_instance_flex_memory_in_gbs = {{ terraform_oci_instance_flex_memory_in_gbs }
 oci_os_image_ocid = "{{ terraform_oci_os_image_ocid }}"
 oci_assign_public_ip = "{{ terraform_oci_assign_public_ip | lower }}"
 oci_subnet_ocid = "{{ terraform_oci_subnet_ocid }}"
-oci_volumes_enable_extra = "{{ terraform_oci_volumes_enable_extra | lower }}"
-{% if terraform_oci_volumes_enable_extra %}
 oci_volumes_per_instance = {{ terraform_oci_volumes_per_instance }}
 oci_volumes_size = {{ terraform_oci_volumes_size }}
-{% else %}
-oci_data_volume_display_name = "{{ terraform_oci_data_volume_display_name }}"
 oci_data_volume_device_file_name = "{{ terraform_oci_data_volume_device_file_name }}"
-oci_sparse_volume_display_name = "{{ terraform_oci_sparse_volume_display_name }}"
 oci_sparse_volume_device_file_name = "{{ terraform_oci_sparse_volume_device_file_name }}"
-{% endif %}
 
 ssh_config_pubkey_file = "{{ kdevops_terraform_ssh_config_pubkey_file }}"
 ssh_config_user = "{{ kdevops_terraform_ssh_config_user }}"

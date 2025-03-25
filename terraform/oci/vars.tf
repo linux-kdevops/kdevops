@@ -55,11 +55,6 @@ variable "oci_subnet_ocid" {
   type        = string
 }
 
-variable "oci_volumes_enable_extra" {
-  description = "Create additional block volumes per instance"
-  type        = bool
-}
-
 variable "oci_volumes_per_instance" {
   description = "The count of additional block volumes per instance"
   type        = number
@@ -70,22 +65,12 @@ variable "oci_volumes_size" {
   type        = number
 }
 
-variable "oci_data_volume_display_name" {
-  description = "Display name to use for the data volume"
-  type        = string
-}
-
-variable oci_data_volume_device_file_name {
+variable "oci_data_volume_device_file_name" {
   description = "Data volume's device file name"
   type        = string
 }
 
-variable "oci_sparse_volume_display_name" {
-  description = "Display name to use for the sparse volume"
-  type        = string
-}
-
-variable oci_sparse_volume_device_file_name {
+variable "oci_sparse_volume_device_file_name" {
   description = "Sparse volume's device file name"
   type        = string
 }

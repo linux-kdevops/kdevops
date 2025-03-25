@@ -40,46 +40,8 @@ resource "oci_core_instance" "kdevops_instance" {
   preserve_boot_volume = false
 }
 
-resource "oci_core_volume" "kdevops_data_disk" {
-  count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
-
-  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
-  display_name = var.oci_data_volume_display_name
-  size_in_gbs = 50
-}
-
-resource "oci_core_volume" "kdevops_sparse_disk" {
-  count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
-
-  availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
-  compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
-  display_name = var.oci_sparse_volume_display_name
-  size_in_gbs = 120
-}
-
-resource "oci_core_volume_attachment" "kdevops_data_volume_attachment" {
-  count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
-
-  attachment_type = "paravirtualized"
-  instance_id = element(oci_core_instance.kdevops_instance.*.id, count.index)
-  volume_id = element(oci_core_volume.kdevops_data_disk.*.id, count.index)
-
-  device = var.oci_data_volume_device_file_name
-}
-
-resource "oci_core_volume_attachment" "kdevops_sparse_disk_attachment" {
-  count = var.oci_volumes_enable_extra == "true" ? 0 : local.kdevops_num_boxes
-
-  attachment_type = "paravirtualized"
-  instance_id = element(oci_core_instance.kdevops_instance.*.id, count.index)
-  volume_id = element(oci_core_volume.kdevops_sparse_disk.*.id, count.index)
-
-  device = var.oci_sparse_volume_device_file_name
-}
-
 module "volumes" {
-  count  = var.oci_volumes_enable_extra == "true" ? local.kdevops_num_boxes : 0
+  count  = local.kdevops_num_boxes
   source = "./volumes"
 
   vol_availability_domain = data.oci_identity_availability_domain.kdevops_av_domain.name
