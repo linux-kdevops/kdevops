@@ -92,6 +92,7 @@ def main():
         }
         sshconf.write(ssh_template.format(**context))
     sshconf.close()
+    os.chmod(ssh_config, 0o600)
 
 if __name__ == "__main__":
     main()
