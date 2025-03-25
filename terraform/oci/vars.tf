@@ -55,11 +55,6 @@ variable "oci_os_image_ocid" {
   default = ""
 }
 
-variable "oci_instance_display_name" {
-  description = "Name of the instance"
-  default = ""
-}
-
 variable "oci_assign_public_ip" {
   description = "Assign public IP to the instance"
   default = false
