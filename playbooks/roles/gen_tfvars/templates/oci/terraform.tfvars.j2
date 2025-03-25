@@ -11,7 +11,7 @@ oci_instance_flex_ocpus = {{ terraform_oci_instance_flex_ocpus }}
 oci_instance_flex_memory_in_gbs = {{ terraform_oci_instance_flex_memory_in_gbs }}
 {% endif %}
 oci_os_image_ocid = "{{ terraform_oci_os_image_ocid }}"
-oci_assign_public_ip = "{{ terraform_oci_assign_public_ip | lower }}"
+oci_assign_public_ip = {{ terraform_oci_assign_public_ip | lower }}
 oci_subnet_ocid = "{{ terraform_oci_subnet_ocid }}"
 oci_volumes_per_instance = {{ terraform_oci_volumes_per_instance }}
 oci_volumes_size = {{ terraform_oci_volumes_size }}

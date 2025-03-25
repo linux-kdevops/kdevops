@@ -1,10 +1,11 @@
 config TERRAFORM_OCI_ASSIGN_PUBLIC_IP
-	bool "Assign public IP address to the cloud instance"
+	bool "Assign public IP address to each instance"
+	output yaml
 	default y
 	help
-	  Select this field if public IP address has to be assigned to
-	  the cloud instance. Otherwise a public IP address is
-	  assigned.
+	  Enable this setting if a public IP address should be
+	  assigned to each instance. Leave it unset to prevent your
+	  instances from being accessible on the public internet.
 
 config TERRAFORM_OCI_SUBNET_OCID
 	string "OCI Subnet OCID"

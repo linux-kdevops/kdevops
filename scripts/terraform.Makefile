@@ -48,11 +48,6 @@ KDEVOPS_MRPROPER += $(KDEVOPS_NODES)
 DEFAULT_DEPS_REQS_EXTRA_VARS += $(KDEVOPS_TFVARS)
 
 ifeq (y,$(CONFIG_TERRAFORM_OCI))
-ifeq (y, $(CONFIG_TERRAFORM_OCI_ASSIGN_PUBLIC_IP))
-TERRAFORM_EXTRA_VARS += terraform_oci_assign_public_ip=true
-else
-TERRAFORM_EXTRA_VARS += terraform_oci_assign_public_ip=false
-endif
 TERRAFORM_EXTRA_VARS += terraform_oci_subnet_ocid=$(subst ",,$(CONFIG_TERRAFORM_OCI_SUBNET_OCID))
 endif
 

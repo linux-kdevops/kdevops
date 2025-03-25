@@ -17,6 +17,8 @@ terraform_private_net_enabled: "false"
 terraform_private_net_prefix: ""
 terraform_private_net_mask: 0
 
+terraform_oci_assign_public_ip: false
+
 terraform_openstack_cloud_name: "invalid"
 terraform_openstack_instance_prefix: "invalid"
 terraform_openstack_flavor: "invalid"
