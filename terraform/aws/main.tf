@@ -65,7 +65,7 @@ resource "aws_security_group" "kdevops_internal_group" {
 
 resource "aws_key_pair" "kdevops_keypair" {
   key_name   = var.ssh_keyname
-  public_key = var.ssh_pubkey_data != "" ? var.ssh_pubkey_data : var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
+  public_key = var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
 }
 
 data "template_file" "script_user_data" {
