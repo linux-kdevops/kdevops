@@ -27,6 +27,11 @@ config TERRAFORM_GCE_REGION_US_WEST3
 	help
 	  Salt Lake City, Utah, USA
 
+config TERRAFORM_GCE_REGION_US_WEST4
+	bool "us-west4"
+	help
+	  Las Vegas, Nevada, USA
+
 endchoice
 
 config TERRAFORM_GCE_REGION
@@ -35,7 +40,9 @@ config TERRAFORM_GCE_REGION
 	default "us-west1" if TERRAFORM_GCE_REGION_US_WEST1
 	default "us-west2" if TERRAFORM_GCE_REGION_US_WEST2
 	default "us-west3" if TERRAFORM_GCE_REGION_US_WEST3
+	default "us-west4" if TERRAFORM_GCE_REGION_US_WEST4
 
 source "terraform/gce/kconfigs/zones/Kconfig.us-west1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-west2"
 source "terraform/gce/kconfigs/zones/Kconfig.us-west3"
+source "terraform/gce/kconfigs/zones/Kconfig.us-west4"
