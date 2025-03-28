@@ -11,6 +11,18 @@ choice
 	  Azure chooses an availability zone for your resources
 	  automatically.
 
+config TERRAFORM_AZURE_REGION_EASTASIA
+	bool "East Asia"
+	help
+	  This option selects the East Asia region, located in
+	  Hong Kong and paired with the Southeast Asia region.
+
+config TERRAFORM_AZURE_REGION_SOUTHEASTASIA
+	bool "Southeast Asia"
+	help
+	  This option selects the Southeast Asia region, located in
+	  Singapore and paired with the East Asia region.
+
 config TERRAFORM_AZURE_REGION_CANADACENTRAL
 	bool "Canada Central"
 	help
@@ -107,6 +119,8 @@ endchoice
 config TERRAFORM_AZURE_LOCATION
 	string
 	output yaml
+	default "eastasia" if TERRAFORM_AZURE_REGION_EASTASIA
+	default "southeastasia" if TERRAFORM_AZURE_REGION_SOUTHEASTASIA
 	default "canadacentral" if TERRAFORM_AZURE_REGION_CANADACENTRAL
 	default "canadaeast" if TERRAFORM_AZURE_REGION_CANADAEAST
 	default "centralindia" if TERRAFORM_AZURE_REGION_CENTRALINDIA
