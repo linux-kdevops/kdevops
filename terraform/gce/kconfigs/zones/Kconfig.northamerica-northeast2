@@ -1,0 +1,27 @@
+if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_B
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_A
+	bool "northamerica-northeast2-a"
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_B
+	bool "northamerica-northeast2-b"
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_C
+	bool "northamerica-northeast2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "northamerica-northeast2-a" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_A
+	default "northamerica-northeast2-b" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_B
+	default "northamerica-northeast2-c" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2_C
+
+endif # TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2

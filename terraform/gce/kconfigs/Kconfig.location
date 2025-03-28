@@ -12,6 +12,16 @@ choice
 	  For guidance selecting a region to use, try:
 	  https://cloud.withgoogle.com/region-picker/
 
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+	bool "northamerica-northeast1"
+	help
+	  Montreal, Quebec, Canada
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+	bool "northamerica-northeast2"
+	help
+	  Toronto, Ontario, Canada
+
 config TERRAFORM_GCE_REGION_US_CENTRAL1
 	bool "us-central1"
 	help
@@ -62,6 +72,8 @@ endchoice
 config TERRAFORM_GCE_REGION
 	string
 	output yaml
+	default "northamerica-northeast1" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+	default "northamerica-northeast2" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
 	default "us-central1" if TERRAFORM_GCE_REGION_US_CENTRAL1
 	default "us-east1" if TERRAFORM_GCE_REGION_US_EAST1
 	default "us-east4" if TERRAFORM_GCE_REGION_US_EAST4
@@ -72,6 +84,8 @@ config TERRAFORM_GCE_REGION
 	default "us-west3" if TERRAFORM_GCE_REGION_US_WEST3
 	default "us-west4" if TERRAFORM_GCE_REGION_US_WEST4
 
+source "terraform/gce/kconfigs/zones/Kconfig.northamerica-northeast1"
+source "terraform/gce/kconfigs/zones/Kconfig.northamerica-northeast2"
 source "terraform/gce/kconfigs/zones/Kconfig.us-central1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-east1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-east4"
