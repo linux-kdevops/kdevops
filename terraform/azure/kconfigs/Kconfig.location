@@ -25,6 +25,24 @@ config TERRAFORM_AZURE_REGION_CANADAEAST
 	  province of Quebec and paired with the Canada Central
 	  region.
 
+config TERRAFORM_AZURE_REGION_CENTRALINDIA
+	bool "Central India"
+	help
+	  This option selects the Central India region, located in
+	  Pune, India and paired with the South India region.
+
+config TERRAFORM_AZURE_REGION_SOUTHINDIA
+	bool "South India"
+	help
+	  This option selects the South India region, located in
+	  Chennai, India and paired with the Central India region.
+
+config TERRAFORM_AZURE_REGION_WESTINDIA
+	bool "West India"
+	help
+	  This option selects the West India region, located in
+	  Mumbai, India and paired with the Central India region.
+
 config TERRAFORM_AZURE_REGION_CENTRALUS
 	bool "Central US"
 	help
@@ -91,6 +109,8 @@ config TERRAFORM_AZURE_LOCATION
 	output yaml
 	default "canadacentral" if TERRAFORM_AZURE_REGION_CANADACENTRAL
 	default "canadaeast" if TERRAFORM_AZURE_REGION_CANADAEAST
+	default "centralindia" if TERRAFORM_AZURE_REGION_CENTRALINDIA
+	default "southindia" if TERRAFORM_AZURE_REGION_SOUTHINDIA
 	default "centralus" if TERRAFORM_AZURE_REGION_CENTRALUS
 	default "eastus" if TERRAFORM_AZURE_REGION_EASTUS
 	default "eastus2" if TERRAFORM_AZURE_REGION_EASTUS2
