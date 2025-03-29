@@ -1,0 +1,20 @@
+if TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string "OS image OCID"
+	output yaml
+	help
+	  An image is a template of a virtual hard drive. It
+	  contains the operating system and other software for each
+	  instance. Select an image by specifying the OCID of the
+	  image to use. You can select:
+
+	  - An older release than the latest image release
+	  - An older operating system release
+	  - A custom-made image
+
+	  More detail is available:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/bringyourownimage.htm
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM
