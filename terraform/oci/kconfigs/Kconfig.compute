@@ -1,5 +1,6 @@
 config TERRAFORM_OCI_SHAPE
 	string "OCI shape name"
+	output yaml
 	help
 	  The name of the shape
 	  Read this:
