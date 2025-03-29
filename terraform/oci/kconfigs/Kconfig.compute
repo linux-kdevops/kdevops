@@ -40,7 +40,8 @@ source "terraform/oci/kconfigs/shapes/Kconfig.generic"
 source "terraform/oci/kconfigs/shapes/Kconfig.bm"
 
 config TERRAFORM_OCI_OS_IMAGE_OCID
-	string "OCI OS image OCID"
+	string "OS image OCID"
+	output yaml
 	help
 	  The OCI ID of the OS image to use.
 	  Read this:
