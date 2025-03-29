@@ -1,3 +1,5 @@
+if TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
 choice
 	prompt "OCI shape"
 	default TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
@@ -98,3 +100,5 @@ config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
 	  Memory per instance, in GiBs. The minimum value for this
 	  setting is a multiple of the number of OCPUS in each
 	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FLEX

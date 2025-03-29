@@ -1,3 +1,26 @@
+choice
+	prompt "OCI shape family"
+	default TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	help
+	  This option selects the class of virtual hardware (CPUs and
+	  memory) to provision for each target node. Most CPU
+	  architectures, including x86, run two threads per physical
+	  core, so one OCPU is the equal of two vCPUs for x86-based
+	  compute.
+
+	  Which shapes are available is limited by your subscription
+	  and what hardware has been deployed in your selected region.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	bool "Flex shapes"
+	help
+	  A flexible shape is a virtual machine that lets you
+	  customize the number of OCPUs and the amount of memory
+	  per instance. The network bandwidth and number of VNICs
+	  scale proportionately with the number of OCPUs.
+
+endchoice
+
 source "terraform/oci/kconfigs/shapes/Kconfig.flex"
 
 config TERRAFORM_OCI_OS_IMAGE_OCID
