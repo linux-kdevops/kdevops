@@ -4,8 +4,12 @@ oci_config_file_profile = "{{ terraform_oci_config_file_profile }}"
 oci_ad_number = {{ terraform_oci_ad_number }}
 oci_compartment_name = "{{ terraform_oci_compartment_name }}"
 oci_shape = "{{ terraform_oci_shape }}"
+{% if terraform_oci_instance_flex_ocpus is defined %}
 oci_instance_flex_ocpus = {{ terraform_oci_instance_flex_ocpus }}
+{% endif %}
+{% if terraform_oci_instance_flex_memory_in_gbs is defined %}
 oci_instance_flex_memory_in_gbs = {{ terraform_oci_instance_flex_memory_in_gbs }}
+{% endif %}
 oci_os_image_ocid = "{{ terraform_oci_os_image_ocid }}"
 oci_assign_public_ip = "{{ terraform_oci_assign_public_ip | lower }}"
 oci_subnet_ocid = "{{ terraform_oci_subnet_ocid }}"

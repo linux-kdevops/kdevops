@@ -19,9 +19,18 @@ config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
 	  per instance. The network bandwidth and number of VNICs
 	  scale proportionately with the number of OCPUs.
 
+config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+	bool "Bare metal"
+	help
+	  A bare metal shape is a whole physical machine without
+	  virtualization. This gives deterministic performance
+	  characteristics but is less configurable than a flex
+	  shape.
+
 endchoice
 
 source "terraform/oci/kconfigs/shapes/Kconfig.flex"
+source "terraform/oci/kconfigs/shapes/Kconfig.bm"
 
 config TERRAFORM_OCI_OS_IMAGE_OCID
 	string "OCI OS image OCID"

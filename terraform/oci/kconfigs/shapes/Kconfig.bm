@@ -1,0 +1,83 @@
+if TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more details, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#baremetalshapes
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	bool "BM.Standard3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  X9-based standard compute. Processor: Intel Xeon Platinum
+	  8358. Base frequency 2.6 GHz, max turbo frequency 3.4 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E4
+	bool "BM.Standard.E4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E4-based standard compute. Processor: AMD EPYC 7J13. Base
+	  frequency 2.55 GHz, max boost frequency 3.5 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E5
+	bool "BM.Standard.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E5-based standard compute. Processor: AMD EPYC 9J14. Base
+	  frequency 2.4 GHz, max boost frequency 3.7 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_A1
+	bool "BM.Standard.A1"
+	depends on TARGET_ARCH_ARM64
+	help
+	  OCI Ampere A1 Compute Arm-based standard compute. Each
+	  OCPU corresponds to a single hardware execution thread.
+	  Processor: Ampere Altra Q80-30. Max frequency 3.0 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_DENSEIO_E4
+	bool "BM.DenseIO.E4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E4-based dense I/O compute. Processor: AMD EPYC 7J13.
+	  Base frequency 2.55 GHz, max boost frequency 3.5 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_DENSEIO_E5
+	bool "BM.DenseIO.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E5-based dense I/O compute. Processor: AMD EPYC 9J14.
+	  Base frequency 2.4 GHz, max boost frequency 3.7 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3
+	bool "BM.Optimized3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: Intel Xeon 6354. Base frequency 3.0 GHz, max
+	  turbo frequency 3.6 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_HPC_E5
+	bool "BM.HPC.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: AMD EPYC 9J14. Base frequency 2.4 GHz, max
+	  boost frequency 3.7 GHz.
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "BM.Standard3" if TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	default "BM.Standard.E4" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E4
+	default "BM.Standard.E5" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E5
+	default "BM.Standard.A1" if TERRAFORM_OCI_SHAPE_BM_STANDARD_A1
+	default "BM.DenseIO.E4" if TERRAFORM_OCI_SHAPE_BM_DENSEIO_E4
+	default "BM.DenseIO.E5" if TERRAFORM_OCI_SHAPE_BM_DENSEIO_E5
+	default "BM.Optimized3" if TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3
+	default "BM.HPC.E5" if TERRAFORM_OCI_SHAPE_BM_HPC_E5
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
