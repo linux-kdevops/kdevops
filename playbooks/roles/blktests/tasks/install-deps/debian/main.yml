@@ -41,7 +41,7 @@
       - sed
       - libacl1
       - libacl1-dev
-      - libaio1
+      - "{{ pkg_libaio }}"
       - uuid-dev
       - uuid-runtime
       - attr
