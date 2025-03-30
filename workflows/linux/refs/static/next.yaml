@@ -4,9 +4,9 @@ configs:
     config: BOOTLINUX_TREE_NEXT_REF_MASTER
     ref: "master"
     help: "The latest and greatest linux-next"
-  - next-20241108:
-    config: BOOTLINUX_TREE_NEXT_REF_20241108
-    ref: "next-20241108"
+  - next-20250328:
+    config: BOOTLINUX_TREE_NEXT_REF_20250328
+    ref: "next-20250328"
     help: "The latest linux-next we manually compile tested and have a config for."
   - fs-current:
     config: BOOTLINUX_TREE_NEXT_REF_FSCURRENT
