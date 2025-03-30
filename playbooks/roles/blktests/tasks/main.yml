@@ -184,6 +184,14 @@
   tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
   run_once: true
 
+- name: Create {{ blktests_results_target }} if it does not exist
+  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ blktests_results_target }}"
+    state: directory
+  run_once: true
+
 - name: Document used target kernel version
   local_action: "shell echo {{ last_kernel }} > {{ blktests_results_target }}/last-kernel.txt"
   tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
