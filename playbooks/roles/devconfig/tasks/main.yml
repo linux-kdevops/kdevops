@@ -41,6 +41,40 @@
 
 # Distro agnostic stuff goes below
 
+- name: Check if /mirror directory exists on localhost
+  delegate_to: localhost
+  stat:
+    path: /mirror
+  register: mirror_dir
+  run_once: true
+
+- name: Create an empty gitconfig if it doesn't exist on the localhost
+  delegate_to: localhost
+  file:
+    path: "{{ dev_gitconfig_src }}"
+    state: touch
+    mode: '0644'
+  when:
+    - mirror_dir.stat.exists
+  run_once: true
+
+- name: Check if any safe.directory entries exist
+  delegate_to: localhost
+  command: git config --global --get-all safe.directory
+  register: git_safe_dirs
+  failed_when: false
+  changed_when: false
+  run_once: true
+  when: mirror_dir.stat.exists
+
+- name: Add safe.directory = * if not already set
+  delegate_to: localhost
+  command: git config --global --add safe.directory '*'
+  when:
+    - mirror_dir.stat.exists
+    - "'*' not in git_safe_dirs.stdout_lines"
+  run_once: true
+
 - name: Check if the developer has a git config
   delegate_to: localhost
   stat:
