@@ -24,7 +24,7 @@
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
     update: yes
-    version: master
+    version: main
   tags: [ 'install', 'git']
 
 - name: Copy over our .config
@@ -121,7 +121,7 @@
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
     update: yes
-    version: master
+    version: main
   tags: [ 'install', 'git', 'git_update', 'run_tests' ]
 
 - name: Create a symbolic links needed
