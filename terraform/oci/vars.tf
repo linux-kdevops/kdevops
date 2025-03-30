@@ -1,103 +1,101 @@
 variable "oci_region" {
   description = "An OCI region"
-  default = ""
+  type        = string
 }
 
 variable "oci_tenancy_ocid" {
   description = "OCID of your tenancy"
-  default = ""
+  type        = string
 }
 
 variable "oci_user_ocid" {
   description = "OCID of the user calling the API"
-  default = ""
+  type        = string
 }
 
 variable "oci_user_private_key_path" {
   description = "The path of the private key stored on your computer"
-  default = ""
+  type        = string
 }
 
 variable "oci_user_fingerprint" {
   description = "Fingerprint for the key pair being used"
-  default = ""
+  type        = string
 }
 
 variable "oci_availablity_domain" {
   description = "Name of availability domain"
-  default = ""
+  type        = string
 }
 
 variable "oci_compartment_ocid" {
   description = "OCID of compartment"
-  default = ""
+  type        = string
 }
 
 variable "oci_shape" {
   description = "Shape name"
-  default = ""
+  type        = string
 }
 
 variable "oci_instance_flex_ocpus" {
+  default     = null
   description = "The total number of OCPUs available to the instance."
-  type = number
-  default = null
+  type        = number
 }
 
 variable "oci_instance_flex_memory_in_gbs" {
+  default     = null
   description = "The total amount of memory available to the instance, in gigabytes."
-  type = number
-  default = null
+  type        = number
 }
 
 variable "oci_os_image_ocid" {
   description = "OCID of OS image"
-  default = ""
+  type        = string
 }
 
 variable "oci_assign_public_ip" {
   description = "Assign public IP to the instance"
-  default = false
+  type        = bool
 }
 
 variable "oci_subnet_ocid" {
   description = "Subnet OCID"
-  default = ""
+  type        = string
 }
 
 variable "oci_volumes_enable_extra" {
   description = "Create additional block volumes per instance"
-  default     = false
+  type        = bool
 }
 
 variable "oci_volumes_per_instance" {
   description = "The count of additional block volumes per instance"
   type        = number
-  default     = 0
 }
 
 variable "oci_volumes_size" {
   description = "The size of additional block volumes, in gibibytes"
   type        = number
-  default     = 0
 }
 
 variable "oci_data_volume_display_name" {
   description = "Display name to use for the data volume"
-  default = "data"
+  type        = string
 }
 
 variable oci_data_volume_device_file_name {
   description = "Data volume's device file name"
-  default = "/dev/oracleoci/oraclevdb"
+  type        = string
 }
 
 variable "oci_sparse_volume_display_name" {
   description = "Display name to use for the sparse volume"
-  default = "sparse"
+  type        = string
 }
 
 variable oci_sparse_volume_device_file_name {
   description = "Sparse volume's device file name"
-  default = "/dev/oracleoci/oraclevdc"
+  type        = string
 }
