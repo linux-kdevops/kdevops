@@ -19,10 +19,10 @@ resource "oci_core_instance" "kdevops_instance" {
   shape               = var.oci_shape
   shape_config {
     memory_in_gbs = var.oci_instance_flex_memory_in_gbs
-    ocpus = var.oci_instance_flex_ocpus
+    ocpus         = var.oci_instance_flex_ocpus
   }
   source_details {
-    source_id = var.oci_os_image_ocid
+    source_id   = var.oci_os_image_ocid
     source_type = "image"
   }
 
