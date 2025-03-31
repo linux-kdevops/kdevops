@@ -9,7 +9,12 @@ config TERRAFORM_OCI_ASSIGN_PUBLIC_IP
 
 config TERRAFORM_OCI_SUBNET_OCID
 	string "OCI Subnet OCID"
+	output yaml
 	help
-	  The OCI ID of the subnet.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+	  If there is a long-lived VNC and subnet already available
+	  to which to attach kdevops compute instances, specify the
+	  OCID of this subnet via this option.
+
+	  kdevops does not manage this resource. Before running
+	  "make bringup", the subnet must already exist and your OCI
+	  user must have permission to attach to it.
