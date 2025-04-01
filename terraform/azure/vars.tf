@@ -1,66 +1,64 @@
 variable "client_certificate_path" {
   description = "Path to the service principal PFX file for this application"
-  default     = "./service-principal.pfx"
+  type        = string
 }
 
 variable "client_certificate_password" {
   description = "The password to the service principal PFX file"
-  default     = "someHardPassword"
+  type        = string
 }
 
 variable "application_id" {
   description = "The application ID"
-  default     = "anotherGUID"
+  type        = string
 }
 
 variable "subscription_id" {
   description = "Your subscription ID"
-  default     = "anotherGUID"
+  type        = string
 }
 
 variable "tenant_id" {
   description = "Azure tenant ID"
-  default     = "someLONGGUID"
+  type        = string
 }
 
 variable "resource_location" {
   description = "Resource location"
-  default     = "westus"
+  type        = string
 }
 
 variable "vmsize" {
   description = "VM size"
-  default     = "Standard_DS3_v2"
+  type        = string
 }
 
 variable "image_publisher" {
   description = "Storage image publisher"
-  default     = "Debian"
+  type        = string
 }
 
 variable "image_offer" {
   description = "Storage image offer"
-  default     = "debian-10"
+  type        = string
 }
 
 variable "image_sku" {
   description = "Storage image sku"
-  default     = "10"
+  type        = string
 }
 
 variable "image_version" {
   description = "Storage image version"
-  default     = "latest"
+  type        = string
 }
 
 variable "managed_disks_per_instance" {
   description = "Count of managed disks per VM instance"
   type        = number
-  default     = 0
 }
 
 variable "managed_disks_size" {
   description = "Size of each managed disk, in gibibytes"
   type        = number
-  default     = 0
 }
