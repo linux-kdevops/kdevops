@@ -2,7 +2,7 @@
 # https://docs.aws.amazon.com/general/latest/gr/rande.html
 variable "aws_region" {
   description = "Your preferred AWS region"
-  default     = "us-west-1"
+  type        = string
 }
 
 # I got mine by an error output after using the same region as above
@@ -10,19 +10,19 @@ variable "aws_region" {
 # https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
 variable "aws_availability_region" {
   description = "Your preferred AWS region"
-  default     = "us-west-1b"
+  type        = string
 }
 
 variable "ssh_keyname" {
-  description = "The name of your ssh key, this is just the name displayed and used on aws in the backend"
   default     = "kdevops_aws_key"
+  description = "The name of your ssh key, this is just the name displayed and used on aws in the backend"
+  type        = string
 }
 
 variable "ssh_pubkey_data" {
+  default     = ""
   description = "The ssh public key data"
-
-  # for instance it coudl be "ssh-rsa AAetcccc"
-  default = ""
+  type        = string
 }
 
 # AMI updates for debian:
@@ -43,37 +43,35 @@ variable "ssh_pubkey_data" {
 # Using this filter glob lets us get the latest ami for this owner / release.
 variable "aws_name_search" {
   description = "Your AWS AMI search name filter"
-  default     = "debian-stretch-hvm-x86_64-*"
+  type        = string
 }
 
 # This has to match your preferred image filter above too.
 variable "aws_virt_type" {
   description = "Your AWS preferred virtualization type"
-  default     = "hvm"
+  type        = string
 }
 
 variable "aws_ami_owner" {
   description = "Your AWS AMI image owner"
-
-  # Debian
-  default = "379101102735"
+  type        = string
 }
 
 # https://aws.amazon.com/ec2/instance-types/
 # Free trial limits you to 750 hours of only t2.micro
 variable "aws_instance_type" {
   description = "Your AWS instance type"
-  default     = "t2.micro"
+  type        = string
 }
 
 variable "aws_enable_ebs" {
   description = "Whether or not to enable EBS"
-  default     = "no"
+  type        = string
 }
 
 variable "aws_ebs_num_volumes_per_instance" {
   description = "Number of EBS volumes to create per instance"
-  default     = "1"
+  type        = string
 }
 
 # The t2.micro comes with 8 GiB of storage.
@@ -83,12 +81,12 @@ variable "aws_ebs_num_volumes_per_instance" {
 #
 variable "aws_ebs_volume_size" {
   description = "Size in GiB for each of the volumes"
-  default     = "4"
+  type        = string
 }
 
 variable "aws_ebs_volume_type" {
   description = "Type of each of the EBS volumes"
-  default     = "gp2"
+  type        = string
 }
 
 variable "aws_ebs_volume_iops" {
@@ -115,11 +113,13 @@ variable "aws_shared_credentials_file" {
 # the hostname. local-exec works too, but this is what we went with.
 variable "user_data_enabled" {
   description = "Do you want to enable cloud-init user data processing?"
+  type        = string
   default     = "yes"
 }
 
 variable "user_data_log_dir" {
   description = "Where on the node you want user_data processing logs to go"
+  type        = string
   default     = "/var/log/user_data"
 }
 
@@ -128,6 +128,7 @@ variable "user_data_log_dir" {
 # changed.
 variable "user_data_admin_enable_hostnamectl" {
   description = "Should we use hostnamectl to change the target hostname?"
+  type        = string
   default     = "yes"
 }
 
@@ -135,10 +136,11 @@ variable "user_data_admin_enable_hostnamectl" {
 # I forget which tests requires this.
 variable "user_data_admin_enable_host_file" {
   description = "Should /etc/hosts also be appended with the new hostname with the localhost address?"
+  type        = string
   default     = "yes"
 }
 
 variable "aws_profile" {
   description = "Shared aws credentials file"
-  default     = "default"
+  type        = string
 }
