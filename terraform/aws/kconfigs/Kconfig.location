@@ -72,6 +72,7 @@ endchoice
 
 config TERRAFORM_AWS_REGION
 	string
+	output yaml
 	default "us-west-2" if TERRAFORM_AWS_US_WEST_2
 	default "us-west-1" if TERRAFORM_AWS_US_WEST_1
 	default "us-east-2" if TERRAFORM_AWS_US_EAST_2
