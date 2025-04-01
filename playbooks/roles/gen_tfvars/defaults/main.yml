@@ -41,13 +41,6 @@ terraform_azure_application_id: "invalid"
 terraform_azure_subscription_id: "invalid"
 terraform_azure_tenant_id: "invalid"
 
-terraform_gce_project_name: "invalid"
-terraform_gce_region: "invalid"
-terraform_gce_machine_type: "invalid"
-terraform_gce_scatch_disk_type: "invalid"
-terraform_gce_image_name: "invalid"
-terraform_gce_credentials: "invalid"
-
 terraform_oci_region: "invalid"
 terraform_oci_tenancy_ocid: "invalid"
 terraform_oci_user_ocid: "invalid"
