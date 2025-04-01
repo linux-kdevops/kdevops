@@ -50,9 +50,6 @@
   tags: ['storage-pool-path']
 
 - name: Create storage pool path directory and set group if using (libvirt system uri)
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
   file:
     path: "{{ libvirt_storage_pool_path }}"
     state: directory
