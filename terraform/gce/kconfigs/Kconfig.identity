@@ -1,10 +1,18 @@
-config TERRAFORM_GCE_PROJECT_NAME
-	string "GCE Project name"
-	default "kdevops"
+config TERRAFORM_GCE_PROJECT
+	string "Project name"
+	output yaml
 	help
-	  This option will set the GCE project name. This name must match
-	  the actual name of the project you have created using the
-	  GCE interface.
+	  A project is made up of the settings, permissions, quotas,
+	  and other metadata that describe your cloud resources.
+	  Resources that are provisioned within a single project can
+	  work together easily, for example by communicating through
+	  an internal private network.
+
+	  When creating a Google Cloud project, the administrator
+	  chooses a human-readable name for it. Specify that name
+	  here.
+
+	  Note: kdevops does not permit blanks in this name.
 
 config TERRAFORM_GCE_JSON_CREDENTIALS_PATH
 	string "GCE json credential file path"

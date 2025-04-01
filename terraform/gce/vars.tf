@@ -1,4 +1,4 @@
-variable "project" {
+variable "gce_project" {
   description = "Your project name"
   type        = string
 }
