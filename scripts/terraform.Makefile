@@ -182,15 +182,13 @@ bringup_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--connection=local --inventory localhost, \
 		playbooks/terraform.yml --tags bringup \
-		--extra-vars=@./extra_vars.yaml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		--extra-vars=@./extra_vars.yaml
 
 $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-i $(KDEVOPS_HOSTFILE) \
 		playbooks/terraform.yml --tags ssh \
-		--extra-vars=@./extra_vars.yaml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		--extra-vars=@./extra_vars.yaml
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 status_terraform:
@@ -201,12 +199,10 @@ destroy_terraform:
 		--connection=local -i $(KDEVOPS_HOSTFILE) \
 		playbooks/terraform.yml --tags destroy \
 		--extra-vars=@./extra_vars.yaml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_tfvars.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml

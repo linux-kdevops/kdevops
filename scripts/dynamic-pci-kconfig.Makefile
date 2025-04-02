@@ -45,8 +45,7 @@ dynamic_pcipassthrough_kconfig:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		playbooks/gen-pci-kconfig.yml \
-		--extra-vars '{ $(PCIE_RUNTIME_VARS) }' \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		--extra-vars '{ $(PCIE_RUNTIME_VARS) }'
 
 dynamic-kconfig-pci-help:
 	@echo "dynconfig-pci      - enables only pci dynamically generated kconfig content"
