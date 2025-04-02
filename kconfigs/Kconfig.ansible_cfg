@@ -2,6 +2,10 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_CALLBACK_PLUGIN)
 
+config ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_INTERPRETER_PYTHON)
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
@@ -107,6 +111,66 @@ config ANSIBLE_CFG_DEPRECATION_WARNINGS
 	help
 	  Toggle to control the showing of deprecation warnings
 	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#deprecation-warnings
+
+menu "Ansible Python Interpreter"
+choice
+	prompt "Ansible Python Interpreter"
+	default ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_SILENT if !ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
+	default ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM if ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO
+	bool "Ansible Python Interpreter: Auto"
+	help
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_LEGACY
+	bool "Ansible Python Interpreter: Auto Legacy"
+	help
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_LEGACY_CLIENT
+	bool "Ansible Python Interpreter: Auto Legacy Client"
+	help
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_SILENT
+	bool "Ansible Python Interpreter: Auto Silent"
+	help
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM
+	bool "Ansible Python Interpreter: Custom"
+	help
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+
+endchoice
+
+if ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM_NAME
+	string "Custom Ansible Python Interpreter Name"
+	default $(shell, ./scripts/append-makefile-vars.sh $(ANSIBLE_CFG_INTERPRETER_PYTHON)) if ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
+	default "/usr/bin/env python3" if !ANSIBLE_CFG_INTERPRETER_PYTHON_SET_BY_CLI
+
+endif # ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM
+
+config ANSIBLE_CFG_INTERPRETER_PYTHON_STRING
+	string
+	output yaml
+	default "auto" if ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO
+	default "auto_legacy" if ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_LEGACY
+	default "auto_legacy_client" if ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_LEGACY_CLIENT
+	default "auto_silent" if ANSIBLE_CFG_INTERPRETER_PYTHON_AUTO_SILENT
+	default ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM_NAME if ANSIBLE_CFG_INTERPRETER_PYTHON_CUSTOM
+	help
+	  Path to the Python interpreter to be used for module execution on remote targets,
+	  or an automatic discovery mode.
+	  https://docs.ansible.com/ansible/latest/reference_appendices/python_3_support.html#using-python-3-on-the-managed-machines-with-commands-and-playbooks
+	  https://docs.ansible.com/ansible/latest/reference_appendices/interpreter_discovery.html#interpreter-discovery
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#interpreter-python
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#envvar-ANSIBLE_PYTHON_INTERPRETER
+
+endmenu
 
 if DISTRO_OPENSUSE
 

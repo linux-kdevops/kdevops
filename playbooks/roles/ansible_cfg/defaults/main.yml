@@ -8,3 +8,4 @@ ansible_cfg_callback_plugin_display_skipped_hosts: true
 ansible_cfg_callback_plugin_show_custom_stats: false
 ansible_cfg_callback_plugin_show_per_host_start: true
 ansible_cfg_callback_plugin_show_task_path_on_failure: true
+ansible_cfg_interpreter_python: "auto_silent"
