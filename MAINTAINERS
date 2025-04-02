@@ -91,6 +91,14 @@ F:	scripts/gen-refs-user.Makefile
 F:	scripts/refs.Makefile
 F:	workflows/linux/refs/*
 
+TERRAFORM:
+M:	Chuck Lever <chuck.lever@oracle.com>
+R:	Luis Chamberlain <mcgrof@kernel.org>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	terraform/
+
 KDEVOPS
 M:	Luis Chamberlain <mcgrof@kernel.org>
 R:	Daniel Gomez <da.gomez@samsung.com>
