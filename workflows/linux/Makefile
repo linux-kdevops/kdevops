@@ -159,9 +159,9 @@ linux-reboot:
 
 PHONY += uname
 uname:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags uname,vars
+	$(Q)ansible all -i hosts -b -m command -a "uname -r" -o \
+	| awk -F '|' '{gsub(/^ +| +$$/, "", $$2); printf "%-30s %s\n", $$1, $$4}' \
+	| sed -e 's|(stdout)||'
 
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL))
 PHONY += linux-cxl
