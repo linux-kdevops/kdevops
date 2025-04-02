@@ -16,7 +16,6 @@ ci-archive:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		playbooks/kdevops_archive.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars '{ $(ARCHIVE_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml
 endif

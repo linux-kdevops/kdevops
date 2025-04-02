@@ -11,28 +11,24 @@ PHONY := kdevops_all
 kdevops_terraform_deps:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml
 PHONY += kdevops_terraform_deps
 
 kdevops_vagrant_install_vagrant:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant.yml
 
 kdevops_install_libvirt:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_configuration=True" \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_configuration=True"
 
 kdevops_configure_libvirt:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_install=True" \
-		-e 'running_user=$(USER)' \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		-e 'running_user=$(USER)'
 
 kdevops_vagrant_deps: \
 		kdevops_vagrant_install_vagrant \
@@ -45,16 +41,14 @@ KDEVOPS_VAGRANT_WORK := kdevops_vagrant_deps
 kdevops_vagrant_boxes:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant_boxes.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant_boxes.yml
 PHONY += kdevops_vagrant_boxes
 KDEVOPS_VAGRANT_WORK += kdevops_vagrant_boxes
 
 kdevops_verify_libvirt_user:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "only_verify_user=True" \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "only_verify_user=True"
 
 PHONY += kdevops_verify_libvirt_user
 KDEVOPS_VAGRANT_WORK += kdevops_verify_libvirt_user
@@ -62,8 +56,7 @@ KDEVOPS_VAGRANT_WORK += kdevops_verify_libvirt_user
 kdevops_libvirt_storage_pool_create:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_storage_pool_create.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3'
+		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_storage_pool_create.yml
 
 PHONY += kdevops_libvirt_storage_pool_create
 KDEVOPS_VAGRANT_WORK += kdevops_libvirt_storage_pool_create

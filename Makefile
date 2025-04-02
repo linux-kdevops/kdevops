@@ -228,7 +228,6 @@ $(KDEVOPS_HOSTS): .config ansible.cfg $(KDEVOPS_HOSTS_TEMPLATE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_hosts.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(KDEVOPS_NODES)
@@ -236,7 +235,6 @@ $(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config ansible.cfg $(KDEVOPS_NODES_TEMPLAT
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_nodes.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(LOCALHOST_SETUP_WORK)

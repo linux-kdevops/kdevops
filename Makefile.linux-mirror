@@ -29,7 +29,6 @@ kdevops_linux_mirror: $(KDEVOPS_EXTRA_VARS)
 		--inventory localhost, \
 		--tags vars,mirror \
 		$(KDEVOPS_PLAYBOOKS_DIR)/linux-mirror.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml
 PHONY += kdevops_linux_mirror
 
@@ -42,7 +41,6 @@ mirror-status: $(KDEVOPS_EXTRA_VARS)
 		--inventory localhost, \
 		--tags vars,mirror-status \
 		$(KDEVOPS_PLAYBOOKS_DIR)/linux-mirror.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		--extra-vars=@./extra_vars.yaml
 
 PHONY += mirror-status
