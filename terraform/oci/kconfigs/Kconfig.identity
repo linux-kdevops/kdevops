@@ -5,23 +5,14 @@ config TERRAFORM_OCI_TENANCY_OCID
 	  Read this:
 	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
 
-config TERRAFORM_OCI_USER_OCID
-	string "OCI user OCID"
+config TERRAFORM_OCI_CONFIG_FILE_PROFILE
+	string "Authentication profile entry"
+	output yaml
+	default "DEFAULT"
 	help
-	  The OCI ID of the user to use.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+	  Authentication secrets are stored in ~/.oci/config. That
+	  file may contain more than one entry/identity. Select the
+	  entry in ~/.oci/config that kdevops uses to
+	  authenticate to OCI. Examples:
 
-config TERRAFORM_OCI_USER_PRIVATE_KEY_PATH
-	string "OCI user private key path"
-	help
-	  Path to the file containing the private key of the user.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
-
-config TERRAFORM_OCI_USER_FINGERPRINT
-	string "OCI user fingerprint"
-	help
-	  Fingerprint for the key pair being used.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+	  https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm

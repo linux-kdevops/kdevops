@@ -1,3 +1,8 @@
+variable "oci_config_file_profile" {
+  description = "Entry in ~/.oci/config to use for API authentication"
+  type        = string
+}
+
 variable "oci_region" {
   description = "An OCI region"
   type        = string
@@ -5,21 +10,6 @@ variable "oci_region" {
 
 variable "oci_tenancy_ocid" {
   description = "OCID of your tenancy"
-  type        = string
-}
-
-variable "oci_user_ocid" {
-  description = "OCID of the user calling the API"
-  type        = string
-}
-
-variable "oci_user_private_key_path" {
-  description = "The path of the private key stored on your computer"
-  type        = string
-}
-
-variable "oci_user_fingerprint" {
-  description = "Fingerprint for the key pair being used"
   type        = string
 }
 
