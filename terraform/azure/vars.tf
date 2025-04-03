@@ -1,25 +1,5 @@
-variable "client_certificate_path" {
-  description = "Path to the service principal PFX file for this application"
-  type        = string
-}
-
-variable "client_certificate_password" {
-  description = "The password to the service principal PFX file"
-  type        = string
-}
-
-variable "application_id" {
-  description = "The application ID"
-  type        = string
-}
-
 variable "subscription_id" {
   description = "Your subscription ID"
-  type        = string
-}
-
-variable "tenant_id" {
-  description = "Azure tenant ID"
   type        = string
 }
 
