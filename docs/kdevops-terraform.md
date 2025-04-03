@@ -270,31 +270,24 @@ To read more about shared credentials refer to:
 
 ### GCE - Google Compute Engine
 
-This Ansible role also supports the GCE on Terraform. Below is an example
-terraform.tfvars you may end up with:
+kdevops can provision Google Compute Engine resources. If you are
+new to GCE, review this article:
 
-```
-project = "demo-kdevops"
+https://cloud.google.com/docs/overview
 
-ssh_config_pubkey_file = "~/.ssh/my-gce.pub"
-ssh_config_user = "mcgrof"
-ssh_config = "~/.ssh/config"
-ssh_config_update = "true"
-ssh_config_use_strict_settings = "true"
-ssh_config_backup = "true"
-```
+to understand the concepts and requirements for setting up and
+using GCE resources.
 
-To ramp up, you'll need to get the JSON for your service account through
-the Identity and Access Management (IAM) interface. This is documented below.
-The default name for the JSON credentials file is account.json, you can
-override this and its path with:
+Once your project is created, the administrator must create a
+service account key and provide it to you in a file. The
+pathname to that file is specified in the "Identity & Access"
+submenu. See:
 
-```
-credentials = /home/foo/path/to/some.json
-```
+https://cloud.google.com/iam/docs/creating-managing-service-account-keys
 
-https://www.terraform.io/docs/providers/google/getting_started.html
-https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+Further, the service account must be granted access to allow
+it to create instances and other resources. See:
+
 https://cloud.google.com/iam/docs/granting-roles-to-service-accounts#granting_access_to_a_service_account_for_a_resource
 
 ### OCI - Oracle Cloud Infrastructure
