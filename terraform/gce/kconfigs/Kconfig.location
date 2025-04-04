@@ -22,6 +22,11 @@ config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
 	help
 	  Toronto, Ontario, Canada
 
+config TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
+	bool "northamerica-south1"
+	help
+	  Querétaro, Mexico
+
 config TERRAFORM_GCE_REGION_US_CENTRAL1
 	bool "us-central1"
 	help
@@ -74,6 +79,7 @@ config TERRAFORM_GCE_REGION
 	output yaml
 	default "northamerica-northeast1" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
 	default "northamerica-northeast2" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+	default "northamerica-south1" if TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
 	default "us-central1" if TERRAFORM_GCE_REGION_US_CENTRAL1
 	default "us-east1" if TERRAFORM_GCE_REGION_US_EAST1
 	default "us-east4" if TERRAFORM_GCE_REGION_US_EAST4
@@ -86,6 +92,7 @@ config TERRAFORM_GCE_REGION
 
 source "terraform/gce/kconfigs/zones/Kconfig.northamerica-northeast1"
 source "terraform/gce/kconfigs/zones/Kconfig.northamerica-northeast2"
+source "terraform/gce/kconfigs/zones/Kconfig.northamerica-south1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-central1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-east1"
 source "terraform/gce/kconfigs/zones/Kconfig.us-east4"
