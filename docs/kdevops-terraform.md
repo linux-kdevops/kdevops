@@ -209,8 +209,8 @@ ssh_config_backup = "true"
 
 ### AWS - Amazon Web Services
 
-AWS is supported. For authentication we rely on the shared credentials file,
-so you must have the file:
+AWS is supported. For authentication, kdevops relies on a shared
+credentials file, separate from kdevops' .config:
 
 ```
 ~/.aws/credentials
@@ -224,35 +224,21 @@ aws_access_key_id = SOME_ACCESS_KEY
 aws_secret_access_key = SECRET_KEY
 ```
 
-The profile above is "default", and you can have multiple profiles. By
-default our Terraform's AWS vars.tf assumes ~/.aws/credentials as the
-default credentials location, and the profile as "default". If this is
-different for you, you can override with the variables:
-
-```
-aws_shared_credentials_file
-aws_profile
-```
-
-But if your credentials file is `~/.aws/credentials` and the profile
-target is `default`, then your minimum `terraform.tfvars` file should look
-something like this:
-
-```
-aws_region = "us-west-1"
-
-ssh_config_pubkey_file = "~/.ssh/my-aws.pub"
-ssh_config_user = "mcgrof"
-ssh_config = "~/.ssh/config"
-ssh_config_update = "true"
-ssh_config_use_strict_settings = "true"
-ssh_config_backup = "true"
-```
+This file may contain authentication secrets for more than one
+user. The TERRAFORM_AWS_PROFILE setting enables you to select which
+entry in this file kdevops will use to authenticate.
 
 To read more about shared credentials refer to:
 
   * https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
   * https://docs.aws.amazon.com/powershell/latest/userguide/shared-credentials-in-aws-powershell.html
+
+If you run kdevops on CodeBuild (or ECS), configure an IAM Task Role
+for the build container so that kdevops can create AWS resources.
+For more information, see:
+
+https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html
+https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/security.html
 
 ### GCE - Google Compute Engine
 
