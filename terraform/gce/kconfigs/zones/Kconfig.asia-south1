@@ -1,0 +1,27 @@
+if TERRAFORM_GCE_REGION_ASIA_SOUTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_REGION_ASIA_SOUTH1_B
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTH1_A
+	bool "asia-south1-a"
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTH1_B
+	bool "asia-south1-b"
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTH1_C
+	bool "asia-south1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-south1-a" if TERRAFORM_GCE_REGION_ASIA_SOUTH1_A
+	default "asia-south1-b" if TERRAFORM_GCE_REGION_ASIA_SOUTH1_B
+	default "asia-south1-c" if TERRAFORM_GCE_REGION_ASIA_SOUTH1_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_SOUTH1
