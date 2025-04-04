@@ -97,6 +97,11 @@ R:	Luis Chamberlain <mcgrof@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
+F:	docs/kdevops-terraform.md
+F:	playbook/roles/gen_tfvars/
+F:	playbook/roles/install_terraform/
+F:	playbook/roles/terraform/
+F:	scripts/terraform.Makefile
 F:	terraform/
 
 GITR WORKFLOW
