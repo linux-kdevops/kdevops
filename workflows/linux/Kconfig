@@ -77,6 +77,20 @@ config BOOTLINUX_9P
 	  However, 9p is available only when using a local
 	  virtualization method such as libvirt.
 
+config BOOTLINUX_BUILDER
+	bool "Separate kernel builder"
+	output yaml
+	help
+	  Enabling this option brings up a separate guest/instance
+	  for building the Linux kernel to test. The new kernel is
+	  packaged appropriately for installation on other systems,
+	  but is not installed. Once the kernel is built, the kernel
+	  packages are saved on the controller host and the builder
+	  node can be destroyed.
+
+	  This choice is best when the test runners are resource-
+	  limited or vastly different than the controller host.
+
 endchoice
 
 if BOOTLINUX_9P
