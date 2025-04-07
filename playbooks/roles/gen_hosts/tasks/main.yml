@@ -56,6 +56,18 @@
   when:
     - is_fstests
 
+- name: Generate the Ansible hosts file for a Linux kernel build
+  tags: [ 'hosts' ]
+  template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - bootlinux_builder
+    - ansible_hosts_template.stat.exists
+
 - name: Generate the Ansible hosts file
   tags: [ 'hosts' ]
   template:

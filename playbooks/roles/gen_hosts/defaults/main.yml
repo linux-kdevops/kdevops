@@ -41,3 +41,5 @@ kdevops_loopback_nfs_enable: False
 kdevops_smbd_enable: False
 kdevops_krb5_enable: False
 kdevops_enable_iscsi: false
+
+bootlinux_builder: false
