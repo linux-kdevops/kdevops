@@ -13,6 +13,10 @@ ifeq (y,$(CONFIG_BOOTLINUX_PURE_IOMAP))
 TREE_CONFIG:=config-$(TREE_REF)-pure-iomap
 endif
 
+ifeq (y,$(CONFIG_BOOTLINUX_BUILDER))
+KDEVOPS_HOSTS_TEMPLATE=builder.j2
+endif
+
 # Describes the Linux clone
 BOOTLINUX_ARGS	+= target_linux_git=$(TREE_URL)
 # ifeq (y,$(CONFIG_BOOTLINUX_TREE_CUSTOM_NAME))

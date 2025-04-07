@@ -91,6 +91,7 @@ kdevops_workflows_dedicated_workflow: False
 kdevops_workflow_enable_fstests: False
 kdevops_workflow_enable_blktests: False
 
+builder_nodes: []
 iscsi_nodes: []
 
 is_fstests: False
@@ -105,6 +106,8 @@ bootlinux_9p_fsdev: "ignore"
 bootlinux_9p_mount_tag: "ignore"
 bootlinux_9p_security_model: "none"
 bootlinux_9p_driver: "virtio-9p-pci"
+
+bootlinux_builder: false
 
 guestfs_requires_uefi: False
 
