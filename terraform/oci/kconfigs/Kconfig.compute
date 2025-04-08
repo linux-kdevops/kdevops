@@ -19,6 +19,12 @@ config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
 	  per instance. The network bandwidth and number of VNICs
 	  scale proportionately with the number of OCPUs.
 
+config TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+	bool "Generic shapes"
+	help
+	  These shapes are recommended for developers who do not
+	  require a specific model of CPU for their workflows.
+
 config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
 	bool "Bare metal"
 	help
@@ -30,6 +36,7 @@ config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
 endchoice
 
 source "terraform/oci/kconfigs/shapes/Kconfig.flex"
+source "terraform/oci/kconfigs/shapes/Kconfig.generic"
 source "terraform/oci/kconfigs/shapes/Kconfig.bm"
 
 config TERRAFORM_OCI_OS_IMAGE_OCID
