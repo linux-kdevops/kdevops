@@ -28,35 +28,30 @@ if FSTESTS_EXT4_MANUAL_COVERAGE
 
 config FSTESTS_EXT4_SECTION_DEFAULTS
 	bool "Enable testing section: ext4_defaults"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem.
 
 config FSTESTS_EXT4_SECTION_1K
 	bool "Enable testing section: ext4_1k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 1k block size.
 
 config FSTESTS_EXT4_SECTION_2K
 	bool "Enable testing section: ext4_2k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 1k block size.
 
 config FSTESTS_EXT4_SECTION_4K
 	bool "Enable testing section: ext4_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 1k block size.
 
 config FSTESTS_EXT4_SECTION_BIGALLOC16K_4K
 	bool "Enable testing section: ext4_bigalloc16k_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 4k block size using the bigalloc
@@ -64,7 +59,6 @@ config FSTESTS_EXT4_SECTION_BIGALLOC16K_4K
 
 config FSTESTS_EXT4_SECTION_BIGALLOC32K_4K
 	bool "Enable testing section: ext4_bigalloc32k_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 4k block size using the bigalloc
@@ -72,7 +66,6 @@ config FSTESTS_EXT4_SECTION_BIGALLOC32K_4K
 
 config FSTESTS_EXT4_SECTION_BIGALLOC64K_4K
 	bool "Enable testing section: ext4_bigalloc64k_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 4k block size using the bigalloc
@@ -80,7 +73,6 @@ config FSTESTS_EXT4_SECTION_BIGALLOC64K_4K
 
 config FSTESTS_EXT4_SECTION_BIGALLOC1024K_4K
 	bool "Enable testing section: ext4_bigalloc1024k_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 4k block size using the bigalloc
@@ -88,7 +80,6 @@ config FSTESTS_EXT4_SECTION_BIGALLOC1024K_4K
 
 config FSTESTS_EXT4_SECTION_BIGALLOC2048K_4K
 	bool "Enable testing section: ext4_bigalloc2048k_4k"
-	default y
 	help
 	  Enabling this will test ext4 with the default options for the mkfs.ext4
 	  to create the filesystem but with 4k block size using the bigalloc
@@ -96,7 +87,6 @@ config FSTESTS_EXT4_SECTION_BIGALLOC2048K_4K
 
 config FSTESTS_EXT4_SECTION_ADVANCED_FEATURES
 	bool "Enable testing section: ext4_advanced_features"
-	default y
 	help
 	  Enabling this will test ext4 with the advanced features enabled.
 	  This enables a host which will use the following configuration:
