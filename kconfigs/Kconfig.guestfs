@@ -8,7 +8,7 @@ config STORAGE_POOL_PATH
 config GUESTFS_STORAGE_DIR
 	string
 	output yaml
-	default "{{ kdevops_storage_pool_path }}/kdevops/guestfs"
+	default "{{ kdevops_storage_pool_path }}/guestfs"
 
 config GUESTFS_BASE_IMAGE_DIR
 	string
