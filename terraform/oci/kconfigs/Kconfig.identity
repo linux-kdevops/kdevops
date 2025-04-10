@@ -1,9 +1,10 @@
 config TERRAFORM_OCI_TENANCY_OCID
-	string "OCI tenant OCID"
+	string "OCI tenancy OCID"
+	output yaml
 	help
-	  The OCI ID of the tenancy to use.
-	  Read this:
-	  https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformproviderconfiguration.htm
+	  The OCID of the tenancy to use. See:
+
+	  https://docs.public.oneportal.content.oci.oraclecloud.com/en-us/iaas/Content/GSG/Reference/faq.htm
 
 config TERRAFORM_OCI_CONFIG_FILE_PROFILE
 	string "Authentication profile entry"
