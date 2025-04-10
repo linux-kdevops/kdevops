@@ -67,16 +67,19 @@ variable "oci_tenancy_ocid" {
 }
 
 variable "oci_user_fingerprint" {
+  default     = null
   description = "Fingerprint for the key pair being used"
   type        = string
 }
 
 variable "oci_user_ocid" {
+  default     = null
   description = "OCID of the user calling the API"
   type        = string
 }
 
 variable "oci_user_private_key_path" {
+  default     = null
   description = "The path of the private key stored on your computer"
   type        = string
 }
