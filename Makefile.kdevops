@@ -14,11 +14,6 @@ kdevops_terraform_deps:
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml
 PHONY += kdevops_terraform_deps
 
-kdevops_vagrant_install_vagrant:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
-		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant.yml
-
 kdevops_install_libvirt:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
@@ -31,7 +26,6 @@ kdevops_configure_libvirt:
 		-e 'running_user=$(USER)'
 
 kdevops_vagrant_deps: \
-		kdevops_vagrant_install_vagrant \
 		kdevops_install_libvirt \
 		kdevops_configure_libvirt
 

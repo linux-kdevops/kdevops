@@ -1,8 +1,5 @@
 # Vagrant support - localized VMs
 
-Read the [kdevops_vagrant](playbooks/roles/install_vagrant/README.md)
-documentation, then come here and read this.
-
 Vagrant is used to easily deploy non-cloud virtual machines. Below are
 the list of providers supported:
 
