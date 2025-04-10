@@ -120,7 +120,7 @@ destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--connection=local -i $(KDEVOPS_HOSTFILE) \
 		playbooks/terraform.yml --tags destroy \
-		--extra-vars=@./extra_vars.yaml \
+		--extra-vars=@./extra_vars.yaml
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
