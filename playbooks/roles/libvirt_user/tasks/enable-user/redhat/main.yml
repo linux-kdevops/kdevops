@@ -35,16 +35,16 @@
   when:
     - only_verify_user|bool
 
-- name: Test SELinux context of {{ storage_pool_path }}
-  command: "/usr/bin/stat -c %C {{ storage_pool_path }}"
+- name: Test SELinux context of {{ libvirt_storage_pool_path }}
+  command: "/usr/bin/stat -c %C {{ libvirt_storage_pool_path }}"
   register: storage_pool_path_ctx
   when:
     - only_verify_user|bool
 
-- name: Set SELinux context on {{ storage_pool_path }}
+- name: Set SELinux context on {{ libvirt_storage_pool_path }}
   become: yes
   community.general.sefcontext:
-    target: "{{ storage_pool_path }}(/.*)?"
+    target: "{{ libvirt_storage_pool_path }}(/.*)?"
     setype: svirt_home_t
     state: present
   when:
