@@ -34,7 +34,7 @@
     block_device_dict: "{{ terraform_output.stdout | from_json }}"
     local_map: "{{ block_device_dict[inventory_hostname] }}"
   ansible.builtin.set_fact:
-    ebs_volume_ids: "{{ ebs_volume_ids + [ item.value | regex_replace('-', '') ] }}"
+    ebs_volume_ids: "{{ ebs_volume_ids + [ 'nvme-Amazon_Elastic_Block_Store_' + item.value | regex_replace('-', '') ] }}"
   when:
     item.key != "/dev/sdf"
   with_dict: "{{ local_map }}"
@@ -43,8 +43,7 @@
   ansible.builtin.set_fact:
     physical_volumes: "{{ physical_volumes + ['/dev/' + item.key] }}"
   when:
-    - item.value.model == "Amazon Elastic Block Store"
-    - item.value.serial in ebs_volume_ids
+    - item.value.links.ids | intersect(ebs_volume_ids) | list | count > 0
   loop_control:
     label: "Adding block device: /dev/{{ item.key }}"
   with_dict: "{{ ansible_devices }}"
