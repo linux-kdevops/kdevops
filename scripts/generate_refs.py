@@ -90,6 +90,16 @@ def parser():
         help="moniker (mainline, stable, longterm or linux-next)",
         required=True,
     )
+    kreleases.add_argument(
+        "--pname",
+        help="project name for User-Agent request",
+        required=True,
+    )
+    kreleases.add_argument(
+        "--pversion",
+        help="project version for User-Agent request",
+        required=True,
+    )
     return parser
 
 
@@ -301,7 +311,14 @@ def kreleases(args) -> None:
 
     reflist = []
     if _check_connection("kernel.org", 80):
-        with urllib.request.urlopen("https://www.kernel.org/releases.json") as url:
+        _url = "https://www.kernel.org/releases.json"
+        req = urllib.request.Request(
+            _url,
+            headers={
+                "User-Agent": f"{args.pname}/{args.pversion} (kdevops@lists.linux.dev)"
+            },
+        )
+        with urllib.request.urlopen(req) as url:
             data = json.load(url)
 
             for release in data["releases"]:
