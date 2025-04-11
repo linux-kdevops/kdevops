@@ -6,12 +6,19 @@ REFS_DEFAULT_TARGETS += gen_refs_def_stable
 
 KRELEASES_FORCE := $(if $(filter --force,$(KRELEASES_FORCE)),--force,)
 
+ifeq ($(V),1)
+KRELEASES_DEBUG = --debug
+else
+KRELEASES_DEBUG =
+endif
+
 gen_refs_def_mainline:
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_LINUS \
 		--output workflows/linux/refs/default/Kconfig.linus \
 		--extra workflows/linux/refs/static/linus.yaml \
 		$(KRELEASES_FORCE) \
+		$(KRELEASES_DEBUG) \
 		kreleases \
 		--moniker mainline
 
@@ -21,6 +28,7 @@ gen_refs_def_next:
 		--output workflows/linux/refs/default/Kconfig.next \
 		--extra workflows/linux/refs/static/next.yaml \
 		$(KRELEASES_FORCE) \
+		$(KRELEASES_DEBUG) \
 		kreleases \
 		--moniker linux-next
 
@@ -30,6 +38,7 @@ gen_refs_def_stable:
 		--output workflows/linux/refs/default/Kconfig.stable \
 		--extra workflows/linux/refs/static/stable.yaml \
 		$(KRELEASES_FORCE) \
+		$(KRELEASES_DEBUG) \
 		kreleases \
 		--moniker stable
 
