@@ -20,7 +20,9 @@ gen_refs_def_mainline:
 		$(KRELEASES_FORCE) \
 		$(KRELEASES_DEBUG) \
 		kreleases \
-		--moniker mainline
+		--moniker mainline \
+		--pname $(PROJECT) \
+		--pversion $(PROJECTVERSION)
 
 gen_refs_def_next:
 	$(Q)./scripts/generate_refs.py \
@@ -30,7 +32,9 @@ gen_refs_def_next:
 		$(KRELEASES_FORCE) \
 		$(KRELEASES_DEBUG) \
 		kreleases \
-		--moniker linux-next
+		--moniker linux-next \
+		--pname $(PROJECT) \
+		--pversion $(PROJECTVERSION)
 
 gen_refs_def_stable:
 	$(Q)./scripts/generate_refs.py \
@@ -40,7 +44,9 @@ gen_refs_def_stable:
 		$(KRELEASES_FORCE) \
 		$(KRELEASES_DEBUG) \
 		kreleases \
-		--moniker stable
+		--moniker stable \
+		--pname $(PROJECT) \
+		--pversion $(PROJECTVERSION)
 
 PHONY += refs-default
 refs-default: $(REFS_DEFAULT_TARGETS) _gen-default-refs-development refs-user-clean
