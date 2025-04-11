@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-REF_DEF_OBJS := $(addprefix $(TOPDIR)/workflows/linux/refs/default/, Kconfig.linus Kconfig.next Kconfig.stable)
+REFS_DEFAULT_TARGETS := gen_refs_def_mainline
+REFS_DEFAULT_TARGETS += gen_refs_def_next
+REFS_DEFAULT_TARGETS += gen_refs_def_stable
 REF_DEF_SRC  := $(addprefix $(TOPDIR)/workflows/linux/refs/static/,  linus.yaml next.yaml stable.yaml)
 
 KRELEASES_FORCE := $(if $(filter --force,$(KRELEASES_FORCE)),--force,)
 
-$(TOPDIR)/workflows/linux/refs/default/Kconfig.linus: $(TOPDIR)/workflows/linux/refs/static/linus.yaml
+gen_refs_def_mainline:
 	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_LINUS \
@@ -15,7 +17,7 @@ $(TOPDIR)/workflows/linux/refs/default/Kconfig.linus: $(TOPDIR)/workflows/linux/
 		kreleases \
 		--moniker mainline
 
-$(TOPDIR)/workflows/linux/refs/default/Kconfig.next: $(TOPDIR)/workflows/linux/refs/static/next.yaml
+gen_refs_def_next:
 	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_NEXT \
@@ -25,7 +27,7 @@ $(TOPDIR)/workflows/linux/refs/default/Kconfig.next: $(TOPDIR)/workflows/linux/r
 		kreleases \
 		--moniker linux-next
 
-$(TOPDIR)/workflows/linux/refs/default/Kconfig.stable: $(TOPDIR)/workflows/linux/refs/static/stable.yaml
+gen_refs_def_stable:
 	$(Q)$(E) "Generating $@..."
 	$(Q)./scripts/generate_refs.py \
 		--prefix BOOTLINUX_TREE_STABLE \
@@ -36,9 +38,9 @@ $(TOPDIR)/workflows/linux/refs/default/Kconfig.stable: $(TOPDIR)/workflows/linux
 		--moniker stable
 
 PHONY += refs-default
-refs-default: $(REF_DEF_OBJS) _gen-default-refs-development refs-user-clean
+refs-default: $(REFS_DEFAULT_TARGETS) _gen-default-refs-development refs-user-clean
 
 PHONY += _refs-default
-_refs-default: $(REF_DEF_OBJS)
+_refs-default: $(REFS_DEFAULT_TARGETS)
 
 .PHONY: $(PHONY)
