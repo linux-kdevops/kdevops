@@ -265,6 +265,7 @@ mrproper:
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
 	$(Q)rm -rf include
 	$(Q)rm -rf guestfs
+	$(Q)$(MAKE) -f scripts/gen-refs-default.Makefile _refs-default-clean
 
 kconfig-help-menu:
 	$(Q)$(MAKE) -s -C scripts/kconfig help
