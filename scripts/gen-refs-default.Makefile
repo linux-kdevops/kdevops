@@ -43,4 +43,10 @@ refs-default: $(REFS_DEFAULT_TARGETS) _gen-default-refs-development refs-user-cl
 PHONY += _refs-default
 _refs-default: $(REFS_DEFAULT_TARGETS)
 
+PHONY += _refs-default-clean
+_refs-default-clean:
+	$(Q)rm --force workflows/linux/refs/default/Kconfig.linus
+	$(Q)rm --force workflows/linux/refs/default/Kconfig.next
+	$(Q)rm --force workflows/linux/refs/default/Kconfig.stable
+
 .PHONY: $(PHONY)
