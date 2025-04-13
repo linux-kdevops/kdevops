@@ -191,7 +191,6 @@ fstests-config-debug: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		playbooks/fstests.yml \
-		-e 'ansible_python_interpreter=/usr/bin/python3' \
 		-e 'fstests_debug_localhost=True' \
 		--tags vars,generate-fstests-config \
 		--extra-vars=@./extra_vars.yaml
