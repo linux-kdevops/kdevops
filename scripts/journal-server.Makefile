@@ -12,8 +12,7 @@ endif
 
 journal-client:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts  \
-		--extra-vars '{ kdevops_cli_install: True }' \
+		-i hosts --extra-vars '{ kdevops_cli_install: True }' \
 		--tags vars_simple,journal \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
@@ -24,14 +23,12 @@ journal-server:
 
 journal-restart:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts  \
-		--tags vars_extra,journal-upload-restart \
+		-i hosts --tags vars_extra,journal-upload-restart \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 journal-status:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts  \
-		--tags vars_extra,journal-status \
+		-i hosts --tags vars_extra,journal-status \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 journal-ls:
@@ -43,8 +40,7 @@ journal-dump:
 
 journal-ln:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts  \
-		--tags vars_extra,journal_ln \
+		-i hosts --tags vars_extra,journal_ln \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 LOCALHOST_SETUP_WORK += journal-server

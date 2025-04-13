@@ -7,12 +7,16 @@ KRB5_EXTRA_ARGS += kdevops_krb5_enable=True
 ANSIBLE_EXTRA_ARGS += $(KRB5_EXTRA_ARGS)
 
 kdc:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --extra-vars=@./extra_vars.yaml \
-		-f 30 -i hosts -l kdc playbooks/kdc.yml
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l kdc \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/kdc.yml
 
 krb5:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --extra-vars=@./extra_vars.yaml \
-		-f 30 -i hosts -l krb5 playbooks/krb5.yml
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l krb5 \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/krb5.yml
 
 KDEVOPS_BRING_UP_DEPS += kdc
 KDEVOPS_BRING_UP_LATE_DEPS += krb5

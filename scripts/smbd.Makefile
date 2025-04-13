@@ -8,8 +8,10 @@ SMBD_EXTRA_ARGS += kdevops_smbd_enable=True
 ANSIBLE_EXTRA_ARGS += $(SMBD_EXTRA_ARGS)
 
 smbd:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --extra-vars=@./extra_vars.yaml \
-		-f 30 -i hosts -l smbd playbooks/smbd.yml
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l smbd \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/smbd.yml
 
 KDEVOPS_BRING_UP_DEPS += smbd
 

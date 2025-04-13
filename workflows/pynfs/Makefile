@@ -44,14 +44,22 @@ endif
 
 # Makefile for pynfs targets
 pynfs:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts playbooks/pynfs.yml --skip-tags run_tests,copy_results,clean_local_results
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--skip-tags run_tests,copy_results,clean_local_results \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 
 pynfs-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l baseline playbooks/pynfs.yml --tags vars,first_run,reset --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l baseline \
+		--tags vars,first_run,reset \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l baseline playbooks/pynfs.yml --tags vars,run_tests,copy_results --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l baseline \
+		--tags vars,run_tests,copy_results \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 
 # Once you know the baseline works, you may want to run the baseline in a loop
 # up to the number of times you define. We define this goal in kdevops as
@@ -67,9 +75,15 @@ pynfs-baseline-kernelci:
 # Below are the corresponding dev targets
 pynfs-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/pynfs.yml --tags vars,first_run,reset --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--tags vars,first_run,reset \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/pynfs.yml --tags vars,run_tests,copy_results --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--tags vars,run_tests,copy_results \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 
 pynfs-dev-loop:
 	$(Q)$(PYNFS_KERNEL_CI_LOOP) dev
@@ -79,7 +93,10 @@ pynfs-dev-kernelci:
 
 pynfs-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/pynfs.yml --tags vars,reset --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--tags vars,reset \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 
 pynfs-show-results:
 	@find $(FIND_PATH) -type f $(PATTERN) \

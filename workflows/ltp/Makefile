@@ -115,14 +115,17 @@ XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
 endif
 
 ltp:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts playbooks/ltp.yml --skip-tags run_tests,copy_results
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--skip-tags run_tests,copy_results \
+		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l baseline playbooks/ltp.yml \
+		-i $(KDEVOPS_HOSTFILE) -l baseline \
 		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-baseline-loop:
 	$(Q)$(LTP_KERNEL_CI_LOOP) baseline
@@ -132,8 +135,10 @@ ltp-baseline-kernelci:
 
 ltp-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/ltp.yml \
-		--tags vars,run_tests,copy_results --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--tags vars,run_tests,copy_results \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-dev-loop:
 	$(Q)$(LTP_KERNEL_CI_LOOP) dev
@@ -143,8 +148,10 @@ ltp-dev-kernelci:
 
 ltp-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/ltp.yml \
-		--tags vars,reset --extra-vars=@./extra_vars.yaml
+		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--tags vars,reset \
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-show-results:
 	@find $(FIND_PATH) -type f $(PATTERN) \

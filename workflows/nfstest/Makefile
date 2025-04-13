@@ -72,15 +72,17 @@ XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
 endif
 
 nfstest:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-f 30 -i hosts playbooks/nfstest.yml \
-		--skip-tags run_tests,copy_results
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--skip-tags run_tests,copy_results \
+		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
 nfstest-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l baseline playbooks/nfstest.yml \
+		-i $(KDEVOPS_HOSTFILE) -l baseline \
 		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
 nfstest-baseline-loop:
 	$(Q)$(NFSTEST_KERNEL_CI_LOOP) baseline
@@ -90,9 +92,10 @@ nfstest-baseline-kernelci:
 
 nfstest-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/nfstest.yml \
+		-i $(KDEVOPS_HOSTFILE) -l dev \
 		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
 nfstest-dev-loop:
 	$(Q)$(NFSTEST_KERNEL_CI_LOOP) dev
@@ -102,9 +105,10 @@ nfstest-dev-kernelci:
 
 nfstest-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts -l dev playbooks/nfstest.yml \
+		-i $(KDEVOPS_HOSTFILE) -l dev \
 		--tags vars,reset \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
 nfstest-show-results:
 	@find $(FIND_PATH) -type f $(PATTERN) \
