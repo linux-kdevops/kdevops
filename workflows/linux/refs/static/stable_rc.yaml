@@ -28,3 +28,7 @@ configs:
     config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_613
     ref: "queue/6.13"
     help: "Pull the queue/6.13 branch."
+  - queue-6.14:
+    config: BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_614
+    ref: "queue/6.14"
+    help: "Pull the queue/6.14 branch."
