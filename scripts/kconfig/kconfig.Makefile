@@ -57,7 +57,7 @@ PHONY += $(simple-targets)
 $(simple-targets): $(KCONFIG_DIR)/conf Kconfig
 	$< --$@ Kconfig
 
-defconfig-%:: $(KCONFIG_DIR)/conf Kconfig
+defconfig-%:: $(KCONFIG_DIR)/conf include/config/project.release Kconfig
 	@$< --defconfig=defconfigs/$(@:defconfig-%=%) Kconfig
 
 .PHONY: $(PHONY)
