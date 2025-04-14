@@ -36,7 +36,6 @@ def popen(
 
 def parser():
     parser = argparse.ArgumentParser(description="Git Reference generate tool")
-    # parser.add_argument('--foo', action='store_true', help='foo is great option')
     parser.add_argument("--debug", action="store_true", help="debug")
     parser.add_argument(
         "--output",
