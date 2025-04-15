@@ -8,7 +8,7 @@ patchwork instance and
 [kpd](https://github.com/facebookincubator/kernel-patches-daemon)
 may be leveraged at later future time. The ext4 kdevops CI tree is:
 
-  * [linux-xfs-kpd](https://github.com/linux-kdevops/linux-ext4-kpd)
+  * [linux-ext4-kpd](https://github.com/linux-kdevops/linux-ext4-kpd)
 
 ## linux-ext4-kpd tests
 
