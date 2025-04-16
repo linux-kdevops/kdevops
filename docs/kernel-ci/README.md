@@ -81,6 +81,7 @@ are:
   * [Linux kernel filesystem kdevops CI](linux-filesystems-kdevops-CI-testing.md)
       * [Linux kernel XFS kdevops CI](linux-xfs-kdevops-ci.md)
       * [Linux kernel ext4 kdevops CI](linux-ext4-kdevops-ci.md)
+      * [Linux kernel btrfs kdevops CI](linux-btrfs-kdevops-ci.md)
   * Linux kernel simple subsystems:
       * [Linux kernel modules kdevops CI](linux-modules-kdevops-ci.md)
       * [Linux kernel firmware loader kdevops CI](linux-firmware-kdevops-ci.md)
