@@ -12,6 +12,7 @@ gitr_packages:
   - make
   - openssl-devel
   - perl-Memoize
+  - perl-LWP-Protocol-https
   - perl-Test-Harness
   - perl-Test-Simple
   - subversion
