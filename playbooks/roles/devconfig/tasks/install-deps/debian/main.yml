@@ -8,6 +8,8 @@
 - name: Set fact if unattended-upgrades is installed
   set_fact:
     unattended_upgrades_installed: "{{ 'install ok installed' in unattended_upgrade_status.stdout }}"
+  when:
+    - kdevops_enable_guestfs|bool
 
 - name: Verify unattended-upgrades is not installed
   fail:
@@ -19,6 +21,7 @@
       make cleancache
       make bringup
   when:
+    - kdevops_enable_guestfs|bool
     - unattended_upgrades_installed|bool
 
 - name: Upgrade Packages

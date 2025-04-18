@@ -54,5 +54,6 @@ devconfig_enable_systemd_timesyncd_ntp: False
 devconfig_enable_systemd_timesyncd_ntp_google: False
 devconfig_enable_systemd_timesyncd_ntp_debian: False
 devconfig_enable_systemd_timesyncd_ntp_google_debian: False
+kdevops_enable_guestfs: False
 guestfs_copy_sources_from_host_to_guest: False
 distro_debian_has_hop1_sources: False
