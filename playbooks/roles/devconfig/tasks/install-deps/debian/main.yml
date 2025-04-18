@@ -4,6 +4,7 @@
   register: unattended_upgrade_status
   ignore_errors: true
   changed_when: false
+  tags: firstconfig
 
 - name: Set fact if unattended-upgrades is installed
   set_fact:
@@ -23,45 +24,7 @@
   when:
     - kdevops_enable_guestfs|bool
     - unattended_upgrades_installed|bool
-
-- name: Upgrade Packages
-  become: yes
-  become_method: sudo
-  ansible.builtin.apt:
-    update_cache: true
-    upgrade: "yes"
-    lock_timeout: 120
-  register: apt_upgrade
-  until: apt_upgrade is success
-  retries: 5
-  delay: 60
   tags: firstconfig
-
-- name: Remove unattended-upgrades package
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  apt:
-    name: unattended-upgrades
-    state: absent
-  register: removal_result
-  retries: 20
-  delay: 30
-  until: removal_result is not failed
-
-- name: Remove optional unattended-upgrades configuration files if they exist
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /etc/apt/apt.conf.d/20auto-upgrades
-    - /etc/apt/apt.conf.d/02periodic
-    - /etc/apt/apt.conf.d/50unattended-upgrades
-    - /etc/apt/apt.conf.d/52unattended-upgrades-local
-  ignore_errors: yes
 
 - name: Stop and disable unattended-upgrades related services
   become: yes
@@ -80,6 +43,67 @@
     - apt-daily-upgrade.timer
     - systemd-networkd-wait-online.service
   ignore_errors: yes
+  tags: firstconfig
+
+- name: Upgrade Packages
+  become: yes
+  become_method: sudo
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: "yes"
+    lock_timeout: 120
+  register: apt_upgrade
+  until: apt_upgrade is success
+  retries: 5
+  delay: 60
+  tags: firstconfig
+
+- name: Remove unattended-upgrades package in case upgrade installed it
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  apt:
+    name: unattended-upgrades
+    state: absent
+  register: removal_result
+  retries: 20
+  delay: 30
+  until: removal_result is not failed
+  tags: firstconfig
+
+- name: Remove optional unattended-upgrades configuration files if they exist
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/apt.conf.d/20auto-upgrades
+    - /etc/apt/apt.conf.d/02periodic
+    - /etc/apt/apt.conf.d/50unattended-upgrades
+    - /etc/apt/apt.conf.d/52unattended-upgrades-local
+  ignore_errors: yes
+  tags: firstconfig
+
+- name: Stop and disable unattended-upgrades related services
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+    daemon_reload: yes
+  loop:
+    - unattended-upgrades
+    - apt-daily.service
+    - apt-daily.timer
+    - apt-daily-upgrade.service
+    - apt-daily-upgrade.timer
+    - systemd-networkd-wait-online.service
+  ignore_errors: yes
+  tags: firstconfig
 
 - name: Allow for distro source change / upgrade
   become: yes
