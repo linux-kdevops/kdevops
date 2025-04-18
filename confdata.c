@@ -736,7 +736,7 @@ static void __print_yaml_symbol(FILE *fp, struct symbol *sym,
 static void print_symbol_for_dotconfig(FILE *fp, FILE *yaml, struct symbol *sym)
 {
 	__print_symbol(fp, sym, OUTPUT_N_AS_UNSET, true);
-	__print_yaml_symbol(yaml, sym, OUTPUT_N_AS_UNSET, true);
+	__print_yaml_symbol(yaml, sym, OUTPUT_N, true);
 }
 
 static void print_symbol_for_autoconf(FILE *fp, struct symbol *sym)
