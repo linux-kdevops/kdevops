@@ -355,7 +355,7 @@
 - name: Create .tar.xz symlink for the archive
   file:
     src: "{{ kdevops_results_archive_dir }}/{{ kdevops_results_archive_dir }}/{{ kdevops_archive_test_ref }}.xz"
-    dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}.tar.xz"
+    dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}/{{ kdevops_archive_test_ref }}.tar.xz"
     state: link
 
 - name: Ensure .xz files are tracked by Git LFS
