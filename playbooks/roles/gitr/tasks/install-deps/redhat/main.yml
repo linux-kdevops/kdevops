@@ -31,6 +31,7 @@
   become_method: ansible.builtin.sudo
   community.general.cpanm:
     name: "{{ item }}"
+    mode: new
   with_items: "{{ gitr_cpan_modules }}"
   when:
     - ansible_distribution != "Fedora"
