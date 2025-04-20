@@ -13,6 +13,16 @@ class TimeoutExpired(SystemdError):
         self.error_code = errcode
         return "timeout"
 
+def get_host_ip(host):
+    try:
+        result = subprocess.run(["ssh", "-G", host], capture_output=True, text=True, check=True)
+        for line in result.stdout.splitlines():
+            if line.startswith("hostname "):
+                return line.split()[1]
+    except subprocess.SubprocessError as e:
+        logger.warning(f"Failed to resolve IP for {host}: {e}")
+    return None
+
 def get_current_time(host):
     format = '%Y-%m-%d %H:%M:%S'
     today = datetime.today()
@@ -20,7 +30,8 @@ def get_current_time(host):
     return today_str
 
 def get_extra_journals(remote_path, host):
-    extra_journals_path = "remote-" + host + '@'
+    ip = get_host_ip(host)
+    extra_journals_path = "remote-" + ip + '@'
     extra_journals = []
     for file in os.listdir(remote_path):
         if extra_journals_path in file:
@@ -29,8 +40,9 @@ def get_extra_journals(remote_path, host):
     return extra_journals
 
 def get_uname(remote_path, host, configured_kernel):
+    ip = get_host_ip(host)
     extra_journals = get_extra_journals(remote_path, host)
-    fpath = remote_path + "remote-" + host + '.journal'
+    fpath = remote_path + "remote-" + ip + '.journal'
     grep = "Linux version"
     grep_str = "\"Linux version\""
     cmd = [
@@ -90,10 +102,11 @@ def get_uname(remote_path, host, configured_kernel):
 
 # Returns something like "xfs/040 at 2023-12-17 23:52:14"
 def get_test(remote_path, host, suite):
+    ip = get_host_ip(host)
     if suite not in [ 'fstests', 'blktests']:
         return None
     # Example: /var/log/journal/remote/remote-line-xfs-reflink.journal
-    fpath = remote_path + "remote-" + host + '.journal'
+    fpath = remote_path + "remote-" + ip + '.journal'
     extra_journals = get_extra_journals(remote_path, host)
     run_string = "run " + suite
     cmd = [
