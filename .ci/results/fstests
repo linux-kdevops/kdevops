@@ -7,4 +7,4 @@ extra_vars.yaml
 linux/.config
 ci.log
 .kernel.ci.*
-crash
+crashes
