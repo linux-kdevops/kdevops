@@ -335,7 +335,7 @@ class KernelCrashWatchdog:
         # skipping blank lines.
         lines = [line.strip() for line in log_content.splitlines() if line.strip()]
         normalized = "\n".join(lines)
-        log_hash = hashlib.md5(normalized.encode()).hexdigest(
+        log_hash = hashlib.md5(normalized.encode()).hexdigest()
 
         # Check if this hash is already in known crashes
         return log_hash in self.known_crashes
