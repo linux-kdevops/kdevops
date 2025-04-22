@@ -314,26 +314,28 @@ class KernelCrashWatchdog:
                 crash_hash = hashlib.md5(content.encode()).hexdigest()
                 self.known_crashes.add(crash_hash)
 
-                # Extract timestamp from filename
-                base_name = os.path.basename(file_path)
-                match = re.match(r'journal-(\d{8}-\d{6})\.', base_name)
-                if match:
-                    timestamp = match.group(1)
-                    self.known_crashes.add(timestamp)
+                # Also store hash of decoded version if it exists
+                decoded_path = file_path.replace(".crash", ".decoded.crash")
+                if os.path.exists(decoded_path):
+                    with open(decoded_path, 'r') as f:
+                        decoded_content = f.read()
+                    decoded_hash = hashlib.md5(decoded_content.encode()).hexdigest()
+                    self.known_crashes.add(decoded_hash)
 
-                logger.debug(f"Added known crash: {os.path.basename(file_path)}")
             except Exception as e:
                 logger.warning(f"Failed to process crash file {file_path}: {e}")
-
-        logger.info(f"Loaded {len(self.known_crashes)} known crashes from {self.output_dir}")
 
     def is_known_crash(self, log_content):
         """Check if the crash log content matches a previously detected crash."""
         if not log_content:
             return False
 
-        # Generate hash of the log content
-        log_hash = hashlib.md5(log_content.encode()).hexdigest()
+        # Generate hash of the log content. To reduce hash collisions from short
+        # kernel snippets, also normalize logs slightly by stripping lines and
+        # skipping blank lines.
+        lines = [line.strip() for line in log_content.splitlines() if line.strip()]
+        normalized = "\n".join(lines)
+        log_hash = hashlib.md5(normalized.encode()).hexdigest(
 
         # Check if this hash is already in known crashes
         return log_hash in self.known_crashes
@@ -645,7 +647,6 @@ class KernelCrashWatchdog:
         # Add this crash to known crashes
         crash_hash = hashlib.md5(log.encode()).hexdigest()
         self.known_crashes.add(crash_hash)
-        self.known_crashes.add(timestamp)
 
         logger.info(f"{context} log saved to {log_file}")
         return log_file
@@ -778,7 +779,7 @@ class KernelCrashWatchdog:
 
         # Check if this is a known crash before proceeding
         if self.is_known_crash(kernel_snippet):
-            logger.info(f"Detected known crash for {self.host_name}, skipping")
+            logger.debug(f"Detected known crash for {self.host_name}, skipping")
             return None, None
 
         log_file = self.save_log(kernel_snippet, issue_context)

@@ -4,3 +4,4 @@ journal/*
 .config
 extra_vars.yaml
 linux/.config
+crash
