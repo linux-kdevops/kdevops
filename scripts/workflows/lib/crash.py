@@ -334,10 +334,19 @@ class KernelCrashWatchdog:
         # kernel snippets, also normalize logs slightly by stripping lines and
         # skipping blank lines.
         lines = [line.strip() for line in log_content.splitlines() if line.strip()]
-        normalized = "\n".join(lines)
-        log_hash = hashlib.md5(normalized.encode()).hexdigest()
+        # Further normalization: remove timestamps and IPs (improves detection accuracy)
+        normalized_lines = [
+            re.sub(
+                r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d+\s\d{2}:\d{2}:\d{2}",
+                "",
+                re.sub(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", "", line),
+            ).strip()
+            for line in lines
+        ]
 
-        # Check if this hash is already in known crashes
+        normalized_content = "\n".join(normalized_lines)
+        log_hash = hashlib.md5(normalized_content.encode()).hexdigest()
+
         return log_hash in self.known_crashes
 
     def get_host_ip(self):
@@ -577,6 +586,7 @@ class KernelCrashWatchdog:
         crash_pattern = None
         lines = log_content.split("\n")
 
+        # Detect crash or corruption pattern
         for pattern in self.CRASH_PATTERNS + self.FILESYSTEM_CORRUPTION_PATTERNS:
             for i, line in enumerate(lines):
                 if re.search(pattern, line):
@@ -589,10 +599,11 @@ class KernelCrashWatchdog:
         if crash_line_idx == -1:
             return None
 
-        start_idx = max(0, crash_line_idx - 5)
+        # Adjusted context: 100 lines before and 100 after the detected line
+        start_idx = max(0, crash_line_idx - 100)
         end_idx = min(len(lines), crash_line_idx + 100)
         crash_context = "\n".join(lines[start_idx:end_idx])
-        return f"Detected kernel crash ({crash_pattern}):\n\n{crash_context}"
+        return f"Detected kernel issue ({crash_pattern}):\n\n{crash_context}"
 
     def decode_log_output(self, log_file):
         if not self.decode_crash:
@@ -737,18 +748,21 @@ class KernelCrashWatchdog:
         if self.save_warnings:
             warnings = self.detect_warnings(journal_logs)
             if warnings:
-                os.makedirs(self.output_dir, exist_ok=True)
-                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                warnings_file = os.path.join(
-                    self.output_dir, f"journal-{timestamp}.warning"
-                )
-                logger.info(
-                    f"Saving kernel warnings found for {self.host_name} on {warnings_file}"
-                )
-                with open(warnings_file, "w") as out:
-                    out.writelines(warnings)
-            else:
-                logger.info(f"No kernel warnings found for {self.host_name}")
+                warnings_text = "\n".join(warnings)
+
+                if not self.is_known_crash(warnings_text):
+                    os.makedirs(self.output_dir, exist_ok=True)
+                    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                    warnings_file = os.path.join(
+                        self.output_dir, f"journal-{timestamp}.warning"
+                    )
+                    with open(warnings_file, "w") as out:
+                        out.write(warnings_text)
+
+                    # Add hash to known_crashes to avoid future dupes
+                    warning_hash = hashlib.md5(warnings_text.encode()).hexdigest()
+                    self.known_crashes.add(warning_hash)
+                    logger.info(f"Saved new kernel warning to: {warnings_file}")
 
         if get_fstests_log:
             log_output = self.get_fstests_log(get_fstests_log)

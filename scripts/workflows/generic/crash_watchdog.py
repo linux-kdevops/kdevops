@@ -171,8 +171,6 @@ Examples:
 
     if warnings_detected:
         logger.warning("Kernel warnings detected in one or more hosts")
-    else:
-        logger.info("No kernel warnings detected")
 
     if crash_detected:
         logger.warning("Kernel crashes detected in one or more hosts")
