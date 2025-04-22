@@ -18,6 +18,7 @@ from pathlib import Path
 import glob
 import pwd
 import getpass
+import hashlib
 
 # Configure logging
 logging.basicConfig(
@@ -268,6 +269,10 @@ class KernelCrashWatchdog:
         self.devconfig_enable_systemd_journal_remote = False
         self.kdevops_enable_guestfs = False
 
+        # New attributes for tracking known crashes
+        self.known_crashes = set()
+        self.load_known_crashes()
+
         self.is_an_fstests = False
         self.current_test_id = None
         self.unexpected_corrupting_tests = set()
@@ -288,6 +293,50 @@ class KernelCrashWatchdog:
                 self.libvirt_uri_system = self.config.get("libvirt_uri_system", False)
         except Exception as e:
             logger.warning(f"Failed to read {EXTRA_VARS_FILE}: {e}")
+
+    def load_known_crashes(self):
+        """Load previously detected crashes from the output directory."""
+        if not os.path.exists(self.output_dir):
+            return
+
+        # Get all crash log files in the output directory
+        crash_files = glob.glob(os.path.join(self.output_dir, "journal-*.crash"))
+        corruption_files = glob.glob(os.path.join(self.output_dir, "journal-*.corruption"))
+        crash_corruption_files = glob.glob(os.path.join(self.output_dir, "journal-*.crash_and_corruption"))
+
+        all_files = crash_files + corruption_files + crash_corruption_files
+
+        for file_path in all_files:
+            try:
+                # Generate a hash of the file content to identify unique crashes
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                crash_hash = hashlib.md5(content.encode()).hexdigest()
+                self.known_crashes.add(crash_hash)
+
+                # Extract timestamp from filename
+                base_name = os.path.basename(file_path)
+                match = re.match(r'journal-(\d{8}-\d{6})\.', base_name)
+                if match:
+                    timestamp = match.group(1)
+                    self.known_crashes.add(timestamp)
+
+                logger.debug(f"Added known crash: {os.path.basename(file_path)}")
+            except Exception as e:
+                logger.warning(f"Failed to process crash file {file_path}: {e}")
+
+        logger.info(f"Loaded {len(self.known_crashes)} known crashes from {self.output_dir}")
+
+    def is_known_crash(self, log_content):
+        """Check if the crash log content matches a previously detected crash."""
+        if not log_content:
+            return False
+
+        # Generate hash of the log content
+        log_hash = hashlib.md5(log_content.encode()).hexdigest()
+
+        # Check if this hash is already in known crashes
+        return log_hash in self.known_crashes
 
     def get_host_ip(self):
         try:
@@ -497,7 +546,7 @@ class KernelCrashWatchdog:
                 self.test_logs[current_test].append(line)
 
         for test, logs in self.test_logs.items():
-            if test in INTENTIONAL_CORRUPTION_TESTS:
+            if test in self.INTENTIONAL_CORRUPTION_TESTS:
                 self.intentional_corruption_tests_seen.add(test)
             else:
                 for pattern in self.FILESYSTEM_CORRUPTION_PATTERNS:
@@ -581,12 +630,22 @@ class KernelCrashWatchdog:
         if not log:
             return None
 
+        # Check if this is a known crash before saving
+        if self.is_known_crash(log):
+            logger.info(f"Skipping known crash for {self.host_name}")
+            return None
+
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         log_file = os.path.join(self.output_dir, f"journal-{timestamp}.{context}")
 
         os.makedirs(self.output_dir, exist_ok=True)
         with open(log_file, "w") as f:
             f.write(log)
+
+        # Add this crash to known crashes
+        crash_hash = hashlib.md5(log.encode()).hexdigest()
+        self.known_crashes.add(crash_hash)
+        self.known_crashes.add(timestamp)
 
         logger.info(f"{context} log saved to {log_file}")
         return log_file
@@ -646,7 +705,7 @@ class KernelCrashWatchdog:
             logger.info(f"Trying console.log fallback for {self.host_name}")
             journal_logs = self.convert_console_log()
 
-        # 2. Try remote journal if that didn’t work and it's enabled.
+        # 2. Try remote journal if that didn't work and it's enabled.
         # If you are using a cloud provider try to get systemd remote journal
         # devconfig_enable_systemd_journal_remote working so you can leverage
         # this. Experience seems to be that it may not capture all crashes.
@@ -716,9 +775,16 @@ class KernelCrashWatchdog:
             return None, None
 
         kernel_snippet = self.extract_kernel_snippet(journal_logs)
+
+        # Check if this is a known crash before proceeding
+        if self.is_known_crash(kernel_snippet):
+            logger.info(f"Detected known crash for {self.host_name}, skipping")
+            return None, None
+
         log_file = self.save_log(kernel_snippet, issue_context)
-        self.decode_log_output(log_file)
-        self.reset_host_now()
-        self.wait_for_ssh()
+        if log_file:  # Only decode and reset if we actually saved a new crash
+            self.decode_log_output(log_file)
+            self.reset_host_now()
+            self.wait_for_ssh()
 
         return log_file, warnings_file
