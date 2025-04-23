@@ -30,8 +30,6 @@ else
 VAGRANT_PRIVATE_BOX_DEPS :=
 endif
 
-VAGRANT_ARGS += kdevops_storage_pool_user='$(USER)'
-
 ifeq (y,$(CONFIG_LIBVIRT))
 VAGRANT_ARGS += libvirt_provider=True
 

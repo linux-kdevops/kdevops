@@ -10,7 +10,6 @@ export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 GUESTFS_ARGS += guestfs_path='$(TOPDIR_PATH)/guestfs'
 GUESTFS_ARGS += data_home_dir=/home/kdevops
 GUESTFS_ARGS += virtbuilder_os_version=$(CONFIG_VIRT_BUILDER_OS_VERSION)
-GUESTFS_ARGS += kdevops_storage_pool_user='$(USER)'
 
 GUESTFS_ARGS += libvirt_provider=True
 
