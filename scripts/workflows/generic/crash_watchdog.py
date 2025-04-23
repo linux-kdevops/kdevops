@@ -58,12 +58,12 @@ def run_crash_watchdog_on_host(args, this_host_name):
         logger.warning(f"Kernel warning and logged to {warning_file}")
         warnings_found = True
     elif args.save_warnings:
-        logger.info(f"No kernel warnings detected for host {args.host_name}")
+        logger.debug(f"No kernel warnings detected for host {this_host_name}")
     if crash_file:
         crashed = True
         logger.warning(f"Crash detected and logged to {crash_file}")
     else:
-        logger.info(f"No crash detected for host {args.host_name}")
+        logger.debug(f"No crash detected for host {this_host_name}")
     return crashed, [crash_file], warnings_found, warning_file
 
 def run_crash_watchdog_all_hosts(args):
@@ -83,11 +83,11 @@ def run_crash_watchdog_all_hosts(args):
         if host_crash_detected and crash_file:
             crash_detected = True
             crash_files.append(crash_file)
-            logger.info(f"Crash detected in host {host}, logs saved to {crash_file}")
+            logger.warning(f"Crash detected in host {host}, logs saved to {crash_file}")
         if host_warnings_detected and warnings_file:
             warnings_detected = True
             warning_files.append(warning_file)
-            logger.info(f"Kernel warning found on host {host}, logs saved to {warning_file}")
+            logger.warning(f"Kernel warning found on host {host}, logs saved to {warning_file}")
 
     return crash_detected, crash_files, warnings_detected, warning_files
 

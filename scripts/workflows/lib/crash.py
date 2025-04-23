@@ -19,6 +19,8 @@ import glob
 import pwd
 import getpass
 import hashlib
+import qrcode
+import io
 
 # Configure logging
 logging.basicConfig(
@@ -42,7 +44,6 @@ class KernelCrashWatchdog:
         r"UBSAN:",
         r"kernel stack overflow",
         r"Kernel offset leak",
-        r"RIP:",
         r"segfault at",
         r"kernel thread",
         r"detected stall on CPU",
@@ -50,10 +51,13 @@ class KernelCrashWatchdog:
         r"watchdog: BUG: soft lockup",
         r"hung_task: blocked tasks",
         r"NMI backtrace",
-        r"Call Trace",
         r"Stack:",
         r"nfs: server .* not responding",
         r"INFO: task .* blocked for more than \\d+ seconds",
+    ]
+
+    WARNINGS = [
+        r"WARNING:",
     ]
 
     BENIGN_WARNINGS = [
@@ -255,6 +259,9 @@ class KernelCrashWatchdog:
         decode_crash=True,
         reset_host=True,
         save_warnings=False,
+        context_prefix=15,
+        context_postfix=35,
+        ssh_timeout = 180,
     ):
         self.host_name = host_name
         self.output_dir = os.path.join(output_dir, host_name)
@@ -268,10 +275,14 @@ class KernelCrashWatchdog:
         self.config = {}
         self.devconfig_enable_systemd_journal_remote = False
         self.kdevops_enable_guestfs = False
+        self.ssh_timeout = ssh_timeout
 
-        # New attributes for tracking known crashes
-        self.known_crashes = set()
-        self.load_known_crashes()
+        self.known_crashes = []
+        self.last_known_console_line = None
+        self.last_issue_count = 0
+        self.latest_file_with_issue = None
+        self.context_prefix = context_prefix
+        self.context_postfix = context_postfix
 
         self.is_an_fstests = False
         self.current_test_id = None
@@ -294,60 +305,129 @@ class KernelCrashWatchdog:
         except Exception as e:
             logger.warning(f"Failed to read {EXTRA_VARS_FILE}: {e}")
 
+        # Leave this last
+        self.load_known_crashes()
+
+    def normalize_kernel_snippet(self, log_content):
+        # Allow both string or list inputs
+        if isinstance(log_content, list):
+            log_content = "\n".join(log_content)
+        # Strip timestamps + hostnames from all lines
+        clean_lines = []
+        for line in log_content.splitlines():
+            # Remove leading timestamps and hostnames (e.g., 'Oct 01 23:30:21 host kernel: ...')
+            clean = re.sub(
+                r"^[A-Z][a-z]{2}\s+\d+\s+\d{2}:\d{2}:\d{2}\s+[\w\-.]+", "", line
+            )
+            clean_lines.append(clean.strip())
+        return clean_lines
+
+    def get_qr_ascii(self, content, invert=True):
+        """Return the ASCII QR code as a string."""
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=1,
+            border=1,
+        )
+        qr.add_data(content)
+        qr.make(fit=True)
+
+        # Redirect stdout to capture print_ascii()
+        buffer = io.StringIO()
+        original_stdout = sys.stdout
+        try:
+            sys.stdout = buffer
+            qr.print_ascii(invert=invert)
+        finally:
+            sys.stdout = original_stdout
+
+        return buffer.getvalue()
+
     def load_known_crashes(self):
-        """Load previously detected crashes from the output directory."""
+        """Load previously detected log hashes from the output directory."""
         if not os.path.exists(self.output_dir):
             return
 
-        # Get all crash log files in the output directory
-        crash_files = glob.glob(os.path.join(self.output_dir, "journal-*.crash"))
-        corruption_files = glob.glob(os.path.join(self.output_dir, "journal-*.corruption"))
-        crash_corruption_files = glob.glob(os.path.join(self.output_dir, "journal-*.crash_and_corruption"))
-
-        all_files = crash_files + corruption_files + crash_corruption_files
-
-        for file_path in all_files:
-            try:
-                # Generate a hash of the file content to identify unique crashes
-                with open(file_path, 'r') as f:
-                    content = f.read()
-                crash_hash = hashlib.md5(content.encode()).hexdigest()
-                self.known_crashes.add(crash_hash)
-
-                # Also store hash of decoded version if it exists
-                decoded_path = file_path.replace(".crash", ".decoded.crash")
-                if os.path.exists(decoded_path):
-                    with open(decoded_path, 'r') as f:
-                        decoded_content = f.read()
-                    decoded_hash = hashlib.md5(decoded_content.encode()).hexdigest()
-                    self.known_crashes.add(decoded_hash)
-
-            except Exception as e:
-                logger.warning(f"Failed to process crash file {file_path}: {e}")
-
-    def is_known_crash(self, log_content):
-        """Check if the crash log content matches a previously detected crash."""
-        if not log_content:
-            return False
-
-        # Generate hash of the log content. To reduce hash collisions from short
-        # kernel snippets, also normalize logs slightly by stripping lines and
-        # skipping blank lines.
-        lines = [line.strip() for line in log_content.splitlines() if line.strip()]
-        # Further normalization: remove timestamps and IPs (improves detection accuracy)
-        normalized_lines = [
-            re.sub(
-                r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d+\s\d{2}:\d{2}:\d{2}",
-                "",
-                re.sub(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", "", line),
-            ).strip()
-            for line in lines
+        file_patterns = [
+            "journal-*.crash",
+            "journal-*.corruption",
+            "journal-*.crash_and_corruption",
+            "journal-*.warning",
         ]
 
-        normalized_content = "\n".join(normalized_lines)
-        log_hash = hashlib.md5(normalized_content.encode()).hexdigest()
+        all_files = []
+        for pattern in file_patterns:
+            all_files.extend(glob.glob(os.path.join(self.output_dir, pattern)))
 
-        return log_hash in self.known_crashes
+        max_issue = 0
+        issue_pattern = re.compile(
+            r"journal-(\d+)\.(?:crash|warning|corruption|crash_and_corruption)$"
+        )
+
+        for file_path in all_files:
+            # Decoded files are just that, a variant of an existing file,
+            # a decoded version of the crash file so just skip them.
+            if ".decoded" in file_path:
+                continue
+            try:
+                with open(file_path, "r") as f:
+                    lines = [line.strip() for line in f if line.strip()]
+                    if not lines:
+                        continue
+                    match = issue_pattern.search(os.path.basename(file_path))
+                    if match:
+                        issue_number = int(match.group(1))
+                        if issue_number > max_issue:
+                            max_issue = issue_number
+                            self.latest_file_with_issue = file_path
+                            for line in reversed(lines[-5:]):
+                                if line.startswith("console line number:"):
+                                    try:
+                                        self.last_known_console_line = int(
+                                            line.split(":", 1)[1].strip()
+                                        )
+                                        logger.debug(
+                                            f"Set last_known_console_line={self.last_known_console_line} from {file_path}"
+                                        )
+                                        break
+                                    except ValueError:
+                                        logger.warning(
+                                            f"Malformed console line number in {file_path}: {line}"
+                                        )
+
+                    lines = self.normalize_kernel_snippet(lines)
+                    normalized_text = "\n".join(lines)
+                    context_patterns = (
+                        self.CRASH_PATTERNS
+                        + self.FILESYSTEM_CORRUPTION_PATTERNS
+                        + self.WARNINGS
+                    )
+                    ignore_patterns = self.BENIGN_WARNINGS
+                    kernel_snippet, key_log_line = self.extract_kernel_snippet(
+                        normalized_text, context_patterns, ignore_patterns
+                    )
+
+                    if not key_log_line:
+                        logger.warning(f"Error getting key log line for {file_path}")
+                        continue;
+                    # Use the first relevant line for any context
+                    log_hash = hashlib.md5(key_log_line.encode()).hexdigest()
+                    self.known_crashes.append(log_hash)
+
+                self.last_issue_count = max_issue
+
+            except Exception as e:
+                logger.warning(f"Failed to process known log file {file_path}: {e}")
+
+    def is_known_crash(self, key_log_line=None):
+        """Check if the crash log content matches a previously detected crash."""
+        if not key_log_line:
+            return True
+
+        content_hash = hashlib.md5(key_log_line.encode()).hexdigest()
+
+        return content_hash in self.known_crashes
 
     def get_host_ip(self):
         try:
@@ -471,7 +551,7 @@ class KernelCrashWatchdog:
                 wall_time = boot_time + timedelta(seconds=seconds)
                 timestamp = wall_time.strftime("%b %d %H:%M:%S")
                 converted_lines.append(
-                    f"{timestamp} {self.host_name} kernel: {match.group(2)}"
+                    f"{timestamp} {self.host_name} {match.group(2)}"
                 )
             else:
                 converted_lines.append(line)
@@ -503,19 +583,6 @@ class KernelCrashWatchdog:
         except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
             logger.error(f"Error collecting journal: {e}")
             return None
-
-    def detect_warnings(self, log_content):
-        if not log_content:
-            return False
-        benign_regexes = [re.compile(p) for p in self.BENIGN_WARNINGS]
-        detected = []
-        for line in log_content:
-            if "WARNING:" in line:
-                if any(p.search(line) for p in benign_regexes):
-                    continue
-                detected.append(line)
-
-        return detected
 
     def detect_crash(self, log_content):
         if not log_content:
@@ -576,34 +643,44 @@ class KernelCrashWatchdog:
         logger.warning(f"Test ID {test_id} not found in log records")
         return None
 
-    def extract_kernel_snippet(self, log_content):
+    def extract_kernel_snippet(
+        self, log_content, context_patterns, ignore_patterns=None
+    ):
         if not log_content:
-            return None
+            return None, None
+
         if self.full_log:
-            return log_content
+            return log_content, None
 
-        crash_line_idx = -1
-        crash_pattern = None
-        lines = log_content.split("\n")
+        benign_regexes = None
+        if ignore_patterns:
+            benign_regexes = [re.compile(p) for p in ignore_patterns]
 
-        # Detect crash or corruption pattern
-        for pattern in self.CRASH_PATTERNS + self.FILESYSTEM_CORRUPTION_PATTERNS:
+        lines = self.normalize_kernel_snippet(log_content)
+        issue_line_idx = -1
+        issue_pattern = None
+
+        for pattern in context_patterns:
             for i, line in enumerate(lines):
                 if re.search(pattern, line):
-                    crash_line_idx = i
-                    crash_pattern = pattern
+                    if ignore_patterns and benign_regexes:
+                        if any(p.search(line) for p in benign_regexes):
+                            continue
+                    issue_line_idx = i
+                    issue_pattern = pattern
                     break
-            if crash_line_idx != -1:
+            if issue_line_idx != -1:
                 break
 
-        if crash_line_idx == -1:
-            return None
+        if issue_line_idx == -1:
+            return None, None
 
-        # Adjusted context: 100 lines before and 100 after the detected line
-        start_idx = max(0, crash_line_idx - 100)
-        end_idx = min(len(lines), crash_line_idx + 100)
+        start_idx = max(0, issue_line_idx - self.context_prefix)
+        end_idx = min(len(lines), issue_line_idx + self.context_postfix)
         crash_context = "\n".join(lines[start_idx:end_idx])
-        return f"Detected kernel issue ({crash_pattern}):\n\n{crash_context}"
+        key_log_line = lines[issue_line_idx].strip()
+
+        return f"{crash_context}\n\nconsole line number: {end_idx}", key_log_line
 
     def decode_log_output(self, log_file):
         if not self.decode_crash:
@@ -639,27 +716,25 @@ class KernelCrashWatchdog:
         except subprocess.SubprocessError as e:
             logger.warning(f"Failed to decode kernel log output: {e}")
 
-    def save_log(self, log, context):
-        if not log:
+    def save_log(self, kernel_snippet, context, key_line=None):
+        if not kernel_snippet or not key_line:
             return None
 
-        # Check if this is a known crash before saving
-        if self.is_known_crash(log):
-            logger.info(f"Skipping known crash for {self.host_name}")
+        log_hash = hashlib.md5(key_line.encode()).hexdigest()
+        if log_hash in self.known_crashes:
+            logger.info(f"Skipping known {context} for {self.host_name}: {key_line}")
             return None
 
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_file = os.path.join(self.output_dir, f"journal-{timestamp}.{context}")
-
+        log_file = self.next_issue_filename(context)
         os.makedirs(self.output_dir, exist_ok=True)
+
+        qr = self.get_qr_ascii(key_line)
         with open(log_file, "w") as f:
-            f.write(log)
+            f.write(kernel_snippet)
+            f.write(f"\n\nQR Code:\n{qr}")
 
-        # Add this crash to known crashes
-        crash_hash = hashlib.md5(log.encode()).hexdigest()
-        self.known_crashes.add(crash_hash)
-
-        logger.info(f"{context} log saved to {log_file}")
+        self.known_crashes.append(log_hash)
+        logger.info(f"{context} log saved to: {log_file} for: {key_line}")
         return log_file
 
     def reset_host_now(self):
@@ -702,10 +777,21 @@ class KernelCrashWatchdog:
                     self.host_name,
                 ],
                 check=True,
+                timeout=self.ssh_timeout,
             )
             logger.info(f"{self.host_name} is now reachable.")
+        except subprocess.TimeoutExpired:
+            logger.error(f"Timeout: SSH connection to {self.host_name} did not succeed within {self.ssh_timeout} seconds. This kernel is probably seriously broken.")
+            sys.exit(1)
         except subprocess.CalledProcessError as e:
             logger.warning(f"Failed to wait for SSH on {self.host_name}: {e}")
+            sys.exit(1)
+
+    def next_issue_filename(self, context):
+        self.last_issue_count += 1
+        return os.path.join(
+            self.output_dir, f"journal-{self.last_issue_count:04d}.{context}"
+        )
 
     def check_and_reset_host(self, method="auto", get_fstests_log=None):
         crash_file = None
@@ -714,7 +800,7 @@ class KernelCrashWatchdog:
 
         # 1. Try console log first if guestfs is enabled
         if method == "console" or (method == "auto" and self.kdevops_enable_guestfs):
-            logger.info(f"Trying console.log fallback for {self.host_name}")
+            logger.debug(f"Trying console.log fallback for {self.host_name}")
             journal_logs = self.convert_console_log()
 
         # 2. Try remote journal if that didn't work and it's enabled.
@@ -727,7 +813,7 @@ class KernelCrashWatchdog:
         ):
             journal_logs = self.try_remote_journal()
             if journal_logs:
-                logger.info(f"Using remote journal logs for {self.host_name}")
+                logger.debug(f"Using remote journal logs for {self.host_name}")
 
         # 3. Fallback to SSH-based journal access if nothing worked yet
         if (
@@ -735,7 +821,7 @@ class KernelCrashWatchdog:
             and (method == "ssh" or method == "auto")
             and self.check_host_reachable()
         ):
-            logger.info(f"Trying SSH-based journalctl access for {self.host_name}")
+            logger.debug(f"Trying SSH-based journalctl access for {self.host_name}")
             journal_logs = self.collect_journal()
 
         if not journal_logs:
@@ -744,25 +830,42 @@ class KernelCrashWatchdog:
             self.wait_for_ssh()
             return None, None
 
+        journal_logs = self.normalize_kernel_snippet(journal_logs)
+
+        if self.last_known_console_line is not None:
+            journal_logs = journal_logs[self.last_known_console_line :]
+            logger.debug(
+                f"Trimmed journal logs starting at console line {self.last_known_console_line} "
+                f"({len(journal_logs)} lines remain)"
+            )
+
+        journal_logs = "\n".join(journal_logs)
+
         self.infer_fstests_state(journal_logs)
+
+        warnings = []
         if self.save_warnings:
-            warnings = self.detect_warnings(journal_logs)
-            if warnings:
-                warnings_text = "\n".join(warnings)
+            warning_context_patterns = self.WARNINGS
+            warning_ignore_patterns = self.BENIGN_WARNINGS
+            warning_snippet, key_log_line = self.extract_kernel_snippet(
+                journal_logs, warning_context_patterns, warning_ignore_patterns
+            )
+            if warning_snippet and key_log_line:
+                warning_hash = hashlib.md5(key_log_line.encode()).hexdigest()
 
-                if not self.is_known_crash(warnings_text):
+                if warning_hash in self.known_crashes:
+                    logger.debug(f"Skipping known warning for {self.host_name}")
+                else:
                     os.makedirs(self.output_dir, exist_ok=True)
-                    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                    warnings_file = os.path.join(
-                        self.output_dir, f"journal-{timestamp}.warning"
+                    warning_file = self.next_issue_filename("warning")
+                    qr = self.get_qr_ascii(key_log_line)
+                    with open(warning_file, "w") as out:
+                        out.write(warning_snippet)
+                        out.write(f"\n\nQR Code:\n{qr}")
+                    self.known_crashes.append(warning_hash)
+                    logger.info(
+                        f"Saved new kernel warning to: {warning_file}: {key_log_line}"
                     )
-                    with open(warnings_file, "w") as out:
-                        out.write(warnings_text)
-
-                    # Add hash to known_crashes to avoid future dupes
-                    warning_hash = hashlib.md5(warnings_text.encode()).hexdigest()
-                    self.known_crashes.add(warning_hash)
-                    logger.info(f"Saved new kernel warning to: {warnings_file}")
 
         if get_fstests_log:
             log_output = self.get_fstests_log(get_fstests_log)
@@ -773,6 +876,10 @@ class KernelCrashWatchdog:
         crash_detected = self.detect_crash(journal_logs)
         fs_corruption_detected = self.detect_filesystem_corruption(journal_logs)
 
+        if warnings and not crash_detected and not fs_corruption_detected:
+            logger.debug(f"Only warnings found for {self.host_name}, skipping reset")
+            return None, warnings_file
+
         if (
             fs_corruption_detected
             and self.is_an_fstests
@@ -782,21 +889,32 @@ class KernelCrashWatchdog:
 
         if crash_detected and fs_corruption_detected:
             issue_context = "crash_and_corruption"
+            context_patterns = self.CRASH_PATTERNS + self.FILESYSTEM_CORRUPTION_PATTERNS
         elif crash_detected:
             issue_context = "crash"
+            context_patterns = self.CRASH_PATTERNS
         elif fs_corruption_detected:
             issue_context = "corruption"
+            context_patterns = self.FILESYSTEM_CORRUPTION_PATTERNS
         else:
             return None, None
 
-        kernel_snippet = self.extract_kernel_snippet(journal_logs)
+        kernel_snippet, key_log_line = self.extract_kernel_snippet(
+            journal_logs, context_patterns
+        )
+        if not kernel_snippet or not key_log_line:
+            logger.warning(
+                f"Unable to extract valid kernel snippet for {self.host_name}"
+            )
+            return None, None
 
         # Check if this is a known crash before proceeding
-        if self.is_known_crash(kernel_snippet):
+        if self.is_known_crash(key_log_line):
             logger.debug(f"Detected known crash for {self.host_name}, skipping")
             return None, None
 
-        log_file = self.save_log(kernel_snippet, issue_context)
+        # This can be a crash or an unexpected filesystem corruption
+        log_file = self.save_log(kernel_snippet, issue_context, key_log_line)
         if log_file:  # Only decode and reset if we actually saved a new crash
             self.decode_log_output(log_file)
             self.reset_host_now()
