@@ -350,6 +350,7 @@ do
 				qemu-img create -f $IMG_FMT "$diskimg" 100G
 				if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
 					chmod g+rw $diskimg
+					chgrp $QEMU_GROUP $diskimg
 				fi
 				let lbs_idx=$lbs_idx+1
 			done
@@ -362,6 +363,7 @@ do
 			qemu-img create -f $IMG_FMT "$STORAGEDIR/$name/extra${i}.$IMG_FMT" 100G
 			if [[ "$CONFIG_LIBVIRT_URI_SYSTEM" == "y" ]]; then
 				chmod g+rw $STORAGEDIR/$name/extra${i}.$IMG_FMT
+				chgrp $QEMU_GROUP $STORAGEDIR/$name/extra${i}.$IMG_FMT
 			fi
 		done
 	fi
