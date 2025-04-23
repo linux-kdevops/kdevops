@@ -1124,10 +1124,47 @@ config LIBVIRT_GDB_BASEPORT
 	  /scripts/get_gdb_base_port.sh file and use the last 4 digits of the md5sum
 	  of the file to assign to libvirt_gdb_baseport.
 
+choice
+	prompt "Storage pool user name to use"
+	default KDEVOPS_STORAGE_POOL_USER_DEFAULT
+	help
+	  The storage pool user is name of the local user ID that has
+	  access to the libvirt storage pool to be used by kdevops.
+
+	  When there is only one user running kdevops on a system,
+	  the default setting should work. To enable multiple users
+	  to run kdevops on the same system, select
+	  KDEVOPS_STORAGE_POOL_USER_AUTO.
+
+config KDEVOPS_STORAGE_POOL_USER_DEFAULT
+	bool "default"
+	help
+	  The default storage pool user name is always "kdevops".
+
+config KDEVOPS_STORAGE_POOL_USER_AUTO
+	bool "auto"
+	help
+	  Kdevops selects the storage pool user name.
+
+config KDEVOPS_STORAGE_POOL_USER_CUSTOM
+	bool "custom"
+	help
+	  Set a fixed custom storage pool user name.
+
+endchoice
+
+config KDEVOPS_STORAGE_POOL_USER_CUSTOM_NAME
+	string "Storage pool user name"
+	depends on KDEVOPS_STORAGE_POOL_USER_CUSTOM
+	help
+	  Set the name of the storage pool user.
+
 config KDEVOPS_STORAGE_POOL_USER
 	string
 	output yaml
-	default "kdevops"
+	default "kdevops" if KDEVOPS_STORAGE_POOL_USER_DEFAULT
+	default $(shell, echo $USER) if KDEVOPS_STORAGE_POOL_USER_AUTO
+	default KDEVOPS_STORAGE_POOL_USER_CUSTOM_NAME if KDEVOPS_STORAGE_POOL_USER_CUSTOM
 
 config KDEVOPS_STORAGE_POOL_PATH
 	string
