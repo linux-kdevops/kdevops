@@ -99,4 +99,4 @@ destroy_guestfs:
 PHONY += destroy_guestfs
 
 cleancache:
-	$(Q)rm -f $(subst ",,$(CONFIG_LIBVIRT_STORAGE_POOL_PATH))/kdevops/guestfs/base_images/*
+	$(Q)rm -f $(CONFIG_LIBVIRT_STORAGE_POOL_PATH)/$(CONFIG_KDEVOPS_STORAGE_POOL_USER)/guestfs/base_images/*
