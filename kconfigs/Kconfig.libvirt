@@ -1104,6 +1104,31 @@ config LIBVIRT_STORAGE_POOL_NAME
 	  For instance you may want to use a volume name of "data2" for a path
 	  on a partition on /data2/ or something like that.
 
+config LIBVIRT_ENABLE_GDB
+    bool "Enable GDB debugging for the guest"
+	output yaml
+	help
+	  Select this option if you want to enable debugging support for GDB.
+	  By default , it is assumed that gdb is disabled since we dont want
+	  to complicate this for the CI runs. If enabled then libvirt guest
+	  xml for each guest will be configured to use gdb on a specific
+	  tcp port.
+
+config LIBVIRT_GDB_BASEPORT
+    int
+	default $(shell, ./scripts/get_gdb_base_port.sh) if LIBVIRT
+	output yaml
+	depends on LIBVIRT_ENABLE_GDB
+	help
+	  This option defines the base port to be used for the GDB.
+	  Esentially we need to make QEMU listen for an incoming connection from
+	  gdb on a TCP port. The default port is chosen to be 1234. However we
+	  introduce variability for assigning the port to each guest by defining
+	  a base port and adding an index to it based on the number of libvrt guest
+	  nodes. Therefore the base port is extracted from the md5sum of the
+	  /scripts/get_gdb_base_port.sh file and use the last 4 digits of the md5sum
+	  of the file to assign to libvirt_gdb_baseport.
+
 source "kconfigs/Kconfig.libvirt.zns"
 source "kconfigs/Kconfig.libvirt.largeio"
 source "kconfigs/Kconfig.libvirt.cxl"

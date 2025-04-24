@@ -561,13 +561,43 @@
     - kdevops_enable_guestfs|bool
     - pcie_passthrough_enable|bool
 
+- name: Find if port conflict occur
+  ansible.builtin.shell: "ss -ltn | grep ':{{ (libvirt_gdb_baseport | int) + (idx | int) }} '"
+  register: gdb_port_reg
+  failed_when: false
+  changed_when: false
+  loop: "{{ guestfs_nodes }}"
+  loop_control:
+    index_var: idx
+  when:
+    - libvirt_enable_gdb|bool
+    - kdevops_enable_guestfs|bool
+
+- name: Set the conflict flag on if conflict occur
+  set_fact:
+    gdb_port_conflict: True
+  when:
+    - libvirt_enable_gdb|bool
+    - gdb_port_reg.results is defined
+    - gdb_port_reg.results | selectattr('rc', 'equalto', 0) | list | length > 0
+
+- name: Fail bringup if gdb port conflict occur
+  fail:
+    msg: "GDB port conflict occur, please check the base port number {{ libvirt_gdb_baseport }} and try with another"
+  when:
+    - libvirt_enable_gdb|bool
+    - gdb_port_conflict|bool
+
 - name: Generate XML files for the libvirt guests
   vars:
     hostname: "{{ item.name }}"
+    guestidx: "{{ idx }}"
   template:
     src: "guestfs_{{ libvirt_machine_type }}.j2.xml"
     dest: "{{ topdir_path }}/guestfs/{{ hostname }}/{{ hostname }}.xml"
     force: yes
   with_items: "{{ guestfs_nodes }}"
+  loop_control:
+    index_var: idx
   when:
     - kdevops_enable_guestfs|bool
