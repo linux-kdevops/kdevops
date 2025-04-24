@@ -36,6 +36,7 @@ class KernelCrashWatchdog:
     CRASH_PATTERNS = [
         r"Kernel panic",
         r"BUG:",
+        r"BUG at",
         r"Oops:",
         r"general protection fault",
         r"Unable to handle kernel",
@@ -259,7 +260,7 @@ class KernelCrashWatchdog:
         decode_crash=True,
         reset_host=True,
         save_warnings=False,
-        context_prefix=15,
+        context_prefix=0,
         context_postfix=35,
         ssh_timeout = 180,
     ):
