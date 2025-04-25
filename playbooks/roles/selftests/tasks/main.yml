@@ -302,6 +302,29 @@
   when:
     - selftest_kernelspace|bool
 
+- name: Run kernel-side tests for special tests not in selftests
+  tags: [ 'selftests', 'run_tests' ]
+  become: yes
+  become_flags: 'su - -c'
+  become_method: sudo
+  command: "{{ command_to_run }}"
+  args:
+    chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
+  register: selftests_module_out
+  when:
+    - kdevops_run_selftests|bool
+    - selftests_build_radix_tree|bool
+    - selftest_userspace|bool
+  vars:
+    command_to_run: >
+      {%- if selftest_xarray  -%}
+      modprobe test_xarray
+      {%- elif selftest_maple -%}
+      modprobe test_maple_tree
+      {%- else -%}
+      echo missing command
+      {%- endif -%}
+
 - name: Run userspace selftests
   tags: [ 'selftests', 'run_tests' ]
   become: yes
@@ -322,29 +345,6 @@
       modprobe test_xarray
       {%- elif selftest_maple -%}
       ./maple
-      modprobe test_maple_tree
-      {%- else -%}
-      echo missing command
-      {%- endif -%}
-
-- name: Run kernel-side tests for special tests not in selftests
-  tags: [ 'selftests', 'run_tests' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "{{ command_to_run }}"
-  args:
-    chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
-  register: selftests_module_out
-  when:
-    - kdevops_run_selftests|bool
-    - selftests_build_radix_tree|bool
-    - selftest_userspace|bool
-  vars:
-    command_to_run: >
-      {%- if selftest_xarray  -%}
-      modprobe test_xarray
-      {%- elif selftest_maple -%}
       modprobe test_maple_tree
       {%- else -%}
       echo missing command
