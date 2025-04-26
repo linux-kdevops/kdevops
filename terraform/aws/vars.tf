@@ -59,7 +59,7 @@ variable "aws_region" {
 variable "aws_shared_config_file" {
   description = "Shared AWS configuration file"
   type        = string
-  default     = "~/.aws/conf"
+  default     = "~/.aws/config"
 }
 
 # So far there hasn't been a need to configure this value
