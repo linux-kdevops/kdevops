@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Create and configure a Libvirt storage pool
+  hosts: localhost
   roles:
     - role: libvirt_storage_pool_create

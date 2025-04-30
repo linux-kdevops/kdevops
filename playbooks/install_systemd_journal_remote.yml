@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Install and configure systemd-journal-remote for remote journal collection
+  hosts: localhost
   roles:
     - role: install_systemd_journal_remote

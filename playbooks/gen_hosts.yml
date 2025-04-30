@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Generate Ansible inentory for guests (hosts)
+  hosts: localhost
   roles:
     - role: gen_hosts
