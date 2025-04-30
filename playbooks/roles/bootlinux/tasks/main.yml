@@ -168,7 +168,7 @@
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'skip_ansible_lint' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -177,7 +177,7 @@
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
-  tags: [ 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'skip_ansible_lint' ]
   when:
     - bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -192,7 +192,7 @@
     if ! $(git config --get user.name) ; then
       git config --global user.name user
     fi
-  tags: [ 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'skip_ansible_lint' ]
   when:
     - target_linux_apply_patch_message_id is defined
     - target_linux_apply_patch_message_id | length > 0
@@ -208,7 +208,7 @@
   shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'skip_ansible_lint' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_apply_patch_message_id is defined
@@ -219,7 +219,7 @@
   shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
-  tags: [ 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'skip_ansible_lint' ]
   when:
     - bootlinux_9p|bool
     - target_linux_apply_patch_message_id is defined
