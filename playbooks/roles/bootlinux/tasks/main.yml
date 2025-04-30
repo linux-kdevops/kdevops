@@ -82,7 +82,7 @@
 
 - name: Add safe exception for a clone
   command: "git config --global --add safe.directory {{ target_linux_git }}"
-  tags: [ 'git', 'clone']
+  tags: [ 'clone']
   when:
     - bootlinux_9p|bool
     - target_linux_git is string and target_linux_git.startswith('/')
@@ -120,7 +120,7 @@
   delay: 5
   register: result
   until: not result.failed
-  tags: [ 'git', 'clone']
+  tags: [ 'clone']
   when:
     - not bootlinux_9p|bool
 
@@ -135,7 +135,7 @@
   delay: 5
   register: result
   until: not result.failed
-  tags: [ 'git', 'clone']
+  tags: [ 'clone']
   when:
     - bootlinux_9p|bool
     - not bootlinux_tree_set_by_cli|bool
@@ -149,7 +149,7 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: 0644
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -159,7 +159,7 @@
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ bootlinux_9p_host_path }}/{{ target_linux_extra_patch }}"
     mode: 0644
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -170,7 +170,7 @@
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'git', 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'extra-patch', 'skip_ansible_lint' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -179,7 +179,7 @@
   command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
-  tags: [ 'git', 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'extra-patch', 'skip_ansible_lint' ]
   when:
     - bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -194,7 +194,7 @@
     if ! $(git config --get user.name) ; then
       git config --global user.name user
     fi
-  tags: [ 'git', 'extra-patch', 'skip_ansible_lint' ]
+  tags: [ 'extra-patch', 'skip_ansible_lint' ]
   when:
     - target_linux_apply_patch_message_id is defined
     - target_linux_apply_patch_message_id | length > 0
@@ -326,7 +326,7 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: 0644
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
 
@@ -335,7 +335,7 @@
     src: "{{ linux_config }}"
     dest: "{{ bootlinux_9p_host_path }}/.config"
     mode: 0644
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
   run_once: true
@@ -343,14 +343,14 @@
 
 - name: Set kernel localversion if requested on the target nodes
   shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
 
 - name: Set kernel localversion if requested on the control node
   shell: "echo {{ target_linux_localversion }} > {{ bootlinux_9p_host_path }}/localversion"
-  tags: [ 'git', 'config' ]
+  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
@@ -591,7 +591,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_TERMINAL='
     line: GRUB_TERMINAL="console serial"
-  tags: [ 'git', 'config', 'console' ]
+  tags: [ 'config', 'console' ]
 
 - name: Update your boot GRUB file if necessary
   tags: [ 'uninstall-linux', 'manual-update-grub', 'console' ]
@@ -606,7 +606,7 @@
     path: /etc/sysconfig/kernel
     regexp: '^DEFAULTDEBUG='
     line: DEFAULTDEBUG=yes
-  tags: [ 'git', 'config', 'saved' ]
+  tags: [ 'config', 'saved' ]
   when: ansible_facts['os_family']|lower == 'redhat'
 
 - name: Install {{ target_linux_tree }} on the target nodes
@@ -634,7 +634,7 @@
     - kdevops_workflow_enable_cxl|bool
 
 - name: Set the default kernel if necessary
-  tags: [ 'git', 'config', 'saved' ]
+  tags: [ 'config', 'saved' ]
   import_tasks: update-grub/install.yml
   # when:
   #   - ansible_facts['os_family']|lower != 'redhat'
@@ -648,11 +648,11 @@
 - name: Run uname
   command: "uname -r"
   register: uname_cmd
-  tags: [ 'git', 'config', 'uname' ]
+  tags: [ 'config', 'uname' ]
 
 - name: Check kernel uname
   debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd.stdout_lines.0 }}"
-  tags: [ 'git', 'config', 'uname' ]
+  tags: [ 'config', 'uname' ]
