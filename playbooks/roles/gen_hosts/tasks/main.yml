@@ -18,23 +18,23 @@
   command: "id -g -n"
   register: my_group
 
-- name: Check if the file {{ kdevops_hosts }} exists already
+- name: Check if the inventory file exists already
   stat:
-    path: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    path: "{{ ansible_cfg_inventory }}"
   register: kdevops_hosts_dest
 
-- name: Ensure proper permission on the file {{ kdevops_hosts }}
+- name: Ensure proper permission on the inventory file
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
   file:
-    path: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    path: "{{ ansible_cfg_inventory }}"
     owner: "{{ my_user.stdout }}"
     group: "{{ my_group.stdout }}"
   when:
     - kdevops_hosts_dest.stat.exists
 
-- name: Verify Ansible host template file exists {{ kdevops_hosts_template_full_path }}
+- name: Verify Ansible inventory template file exists
   stat:
     path: "{{ kdevops_hosts_template_full_path }}"
   register: ansible_hosts_template
@@ -56,11 +56,11 @@
   when:
     - is_fstests
 
-- name: Generate the Ansible hosts file
+- name: Generate the Ansible inventory file
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -68,11 +68,11 @@
     - not kdevops_workflows_dedicated_workflow
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for dedicated cxl work
+- name: Generate the Ansible inventory file for dedicated cxl work
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ anisble_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -81,11 +81,11 @@
     - kdevops_workflow_enable_cxl
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for dedicated pynfs work
+- name: Generate the Ansible inventory file for dedicated pynfs work
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -94,13 +94,13 @@
     - kdevops_workflow_enable_pynfs
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for dedicated gitr workflow
+- name: Generate the Ansible inventory file for dedicated gitr workflow
   tags: [ 'hosts' ]
   vars:
     gitr_enabled_hosts: "{{ gitr_enabled_test_groups|ansible.builtin.split }}"
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: true
     trim_blocks: true
     lstrip_blocks: true
@@ -109,13 +109,13 @@
     - kdevops_workflow_enable_gitr
     - ansible_hosts_template.stat.exists
 
-- name: Generate an Ansible hosts file for a dedicated ltp workflow
+- name: Generate an Ansible inventory file for a dedicated ltp workflow
   tags: [ 'hosts' ]
   vars:
     ltp_enabled_hosts: "{{ ltp_enabled_test_groups|ansible.builtin.split }}"
   ansible.builtin.template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -124,13 +124,13 @@
     - kdevops_workflow_enable_ltp
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for dedicated nfstest workflow
+- name: Generate the Ansible inventory file for dedicated nfstest workflow
   tags: [ 'hosts' ]
   vars:
     nfstest_enabled_hosts: "{{ nfstest_enabled_test_groups | ansible.builtin.split }}"
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: true
     trim_blocks: true
     lstrip_blocks: true
@@ -183,7 +183,7 @@
     - ansible_hosts_template.stat.exists
     - item.changed
 
-- name: Generate the Ansible hosts file for a dedicated fstests setup
+- name: Generate the Ansible inventory file for a dedicated fstests setup
   tags: [ 'hosts' ]
   vars:
     fs_config_data: "{{ lookup('file', fs_config_path) }}"
@@ -194,7 +194,7 @@
     sections: "{{ sections_replace_underscore |  replace(\"'\", '') | split(', ') }}"
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -224,11 +224,11 @@
     - kdevops_workflow_enable_blktests
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for a dedicated blktests setup
+- name: Generate the Ansible inventory file for a dedicated blktests setup
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -250,11 +250,11 @@
     - kdevops_workflow_enable_selftests
     - ansible_hosts_template.stat.exists
 
-- name: Generate the Ansible hosts file for a dedicated selftests setup
+- name: Generate the Ansible inventory file for a dedicated selftests setup
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -291,11 +291,11 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_sysbench
 
-- name: Generate the Ansible hosts file for a dedicated sysbench setup
+- name: Generate the Ansible inventory file for a dedicated sysbench setup
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
@@ -306,7 +306,7 @@
 
 - name: Verify if final host file exists
   stat:
-    path: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    path: "{{ ansible_cfg_inventory }}"
   register: final_hosts_file
 
 - name: Fail if the dedicated workflow has no rules for node configuration for hosts file configuration

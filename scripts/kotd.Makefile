@@ -9,19 +9,23 @@ endif # HAVE_DISTRO_CUSTOM_KOTD_REPO
 
 ANSIBLE_CMD_KOTD_ENABLE :=
 
-kotd: $(KDEVOPS_HOSTS) .config
+kotd: inventory .config
 	$(Q)$(ANSIBLE_CMD_KOTD_ENABLE)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/devconfig.yml --tags vars,kotd \
+		playbooks/devconfig.yml --tags vars,kotd \
 		--extra-vars=@./extra_vars.yaml
 
-kotd-baseline: $(KDEVOPS_HOSTS) .config
+kotd-baseline: inventory .config
 	$(Q)$(ANSIBLE_CMD_KOTD_ENABLE)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/devconfig.yml --tags vars,kotd \
+		--limit 'baseline' \
+		playbooks/devconfig.yml \
+		--tags vars,kotd \
 		--extra-vars=@./extra_vars.yaml
 
-kotd-dev: $(KDEVOPS_HOSTS) .config
+kotd-dev: inventory .config
 	$(Q)$(ANSIBLE_CMD_KOTD_ENABLE)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/devconfig.yml --tags vars,kotd \
+		--limit 'dev' \
+		playbooks/devconfig.yml \
+		--tags vars,kotd \
 		--extra-vars=@./extra_vars.yaml
 
 kotd-help-menu:

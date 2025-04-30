@@ -75,6 +75,7 @@ linux-help-menu:
 		echo "linux-mount        - Mounts 9p path on targets" ;\
 	fi
 	@echo "linux-deploy       - Builds, installs, updates GRUB and reboots - useful for rapid development"
+	@echo "linux-build        - Builds kernel"
 	@echo "linux-install      - Only builds and installs Linux"
 	@echo "linux-uninstall    - Remove a kernel you can pass arguments for the version such as KVER=6.5.0-rc7-next-20230825"
 	@echo "linux-clone        - Only clones Linux"
@@ -93,49 +94,63 @@ linux: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux-local.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)"
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-mount
 linux-mount:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,9p_mount \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-deploy
 linux-deploy:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
+		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+
+PHONY += linux-build
+linux-build:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--tags vars,build-linux,saved,vars \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-install
 linux-install:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-uninstall
 linux-uninstall:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags uninstall-linux,vars \
 		--extra-vars '{ "uninstall_kernel_enable": "True", $(LINUX_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 linux-clone-clients: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) \
 		--tags vars,deps,clone
 
 PHONY += linux-clone-9p
 linux-clone-9p: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'localhost' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" \
 		--tags vars,deps,clone
@@ -145,27 +160,30 @@ linux-clone: $(KDEVOPS_NODES) $(LINUX_CLONE_DEFAULT_TYPE)
 
 PHONY += linux-grub-setup
 linux-grub-setup:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags manual-update-grub,saved,vars
 
 PHONY += linux-reboot
 linux-reboot:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags vars,reboot
 
 PHONY += uname
 uname:
-	$(Q)ansible 'baseline:dev' -i hosts -b -m command -a "uname -r" -o \
+	$(Q)ansible 'baseline:dev' -b -m command -a "uname -r" -o \
 	| awk -F '|' '{gsub(/^ +| +$$/, "", $$2); printf "%-30s %s\n", $$1, $$4}' \
 	| sed -e 's|(stdout)||'
 
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL))
 PHONY += linux-cxl
 linux-cxl: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags 'vars,cxl-build,cxl-install'                             \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 

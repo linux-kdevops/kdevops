@@ -78,7 +78,7 @@ You can compile say a vanilla kernel v4.19.58 with an extra set of patches we'd
 
 ```
 cd ansible
-ansible-playbook -i hosts -l dev --extra-vars "target_linux_extra_patch=pend-v4.19.58-fixes-20190716-v2.patch" bootlinux.yml
+ansible-playbook -l dev --extra-vars "target_linux_extra_patch=pend-v4.19.58-fixes-20190716-v2.patch" bootlinux.yml
 ```
 
 You'd place the `pend-v4.19.58-fixes-20190716-v2.patch` file on the directory
@@ -87,19 +87,19 @@ You'd place the `pend-v4.19.58-fixes-20190716-v2.patch` file on the directory
 Now say you wantd to be explicit about a tag of Linux you'd want to use:
 
 ```
-ansible-playbook -i hosts -l dev --extra-vars "target_linux_ref=v4.19.21 "target_linux_extra_patch=try-v4.19.20-fixes-20190716-v1.patch" bootlinux.yml
+ansible-playbook -l dev --extra-vars "target_linux_ref=v4.19.21 "target_linux_extra_patch=try-v4.19.20-fixes-20190716-v1.patch" bootlinux.yml
 ```
 
 To uninstall a kernel:
 
 ```
-ansible-playbook -i hosts -l dev --tags uninstall-linux --extra-vars "uninstall_kernel_ver=4.19.58+" bootlinux.yml
+ansible-playbook -l dev --tags uninstall-linux --extra-vars "uninstall_kernel_ver=4.19.58+" bootlinux.yml
 ```
 
 To ensure you can get the grub prompt:
 
 ```bash
-ansible-playbook -i hosts --tags console,vars,manual-update-grub playbooks/bootlinux.yml
+ansible-playbook --tags console,vars,manual-update-grub playbooks/bootlinux.yml
 ```
 
 The ansible bootlinux role relies on the create_partition role to create a data
@@ -107,13 +107,13 @@ partition where we can stuff code, and compile it. To test that aspect of
 the bootlinux role you can run:
 
 ```
-ansible-playbook -i hosts -l baseline --tags data_partition,partition bootlinux.yml
+ansible-playbook -l baseline --tags data_partition,partition bootlinux.yml
 ```
 
 To reboot all hosts:
 
 ```bash
-ansible-playbook -i hosts bootlinux.yml --tags reboot
+ansible-playbook bootlinux.yml --tags reboot
 ```
 
 For further examples refer to one of this role's users, the
