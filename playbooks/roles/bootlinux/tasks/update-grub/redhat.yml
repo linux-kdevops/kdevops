@@ -28,4 +28,4 @@
   command: "grub2-mkconfig -o {{ grub_config_file }}"
   register: grub_update
   changed_when: "grub_update.rc == 0"
-  tags: [ 'linux', 'manual-update-grub', 'console' ]
+  tags: [ 'manual-update-grub', 'console' ]
