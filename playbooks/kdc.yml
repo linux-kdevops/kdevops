@@ -1,5 +1,5 @@
 ---
 - name: Setup MIT Kerberos V5 KDC with realm and admin settings
-  hosts: all
+  hosts: kdc
   roles:
     - role: kdc

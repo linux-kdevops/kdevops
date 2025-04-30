@@ -1,6 +1,6 @@
 ---
 - name: Configure developer environment on target systems
-  hosts: all
+  hosts: baseline:dev
   gather_facts: no
   roles:
     - role: devconfig

@@ -1,4 +1,5 @@
 [all]
+localhost ansible_connection=local
 {% for test_type in selftests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ test_type }}
 {% if kdevops_baseline_and_dev %}
