@@ -76,7 +76,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_DEFAULT='
     line: GRUB_DEFAULT=saved
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
 
 - name: Use GRUB_DISABLE_SUBMENU=y to enable grub-set-default use with one digit
   become: yes
@@ -87,7 +87,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_DISABLE_SUBMENU='
     line: GRUB_DISABLE_SUBMENU=y
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
 
 - name: Update your boot GRUB file if necessary to ensure GRUB flat earth
   tags: [ 'uninstall-linux', 'manual-update-grub', 'console' ]
@@ -139,7 +139,7 @@
   vars:
     target_kernel: "{{ target_linux_ref | replace('v', '') }}"
   register: grub_boot_number_cmd
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
   when: kernel_release_file.stat.exists
 
 - name: Obtain command to set default kernel to boot
@@ -161,7 +161,7 @@
   command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
   vars:
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
   when:
     - grub_boot_number_cmd.rc == 0
     - grub_boot_number_cmd.stdout != ""
@@ -172,7 +172,7 @@
   vars:
     target_kernel: "{{ target_linux_ref | replace('v', '') }}"
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
   when:
     - grub_boot_number_cmd.rc == 0
     - grub_boot_number_cmd.stdout != ""

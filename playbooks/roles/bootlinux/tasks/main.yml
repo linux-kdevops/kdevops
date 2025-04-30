@@ -149,7 +149,6 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: 0644
-  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -159,7 +158,6 @@
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ bootlinux_9p_host_path }}/{{ target_linux_extra_patch }}"
     mode: 0644
-  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
     - target_linux_extra_patch is defined
@@ -326,7 +324,6 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: 0644
-  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
 
@@ -335,7 +332,6 @@
     src: "{{ linux_config }}"
     dest: "{{ bootlinux_9p_host_path }}/.config"
     mode: 0644
-  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
   run_once: true
@@ -343,14 +339,12 @@
 
 - name: Set kernel localversion if requested on the target nodes
   shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
-  tags: [ 'config' ]
   when:
     - not bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
 
 - name: Set kernel localversion if requested on the control node
   shell: "echo {{ target_linux_localversion }} > {{ bootlinux_9p_host_path }}/localversion"
-  tags: [ 'config' ]
   when:
     - bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
@@ -367,7 +361,6 @@
   args:
     chdir: "{{ target_linux_dir_path }}"
     executable: /bin/bash
-  tags: [ 'oldconfig' ]
   when:
     - not bootlinux_9p|bool
 
@@ -381,7 +374,6 @@
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
     executable: /bin/bash
-  tags: [ 'oldconfig' ]
   when:
     - bootlinux_9p|bool
   run_once: true
@@ -427,7 +419,7 @@
 
 - name: Get nproc on the control node
   command: "{{ num_jobs }}"
-  tags: [ 'build-linux', 'configure', 'cxl-build' ]
+  tags: [ 'build-linux', 'cxl-build' ]
   register: nproc_9p
   when:
     - bootlinux_9p|bool
@@ -591,7 +583,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_TERMINAL='
     line: GRUB_TERMINAL="console serial"
-  tags: [ 'config', 'console' ]
+  tags: [ 'console' ]
 
 - name: Update your boot GRUB file if necessary
   tags: [ 'uninstall-linux', 'manual-update-grub', 'console' ]
@@ -606,7 +598,7 @@
     path: /etc/sysconfig/kernel
     regexp: '^DEFAULTDEBUG='
     line: DEFAULTDEBUG=yes
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
   when: ansible_facts['os_family']|lower == 'redhat'
 
 - name: Install {{ target_linux_tree }} on the target nodes
@@ -634,7 +626,7 @@
     - kdevops_workflow_enable_cxl|bool
 
 - name: Set the default kernel if necessary
-  tags: [ 'config', 'saved' ]
+  tags: [ 'saved' ]
   import_tasks: update-grub/install.yml
   # when:
   #   - ansible_facts['os_family']|lower != 'redhat'
@@ -648,11 +640,11 @@
 - name: Run uname
   command: "uname -r"
   register: uname_cmd
-  tags: [ 'config', 'uname' ]
+  tags: [ 'uname' ]
 
 - name: Check kernel uname
   debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd.stdout_lines.0 }}"
-  tags: [ 'config', 'uname' ]
+  tags: [ 'uname' ]
