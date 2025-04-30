@@ -578,10 +578,9 @@
     path: /etc/default/grub
     regexp: '^GRUB_TERMINAL='
     line: GRUB_TERMINAL="console serial"
-  tags: [ 'console' ]
 
 - name: Update your boot GRUB file if necessary
-  tags: [ 'uninstall-linux', 'manual-update-grub', 'console' ]
+  tags: [ 'uninstall-linux', 'manual-update-grub' ]
   import_tasks: update-grub/main.yml
 
 - name: Ensure we have DEFAULTDEBUG set

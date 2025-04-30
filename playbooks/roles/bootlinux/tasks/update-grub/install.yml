@@ -90,7 +90,7 @@
   tags: [ 'saved' ]
 
 - name: Update your boot GRUB file if necessary to ensure GRUB flat earth
-  tags: [ 'uninstall-linux', 'manual-update-grub', 'console' ]
+  tags: [ 'uninstall-linux', 'manual-update-grub' ]
   import_tasks: update-grub/main.yml
 
 - name: Set file used to extract KERNELRELEASE variable
