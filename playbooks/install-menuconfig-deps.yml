@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: install-menuconfig-deps
+  hosts: localhost
   roles:
     - role: install-menuconfig-deps

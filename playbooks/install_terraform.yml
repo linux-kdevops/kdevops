@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: install_terraform
+  hosts: localhost
   roles:
     - role: install_terraform

@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: build_qemu
+  hosts: localhost
   roles:
     - role: build_qemu

@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: libvirt_storage_pool_create
+  hosts: localhost
   roles:
     - role: libvirt_storage_pool_create

@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: gen_tfvars
+  hosts: localhost
   roles:
     - role: gen_tfvars

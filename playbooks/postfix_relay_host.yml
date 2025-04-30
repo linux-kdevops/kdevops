@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: postfix_relay_host
+  hosts: localhost
   roles:
     - role: postfix_relay_host

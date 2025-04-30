@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: linux-mirror
+  hosts: localhost
   roles:
     - role: linux-mirror

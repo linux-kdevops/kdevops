@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: gen-pci-kconfig
+  hosts: localhost
   roles:
     - role: gen_pci_kconfig

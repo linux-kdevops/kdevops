@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: kdevops_archive
+  hosts: localhost
   roles:
     - role: kdevops_archive

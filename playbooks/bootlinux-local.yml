@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: bootlinux-local
+  hosts: localhost
   connection: local
   roles:
     - role: bootlinux-local

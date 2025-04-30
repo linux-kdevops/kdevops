@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: bringup_guestfs
+  hosts: localhost
   roles:
     - role: bringup_guestfs

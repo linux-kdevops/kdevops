@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: gen_nodes
+  hosts: localhost
   roles:
     - role: gen_nodes

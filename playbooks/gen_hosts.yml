@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: gen_hosts
+  hosts: localhost
   roles:
     - role: gen_hosts

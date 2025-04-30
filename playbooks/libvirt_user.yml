@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: libvirt_user
+  hosts: localhost
   roles:
     - role: libvirt_user

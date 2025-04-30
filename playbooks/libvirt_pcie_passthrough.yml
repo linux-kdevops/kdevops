@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: libvirt_pcie_passthrough
+  hosts: localhost
   roles:
     - role: libvirt_pcie_passthrough

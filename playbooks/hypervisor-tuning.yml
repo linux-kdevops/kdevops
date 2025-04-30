@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: hypervisor-tuning
+  hosts: localhost
   roles:
     - role: hypervisor-tuning
