@@ -224,6 +224,24 @@ config ANSIBLE_CFG_TASK_DEBUGGER
 
 	  https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#id10
 
+config ANSIBLE_CFG_INVENTORY
+	string "Ansible inventory sources"
+	output yaml
+	default "$(TOPDIR_PATH)/hosts"
+	help
+	  Comma-separated list of Ansible inventory source paths.
+
+	  This is mapped to the [defaults] section of the Ansible configuration
+	  file (ansible.cfg):
+	    inventory = <value>
+
+	  Each entry can be a path to an inventory file or directory,
+	  such as:
+	    /path/to/hosts,/path/to/inventory_dir
+
+	  For more details, refer to the Ansible documentation:
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-host-list
+
 if DISTRO_OPENSUSE
 
 config ANSIBLE_CFG_RECONNECTION_RETRIES

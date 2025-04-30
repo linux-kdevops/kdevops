@@ -11,6 +11,7 @@ show_task_path_on_failure = {{ ansible_cfg_callback_plugin_show_task_path_on_fai
 interpreter_python = {{ ansible_cfg_interpreter_python_string }}
 forks = {{ ansible_cfg_forks }}
 enable_task_debugger = {{ ansible_cfg_task_debugger }}
+inventory = {{ ansible_cfg_inventory }}
 {% if ansible_facts['distribution'] == 'openSUSE' %}
 [connection]
 retries = {{ ansible_cfg_reconnection_retries }}
