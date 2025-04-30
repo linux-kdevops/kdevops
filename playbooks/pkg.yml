@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: pkg
+  hosts: all
   roles:
     - role: pkg

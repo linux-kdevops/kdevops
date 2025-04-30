@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: kdc
+  hosts: all
   roles:
     - role: kdc

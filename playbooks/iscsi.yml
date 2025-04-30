@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: iscsi
+  hosts: all
   roles:
     - role: iscsi

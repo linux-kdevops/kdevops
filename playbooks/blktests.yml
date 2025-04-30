@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: blktests
+  hosts: all
   roles:
     - role: blktests

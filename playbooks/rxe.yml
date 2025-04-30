@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: rxe
+  hosts: all
   roles:
     - role: rxe

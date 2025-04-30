@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: pynfs
+  hosts: all
   roles:
     - role: pynfs

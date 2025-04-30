@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: nfsd
+  hosts: all
   roles:
     - role: nfsd

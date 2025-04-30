@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: ktls
+  hosts: all
   roles:
     - role: ktls

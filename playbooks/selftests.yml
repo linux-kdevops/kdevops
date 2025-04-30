@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: selftests
+  hosts: all
   roles:
     - role: selftests

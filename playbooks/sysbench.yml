@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: sysbench
+  hosts: all
   roles:
     - role: sysbench

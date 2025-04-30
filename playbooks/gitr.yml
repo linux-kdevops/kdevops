@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: gitr
+  hosts: all
   roles:
     - role: gitr

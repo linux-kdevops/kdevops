@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: reboot-limit
+  hosts: all
   roles:
     - role: reboot-limit

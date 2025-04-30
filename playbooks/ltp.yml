@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: ltp
+  hosts: all
   roles:
     - role: ltp

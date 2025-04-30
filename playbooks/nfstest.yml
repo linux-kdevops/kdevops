@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: nfstest
+  hosts: all
   roles:
     - role: nfstest
