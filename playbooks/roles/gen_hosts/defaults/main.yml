@@ -6,7 +6,6 @@ hosts_type_generic: True
 hosts_type_fs: False
 hosts_type_block: False
 
-kdevops_hosts: "hosts"
 kdevops_hosts_template: "hosts.in"
 kdevops_playbooks_dir: "/dev/null"
 kdevops_genhosts_templates_dir: "/dev/null"

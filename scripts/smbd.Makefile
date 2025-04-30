@@ -9,7 +9,6 @@ ANSIBLE_EXTRA_ARGS += $(SMBD_EXTRA_ARGS)
 
 smbd:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l smbd \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/smbd.yml
 

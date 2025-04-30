@@ -90,13 +90,13 @@ endif
 
 gitr:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--limit 'baseline:dev' \
 		--skip-tags run_tests,run_specific_tests,copy_results \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml
 
 gitr-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline \
+		--limit 'baseline' \
 		--tags $(GITR_PLAY_TAGS) \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml
@@ -109,7 +109,7 @@ gitr-baseline-kernelci:
 
 gitr-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags $(GITR_PLAY_TAGS) \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml
@@ -122,7 +122,7 @@ gitr-dev-kernelci:
 
 gitr-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml

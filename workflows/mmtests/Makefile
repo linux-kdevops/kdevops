@@ -6,42 +6,42 @@ endif
 
 mmtests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/mmtests.yml \
+		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml  \
 		--tags deps,setup
 		$(MMTESTS_ARGS)
 
 mmtests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/mmtests.yml
+		-l baseline playbooks/mmtests.yml
 		--extra-vars=@./extra_vars.yaml  \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
 mmtests-dev:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/mmtests.yml \
+		-l dev playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
 mmtests-test: mmtests
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/mmtests.yml \
+		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags run_tests,results \
 		$(MMTESTS_ARGS)
 
 mmtests-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/mmtests.yml \
+		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags results \
 		$(MMTESTS_ARGS)
 
 mmtests-clean:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/mmtests.yml \
+		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags clean \
 		$(MMTESTS_ARGS)

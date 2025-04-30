@@ -14,6 +14,10 @@ config ANSIBLE_CFG_TASK_DEBUGGER_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_TASK_DEBUGGER)
 
+config ANSIBLE_CFG_INVENTORY_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh KDEVOPS_HOSTS)
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
@@ -227,7 +231,8 @@ config ANSIBLE_CFG_TASK_DEBUGGER
 config ANSIBLE_CFG_INVENTORY
 	string "Ansible inventory sources"
 	output yaml
-	default "$(TOPDIR_PATH)/hosts"
+	default "$(TOPDIR_PATH)/hosts" if !ANSIBLE_CFG_INVENTORY_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(KDEVOPS_HOSTS)) if ANSIBLE_CFG_INVENTORY_SET_BY_CLI
 	help
 	  Comma-separated list of Ansible inventory source paths.
 

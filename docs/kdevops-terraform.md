@@ -120,7 +120,7 @@ connectivity issues. In such cases, you can run the Ansible role yourself
 manually:
 
 ```bash
-ansible-playbook -i hosts -l kdevops playbooks/devconfig.yml
+ansible-playbook -l kdevops playbooks/devconfig.yml
 ```
 
 Note that there a few configuration items you may have enabled, for things
