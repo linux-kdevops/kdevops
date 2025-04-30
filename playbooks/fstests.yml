@@ -3,6 +3,7 @@
   roles:
     - role: fstests_prep_localhost
 
-- hosts: all
+- name: Configure and run the filesystem testing suite workflow
+  hosts: all
   roles:
     - role: fstests

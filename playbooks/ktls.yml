@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Provision self-signed TLS certs and enable tlshd for kernel TLS testing (ktls)
+  hosts: all
   roles:
     - role: ktls

@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Package name wrapper
+  hosts: all
   roles:
     - role: pkg
