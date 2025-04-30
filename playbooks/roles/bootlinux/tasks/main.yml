@@ -15,6 +15,14 @@
   ansible.builtin.import_tasks:
     file: install-deps/main.yml
 
+- name: Install dependencies to build the Linux kernel
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.import_tasks:
+    file: install-deps/main.yml
+  when:
+    - bootlinux_9p|bool
+
 # We do this regardless of what distro you use
 - name: Install b4
   become: yes
