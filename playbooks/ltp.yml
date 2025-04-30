@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run the Linux Test Project (LTP) suite workflow
+  hosts: all
   roles:
     - role: ltp

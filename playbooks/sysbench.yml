@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run the sysbench workflow
+  hosts: baseline:dev
   roles:
     - role: sysbench
