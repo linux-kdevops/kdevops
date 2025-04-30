@@ -23,6 +23,7 @@
     - bringup
   ansible.builtin.set_fact:
     storagedir: "{{ kdevops_storage_pool_path }}/guestfs"
+  delegate_to: localhost
 
 - name: Set the pathname of the OS base image
   tags:
@@ -30,6 +31,7 @@
     - bringup
   ansible.builtin.set_fact:
     base_image: "{{ storagedir }}/base_images/{{ virtbuilder_os_version }}.raw"
+  delegate_to: localhost
 
 - name: Ensure the required base OS image exists
   tags:
@@ -39,12 +41,14 @@
   vars:
     base_image_os_version: "{{ virtbuilder_os_version }}"
     base_image_pathname: "{{ base_image }}"
+  delegate_to: localhost
 
 - name: Bring up each target node
   tags:
     - bringup
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/bringup/main.yml"
+  delegate_to: localhost
 
 - name: Set up target node console permissions
   tags:
@@ -53,9 +57,11 @@
     file: "{{ role_path }}/tasks/bringup/console-permissions.yml"
   when:
     - libvirt_uri_system|bool
+  delegate_to: localhost
 
 - name: Shut down and destroy each target node
   tags:
     - destroy
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/destroy.yml"
+  delegate_to: localhost

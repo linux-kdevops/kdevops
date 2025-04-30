@@ -15,7 +15,6 @@ include Makefile.subtrees
 
 export KDEVOPS_EXTRA_VARS ?=			extra_vars.yaml
 export KDEVOPS_PLAYBOOKS_DIR :=			playbooks
-export KDEVOPS_HOSTFILE ?=			hosts
 export KDEVOPS_NODES :=
 export KDEVOPS_VAGRANT :=
 export PYTHONUNBUFFERED=1
@@ -26,6 +25,8 @@ include scripts/refs.Makefile
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates
 export KDEVOPS_NODES_TEMPLATE :=
 export KDEVOPS_MRPROPER :=
+
+ANSIBLE_INVENTORY_FILE := $(shell echo $(CONFIG_ANSIBLE_CFG_INVENTORY) | tr --delete '"')
 
 KDEVOPS_INSTALL_TARGETS :=
 
@@ -79,8 +80,7 @@ CFLAGS += $(INCLUDES)
 
 ANSIBLE_EXTRA_ARGS += kdevops_version='$(PROJECTRELEASE)'
 
-export KDEVOPS_HOSTS_TEMPLATE := $(KDEVOPS_HOSTFILE).j2
-export KDEVOPS_HOSTS := $(KDEVOPS_HOSTFILE)
+export KDEVOPS_HOSTS_TEMPLATE := hosts.j2
 
 LOCAL_DEVELOPMENT_ARGS	:=
 ifeq (y,$(CONFIG_NEEDS_LOCAL_DEVELOPMENT_PATH))
@@ -197,8 +197,7 @@ include scripts/gen-nodes.Makefile
 
 
 ansible.cfg: .config
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ansible_cfg.yml \
 		--extra-vars=@./.extra_vars_auto.yaml
 
@@ -226,17 +225,15 @@ ifneq (,$(KDEVOPS_BRING_UP_DEPS))
 include scripts/bringup.Makefile
 endif
 
-DEFAULT_DEPS += $(KDEVOPS_HOSTS)
-$(KDEVOPS_HOSTS): .config ansible.cfg $(KDEVOPS_HOSTS_TEMPLATE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+DEFAULT_DEPS += $(ANSIBLE_INVENTORY_FILE)
+$(ANSIBLE_INVENTORY_FILE): .config ansible.cfg $(KDEVOPS_HOSTS_TEMPLATE)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_hosts.yml \
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(KDEVOPS_NODES)
 $(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config ansible.cfg $(KDEVOPS_NODES_TEMPLATE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_nodes.yml \
 		--extra-vars=@./extra_vars.yaml
 
@@ -264,7 +261,7 @@ mrproper:
 	$(Q)rm -rf terraform/*/.terraform
 	$(Q)rm -f terraform/*/.terraform.lock.hcl
 	$(Q)rm -f $(KDEVOPS_NODES)
-	$(Q)rm -f $(KDEVOPS_HOSTFILE) $(KDEVOPS_MRPROPER)
+	$(Q)rm -f $(ANSIBLE_CFG_INVENTORY) $(KDEVOPS_MRPROPER)
 	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
 	$(Q)rm -f ansible.cfg
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)

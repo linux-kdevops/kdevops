@@ -25,8 +25,7 @@ endif
 MIRROR_CODE      := $(TOPDIR)/playbooks/roles/linux-mirror/linux-mirror-systemd/
 
 kdevops_linux_mirror: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook \
 		--tags vars,mirror \
 		$(KDEVOPS_PLAYBOOKS_DIR)/linux-mirror.yml \
 		--extra-vars=@./extra_vars.yaml
@@ -37,8 +36,7 @@ mirror: $(KDEVOPS_EXTRA_VARS) kdevops_linux_mirror
 PHONY += mirror
 
 mirror-status: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook \
 		--tags vars,mirror-status \
 		$(KDEVOPS_PLAYBOOKS_DIR)/linux-mirror.yml \
 		--extra-vars=@./extra_vars.yaml

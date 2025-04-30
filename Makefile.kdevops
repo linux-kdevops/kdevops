@@ -2,26 +2,22 @@
 # allow your project to define these and just include this file.
 KDEVOPS_TERRAFORM_DIR ?=	terraform
 KDEVOPS_PLAYBOOKS_DIR ?=	playbooks
-KDEVOPS_HOSTFILE ?=		hosts
 KDEVOPS_LOCAL_WORK :=
 
 kdevops_all: kdevops_deps
 PHONY := kdevops_all
 
 kdevops_terraform_deps:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml
 PHONY += kdevops_terraform_deps
 
 kdevops_install_libvirt:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_configuration=True"
 
 kdevops_configure_libvirt:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_install=True" \
 		-e 'running_user=$(USER)'
 
@@ -33,23 +29,20 @@ PHONY += kdevops_vagrant_deps
 KDEVOPS_VAGRANT_WORK := kdevops_vagrant_deps
 
 kdevops_vagrant_boxes:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant_boxes.yml
 PHONY += kdevops_vagrant_boxes
 KDEVOPS_VAGRANT_WORK += kdevops_vagrant_boxes
 
 kdevops_verify_libvirt_user:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "only_verify_user=True"
 
 PHONY += kdevops_verify_libvirt_user
 KDEVOPS_VAGRANT_WORK += kdevops_verify_libvirt_user
 
 kdevops_libvirt_storage_pool_create:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_storage_pool_create.yml
 
 PHONY += kdevops_libvirt_storage_pool_create
