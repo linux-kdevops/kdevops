@@ -1,5 +1,5 @@
 ---
 - name: Create Directory Data Path (e.g. /data partition)
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: create_data_partition

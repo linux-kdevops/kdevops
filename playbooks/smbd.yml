@@ -1,5 +1,5 @@
 ---
 - name: Set up Samba server with shared volume and system integration
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: smbd

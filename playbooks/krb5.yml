@@ -1,5 +1,5 @@
 ---
 - name: Setup MIT Kerberos V5 KDC and configure NFS clients for Kerberos authentication
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: krb5

@@ -1,5 +1,5 @@
 ---
 - name: Provision and manage iSCSI targets and LUNs for shared block storage
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: iscsi
