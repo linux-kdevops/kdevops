@@ -1,5 +1,5 @@
 ---
 - name: nfstest
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: nfstest

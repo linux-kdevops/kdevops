@@ -1,5 +1,5 @@
 ---
 - name: nfsd
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: nfsd

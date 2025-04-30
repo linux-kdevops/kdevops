@@ -57,7 +57,7 @@ extend-extra-args-devconfig:
 PHONY += devconfig
 devconfig: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i $(KDEVOPS_HOSTFILE) \
-		-l all,nfsd \
+		--limit 'baseline:dev:nfsd' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" \
 		--extra-vars '{ kdevops_cli_install: True }' \
@@ -72,7 +72,7 @@ ifeq (y,$(CONFIG_SYSCTL_TUNING))
 PHONY += sysctl-tunings
 sysctl-tunings: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i $(KDEVOPS_HOSTFILE) \
-		-l all,nfsd \
+		--limit 'baseline:dev:nfsd' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags vars,sysctl
 

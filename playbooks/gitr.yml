@@ -1,5 +1,5 @@
 ---
 - name: gitr
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: gitr

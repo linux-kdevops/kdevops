@@ -1,5 +1,5 @@
 ---
 - name: blktests
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: blktests

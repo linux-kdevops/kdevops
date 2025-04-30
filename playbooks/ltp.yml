@@ -1,5 +1,5 @@
 ---
 - name: ltp
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: ltp

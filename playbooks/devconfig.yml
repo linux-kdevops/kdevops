@@ -1,6 +1,6 @@
 ---
 - name: devconfig
-  hosts: all
+  hosts: baseline:dev
   gather_facts: no
   roles:
     - role: devconfig

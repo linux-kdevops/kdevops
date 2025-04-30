@@ -1,5 +1,5 @@
 ---
 - name: reboot-limit
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: reboot-limit

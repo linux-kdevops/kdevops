@@ -4,6 +4,6 @@
   roles:
     - role: fstests_prep_localhost
 
-- hosts: all
+- hosts: baseline:dev
   roles:
     - role: fstests

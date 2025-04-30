@@ -1,5 +1,5 @@
 ---
 - name: krb5
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: krb5

@@ -1,6 +1,6 @@
 ---
 - name: update_etc_hosts
-  hosts: all
+  hosts: baseline:dev
   gather_facts: no
   roles:
     - role: update_etc_hosts

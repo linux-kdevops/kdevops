@@ -1,5 +1,5 @@
 ---
 - name: rxe
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: rxe

@@ -1,6 +1,6 @@
 ---
 - name: terraform
-  hosts: all
+  hosts: baseline:dev
   gather_facts: false
   roles:
     - role: terraform

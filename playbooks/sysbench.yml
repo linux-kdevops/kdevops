@@ -1,5 +1,5 @@
 ---
 - name: sysbench
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: sysbench
