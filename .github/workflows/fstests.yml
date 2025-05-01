@@ -44,23 +44,23 @@ jobs:
 
       - name: Run kdevops make
         run: |
-          make -j$(nproc)
+          make V=1 -j$(nproc)
 
       - name: Run kdevops make bringup
         run: |
-          make bringup
+          make V=1 bringup
 
       - name: Build linux and boot test nodes on test kernel
         run: |
-          make linux
+          make V=1 linux
 
       - name: Build fstests
         run: |
-          make fstests
+          make V=1 fstests
 
       - name: Run just one fstest to verify we tests and test collection works
         run: |
-          make fstests-baseline TESTS=generic/003
+          make V=1 fstests-baseline TESTS=generic/003
           echo "ok" > ci.result
           find workflows/fstests/results/last-run -name xunit_results.txt -type f -exec cat {} \; > ci.commit_extra || true
           if ! grep -E "failures, [1-9]|errors, [1-9]" ci.commit_extra; then
@@ -70,7 +70,7 @@ jobs:
       - name: Get systemd journal files
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          make journal-dump
+          make V=1 journal-dump
 
       - name: Start SSH Agent
         if: always()  # Ensure this step runs even if previous steps failed
@@ -81,7 +81,7 @@ jobs:
       - name: Build our kdevops archive results
         if: always() # This ensures the step runs even if previous steps failed
         run: |
-          make ci-archive
+          make V=1 ci-archive
 
       - name: Upload our kdevops results archive
         if: always() # This ensures the step runs even if previous steps failed
@@ -94,4 +94,4 @@ jobs:
       - name: Run kdevops make destroy
         if: always()  # This ensures the step runs even if previous steps failed
         run: |
-          make destroy
+          make V=1 destroy
