@@ -38,8 +38,12 @@ KDEVOPS_DEPCHECK = .kdevops.depcheck
 
 PHONY += kconfig-help-menu
 
+define print_target
+	echo "==> [$1]"
+endef
+
 ifeq ($(V),1)
-export Q=
+export Q=@$(call print_target,$@) && set -x &&
 export NQ=true
 else
 export Q=@
