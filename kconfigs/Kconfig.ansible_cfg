@@ -14,6 +14,29 @@ config ANSIBLE_CFG_INVENTORY_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh KDEVOPS_HOSTS)
 
+config ANSIBLE_CFG_FILE
+	string "Ansible configuration file"
+	output yaml
+	default "$(TOPDIR_PATH)/ansible.cfg"
+	help
+	  Path and filename to the Ansible configuration file.
+
+	  This option lets you specify the path and filename for the Ansible
+	  configuration file. If the specified file already exists, it will not
+	  be overwritten. Otherwise, kdevops will generate one using the settings
+	  defined in this Kconfig menu.
+
+	  If this option is left undefined or set to an empty string, kdevops
+	  will not generate any configuration file. In that case, Ansible will
+	  fall back to its own search order to locate a config file:
+	    1. The ANSIBLE_CONFIG environment variable (if set)
+	    2. ./ansible.cfg (in the current working directory)
+	    3. ~/.ansible.cfg (in the user's home directory)
+	    4. /etc/ansible/ansible.cfg (system-wide default)
+
+	  For more details, refer to the Ansible documentation:
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#the-configuration-file
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
