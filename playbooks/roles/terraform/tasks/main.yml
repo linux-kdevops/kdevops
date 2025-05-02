@@ -15,8 +15,6 @@
     cmd: "terraform output -json public_ip_map"
   register: terraform_output
   changed_when: false
-  when:
-    - kdevops_terraform_ssh_config_genkey_overwrite|bool
   tags:
     - ssh
 
@@ -25,8 +23,6 @@
   run_once: true
   ansible.builtin.set_fact:
     public_ip_map: "{{ terraform_output.stdout | from_json }}"
-  when:
-    - kdevops_terraform_ssh_config_genkey_overwrite|bool
   tags:
     - ssh
 
@@ -40,8 +36,6 @@
     insertafter: "EOF"
     marker: "# {mark} host configuration for {{ inventory_hostname }}"
     mode: "u=rw,g=r,o=r"
-  when:
-    - kdevops_terraform_ssh_config_genkey_overwrite|bool
   tags:
     - ssh
 
@@ -55,8 +49,6 @@
     marker: "# {mark} Managed by kdevops"
     mode: "u=rw,g=r,o=r"
     block: "Include {{ kdevops_ssh_config_prefix }}*"
-  when:
-    - kdevops_terraform_ssh_config_genkey_overwrite|bool
   tags:
     - ssh
 

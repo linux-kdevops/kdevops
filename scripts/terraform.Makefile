@@ -92,7 +92,6 @@ export KDEVOPS_SSH_PRIVKEY:=$(basename $(KDEVOPS_SSH_PUBKEY))
 
 ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE))
 DEFAULT_DEPS += remove-ssh-key
-TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_genkey_overwrite='True'
 endif
 
 DEFAULT_DEPS += $(KDEVOPS_SSH_PRIVKEY)
