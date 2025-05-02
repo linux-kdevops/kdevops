@@ -85,10 +85,10 @@ endif # CONFIG_KDEVOPS_SSH_CONFIG_UPDATE
 export KDEVOPS_SSH_PUBKEY:=$(shell realpath $(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_PUBKEY_FILE)))
 TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_pubkey_file='$(KDEVOPS_SSH_PUBKEY)'
 TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_user='$(SSH_CONFIG_USER)'
+TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_privkey_file='$(basename $(KDEVOPS_SSH_PUBKEY))'
 
 ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY))
 export KDEVOPS_SSH_PRIVKEY:=$(basename $(KDEVOPS_SSH_PUBKEY))
-TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_privkey_file='$(KDEVOPS_SSH_PRIVKEY)'
 
 ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE))
 DEFAULT_DEPS += remove-ssh-key
