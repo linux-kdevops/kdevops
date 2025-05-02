@@ -127,7 +127,7 @@ linux-clone-clients: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
 		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) \
-		--tags vars,deps,clone
+		--tags vars,clone
 
 PHONY += linux-clone-9p
 linux-clone-9p: $(KDEVOPS_NODES)
@@ -135,7 +135,7 @@ linux-clone-9p: $(KDEVOPS_NODES)
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" \
-		--tags vars,deps,clone
+		--tags vars,clone
 
 PHONY += linux-clone
 linux-clone: $(KDEVOPS_NODES) $(LINUX_CLONE_DEFAULT_TYPE)
