@@ -14,5 +14,5 @@
 - name: Generate kdevops ansible.cfg
   ansible.builtin.template:
     src: "ansible.cfg.j2"
-    dest: "{{ topdir_path }}/ansible.cfg"
+    dest: "{{ ansible_cfg_file }}"
     mode: '0755'
