@@ -7,22 +7,22 @@
   tags:
     - bringup
 
-- name: Retrieve the public_ip_map from terraform
+- name: Retrieve the controller_ip_map from terraform
   delegate_to: localhost
   run_once: true
   ansible.builtin.command:
     chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
-    cmd: "terraform output -json public_ip_map"
+    cmd: "terraform output -json controller_ip_map"
   register: terraform_output
   changed_when: false
   tags:
     - ssh
 
-- name: Convert the retrieved public_ip_map into a dictionary
+- name: Convert the retrieved controller_ip_map into a dictionary
   delegate_to: localhost
   run_once: true
   ansible.builtin.set_fact:
-    public_ip_map: "{{ terraform_output.stdout | from_json }}"
+    controller_ip_map: "{{ terraform_output.stdout | from_json }}"
   tags:
     - ssh
 

@@ -13,5 +13,5 @@ if [[ ${COUNT} -eq 1 ]]; then
 else
   echo "There are ${COUNT} active terraform resources on '$1'."
 fi
-terraform output public_ip_map
+terraform output controller_ip_map
 exit 0
