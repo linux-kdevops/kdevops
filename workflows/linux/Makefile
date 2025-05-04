@@ -42,7 +42,6 @@ endif
 
 LINUX_CLONE_DEFAULT_TYPE := linux-clone-clients
 ifeq (y,$(CONFIG_BOOTLINUX_9P))
-BOOTLINUX_ARGS	+= bootlinux_9p=True
 BOOTLINUX_ARGS	+= bootlinux_9p_host_path='$(subst ",,$(CONFIG_BOOTLINUX_9P_HOST_PATH))'
 BOOTLINUX_ARGS	+= bootlinux_9p_msize='$(subst ",,$(CONFIG_BOOTLINUX_9P_MSIZE))'
 BOOTLINUX_ARGS	+= bootlinux_9p_fsdev='$(subst ",,$(CONFIG_BOOTLINUX_9P_FSDEV))'
