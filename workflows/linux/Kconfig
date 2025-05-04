@@ -31,27 +31,52 @@ config BOOTLINUX_PURE_IOMAP
 	bool "Use a kernel configuration which disables buffer heads"
 	default HAVE_SUPPORTS_PURE_IOMAP
 	depends on BOOTLINUX_HAS_PURE_IOMAP_CONFIG
-	help
-	  This will let you choose use 9p to build Linux. What this does is
 
 endif # HAVE_SUPPORTS_PURE_IOMAP
 
-config BOOTLINUX_9P
-	bool "Use 9p to build Linux"
-	depends on LIBVIRT && !GUESTFS_LACKS_9P
-	default LIBVIRT
+choice
+	prompt "Kernel build location"
+	default BOOTLINUX_TARGETS
 	help
-	  This will let you choose use 9p to build Linux. What this does is
-	  use your localhost to git clone Linux under the assumption your
-	  host is more powerful than the guests you are going to instantiate.
-	  The localhost then will be used to build Linux using all threads
-	  possible. The installation of Linux on the guest is done only with
-	  the install target, the guest gets read-only access to the host's
-	  path where Linux is closed using 9p.
+	  Choose where you want to compile the test kernel. The help
+	  for the choices below explain how each alternative works.
 
-	  You should not have to modify any default 9p settings except maybe
-	  where your localhost path for your git tree is. You should keep
-	  the other settings as-is unless you know what you are doing.
+config BOOTLINUX_TARGETS
+	bool "Target nodes"
+	output yaml
+	help
+	  Choosing this option clones and builds the test kernel on
+	  each target node, then installs the test kernel and
+	  reboots each target node. These actions are triggered by
+	  using "make linux".
+
+	  This choice is best when the target node configuration is
+	  vastly different than the controller node's configuration.
+	  It is the only choice available when the target nodes
+	  reside in the cloud.
+
+config BOOTLINUX_9P
+	bool "Controller node"
+	output yaml
+	depends on LIBVIRT && !GUESTFS_LACKS_9P
+	help
+	  Choosing this option clones and builds the test kernel on
+	  the Ansible controller node. Once the test kernel is
+	  built, the target nodes access the controller node's build
+	  directory via 9p to install the test kernel, then each
+	  target node is rebooted into the new kernel. These actions
+	  are triggered by using "make linux".
+
+	  This is quick and efficient (since the kernel is built only
+	  once, and the build has access to all compute resources on
+	  the controller node). The source tree and compiled artifacts
+	  are not removed when the test runners are destroyed, so
+	  subsequent builds can be fast.
+
+	  However, 9p is available only when using a local
+	  virtualization method such as libvirt.
+
+endchoice
 
 if BOOTLINUX_9P
 
