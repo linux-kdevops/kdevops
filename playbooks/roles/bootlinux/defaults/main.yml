@@ -46,3 +46,5 @@ kdevops_workflow_enable_cxl: False
 
 bootlinux_cxl_test: False
 bootlinux_tree_set_by_cli: False
+
+bootlinux_artifacts_dir: "{{ topdir_path }}/workflows/linux/artifacts"
