@@ -19,13 +19,13 @@
   ansible.builtin.import_tasks:
     file: install-deps/main.yml
 
-- name: Install dependencies to build the Linux kernel
-  delegate_to: localhost
-  run_once: true
+# When using 9P builds, we still need make on the guest for modules_install
+- name: Install essential build tools for 9P builds
   ansible.builtin.import_tasks:
-    file: install-deps/main.yml
+    file: install-minimal-deps/main.yml
   when:
     - bootlinux_9p|bool
+    - not workflow_linux_packaged|bool
 
 # We do this regardless of what distro you use
 - name: Install b4
@@ -38,20 +38,6 @@
     - target_linux_install_b4 is defined
     - target_linux_install_b4
     - ansible_facts['os_family']|lower != 'debian'
-
-- name: Install b4 on host
-  become: yes
-  become_method: sudo
-  pip:
-    name:
-      - b4
-  when:
-    - target_linux_install_b4 is defined
-    - target_linux_install_b4
-    - bootlinux_9p|bool
-    - ansible_facts['os_family']|lower != 'debian'
-  run_once: true
-  delegate_to: localhost
 
 - name: Set bootlinux_b4_am_this_host as a fact for dev hosts only
   set_fact:
@@ -68,9 +54,7 @@
 - include_role:
     name: create_data_partition
 
-# Distro agnostic stuff to build and boot Linux goes below
-
-- name: Mount bootlinux 9p and add to fstab if it does not exist
+- name: Mount bootlinux 9p on each target node
   become: yes
   become_flags: 'su - -c'
   become_method: sudo
@@ -84,34 +68,11 @@
   when:
     - bootlinux_9p|bool
 
-- name: Add safe exception for a clone
-  command: "git config --global --add safe.directory {{ target_linux_git }}"
-  tags: [ 'clone']
+- name: Build the Linux kernel on the controller host
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/build/9p.yml"
   when:
     - bootlinux_9p|bool
-    - target_linux_git is string and target_linux_git.startswith('/')
-  run_once: true
-  delegate_to: localhost
-
-- name: Check if target directory exists when using 9p and Linux CLI was set
-  stat:
-    path: "{{ bootlinux_9p_host_path }}"
-  register: target_directory_stat
-  run_once: true
-  delegate_to: localhost
-  when:
-    - bootlinux_9p|bool
-    - bootlinux_tree_set_by_cli|bool
-
-- name: Fail if target directory does not exist when using 9p and Linux CLI was set
-  fail:
-    msg: "The target directory {{ bootlinux_9p_host_path }} does not exist."
-  run_once: true
-  delegate_to: localhost
-  when:
-    - bootlinux_9p|bool
-    - bootlinux_tree_set_by_cli|bool
-    - not target_directory_stat.stat.exists
 
 - name: git clone {{ target_linux_tree }} on the target nodes
   git:
@@ -128,24 +89,6 @@
   when:
     - not bootlinux_9p|bool
 
-- name: git clone {{ target_linux_tree }} on the control node
-  git:
-    repo: "{{ target_linux_git }}"
-    dest: "{{ bootlinux_9p_host_path }}"
-    update: yes
-    depth: "{{ target_linux_shallow_depth }}"
-    version: "{{ target_linux_ref }}"
-  retries: 3
-  delay: 5
-  register: result
-  until: not result.failed
-  tags: [ 'clone']
-  when:
-    - bootlinux_9p|bool
-    - not bootlinux_tree_set_by_cli|bool
-  run_once: true
-  delegate_to: localhost
-
 - name: Copy kernel delta if requested on the target nodes
   template:
     src: "{{ target_linux_extra_patch }}"
@@ -157,17 +100,6 @@
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
 
-- name: Copy kernel delta if requested on the control node
-  template:
-    src: "{{ target_linux_extra_patch }}"
-    dest: "{{ bootlinux_9p_host_path }}/{{ target_linux_extra_patch }}"
-    mode: 0644
-  when:
-    - bootlinux_9p|bool
-    - target_linux_extra_patch is defined
-  run_once: true
-  delegate_to: localhost
-
 - name: Apply kernel delta if requested on the target nodes
   command: "git am {{ target_linux_extra_patch }}"
   args:
@@ -175,16 +107,6 @@
   when:
     - not bootlinux_9p|bool
     - target_linux_extra_patch is defined
-
-- name: Apply kernel delta if requested on the control node
-  command: "git am {{ target_linux_extra_patch }}"
-  args:
-    chdir: "{{ bootlinux_9p_host_path }}"
-  when:
-    - bootlinux_9p|bool
-    - target_linux_extra_patch is defined
-  run_once: true
-  delegate_to: localhost
 
 - name: Set git user name and email if needed
   shell: |
@@ -215,18 +137,6 @@
     - target_linux_apply_patch_message_id | length > 0
     - bootlinux_b4_am_this_host|bool
 
-- name: Apply message patch set if requested on the control node
-  shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
-  args:
-    chdir: "{{ bootlinux_9p_host_path }}"
-  when:
-    - bootlinux_9p|bool
-    - target_linux_apply_patch_message_id is defined
-    - target_linux_apply_patch_message_id | length > 0
-    - bootlinux_b4_am_this_host|bool
-  run_once: true
-  delegate_to: localhost
-
 - name: Copy configuration for Linux {{ target_linux_tree }} to the target nodes
   template:
     src: "{{ linux_config }}"
@@ -237,29 +147,11 @@
   when:
     - not bootlinux_9p|bool
 
-- name: Copy configuration for Linux {{ target_linux_tree }} on the control node
-  template:
-    src: "{{ linux_config }}"
-    dest: "{{ bootlinux_9p_host_path }}/.config"
-    mode: 0644
-  when:
-    - bootlinux_9p|bool
-  run_once: true
-  delegate_to: localhost
-
 - name: Set kernel localversion if requested on the target nodes
   shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
   when:
     - not bootlinux_9p|bool
     - target_linux_localversion is defined and target_linux_localversion != ""
-
-- name: Set kernel localversion if requested on the control node
-  shell: "echo {{ target_linux_localversion }} > {{ bootlinux_9p_host_path }}/localversion"
-  when:
-    - bootlinux_9p|bool
-    - target_linux_localversion is defined and target_linux_localversion != ""
-  run_once: true
-  delegate_to: localhost
 
 - name: Configure Linux {{ target_linux_tree }} on the target nodes
   shell: |
@@ -273,21 +165,6 @@
     executable: /bin/bash
   when:
     - not bootlinux_9p|bool
-
-- name: Configure Linux {{ target_linux_tree }} on the control node
-  shell: |
-    set -o pipefail
-    yes "" | make oldconfig
-  register: configure_done
-  changed_when: configure_done.rc == 0 or configure_done.rc == 141
-  failed_when: configure_done.rc != 0 and configure_done.rc != 141
-  args:
-    chdir: "{{ bootlinux_9p_host_path }}"
-    executable: /bin/bash
-  when:
-    - bootlinux_9p|bool
-  run_once: true
-  delegate_to: localhost
 
 - name: Build {{ target_linux_tree }} on the target nodes
   command: "{{ target_linux_make_cmd }}"
@@ -326,95 +203,6 @@
   when:
     - not bootlinux_9p|bool
     - snaik_oil_file.stat.exists
-
-- name: Get nproc on the control node
-  command: "{{ num_jobs }}"
-  tags: [ 'build-linux', 'cxl-build' ]
-  register: nproc_9p
-  when:
-    - bootlinux_9p|bool
-  run_once: true
-  delegate_to: localhost
-
-- name: Get kernelversion
-  make:
-    chdir: "{{ bootlinux_9p_host_path }}"
-    target: kernelversion
-  register: target_linux_kernelversion
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-    - target_linux_kernelrelease | length > 0
-  run_once: true
-  delegate_to: localhost
-
-- name: Generate user kernelrelease {{ target_linux_kernelversion.stdout }}-{{ target_linux_kernelrelease }}
-  set_fact:
-    target_user_kernelrelease: "{{ target_linux_kernelversion.stdout }}-{{ target_linux_kernelrelease }}"
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-    - target_linux_kernelrelease | length > 0
-  run_once: true
-  delegate_to: localhost
-
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
-  make:
-    jobs: "{{ nproc_9p.stdout }}"
-    chdir: "{{ bootlinux_9p_host_path }}"
-    params:
-      KERNELRELEASE={{ target_user_kernelrelease }}
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-    - target_linux_kernelrelease | length > 0
-  run_once: true
-  delegate_to: localhost
-
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
-  make:
-    jobs: "{{ nproc_9p.stdout }}"
-    chdir: "{{ bootlinux_9p_host_path }}"
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-    - target_linux_kernelrelease | length == 0
-  run_once: true
-  delegate_to: localhost
-
-- name: Build {{ target_linux_tree }} cxl_test on the control node using {{ nproc_9p.stdout }} threads
-  make:
-    jobs: "{{ nproc_9p.stdout }}"
-    chdir: "{{ bootlinux_9p_host_path }}"
-    params:
-      M: "tools/testing/cxl"
-  tags: [ 'build-linux', 'cxl-build' ]
-  when:
-    - bootlinux_9p|bool
-    - bootlinux_cxl_test|bool
-  run_once: true
-  delegate_to: localhost
-
-- name: See if snake-oil cert file is present on host
-  stat:
-    path: "{{ bootlinux_9p_host_path }}/certs/signing_key.pem"
-  register: snaik_oil_file_9p
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-  run_once: true
-  delegate_to: localhost
-
-- name: Ensure we allow world to read the snake oil in case of NFS or 9p read only usage
-  file:
-    path: "{{ bootlinux_9p_host_path }}/certs/signing_key.pem"
-    mode: "0755"
-  tags: [ 'build-linux' ]
-  when:
-    - bootlinux_9p|bool
-    - snaik_oil_file_9p.stat.exists
-  run_once: true
-  delegate_to: localhost
 
 - name: Run uname before
   command: "uname -r"
