@@ -1,0 +1,19 @@
+---
+# Install minimal dependencies needed for kernel installation on Debian
+# This is used when bootlinux_9p is enabled and the build happens on the host
+
+- name: Update apt cache
+  become: yes
+  become_method: sudo
+  apt:
+    update_cache: yes
+
+- name: Install minimal build tools for kernel installation
+  become: yes
+  become_method: sudo
+  apt:
+    name:
+      - make
+      - gcc
+      - kmod
+    state: present

@@ -1,0 +1,13 @@
+---
+# Install minimal dependencies needed for kernel installation on SUSE
+# This is used when bootlinux_9p is enabled and the build happens on the host
+
+- name: Install minimal build tools for kernel installation
+  become: yes
+  become_method: sudo
+  zypper:
+    name:
+      - make
+      - gcc
+      - kmod-compat
+    state: present

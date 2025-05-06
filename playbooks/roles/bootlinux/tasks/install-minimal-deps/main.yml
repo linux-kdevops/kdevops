@@ -1,0 +1,15 @@
+---
+- name: Debian-specific minimal setup
+  ansible.builtin.import_tasks: debian/main.yml
+  when:
+    - ansible_os_family == "Debian"
+
+- name: SuSE-specific minimal setup
+  ansible.builtin.import_tasks: suse/main.yml
+  when:
+    - ansible_os_family == "Suse"
+
+- name: Red Hat-specific minimal setup
+  ansible.builtin.import_tasks: redhat/main.yml
+  when:
+    - ansible_os_family == "RedHat"
