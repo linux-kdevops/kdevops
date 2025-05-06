@@ -68,6 +68,24 @@
       - btrfs-progs
   when: ansible_distribution == 'Fedora'
 
+- name: Install rpmbuild
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    name:
+      - elfutils-devel
+      - perl-core
+      - rpm-build
+      - rsync
+    state: present
+    update_cache: true
+  retries: 3
+  delay: 5
+  register: rpmbuild_result
+  until: rpmbuild_result is succeeded
+  when:
+    - bootlinux_builder|bool
+
 - name: Remove packages that mess with initramfs
   become: yes
   become_method: sudo
