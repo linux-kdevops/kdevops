@@ -127,6 +127,16 @@
       when:
         - passthrough_devices.matched > 0
 
+- name: Ensure 9P host directory exists before bringing nodes on libvirt
+  file:
+    path: "{{ bootlinux_9p_host_path }}"
+    state: directory
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+  when:
+    - bootlinux_9p|bool
+
 - name: Boot each target node
   community.libvirt.virt:
     name: "{{ inventory_hostname }}"

@@ -1,0 +1,27 @@
+---
+# Install minimal dependencies needed for kernel installation on Red Hat
+# This is used when bootlinux_9p is enabled and the build happens on the host
+
+- name: Install minimal build tools for kernel installation
+  become: yes
+  become_method: sudo
+  yum:
+    name:
+      - make
+      - gcc
+      - kmod
+    state: present
+  when:
+    - ansible_facts['distribution_major_version']|int < 8
+
+- name: Install minimal build tools for kernel installation (dnf)
+  become: yes
+  become_method: sudo
+  dnf:
+    name:
+      - make
+      - gcc
+      - kmod
+    state: present
+  when:
+    - ansible_facts['distribution_major_version']|int >= 8
