@@ -80,6 +80,12 @@
   when:
     - bootlinux_targets|bool
 
+- name: Build kernel on the builder node
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/build/builder.yml"
+  when:
+    - bootlinux_builder|bool
+
 - name: Run uname before
   command: "uname -r"
   register: uname_cmd_before
