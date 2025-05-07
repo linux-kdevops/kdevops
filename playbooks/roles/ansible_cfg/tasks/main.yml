@@ -15,4 +15,9 @@
   ansible.builtin.template:
     src: "ansible.cfg.j2"
     dest: "{{ topdir_path }}/ansible.cfg"
+
+- name: Update ansible.cfg access modification time so make sees it updated
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/ansible.cfg"
+    state: touch
     mode: '0755'

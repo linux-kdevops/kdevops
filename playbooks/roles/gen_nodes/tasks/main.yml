@@ -535,6 +535,12 @@
     - ansible_nodes_template.stat.exists
     - not dedicated_nodes_template.stat.exists
 
+- name: "Update {{ kdevops_nodes }} access modification time so make sees it updated"
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    state: touch
+    mode: '0755'
+
 - name: Import list of guest nodes
   include_vars: "{{ topdir_path }}/{{ kdevops_nodes }}"
   ignore_errors: yes

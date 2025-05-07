@@ -68,6 +68,12 @@
     - not kdevops_workflows_dedicated_workflow
     - ansible_hosts_template.stat.exists
 
+- name: Update Ansible inventory access modification time so make sees it updated
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    state: touch
+    mode: '0755'
+
 - name: Generate the Ansible hosts file for dedicated cxl work
   tags: [ 'hosts' ]
   template:
