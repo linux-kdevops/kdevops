@@ -39,6 +39,11 @@ jobs:
           pre-commit run codespell --files docs/*
         continue-on-error: true
 
+      - name: pre-commit ansible-lint playbooks
+        run: |
+          pre-commit run ansible-lint --all-files
+        continue-on-error: true
+
       - name: Run kdevops make defconfig-repo
         run: |
           KDEVOPS_TREE_REF="${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"

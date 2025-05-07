@@ -5,3 +5,8 @@ repos:
       - id: codespell
         additional_dependencies:
           - tomli
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v25.4.0
+    hooks:
+      - id: ansible-lint
+        entry: bash scripts/ansible-lint.sh
