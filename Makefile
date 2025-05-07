@@ -192,8 +192,7 @@ include scripts/gen-nodes.Makefile
 	false)
 
 
-PHONY += ansible.cfg
-ansible.cfg:
+ansible.cfg: .config
 	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ansible_cfg.yml \
@@ -201,7 +200,7 @@ ansible.cfg:
 
 PHONY += $(EXTRA_VAR_INPUTS) $(EXTRA_VAR_INPUTS_LAST)
 
-$(KDEVOPS_EXTRA_VARS): .config ansible.cfg $(EXTRA_VAR_INPUTS) $(EXTRA_VAR_INPUTS_LAST)
+$(KDEVOPS_EXTRA_VARS): .config $(EXTRA_VAR_INPUTS) $(EXTRA_VAR_INPUTS_LAST)
 
 playbooks/secret.yml:
 	@if [[ "$(CONFIG_KDEVOPS_REG_TWOLINE_REGCODE)" == "" ]]; then \
