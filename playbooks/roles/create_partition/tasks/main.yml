@@ -92,12 +92,7 @@
 
 - name: Partitions | Collect partition information onto part_mounts
   set_fact:
-    part_mounts: |
-      {%- set x = [] -%}
-      {%- for line in result.stdout_lines -%}
-      {{ x.append(line.split()) }}
-      {%- endfor -%}
-      {{ x }}
+    part_mounts: "{{ result.stdout_lines | map('split') | list }}"
   when: >
     result is success and
     result.stdout_lines is defined
