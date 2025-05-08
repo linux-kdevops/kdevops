@@ -477,50 +477,6 @@
   ansible.builtin.command: "timedatectl show -p Timezone --value"
   register: kdevops_host_timezone
 
-- name: Verify vagrant template file exists {{ kdevops_vagrant_template_full_path }}
-  stat:
-    path: "{{ kdevops_vagrant_template_full_path }}"
-  register: vagrant_template
-  when:
-    - kdevops_enable_vagrant
-
-- name: Check if {{ kdevops_vagrant }} exists already
-  stat:
-    path: "{{ topdir_path }}/{{ kdevops_vagrant }}"
-  register: vagrant_dest
-  when:
-    - kdevops_enable_vagrant
-
-- name: Ensure proper permission on {{ kdevops_vagrant }}
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
-    path: "{{ topdir_path }}/{{ kdevops_vagrant }}"
-    owner: "{{ my_user.stdout }}"
-    group: "{{ my_group.stdout }}"
-  when:
-    - kdevops_enable_vagrant|bool
-    - vagrant_dest.stat.exists
-
-- name: Generate the {{ kdevops_vagrant_generated }} file using {{ kdevops_vagrant_template }} as jinja2 source template
-  tags: [ 'vagrant' ]
-  template:
-    src: "{{ kdevops_vagrant_template | basename }}"
-    dest: "{{ topdir_path }}/{{ kdevops_vagrant_generated }}"
-    force: yes
-  when:
-    - kdevops_enable_vagrant|bool
-    - vagrant_template.stat.exists
-
-- name: Copy the generated {{ kdevops_vagrant_generated }} to {{ kdevops_vagrant }} if it does not exist already
-  tags: [ 'vagrant' ]
-  command: "cp {{ topdir_path }}/{{ kdevops_vagrant_generated }} {{ topdir_path }}/{{ kdevops_vagrant }}"
-  when:
-    - kdevops_enable_vagrant|bool
-    - vagrant_template.stat.exists
-    - not vagrant_dest.stat.exists
-
 - name: Verify if dedicated workflow defined a custom nodes template and the final file exists {{ kdevops_nodes_template_full_path }}
   stat:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
