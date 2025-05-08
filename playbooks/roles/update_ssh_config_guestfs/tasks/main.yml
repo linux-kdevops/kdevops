@@ -31,8 +31,8 @@
   meta: end_play
   when:
     - ssh_config.stat.exists
-    - kdevops_ssh_include.found
-    - fixed_ssh_entry.found
+    - kdevops_ssh_include.found | bool
+    - fixed_ssh_entry.found | bool
 
 # If we're still running it means the correct include directive following a new
 # line was not found. So remove old stale include directives which may be
