@@ -305,13 +305,20 @@
     - ansible_nodes_template.stat.exists
 
 - name: Infer enabled blktests test section types
-  vars:
-    kdevops_config_data: "{{ lookup('file', topdir_path + '/.config') }}"
-    config_val: "CONFIG_BLKTESTS_SECTION_"
-    config_block_test_types: "{{ kdevops_config_data | regex_findall('^' + config_val + '(.*)=y$', multiline=True) }}"
-    config_block_test_type_names: "{{ config_block_test_types | lower }}"
   set_fact:
-    blktests_enabled_test_types: "{{ [kdevops_host_prefix + '-'] | product(config_block_test_type_names) | map('join') | list }}"
+    blktests_enabled_test_types: >-
+      {{
+        [kdevops_host_prefix + '-']
+        | product(
+            lookup('file', topdir_path + '/.config')
+            | regex_findall('^CONFIG_BLKTESTS_SECTION_(.*)=y$', multiline=True)
+            | map('lower')
+            | list
+          )
+        | map('join')
+        | list
+      }}
+
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
