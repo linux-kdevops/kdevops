@@ -435,6 +435,23 @@
   when:
     - new_expunges.stdout != 0
 
+- name: Check if results directory is empty
+  find:
+    paths: "{{ blktests_results_full_path }}/{{ last_kernel }}"
+    file_type: any
+  register: result_dir_check
+  delegate_to: localhost
+  run_once: true
+  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+
+- name: Inform user if results directory is empty
+  debug:
+    msg: "Skipping compression: {{ blktests_results_full_path }}/{{ last_kernel }} is empty."
+  when: result_dir_check.matched == 0
+  run_once: true
+  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  delegate_to: localhost
+
 # You are encouraged to commit the compressed results of failed tests
 # so we keep an archive
 - name: Compress results {{ blktests_results_full_path }}{{ last_kernel }}.xz
@@ -442,6 +459,7 @@
     path: "{{ blktests_results_full_path }}/{{ last_kernel }}"
     dest: "{{ blktests_results_full_path }}/{{ last_kernel }}.xz"
     format: xz
+  when: result_dir_check.matched != 0
   run_once: true
   tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
   delegate_to: localhost
