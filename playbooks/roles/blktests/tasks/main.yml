@@ -437,7 +437,7 @@
 
 # You are encouraged to commit the compressed results of failed tests
 # so we keep an archive
-- name: Compress results {{ blktests_results_full_path }}.xz
+- name: Compress results {{ blktests_results_full_path }}{{ last_kernel }}.xz
   community.general.archive:
     path: "{{ blktests_results_full_path }}/{{ last_kernel }}"
     dest: "{{ blktests_results_full_path }}/{{ last_kernel }}.xz"
