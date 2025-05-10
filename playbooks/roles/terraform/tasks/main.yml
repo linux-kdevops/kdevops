@@ -58,6 +58,15 @@
   tags:
     - ssh
 
+- name: Remove the ephemeral ssh config file on the control host
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ kdevops_ssh_config }}"
+    state: absent
+  tags:
+    - destroy
+
 - name: Destroy terraform resources
   delegate_to: localhost
   run_once: true
@@ -65,14 +74,5 @@
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: absent
     force_init: true
-  tags:
-    - destroy
-
-- name: Remove the ephemeral ssh config file on the control host
-  delegate_to: localhost
-  run_once: true
-  ansible.builtin.file:
-    path: "{{ kdevops_ssh_config }}"
-    state: absent
   tags:
     - destroy
