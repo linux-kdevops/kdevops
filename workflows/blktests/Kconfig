@@ -389,3 +389,11 @@ endif # !BLKTESTS_MANUAL_COVERAGE
 endmenu
 
 endif # KDEVOPS_WORKFLOW_ENABLE_BLKTESTS
+
+config BLKTESTS_RESULTS_ALL
+	bool "Copy all results"
+	default n
+	output yaml
+	help
+	  By default, kdevops only archives failed tests. Enable this option to
+	  archive all test results, including successful runs.
