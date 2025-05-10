@@ -255,8 +255,10 @@ mrproper:
 	$(Q)$(MAKE) -f scripts/build.Makefile clean
 	$(Q)$(MAKE) -f scripts/build.Makefile $@
 	$(Q)rm -f $(KDEVOPS_DEPCHECK)
+	$(Q)rm -f terraform/*/terraform.tfstat*
 	$(Q)rm -f terraform/*/terraform.tfvars
 	$(Q)rm -rf terraform/*/.terraform
+	$(Q)rm -f terraform/*/.terraform.lock.hcl
 	$(Q)rm -f $(KDEVOPS_NODES)
 	$(Q)rm -f $(KDEVOPS_HOSTFILE) $(KDEVOPS_MRPROPER)
 	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
