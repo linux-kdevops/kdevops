@@ -35,6 +35,8 @@ def main():
     parser = argparse.ArgumentParser(description='Get list of expunge files not yet committed in git')
     parser.add_argument('--clean-dir-only', metavar='<clean_dir_only>', type=str, default='none',
                         help='Do not perform an evaluation, just clean empty directories on the specified directory')
+    parser.add_argument('--copy-all', action='store_true',
+                        help='Copy all test results without filtering')
     args = parser.parse_args()
 
     if not os.path.isfile(blktests_last_kernel):
@@ -61,42 +63,43 @@ def main():
     sys.stdout.write("Copying %s to %s ...\n" % (last_run_dir, target_results))
     copytree(last_run_dir, target_results, dirs_exist_ok=True)
 
-    for root, dirs, all_files in os.walk(target_results):
-        for fname in all_files:
-            f = os.path.join(root, fname)
-            if os.path.isdir(f):
-                continue
-            if not os.path.isfile(f):
-                continue
-            test_name_list = f.split(target_results)
-            if len(test_name_list) < 1:
-                continue
-            test_name_full = test_name_list[1]
-            test_name_full_list = test_name_full.split("/")
-            if len(test_name_full_list) != 3:
-                continue
-            bdev = test_name_full_list[0]
-            group = test_name_full_list[1]
-            test_name_file = test_name_full_list[2]
-            test_name = ""
-            test_name_file_list = test_name_file.split(".")
-            if len(test_name_file_list) == 0:
-                test_name = test_name_file
-            else:
-                test_name = test_name_file_list[0]
+    if not args.copy_all:
+        for root, dirs, all_files in os.walk(target_results):
+            for fname in all_files:
+                f = os.path.join(root, fname)
+                if os.path.isdir(f):
+                    continue
+                if not os.path.isfile(f):
+                    continue
+                test_name_list = f.split(target_results)
+                if len(test_name_list) < 1:
+                    continue
+                test_name_full = test_name_list[1]
+                test_name_full_list = test_name_full.split("/")
+                if len(test_name_full_list) != 3:
+                    continue
+                bdev = test_name_full_list[0]
+                group = test_name_full_list[1]
+                test_name_file = test_name_full_list[2]
+                test_name = ""
+                test_name_file_list = test_name_file.split(".")
+                if len(test_name_file_list) == 0:
+                    test_name = test_name_file
+                else:
+                    test_name = test_name_file_list[0]
 
-            test_dir = os.path.dirname(f)
-            name_lookup_base = test_dir + '/' + test_name + '*'
-            name_lookup = test_dir + '/' + test_name + '.*'
-            listing = glob.glob(name_lookup)
-            bad_ext_found = False
-            if len(listing) > 0:
-                for ext_file in listing:
-                    if ext_file.endswith(".dmesg") or ext_file.endswith(".bad"):
-                        bad_ext_found = True
-            if not bad_ext_found:
-                for r in glob.glob(name_lookup_base):
-                    os.unlink(r)
+                test_dir = os.path.dirname(f)
+                name_lookup_base = test_dir + '/' + test_name + '*'
+                name_lookup = test_dir + '/' + test_name + '.*'
+                listing = glob.glob(name_lookup)
+                bad_ext_found = False
+                if len(listing) > 0:
+                    for ext_file in listing:
+                        if ext_file.endswith(".dmesg") or ext_file.endswith(".bad"):
+                            bad_ext_found = True
+                if not bad_ext_found:
+                    for r in glob.glob(name_lookup_base):
+                        os.unlink(r)
     clean_empty_dir(target_results)
 
 if __name__ == '__main__':

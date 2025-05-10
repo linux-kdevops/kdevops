@@ -420,6 +420,15 @@
   local_action: "shell ./python/workflows/blktests/gen-results-dir.py"
   tags: [ 'blktests', 'copy_results', 'print_results', 'augment_expunge_list' ]
   run_once: true
+  when:
+    - not blktests_results_all
+
+- name: Copy all last-run files to results directory for full results
+  local_action: "shell ./python/workflows/blktests/gen-results-dir.py --copy-all"
+  tags: [ 'blktests', 'copy_results', 'print_results', 'augment_expunge_list' ]
+  run_once: true
+  when:
+    - blktests_results_all | bool
 
 - name: Print blktests new expunge files for which are not yet committed
   local_action: "shell ./python/workflows/blktests/get_new_expunge_files.py {{ blktests_expunges_target }}"
