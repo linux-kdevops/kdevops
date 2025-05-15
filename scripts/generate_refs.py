@@ -257,7 +257,7 @@ def remote(args) -> List:
     return [heads["stdout"], tags["stdout"]]
 
 
-def gitref_getreflist(args, reflist):
+def gitref_getreflist(args, reflist, extraconfs):
     refs = []
     for refline in reflist.splitlines():
         if "^{}" in refline:
@@ -265,6 +265,8 @@ def gitref_getreflist(args, reflist):
         if len(refs) >= args.refs:
             break
         ref_name = refline.split("/")[-1]
+        if any(config["ref"] == ref_name for config in extraconfs):
+            continue
         refs.append(ref_name)
         logging.debug("release: {}".format(ref_name))
     return refs
@@ -296,14 +298,15 @@ def gitref(args) -> None:
     # Only generate git reference if we have connection. Otherwise the output
     # file would contain static reference only and they should be already
     # part of the kreleases generation.
+    extraconfs = _get_extraconfs(args)
     if _check_connection("git.kernel.org", 80):
         reflist = []
         refstr = remote(args)
         for rl in refstr:
-            _refs = gitref_getreflist(args, rl)
+            _refs = gitref_getreflist(args, rl, extraconfs)
             for r in _refs:
                 reflist.append(r)
-        ref_generator(args, reflist, _get_extraconfs(args))
+        ref_generator(args, reflist, extraconfs)
 
 
 def kreleases(args) -> None:
