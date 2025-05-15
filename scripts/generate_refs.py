@@ -202,7 +202,6 @@ def ref_generator(args, reflist, extraconfs) -> None:
         f.write('\tprompt "Tag or branch to use"\n\n')
 
     logging.debug("Generating...")
-    refs.update(_ref_generator_choices(args, reflist, len(refs)))
 
     if extraconfs:
         for config in extraconfs:
@@ -211,6 +210,8 @@ def ref_generator(args, reflist, extraconfs) -> None:
                     args, config["config"], config["ref"], config["help"]
                 )
             )
+
+    refs.update(_ref_generator_choices(args, reflist, len(refs)))
 
     with open(args.output, "a") as f:
         f.write("endchoice\n\n")
