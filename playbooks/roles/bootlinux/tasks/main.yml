@@ -11,8 +11,8 @@
   tags: vars
 
 # Distro specific
-- name: Install dependencies
-  include_tasks:
+- name: Install dependencies to build and install the Linux kernel
+  ansible.builtin.import_tasks:
     file: install-deps/main.yml
 
 # We do this regardless of what distro you use
