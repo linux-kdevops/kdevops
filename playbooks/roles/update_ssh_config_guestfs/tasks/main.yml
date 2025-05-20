@@ -71,9 +71,7 @@
       Include ~/.ssh/config_kdevops_*
 
 - name: Ensure ~/.ssh/config permissions
-  become: true
-  become_flags: 'su - -c'
-  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: ~/.ssh/config
     mode: "0600"
+  when: ssh_config.stat.exists
