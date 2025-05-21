@@ -1,0 +1,7 @@
+---
+- name: Provision target nodes with libvirt/guestfs
+  gather_facts: true
+  connection: local
+  hosts: all
+  roles:
+    - role: guestfs

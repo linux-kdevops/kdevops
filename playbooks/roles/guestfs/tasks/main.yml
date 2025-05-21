@@ -1,0 +1,6 @@
+---
+- name: Shut down and destroy each target node
+  tags:
+    - destroy
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/destroy.yml"

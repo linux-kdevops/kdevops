@@ -1,0 +1,32 @@
+---
+- name: Destroy each target node
+  community.libvirt.virt:
+    name: "{{ inventory_hostname }}"
+    command: "destroy"
+    uri: "{{ libvirt_uri }}"
+  failed_when: false # Do not fail if the target node is not currently running
+
+- name: Undefine each target node
+  community.libvirt.virt:
+    name: "{{ inventory_hostname }}"
+    command: "undefine"
+    uri: "{{ libvirt_uri }}"
+    force: true
+  failed_when: false # Do not fail if the target node is not currently defined
+
+- name: Remove per-node configuration files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ guestfs_path }}/{{ inventory_hostname }}"
+    - "{{ kdevops_storage_pool_path }}/guestfs/{{ inventory_hostname }}"
+
+- name: Remove global configuration files
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ kdevops_ssh_config }}"
+    - "{{ topdir_path }}/{{ kdevops_nodes }}"

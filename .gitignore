@@ -6,6 +6,7 @@
 .provisioned_once*
 
 guestfs/
+!playbooks/roles/guestfs/
 
 linux/
 !workflows/linux/

@@ -93,9 +93,11 @@ status_guestfs:
 PHONY += status_guestfs
 
 destroy_guestfs:
-	$(Q)$(TOPDIR)/scripts/destroy_guestfs.sh
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i hosts playbooks/guestfs.yml \
+		--extra-vars=@./extra_vars.yaml \
+		--tags destroy
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
-
 PHONY += destroy_guestfs
 
 cleancache:
