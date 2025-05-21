@@ -50,6 +50,16 @@
   ansible.builtin.import_tasks:
     file: "{{role_path }}/tasks/bringup/main.yml"
 
+- name: Set up target node console permissions
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - bringup
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/bringup/console-permissions.yml"
+  when:
+    - libvirt_uri_system|bool
+
 - name: Shut down and destroy each target node
   tags:
     - destroy
