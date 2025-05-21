@@ -1,0 +1,12 @@
+---
+- name: Install guestfs dependencies for Red Hat Enterprise
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    update_cache: true
+    name:
+      - libguestfs-tools
+      - dhcpcd
+    state: present
+  when:
+    - ansible_distribution != "Fedora"

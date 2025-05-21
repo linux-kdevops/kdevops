@@ -1,0 +1,21 @@
+---
+- name: Gathering facts
+  ansible.builtin.gather_facts:
+
+- name: Debian-specific setup
+  ansible.builtin.import_tasks:
+    file: debian/main.yml
+  when:
+    - ansible_os_family == "Debian"
+
+- name: SuSE-specific setup
+  ansible.builtin.import_tasks:
+    file: suse/main.yml
+  when:
+    - ansible_os_family == "Suse"
+
+- name: Red Hat-specific setup
+  ansible.builtin.import_tasks:
+    file: redhat/main.yml
+  when:
+    - ansible_os_family == "Redhat"

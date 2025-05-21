@@ -68,9 +68,9 @@ $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 install_libguestfs:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--inventory localhost, \
-		playbooks/bringup_guestfs.yml \
+		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags install-deps
 

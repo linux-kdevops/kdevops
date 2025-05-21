@@ -1,0 +1,10 @@
+---
+- name: Install guestfs dependencies for Debian
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    update_cache: true
+    name:
+      - libguestfs-tools
+      - isc-dhcp-client
+    state: present

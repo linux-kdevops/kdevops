@@ -1,0 +1,9 @@
+---
+- name: Install guestfs dependencies for Suse
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - libguestfs-tools
+      - dhcpcd
+    state: present

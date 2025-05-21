@@ -1,4 +1,10 @@
 ---
+- name: Install guestfs dependencies on the Ansible controller
+  tags:
+    - install-deps
+  ansible.builtin.import_tasks:
+    file: "{{role_path }}/tasks/install-deps/main.yml"
+
 - name: Shut down and destroy each target node
   tags:
     - destroy
