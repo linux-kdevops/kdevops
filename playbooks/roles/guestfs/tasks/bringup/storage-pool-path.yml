@@ -1,4 +1,18 @@
 ---
+- name: Get the user who invoked Ansible
+  ansible.builtin.command:
+    cmd: "id -Gn"
+  register: id_group
+  changed_when: false
+
+- name: Group membership check failed
+  vars:
+    user_groups: "{{ id_group.stdout | split }}"
+  ansible.builtin.fail:
+    msg: "Ansible user is not part of the {{ libvirt_qemu_group }} group."
+  when:
+    - libvirt_qemu_group not in user_groups
+
 - name: Create storage pool path directory (libvirt session uri)
   # noqa: risky-file-permissions
   ansible.builtin.file:

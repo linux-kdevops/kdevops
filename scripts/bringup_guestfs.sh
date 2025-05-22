@@ -31,14 +31,6 @@ OS_VERSION=${CONFIG_VIRT_BUILDER_OS_VERSION}
 BASE_IMAGE_DIR="${STORAGEDIR}/base_images"
 BASE_IMAGE="${BASE_IMAGE_DIR}/${OS_VERSION}.raw"
 
-if id -nG "$(whoami)" | grep -qw "$QEMU_GROUP"; then
-    echo "User $USER is part of the $QEMU_GROUP group."
-else
-    echo "Error: User $USER is not part of the $QEMU_GROUP group. Exiting..."
-    echo "Fix this and come back and try again."
-    exit 1
-fi
-
 build_custom_source()
 {
 	SOURCE_TMP=$(mktemp)
