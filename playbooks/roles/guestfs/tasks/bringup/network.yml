@@ -1,0 +1,83 @@
+---
+- name: Check for dnsmasq configuration files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/dnsmasq.conf
+    - /etc/dnsmasq.d
+  register: dnsmasq_config_files
+  when:
+    - distro_debian_based|bool
+
+- name: Fail if dnsmasq configuration files exist
+  ansible.builtin.fail:
+    msg: |
+      dnsmasq configuration files or directories still exist.
+      Please remove the following to fully uninstall
+      dnsmasq:\n{{ dnsmasq_config_files | join('\n') }}
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_config_files.results | selectattr('stat.exists') | list | length > 0
+
+- name: Check if dnsmasq service is enabled
+  # noqa: command-instead-of-module
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "systemctl is-enabled dnsmasq"
+  register: dnsmasq_enabled
+  failed_when: false
+  changed_when: false
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_config_files | length > 0
+
+- name: Check if dnsmasq service is active
+  # noqa: command-instead-of-module
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "systemctl is-active dnsmasq"
+  register: dnsmasq_active
+  failed_when: false
+  changed_when: false
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_config_files | length > 0
+
+- name: Fail if dnsmasq service is enabled or active
+  ansible.builtin.fail:
+    msg: |
+      dnsmasq service is
+      {{ 'enabled' if dnsmasq_enabled.rc == 0 else 'active' if dnsmasq_active.rc == 0 else 'present' }}.
+      Please ensure dnsmasq is fully uninstalled and disabled.
+      Run 'sudo systemctl disable dnsmasq' and 'sudo systemctl
+      stop dnsmasq' to disable and stop the service.
+  when:
+    - distro_debian_based|bool
+    - dnsmasq_config_files | length > 0
+    - (dnsmasq_enabled.rc == 0) or (dnsmasq_active.rc == 0)
+
+- name: Check if libvirt default network is running
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: virsh net-list | grep -q default
+  register: libvirt_default_net
+  ignore_errors: true
+  changed_when: false
+  when:
+    - libvirt_uri_system|bool
+
+- name: Start the libvirt default network
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "virsh net-start default"
+  changed_when: true
+  when:
+    - libvirt_uri_system|bool
+    - libvirt_default_net.rc != 0

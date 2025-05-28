@@ -1,2 +1,4 @@
 ---
+distro_debian_based: false
+
 libvirt_uri_system: false

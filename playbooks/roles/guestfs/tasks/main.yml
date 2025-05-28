@@ -13,6 +13,14 @@
   ansible.builtin.import_tasks:
     file: "{{role_path }}/tasks/bringup/storage-pool-path.yml"
 
+- name: Ensure libvirt networking has started
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - bringup
+  ansible.builtin.import_tasks:
+    file: "{{role_path }}/tasks/bringup/network.yml"
+
 - name: Shut down and destroy each target node
   tags:
     - destroy
