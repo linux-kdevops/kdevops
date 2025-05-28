@@ -1,0 +1,80 @@
+---
+- name: Gather facts
+  ansible.builtin.gather_facts:
+
+- name: Get the UID of the kdevops user on the control host
+  ansible.builtin.command:
+    cmd: "id -u kdevops"
+  register: id_output
+  changed_when: false
+  failed_when: false
+
+- name: Set the kdevops UID in the base image
+  ansible.builtin.set_fact:
+    kdevops_uid: "-u {{ id_output.stdout }}"
+  when:
+    - id_output.rc == 0
+
+- name: Select the grub command for the base image (Red Hat)
+  ansible.builtin.set_fact:
+    update_grub_cmd: "/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg"
+  when:
+    - base_image_os_version is match("^(rhel|fedora|centos)")
+
+- name: Create a temporary file for virt-builder commands
+  ansible.builtin.tempfile:
+    state: file
+  register: command_file
+
+- name: Construct the virt-builder command file
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/virt-builder.j2"
+    dest: "{{ command_file.path }}"
+    mode: "u=rw"
+
+- name: Generate a new base image for {{ base_image_os_version }}
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    argv:
+      - "virt-builder"
+      - "{{ base_image_os_version }}"
+      - "--arch"
+      - "{{ ansible_machine }}"
+      - "-o"
+      - "{{ base_image_pathname }}"
+      - "--size"
+      - "20G"
+      - "--format"
+      - "raw"
+      - "--commands-from-file"
+      - "{{ command_file.path }}"
+    creates: "{{ base_image_pathname }}"
+  when:
+    - libvirt_uri_system|bool
+
+- name: Generate a new base image for {{ base_image_os_version }}
+  ansible.builtin.command:
+    argv:
+      - "virt-builder"
+      - "{{ base_image_os_version }}"
+      - "--arch"
+      - "{{ ansible_machine }}"
+      - "-o"
+      - "{{ base_image_pathname }}"
+      - "--size"
+      - "20G"
+      - "--format"
+      - "raw"
+      - "--commands-from-file"
+      - "{{ command_file.path }}"
+    creates: "{{ base_image_pathname }}"
+  when:
+    - not libvirt_uri_system|bool
+
+- name: Clean up the virt-builder command file
+  ansible.builtin.file:
+    path: "{{ command_file.path }}"
+    state: absent
+  when:
+    - command_file.path is defined

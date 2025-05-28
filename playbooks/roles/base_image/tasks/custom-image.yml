@@ -1,0 +1,159 @@
+---
+- name: Set the pathname of the custom image directory
+  ansible.builtin.set_fact:
+    custom_image_dir: "{{ kdevops_storage_pool_path }}/guestfs/custom_images/{{ base_image_os_version }}"
+
+- name: Ensure the custom image directory exists
+  ansible.builtin.file:
+    path: "{{ custom_image_dir }}"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: Set the pathname of the custom image
+  ansible.builtin.set_fact:
+    custom_image: "{{ custom_image_dir }}/{{ base_image_os_version }}.raw"
+
+- name: Set the pathname of the custom image sentinel
+  ansible.builtin.set_fact:
+    custom_image_ok: "{{ custom_image_dir }}.ok"
+
+- name: Set the pathname of the custom source configuration file
+  ansible.builtin.set_fact:
+    custom_source: "/etc/virt-builder/repos.d/kdevops-custom-images-{{ base_image_os_version }}.conf"
+
+- name: Set the pathname of the custom index file
+  ansible.builtin.set_fact:
+    custom_index: "{{ custom_image_dir | realpath }}/index"
+
+- name: Check if the custom image file already exists
+  ansible.builtin.stat:
+    path: "{{ custom_image }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: result
+
+- name: Fetch the custom image
+  ansible.builtin.get_url:
+    url: "{{ guestfs_custom_raw_image_url }}"
+    dest: "{{ custom_image_dir }}"
+    mode: "u=rw,g=r,o=r"
+  when:
+    - not result.stat.exists
+    - guestfs_has_custom_raw_image_url|bool
+
+- name: Check if the custom image sentinel file already exists
+  ansible.builtin.stat:
+    path: "{{ custom_image_ok }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: result
+
+- name: Check the custom image
+  when:
+    - not result.stat.exists
+    - guestfs_has_custom_raw_image_sha512sums|bool
+  block:
+    - name: Get the base name of the sha512sums file
+      ansible.builtin.set_fact:
+        sha512sums_file: "{{ guestfs_custom_raw_image_sha512sums_url | basename }}"
+
+    - name: Set the full pathname of sha512sums file
+      ansible.builtin.set_fact:
+        custom_image_sha512sum: "{{ custom_image_dir }}/{{ sha512sums_file }}"
+
+    - name: Check if the sha512sums file already exists
+      ansible.builtin.stat:
+        path: "{{ custom_image_sha512sum }}"
+        get_attributes: false
+        get_checksum: false
+        get_mime: false
+      register: result
+
+    - name: Fetch the sha512sums file
+      ansible.builtin.get_url:
+        url: "{{ guestfs_custom_raw_image_sha512sums_url }}"
+        dest: "{{ custom_image_dir }}"
+        mode: "u=rw,g=r,o=r"
+      when:
+        - not result.stat.exists
+
+    - name: Compute checksum of something
+      ansible.builtin.command:
+        cmd: "sha512sum --ignore-missing -c {{ sha512sums_file }}"
+        chdir: "{{ custom_image_dir }}"
+      changed_when: false
+
+    - name: Touch the custom image sentinel
+      ansible.builtin.file:
+        path: "{{ custom_image_ok }}"
+        state: touch
+        mode: "u=rw,g=r,o=r"
+
+- name: Check if the custom source exists
+  ansible.builtin.stat:
+    path: "{{ custom_source }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: result
+
+- name: Build the custom source
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/custom-source.j2"
+    dst: "{{ custom_source }}"
+    mode: "u=rw,g=r,o=r"
+  when:
+    - not result.stat.exists
+
+- name: Check if the custom index exists
+  ansible.builtin.stat:
+    path: "{{ custom_index }}"
+    get_attributes: false
+    get_checksum: false
+    get_mime: false
+  register: result
+
+- name: Build the custom index
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/custom-index.j2"
+    dst: "{{ custom_index }}"
+    mode: "u=rw,g=r,o=r"
+  when:
+    - not result.stat.exists
+
+- name: Show rolling distribution release warning
+  ansible.builtin.debug:
+    msg: |
+      ------------------------------------------------------------------
+      This is a rolling distribution release! To upgrade just do:
+
+      rm -rf {{ custom_image }}/*
+      rm -f  {{ custom_source }}
+      rm -f  {{ custom_index }}
+
+      Running guests always use their own copy. To rebuild your custom
+      base image from the custom image, also remove the base image:
+
+      rm -f  ${BASE_IMAGE}
+
+      This can always be done safely without affecting running guests.
+      ------------------------------------------------------------------
+  when:
+    - guestfs_has_custom_raw_image_rolling|bool
+
+- name: Show the custom virt-builder database
+  ansible.builtin.debug:
+    msg: |
+      Custom virt-builder source: {{ custom_source }}
+      Custom virt-builder index: {{ custom_index }}
+      Custom virt-builder image: {{ custom_image }}
+
+- name: Generating the index for {{ base_image_os_version }}
+  ansible.builtin.command:
+    argv:
+      - "virt-builder-repository"
+      - "--no-compression"
+      - "{{ custom_image_dir }}"
+  changed_when: true

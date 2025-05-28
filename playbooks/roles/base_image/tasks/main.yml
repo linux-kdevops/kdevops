@@ -1,0 +1,19 @@
+---
+- name: Stat {{ base_image_pathname }}
+  ansible.builtin.stat:
+    path: "{{ base_image_pathname }}"
+    get_checksum: false
+    get_mime: false
+  register: result
+
+- name: Create custom upstream OS image
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/custom_image.yml"
+  when:
+    - guestfs_has_custom_raw_image|bool
+
+- name: Create the base OS image
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/base-image.yml"
+  when:
+    - not result.stat.exists

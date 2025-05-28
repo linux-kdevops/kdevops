@@ -1,0 +1,7 @@
+---
+- name: Create a libvirt base OS image
+  gather_facts: false
+  connection: local
+  hosts: localhost
+  roles:
+    - role: base_image

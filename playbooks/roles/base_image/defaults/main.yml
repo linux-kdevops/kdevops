@@ -1,0 +1,7 @@
+---
+libvirt_uri_system: false
+
+guestfs_copy_sources_from_host_to_guest: false
+guestfs_has_custom_raw_image: false
+kdevops_uid: ""
+update_grub_cmd: "/usr/sbin/update-grub2"

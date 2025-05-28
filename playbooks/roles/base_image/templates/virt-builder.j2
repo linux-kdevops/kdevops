@@ -1,0 +1,77 @@
+{% if rhel_org_id is defined %}
+run-command subscription-manager register --org={{ rhel_org_id }} --activationkey={{ rhel_activation_key }}
+{% endif %}
+
+{% if kdevops_custom_yum_repofile is defined and kdevops_custom_yum_repofile != "" %}
+copy-in {{ kdevops_custom_yum_repofile }}:/etc/yum.repos.d
+{% endif %}
+
+{% if guestfs_copy_sources_from_host_to_guest %}
+mkdir {{ target_dir }}
+copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
+{% endif %}
+
+install sudo,qemu-guest-agent,python3,bash
+run-command useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
+append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
+edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
+run-command {{ update_grub_cmd }}
+root-password password:kdevops
+
+{% if rhel_org_id is defined %}
+sm-unregister
+{% endif %}
+
+{% if distro_debian_based is defined and distro_debian_based %}
+{# Ugh, debian has to be told to bring up the network and regenerate ssh keys #}
+{# Hope we get that interface name right! #}
+install isc-dhcp-client,ifupdown
+mkdir /etc/network/interfaces.d/
+append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
+append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
+append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
+firstboot-command systemctl disable systemd-networkd-wait-online.service
+firstboot-command systemctl stop ssh
+firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
+firstboot-command systemctl start ssh
+firstboot-command apt update && apt upgrade --yes
+uninstall unattended-upgrades
+
+{% if distro_debian_trixie is defined and distro_debian_trixie %}
+{# CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST will not work #}
+{# if /etc/nsswitch.conf has a line like this: #}
+{# #}
+{# hosts:          files myhostname resolve [!UNAVAIL=return] dns #}
+{# #}
+{# We need DNS to be used so virb0 will be used for a DNS request #}
+{# For the life of me I can't get the following line to work with #}
+{# the virt-builder command and so we do a full edit of the file for now #}
+{# edit /etc/nsswitch.conf:'s/\[!UNAVAIL=return\]//' #}
+write /etc/nsswitch.conf: # kdevops generated /etc/nsswitch.conf
+append-line /etc/nsswitch.conf:passwd:         files
+append-line /etc/nsswitch.conf:group:          files
+append-line /etc/nsswitch.conf:shadow:         files
+append-line /etc/nsswitch.conf:gshadow:        files
+append-line /etc/nsswitch.conf:hosts:          files myhostname resolve dns
+append-line /etc/nsswitch.conf:networks:       files
+append-line /etc/nsswitch.conf:protocols:      db files
+append-line /etc/nsswitch.conf:services:       db files
+append-line /etc/nsswitch.conf:ethers:         db files
+append-line /etc/nsswitch.conf:rpc:            db files
+append-line /etc/nsswitch.conf:netgroup:       nis
+uninstall cloud-init
+write /etc/default/locale:LANG=en_US.UTF-8
+append-line /etc/default/locale:LANGUAGE=en_US:en
+write /etc/locale.gen:en_US.UTF-8 UTF-8
+firstboot-command locale-gen en_US.UTF-8
+firstboot-command update-locale LANG=en_US.UTF-8
+firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force locales
+firstboot-command systemctl stop ssh
+firstboot-command systemctl start ssh
+
+{% if guestfs_copy_sources_from_host_to_guest %}
+delete /etc/apt/sources.list.d/debian.sources
+{% endif %}
+
+{% endif %}
+{% endif %}
