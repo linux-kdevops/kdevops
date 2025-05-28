@@ -1,0 +1,11 @@
+---
+- name: Compute the total number of devices to build
+  ansible.builtin.set_fact:
+    total_devices: "{{ libvirt_largeio_pow_limit * libvirt_largeio_drives_per_space }}"
+
+- name: Create largeio block devices
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/extra_disks.yml"
+  vars:
+    path: "{{ storagedir }}/{{ inventory_hostname }}/extra{{ item }}.{{ libvirt_extra_drive_format }}"
+  loop: "{{ range(0, total_devices) | list }}"

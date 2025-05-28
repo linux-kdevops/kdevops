@@ -21,6 +21,35 @@
   ansible.builtin.import_tasks:
     file: "{{role_path }}/tasks/bringup/network.yml"
 
+- name: Set the pathname of storage pool directory
+  tags:
+    - bringup
+  ansible.builtin.set_fact:
+    storagedir: "{{ kdevops_storage_pool_path }}/guestfs"
+
+- name: Set the pathname of the OS base image
+  tags:
+    - bringup
+  ansible.builtin.set_fact:
+    base_image: "{{ storagedir }}/base_images/{{ virtbuilder_os_version }}.raw"
+
+- name: Ensure the base OS image exists
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - bringup
+  ansible.builtin.import_role:
+    name: base_image
+  vars:
+    base_image_os_version: "{{ virtbuilder_os_version }}"
+    base_image_pathname: "{{ base_image }}"
+
+- name: Bring up each target node
+  tags:
+    - bringup
+  ansible.builtin.import_tasks:
+    file: "{{role_path }}/tasks/bringup/main.yml"
+
 - name: Shut down and destroy each target node
   tags:
     - destroy

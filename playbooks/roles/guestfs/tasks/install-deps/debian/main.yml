@@ -7,4 +7,5 @@
     name:
       - libguestfs-tools
       - isc-dhcp-client
+      - python3-lxml
     state: present

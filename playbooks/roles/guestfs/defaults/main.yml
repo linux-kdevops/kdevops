@@ -2,3 +2,4 @@
 distro_debian_based: false
 
 libvirt_uri_system: false
+libvirt_enable_largeio: false

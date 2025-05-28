@@ -1,0 +1,16 @@
+---
+- name: Create the new drive image
+  ansible.builtin.command:
+    argv:
+      - "qemu-img"
+      - "create"
+      - "-f"
+      - "{{ libvirt_extra_drive_format }}"
+      - "{{ path }}"
+      - "100G"
+
+- name: Update the permission settings of the drive image file
+  ansible.builtin.file:
+    path: "{{ path }}"
+    group: "{{ libvirt_qemu_group }}"
+    mode: "g+rw,o-rw"

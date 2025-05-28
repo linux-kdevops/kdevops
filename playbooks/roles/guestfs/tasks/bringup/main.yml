@@ -1,0 +1,132 @@
+---
+- name: List defined libvirt guests
+  run_once: true
+  community.libvirt.virt:
+    command: list_vms
+    uri: "{{ libvirt_uri }}"
+  register: defined_vms
+
+- name: Provision each target node
+  when:
+    - 'inventory_hostname not in defined_vms.list_vms'
+  block:
+    - name: Set the pathname of the ssh directory for each target node
+      ansible.builtin.set_fact:
+        ssh_key_dir: "{{ guestfs_path }}/{{ inventory_hostname }}/ssh"
+
+    - name: Set the pathname of the ssh key for each target node
+      ansible.builtin.set_fact:
+        ssh_key: "{{ ssh_key_dir }}/id_ed25519"
+
+    - name: Generate ssh keys for each target node
+      block:
+        - name: Create the ssh key directory on the control host
+          ansible.builtin.file:
+            path: "{{ ssh_key_dir }}"
+            state: directory
+            mode: "u=rwx"
+
+        - name: Generate fresh keys for each target node
+          ansible.builtin.command:
+            cmd: 'ssh-keygen -q -t ed25519 -f {{ ssh_key }} -N ""'
+
+    - name: Set the pathname of the root disk image for each target node
+      ansible.builtin.set_fact:
+        root_image: "{{ storagedir }}/{{ inventory_hostname }}/root.raw"
+
+    - name: Create the storage pool directory for each target node
+      ansible.builtin.file:
+        path: "{{ storagedir }}/{{ inventory_hostname }}"
+        state: directory
+
+    - name: Duplicate the root disk image for each target node
+      ansible.builtin.command:
+        cmd: "cp --reflink=auto {{ base_image }} {{ root_image }}"
+
+    - name: Get the timezone of the control host
+      ansible.builtin.command:
+        cmd: "timedatectl show -p Timezone --value"
+      register: host_timezone
+
+    - name: Build the root image for each target node (as root)
+      become: true
+      become_method: ansible.builtin.sudo
+      ansible.builtin.command:
+        argv:
+          - "virt-sysprep"
+          - "-a"
+          - "{{ root_image }}"
+          - "--hostname"
+          - "{{ inventory_hostname }}"
+          - "--ssh-inject"
+          - "kdevops:file:{{ ssh_key }}.pub"
+          - "--timezone"
+          - "{{ host_timezone.stdout }}"
+      when:
+        - libvirt_uri_system|bool
+
+    - name: Build the root image for each target node (non-root)
+      ansible.builtin.command:
+        argv:
+          - "virt-sysprep"
+          - "-a"
+          - "{{ root_image }}"
+          - "--hostname"
+          - "{{ inventory_hostname }}"
+          - "--ssh-inject"
+          - "kdevops:file:{{ ssh_key }}.pub"
+          - "--timezone"
+          - "{{ host_timezone.stdout }}"
+      when:
+        - not libvirt_uri_system|bool
+
+    - name: Create largeio devices
+      ansible.builtin.include_tasks:
+        file: "{{ role_path }}/tasks/bringup/largeio.yml"
+      when:
+        - libvirt_enable_largeio|bool
+
+    - name: Create extra disks
+      vars:
+        path: "{{ storagedir }}/{{ inventory_hostname }}/extra{{ item }}.{{ libvirt_extra_drive_format }}"
+      ansible.builtin.include_tasks:
+        file: "{{ role_path }}/tasks/bringup/extra-disks.yml"
+      loop: "{{ range(0, 4) | list }}"
+      when:
+        - not libvirt_enable_largeio|bool
+
+    - name: Define each target node
+      vars:
+        xml_file: "{{ guestfs_path }}/{{ inventory_hostname }}/{{ inventory_hostname }}.xml"
+      community.libvirt.virt:
+        command: define
+        name: "{{ inventory_hostname }}"
+        xml: "{{ lookup('file', xml_file) }}"
+        uri: "{{ libvirt_uri }}"
+
+    - name: Find PCIe passthrough devices
+      ansible.builtin.find:
+        paths: "{{ guestfs_path }}/{{ inventory_hostname }}"
+        file_type: file
+        patterns: "pcie_passthrough_*.xml"
+      register: passthrough_devices
+
+    - name: Attach PCIe passthrough devices to each target node
+      ansible.builtin.command:
+        argv:
+          - "virsh"
+          - "attach-device"
+          - "{{ inventory_hostname }}"
+          - "{{ item }}"
+          - "--config"
+      loop: "{{ passthrough_devices.files }}"
+      loop_control:
+        label: "Doing PCI-E passthrough for device {{ item }}"
+      when:
+        - passthrough_devices.matched > 0
+
+- name: Boot each target node
+  community.libvirt.virt:
+    name: "{{ inventory_hostname }}"
+    uri: "{{ libvirt_uri }}"
+    state: running
