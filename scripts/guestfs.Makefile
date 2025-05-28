@@ -75,11 +75,15 @@ install_libguestfs:
 		--tags install-deps
 
 bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i hosts playbooks/guestfs.yml \
+		--extra-vars=@./extra_vars.yaml \
+		--tags bringup
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		playbooks/bringup_guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
-		--tags network,storage-pool-path
+		--tags network
 	$(Q)$(TOPDIR)/scripts/bringup_guestfs.sh
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \

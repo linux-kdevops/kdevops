@@ -1,0 +1,78 @@
+---
+- name: Create storage pool path directory (libvirt session uri)
+  # noqa: risky-file-permissions
+  ansible.builtin.file:
+    path: "{{ libvirt_storage_pool_path }}"
+    state: directory
+  # mode: "u=rwx,g=rwx,o=rx"
+  when:
+    - not libvirt_uri_system|bool
+
+- name: Create storage pool path directory and set group (libvirt system uri)
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ libvirt_storage_pool_path }}"
+    state: directory
+    owner: root
+    group: "{{ libvirt_qemu_group }}"
+    mode: "u=rwx,g=rwx,o=rx"
+  when:
+    - libvirt_uri_system|bool
+
+- name: Create kdevops guestfs storage directory (libvirt session uri)
+  ansible.builtin.file:
+    path: "{{ guestfs_base_image_dir }}"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+  when:
+    - not libvirt_uri_system|bool
+
+- name: Create kdevops guestfs storage directory (libvirt system uri)
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ guestfs_base_image_dir }}"
+    state: directory
+    mode: "u=rwx,g=rwx,o=rx"
+    group: "{{ libvirt_qemu_group }}"
+  when:
+    - libvirt_uri_system|bool
+
+- name: Check if directory is owned by the correct group (libvirt system uri)
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: stat -c '%G' "{{ libvirt_storage_pool_path }}"
+  register: dir_group
+  changed_when: false
+  when:
+    - libvirt_uri_system|bool
+
+- name: Check if directory has group write permissions (libvirt system uri)
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: stat -c '%A' "{{ libvirt_storage_pool_path }}"
+  register: dir_perms
+  changed_when: false
+  when:
+    - libvirt_uri_system|bool
+
+- name: Verify storage pool path directory is group-writable (libvirt system uri)
+  become: true
+  become_flags: 'su - -c'
+  become_method: ansible.builtin.sudo
+  ansible.builtin.fail:
+    msg: |
+      The permissions for {{ libvirt_storage_pool_path }} should be group
+      writeable by the group used by libvirt: {{ libvirt_qemu_group }}
+      Current group: {{ dir_group.stdout }}
+      Current permissions: {{ dir_perms.stdout }}
+  when:
+    - libvirt_uri_system|bool
+    - (dir_group.stdout != libvirt_qemu_group) or (dir_perms.stdout[5] != 'w')

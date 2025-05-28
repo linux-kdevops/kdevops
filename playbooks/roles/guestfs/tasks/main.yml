@@ -5,6 +5,14 @@
   ansible.builtin.import_tasks:
     file: "{{role_path }}/tasks/install-deps/main.yml"
 
+- name: Ensure a storage pool for guestfs exists
+  delegate_to: localhost
+  run_once: true
+  tags:
+    - bringup
+  ansible.builtin.import_tasks:
+    file: "{{role_path }}/tasks/bringup/storage-pool-path.yml"
+
 - name: Shut down and destroy each target node
   tags:
     - destroy
