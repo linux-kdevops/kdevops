@@ -93,39 +93,62 @@
   tags: [ 'uninstall-linux', 'manual-update-grub' ]
   import_tasks: update-grub/main.yml
 
-- name: Set file used to extract KERNELRELEASE variable
-  set_fact:
+- name: Set the pathname used to extract the kernel release
+  tags:
+    - vars
+  ansible.builtin.set_fact:
     kernelrelease_file: "{{ target_linux_dir_path }}/include/config/kernel.release"
-  tags: vars
 
-- name: Check if {{ kernelrelease_file }} exists
-  stat:
+- name: Stat {{ kernelrelease_file }}
+  tags:
+    - vars
+  ansible.builtin.stat:
+    get_checksum: false
+    get_mime: false
     path: "{{ kernelrelease_file }}"
   register: kernel_release_file
-  tags: vars
 
-- name: Get Linux build KERNELRELEASE varible which is set in include/config/kernel.release
-  shell: cat {{ kernelrelease_file }}
-  register: kernelrelease
-  when: kernel_release_file.stat.exists
+- name: Slurp {{ kernelrelease_file }}
+  tags:
+    - vars
+  ansible.builtin.slurp:
+    src: "{{ kernelrelease_file }}"
+  register: slurped_kernel_release
+  when:
+    - kernel_release_file.stat.exists
 
-- name: Construct command line to determine default kernel ID
-  set_fact:
+- name: Get the kernel release of the kernel to be installed
+  tags:
+    - vars
+  ansible.builtin.set_fact:
+    kernelrelease: "{{ slurped_kernel_release.content | b64decode | trim }}"
+  when:
+    - kernel_release_file.stat.exists
+
+- name: Construct the command line to determine the default boot entry
+  tags:
+    - saved
+  ansible.builtin.set_fact:
     determine_default_kernel_id: >-
       awk -F\' '/menuentry / {print $2}'
       /boot/grub/grub.cfg | awk '{print NR-1" ... "$0}' |
-      grep {{ kernelrelease.stdout }} | head -1 | awk '{print $1}'
+      grep {{ kernelrelease }} | head -1 | awk '{print $1}'
   when:
-    ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
+    - kernel_release_file.stat.exists
+    - ansible_os_family != "RedHat" or ansible_distribution_major_version | int < 8
 
-- name: Construct command line to determine default kernel ID for RHEL >= 8
-  set_fact:
+- name: Construct the command line to determine default boot entry for RHEL >= 8
+  tags:
+    - saved
+  ansible.builtin.set_fact:
     determine_default_kernel_id: >-
       for f in $(ls -1 /boot/loader/entries/*.conf); do
       cat $f;
-      done | grep title | awk '{ gsub("title ", "", $0); print }' | grep '{{ kernelrelease.stdout }}';
+      done | grep title | awk '{ gsub("title ", "", $0); print }' | grep '{{ kernelrelease }}';
   when:
-    ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
+    - kernel_release_file.stat.exists
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version | int >= 8
 
 # If this fails then grub-set-default won't be run, and the assumption here
 # is either you do the work to enhance the heuristic or live happy with the
