@@ -152,6 +152,26 @@ endmenu
 endif # BOOTLINUX_9P
 
 choice
+	prompt "Compiler to use to build the kernel"
+	default BOOTLINUX_COMPILER_GCC
+	help
+	  Choose which toolchain to use to build the kernel.
+
+config BOOTLINUX_COMPILER_GCC
+	bool "gcc"
+	output yaml
+	help
+	  Use the gcc compiler toolchain to build the Linux kernel.
+
+config BOOTLINUX_COMPILER_CLANG
+	bool "clang"
+	output yaml
+	help
+	  Use the clang compiler toolchain to build the Linux kernel.
+
+endchoice
+
+choice
 	prompt "Type of development version of Linux to use"
 	default BOOTLINUX_LINUS if !BOOTLINUX_TREE_SET_BY_CLI && !BOOTLINUX_TREE_REF_SET_BY_CLI
 	default BOOTLINUX_CUSTOM if BOOTLINUX_TREE_SET_BY_CLI || BOOTLINUX_TREE_REF_SET_BY_CLI
