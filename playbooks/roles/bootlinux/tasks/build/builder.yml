@@ -110,12 +110,35 @@
   community.general.make:
     chdir: "{{ target_linux_dir_path }}"
     target: "olddefconfig"
+  when:
+    - bootlinux_compiler_gcc|bool
 
 - name: Build {{ target_linux_tree }}
   community.general.make:
     chdir: "{{ target_linux_dir_path }}"
     jobs: "{{ ansible_processor_nproc }}"
     target: "all"
+  when:
+    - bootlinux_compiler_gcc|bool
+
+- name: Configure kernel {{ target_linux_tree }}
+  community.general.make:
+    chdir: "{{ target_linux_dir_path }}"
+    params:
+      LLVM: 1
+    target: "olddefconfig"
+  when:
+    - bootlinux_compiler_clang|bool
+
+- name: Build {{ target_linux_tree }}
+  community.general.make:
+    chdir: "{{ target_linux_dir_path }}"
+    jobs: "{{ ansible_processor_nproc }}"
+    params:
+      LLVM: 1
+    target: "all"
+  when:
+    - bootlinux_compiler_clang|bool
 
 - name: Remove the old artifacts directory on the control host
   delegate_to: localhost
@@ -192,6 +215,19 @@
         target: "binrpm-pkg"
         params:
           RPMOPTS: '--without devel'
+      when:
+        - bootlinux_compiler_gcc|bool
+
+    - name: Make the binrpm-pkg target
+      community.general.make:
+        chdir: "{{ target_linux_dir_path }}"
+        jobs: "{{ ansible_processor_nproc }}"
+        target: "binrpm-pkg"
+        params:
+          RPMOPTS: '--without devel'
+          LLVM: 1
+      when:
+        - bootlinux_compiler_clang|bool
 
     - name: Find the build artifacts
       ansible.builtin.find:
