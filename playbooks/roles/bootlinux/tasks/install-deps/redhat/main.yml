@@ -68,6 +68,22 @@
       - btrfs-progs
   when: ansible_distribution == 'Fedora'
 
+- name: Install clang
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - clang
+      - lld
+      - llvm
+    state: present
+    update_cache: true
+  retries: 3
+  delay: 5
+  register: clang_result
+  until: clang_result is succeeded
+  when:
+    - bootlinux_compiler_clang|bool
+
 - name: Install rpmbuild
   become: true
   become_method: ansible.builtin.sudo
