@@ -46,6 +46,11 @@ config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_614
 	help
 	  Pull the queue/6.14 branch.
 
+config BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_615
+	bool "queue/6.15"
+	help
+	  Pull the queue/6.15 branch.
+
 endchoice
 
 config BOOTLINUX_TREE_STABLE_RC_REF
@@ -58,5 +63,6 @@ config BOOTLINUX_TREE_STABLE_RC_REF
 	default "queue/6.12" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_612
 	default "queue/6.13" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_613
 	default "queue/6.14" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_614
+	default "queue/6.15" if BOOTLINUX_TREE_STABLE_RC_REF_QUEUE_615
 
 endif # !HAVE_BOOTLINUX_TREE_STABLE_RC_USER_REFS
