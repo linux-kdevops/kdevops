@@ -112,6 +112,8 @@
       register: passthrough_devices
 
     - name: Attach PCIe passthrough devices to each target node
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
       ansible.builtin.command:
         argv:
           - "virsh"

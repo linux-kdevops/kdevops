@@ -64,6 +64,8 @@
   become: true
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
   ansible.builtin.shell: virsh net-list | grep -q default
   register: libvirt_default_net
   ignore_errors: true
@@ -75,6 +77,8 @@
   become: true
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
   ansible.builtin.command:
     cmd: "virsh net-start default"
   changed_when: true
