@@ -1,0 +1,10 @@
+workflows/fstests/results/
+guestfs/*/*.xml
+guestfs/*/*.log
+journal/*
+.config
+extra_vars.yaml
+linux/.config
+ci.log
+.kernel.ci.*
+crashes
