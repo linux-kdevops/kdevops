@@ -614,7 +614,7 @@
     part_type: "logical"
     part_start: "{{ ((item - 5) * test_partsize ) + 1 }}GiB"
     part_end:   "{{ ((item - 4) * test_partsize ) }}GiB"
-  loop: '{{ range(5, 17) }}'
+  loop: '{{ range(5, 17) | list }}'
   when:
     - fstests_testdev_nvme_partition_euis|bool
     - nvme_symlinks | length >= 1
