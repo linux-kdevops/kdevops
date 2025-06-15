@@ -2,6 +2,16 @@ menu "Shared workflow data partition"
 source "kconfigs/workflows/Kconfig.data_partition"
 endmenu
 
+config WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
+	bool
+	select HAVE_CUSTOM_KDEVOPS_GIT
+	default $(shell, scripts/check-cli-set-var.sh GUEST_KDEVOPS_REPO)
+
+config WORKFLOW_KDEVOPS_GIT_VERSION_SET_BY_CLI
+	bool
+	select HAVE_CUSTOM_KDEVOPS_GIT_VERSION
+	default $(shell, scripts/check-cli-set-var.sh GUEST_KDEVOPS_REF)
+
 config HAVE_CUSTOM_KDEVOPS_GIT
 	bool
 	default n
@@ -69,7 +79,7 @@ config WORKFLOW_KDEVOPS_GIT
 
 config WORKFLOW_KDEVOPS_GIT_VERSION
 	string "Git tree version (branch/tag/commit) of kdevops to clone on targets"
-	default "HEAD"
+	default CUSTOM_KDEVOPS_GIT_VERSION if HAVE_CUSTOM_KDEVOPS_GIT_VERSION
 	help
 	  Specify the verison of the custom kdevops git repository to check out
 	  on each target.
@@ -85,11 +95,12 @@ config HAVE_MIRROR_KDEVOPS
 
 config WORKFLOW_KDEVOPS_GIT
 	string
-	default "https://github.com/linux-kdevops/kdevops.git" if !GIT_ALTERNATIVES && !HAVE_CUSTOM_KDEVOPS_GIT
+	default "https://github.com/linux-kdevops/kdevops.git" if !GIT_ALTERNATIVES && !HAVE_CUSTOM_KDEVOPS_GIT && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	default "https://github.com/linux-kdevops/kdevops.git" if GIT_LINUX_KDEVOPS_GITHUB && !HAVE_MIRROR_KDEVOPS
 	default "https://gitlab.com/linux-kdevops/kdevops.git" if GIT_LINUX_KDEVOPS_GITLAB && !HAVE_MIRROR_KDEVOPS
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && VAGRANT
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && GUESTFS
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && VAGRANT && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && GUESTFS && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars.sh $(GUEST_KDEVOPS_REPO)) if WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	help
 	  Some workflows want to also clone a version of kdevops on each target.
 	  An example of this is when using the fstests workflow, which carries
@@ -99,7 +110,9 @@ config WORKFLOW_KDEVOPS_GIT
 	  baseline.
 
 config WORKFLOW_KDEVOPS_GIT_VERSION
-	default "HEAD"
+	string
+	default "HEAD" if !WORKFLOW_KDEVOPS_GIT_VERSION_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars.sh $(GUEST_KDEVOPS_REF)) if WORKFLOW_KDEVOPS_GIT_VERSION_SET_BY_CLI
 	help
 	  Specify the verison of the custom kdevops git repository to check out
 	  on each target.
