@@ -245,13 +245,14 @@
     - ansible_hosts_template.stat.exists
 
 - name: Infer enabled selftests test section types
-  vars:
-    kdevops_config_data: "{{ lookup('file', topdir_path + '/.config') }}"
-    config_val: "CONFIG_SELFTESTS_SECTION_"
-    config_selftests_test_types: "{{ kdevops_config_data | regex_findall('^' + config_val + '(.*)=y$', multiline=True) }}"
-    config_selftests_test_type_names: "{{ config_selftests_test_types | lower }}"
-  set_fact:
-    selftests_enabled_test_types: "{{ config_selftests_test_type_names }}"
+  ansible.builtin.set_fact:
+    selftests_enabled_test_types: >-
+     {{
+       lookup('file', topdir_path + '/.config')
+       | regex_findall('^CONFIG_SELFTESTS_SECTION_(.*)=y$', multiline=True)
+       | map('lower')
+       | list
+     }}
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
