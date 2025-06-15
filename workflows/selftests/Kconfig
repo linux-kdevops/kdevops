@@ -1,5 +1,9 @@
 if KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 
+config SELFTESTS_KMOD_TIMEOUT_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh KMOD_TIMEOUT)
+
 menu "Configure what to test in selftests"
 
 config SELFTESTS_BUILD_RADIX_TREE
@@ -111,7 +115,8 @@ config SELFTESTS_SECTION_KMOD_TIMEOUT
 	int "kmod timeout"
 	output yaml
 	depends on SELFTESTS_SECTION_KMOD
-	default 165
+	default 165 if !SELFTESTS_KMOD_TIMEOUT_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(KMOD_TIMEOUT)) if SELFTESTS_KMOD_TIMEOUT_SET_BY_CLI
 	help
 	  A default timeout of 45 seconds is used for runner, however each
 	  runner system configuration may also vary. So a timeout is very
