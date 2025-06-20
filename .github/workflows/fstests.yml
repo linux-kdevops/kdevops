@@ -40,6 +40,7 @@ jobs:
           SHORT_PREFIX="$(echo ${KDEVOPS_TREE_REF:0:12})"
           make KDEVOPS_HOSTS_PREFIX="$SHORT_PREFIX" \
           ANSIBLE_CFG_CALLBACK_PLUGIN="debug" \
+          LINUX_TREE_REF="v6.15" \
           defconfig-xfs_reflink_4k
 
       - name: Run kdevops make
