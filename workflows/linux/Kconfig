@@ -113,8 +113,8 @@ endif # BOOTLINUX_9P
 
 choice
 	prompt "Type of development version of Linux to use"
-	default BOOTLINUX_LINUS if !BOOTLINUX_TREE_SET_BY_CLI
-	default BOOTLINUX_CUSTOM if BOOTLINUX_TREE_SET_BY_CLI
+	default BOOTLINUX_LINUS if !BOOTLINUX_TREE_SET_BY_CLI && !BOOTLINUX_TREE_REF_SET_BY_CLI
+	default BOOTLINUX_CUSTOM if BOOTLINUX_TREE_SET_BY_CLI || BOOTLINUX_TREE_REF_SET_BY_CLI
 
 config BOOTLINUX_LINUS
 	bool "Linux releases based on Linus' tree"
