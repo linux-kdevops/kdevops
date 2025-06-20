@@ -8,4 +8,5 @@
       - libguestfs-tools
       - isc-dhcp-client
       - python3-lxml
+      - python3-libvirt
     state: present
