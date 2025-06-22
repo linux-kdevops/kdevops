@@ -1,7 +1,4 @@
 ---
-- name: Gathering facts
-  ansible.builtin.gather_facts:
-
 - name: Debian-specific setup
   ansible.builtin.import_tasks:
     file: debian/main.yml
