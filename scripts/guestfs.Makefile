@@ -79,7 +79,7 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 		--connection=local --inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
-		--tags network
+		--tags network,pool
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		-i hosts playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \

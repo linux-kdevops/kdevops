@@ -3,15 +3,13 @@
   tags:
     - install-deps
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/install-deps/main.yml"
+    file: "{{ role_path }}/tasks/install-deps/main.yml"
 
 - name: Ensure a storage pool for guestfs exists
-  delegate_to: localhost
-  run_once: true
   tags:
-    - bringup
+    - pool
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/bringup/storage-pool-path.yml"
+    file: "{{ role_path }}/tasks/bringup/storage-pool-path.yml"
 
 - name: Ensure libvirt networking has started
   tags:
