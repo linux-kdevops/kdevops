@@ -19,21 +19,21 @@
 
 - name: Set the pathname of storage pool directory
   tags:
+    - base_image
     - bringup
   ansible.builtin.set_fact:
     storagedir: "{{ kdevops_storage_pool_path }}/guestfs"
 
 - name: Set the pathname of the OS base image
   tags:
+    - base_image
     - bringup
   ansible.builtin.set_fact:
     base_image: "{{ storagedir }}/base_images/{{ virtbuilder_os_version }}.raw"
 
-- name: Ensure the base OS image exists
-  delegate_to: localhost
-  run_once: true
+- name: Ensure the required base OS image exists
   tags:
-    - bringup
+    - base_image
   ansible.builtin.import_role:
     name: base_image
   vars:
