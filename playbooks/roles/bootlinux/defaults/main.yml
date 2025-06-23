@@ -41,6 +41,8 @@ uninstall_kernel_enable: False
 bootlinux_b4_am_this_host: False
 
 bootlinux_9p: False
+bootlinux_targets: false
+bootlinux_builder: false
 
 kdevops_workflow_enable_cxl: False
 
