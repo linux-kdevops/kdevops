@@ -37,6 +37,18 @@ config WORKFLOW_LINUX_CUSTOM
 	  linux, linux-stable, linux-next, or a custom kernel you want to
 	  build and install enable this.
 
+config WORKFLOW_LINUX_PACKAGED
+	bool "Install pre-built kernel package"
+	output yaml
+	help
+	  Choose this option to install a pre-built kernel package on each
+	  target node.
+
+	  By default, the kernel packages reside in
+	  workflows/linux/artifacts. Later we can introduce a Kconfig
+	  option that lets kdevops pull the packages from other
+	  locations.
+
 endchoice
 
 if WORKFLOW_LINUX_CUSTOM
@@ -53,6 +65,12 @@ config BOOTLINUX
 source "workflows/linux/Kconfig"
 endmenu
 endif # WORKFLOW_LINUX_CUSTOM
+
+if WORKFLOW_LINUX_PACKAGED
+config BOOTLINUX
+	bool
+	default y
+endif # WORKFLOW_LINUX_PACKAGED
 
 config WORKFLOWS_TESTS
 	bool "Enable selection of test workflows"

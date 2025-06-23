@@ -5,6 +5,8 @@
 CI_WORKFLOW ?=
 ifeq (y,$(CONFIG_BOOTLINUX))
 
+ifneq (y,$(CONFIG_WORKFLOW_LINUX_PACKAGED))
+
 ifeq ($(strip $(CI_WORKFLOW)),)
 CI_WORKFLOW_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE) | sed 's/\.git$$//')
 else
@@ -80,6 +82,12 @@ ci-results:
 ci-test:
 ci-build-test:
 endif # We have ci build tests entries
+
+else # CONFIG_WORKFLOW_LINUX_PACKAGED
+ci-results:
+ci-test:
+ci-build-test:
+endif # CONFIG_WORKFLOW_LINUX_PACKAGED
 
 else # CONFIG_BOOTLINUX
 ci-results:
