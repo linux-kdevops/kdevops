@@ -1,89 +1,38 @@
 ---
-- name: Check whether config-kdevops exists
-  stat:
-    path: "{{ role_path }}/templates/config-kdevops"
-  register: config_kdevops
+- name: Initialize the kernel config file names search list
+  ansible.builtin.set_fact:
+    search_list:
+      - "{{ role_path }}/templates/config-kdevops"
+      - "{{ role_path }}/templates/{{ target_linux_config }}"
+
+- name: Find all linux-next kernel config files
   delegate_to: localhost
-
-- name: Found config-kdevops, using it for template
-  set_fact:
-    linux_config: "config-kdevops"
-  when: config_kdevops.stat.exists
-
-- name: No config-kdevops, looking for {{ target_linux_config }}
-  set_fact:
-    linux_config: "{{ target_linux_config }}"
-  when: not config_kdevops.stat.exists
-
-- name: Check if specific kernel config exists for {{ target_linux_ref }}
-  stat:
-    path: "{{ role_path }}/templates/{{ target_linux_config }}"
-  register: kernel_config
-  delegate_to: localhost
-
-- name: Find all linux-next configs if a your custom config-kdevops and ref config was not found
-  find:
+  run_once: true
+  ansible.builtin.find:
     paths: "{{ role_path }}/templates"
-    patterns: "config-next*"
+    patterns: "config-next-*"
     file_type: file
-    recurse: no
-  register: found_configs
-  delegate_to: localhost
+  register: linux_next_configs
+
+- name: Build a list of linux-next kernel config file names
+  ansible.builtin.set_fact:
+    config_file_names: "{{ config_file_names | default([]) + [item.path] }}"
+  loop: "{{ linux_next_configs.files }}"
+  loop_control:
+    label: "Adding {{ item.path | basename }}..."
   when:
-    - not config_kdevops.stat.exists
-    - not kernel_config.stat.exists
+    - linux_next_configs.matched > 0
 
-- name: Extract the date from the filenames
-  set_fact:
-    configs_with_dates: "{{ configs_with_dates | default([]) + [{'file': item.path, 'date': (item.path | regex_search('config-next-(\\d{8})')).split('-')[-1]}] }}"
-  loop: "{{ found_configs.files }}"
+- name: Append the name of the most recent linux-next kernel config to the search list
+  vars:
+    config_file_names_sorted: "{{ config_file_names | community.general.version_sort }}"
+  ansible.builtin.set_fact:
+    search_list: "{{ search_list + [config_file_names_sorted[-1]] }}"
   when:
-    - not config_kdevops.stat.exists
-    - not kernel_config.stat.exists
-    - item.path is search('config-next-(\\d{8})')
-  no_log: true
-  delegate_to: localhost
+    - linux_next_configs.matched > 0
 
-- name: Sort configs based on date extracted from filename
-  set_fact:
-    sorted_configs: "{{ configs_with_dates | selectattr('date', 'defined') | sort(attribute='date', reverse=True) | map(attribute='file') | list }}"
-  when:
-    - not config_kdevops.stat.exists
-    - not kernel_config.stat.exists
-    - configs_with_dates | length > 0
-  delegate_to: localhost
-
-- name: Set latest linux-next config if configs are found
-  set_fact:
-    latest_linux_next_config: "{{ sorted_configs[0] }}"
-  when:
-    - not config_kdevops.stat.exists and not kernel_config.stat.exists
-    - sorted_configs | length > 0
-  delegate_to: localhost
-
-- name: Use the specific kernel config or fallback to the latest linux-next
-  set_fact:
-    linux_config: "{{ target_linux_config | default('') if kernel_config.stat.exists else (latest_linux_next_config | default('') | basename) }}"
-  when:
-    - not config_kdevops.stat.exists
-    - not kernel_config.stat.exists
-    - latest_linux_next_config is defined
-  delegate_to: localhost
-
-- name: Verify config used
-  debug:
-    msg: "Linux config used: {{ role_path }}/templates/{{ linux_config }}"
-  delegate_to: localhost
-
-- name: Verify that the Linux configuration file exists
-  stat:
-    path: "{{ role_path }}/templates/{{ linux_config }}"
-  register: config_stat
-  delegate_to: localhost
-  when: linux_config is defined
-
-- name: Fail if the configuration file does not exist
-  fail:
-    msg: "The configuration file {{ role_path }}/templates/{{ linux_config }} does not exist."
-  when: not config_stat.stat.exists
-  delegate_to: localhost
+- name: Set the .config file for building the test kernel
+  ansible.builtin.set_fact:
+    linux_config: "{{ item | basename }}"
+  with_first_found:
+    - files: "{{ search_list }}"
