@@ -10,6 +10,10 @@
       skip: true
   tags: vars
 
+- name: Select the .config file for building the test kernel
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/config.yml"
+
 # Distro specific
 - name: Install dependencies to build and install the Linux kernel
   ansible.builtin.import_tasks:
@@ -222,10 +226,6 @@
     - bootlinux_b4_am_this_host|bool
   run_once: true
   delegate_to: localhost
-
-- name: Select the .config file for building the test kernel
-  ansible.builtin.include_tasks:
-    file: "{{ role_path }}/tasks/config.yml"
 
 - name: Copy configuration for Linux {{ target_linux_tree }} to the target nodes
   template:
