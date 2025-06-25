@@ -1,18 +1,38 @@
 ---
-- name: Destroy each target node
+- name: Gather the list of running libvirt guests
+  run_once: true
   community.libvirt.virt:
-    name: "{{ inventory_hostname }}"
-    command: "destroy"
+    command: list_vms
+    state: running
     uri: "{{ libvirt_uri }}"
-  failed_when: false # Do not fail if the target node is not currently running
+  register: running_vms
 
-- name: Undefine each target node
+- name: Shut down each running target node
   community.libvirt.virt:
     name: "{{ inventory_hostname }}"
-    command: "undefine"
+    command: destroy
     uri: "{{ libvirt_uri }}"
+  changed_when: true
+  when:
+    - inventory_hostname in running_vms.list_vms
+
+- name: Gather the list of stopped libvirt guests
+  run_once: true
+  community.libvirt.virt:
+    command: list_vms
+    state: shutdown
+    uri: "{{ libvirt_uri }}"
+  register: shutdown_vms
+
+- name: Undefine each stopped target node
+  community.libvirt.virt:
+    command: "undefine"
     force: true
-  failed_when: false # Do not fail if the target node is not currently defined
+    name: "{{ inventory_hostname }}"
+    uri: "{{ libvirt_uri }}"
+  changed_when: true
+  when:
+    - inventory_hostname in shutdown_vms.list_vms
 
 - name: Remove per-node configuration files
   ansible.builtin.file:

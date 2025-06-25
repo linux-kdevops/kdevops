@@ -27,6 +27,12 @@ config TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
 	  This option sets the OS image to Red Hat Enterprise Linux
 	  release 9 update 5.
 
+config TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
+	bool "RHEL 9.6 x64"
+	help
+	  This option sets the OS image to Red Hat Enterprise Linux
+	  release 9 update 6.
+
 endchoice
 
 config TERRAFORM_AZURE_IMAGE_OFFER
@@ -35,6 +41,7 @@ config TERRAFORM_AZURE_IMAGE_OFFER
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_7_9
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_9
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
+	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
 
 config TERRAFORM_AZURE_IMAGE_SKU
 	string
@@ -42,6 +49,7 @@ config TERRAFORM_AZURE_IMAGE_SKU
 	default "7_9" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_7_9
 	default "8_9" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_9
 	default "9_5" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
+	default "9_6" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
 
 endif # TARGET_ARCH_X86_64
 

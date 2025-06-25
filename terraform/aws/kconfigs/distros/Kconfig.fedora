@@ -17,6 +17,9 @@ config TERRAFORM_AWS_FEDORA40_X86_64
 config TERRAFORM_AWS_FEDORA41_X86_64
 	bool "Fedora 41 (x86_64)"
 
+config TERRAFORM_AWS_FEDORA42_X86_64
+	bool "Fedora 42 (x86_64)"
+
 endchoice
 
 config TERRAFORM_AWS_NS
@@ -24,6 +27,7 @@ config TERRAFORM_AWS_NS
 	output yaml
 	default "Fedora-Cloud-Base-AmazonEC2.x86_64-40-*" if TERRAFORM_AWS_FEDORA40_X86_64
 	default "Fedora-Cloud-Base-AmazonEC2.x86_64-41-*" if TERRAFORM_AWS_FEDORA41_X86_64
+	default "Fedora-Cloud-Base-AmazonEC2.x86_64-42-*" if TERRAFORM_AWS_FEDORA42_X86_64
 
 endif # TARGET_ARCH_X86_64
 
@@ -39,6 +43,9 @@ config TERRAFORM_AWS_FEDORA40_ARM64
 config TERRAFORM_AWS_FEDORA41_ARM64
 	bool "Fedora 41 (arm64"
 
+config TERRAFORM_AWS_FEDORA42_ARM64
+	bool "Fedora 42 (arm64"
+
 endchoice
 
 config TERRAFORM_AWS_NS
@@ -46,6 +53,7 @@ config TERRAFORM_AWS_NS
 	output yaml
 	default "Fedora-Cloud-Base-AmazonEC2.aarch64-40-*" if TERRAFORM_AWS_FEDORA40_ARM64
 	default "Fedora-Cloud-Base-AmazonEC2.aarch64-41-*" if TERRAFORM_AWS_FEDORA41_ARM64
+	default "Fedora-Cloud-Base-AmazonEC2.aarch64-42-*" if TERRAFORM_AWS_FEDORA42_ARM64
 
 endif # TARGET_ARCH_ARM64
 

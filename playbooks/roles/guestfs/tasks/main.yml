@@ -3,41 +3,37 @@
   tags:
     - install-deps
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/install-deps/main.yml"
+    file: "{{ role_path }}/tasks/install-deps/main.yml"
 
 - name: Ensure a storage pool for guestfs exists
-  delegate_to: localhost
-  run_once: true
   tags:
-    - bringup
+    - pool
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/bringup/storage-pool-path.yml"
+    file: "{{ role_path }}/tasks/bringup/storage-pool-path.yml"
 
 - name: Ensure libvirt networking has started
-  delegate_to: localhost
-  run_once: true
   tags:
-    - bringup
+    - network
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/bringup/network.yml"
+    file: "{{ role_path }}/tasks/bringup/network.yml"
 
 - name: Set the pathname of storage pool directory
   tags:
+    - base_image
     - bringup
   ansible.builtin.set_fact:
     storagedir: "{{ kdevops_storage_pool_path }}/guestfs"
 
 - name: Set the pathname of the OS base image
   tags:
+    - base_image
     - bringup
   ansible.builtin.set_fact:
     base_image: "{{ storagedir }}/base_images/{{ virtbuilder_os_version }}.raw"
 
-- name: Ensure the base OS image exists
-  delegate_to: localhost
-  run_once: true
+- name: Ensure the required base OS image exists
   tags:
-    - bringup
+    - base_image
   ansible.builtin.import_role:
     name: base_image
   vars:
@@ -48,13 +44,11 @@
   tags:
     - bringup
   ansible.builtin.import_tasks:
-    file: "{{role_path }}/tasks/bringup/main.yml"
+    file: "{{ role_path }}/tasks/bringup/main.yml"
 
 - name: Set up target node console permissions
-  delegate_to: localhost
-  run_once: true
   tags:
-    - bringup
+    - console
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/bringup/console-permissions.yml"
   when:

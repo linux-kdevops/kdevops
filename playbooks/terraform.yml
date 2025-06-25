@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Provision target nodes with terraform
   gather_facts: false
+  hosts: all
   roles:
     - role: terraform
