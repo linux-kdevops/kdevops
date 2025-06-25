@@ -50,3 +50,5 @@ bootlinux_cxl_test: False
 bootlinux_tree_set_by_cli: False
 
 bootlinux_artifacts_dir: "{{ topdir_path }}/workflows/linux/artifacts"
+kernel_packages: []
+workflow_linux_packaged: false
