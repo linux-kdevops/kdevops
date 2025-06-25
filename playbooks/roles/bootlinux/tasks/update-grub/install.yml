@@ -131,16 +131,19 @@
 # is either you do the work to enhance the heuristic or live happy with the
 # assumption that grub2's default of picking the latest kernel is the best
 # option.
-- name: Try to find your target kernel's GRUB boot entry number now that the menu is flattened for {{ target_linux_ref }} using inferred KERNELRELEASE {{ kernelrelease.stdout}}
-  become: yes
+- name: Determine the target kernel's GRUB boot entry number
+  # noqa: command-instead-of-shell
+  tags:
+    - saved
+  become: true
   become_flags: 'su - -c'
-  become_method: sudo
-  shell: " {{ determine_default_kernel_id }} "
-  vars:
-    target_kernel: "{{ target_linux_ref | replace('v', '') }}"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell:
+    cmd: "{{ determine_default_kernel_id }}"
   register: grub_boot_number_cmd
-  tags: [ 'saved' ]
-  when: kernel_release_file.stat.exists
+  changed_when: false
+  when:
+    - kernel_release_file.stat.exists
 
 - name: Obtain command to set default kernel to boot
   set_fact:
