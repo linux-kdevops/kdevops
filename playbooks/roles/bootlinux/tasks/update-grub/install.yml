@@ -96,6 +96,8 @@
 - name: Get the name of the kernel release to install (source tree)
   tags:
     - vars
+  when:
+    - not workflow_linux_packaged|bool
   block:
     - name: Set the pathname used to extract the kernel release
       ansible.builtin.set_fact:
@@ -118,6 +120,26 @@
     - name: Get the kernel release of the kernel to be installed
       ansible.builtin.set_fact:
         kernelrelease: "{{ slurped_kernel_release.content | b64decode | trim }}"
+      when:
+        - kernel_release_file.stat.exists
+
+- name: Get the name of the kernel release to install (package)
+  when:
+    - workflow_linux_packaged|bool
+  block:
+    - name: Set the pathname used to extract the kernel release
+      ansible.builtin.set_fact:
+        kernelrelease_file: "{{ bootlinux_artifacts_dir }}/kernel.release"
+
+    - name: Stat {{ kernelrelease_file }}
+      delegate_to: localhost
+      ansible.builtin.stat:
+        path: "{{ kernelrelease_file }}"
+      register: kernel_release_file
+
+    - name: Get the kernel release of packaged kernel to be installed
+      ansible.builtin.set_fact:
+        kernelrelease: "{{ lookup('ansible.builtin.file', kernelrelease_file) | trim }}"
       when:
         - kernel_release_file.stat.exists
 
