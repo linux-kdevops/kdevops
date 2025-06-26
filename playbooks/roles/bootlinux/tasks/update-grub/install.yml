@@ -93,29 +93,33 @@
   tags: [ 'uninstall-linux', 'manual-update-grub' ]
   import_tasks: update-grub/main.yml
 
-- name: Set the pathname used to extract the kernel release
+- name: Get the name of the kernel release to install (source tree)
   tags:
     - vars
-  ansible.builtin.set_fact:
-    kernelrelease_file: "{{ target_linux_dir_path }}/include/config/kernel.release"
+  block:
+    - name: Set the pathname used to extract the kernel release
+      ansible.builtin.set_fact:
+        kernelrelease_file: "{{ target_linux_dir_path }}/include/config/kernel.release"
 
-- name: Stat {{ kernelrelease_file }}
-  tags:
-    - vars
-  ansible.builtin.stat:
-    get_checksum: false
-    get_mime: false
-    path: "{{ kernelrelease_file }}"
-  register: kernel_release_file
+    - name: Stat {{ kernelrelease_file }}
+      ansible.builtin.stat:
+        get_checksum: false
+        get_mime: false
+        path: "{{ kernelrelease_file }}"
+      register: kernel_release_file
 
-- name: Slurp {{ kernelrelease_file }}
-  tags:
-    - vars
-  ansible.builtin.slurp:
-    src: "{{ kernelrelease_file }}"
-  register: slurped_kernel_release
-  when:
-    - kernel_release_file.stat.exists
+    - name: Slurp {{ kernelrelease_file }}
+      ansible.builtin.slurp:
+        src: "{{ kernelrelease_file }}"
+      register: slurped_kernel_release
+      when:
+        - kernel_release_file.stat.exists
+
+    - name: Get the kernel release of the kernel to be installed
+      ansible.builtin.set_fact:
+        kernelrelease: "{{ slurped_kernel_release.content | b64decode | trim }}"
+      when:
+        - kernel_release_file.stat.exists
 
 - name: Set default kernelrelease if not determined
   ansible.builtin.set_fact:
