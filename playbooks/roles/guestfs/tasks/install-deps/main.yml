@@ -1,18 +1,18 @@
 ---
 - name: Debian-specific setup
   ansible.builtin.import_tasks:
-    file: debian/main.yml
+    file: "{{ role_path }}/tasks/install-deps/debian/main.yml"
   when:
     - ansible_os_family == "Debian"
 
 - name: SuSE-specific setup
   ansible.builtin.import_tasks:
-    file: suse/main.yml
+    file: "{{ role_path }}/tasks/install-deps/suse/main.yml"
   when:
     - ansible_os_family == "Suse"
 
 - name: Red Hat-specific setup
   ansible.builtin.import_tasks:
-    file: redhat/main.yml
+    file: "{{ role_path }}/tasks/install-deps/redhat/main.yml"
   when:
     - ansible_os_family == "Redhat"
