@@ -88,6 +88,33 @@ config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_5_X86
 	  Image release notes:
 	  https://docs.oracle.com/en-us/iaas/images/oracle-linux-9x/oracle-linux-9-5-2025-03-18-0.htm
 
+config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_GPU
+	bool "Oracle Linux 9.6 Gen2 GPU"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Oracle-Linux-9.6-Gen2-GPU-2025.06.17-0
+
+	  Image release notes:
+	  https://docs.oracle.com/en-us/iaas/images/oracle-linux-9x/oracle-linux-9-6-gen2-gpu-2025-06-17-0.htm
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_ARM64
+	bool "Oracle Linux 9.6 (aarch64)"
+	depends on TARGET_ARCH_ARM64
+	help
+	  Oracle-Linux-9.6-aarch64-2025.06.17-0
+
+	  Image release notes:
+	  https://docs.oracle.com/en-us/iaas/images/oracle-linux-9x/oracle-linux-9-6-aarch64-2025-06-17-0.htm
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_X86
+	bool "Oracle Linux 9.6 (x86)"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Oracle-Linux-9.6-2025.06.17-0
+
+	  Image release notes:
+	  https://docs.oracle.com/en-us/iaas/images/oracle-linux-9x/oracle-linux-9-6-2025-06-17-0.htm
+
 endchoice
 
 if TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_7_9_X86
@@ -233,5 +260,53 @@ config TERRAFORM_OCI_OS_IMAGE_OCID
 	default "ocid1.image.oc1.us-sanjose-1.aaaaaaaaopxntceb4zygnto7tbi7ezxptoxp3m72jz5ttpp5zfg4iklupr4q" if TERRAFORM_OCI_REGION_SJC
 
 endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_5_X86
+
+if TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_GPU
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string
+	output yaml
+	default "ocid1.image.oc1.us-chicago-1.aaaaaaaaxetvxo7pwc2uoj7gel5yyrroofgm6wgito7g6lvu4rcyzjetlmta" if TERRAFORM_OCI_REGION_ORD
+	default "ocid1.image.oc1.ap-mumbai-1.aaaaaaaaju6ud4bzvkwzphlaw4tt27mx374t4eoq36vufk6qavpwc2imis7a" if TERRAFORM_OCI_REGION_BOM
+	default "ocid1.image.oc1.phx.aaaaaaaaxtx5e3vilq727xx2f32ad72l46gt2tvanlqfoi7mkrbae4zafeea" if TERRAFORM_OCI_REGION_PHX
+	default "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaayfjxrv3z5quvwn4sbwxalxct6ic67otjvjgub2rdh5b3rsugbqya" if TERRAFORM_OCI_REGION_HYD
+	default "ocid1.image.oc1.ca-toronto-1.aaaaaaaa6amxhb4uxcyjnztvyjmvwo2cv3aencrpwo2ltqf5g4fjt4iddmuq" if TERRAFORM_OCI_REGION_YYZ
+	default "ocid1.image.oc1.ca-montreal-1.aaaaaaaaowpmyyvgx232gettpqyeb5vxyfhaapcwuftqczcisyfprbnwyqsa" if TERRAFORM_OCI_REGION_YUL
+	default "ocid1.image.oc1.iad.aaaaaaaa6lrr64teb63cmprsnmlozagcmcmqedg6ubjsij7vszptipgzpedq" if TERRAFORM_OCI_REGION_IAD
+	default "ocid1.image.oc1.us-sanjose-1.aaaaaaaab77uhcrbou4iqji3qah6ync663l6inyjqnwa66q4suscxtdb3aya" if TERRAFORM_OCI_REGION_SJC
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_GPU
+
+if TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_ARM64
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string
+	output yaml
+	default "ocid1.image.oc1.us-chicago-1.aaaaaaaarth4ajbp464qwkcwfmzqkzmgamnuiuot354oe437quz7dt47g2gq" if TERRAFORM_OCI_REGION_ORD
+	default "ocid1.image.oc1.ap-mumbai-1.aaaaaaaa4ly37lnuij6u5irxnqxvcy7pi2mhmioc7o6jwm6sudex5rtqatda" if TERRAFORM_OCI_REGION_BOM
+	default "ocid1.image.oc1.phx.aaaaaaaaaawp4x63fjccfs2cwdq63ofvftcktl56xp2afophsp4xvemr52ba" if TERRAFORM_OCI_REGION_PHX
+	default "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaa76hls27mlpe5ietuukxidsc5czy3332z5vjoys5nc7gp74fhtena" if TERRAFORM_OCI_REGION_HYD
+	default "ocid1.image.oc1.ca-toronto-1.aaaaaaaamh6uuodtwvl2n2vijgrzfn4qgnud4cikdveeeoqbuulecvv6z5fa" if TERRAFORM_OCI_REGION_YYZ
+	default "ocid1.image.oc1.ca-montreal-1.aaaaaaaaqtbcyvi5blheqy4ryj5zy4xbgab4gg5lu4ryfdezipxwrzn7xzca" if TERRAFORM_OCI_REGION_YUL
+	default "ocid1.image.oc1.iad.aaaaaaaayh2t6irbplharxvcfcpzopxl5ojk3gm3jtthnonhvd4pupliie5a" if TERRAFORM_OCI_REGION_IAD
+	default "ocid1.image.oc1.us-sanjose-1.aaaaaaaa3gmh6j33rmb2z5vd52lb6dyvn6iy24kryhvhqe546rwtbbypzltq" if TERRAFORM_OCI_REGION_SJC
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_ARM64
+
+if TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_X86
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string
+	output yaml
+	default "ocid1.image.oc1.us-chicago-1.aaaaaaaaxglgurk3cbsfgzrknz6bm4745br6sflp73pymuhu7nu3bg324goa" if TERRAFORM_OCI_REGION_ORD
+	default "ocid1.image.oc1.ap-mumbai-1.aaaaaaaafigfhiva5nurwfo2yjp2mfvzcjdhqxbclxp2mvtm4kk44qnu5lra" if TERRAFORM_OCI_REGION_BOM
+	default "ocid1.image.oc1.phx.aaaaaaaanoh2ncjgaee7kxlkkeify2hux7nqcrfn4fjacruqupzlm6572zwa" if TERRAFORM_OCI_REGION_PHX
+	default "ocid1.image.oc1.ap-hyderabad-1.aaaaaaaanobby7pyz667w7mupftxwfa67sz5rpb3cm3eecgjq5sxpmxg5moq" if TERRAFORM_OCI_REGION_HYD
+	default "ocid1.image.oc1.ca-toronto-1.aaaaaaaakdieboyxlwwrs5mbbshzl3or3xh4vgn7n2gve5pfdkvgtcwdiopq" if TERRAFORM_OCI_REGION_YYZ
+	default "ocid1.image.oc1.ca-montreal-1.aaaaaaaahagfoemyqlfb5mwp3umst7h7tbzetf3eoehz5lvm3mdtofkgeuta" if TERRAFORM_OCI_REGION_YUL
+	default "ocid1.image.oc1.iad.aaaaaaaafjz2wgkvdamf3epnseff5aybkefqpqmbx5ol6xklszeatspdwswa" if TERRAFORM_OCI_REGION_IAD
+	default "ocid1.image.oc1.us-sanjose-1.aaaaaaaaztvaby7stzck64mwfze6rosjs53dlg4umqxz3p4h3dqavo2zhirq" if TERRAFORM_OCI_REGION_SJC
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX_9_6_X86
 
 endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
