@@ -1,5 +1,5 @@
 ---
 - name: bootlinux
-  hosts: baseline:dev
+  hosts: all
   roles:
     - role: bootlinux
