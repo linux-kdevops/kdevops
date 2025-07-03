@@ -39,6 +39,14 @@
         - kdevops_enable_terraform
         - kdevops_terraform_provider == "azure"
 
+    - name: Select the Google Cloud RHEL CodeReady Builder repo
+      ansible.builtin.set_fact:
+        codeready_repo: "rhui-codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rhui-rpms"
+      when:
+        - ansible_distribution == 'RedHat'
+        - kdevops_enable_terraform
+        - kdevops_terraform_provider == "gce"
+
     - name: The distribution/provisioner combo isn't recognized
       ansible.builtin.fail:
         msg: The selection heuristic failed to find a CodeReady Builder repo.
