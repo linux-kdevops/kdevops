@@ -11,17 +11,35 @@ config TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD
 	  Balanced performance and cost-effectiveness. Intel
 	  Haswell CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_N2_STANDARD
+	bool "N2 Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  General purpose computing on Intel Cascade Lake CPUs.
+
 config TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
 	bool "N2 High CPU family"
 	depends on TARGET_ARCH_X86_64
 	help
 	  General purpose computing on Intel Cascade Lake CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_N2D_STANDARD
+	bool "N2D Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  General purpose computing on AMD Milan CPUs.
+
 config TERRAFORM_GCE_MACHINE_FAMILY_N2D_HIGHCPU
 	bool "N2D High CPU family"
 	depends on TARGET_ARCH_X86_64
 	help
 	  General purpose computing on AMD Milan CPUs.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_N4_STANDARD
+	bool "N4 Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  General purpose computing on Intel Emerald Rapids CPUs.
 
 config TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
 	bool "N4 High CPU family"
@@ -32,8 +50,11 @@ config TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
 endchoice
 
 source "terraform/gce/kconfigs/machines/Kconfig.n1-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.n2-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.n2d-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.n4-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-highcpu"
 
 choice
