@@ -127,4 +127,5 @@
       - libselinux-devel
       - libsepol-devel
       - pcre2-devel
+      - gcc-c++
   when: 'fstests_xfs_build_custom_xfsprogs|bool'
