@@ -47,6 +47,12 @@ config TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
 	help
 	  General purpose computing on Intel Emerald Rapids CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
+	bool "C4 Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Consistently high performance on Intel Emerald Rapids CPUs.
+
 endchoice
 
 source "terraform/gce/kconfigs/machines/Kconfig.n1-standard"
@@ -56,6 +62,7 @@ source "terraform/gce/kconfigs/machines/Kconfig.n2d-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.c4-standard"
 
 choice
 	prompt "OS Distributor"
