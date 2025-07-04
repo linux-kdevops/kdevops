@@ -1,0 +1,48 @@
+if TERRAFORM_AWS_DISTRO_OL
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "amazon"
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "Oracle Linux release"
+	default TERRAFORM_AWS_OL9_X86_64
+
+config TERRAFORM_AWS_OL8_X86_64
+	bool "Oracle Linux 8 (x86)"
+
+config TERRAFORM_AWS_OL9_X86_64
+	bool "Oracle Linux 9 (x86)"
+
+endchoice
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "Oracle-Linux-8.*x86_64-*" if TERRAFORM_AWS_OL8_X86_64
+	default "Oracle-Linux-9.*x86_64-*" if TERRAFORM_AWS_OL9_X86_64
+
+endif # TARGET_ARCH_X86_64
+
+if TARGET_ARCH_ARM64
+
+choice
+	prompt "Oracle Linux release"
+	default TERRAFORM_AWS_OL9_ARM64
+
+config TERRAFORM_AWS_OL9_ARM64
+	bool "Oracle Linux 9 (arm64)"
+
+endchoice
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "Oracle-Linux-9.*arm64-*" if TERRAFORM_AWS_OL9_ARM64
+
+endif # TARGET_ARCH_ARM64
+
+endif # TERRAFORM_AWS_DISTRO_OL
