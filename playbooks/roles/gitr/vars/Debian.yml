@@ -8,7 +8,9 @@ gitr_packages:
   - libcurl4-openssl-dev
   - libexpat1-dev
   - libssl-dev
+  - libtap-harness-archive-perl
   - libtest-most-perl
   - libz-dev
+  - make
   - perl
   - sqlite3
