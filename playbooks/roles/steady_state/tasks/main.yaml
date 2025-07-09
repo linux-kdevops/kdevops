@@ -1,0 +1,73 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  failed_when: false
+  tags: vars
+
+- name: Ensure steady state directory exists
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ steady_state_data }}"
+    state: directory
+  tags: ['setup']
+
+- name: Generate fio steady state configs
+  become: yes
+  become_method: sudo
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ steady_state_data }}/{{ item }}"
+    mode: '0644'
+  loop:
+    - ss_iops.ini
+    - ss_bw.ini
+  tags: ['setup']
+
+- name: Run prefill helper and execute fio commands
+  become: yes
+  become_method: sudo
+  shell: |
+    {{ topdir_path }}/scripts/workflows/precondition/prefill-fio-jobs.sh \
+      --target {{ steady_state_device }} \
+      --blocksize {{ precondition_blocksize }} \
+      --jobs {{ precondition_numjobs }} \
+      --verbose > {{ steady_state_data }}/prefill.cmd
+    grep '^fio' {{ steady_state_data }}/prefill.cmd | bash
+  args:
+    executable: /bin/bash
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Run fio steady state for iops
+  become: yes
+  become_method: sudo
+  command: fio {{ steady_state_data }}/ss_iops.ini
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['steady_state']
+
+- name: Run fio steady state for bw
+  become: yes
+  become_method: sudo
+  command: fio {{ steady_state_data }}/ss_bw.ini
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['steady_state']
+
+- name: Copy steady state results to controller
+  ansible.posix.synchronize:
+    src: "{{ steady_state_data }}/"
+    dest: "{{ topdir_path }}/workflows/steady_state/results/{{ inventory_hostname }}/"
+    mode: pull
+    recursive: true
+    rsync_opts:
+      - "--ignore-existing"
+  delegate_to: localhost
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['results']

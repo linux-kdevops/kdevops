@@ -1,0 +1,108 @@
+menu "Configure SSD steady state workflow"
+
+config SSD_STEADY_STATE_DEVICE
+    string "Device to pre-condition"
+    output yaml
+    default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+    default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+    default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+    default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+    default "/dev/nvme1n1" if TERRAFORM_GCE
+    default "/dev/sdd" if TERRAFORM_AZURE
+    default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+    help
+      Block device to operate on for steady state.
+
+config SSD_STEADY_STATE_PREFILL_BLOCKSIZE
+    string "Prefill blocksize"
+    output yaml
+    default "128k"
+    help
+      Block size used during the prefill step before steady
+      state verification.
+
+config SSD_STEADY_STATE_IODEPTH
+    string "Prefill iodepth"
+    output yaml
+    default "32"
+    help
+      Queue depth used for the prefill workload.
+
+config SSD_STEADY_STATE_NUMJOBS
+    string "Prefill number jobs"
+    output yaml
+    default "4"
+    help
+      Number of fio jobs to spawn for the prefill step.
+
+config SSD_STEADY_STATE_PREFILL_LOOP
+    int "Prefill loop count"
+    output yaml
+    default 2
+    help
+      How many iterations of the prefill helper to run.
+
+config SSD_STEADY_STATE_RUNTIME
+    string "Steady state runtime"
+    output yaml
+    default "6h"
+    help
+      Maximum runtime allowed for each steady state check.
+
+config SSD_STEADY_STATE_IOPS_MEAN_LIMIT
+    string "IOPS steady state mean limit"
+    output yaml
+    default "20%"
+    help
+      fio ss=iops value defining the IOPS mean limit criteria.
+
+config SSD_STEADY_STATE_IOPS_MEAN_DUR
+    string "IOPS steady state mean duration"
+    output yaml
+    default "4h"
+    help
+      Duration the IOPS mean limit must be sustained.
+
+config SSD_STEADY_STATE_IOPS_SLOPE
+    string "IOPS steady state slope"
+    output yaml
+    default "10%"
+    help
+      fio ss=iops_slope percentage for slope detection.
+
+config SSD_STEADY_STATE_IOPS_SLOPE_DUR
+    string "IOPS steady state slope duration"
+    output yaml
+    default "4h"
+    help
+      Duration the IOPS slope criterion must hold.
+
+config SSD_STEADY_STATE_BW_MEAN_LIMIT
+    string "BW steady state mean limit"
+    output yaml
+    default "20%"
+    help
+      fio ss=bw value defining the throughput mean limit.
+
+config SSD_STEADY_STATE_BW_MEAN_DUR
+    string "BW steady state mean duration"
+    output yaml
+    default "2h"
+    help
+      Duration the throughput mean limit must be sustained.
+
+config SSD_STEADY_STATE_BW_SLOPE
+    string "BW steady state slope"
+    output yaml
+    default "10%"
+    help
+      fio ss=bw_slope percentage for slope detection.
+
+config SSD_STEADY_STATE_BW_SLOPE_DUR
+    string "BW steady state slope duration"
+    output yaml
+    default "2h"
+    help
+      Duration the throughput slope criterion must hold.
+
+endmenu
