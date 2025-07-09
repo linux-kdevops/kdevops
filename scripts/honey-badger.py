@@ -27,7 +27,7 @@ def is_dpkg_installed():
 def extract_deb(deb_file, tempdir, verbose=False, dest="/"):
     try:
         if verbose:
-            print(f"Extracting %s onto %s\n" %  deb_file, tempdir)
+            print(f"Extracting {deb_file} onto {tempdir}")
         # Extract the ar archive
         subprocess.run(['ar', 'x', deb_file], check=True, cwd=tempdir)
         data_tarball = next(f for f in os.listdir(tempdir) if f.startswith('data.tar'))
@@ -42,7 +42,7 @@ def extract_deb(deb_file, tempdir, verbose=False, dest="/"):
         # Cleanup the work directory
         if os.path.exists(tempdir):
             if verbose:
-                print(f"Removing temporary %s %s\n" %  tempdir)
+                print(f"Removing temporary directory {tempdir}")
             subprocess.run(['rm', '-rf', tempdir])
 
 def install_kernel_packages(package_files, verbose=False, use_ar=False, dest="/"):
@@ -51,7 +51,7 @@ def install_kernel_packages(package_files, verbose=False, use_ar=False, dest="/"
             if verbose:
                 print("Using ar x on %s" % package)
             with tempfile.TemporaryDirectory() as tempdir:
-                extract_deb(package, tempdir, dest)
+                extract_deb(package, tempdir, verbose, dest)
     else:
         for package in package_files:
             if verbose:
