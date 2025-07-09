@@ -26,14 +26,14 @@ choice
 config WORKFLOW_LINUX_DISTRO
 	bool "Distro kernel"
 	help
-	  If you are targetting a workflow to run on a distribution kernel
+	  If you are targeting a workflow to run on a distribution kernel
 	  enable this.
 
 config WORKFLOW_LINUX_CUSTOM
 	bool "Upstream Linux or custom kernel"
 	select BOOTLINUX
 	help
-	  If you are targetting a workflow to run on a vanilla upstream
+	  If you are targeting a workflow to run on a vanilla upstream
 	  linux, linux-stable, linux-next, or a custom kernel you want to
 	  build and install enable this.
 
@@ -80,7 +80,7 @@ config WORKFLOWS_LINUX_TESTS
 if WORKFLOWS_LINUX_TESTS
 
 config WORKFLOWS_DEDICATED_WORKFLOW
-	bool "Are you only targetting one subsystem test?"
+	bool "Are you only targeting one subsystem test?"
 	default y
 	help
 	 Enable this to if you are only wanting to test one main Linux
@@ -389,6 +389,23 @@ menu "Configure and run the sysbench tests"
 source "workflows/sysbench/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+
+config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
+       bool
+       output yaml
+       default n
+       help
+         Steady state is a state where performance is considered stable.
+         SNIA guidelines recommend purging and pre-conditioning a device
+         before collecting performance data.  Enable this workflow if you
+         want to run the fio steady state scripts prior to other workflows
+         to verify the target drive has reached steady state.
+
+if KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
+menu "Configure SSD steady state workflow"
+source "workflows/steady_state/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
 
 config KDEVOPS_WORKFLOW_GIT_CLONES_KDEVOPS_GIT
 	bool
