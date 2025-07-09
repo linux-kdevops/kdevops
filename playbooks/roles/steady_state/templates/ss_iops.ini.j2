@@ -1,0 +1,31 @@
+[global]
+name=Workload dependent steady state iops random pre-conditioning
+threads=1
+group_reporting=1
+time_based
+ioengine=io_uring
+direct=1
+buffered=0
+norandommap
+refill_buffers
+
+bs={{ precondition_blocksize }}
+iodepth={{ precondition_iodepth }}
+numjobs={{ precondition_numjobs }}
+filename={{ steady_state_device }}
+
+exitall_on_error
+continue_on_error=none
+
+rw=randwrite
+
+runtime={{ steady_state_runtime }}
+[steady-state-mean-iops]
+ss=iops:{{ steady_state_iops_mean_limit }}
+ss_dur={{ steady_state_iops_mean_dur }}
+
+[steady-state-slope-iops]
+new_group
+group_reporting
+ss=iops_slope:{{ steady_state_iops_slope }}
+ss_dur={{ steady_state_iops_slope_dur }}
