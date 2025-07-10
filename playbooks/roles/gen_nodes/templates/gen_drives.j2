@@ -19,14 +19,21 @@
 				    kdevops_storage_pool_path) }}
 {% else %}
 {{ drives.gen_drive_virtio(4,
-			   kdevops_storage_pool_path,
-			   hostname,
-			   libvirt_extra_drive_format,
-			   libvirt_extra_storage_aio_mode,
-			   libvirt_extra_storage_aio_cache_mode,
-			   libvirt_extra_storage_virtio_logical_block_size,
-			   libvirt_extra_storage_virtio_physical_block_size) }}
+                           kdevops_storage_pool_path,
+                           hostname,
+                           libvirt_extra_drive_format,
+                           libvirt_extra_storage_aio_mode,
+                           libvirt_extra_storage_aio_cache_mode,
+                           libvirt_extra_storage_virtio_logical_block_size,
+                           libvirt_extra_storage_virtio_physical_block_size) }}
 {% endif %}
+{% elif libvirt_extra_storage_drive_scsi %}
+{{ drives.gen_drive_scsi(4,
+                         kdevops_storage_pool_path,
+                         hostname,
+                         libvirt_extra_drive_format,
+                         libvirt_extra_storage_aio_mode,
+                         libvirt_extra_storage_aio_cache_mode) }}
 {% elif libvirt_extra_storage_drive_nvme  %}
 {% if libvirt_largeio_enable %}
 {{ drives.gen_drive_large_io_nvme(libvirt_largeio_logical_compat,

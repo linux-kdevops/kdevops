@@ -244,7 +244,7 @@ Vagrant.configure("2") do |config|
         #
         # Just create a PCI or PCI-E root bus dedicated for extra drives. We
         # use 0x08 to place this PCI / PCI-E root bus as we know this is
-        # avilable on modern x86-64 systems. Eventually we may need to bump
+        # available on modern x86-64 systems. Eventually we may need to bump
         # this to 0x9, but it would be better instead to have vagant-libvirt
         # speak "add a new PCI or PCI-E root bus" and "add extra drives" whether
         # that is nvme or virtio.
@@ -252,7 +252,7 @@ Vagrant.configure("2") do |config|
 {% if not libvirt_override_machine_type %}
         # For i440x on x86_64 (default on libvirt as of today) we use PCI, not
         # PCI-E. Below assumes i440x. i440x cannot support CXL as it does not
-        # suport PCI-E.
+        # support PCI-E.
         libvirt.qemuargs :value => "-device"
         libvirt.qemuargs :value => "pci-bridge,id=custom-pci-for-{{ extra_disk_driver }},chassis_nr=1,bus=pci.0,addr=0x8"
 {% else %}
@@ -417,6 +417,13 @@ Vagrant.configure("2") do |config|
             libvirt.qemuargs :value => "file=#{extra_disk},format={{ libvirt_extra_drive_format }},if=none,aio={{ libvirt_extra_storage_aio_mode }},cache={{ libvirt_extra_storage_aio_cache_mode }},id=#{disk_id}"
             libvirt.qemuargs :value => "-device"
             libvirt.qemuargs :value => "virtio-blk-pci,drive=#{disk_id},id=virtio-#{disk_id},serial=#{serial_id},bus=#{bus_for_extra_drives},addr=#{pci_function},iothread=kdevops-virtio-iothread-#{port}#{extra_drive_largio_args},logical_block_size=#{virtio_lbs},physical_block_size=#{virtio_pbs}"
+{% elif libvirt_extra_storage_drive_scsi %}
+            libvirt.qemuargs :value => "-device"
+            libvirt.qemuargs :value => "virtio-scsi-pci,id=scsi#{port},bus=#{bus_for_extra_drives},addr=#{pci_function}"
+            libvirt.qemuargs :value => "-drive"
+            libvirt.qemuargs :value => "file=#{extra_disk},format={{ libvirt_extra_drive_format }},if=none,aio={{ libvirt_extra_storage_aio_mode }},cache={{ libvirt_extra_storage_aio_cache_mode }},id=#{disk_id}"
+            libvirt.qemuargs :value => "-device"
+            libvirt.qemuargs :value => "scsi-hd,drive=#{disk_id},bus=scsi#{port}.0"
 {% elif libvirt_extra_storage_drive_nvme  %}
             if ! largio
               nvme_lbs = "{{ libvirt_extra_storage_nvme_logical_block_size }}"
