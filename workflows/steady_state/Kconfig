@@ -1,5 +1,3 @@
-menu "Configure SSD steady state workflow"
-
 config SSD_STEADY_STATE_DEVICE
     string "Device to pre-condition"
     output yaml
@@ -105,5 +103,3 @@ config SSD_STEADY_STATE_BW_SLOPE_DUR
     default "2h"
     help
       Duration the throughput slope criterion must hold.
-
-endmenu
