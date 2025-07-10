@@ -1,0 +1,28 @@
+menu "fio-tests simple workflows"
+
+config FIO_TESTS_DEVICE
+    string "Device or file to use"
+    output yaml
+    default "/dev/null"
+
+config FIO_TEST_BASIC
+    bool "Basic tests"
+    output yaml
+
+config FIO_TEST_IOBATCH
+    bool "IO depth batch tests"
+    output yaml
+
+config FIO_TEST_MAX_IOBATCH_SINGLE
+    bool "Max iodepth batch single job tests"
+    output yaml
+
+config FIO_TEST_MAX_IOBATCH_JOBS
+    bool "Max iodepth batch jobs tests"
+    output yaml
+
+config FIO_TEST_SNIA
+    bool "SNIA interpretation tests"
+    output yaml
+
+endmenu

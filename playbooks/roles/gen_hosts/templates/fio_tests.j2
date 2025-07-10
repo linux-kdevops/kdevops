@@ -1,0 +1,23 @@
+[all]
+{% for t in enabled_fio_tests %}
+{{ kdevops_host_prefix }}-{{ t }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ t }}-dev
+{% endif %}
+{% endfor %}
+[all:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+[baseline]
+{% for t in enabled_fio_tests %}
+{{ kdevops_host_prefix }}-{{ t }}
+{% endfor %}
+[baseline:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+[dev]
+{% if kdevops_baseline_and_dev %}
+  {% for t in enabled_fio_tests %}
+{{ kdevops_host_prefix }}-{{ t }}-dev
+  {% endfor %}
+{% endif %}
+[dev:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"

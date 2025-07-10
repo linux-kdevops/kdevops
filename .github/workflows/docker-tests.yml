@@ -52,4 +52,7 @@ jobs:
         run: |
           echo "Running simple make targets on ${{ matrix.distro_container }} environment"
           make mrproper
+          make defconfig-fio-tests-null
+          make -j$(nproc)
+          make fio-tests
 
