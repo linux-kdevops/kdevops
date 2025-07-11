@@ -1,0 +1,211 @@
+if MMTESTS_FS_XFS
+
+choice
+	prompt "XFS filesystem configuration to use"
+	default MMTESTS_FS_XFS_4K_4KS
+
+config MMTESTS_FS_XFS_4K_4KS
+	bool "XFS 4k LBS - 4k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_4K
+	select MMTESTS_XFS_SECTION_REFLINK_4K
+	output yaml
+	help
+	  XFS with 4k FSB with 4k sector size.
+
+config MMTESTS_FS_XFS_8K_4KS
+	bool "XFS 8k LBS - 4k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_4K
+	select MMTESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 8k FSB with 4k sector size.
+
+config MMTESTS_FS_XFS_16K_4KS
+	bool "XFS 16k LBS - 4k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_4K
+	select MMTESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 16k FSB with 4k sector size.
+
+config MMTESTS_FS_XFS_32K_4KS
+	bool "XFS 32k LBS - 4k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_4K
+	select MMTESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 4k sector size.
+
+config MMTESTS_FS_XFS_64K_4KS
+	bool "XFS 64k LBS - 4k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_4K
+	select MMTESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 8k sector size.
+
+config MMTESTS_FS_XFS_8K_8KS
+	bool "XFS 8k LBS - 8k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_8K
+	select MMTESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 8k FSB with 8k sector size.
+
+config MMTESTS_FS_XFS_16K_8KS
+	bool "XFS 16k LBS - 8k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_8K
+	select MMTESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 16k FSB with 8k sector size.
+
+config MMTESTS_FS_XFS_32K_8KS
+	bool "XFS 32k LBS - 8k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_8K
+	select MMTESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 8k sector size.
+
+config MMTESTS_FS_XFS_64K_8KS
+	bool "XFS 64k LBS - 8k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_8K
+	select MMTESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 8k sector size.
+
+config MMTESTS_FS_XFS_16K_16KS
+	bool "XFS 16k LBS - 16k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_16K
+	select MMTESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 16k FSB with 16k sector size.
+
+config MMTESTS_FS_XFS_32K_16KS
+	bool "XFS 32k LBS - 16k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_16K
+	select MMTESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 16k sector size.
+
+config MMTESTS_FS_XFS_64K_16KS
+	bool "XFS 64k LBS - 16k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_16K
+	select MMTESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 16k sector size.
+
+config MMTESTS_FS_XFS_32K_32KS
+	bool "XFS 32k LBS - 32k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_32K
+	select MMTESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 32k sector size.
+
+config MMTESTS_FS_XFS_64K_32KS
+	bool "XFS 64k LBS - 32k sector size"
+	select MMTESTS_XFS_SECTOR_SIZE_32K
+	select MMTESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 32k sector size.
+
+endchoice
+
+choice
+	prompt "XFS filesystem sector size to use"
+	default MMTESTS_XFS_SECTOR_SIZE_4K
+
+config MMTESTS_XFS_SECTOR_SIZE_512
+	bool "512 bytes"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_512
+	help
+	  Use 512 byte sector size.
+
+config MMTESTS_XFS_SECTOR_SIZE_4K
+	bool "4 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Use 4 KiB sector size.
+
+config MMTESTS_XFS_SECTOR_SIZE_16K
+	bool "16 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 16 KiB sector size.
+
+config MMTESTS_XFS_SECTOR_SIZE_32K
+	bool "32 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 32 KiB sector size.
+
+endchoice
+
+config MMTESTS_XFS_SECTOR_SIZE
+	string
+	output yaml
+	default "512" if MMTESTS_XFS_SECTOR_SIZE_512
+	default "4k"  if MMTESTS_XFS_SECTOR_SIZE_4K
+	default "16k" if MMTESTS_XFS_SECTOR_SIZE_16K
+	default "32k" if MMTESTS_XFS_SECTOR_SIZE_32K
+
+config MMTESTS_XFS_SECTION_REFLINK_4K
+	bool
+
+config MMTESTS_XFS_SECTION_REFLINK_4K_CMD
+	string
+	depends on MMTESTS_XFS_SECTION_REFLINK_4K
+	default "-f -m reflink=1,rmapbt=1, -i sparse=1 -b size=4k"
+
+config MMTESTS_XFS_SECTION_REFLINK_8K
+	bool
+
+config MMTESTS_XFS_SECTION_REFLINK_8K_CMD
+	string
+	depends on MMTESTS_XFS_SECTION_REFLINK_8K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=8k"
+
+config MMTESTS_XFS_SECTION_REFLINK_16K
+	bool
+
+config MMTESTS_XFS_SECTION_REFLINK_16K_CMD
+	string
+	depends on MMTESTS_XFS_SECTION_REFLINK_16K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=16k"
+
+config MMTESTS_XFS_SECTION_REFLINK_32K
+	bool
+
+config MMTESTS_XFS_SECTION_REFLINK_32K_CMD
+	string
+	depends on MMTESTS_XFS_SECTION_REFLINK_32K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=32k"
+
+config MMTESTS_XFS_SECTION_REFLINK_64K
+	bool
+
+config MMTESTS_XFS_SECTION_REFLINK_64K_CMD
+	string
+	depends on MMTESTS_XFS_SECTION_REFLINK_64K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=64k"
+
+config MMTESTS_XFS_CMD
+	string
+	default MMTESTS_XFS_SECTION_REFLINK_4K_CMD if MMTESTS_FS_XFS_4K_4KS
+	default MMTESTS_XFS_SECTION_REFLINK_8K_CMD if MMTESTS_XFS_SECTION_REFLINK_8K
+	default MMTESTS_XFS_SECTION_REFLINK_16K_CMD if MMTESTS_XFS_SECTION_REFLINK_16K
+	default MMTESTS_XFS_SECTION_REFLINK_32K_CMD if MMTESTS_XFS_SECTION_REFLINK_32K
+	default MMTESTS_XFS_SECTION_REFLINK_64K_CMD if MMTESTS_XFS_SECTION_REFLINK_64K
+
+endif # MMTESTS_FS_XFS

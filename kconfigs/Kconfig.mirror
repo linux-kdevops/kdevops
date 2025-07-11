@@ -657,5 +657,24 @@ config MIRROR_XFSPROGS_URL
 	string
 	default DEFAULT_XFSPROGS_URL
 
+choice
+	prompt "Tools - mmtests.git mirror protocol/source"
+	default MIRROR_MMTESTS_HTTPS_GITHUB
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+
+config MIRROR_MMTESTS_HTTPS_GITHUB
+	bool "HTTPS (GitHub)"
+	help
+	  If you enable this option then GitHub HTTPS will be used as the
+	  source of the mirror. The URL is:
+
+	  https://github.com/gormanm/mmtests.git
+
+endchoice
+
+config MIRROR_MMTESTS_URL
+	string
+	default DEFAULT_MMTESTS_GITHUB_HTTPS_URL if MIRROR_MMTESTS_HTTPS_GITHUB
+
 endif # ENABLE_LOCAL_LINUX_MIRROR
 endif # TERRAFORM
