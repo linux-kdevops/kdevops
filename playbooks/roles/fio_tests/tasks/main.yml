@@ -1,0 +1,35 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  failed_when: false
+  tags: vars
+
+- name: Install fio
+  become: yes
+  package:
+    name: fio
+    state: present
+  tags: ['install']
+
+- name: Run basic fio sequential write
+  become: yes
+  command: >-
+    fio --name=basic-seqwrite --rw=write --filename={{ fio_tests_device }} \
+        --size=1M --ioengine=libaio --direct=1 --output=/tmp/basic-seqwrite.out
+  when: fio_test_basic | bool
+  tags: ['fio']
+
+- name: Fetch fio result
+  ansible.builtin.fetch:
+    src: /tmp/basic-seqwrite.out
+    dest: "{{ topdir_path }}/workflows/fio_tests/results/{{ inventory_hostname }}/"
+    flat: yes
+  when: fio_test_basic | bool
+  tags: ['results']

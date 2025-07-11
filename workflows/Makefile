@@ -50,6 +50,10 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST))
 include workflows/nfstest/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST == y
 
+ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS))
+include workflows/fio_tests/Makefile
+endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS == y
+
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH))
 include workflows/sysbench/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH == y
