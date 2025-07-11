@@ -1,0 +1,57 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_first_found:
+    - files:
+      - "../extra_vars.yml"
+      - "../extra_vars.yaml"
+      - "../extra_vars.json"
+      skip: true
+  tags: vars
+
+- name: Install mmtests build dependencies (SUSE)
+  become: yes
+  become_method: sudo
+  zypper:
+    name:
+      - gcc
+      - git
+      - perl
+      - perl-CPAN
+      - perl-Math-Gradient
+      - R-base
+      - R-base-devel
+      - libnuma-devel
+    state: present
+  tags: ['deps']
+
+- name: Install mmtests runtime dependencies (SUSE)
+  become: yes
+  become_method: sudo
+  zypper:
+    name:
+      - numactl
+      - fio
+      - sysstat
+      - procps
+      - util-linux
+      - coreutils
+      - time
+      - bc
+      - psmisc
+      - perl-Math-Gradient
+    state: present
+  tags: ['deps']
+
+- name: Install mmtests monitoring dependencies (SUSE)
+  become: yes
+  become_method: sudo
+  zypper:
+    name:
+      - kernel-default-devel
+      - trace-cmd
+      - perf
+    state: present
+  tags: ['deps']
+  ignore_errors: true
