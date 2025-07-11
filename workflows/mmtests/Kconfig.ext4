@@ -1,0 +1,105 @@
+if MMTESTS_FS_EXT4
+
+choice
+	prompt "ext4 filesystem configuration to use"
+
+config MMTESTS_FS_EXT4_4K_4KS
+	bool "ext4 4k -  4k sector size"
+	select MMTESTS_EXT4_SECTOR_SIZE_4K
+	output yaml
+	help
+	  ext4 4k FSB with 4k sector size.
+
+config MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_16K
+	bool "ext4 4k block size bigalloc 16k cluster sizes -  4k sector size"
+	select MMTESTS_EXT4_SECTOR_SIZE_4K
+	select MMTESTS_EXT4_SECTION_4K_BIGALLOC_16K
+	output yaml
+	help
+	  ext4 4 KiB FSB with 4 KiB sector size, 16 KiB cluster sizes.
+
+config MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_32K
+	bool "ext4 4k block size bigalloc 32k cluster sizes -  4k sector size"
+	select MMTESTS_EXT4_SECTOR_SIZE_4K
+	select MMTESTS_EXT4_SECTION_4K_BIGALLOC_32K
+	output yaml
+	help
+	  ext4 4 KiB FSB with 4 KiB sector size, 32 KiB cluster sizes.
+
+config MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_64K
+	bool "ext4 4k block size bigalloc 64k cluster sizes -  4k sector size"
+	select MMTESTS_EXT4_SECTOR_SIZE_4K
+	select MMTESTS_EXT4_SECTION_4K_BIGALLOC_64K
+	output yaml
+	help
+	  ext4 4 KiB FSB with 4 KiB sector size, 64 KiB cluster sizes.
+
+endchoice
+
+choice
+    prompt "EXT4 filesystem sector size to use"
+    default MMTESTS_EXT4_SECTOR_SIZE_4K
+
+config MMTESTS_EXT4_SECTOR_SIZE_512
+	bool "512 bytes"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_512
+	help
+	  Use 512 byte sector size.
+
+config MMTESTS_EXT4_SECTOR_SIZE_4K
+	bool "4 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Use 4 KiB sector size.
+
+endchoice
+
+config MMTESTS_EXT4_SECTOR_SIZE
+	string
+	output yaml
+	default "512" if MMTESTS_EXT4_SECTOR_SIZE_512
+	default "4k"  if MMTESTS_EXT4_SECTOR_SIZE_4K
+
+config MMTESTS_EXT4_SECTION_4K
+	bool
+
+config MMTESTS_EXT4_SECTION_4K_CMD
+	string
+	depends on MMTESTS_EXT4_SECTION_4K
+	default "-F -b 4k"
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_16K
+	bool
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_16K_CMD
+	string
+	depends on MMTESTS_EXT4_SECTION_4K_BIGALLOC_16K
+	default "-F -b 4k -O bigalloc -C 16k"
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_32K
+	bool
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_32K_CMD
+	string
+	depends on MMTESTS_EXT4_SECTION_4K_BIGALLOC_32K
+	default "-F -b 4k -O bigalloc -C 32k"
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_64K
+	bool
+
+config MMTESTS_EXT4_SECTION_4K_BIGALLOC_64K_CMD
+	string
+	depends on MMTESTS_EXT4_SECTION_4K_BIGALLOC_64K
+	default "-F -b 4k -O bigalloc -C 64k"
+
+config MMTESTS_EXT4_CMD
+	string
+	output yaml
+	default MMTESTS_EXT4_SECTION_4K_CMD if MMTESTS_FS_EXT4_4K_4KS
+	default MMTESTS_EXT4_SECTION_4K_BIGALLOC_16K_CMD if MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_16K
+	default MMTESTS_EXT4_SECTION_4K_BIGALLOC_32K_CMD if MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_32K
+	default MMTESTS_EXT4_SECTION_4K_BIGALLOC_64K_CMD if MMTESTS_FS_EXT4_4K_4KS_BIGALLOC_64K
+
+endif # MMTESTS_FS_EXT4

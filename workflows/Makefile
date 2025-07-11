@@ -54,6 +54,10 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH))
 include workflows/sysbench/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH == y
 
+ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_MMTESTS))
+include workflows/mmtests/Makefile
+endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_MMTESTS == y
+
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE))
 include workflows/steady_state/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE == y

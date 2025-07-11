@@ -1,0 +1,108 @@
+if KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+
+config HAVE_MIRROR_MMTESTS
+	bool
+	depends on USE_LIBVIRT_MIRROR
+	default $(shell, scripts/check_mirror_present.sh /mirror/mmtests.git)
+
+config MMTESTS_GIT_URL
+	string "The mmtests git tree to clone"
+	output yaml
+	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/mmtests.git) if HAVE_MIRROR_MMTESTS && GUESTFS
+	default DEFAULT_MMTESTS_GITHUB_HTTPS_URL if !HAVE_MIRROR_MMTESTS
+	help
+	  The mmtests git tree to clone.
+
+config MMTESTS_TEST_TYPE
+	string
+	output yaml
+	default "thpcompact" if MMTESTS_ENABLE_THPCOMPACT
+	default "thpchallenge" if MMTESTS_ENABLE_THPCHALLENGE
+
+choice
+	prompt "mmtests test type"
+	default MMTESTS_ENABLE_THPCOMPACT
+	help
+	  Select the type of mmtests test to run.
+
+config MMTESTS_ENABLE_THPCOMPACT
+	bool "thpcompact"
+	help
+	  Run thpcompact test to stress THP allocations through multi-stage
+	  memory allocation and migration. This test is designed to exercise
+	  memory compaction and huge page allocation under various thread
+	  counts while staying within system memory limits.
+
+config MMTESTS_ENABLE_THPCHALLENGE
+	bool "thpchallenge"
+	help
+	  Run thpchallenge fio test which uses fio for background I/O
+	  workload while testing THP allocation performance.
+
+endchoice
+
+config MMTESTS_ITERATIONS
+	int "Number of iterations per test"
+	default 5
+	range 1 100
+	output yaml
+	help
+	  The number of iterations to run for each mmtests configuration.
+
+config MMTESTS_MONITOR_INTERVAL
+	int "Monitor update interval in seconds"
+	default 1
+	range 1 60
+	output yaml
+	help
+	  The interval in seconds between monitoring updates during
+	  mmtests execution.
+
+config MMTESTS_MONITOR_ENABLE_FTRACE
+	bool "Enable ftrace monitoring"
+	default y
+	output yaml
+	help
+	  Enable ftrace events for compaction and kernel memory monitoring
+	  during mmtests execution.
+
+config MMTESTS_MONITOR_ENABLE_PROC_MONITORING
+	bool "Enable /proc monitoring"
+	default y
+	output yaml
+	help
+	  Enable monitoring of /proc/vmstat, /proc/buddyinfo, and
+	  /proc/pagetypeinfo during mmtests execution.
+
+config MMTESTS_MONITOR_ENABLE_MPSTAT
+	bool "Enable mpstat monitoring"
+	default y
+	output yaml
+	help
+	  Enable mpstat monitoring during mmtests execution.
+
+config MMTESTS_PRETEST_DROPVMCACHES
+	bool "Trigger to drop vm cache before the test"
+	output yaml
+	help
+	  Manually trigger to drop the vm cache before the test.
+
+config MMTESTS_PRETEST_COMPACTION
+	bool "Trigger memory compaction before the test"
+	output yaml
+	help
+	  Manually trigger memory comapction before run.
+
+config MMTESTS_PRETEST_THP_SETTING
+	string "THP setting"
+	default "always"
+	output yaml
+	help
+	  Transparent huge page setting for all nodes.
+	  Options: always, madvise, never
+
+source "workflows/mmtests/Kconfig.thpcompact"
+source "workflows/mmtests/Kconfig.thpchallenge"
+source "workflows/mmtests/Kconfig.fs"
+
+endif # KDEVOPS_WORKFLOW_ENABLE_MMTESTS

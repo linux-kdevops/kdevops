@@ -1,0 +1,62 @@
+if MMTESTS_ENABLE_THPCOMPACT
+
+config MMTESTS_THPCOMPACT_THREADS_MIN
+	int "Minimum number of threads to use for mmtests"
+	default 1
+	range 1 128
+	output yaml
+	help
+	  The minimum number of threads to use for mmtests runs.
+
+choice
+	prompt "mmtests max thread count strategy"
+	default MMTESTS_THPCOMPACT_THREADS_MAX_TYPE_AUTO
+	help
+	  Select the strategy to set the maximum number of threads we'll use.
+
+config MMTESTS_THPCOMPACT_THREADS_MAX_TYPE_AUTO
+	bool "auto"
+	output yaml
+	help
+	  We use a heuristic to use 4 times the number of threads the system has
+	  so 4 * $(nproc).
+
+config MMTESTS_THPCOMPACT_THREADS_MAX_TYPE_MANUAL
+	bool "manual"
+	output yaml
+	help
+	  Lets you select the max number of threads mmtests will use.
+
+endchoice
+
+if MMTESTS_THPCOMPACT_THREADS_MAX_TYPE_MANUAL
+
+config MMTESTS_THPCOMPACT_THREADS_MAX
+	int "Maximum number of threads to use for mmtests"
+	default 32
+	range 1 128
+	output yaml
+	help
+	  The maximum number of threads to use for mmtests runs.
+
+endif
+
+config MMTESTS_THPCOMPACT_ANONYMOUS_MEMORY_PERCENT
+	int "Percentage of system memory to use for anonymous memory"
+	default 80
+	range 10 95
+	output yaml
+	help
+	  The percentage of total system memory to use for anonymous
+	  memory allocation during tests.
+
+config MMTESTS_THPCOMPACT_FILEMAP_MEMORY_SCALE
+	int "How much to scale file memory used"
+	default 4
+	output yaml
+	help
+	  The amount of scaling of memory in comparison to anonymous memory to
+	  use for file mappings. Is set set to 4 then we'll use the 1/4th the
+	  amount of set for MMTESTS_ANONYMOUS_MEMORY_PERCENT.
+
+endif # MMTESTS_ENABLE_THPCOMPACT

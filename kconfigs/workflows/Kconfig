@@ -182,6 +182,13 @@ config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 	  This will dedicate your configuration to running only the
 	  sysbench workflow.
 
+config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
+	bool "mmtests"
+	select KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+	help
+	  This will dedicate your configuration to running only the
+	  mmtests workflow for memory fragmentation testing.
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -195,6 +202,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "ltp" if KDEVOPS_WORKFLOW_DEDICATE_LTP
 	default "nfstest" if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 	default "sysbench" if KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+	default "mmtests" if KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 
 endif
 
@@ -286,6 +294,14 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
 	  Select this option if you want to provision sysbench on a
+	  single target node for by-hand testing.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MMTESTS
+	bool "mmtests"
+	select KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
+	help
+	  Select this option if you want to provision mmtests on a
 	  single target node for by-hand testing.
 
 endif # !WORKFLOWS_DEDICATED_WORKFLOW
@@ -389,6 +405,17 @@ menu "Configure and run the sysbench tests"
 source "workflows/sysbench/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+
+config KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MMTESTS || KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
+
+if KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+menu "Configure and run the mmtests tests"
+source "workflows/mmtests/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_MMTESTS
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"
