@@ -548,11 +548,18 @@ config LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 	  you won't be able to test ZNS.
 
 config LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
-	bool "ide"
-	output yaml
-	help
-	  Use the QEMU ide driver for extra storage drives. This is useful for
-	  really old Linux distributions that lack the virtio backend driver.
+        bool "ide"
+        output yaml
+        help
+          Use the QEMU ide driver for extra storage drives. This is useful for
+          really old Linux distributions that lack the virtio backend driver.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
+        bool "scsi"
+        output yaml
+        help
+          Use the QEMU SCSI driver for extra storage drives. This relies on a
+          virtio-scsi controller with scsi-hd devices attached.
 
 config LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
         bool "scsi"
