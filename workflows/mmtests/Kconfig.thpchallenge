@@ -1,0 +1,52 @@
+if MMTESTS_ENABLE_THPCHALLENGE
+
+config MMTESTS_THPCHALLENGE_BACKGROUND
+	string "Background workload for THP challenge"
+	output yaml
+	default "fio-random-reader-inefficient"
+	help
+	  Name of the background workload to use during the THP challenge.
+	  This workload is typically one that causes memory fragmentation.
+
+config MMTESTS_THPCHALLENGE_FIO_THREADS
+	int "Number of FIO threads for THP challenge background workload"
+	output yaml
+	default 4
+	help
+	  The number of FIO threads used for the background memory
+	  fragmentation workload during the THP challenge benchmark.
+
+config MMTESTS_THPCHALLENGE_MIN_THREADS
+	int "Minimum number of threads for THP workload"
+	output yaml
+	default 1
+	help
+	  Minimum number of threads used in the THP challenge benchmark.
+	  This is typically computed as a function of NUMCPUS and NUMNODES.
+	  If unsure, leave at default and let the runtime environment compute it.
+
+config MMTESTS_THPCHALLENGE_MAX_THREADS
+	int "Maximum number of threads for THP workload"
+	output yaml
+	default 1
+	help
+	  Maximum number of threads used in the THP challenge benchmark.
+	  Should be equal to or greater than MIN_THREADS.
+
+config MMTESTS_THPCHALLENGE_THP_WSETSIZE
+	int "Working set size for THP workload - percertage"
+	output yaml
+	range 1 100
+	help
+	  Working set size for the main THP challenge workload.
+	  Typically 80% of total system memory.
+
+config MMTESTS_THPCHALLENGE_FIO_WSETSIZE
+	int "Working set size for FIO workload - percentage"
+	output yaml
+	range 1 200
+	help
+	  Working set size for the background FIO workload in the THP challenge.
+	  Typically 150% of total system memory.
+
+endif # MMTESTS_ENABLE_THPCHALLENGE
