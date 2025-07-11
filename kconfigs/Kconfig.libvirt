@@ -487,7 +487,7 @@ config LIBVIRT_MACHINE_TYPE_DEFAULT
 	  is the old i440x, so you will not get PCIe support.
 
 	  We only want to support PCI-E capable guests with libguest so the
-	  deafult is not allowed on libguest.
+	  default is not allowed on libguest.
 
 config LIBVIRT_MACHINE_TYPE_Q35
 	bool "q35"
@@ -817,7 +817,7 @@ config LIBVIRT_AIO_MODE_NATIVE
 	help
 	  Use the aio=native mode. For some older kernels it is known that
 	  native will cause corruption if used on ext4 or xfs filesystem if
-	  you also use cace=none. This corruption is documented for RHEL:
+	  you also use cache=none. This corruption is documented for RHEL:
 
 	  https://access.redhat.com/articles/41313
 	  https://bugzilla.redhat.com/show_bug.cgi?id=615309
@@ -1104,7 +1104,7 @@ config LIBVIRT_ENABLE_GDB
 	output yaml
 	help
 	  Select this option if you want to enable debugging support for GDB.
-	  By default , it is assumed that gdb is disabled since we dont want
+	  By default , it is assumed that gdb is disabled since we don't want
 	  to complicate this for the CI runs. If enabled then libvirt guest
 	  xml for each guest will be configured to use gdb on a specific
 	  tcp port.
@@ -1116,7 +1116,7 @@ config LIBVIRT_GDB_BASEPORT
 	depends on LIBVIRT_ENABLE_GDB
 	help
 	  This option defines the base port to be used for the GDB.
-	  Esentially we need to make QEMU listen for an incoming connection from
+	  Essentially we need to make QEMU listen for an incoming connection from
 	  gdb on a TCP port. The default port is chosen to be 1234. However we
 	  introduce variability for assigning the port to each guest by defining
 	  a base port and adding an index to it based on the number of libvrt guest
