@@ -76,6 +76,16 @@ vagrant_global:
       physical_block_size: {{ libvirt_extra_storage_virtio_physical_block_size }}
       logical_block_size: {{ libvirt_extra_storage_virtio_logical_block_size }}
 {% endif %}
+{% elif libvirt_extra_storage_drive_scsi %}
+  extra_disks:
+    data:
+      size: 102400
+    scratch:
+      size: 102400
+    extra1:
+      size: 102400
+    extra2:
+      size: 102400
 {% elif libvirt_extra_storage_drive_nvme %}
   extra_disks:
     data:

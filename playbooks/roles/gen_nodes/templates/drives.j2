@@ -40,6 +40,26 @@ the drives can vary by type, so we have one macro by type of drive.
 {% endfor %}
 <!-- End of virtio drives-->
 {%- endmacro -%}
+{%- macro gen_drive_scsi(num_drives,
+                         kdevops_storage_pool_path,
+                         hostname,
+                         libvirt_extra_drive_format,
+                         libvirt_extra_storage_aio_mode,
+                         libvirt_extra_storage_aio_cache_mode) -%}
+<!-- We generated {{ num_drives }} scsi dives -->
+{% for n in range(0,num_drives) %}
+    <!-- This is scsi drive # {{ n + 1 }} -->
+    <qemu:arg value='-device'/>
+    <qemu:arg value='pcie-root-port,id=pcie-port-for-scsi-{{ n }},multifunction=on,bus=pcie.1,addr=0x{{ "%0x" | format( n | int) }},chassis=5{{ n }}'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='virtio-scsi-pci,id=scsi{{ n }},bus=pcie-port-for-scsi-{{ n }},addr=0x0'/>
+    <qemu:arg value='-drive'/>
+    <qemu:arg value='file={{ kdevops_storage_pool_path }}/guestfs/{{ hostname }}/extra{{ n }}.{{ libvirt_extra_drive_format }},format={{ libvirt_extra_drive_format }},if=none,aio={{ libvirt_extra_storage_aio_mode }},cache={{ libvirt_extra_storage_aio_cache_mode }},id=drv{{ n }}'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='scsi-hd,drive=drv{{ n }},bus=scsi{{ n }}.0'/>
+{% endfor %}
+<!-- End of scsi drives-->
+{%- endmacro -%}
 {%- macro gen_drive_large_io_virtio(libvirt_largeio_logical_compat,
 				    libvirt_largeio_logical_compat_size,
 				    libvirt_largeio_pow_limit,
