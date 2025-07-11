@@ -312,6 +312,33 @@
     - kdevops_workflow_enable_sysbench
     - ansible_hosts_template.stat.exists
 
+- name: Infer enabled mmtests test types
+  set_fact:
+    mmtests_enabled_test_types: >-
+      {{
+        lookup('file', topdir_path + '/.config')
+        | regex_findall('^CONFIG_MMTESTS_ENABLE_(.*)=y$', multiline=True)
+        | map('lower')
+        | list
+      }}
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_mmtests
+    - ansible_hosts_template.stat.exists
+
+- name: Generate the Ansible hosts file for a dedicated mmtests setup
+  tags: [ 'hosts' ]
+  template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_mmtests
+    - ansible_hosts_template.stat.exists
+
 - name: Verify if final host file exists
   stat:
     path: "{{ topdir_path }}/{{ kdevops_hosts }}"

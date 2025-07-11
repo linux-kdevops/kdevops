@@ -116,6 +116,10 @@ config DEFAULT_MODULES_HTTPS_GOOGLE_URL
 	string
 	default "https://kernel.googlesource.com/pub/scm/linux/kernel/git/modules/linux.git"
 
+config DEFAULT_MMTESTS_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/gormanm/mmtests.git"
+
 config DEFAULT_MCGROF_LINUS_GIT_URL
 	string
 	default "https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git"
