@@ -15,10 +15,14 @@ config SSD_STEADY_STATE_DEVICE
 config SSD_STEADY_STATE_PREFILL_BLOCKSIZE
     string "Prefill blocksize"
     output yaml
-    default "128k"
+    default ""
     help
       Block size used during the prefill step before steady
-      state verification.
+      state verification. If empty we will try to infer this based first on the
+      the device queue/optimal_io_size and if that is not available fallback
+      to the queue/physical_block_size which should always exist. The final
+      computed block size is kept at run time on the effective_blocksize
+      varible and computed on the task 'Calculate effective configuration values'
 
 config SSD_STEADY_STATE_IODEPTH
     string "Prefill iodepth"
@@ -103,3 +107,72 @@ config SSD_STEADY_STATE_BW_SLOPE_DUR
     default "2h"
     help
       Duration the throughput slope criterion must hold.
+
+menu "Prefill configuration options"
+
+config SSD_STEADY_STATE_PREFILL_VERBOSE
+    bool "Enable verbose prefill output"
+    output yaml
+    default n
+    help
+      Enable verbose debug output during the prefill operation.
+      This provides detailed information about alignment calculations
+      and fio command generation.
+
+config SSD_STEADY_STATE_PREFILL_MAX_SIZE
+    string "Maximum size for prefill operation"
+    output yaml
+    default ""
+    help
+      Override the automatic detection of device capacity.
+      If empty, the script will use the full capacity of block devices
+      or file size for regular files. Use suffixes like "1G", "100M", etc.
+
+config SSD_STEADY_STATE_PREFILL_PHYSICAL_BS
+    string "Physical block size override"
+    output yaml
+    default ""
+    help
+      Override the automatic detection of physical block size.
+      If empty, the script will read from /sys/block/*/queue/physical_block_size
+      for block devices. Must be a power of 2 and align with the blocksize.
+
+config SSD_STEADY_STATE_PREFILL_IOENGINE
+    string "FIO I/O engine for prefill"
+    output yaml
+    default "io_uring"
+    help
+      The FIO I/O engine to use for prefill operations.
+      Common options: io_uring, libaio, psync, sync.
+      io_uring provides the best performance on modern kernels.
+
+config SSD_STEADY_STATE_PREFILL_DIRECT
+    string "FIO direct I/O setting"
+    output yaml
+    default "1"
+    help
+      Enable or disable direct I/O for prefill operations.
+      1 = direct I/O (bypass page cache)
+      0 = buffered I/O (use page cache)
+      Direct I/O is recommended for accurate device testing.
+
+config SSD_STEADY_STATE_PREFILL_ALLOC_SIZE
+    string "FIO memory allocation size per job"
+    output yaml
+    default "1048576"
+    help
+      Memory allocation size per FIO job in bytes.
+      This controls how much memory each FIO job uses.
+      Default of 1MB should support up to 128 threads.
+      Increase if using more jobs or experiencing memory pressure.
+
+config SSD_STEADY_STATE_PREFILL_EXTRA_ARGS
+    string "Additional FIO arguments for prefill"
+    output yaml
+    default ""
+    help
+      Additional arguments to pass to FIO during prefill operations.
+      These will be appended to the generated FIO command line.
+      Example: "--gtod_reduce=1 --norandommap"
+
+endmenu

@@ -9,23 +9,27 @@ buffered=0
 norandommap
 refill_buffers
 
-bs={{ precondition_blocksize }}
-iodepth={{ precondition_iodepth }}
-numjobs={{ precondition_numjobs }}
-filename={{ steady_state_device }}
+# We actually compute this at run time and override it on the command line.
+# We keep the value you had only if you set SSD_STEADY_STATE_PREFILL_BLOCKSIZE
+# to something not empty, your value: {{ ssd_steady_state_prefill_blocksize }}
+# bs={{ ssd_steady_state_prefill_blocksize }}
+
+iodepth={{ ssd_steady_state_iodepth }}
+numjobs={{ ssd_steady_state_numjobs }}
+filename={{ ssd_steady_state_device }}
 
 exitall_on_error
 continue_on_error=none
 
 rw=randwrite
 
-runtime={{ steady_state_runtime }}
+runtime={{ ssd_steady_state_runtime }}
 [steady-state-mean-bw]
-ss=bw:{{ steady_state_bw_mean_limit }}
-ss_dur={{ steady_state_bw_mean_dur }}
+ss=bw:{{ ssd_steady_state_bw_mean_limit }}
+ss_dur={{ ssd_steady_state_bw_mean_dur }}
 
 [steady-state-slope-bw]
 new_group
 group_reporting
-ss=bw_slope:{{ steady_state_bw_slope }}
-ss_dur={{ steady_state_bw_slope_dur }}
+ss=bw_slope:{{ ssd_steady_state_bw_slope }}
+ss_dur={{ ssd_steady_state_bw_slope_dur }}

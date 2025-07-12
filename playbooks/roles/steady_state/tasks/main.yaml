@@ -11,6 +11,16 @@
   failed_when: false
   tags: vars
 
+- include_role:
+    name: create_data_partition
+  tags: [ 'data_partition' ]
+
+- name: Ensure fio is installed
+  become: yes
+  package:
+    name: fio
+    state: present
+
 - name: Ensure steady state directory exists
   become: yes
   become_method: sudo
@@ -31,36 +41,315 @@
     - ss_bw.ini
   tags: ['setup']
 
-- name: Run prefill helper and execute fio commands
+- name: Resolve real path of target block device
   become: yes
   become_method: sudo
-  shell: |
-    {{ topdir_path }}/scripts/workflows/precondition/prefill-fio-jobs.sh \
-      --target {{ steady_state_device }} \
-      --blocksize {{ precondition_blocksize }} \
-      --jobs {{ precondition_numjobs }} \
-      --verbose > {{ steady_state_data }}/prefill.cmd
-    grep '^fio' {{ steady_state_data }}/prefill.cmd | bash
-  args:
-    executable: /bin/bash
+  ansible.builtin.command: realpath {{ ssd_steady_state_device }}
+  register: real_device_path
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Inform user of target block device for steady_state_device
+  become: yes
+  become_method: sudo
+  ansible.builtin.debug:
+    msg:
+      - "Target device is {{ ssd_steady_state_device }} real device is: {{ real_device_path.stdout }}"
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Check if target is a block device
+  become: yes
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ real_device_path.stdout }}"
+  register: device_stat
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Fail if target is not a block device
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Target {{ ssd_steady_state_device }} must be a block device"
+  when:
+    - kdevops_run_ssd_steady_state | bool
+    - device_stat.stat.exists | default(false)
+    - not device_stat.stat.isblk | default(false)
+  tags: ['prefill']
+
+- name: Get device basename from resolved symlink
+  become: yes
+  become_method: sudo
+  set_fact:
+    device_basename: "{{ real_device_path.stdout | basename }}"
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Inform user of short basename of target device
+  become: yes
+  become_method: sudo
+  ansible.builtin.debug:
+    msg:
+      - "Target device base name is {{ device_basename }}"
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Read block device properties from sysfs
+  become: yes
+  become_method: sudo
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  loop:
+    - { path: "/sys/block/{{ device_basename }}/queue/physical_block_size", var: "device_pbs_raw" }
+    - { path: "/sys/block/{{ device_basename }}/queue/optimal_io_size", var: "device_optimal_io_raw" }
+  register: device_sysfs_read
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Get device capacity
+  become: yes
+  become_method: sudo
+  ansible.builtin.command: /usr/sbin/blockdev --getsize64 {{ ssd_steady_state_device }}
+  register: device_capacity_raw
+  changed_when: false
   when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Set block device properties as facts
+  become: yes
+  become_method: sudo
+  set_fact:
+    device_physical_block_size: >-
+      {{
+        (device_sysfs_read.results |
+         selectattr('item.var', 'equalto', 'device_pbs_raw') |
+         first).content | b64decode | trim | int
+      }}
+    device_optimal_io_size: >-
+      {{
+        (device_sysfs_read.results |
+         selectattr('item.var', 'equalto', 'device_optimal_io_raw') |
+         first).content | b64decode | trim | int
+      }}
+    device_capacity: "{{ device_capacity_raw.stdout | int }}"
+  when: kdevops_run_ssd_steady_state | bool
+  tags: ['prefill']
+
+- name: Calculate effective configuration values
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    effective_physical_bs: "{{ ssd_steady_state_prefill_physical_bs | default(device_physical_block_size, true) | int }}"
+    effective_max_size: "{{ ssd_steady_state_prefill_max_size | default(device_capacity, true) | int }}"
+    effective_blocksize: >-
+      {% if ssd_steady_state_prefill_blocksize %}
+        {{ ssd_steady_state_prefill_blocksize | human_to_bytes | trim | int }}
+      {% elif device_optimal_io_size != 0 %}
+        {{ device_optimal_io_size | trim | int }}
+      {% else %}
+        {{ device_physical_block_size | trim | int }}
+      {% endif %}
+    effective_jobs: "{{ ssd_steady_state_numjobs | default(ansible_processor_vcpus, true) | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Fix syntax for effective_blocksize
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    effective_blocksize: "{{ effective_blocksize | trim | int }}"
+
+- name: Debug type of device_optimal_io_size
+  debug:
+    msg: "device_optimal_io_size={{ device_optimal_io_size }} ({{ device_optimal_io_size | type_debug }})"
+
+- name: Validate capacity alignment to physical block size
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Device capacity {{ effective_max_size }} not aligned to physical block size {{ effective_physical_bs }}"
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - (effective_max_size | int) % (effective_physical_bs | int) != 0
+  tags: ['prefill']
+
+- name: Validate blocksize alignment to physical block size
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Block size {{ effective_blocksize }} not aligned to physical block size {{ effective_physical_bs }}"
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - (effective_blocksize | int) % (effective_physical_bs | int) != 0
+  tags: ['prefill']
+
+- name: Calculate prefill job distribution
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    aligned_pbs_blocks: "{{ (effective_max_size | int) // (effective_physical_bs | int) }}"
+    aligned_bs_per_block: "{{ (effective_blocksize | int) // (effective_physical_bs | int) }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Calculate aligned blocks and job distribution
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    aligned_blocks: "{{ aligned_pbs_blocks | int // aligned_bs_per_block | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Calculate job alignment
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    blocks_per_job_remainder: "{{ aligned_blocks | int % effective_jobs | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Set aligned job distribution
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    aligned_jobs: "{{ effective_jobs if blocks_per_job_remainder == 0 else (effective_jobs | int - 1) }}"
+    unaligned_jobs: "{{ 0 if blocks_per_job_remainder == 0 else 1 }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Set aligned blocks per job
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    aligned_blocks_per_job: "{{ aligned_blocks | int // aligned_jobs | int if blocks_per_job_remainder != 0 else aligned_blocks | int // effective_jobs | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Calculate byte distribution for jobs
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    aligned_block_bytes: "{{ aligned_blocks_per_job | int * effective_blocksize | int }}"
+    total_aligned_block_bytes: "{{ aligned_blocks_per_job | int * effective_blocksize | int * aligned_jobs | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Calculate remainder bytes for unaligned job
+  become: yes
+  become_method: sudo
+  ansible.builtin.set_fact:
+    remainder_block_bytes: "{{ effective_max_size | int - total_aligned_block_bytes | int }}"
+  when: kdevops_run_ssd_steady_state|bool
+  tags: ['prefill']
+
+- name: Validate job byte alignment to blocksize
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Aligned job bytes {{ aligned_block_bytes }} not aligned to blocksize {{ effective_blocksize }}"
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - (aligned_block_bytes | int) % (effective_blocksize | int) != 0
+  tags: ['prefill']
+
+- name: Validate job byte alignment to physical block size
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Aligned job bytes {{ aligned_block_bytes }} not aligned to physical block size {{ effective_physical_bs }}"
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - (aligned_block_bytes | int) % (effective_physical_bs | int) != 0
+  tags: ['prefill']
+
+- name: Validate remainder alignment to physical block size
+  become: yes
+  become_method: sudo
+  ansible.builtin.fail:
+    msg: "Remainder bytes {{ remainder_block_bytes }} not aligned to physical block size {{ effective_physical_bs }}"
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - remainder_block_bytes | int != 0
+    - (remainder_block_bytes | int) % (effective_physical_bs | int) != 0
+  tags: ['prefill']
+
+- name: Run main prefill fio job for aligned data
+  become: yes
+  become_method: sudo
+  ansible.builtin.command: >-
+    fio --filename={{ ssd_steady_state_device }}
+    --direct={{ ssd_steady_state_prefill_direct }}
+    --name=drive-pre-fill-aligned-to-bs
+    --readwrite=write
+    --ioengine={{ ssd_steady_state_prefill_ioengine }}
+    --group_reporting=1
+    --alloc-size={{ ssd_steady_state_prefill_alloc_size }}
+    --numjobs={{ aligned_jobs }}
+    --offset_increment={{ aligned_block_bytes }}
+    --size={{ aligned_block_bytes }}
+    --blocksize={{ effective_blocksize }}
+    {{ ssd_steady_state_prefill_extra_args }}
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - aligned_jobs | int > 0
+  tags: ['prefill']
+
+- name: Run remainder prefill fio job for unaligned data
+  become: yes
+  become_method: sudo
+  ansible.builtin.command: >-
+    fio --filename={{ ssd_steady_state_device }}
+    --direct={{ ssd_steady_state_prefill_direct }}
+    --name=drive-pre-fill-aligned-to-pbs
+    --readwrite=write
+    --ioengine={{ ssd_steady_state_prefill_ioengine }}
+    --group_reporting=1
+    --offset={{ total_aligned_block_bytes }}
+    --size={{ remainder_block_bytes }}
+    --blocksize={{ effective_physical_bs }}
+    {{ ssd_steady_state_prefill_extra_args }}
+  when:
+    - kdevops_run_ssd_steady_state|bool
+    - unaligned_jobs | int > 0
+    - remainder_block_bytes | int > 0
   tags: ['prefill']
 
 - name: Run fio steady state for iops
   become: yes
   become_method: sudo
-  command: fio {{ steady_state_data }}/ss_iops.ini
+  ansible.builtin.command: >-
+    fio {{ steady_state_data }}/ss_iops.ini
+    --blocksize={{ effective_blocksize }}
+    --warnings-fatal
+    --output-format=json+
+    --output={{ steady_state_data }}/ss_iops.json
   when: kdevops_run_ssd_steady_state|bool
   tags: ['steady_state']
 
 - name: Run fio steady state for bw
   become: yes
   become_method: sudo
-  command: fio {{ steady_state_data }}/ss_bw.ini
+  ansible.builtin.command: >-
+    fio {{ steady_state_data }}/ss_bw.ini
+    --blocksize={{ effective_blocksize }}
+    --warnings-fatal
+    --output-format=json+
+    --output={{ steady_state_data }}/ss_bw.json
   when: kdevops_run_ssd_steady_state|bool
   tags: ['steady_state']
 
+- name: Create local results directory
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/workflows/steady_state/results/{{ inventory_hostname }}/"
+    state: directory
+    mode: '0755'
+  run_once: false
+  tags: ['results']
+
 - name: Copy steady state results to controller
+  delegate_to: localhost
   ansible.posix.synchronize:
     src: "{{ steady_state_data }}/"
     dest: "{{ topdir_path }}/workflows/steady_state/results/{{ inventory_hostname }}/"
@@ -68,6 +357,5 @@
     recursive: true
     rsync_opts:
       - "--ignore-existing"
-  delegate_to: localhost
   when: kdevops_run_ssd_steady_state|bool
   tags: ['results']
