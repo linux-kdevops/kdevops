@@ -131,10 +131,8 @@ config BLKTESTS_WATCHDOG_RESET_HUNG_SYSTEMS
 	  have to also implement a way to try to capture kernel logs
 	  before a reset.
 
-	  We currently only enable this for Vagrant provisioning, given we have
-	  to figure out a unified way to express a reset for cloud solution and
-	  also figure out a way to enable this for bare metal. For vagrant we
-	  currently use 'virsh reset' and so this works only if on libvirt.
+          We currently rely on 'virsh reset' for libvirt based setups. Support
+          for cloud solutions or bare metal can be extended later as needed.
 
 endif # BLKTESTS_WATCHDOG
 

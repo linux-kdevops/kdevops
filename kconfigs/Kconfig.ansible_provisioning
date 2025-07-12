@@ -187,10 +187,8 @@ config DEVCONFIG_SYSTEMD_JOURNAL_REMOTE_URL
 	help
           This is used for the client /etc/systemd/journal-upload.conf URL line.
           By default we won't use SSL for now. If you should make sure the
-	  IP address used here matches what the node should use. If using
-	  libvirt then ensure it is the same for your virtualization setup.
-	  If you are using vagrant on debian on the host it would seem the
-	  current default should work.
+         IP address used here matches what the node should use. If using
+         libvirt then ensure it is the same for your virtualization setup.
 
 endif # DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE
 

@@ -31,10 +31,6 @@ scripts/workflows/fstests/lib/__pycache__/
 scripts/workflows/blktests/lib/__pycache__/
 scripts/workflows/lib/__pycache__/
 
-vagrant/kdevops_nodes.yaml
-vagrant/.Vagrantfile.generated
-vagrant/Vagrantfile
-.vagrant/
 
 include/
 
@@ -97,6 +93,6 @@ workflows/linux/refs/user
 
 scripts/kconfig/.nconf-cfg
 .dynamic-kconfig.*
-vagrant/Kconfig.passthrough_libvirt.generated
+kconfigs/Kconfig.passthrough_libvirt.generated
 
 archive/

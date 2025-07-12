@@ -40,10 +40,9 @@ an entire lab for Linux kernel testing for a complex subsystem in a jiffy.
 
 It makes use of local ansible roles and optionally lets you use
 [libguestfs](https://libguestfs.org/) with libvirt or terraform in order
-to support an cloud provider. Support for vagrant in kdevops exists but is now
-deprecated in favor of [libguestfs](https://libguestfs.org/) since vagrant
-lacks any active maintenance, new development should use and focus on
-[libguestfs](https://libguestfs.org/).
+to support a cloud provider. Historical support for Vagrant has been
+removed in favor of [libguestfs](https://libguestfs.org/), which is
+actively maintained.
 
 Variability is provided through the same variability language used in the Linux
 kernel, kconfig. It is written by Linux kernel developers, for Linux kernel
@@ -334,10 +333,8 @@ Below are sections which get into technical details of how kdevops works.
   * [How is extra_vars.yaml generated](docs/how-extra-vars-generated.md)
   * [How is the ansible hosts file generated](docs/the-gen-hosts-ansible-role.md)
   * [What are and how to generate the kdevops nodes files](docs/the-gen-nodes-ansible-role.md)
-    * [How is the dynamic Vagrant files generated](docs/the-gen-nodes-ansible-role-vagrant.md)
     * [How is the terraform kdevops_nodes variable generated](docs/the-gen-nodes-ansible-role-terraform.md)
   * [How are the terraform terraform/terraform.tfvars variables generated](docs/the-terraform-gen-tfvar-ansible-role.md)
-  * [Why Vagrant (deprecated) used to be used for virtualization](docs/why-vagrant.md)
   * [A case for supporting truncated files with loopback block devices](docs/testing-with-loopback.md)
   * [Seeing more issues with loopback / truncated files setup](docs/seeing-more-issues.md)
   * [Adding a new workflow to kdevops](docs/adding-a-new-workflow.md)
@@ -347,10 +344,8 @@ Below are sections which get into technical details of how kdevops works.
   * [Motivation behind kdevops](docs/motivations.md)
   * [Linux distribution support](docs/linux-distro-support.md)
   * [Overriding all Ansible role options with one file](docs/ansible-override.md)
-  * [kdevops Vagrant support](docs/kdevops-vagrant.md)
   * [kdevops terraform support - cloud setup with kdevops](docs/kdevops-terraform.md)
   * [kdevops local Ansible roles](docs/ansible-roles.md)
-  * [Tutorial on building your own custom Vagrant boxes](docs/custom-vagrant-boxes.md)
 
 License
 -------

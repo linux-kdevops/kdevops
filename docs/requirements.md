@@ -17,12 +17,6 @@ Then you can now run:
 
 # Supported base distributions for command and control
 
-Examples of well tested rolling distributions recommended if using vagrant:
-
-  * Debian testing
-  * OpenSUSE Tumbleweed
-  * Fedora
-  * Latest Ubuntu
-
-If using Terraform just ensure you can upgrade Terraform to the latest release
-regularly.
+Examples of well tested rolling distributions include Debian testing,
+OpenSUSE Tumbleweed, Fedora and the latest Ubuntu. Ensure you can
+upgrade Terraform to the latest release regularly if you rely on it.

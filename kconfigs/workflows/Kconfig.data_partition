@@ -55,8 +55,8 @@ config WORKFLOW_INFER_USER_AND_GROUP
 	  typically set the username and group ownership of that partition
 	  based on passed manual settings. Providing a good guess as defaults
 	  through kconfig about what the target user and group should be for the
-	  data partition for systems created with vagrant is easy, but this is
-	  not as easy when users are using Terraform or bare metal. Instead of
+         data partition for systems created with libvirt is easy, but this is
+         not as easy when users are using Terraform or bare metal. Instead of
 	  extending the possible sensible defaults for the target username and
 	  group to use for the data partition based the mechanism used for
 	  bringup or Linux distribution chosen, we also provide support to infer
@@ -72,7 +72,6 @@ if !WORKFLOW_INFER_USER_AND_GROUP
 config WORKFLOW_DATA_USER
 	string "The username to use to chown on the target data workflow directory"
 	default "kdevops" if GUESTFS
-	default "vagrant" if VAGRANT
 	default TERRAFORM_SSH_CONFIG_USER if TERRAFORM
 	help
 	  Manual setting for the username to chown the data workflow path.
@@ -80,15 +79,13 @@ config WORKFLOW_DATA_USER
 config WORKFLOW_DATA_GROUP
 	string "The group to use to chown on the target data workflow directory"
 	default "kdevops" if GUESTFS
-	default "vagrant" if VAGRANT
 	default TERRAFORM_SSH_CONFIG_USER if TERRAFORM_AWS_AMI_DEBIAN || TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 	default "users" if !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
-	default "root" if !VAGRANT && !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+       default "root" if !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 	help
 	  Manual setting for the group to chgrp the data workflow path.
 
-	  We default to "vagrant" if you are using vagrant, otherwise we rely
-	  on the the assumption your distribution has the "users" group created
+         We rely on the assumption your distribution has the "users" group created
 	  for distributions where we are certain of that. If on debian based
 	  systems we assume the same group exists with the username you used
 	  to log in.
