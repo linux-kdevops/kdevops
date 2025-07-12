@@ -17,7 +17,6 @@ export KDEVOPS_EXTRA_VARS ?=			extra_vars.yaml
 export KDEVOPS_PLAYBOOKS_DIR :=			playbooks
 export KDEVOPS_HOSTFILE ?=			hosts
 export KDEVOPS_NODES :=
-export KDEVOPS_VAGRANT :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
@@ -129,9 +128,6 @@ ifneq (,$(ANSIBLE_EXTRA_ARGS))
 DEFAULT_DEPS += $(KDEVOPS_EXTRA_VARS)
 endif
 
-ifeq (y,$(CONFIG_VAGRANT))
-DEFAULT_DEPS += $(KDEVOPS_VAGRANT)
-endif
 
 DEFAULT_DEPS += $(DEFAULT_DEPS_REQS_EXTRA_VARS)
 
@@ -230,7 +226,7 @@ $(KDEVOPS_HOSTS): .config ansible.cfg $(KDEVOPS_HOSTS_TEMPLATE)
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(KDEVOPS_NODES)
-$(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config ansible.cfg $(KDEVOPS_NODES_TEMPLATE)
+$(KDEVOPS_NODES): .config ansible.cfg $(KDEVOPS_NODES_TEMPLATE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_nodes.yml \

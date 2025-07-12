@@ -20,9 +20,9 @@ make dynconfig
 
 ### CXL topologies
 
-Today we construct CXL topologies manually through kconfig and
-Vagrantfile qemu line entries based on jinja2 variables. It should be possible
-to generate CXL topologies automatically.
+Today we construct CXL topologies manually through kconfig and qemu command
+line options derived from jinja2 variables. It should be possible to
+generate CXL topologies automatically.
 
 ### dynamic cloud configs
 

@@ -4,8 +4,6 @@ GEN_NODES_EXTRA_ARGS += kdevops_nodes='$(KDEVOPS_NODES)'
 GEN_NODES_EXTRA_ARGS += kdevops_nodes_template='$(KDEVOPS_NODES_TEMPLATE)'
 GEN_NODES_EXTRA_ARGS += kdevops_nodes_template_full_path='$(TOPDIR_PATH)/$(KDEVOPS_NODES_TEMPLATE)'
 
-GEN_NODES_EXTRA_ARGS += vagrant_box='$(subst ",,$(CONFIG_VAGRANT_BOX))'
-GEN_NODES_EXTRA_ARGS += vagrant_box_version='$(subst ",,$(CONFIG_VAGRANT_BOX_VERSION))'
 GEN_NODES_EXTRA_ARGS += libvirt_vcpus_count='$(subst ",,$(CONFIG_LIBVIRT_VCPUS_COUNT))'
 GEN_NODES_EXTRA_ARGS += libvirt_mem_mb='$(subst ",,$(CONFIG_LIBVIRT_MEM_MB))'
 

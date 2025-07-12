@@ -43,7 +43,6 @@ config HAVE_MIRROR_XFSPROGS
 config FSTESTS_XFS_XFSPROGS_GIT
 	string "The Xfsprogs git tree to clone"
 	default DEFAULT_XFSPROGS_URL if !HAVE_MIRROR_XFSPROGS
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/xfsprogs-dev.git) if HAVE_MIRROR_XFSPROGS && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/xfsprogs-dev.git) if HAVE_MIRROR_XFSPROGS && GUESTFS
 	depends on FSTESTS_XFS_BUILD_CUSTOM_XFSPROGS
 	help
@@ -83,7 +82,6 @@ config FSTESTS_XFSDUMP_GIT_URL
 	string "The xfsdump git tree to clone"
 	depends on FSTESTS_XFS_BUILD_XFSDUMP
 	default DEFAULT_XFSDUMP_URL if !HAVE_MIRROR_XFSDUMP
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/xfsdump-dev.git) if HAVE_MIRROR_XFSDUMP && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/xfsdump-dev.git) if HAVE_MIRROR_XFSDUMP && GUESTFS
 	help
 	  The xfsdump git tree to clone

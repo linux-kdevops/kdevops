@@ -13,8 +13,7 @@ Distributions are supported as new users add support for them. Adding support
 for a new distribution typically just consists of updating the kdevops
 Ansible roles with support for doing a mapping of package names, package
 manager updates, and ensuring your distribution can install the latest
-version of vagrant and Terraform. Because you *want* the latest version of
-vagrant and Terraform rolling Linux distributions are encouraged to be used.
+version of Terraform. Rolling Linux distributions are encouraged to be used.
 Currently supported Linux distributions:
 
   * Debian testing
@@ -22,9 +21,9 @@ Currently supported Linux distributions:
   * OpenSUSE Tumbleweed
   * Ubuntu 21.10
 
-If your distribution does not have vagrant and Terraform packaged, support
-is provided to download the latest releases via the published zip files,
-however this can get complex quite fast due to the dependency chain.
+If your distribution does not have Terraform packaged, support is provided
+to download the latest release via the published zip files, however this
+can get complex quite fast due to the dependency chain.
 
 ## Target Linux distributions support
 

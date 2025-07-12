@@ -77,8 +77,8 @@ ansible-playbook -i hosts playbooks/libvirt_user.yml -e "only_verify_user=True"
 This documents the logic used by this Ansible role to let a regular user run
 libvirt.
 
-Vagrant can be used to call libvirt without requiring root privileges. To do
-this this Ansible role ensures the user which runs vagrant is part of the
+Guests created with libguestfs can be managed without root privileges. To do
+this this Ansible role ensures the user running the build is part of the
 following groups:
 
   * kvm

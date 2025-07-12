@@ -27,7 +27,7 @@ make menuconfig
 ```
 
 Under "Bring up methods" you will see the option for
-"Node bring up method (Vagrant for local virtualization (KVM / VirtualBox))".
+"Node bring up method (Use guestfs-tools for local virtualization via KVM and libvirt)".
 Click on that and then change the option to "Terraform for cloud environments".
 That should let you start configuring your cloud provider options. You can
 use the same main menu to configure specific workflows supported by kdevops,
@@ -69,8 +69,7 @@ writing we support this for all cloud providers we support.
 
 After `make bringup` you should have had your SSH configuration file updated
 automatically with the provisioned hosts. The Terraform module
-`add-host-ssh-config` is used to do the work of updating your SSH configuration,
-a module is used to share the code with provisioning with vagrant.
+`add-host-ssh-config` is used to do the work of updating your SSH configuration.
 
 The Terraform module on the registry:
 
@@ -80,22 +79,14 @@ The Terraform source code:
 
   * https://github.com/mcgrof/terraform-kdevops-add-host-ssh-config
 
-Because the same code is shared between the vagrant Ansible role and the
-Terraform module, a git subtree is used to maintain the shared code. The
-Terraform code downloads the module on its own, while the code for
-the Vagrant Ansible role has the code present on the kdevops tree as
-part of its local directories in under:
+Because the same code is shared between the Ansible role and the
+Terraform module, a git subtree is used to maintain the shared code.
+The Terraform module downloads its own copy of the ssh config helper code
+and kdevops now ships a small helper script under
+`scripts/update_ssh_config_guestfs.py`.
 
-  * `playbooks/roles/update_ssh_config_vagrant/update_ssh_config/`
-
-Patches for code for in `update_ssh_config` can go against
-the `playbooks/roles/update_ssh_config_vagrant/update_ssh_config/`
-directory, but should be made atomic so that these changes can
-be pushed onto the standalone git tree for update_ssh_config on
-a regular basis. For details on the development workflow for it,
-read the documentation on:
-
- * [update_ssh_config documentation](playbooks/roles/update_ssh_config_vagrant/update_ssh_config/README.md)
+Patches for this script should be kept simple so they can be shared with
+the standalone Terraform module.
 
 ## Destroying nodes with Terraform
 
