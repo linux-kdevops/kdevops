@@ -51,7 +51,6 @@ config WORKFLOW_MAKE_CMD
 	default "make -j 16" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
 	default "make -j 1" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS1_V2
 	default "make -j 4" if TERRAFORM_AZURE_VM_SIZE_STANDARD_DS3_V2
-	default "make -j 8" if VAGRANT
 	help
 	  The actual make command to use when building Linux. You want to
 	  optimize this as per the number of cores you have.
@@ -98,7 +97,6 @@ config WORKFLOW_KDEVOPS_GIT
 	default "https://github.com/linux-kdevops/kdevops.git" if !GIT_ALTERNATIVES && !HAVE_CUSTOM_KDEVOPS_GIT && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	default "https://github.com/linux-kdevops/kdevops.git" if GIT_LINUX_KDEVOPS_GITHUB && !HAVE_MIRROR_KDEVOPS
 	default "https://gitlab.com/linux-kdevops/kdevops.git" if GIT_LINUX_KDEVOPS_GITLAB && !HAVE_MIRROR_KDEVOPS
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && VAGRANT && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/kdevops.git) if HAVE_MIRROR_KDEVOPS && GUESTFS && !WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	default $(shell, ./scripts/append-makefile-vars.sh $(GUEST_KDEVOPS_REPO)) if WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	help
@@ -163,7 +161,6 @@ config CUSTOM_DISTRO_KOTD_REPO
 	string "Distribution KOTD repository"
 	depends on WORKFLOW_KOTD_ENABLE
 	depends on HAVE_DISTRO_CUSTOM_KOTD_REPO
-	default VAGRANT_SUSE_KOTD_REPO if VAGRANT_SUSE
 	help
 	  The URL of the custom KOTD repo for your Linux distribution.
 
@@ -171,6 +168,5 @@ config CUSTOM_DISTRO_KOTD_REPO_NAME
 	string "Distribution KOTD repository name"
 	depends on WORKFLOW_KOTD_ENABLE
 	depends on HAVE_DISTRO_CUSTOM_KOTD_REPO
-	default VAGRANT_SUSE_KOTD_REPO_NAME if VAGRANT_SUSE
 	help
 	  The name of the custom KOTD repo for your Linux distribution.

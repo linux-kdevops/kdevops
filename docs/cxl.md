@@ -3,10 +3,8 @@
 kdevops has support bringing up a CXL development environment and testing. This
 documents this support.
 
-Current support for CXL on kdevops relies on vagrant, support for
-[libguestfs](https://libguestfs.org/) is currently under investigation but
-will rely on using a python script to dynamically create XML requirements.
-The documentation below assumes vagrant will be used for now.
+Current support for CXL on kdevops relies on libguestfs. Support was
+originally developed for Vagrant but has since been removed.
 
 You can either use virtualized CXL devices or you can use
 [PCIe passthrough](docs/libvirt-pcie-passthrough.md) to passthrough real

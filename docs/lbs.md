@@ -92,20 +92,7 @@ and if you later want to, use ext4 on the same drive after wiping XFS.
 
 ## Experimenting with pure-iomap
 
-Kdevops provides its own debian-testing vagrant image which supports XFS as the main
-root image, and thus could also enable experimenting with pure-iomap. Pure-iomap
-allows the `bdev cache` to use IOMAP instead of buffer-heads when doing disk
-partition scanning on bootup.
-
-Enable:
-
-  * `CONFIG_VAGRANT_KDEVOPS_DEBIAN_TESTING64_XFS_20230427`
-
-This effectively enables the vagrant image:
-
-  * [kdevops debian-xfs-20230427](https://app.vagrantup.com/linux-kdevops/boxes/debian-xfs-20230427/)
-
-If you'd like to work on your own image see [kdevops docs on building custom vagrant images](https://github.com/linux-kdevops/kdevops/blob/master/docs/custom-vagrant-boxes.md).
+Pure-iomap allows the `bdev cache` to use IOMAP instead of buffer-heads when doing disk partition scanning on bootup. If you want to build your own image see the documentation on creating custom images.
 
 # Regressions large-block-next
 

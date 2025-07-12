@@ -2,11 +2,7 @@
 ---
 kdevops_enable_guestfs: False
 kdevops_enable_terraform: False
-kdevops_enable_vagrant: False
-kdevops_vagrant: '/dev/null'
-kdevops_vagrant_generated: '/dev/null'
-kdevops_vagrant_template: '/dev/null'
-kdevops_nodes: "vagrant/kdevops_nodes.yaml"
+kdevops_nodes: "guestfs/kdevops_nodes.yaml"
 kdevops_baseline_and_dev: False
 kdevops_workflow_enable_cxl: False
 kdevops_workflow_enable_pynfs: False
@@ -23,15 +19,13 @@ virtualbox_provider: False
 libvirt_provider: False
 
 libvirt_extra_drive_format: 'qcow2'
-vagrant_box: "debian/testing64"
-vagrant_box_version: ""
 libvirt_vcpus_count: 8
 libvirt_mem_mb: 4096
 gdb_port_conflict: False
 libvirt_enable_gdb: False
 libvirt_gdb_baseport: 1234
 qemu_bin_path: "/usr/bin/qemu-system-x86_64"
-extra_disk_path: ".vagrant/nvme_disks"
+extra_disk_path: "guestfs/nvme_disks"
 extra_disk_driver: "nvme"
 extra_disk_controller: "NVMe"
 nvme_zone_enable: False

@@ -7,7 +7,7 @@
 
 # This simple workflow relies on the default setting of the variable
 # KDEVOPS_NODES_TEMPLATE which to generate your target nodes. This can
-# either be used by vagrant or terraform when building the nodes it will
+# either be used by guestfs or terraform when building the nodes it will
 # create for bringup. The template file relies on jinja2 templating for
 # its parsing and generation and we rely on the ansible template module
 # to process this template file.

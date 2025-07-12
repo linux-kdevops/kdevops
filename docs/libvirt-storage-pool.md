@@ -1,20 +1,15 @@
 # kdevops libvirt storage pool considerations
 
-Only read this page if you are using libvirt for virtualization with Vagrant.
+Only read this page if you are using libvirt for virtualization.
 
-Since kdevops uses Vagrant, it is important to understand how Vagrant makes
-use of storage within libvirt. And the reason it is important is that the
-way Vagrant uses pool storage is rather stupid, and long term can really be
-counter productive if you want to scale.
+kdevops uses libguestfs utilities to build images and relies on libvirt to
+run the guests. Understanding how libvirt storage pools work is important if
+you want to customize storage locations or scale your environment.
 
-By default, if you are on a bare new system, using Vagrant with libvirt
-will assume you want to create a "default" libvirt storage pool on the
-*same* directory where your Vagrantfile is located! This is insanity.
-It is pure bananas. This is specially true that today all distributions other
-than fedora essentially require you to work with root to work with libvirt.
-On those distros then, if you later want to start guests with libvirt manually,
-you'd run into a bit of a surprise when you realize what your default
-libvirt storage pool is.
+By default libvirt may create a "default" storage pool in the same directory
+where you run libguestfs. On distributions where libvirt runs as root this can
+lead to confusion if you later start guests manually and expect a different
+default pool.
 
 If you're not sure if you are using libvirt storage pool or have one defined:
 

@@ -21,7 +21,7 @@ Role Variables
 --------------
 
   * data_home_dir: the target home directory on each host, this defaults to
-    /home/vagrant
+    /home/kdevops
   * dev_gitconfig_src: your localhost .gitconfig file
   * dev_gitconfig_dest: where to copy the .gitconfig to on the target system
   * dev_bash_config: the .bashrc used

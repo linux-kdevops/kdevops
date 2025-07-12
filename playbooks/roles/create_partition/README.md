@@ -53,8 +53,8 @@ Below is an example playbook task:
     disk_setup_label : "truncated"
     disk_setup_fs_opts: "-L {{ disk_setup_label }}"
     disk_setup_path: "/media/truncated"
-    disk_setup_user: "vagrant"
-    disk_setup_group: "vagrant"
+    disk_setup_user: "kdevops"
+    disk_setup_group: "kdevops"
   tags: [ 'oscheck', 'truncated_partition' ]
 ```
 

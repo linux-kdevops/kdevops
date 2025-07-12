@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
 # Automatically archive of CI results
-
+	
 ifeq (,$(wildcard $(CURDIR)/.config))
+ci-archive:
+	@echo "No .config found; skipping archive"
 else
 
 ARCHIVE_DYNAMIC_RUNTIME_VARS :=

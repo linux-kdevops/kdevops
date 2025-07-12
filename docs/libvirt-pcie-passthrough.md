@@ -30,8 +30,7 @@ not everyone wants these features.
 
 ## Enable kdevops PCIe passthrough support
 
-PCIe passthrough support is currently only available when you select to
-use vagrant with libvirt. The respective Kconfig option is
+PCIe passthrough support is available when using libvirt. The respective Kconfig option is
 `CONFIG_KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH`.
 
 If you enable that you then get to pick what technique you wish to use to
@@ -97,7 +96,7 @@ to review how this is done generically with kdevops. You don't need to read
 this if you are using `make dynconfig`.
 
 To get this to work you must modify permissions of some sysfs files so that
-vagrant/libvirt will work properly.  You also must make sure the vfio devices
+libvirt will work properly.  You also must make sure the vfio devices
 are accessible by the libvirt group.  Scripts are provided to do all the work
 for you, but you must determine the PCIe ID's of the devices you want to
 passthrough.  The following is an example
@@ -119,15 +118,12 @@ above example, you would have a `pcipassthrough` option with the configuration
 for your given device
 
 ```yaml
-vagrant_boxes:
-  - name: kdevops-btrfs-zns
-    ip: 172.17.8.101
-    pcipassthrough:
-      zns1:
-        domain: 0x0000
-        bus: 0x2d
-        slot: 0x00
-        function: 0x0
+pcipassthrough:
+  zns1:
+    domain: 0x0000
+    bus: 0x2d
+    slot: 0x00
+    function: 0x0
 ```
 
 From here you will be able to run `make bringup` and the PCIe passthrough will
