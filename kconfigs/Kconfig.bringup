@@ -59,7 +59,6 @@ config LIBVIRT
 	default y
 
 source "kconfigs/Kconfig.guestfs"
-source "vagrant/Kconfig"
 source "terraform/Kconfig"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"

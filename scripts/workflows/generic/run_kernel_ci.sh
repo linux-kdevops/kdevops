@@ -237,19 +237,13 @@ kernel_ci_watchdog_loop()
 					grep runtime $KERNEL_CI_WATCHDOG_RESULTS >> $KERNEL_CI_WATCHDOG_FAIL_LOG
 					cat $KERNEL_CI_WATCHDOG_TIMEOUT >> $KERNEL_CI_WATCHDOG_FAIL_LOG
 				fi
-				if [[ "$WATCHDOG_RESET_HUNG_SYSTEMS" == "y" ]]; then
-					for i in $(awk '{print $1}' $KERNEL_CI_WATCHDOG_RESULTS | grep -E -v "runtime|Hostname"); do
-						if [[ "$CONFIG_VAGRANT" == "y" ]]; then
-							sudo virsh reset vagrant_$i
-						elif [[ "$CONFIG_GUESTFS" == "y" ]]; then
-							sudo virsh reset $i
-						else
-							echo "$i : Unsupported crashy reset for this bringup configuration" >> $KERNEL_CI_WATCHDOG_FAIL_LOG
-						fi
-						echo -e "\nReset all your associated systems:" >> $KERNEL_CI_WATCHDOG_FAIL_LOG
-						echo -e "\t$i" >> $KERNEL_CI_WATCHDOG_FAIL_LOG
-					done
-				fi
+                                if [[ "$WATCHDOG_RESET_HUNG_SYSTEMS" == "y" ]]; then
+                                        for i in $(awk '{print $1}' $KERNEL_CI_WATCHDOG_RESULTS | grep -E -v "runtime|Hostname"); do
+                                                sudo virsh reset $i
+                                                echo -e "\nReset all your associated systems:" >> $KERNEL_CI_WATCHDOG_FAIL_LOG
+                                                echo -e "\t$i" >> $KERNEL_CI_WATCHDOG_FAIL_LOG
+                                        done
+                                fi
 				break
 			fi
 		fi

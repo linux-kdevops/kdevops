@@ -35,15 +35,3 @@ rm -f hosts
 make hosts
 ```
 
-  * If using virtualization it will generate the dynamic Vagrant and vagrant
-    nodes file, `kdevops_nodes.yaml`.
-
-    It is *not* safe to destroy the Vagrantfile if you have done a git fetch
-    and reset for kdevops, given that vagrant requires you to never modify
-    your Vagrantfile *after* you have instantiated guests. kdevops provides
-    a guard file for you so you don't shoot yourself in the foot and make
-    commands won't regenerate the file for you unless you remove this guard.
-
-    The files in question is `vagrant/Vagrantfile`. The respective configuration
-    for the nodes, `vagrant/kdevops_nodes.yaml` should not be updated either,
-    because the Vagrantfile relies on it.

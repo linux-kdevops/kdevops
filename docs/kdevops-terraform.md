@@ -69,8 +69,7 @@ writing we support this for all cloud providers we support.
 
 After `make bringup` you should have had your SSH configuration file updated
 automatically with the provisioned hosts. The Terraform module
-`add-host-ssh-config` is used to do the work of updating your SSH configuration,
-a module is used to share the code with provisioning with vagrant.
+`add-host-ssh-config` is used to do the work of updating your SSH configuration.
 
 The Terraform module on the registry:
 
@@ -80,11 +79,10 @@ The Terraform source code:
 
   * https://github.com/mcgrof/terraform-kdevops-add-host-ssh-config
 
-Because the same code is shared between the vagrant Ansible role and the
-Terraform module, a git subtree is used to maintain the shared code. The
-Terraform code downloads the module on its own, while the code for
-the Vagrant Ansible role has the code present on the kdevops tree as
-part of its local directories in under:
+Because the same code is shared between the Ansible role and the
+Terraform module, a git subtree is used to maintain the shared code.
+The Terraform code downloads the module on its own, while the role has
+the code present in the kdevops tree under:
 
   * `playbooks/roles/update_ssh_config_vagrant/update_ssh_config/`
 

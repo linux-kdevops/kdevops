@@ -6,7 +6,6 @@ else
 stage-2-$(CONFIG_TERRAFORM)			+= kdevops_terraform_deps
 stage-2-$(CONFIG_LIBVIRT_INSTALL)	+= kdevops_install_libvirt
 stage-2-$(CONFIG_LIBVIRT_CONFIGURE)	+= kdevops_configure_libvirt
-stage-2-$(CONFIG_VAGRANT_INSTALL_PRIVATE_BOXES)	+= kdevops_vagrant_boxes
 stage-2-$(CONFIG_LIBVIRT_VERIFY)	+= kdevops_verify_libvirt_user
 stage-2-$(CONFIG_LIBVIRT_STORAGE_POOL_CREATE)	+= kdevops_libvirt_storage_pool_create
 

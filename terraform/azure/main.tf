@@ -93,7 +93,7 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   count = local.kdevops_num_boxes
 
   # As of terraform 0.11 there is no easy way to convert a list to a map
-  # for the structure we have defined for the vagrant_boxes. We can use
+  # for the structure we have defined for the guest list. We can use
   # split to construct a subjset list though, and then key in with the
   # target left hand value name we want to look for. On the last split we
   # call always uses the second element given its a value: figure, we want

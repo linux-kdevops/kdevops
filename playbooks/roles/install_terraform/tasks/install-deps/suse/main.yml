@@ -30,7 +30,7 @@
     - force_install_zip|bool
     - force_install_if_present|bool or (is_sle or is_leap and terraform_present.rc != 0)
 
-- name: Install vagrant and vagrant-libvirt from your tumbleweed repository
+- name: Install terraform from your tumbleweed repository
   become: yes
   become_method: sudo
   ansible.builtin.package:

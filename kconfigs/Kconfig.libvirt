@@ -18,9 +18,7 @@ config LIBVIRT_CONFIGURE
 	  in again, to ensure the new group takes effect. The goal in the
 	  configuration will be to ensure you can use libvirt to spawn guests
 	  as a regular user. You are encouraged to say y here unless you know
-	  what you are doing or you already know this works. If you are unsure,
-	  the litmus test for this is if you can run vagrant up, on any public
-	  demo box available.
+         what you are doing or you already know this works.
 
 config LIBVIRT_VERIFY
 	bool "Verify that a user can spawn libvirt as a regular user"
@@ -30,7 +28,7 @@ config LIBVIRT_VERIFY
 	  To enable a user to be able to spawn libvirt guests as a regular user
 	  a user is typically added to a few groups. These groups are not
 	  effective immediately, and so before a user can assume that they
-	  use Vagrant they must verify that the required groups are effective.
+         start guests they must verify that the required groups are effective.
 	  If you enable this option, we will spawn an Ansible role that will
 	  verify and ensure that your user is already part of these groups.
 	  You can safely say yes here.
@@ -60,7 +58,7 @@ config LIBVIRT_URI_SYSTEM
 	  proper networkings via bridges or virtual networks. qemu:///system
 	  is generally what tools like virt-manager default to.
 
-	  When this option is enabled vagrant's libvirt default built-in
+	  When this option is enabled libvirt default built-in
 	  URI is used along with the default network management interface,
 	  libvirt socket, and the network interface assumed for bridging.
 
@@ -92,7 +90,7 @@ config LIBVIRT_URI_SESSION
 	  you are doing custom networking stuff this may be more relevant for
 	  you. Fedora defaults to the session URI.
 
-	  When this option is enabled we modify vagrant's libvirt default
+	  When this option is enabled we modify libvirt default
 	  built-in URI for the session URI, and we also modify the default
 	  network management interface to be virbr0, the default socket
 	  is assumed to be /run/libvirt/libvirt-sock-ro. New Kconfig options
@@ -120,14 +118,14 @@ config LIBVIRT_URI_PATH
 	string "Libvirt QEMU URI to use"
 	default "qemu:///system" if LIBVIRT_URI_SYSTEM || LIBVIRT_URI_CUSTOM
 	default "qemu:///session" if LIBVIRT_URI_SESSION
-	help
-	  By default Vagrant uses a qemu:///system URI which assumes the libvirt
-	  daemon runs as a user other than the user which is running the vagrant
-	  commands. Libvirt has support for running the libvirt daemon as other
-	  users using session support. This will be modified to a session URI
-	  if you enable LIBVIRT_URI_SESSION. You can however set this to
-	  something different to suit your exact needs here. This is the value
-	  passed to the vagrant-libvirt plugin libvirt.uri. You should not have
+        help
+          By default libvirt uses a qemu:///system URI which assumes the libvirt
+          daemon runs as a user other than the user running the commands.
+          Libvirt has support for running the libvirt daemon as other
+          users using session support. This will be modified to a session URI
+          if you enable LIBVIRT_URI_SESSION. You can however set this to
+          something different to suit your exact needs here. This is the value
+          passed to the libvirt plugin libvirt.uri. You should not have
 	  to modify this value if you selected LIBVIRT_URI_SYSTEM or
 	  LIBVIRT_URI_SESSION and are starting from a fresh 'make mrproper'
 	  setting on kdevops, the appropriate value will be set for you.
@@ -139,14 +137,14 @@ config LIBVIRT_SYSTEM_URI_PATH
 	default "qemu:///system"
 	help
 	  This is the URI of QEMU system connection, used to obtain the IP
-	  address for management. This is used for the vagrant-libvirt plugin
-	  libvirt.system_uri setting. If for whatever reason this needs to
+          address for management. This is used for the libvirt plugin
+          libvirt.system_uri setting. If for whatever reason this needs to
 	  be modified you can do so here. Even if you are using session
 	  support you should leave this with the default qemu:///system setting
 	  as this is still used to ensure your guest's IP address will be
-	  communicated back to Vagrant so it determines the guest is up and
+	  communicated back to kdevops so it determines the guest is up and
 	  you can ssh to it. Setting this to qemu:///session still gets the
-	  guest up but Vagrant won't know the guest is up, even though the
+	  guest up but kdevops won't know the guest is up, even though the
 	  host can ssh to the guest. You should only modify this value if
 	  you know what you are doing.
 
@@ -464,7 +462,7 @@ config HAVE_LIBVIRT_PCIE_PASSTHROUGH
 	default $(shell, scripts/check_pciepassthrough_kconfig.sh passthrough_libvirt.generated)
 
 if HAVE_LIBVIRT_PCIE_PASSTHROUGH
-source "vagrant/Kconfig.pcie_passthrough_libvirt"
+source "kconfigs/Kconfig.pcie_passthrough_libvirt"
 endif # HAVE_LIBVIRT_PCIE_PASSTHROUGH
 
 choice
@@ -968,7 +966,7 @@ config LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	bool "Use an advanced smart inference for what storage pool path to use"
 	help
 	  If you are a power user of kdevops you likely want to enable this.
-	  By default vagrant will assume that if you don't have a virsh pool
+	  By default libvirt will assume that if you don't have a virsh pool
 	  that the current directory will become the "default" storage pool
 	  path. This is rather silly for an advanced setup. Consider a setup
 	  where you have a set of different NVMe drivers mounted on different
@@ -996,9 +994,9 @@ config LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	  that the heuristics will work on each distro with their own defaults.
 
 config LIBVIRT_STORAGE_POOL_PATH_CUSTOM_CWD
-	bool "Use the current vagrant working directory"
+	bool "Use the current kdevops working directory"
 	help
-	  Select this option if you want to use the vagrant directory inside
+	  Select this option if you want to use the kdevops directory inside
 	  where you git cloned kdevops as the libvirt storage pool path where
 	  we'll download images and store images for guests spawned. If users
 	  git cloned kdevops somewhere in their home directory they'll have to
@@ -1031,16 +1029,16 @@ config LIBVIRT_STORAGE_POOL_PATH_AUTO
 	string
 	default $(shell, ./scripts/get_libvirsh_pool_path.sh) if LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	default "/var/lib/libvirt/images" if LIBVIRT_STORAGE_POOL_PATH_CUSTOM_DEFAULT_DISTRO
-	default $(shell, scripts/cwd-append.sh vagrant) if LIBVIRT_STORAGE_POOL_PATH_CUSTOM_CWD
+	default $(shell, scripts/cwd-append.sh guestfs) if LIBVIRT_STORAGE_POOL_PATH_CUSTOM_CWD
 	help
 	  The path to use for the libvirt storage pool path. Since kdevops uses
-	  Vagrant for virtualization this is also the path used to place the
+	  libvirt for virtualization this is also the path used to place the
 	  additional NVMe drives created. kdevops adds a postfix "kdevops" to
-	  this directory as it wants to allow Vagrant full control over that
+	  this directory as it wants to allow libvirt full control over that
 	  directory. For instance if this is /var/lib/libvirt/images/ kdevops
-	  will let Vagrant store images in /var/lib/libvirt/images/ and
+	  will let libvirt store images in /var/lib/libvirt/images/ and
 	  the NVMe qcow2 files created will go in by default to the directory
-	  /var/lib/libvirt/images/kdevops/.vagrant/nvme_disks/guest-hostname/.
+	  /var/lib/libvirt/images/kdevops/guestfs/nvme_disks/guest-hostname/.
 
 if LIBVIRT_STORAGE_POOL_PATH_CUSTOM_MANUAL
 
@@ -1049,13 +1047,13 @@ config LIBVIRT_STORAGE_POOL_PATH_CUSTOM
 	default "/var/lib/libvirt/images"
 	help
 	  The path to use for the libvirt storage pool path. Since kdevops uses
-	  Vagrant for virtualization this is also the path used to place the
+	  libvirt for virtualization this is also the path used to place the
 	  additional NVMe drives created. kdevops adds a postfix "kdevops" to
-	  this directory as it wants to allow Vagrant full control over that
+	  this directory as it wants to allow libvirt full control over that
 	  directory. For instance if this is /var/lib/libvirt/images/ kdevops
-	  will let Vagrant store images in /var/lib/libvirt/images/ and
+	  will let libvirt store images in /var/lib/libvirt/images/ and
 	  the NVMe qcow2 files created will go in by default to the directory
-	  /var/lib/libvirt/images/kdevops/.vagrant/nvme_disks/guest-hostname/.
+	  /var/lib/libvirt/images/kdevops/guestfs/nvme_disks/guest-hostname/.
 
 endif
 
@@ -1065,7 +1063,7 @@ config LIBVIRT_STORAGE_POOL_CREATE
 	default n if !LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	default $(shell, ./scripts/get_libvirsh_pool_enabled.sh) if LIBVIRT_STORAGE_POOL_PATH_INFER_ADVANCED
 	help
-	  By default vagrant assumes your storage pool name is "default" and
+	  By default libvirt assumes your storage pool name is "default" and
 	  it expects libvirt to have created this for you. If you want to
 	  use a custom pool name and path enable this. This is useful if
 	  you want to place guest images on another path other than the
