@@ -1,17 +1,26 @@
 ---
 steady_state_data: "{{ data_path }}/steady_state"
-steady_state_device: "/dev/nvme0n1"
-precondition_blocksize: "128k"
-precondition_iodepth: "32"
-precondition_numjobs: "4"
-precondition_prefill_loop: 2
-steady_state_runtime: "6h"
-steady_state_iops_mean_limit: "20%"
-steady_state_iops_mean_dur: "4h"
-steady_state_iops_slope: "10%"
-steady_state_iops_slope_dur: "4h"
-steady_state_bw_mean_limit: "20%"
-steady_state_bw_mean_dur: "2h"
-steady_state_bw_slope: "10%"
-steady_state_bw_slope_dur: "2h"
+ssd_steady_state_device: "/dev/null"
+ssd_steady_state_prefill_blocksize: "128k"
+ssd_steady_state_iodepth: "32"
+ssd_steady_state_numjobs: "4"
+ssd_steady_state_prefill_loop: 2
+ssd_steady_state_runtime: "6h"
+ssd_steady_state_iops_mean_limit: "20%"
+ssd_steady_state_iops_mean_dur: "4h"
+ssd_steady_state_iops_slope: "10%"
+ssd_steady_state_iops_slope_dur: "4h"
+ssd_steady_state_bw_mean_limit: "20%"
+ssd_steady_state_bw_mean_dur: "2h"
+ssd_steady_state_bw_slope: "10%"
+ssd_steady_state_bw_slope_dur: "2h"
 kdevops_run_ssd_steady_state: False
+
+# Prefill configuration defaults
+ssd_steady_state_prefill_verbose: False
+ssd_steady_state_prefill_max_size: ""
+ssd_steady_state_prefill_physical_bs: ""
+ssd_steady_state_prefill_ioengine: "io_uring"
+ssd_steady_state_prefill_direct: "1"
+ssd_steady_state_prefill_alloc_size: "1048576"
+ssd_steady_state_prefill_extra_args: ""
