@@ -265,7 +265,7 @@
   environment:
     GIT_TEST_CLONE_2GB: "true"
   ansible.builtin.shell:
-    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz --jobs {{ gitr_test_thread_count }} ./t[0-9]*.sh"
+    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz --jobs {{ gitr_test_thread_count }} ./t[0-9]*.sh :: --verbose-log"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false
@@ -274,7 +274,7 @@
 - name: Run specific git regression tests
   tags: run_specific_tests
   ansible.builtin.command:
-    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz {{ gitr_test_list }}"
+    cmd: "prove -Q -a /tmp/{{ gitr_run_uniqifier }}.tgz {{ gitr_test_list }} :: --verbose-log"
     chdir: "{{ gitr_mnt }}/git/t"
   register: gitr_results
   failed_when: false
