@@ -10,32 +10,25 @@
 - name: Retrieve the controller_ip_map from terraform
   delegate_to: localhost
   run_once: true
-  ansible.builtin.command:
-    chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
-    cmd: "terraform output -json controller_ip_map"
+  cloud.terraform.terraform_output:
+    format: json
+    name: controller_ip_map
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
   register: terraform_output
-  changed_when: false
-  tags:
-    - ssh
-
-- name: Convert the retrieved controller_ip_map into a dictionary
-  delegate_to: localhost
-  run_once: true
-  ansible.builtin.set_fact:
-    controller_ip_map: "{{ terraform_output.stdout | from_json }}"
   tags:
     - ssh
 
 - name: Add each target node's ssh Host entry on the control host
   delegate_to: localhost
-  throttle: 1
+  run_once: true
   ansible.builtin.blockinfile:
     block: "{{ lookup('template', 'ssh_config.j2') }}"
     create: true
     dest: "{{ kdevops_ssh_config }}"
     insertafter: "EOF"
-    marker: "# {mark} host configuration for {{ inventory_hostname }}"
+    marker: "# {mark} host configuration for {{ item.key }}"
     mode: "u=rw,g=r,o=r"
+  loop: "{{ terraform_output.value | dict2items }}"
   tags:
     - ssh
 
