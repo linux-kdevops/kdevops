@@ -1,9 +1,9 @@
 ---
 - name: Bring up terraform resources
-  community.general.terraform:
+  cloud.terraform.terraform:
+    force_init: true
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: present
-    force_init: true
   tags:
     - bringup
 
@@ -66,9 +66,9 @@
     - destroy
 
 - name: Destroy terraform resources
-  community.general.terraform:
+  cloud.terraform.terraform:
+    force_init: true
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: absent
-    force_init: true
   tags:
     - destroy
