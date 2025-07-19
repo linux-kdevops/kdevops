@@ -1,5 +1,5 @@
-Host {{ inventory_hostname }} {{ controller_ip_map[inventory_hostname] }}
-	HostName {{ controller_ip_map[inventory_hostname] }}
+Host {{ item.key }} {{ item.value }}
+	HostName {{ item.value }}
 	User {{ kdevops_terraform_ssh_config_user }}
 	Port 22
 	IdentityFile {{ kdevops_terraform_ssh_config_privkey_file }}
