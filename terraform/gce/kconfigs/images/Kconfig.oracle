@@ -1,0 +1,34 @@
+if TERRAFORM_GCE_DISTRO_OL
+
+config TERRAFORM_GCE_IMAGE_PROJECT
+	string
+	output yaml
+	default "oracle-linux-cloud"
+
+config TERRAFORM_GCE_IMAGE_SIZE
+	int
+	output yaml
+	default 20
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "OS image to use"
+
+config TERRAFORM_GCE_IMAGE_OL_8_X86_64
+	bool "Oracle Linux 8 (x86)"
+
+config TERRAFORM_GCE_IMAGE_OL_9_X86_64
+	bool "Oracle Linux 9 (x86)"
+
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+	default "oracle-linux-8" if TERRAFORM_GCE_IMAGE_OL_8_X86_64
+	default "oracle-linux-9" if TERRAFORM_GCE_IMAGE_OL_9_X86_64
+
+endif # TARGET_ARCH_X86_64
+
+endif # TERRAFORM_GCE_DISTRO_OL

@@ -1,0 +1,53 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_N4_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	help
+	  This option sets the GCE machine type. For other machine
+	  types, refer to this page:
+
+	  https://cloud.google.com/compute/docs/machine-types
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_2
+	bool "n4-standard-2"
+	help
+	  2 vCPU (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	bool "n4-standard-4"
+	help
+	  4 vCPU (2 core) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_8
+	bool "n4-standard-8"
+	help
+	  8 vCPU (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_16
+	bool "n4-standard-16"
+	help
+	  16 vCPU (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_32
+	bool "n4-standard-32"
+	help
+	  32 vCPU (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n4-standard-2" if TERRAFORM_GCE_MACHINE_N4_STANDARD_2
+	default "n4-standard-4" if TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	default "n4-standard-8" if TERRAFORM_GCE_MACHINE_N4_STANDARD_8
+	default "n4-standard-16" if TERRAFORM_GCE_MACHINE_N4_STANDARD_16
+	default "n4-standard-32" if TERRAFORM_GCE_MACHINE_N4_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N4_STANDARD

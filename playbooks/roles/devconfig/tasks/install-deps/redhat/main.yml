@@ -32,6 +32,24 @@
     - devconfig_custom_yum_repofile
     - custom_repofile.stat.exists
 
+- name: Discover the fastest package update mirrors
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
+    insertafter: "[main]"
+    line: "fastestmirror=true"
+    path: "/etc/dnf/dnf.conf"
+    state: present
+
+- name: Increase the maximum number of concurrent package downloads
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
+    insertafter: "[main]"
+    line: "max_parallel_downloads=10"
+    path: "/etc/dnf/dnf.conf"
+    state: present
+
 - name: Refresh cache and upgrade all present packages
   become: yes
   become_method: sudo

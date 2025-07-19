@@ -10,6 +10,10 @@ config ANSIBLE_CFG_FORKS_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_FORKS)
 
+config ANSIBLE_CFG_TASK_DEBUGGER_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_TASK_DEBUGGER)
+
 menu "Ansible Callback Plugin Configuration"
 choice
 	prompt "Ansible Callback Plugin"
@@ -206,6 +210,19 @@ config ANSIBLE_CFG_FORKS
 	default $(shell, ./scripts/append-makefile-vars-int.sh $(ANSIBLE_CFG_FORKS)) if ANSIBLE_CFG_FORKS_SET_BY_CLI
 
 endif # !ANSIBLE_CFG_FORKS_CUSTOM
+
+config ANSIBLE_CFG_TASK_DEBUGGER
+	bool "Enable the Ansible task debugger on failed tasks"
+	output yaml
+	default n
+	help
+	  When this setting is enabled, a task failure invokes the
+	  Ansible debugger. Generally this is useful only when
+	  running kdevops from the command line.
+
+	  For more information, see:
+
+	  https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#id10
 
 if DISTRO_OPENSUSE
 
