@@ -117,7 +117,7 @@ status_terraform:
 
 destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=local -i $(KDEVOPS_HOSTFILE) \
+		--connection=local --inventory localhost, \
 		playbooks/terraform.yml --tags destroy \
 		--extra-vars=@./extra_vars.yaml
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
