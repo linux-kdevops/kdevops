@@ -45,12 +45,6 @@
   tags:
     - ssh
 
-- name: Wait for target nodes to become reachable
-  ansible.builtin.wait_for_connection:
-    timeout: 60
-  tags:
-    - ssh
-
 - name: Remove the ephemeral ssh config file on the control host
   ansible.builtin.file:
     path: "{{ kdevops_ssh_config }}"
