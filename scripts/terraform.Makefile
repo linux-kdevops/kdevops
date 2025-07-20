@@ -101,11 +101,13 @@ ANSIBLE_EXTRA_ARGS += $(TERRAFORM_EXTRA_VARS)
 
 bringup_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--inventory localhost, \
 		playbooks/terraform.yml --tags bringup \
 		--extra-vars=@./extra_vars.yaml
 
 $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--inventory localhost, \
 		playbooks/terraform.yml --tags ssh \
 		--extra-vars=@./extra_vars.yaml
 	$(Q)ansible $(ANSIBLE_VERBOSE) -i hosts all -m wait_for_connection
@@ -116,7 +118,7 @@ status_terraform:
 
 destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=local --inventory localhost, \
+		--inventory localhost, \
 		playbooks/terraform.yml --tags destroy \
 		--extra-vars=@./extra_vars.yaml
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
