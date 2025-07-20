@@ -114,7 +114,10 @@ $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 status_terraform:
-	$(Q)scripts/status_terraform.sh $(KDEVOPS_CLOUD_PROVIDER)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--inventory localhost, \
+		playbooks/terraform.yml --tags status \
+		--extra-vars=@./extra_vars.yaml
 
 destroy_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
