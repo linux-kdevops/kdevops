@@ -59,8 +59,6 @@
     - ssh
 
 - name: Remove the ephemeral ssh config file on the control host
-  delegate_to: localhost
-  run_once: true
   ansible.builtin.file:
     path: "{{ kdevops_ssh_config }}"
     state: absent
@@ -68,8 +66,6 @@
     - destroy
 
 - name: Destroy terraform resources
-  delegate_to: localhost
-  run_once: true
   community.general.terraform:
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: absent
