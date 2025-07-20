@@ -8,8 +8,6 @@
     - bringup
 
 - name: Retrieve the controller_ip_map from terraform
-  delegate_to: localhost
-  run_once: true
   cloud.terraform.terraform_output:
     format: json
     name: controller_ip_map
@@ -19,8 +17,6 @@
     - ssh
 
 - name: Add each target node's ssh Host entry on the control host
-  delegate_to: localhost
-  run_once: true
   ansible.builtin.blockinfile:
     block: "{{ lookup('template', 'ssh_config.j2') }}"
     create: true
@@ -33,8 +29,6 @@
     - ssh
 
 - name: Ensure the Include directive is present on the controller
-  delegate_to: localhost
-  run_once: true
   ansible.builtin.blockinfile:
     path: "{{ sshconfig }}"
     insertbefore: BOF
