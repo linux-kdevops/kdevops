@@ -39,6 +39,37 @@
   tags:
     - ssh
 
+- name: Report terraform status
+  tags:
+    - status
+  block:
+    - name: Retrieve the controller_ip_map from terraform
+      cloud.terraform.terraform_output:
+        format: json
+        name: controller_ip_map
+        project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+      register: terraform_output
+
+    - name: End play -- terraform state file is empty or missing
+      ansible.builtin.meta: end_play
+      when:
+        - terraform_output.warnings is defined
+
+    - name: Count active resources
+      ansible.builtin.command:
+        cmd: "terraform state list"
+        chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+      register: terraform_state
+      changed_when: false
+
+    - name: Show status
+      ansible.builtin.debug:
+        msg: "Active resources: {{ terraform_state.stdout_lines | length }}"
+
+    - name: Show controller IP map
+      ansible.builtin.debug:
+        var: terraform_output.value
+
 - name: Remove the ephemeral ssh config file on the control host
   ansible.builtin.file:
     path: "{{ kdevops_ssh_config }}"
