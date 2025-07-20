@@ -33,6 +33,7 @@ config SELFTESTS_TEST_BUNDLE_RADIX_TREE
 	output yaml
 	select SELFTESTS_SECTION_MAPLE
 	select SELFTESTS_SECTION_XARRAY
+	select SELFTESTS_SECTION_VMA
 	help
 	  This will ensure you test the radix tree in the kernel.
 
@@ -78,6 +79,12 @@ config SELFTESTS_SECTION_XARRAY
 	help
 	  This will create a host to test the xarray.
 
+config SELFTESTS_SECTION_VMA
+	bool "VMA"
+	output yaml
+	help
+	  This will create a host to test the VMA userspace tests.
+
 endif # SELFTESTS_MANUAL_COVERAGE
 
 if !SELFTESTS_MANUAL_COVERAGE
@@ -103,6 +110,11 @@ config SELFTESTS_SECTION_SYSCTL
 	default y
 
 config SELFTESTS_SECTION_XARRAY
+	bool
+	output yaml
+	default y
+
+config SELFTESTS_SECTION_VMA
 	bool
 	output yaml
 	default y
