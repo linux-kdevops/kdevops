@@ -1,6 +1,7 @@
 ---
 - name: Provision target nodes with terraform
   gather_facts: false
-  hosts: all
+  connection: local
+  hosts: localhost
   roles:
     - role: terraform
