@@ -1,5 +1,0 @@
----
-- name: update_ssh_config_vagrant
-  hosts: localhost
-  roles:
-    - role: update_ssh_config_vagrant

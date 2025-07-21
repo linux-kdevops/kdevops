@@ -1,6 +1,0 @@
----
-- name: install_vagrant_boxes
-  hosts: localhost
-  tasks:
-    - include_role:
-        name: install_vagrant_boxes
