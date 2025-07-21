@@ -44,7 +44,6 @@ KDEVOPS_DESTROY_DEPS :=
 # We export this into Makefiles so that we can use them both on Makefiles and
 # on Kconfig files with environment variables such as $(FOO)
 export KDEVOPS_DEFAULT_DISTRO			:= $(shell $(TOPDIR)/scripts/get-distro-prefix.sh)
-export KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT	:= $(shell $(TOPDIR)/scripts/get-distro-default-bridge.sh $(KDEVOPS_DEFAULT_DISTRO) vagrant)
 export KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS	:= $(shell $(TOPDIR)/scripts/get-distro-default-bridge.sh $(KDEVOPS_DEFAULT_DISTRO) guestfs)
 
 # These go last
@@ -56,9 +55,6 @@ ifeq (y,$(CONFIG_TERRAFORM))
 include scripts/terraform.Makefile
 endif # CONFIG_TERRAFORM
 
-ifeq (y,$(CONFIG_VAGRANT))
-include scripts/vagrant.Makefile
-endif
 
 ifeq (y,$(CONFIG_GUESTFS))
 include scripts/guestfs.Makefile

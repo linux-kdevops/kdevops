@@ -27,6 +27,7 @@ kdevops_workflow_enable_gitr: False
 kdevops_workflow_enable_ltp: False
 kdevops_workflow_enable_nfstest: false
 kdevops_workflow_enable_sysbench: false
+kdevops_workflow_enable_fio_tests: false
 kdevops_workflow_enable_mmtests: False
 
 is_fstests: False
