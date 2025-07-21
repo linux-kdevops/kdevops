@@ -113,7 +113,8 @@ def main():
         shortcut_dir = None
         shortcut_file = None
 
-        if is_config_bool_true(config, "CONFIG_VAGRANT_SUSE"):
+        # Vagrant support removed - keeping for reference
+        if False and is_config_bool_true(config, "CONFIG_VAGRANT_SUSE"):
             if is_config_bool_true(config, "CONFIG_WORKFLOW_KOTD_ENABLE"):
                 sles_host_parts = hostname.split("sles")
                 if len(sles_host_parts) <= 1:
@@ -139,7 +140,7 @@ def main():
                 shortcut_kernel_dir = args.outputdir + '/' + shortcut_kernel + '/' + args.filesystem + '/'
                 shortcut_dir = shortcut_kernel_dir + 'unassigned/'
                 shortcut_file = shortcut_dir + section + '.txt'
-        elif is_config_bool_true(config, "CONFIG_VAGRANT_OPENSUSE"):
+        elif is_config_bool_true(config, "CONFIG_LIBVIRT_OPENSUSE"):
             if is_config_bool_true(config, "CONFIG_WORKFLOW_KOTD_ENABLE") and "leap" in hostname:
                 leap_host_parts = hostname.split("leap")
                 if len(leap_host_parts) <= 1:

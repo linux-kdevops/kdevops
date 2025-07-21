@@ -4,8 +4,8 @@ kdevops_bootlinux: False
 infer_uid_and_group: False
 
 data_path: "/data"
-data_user: "vagrant"
-data_group: "vagrant"
+data_user: "root"
+data_group: "root"
 
 data_device: "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops0"
 data_fstype: "xfs"

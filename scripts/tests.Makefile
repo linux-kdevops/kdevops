@@ -6,7 +6,6 @@
 # target on each of these directories. These will run with a travis setup for
 # python 3.8.
 KDEVOPS_PYTHON_TESTS :=
-KDEVOPS_PYTHON_TESTS += playbooks/roles/update_ssh_config_vagrant/update_ssh_config/
 
 KDEVOPS_TEST_TYPES :=
 KDEVOPS_TEST_TYPES += python-tests
