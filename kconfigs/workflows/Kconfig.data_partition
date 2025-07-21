@@ -72,7 +72,6 @@ if !WORKFLOW_INFER_USER_AND_GROUP
 config WORKFLOW_DATA_USER
 	string "The username to use to chown on the target data workflow directory"
 	default "kdevops" if GUESTFS
-	default "vagrant" if VAGRANT
 	default TERRAFORM_SSH_CONFIG_USER if TERRAFORM
 	help
 	  Manual setting for the username to chown the data workflow path.
@@ -80,14 +79,13 @@ config WORKFLOW_DATA_USER
 config WORKFLOW_DATA_GROUP
 	string "The group to use to chown on the target data workflow directory"
 	default "kdevops" if GUESTFS
-	default "vagrant" if VAGRANT
 	default TERRAFORM_SSH_CONFIG_USER if TERRAFORM_AWS_AMI_DEBIAN || TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 	default "users" if !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
-	default "root" if !VAGRANT && !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+	default "root" if !TERRAFORM_AWS_AMI_DEBIAN && !TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
 	help
 	  Manual setting for the group to chgrp the data workflow path.
 
-	  We default to "vagrant" if you are using vagrant, otherwise we rely
+	  We rely
 	  on the the assumption your distribution has the "users" group created
 	  for distributions where we are certain of that. If on debian based
 	  systems we assume the same group exists with the username you used

@@ -182,7 +182,6 @@ config DEVCONFIG_SYSTEMD_JOURNAL_USE_HTTP
 
 config DEVCONFIG_SYSTEMD_JOURNAL_REMOTE_URL
 	string "systemd-remote URL"
-	default $(shell, scripts/append-makefile-vars.sh http:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT)) if VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh http:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS)) if GUESTFS
 	help
           This is used for the client /etc/systemd/journal-upload.conf URL line.

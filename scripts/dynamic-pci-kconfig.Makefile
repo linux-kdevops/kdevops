@@ -2,7 +2,7 @@
 
 PCIE_RUNTIME_VARS := "topdir_path": $(TOPDIR_PATH)
 
-KDEVOPS_MRPROPER += vagrant/Kconfig.passthrough_libvirt.generated
+KDEVOPS_MRPROPER += Kconfig.passthrough_libvirt.generated
 
 ifneq (,$(KDEVOPS_ENABLE_PCIE_KCONFIG))
 DYNAMIC_KCONFIG += dynamic_pcipassthrough_kconfig
@@ -12,7 +12,7 @@ endif
 ifeq (,$(KDEVOPS_ENABLE_PCIE_KCONFIG))
 DYNAMIC_KCONFIG += dynamic_pcipassthrough_kconfig_touch
 dynamic_pcipassthrough_kconfig_touch:
-	$(Q)touch vagrant/Kconfig.passthrough_libvirt.generated
+	$(Q)touch Kconfig.passthrough_libvirt.generated
 endif
 
 ifeq (y,$(CONFIG_KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH))
