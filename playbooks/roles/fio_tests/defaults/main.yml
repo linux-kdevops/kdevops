@@ -1,0 +1,7 @@
+---
+fio_tests_device: "/dev/null"
+fio_test_basic: false
+fio_test_iobatch: false
+fio_test_max_iobatch_single: false
+fio_test_max_iobatch_jobs: false
+fio_test_snia: false

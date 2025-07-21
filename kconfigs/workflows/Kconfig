@@ -169,11 +169,18 @@ config KDEVOPS_WORKFLOW_DEDICATE_LTP
 	  ltp workflow in separate target nodes per testing group.
 
 config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
-	bool "nfstest"
-	select KDEVOPS_WORKFLOW_ENABLE_NFSTEST
-	help
-	  This will dedicate your configuration to running only the
-	  nfstest workflow in separate target nodes per testing group.
+        bool "nfstest"
+        select KDEVOPS_WORKFLOW_ENABLE_NFSTEST
+        help
+          This will dedicate your configuration to running only the
+          nfstest workflow in separate target nodes per testing group.
+
+config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
+        bool "fio-tests"
+        select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+        help
+          This will dedicate your configuration to running only the
+          fio-tests workflow.
 
 config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 	bool "sysbench"
@@ -193,8 +200,9 @@ config KDEVOPS_WORKFLOW_NAME
 	default "selftests" if KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 	default "gitr" if KDEVOPS_WORKFLOW_DEDICATE_GITR
 	default "ltp" if KDEVOPS_WORKFLOW_DEDICATE_LTP
-	default "nfstest" if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
-	default "sysbench" if KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+        default "nfstest" if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
+        default "sysbench" if KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+        default "fio-tests" if KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 
 endif
 
@@ -281,12 +289,20 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_NFSTEST
 	  single target node for by-hand testing.
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH
-	bool "sysbench"
-	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
-	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
-	help
-	  Select this option if you want to provision sysbench on a
-	  single target node for by-hand testing.
+        bool "sysbench"
+        select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+        depends on LIBVIRT || TERRAFORM_PRIVATE_NET
+        help
+          Select this option if you want to provision sysbench on a
+          single target node for by-hand testing.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS
+        bool "fio-tests"
+        select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+        depends on LIBVIRT || TERRAFORM_PRIVATE_NET || SKIP_BRINGUP
+        help
+          Select this option if you want to run fio-tests on a single
+          target node for by-hand testing.
 
 endif # !WORKFLOWS_DEDICATED_WORKFLOW
 
@@ -380,15 +396,26 @@ endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_NFSTEST
 
 config KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
-	bool
-	output yaml
-	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH || KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
+        bool
+        output yaml
+        default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH || KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 
 if KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
 menu "Configure and run the sysbench tests"
 source "workflows/sysbench/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
+
+config KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+        bool
+        output yaml
+        default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS || KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
+
+if KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+menu "Configure and run fio-tests"
+source "workflows/fio_tests/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"
