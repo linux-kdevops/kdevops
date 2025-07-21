@@ -53,7 +53,7 @@ if [ "$(grep '^ID=' /etc/os-release | sed '/opensuse/d')" != "" ]; then
 	# on SLED SUSEConnect tries to add the Nvidia repo with its own GPG key
 	# => this causes a failure (as the key is unknown)
 	# we therefore disable the Nvidia repo here, as it doesn't work with SLED 12
-	# anyway and isn't really useful for a vagrant box
+	# anyway and isn't really useful for a virtual machine
 	if [ "$REGISTER_SYSTEM" == "true" ]; then
 		set +e # (need to `set +e` as the SUSEConnect can fail)
 		SUSEConnect --regcode $REG_CODE

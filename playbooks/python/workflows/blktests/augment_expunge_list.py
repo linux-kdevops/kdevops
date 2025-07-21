@@ -137,7 +137,8 @@ def main():
         shortcut_dir = None
         shortcut_file = None
 
-        if is_config_bool_true(config, "CONFIG_VAGRANT_SUSE"):
+        # Vagrant support removed - keeping for reference
+        if False and is_config_bool_true(config, "CONFIG_VAGRANT_SUSE"):
             # If kotd is enabled we assume you have the latest kernel and
             # all new results are relevant to that release.
             if is_config_bool_true(config, "CONFIG_WORKFLOW_KOTD_ENABLE"):
