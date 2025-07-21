@@ -463,31 +463,11 @@ config HAVE_LIBVIRT_PCIE_PASSTHROUGH
 	bool
 	default $(shell, scripts/check_pciepassthrough_kconfig.sh passthrough_libvirt.generated)
 
-if HAVE_LIBVIRT_PCIE_PASSTHROUGH
-source "vagrant/Kconfig.pcie_passthrough_libvirt"
-endif # HAVE_LIBVIRT_PCIE_PASSTHROUGH
 
 choice
 	prompt "Machine type to use"
 	default LIBVIRT_MACHINE_TYPE_Q35 if TARGET_ARCH_X86_64
 	default LIBVIRT_MACHINE_TYPE_VIRT if TARGET_ARCH_ARM64
-
-config LIBVIRT_MACHINE_TYPE_DEFAULT
-	bool "Use the default machine type"
-	depends on VAGRANT
-	help
-	  Use whatever default the guest was intended to use. This will either
-	  be the machine type used at virt-install time or some other default
-	  by QEMU / libvirt. This is important for backward compatibility with
-	  older kernels. For example if you enable q35 on an old kernel the old
-	  kernel may not boot. For details refer to kdevops commit 83952e2e532e
-	  ("vagrant/kdevops_nodes.yaml.in: remove machine_type)".
-
-	  It would seem today's default for libvirt is to still use "pc" which
-	  is the old i440x, so you will not get PCIe support.
-
-	  We only want to support PCI-E capable guests with libguest so the
-	  default is not allowed on libguest.
 
 config LIBVIRT_MACHINE_TYPE_Q35
 	bool "q35"
