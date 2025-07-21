@@ -14,8 +14,8 @@ config GUESTFS
 	select KDEVOPS_ENABLE_GUESTFS
 	select EXTRA_STORAGE_SUPPORTS_LARGEIO
 	help
-	  This option will use libguestfs utilities instead of Vagrant to build
-	  guest images and spin them up using libvirt with KVM.
+	  This option will use libguestfs utilities to build guest images and
+	  spin them up using libvirt with KVM.
 
 config TERRAFORM
 	bool "Terraform for cloud environments"
@@ -24,8 +24,8 @@ config TERRAFORM
 	select EXTRA_STORAGE_SUPPORTS_2K
 	select EXTRA_STORAGE_SUPPORTS_4K
 	help
-	  This option will enable use of Vagrant. Enable this if you want to
-	  use terraform to create nodes on a cloud environment such as:
+	  Enable this if you want to use terraform to create nodes on a cloud
+	  environment such as:
 
 	    * Azure
 	    * AWS
@@ -55,11 +55,10 @@ endchoice
 
 config LIBVIRT
 	bool
-	depends on VAGRANT_LIBVIRT_SELECT || GUESTFS
+	depends on GUESTFS
 	default y
 
 source "kconfigs/Kconfig.guestfs"
-source "vagrant/Kconfig"
 source "terraform/Kconfig"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"
