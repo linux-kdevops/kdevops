@@ -11,7 +11,7 @@ config QEMU_ENABLE_EXTRA_DRIVE_LARGEIO
 
 	  For now you will need a distribution with a root filesystem on XFS
 	  or btrfs, and so you will want to enable the kdevops distribution and
-	  VAGRANT_KDEVOPS_DEBIAN_TESTING64_XFS_20230427. This is a requirement
+	  LIBVIRT_KDEVOPS_DEBIAN_TESTING64_XFS_20230427. This is a requirement
 	  given all block devices must use iomap and that is the only current
 	  way to disable buffer-heads. Eventually this limitation is expected
 	  You can also use large-block-20230525 with Amazon Linux 2023 on AWS.
