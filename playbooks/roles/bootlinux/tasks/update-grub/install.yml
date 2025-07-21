@@ -54,7 +54,7 @@
 # So for instance, using GRUB_DISABLE_SUBMENU=y results in the following
 # options:
 #
-# vagrant@kdevops-xfs-nocrc ~ $ awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg |  awk '{print NR-1" ... "$0}'
+# root@kdevops-xfs-nocrc ~ $ awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg |  awk '{print NR-1" ... "$0}'
 # 0 ... Debian GNU/Linux, with Linux 5.16.0-4-amd64
 # 1 ... Debian GNU/Linux, with Linux 5.16.0-4-amd64 (recovery mode)
 # 2 ... Debian GNU/Linux, with Linux 5.10.105

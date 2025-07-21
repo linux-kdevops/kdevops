@@ -20,7 +20,6 @@ config HAVE_MIRROR_DBENCH
 config BLKTESTS_DBENCH_GIT_URL
 	string
 	default DEFAULT_DBENCH_URL if !HAVE_MIRROR_DBENCH
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/dbench.git) if HAVE_MIRROR_XFSDUMP && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/dbench.git) if HAVE_MIRROR_XFSDUMP && GUESTFS
 
 config BLKTESTS_WATCHDOG
@@ -131,10 +130,10 @@ config BLKTESTS_WATCHDOG_RESET_HUNG_SYSTEMS
 	  have to also implement a way to try to capture kernel logs
 	  before a reset.
 
-	  We currently only enable this for Vagrant provisioning, given we have
+	  We currently only enable this for libvirt provisioning, given we have
 	  to figure out a unified way to express a reset for cloud solution and
-	  also figure out a way to enable this for bare metal. For vagrant we
-	  currently use 'virsh reset' and so this works only if on libvirt.
+	  also figure out a way to enable this for bare metal. For libvirt we
+	  currently use 'virsh reset'.
 
 endif # BLKTESTS_WATCHDOG
 
@@ -146,7 +145,6 @@ config HAVE_MIRROR_BLKTESTS
 config BLKTESTS_GIT
 	string "The blktests git tree to clone"
 	default DEFAULT_BLKTESTS_URL if !HAVE_MIRROR_BLKTESTS
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/blktests.git) if HAVE_MIRROR_BLKTESTS && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/blktests.git) if HAVE_MIRROR_BLKTESTS && GUESTFS
 	help
 	  The blktests git tree to clone.
@@ -167,7 +165,6 @@ config HAVE_MIRROR_BLKTRACE
 config BLKTRACE_GIT
 	string "The blktrace git tree to clone"
 	default DEFAULT_BLKTRACE_URL if !HAVE_MIRROR_BLKTRACE
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/blktrace.git) if HAVE_MIRROR_BLKTRACE && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/blktrace.git) if HAVE_MIRROR_BLKTRACE && GUESTFS
 	help
 	  The blktrace git tree to clone.

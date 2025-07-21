@@ -9,7 +9,7 @@ UPDATE_SSHCONFIG_READ :=  https://github.com/linux-kdevops/update_ssh_config.git
 UPDATE_SSHCONFIG_RW   :=  git@github.com:linux-kdevops/update_ssh_config.git
 
 KCONFIG_DIR :=          scripts/kconfig
-UPDATE_SSHCONFIG_DIR := playbooks/roles/update_ssh_config_vagrant/update_ssh_config/
+UPDATE_SSHCONFIG_DIR := playbooks/roles/update_ssh_config/update_ssh_config/
 
 # If you only have read access to these trees use this target
 add-subtree-remotes:
@@ -35,4 +35,4 @@ refresh-subtrees:
 # If you are a developer with write commit access you can push changes queued
 # up here onto kdevops to their respective upstream as follows:
 # git subtree push --prefix=scripts/kconfig/                                            kconfig           master
-# git subtree push --prefix=playbooks/roles/update_ssh_config_vagrant/update_ssh_config update_ssh_config master
+# git subtree push --prefix=playbooks/roles/update_ssh_config/update_ssh_config update_ssh_config master

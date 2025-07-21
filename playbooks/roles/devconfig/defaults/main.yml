@@ -2,7 +2,7 @@
 ---
 
 # Your target home directory
-data_home_dir: "/home/vagrant"
+data_home_dir: "/root"
 
 # On your own system
 dev_gitconfig_src: "~/.gitconfig"
