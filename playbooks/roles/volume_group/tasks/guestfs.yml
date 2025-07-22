@@ -31,6 +31,13 @@
     - libvirt_extra_storage_drive_ide is defined
     - libvirt_extra_storage_drive_ide|bool
 
+- name: Set the SCSI device search pattern
+  ansible.builtin.set_fact:
+    by_id_pattern: "scsi-0QEMU_QEMU_HARDDISK_kdevops*"
+  when:
+    - libvirt_extra_storage_drive_scsi is defined
+    - libvirt_extra_storage_drive_scsi|bool
+
 - name: Verify there are block devices to search
   ansible.builtin.fail:
     msg: No supported block devices are available for NFSD.
