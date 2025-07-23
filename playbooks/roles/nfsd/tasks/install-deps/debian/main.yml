@@ -19,7 +19,7 @@
     nfsd_packages: "{{ nfsd_packages + [fsprogs] }}"
   when:
     - fsprogs is defined
-    - fsprogs
+    - fsprogs | length > 0
 
 - name: Add gssproxy to the nfsd packages list
   set_fact:
