@@ -5,6 +5,6 @@
     - kdevops_pcie_dynamic_kconfig
 
 - name: Generate libvirt PCI-E kcofig files
-  shell: "./python/workflows/dynamic-kconfig/gen-dynamic-pci.py {{ topdir_path }}/.dynamic-kconfig.pci.txt > {{ topdir_path }}/vagrant/Kconfig.passthrough_libvirt.generated"
+  shell: "./python/workflows/dynamic-kconfig/gen-dynamic-pci.py {{ topdir_path }}/.dynamic-kconfig.pci.txt > {{ topdir_path }}/kconfigs/Kconfig.passthrough_libvirt.generated"
   when:
     - kdevops_pcie_dynamic_kconfig

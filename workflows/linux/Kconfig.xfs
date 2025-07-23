@@ -14,7 +14,6 @@ config BOOTLINUX_TREE_XFS_URL
 	string
 	default DEFAULT_XFS_GIT_URL if BOOTLINUX_TREE_XFS && !USE_LOCAL_LINUX_MIRROR
 	default "/mirror/xfs-linux.git" if BOOTLINUX_TREE_XFS && USE_LIBVIRT_MIRROR && BOOTLINUX_9P
-	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_VAGRANT) /mirror/xfs-linux.git) if BOOTLINUX_TREE_XFS && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && VAGRANT
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/xfs-linux.git) if BOOTLINUX_TREE_XFS && USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && GUESTFS
 
 endif # BOOTLINUX_TREE_XFS

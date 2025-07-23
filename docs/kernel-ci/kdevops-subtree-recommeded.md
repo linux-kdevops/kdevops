@@ -8,7 +8,7 @@ tree as a git sub tree might be:
 
   * keeping track of expunges for baselines for releases which are not yet
     public
-  * adding support vagrant images for releases which are not yet public
+  * adding support images for releases which are not yet public
   * dealing with internal R&D registration (consider enterprise Linux
     registration) of guests to a subscription service
 

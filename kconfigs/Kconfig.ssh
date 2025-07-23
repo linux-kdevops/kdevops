@@ -50,8 +50,8 @@ config KDEVOPS_SSH_CONFIG_UPDATE_STRICT
 	     IdentitiesOnly yes
 	     LogLevel FATAL
 
-	  You are encouraged to use this. Vagrant does this, and so you can't
-	  disable this if you are using Vagrant.
+         You are encouraged to use this. It mirrors the settings used when
+         bringing up guests with libguestfs or terraform.
 
 config KDEVOPS_SSH_CONFIG_UPDATE_BACKUP
 	bool "Create a backup when updating your SSH config file"
@@ -62,6 +62,6 @@ config KDEVOPS_SSH_CONFIG_UPDATE_BACKUP
 
 	    ~/.ssh/config.backup.kdevops.$method
 
-	  where $method is either Vagrant or terraform.
+          where $method is either guestfs or terraform.
 
 endif # KDEVOPS_SSH_CONFIG_UPDATE

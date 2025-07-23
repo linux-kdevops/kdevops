@@ -37,8 +37,8 @@ Below is an example playbook task:
   vars:
     tmpfs_mount_options: "size=75%"
     tmpfs_mounted_on: "/test/tmpfs"
-    tmpfs_user: "vagrant"
-    tmpfs_group: "vagrant"
+    tmpfs_user: "kdevops"
+    tmpfs_group: "kdevops"
   tags: [ 'oscheck', 'test_tmpfs_enable' ]
 ```
 
