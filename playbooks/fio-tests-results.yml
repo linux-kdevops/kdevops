@@ -1,0 +1,87 @@
+---
+- hosts:
+    - baseline
+    - dev
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  tasks:
+    - name: Generate performance summary
+      shell: |
+        cd {{ fio_tests_results_dir }}
+        echo "=== FIO Test Results Summary ===" > summary.txt
+        echo "Generated on: $(date)" >> summary.txt
+        echo "" >> summary.txt
+        for result_file in results_*.txt; do
+          if [[ -f "$result_file" ]]; then
+            echo "=== $(basename $result_file .txt) ===" >> summary.txt
+            # Extract key metrics from fio output
+            grep -E "(read:|write:|READ:|WRITE:)" "$result_file" | head -4 >> summary.txt || true
+            echo "" >> summary.txt
+          fi
+        done
+      become: yes
+
+    - name: Show summary
+      shell: cat {{ fio_tests_results_dir }}/summary.txt
+      become: yes
+      register: fio_summary
+
+    - name: Display results
+      debug:
+        msg: "{{ fio_summary.stdout_lines }}"
+
+    - name: Create local results directory
+      delegate_to: localhost
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/"
+        state: directory
+        mode: '0755'
+      run_once: false
+      tags: ['results']
+
+    - name: Ensure old fio-tests results archive is removed if it exists
+      become: yes
+      become_method: sudo
+      ansible.builtin.file:
+        path: "{{ fio_tests_results_dir }}/../{{ inventory_hostname }}.tar.gz"
+        state: absent
+      tags: [ 'results' ]
+
+    - name: Archive fio-tests results directory on remote host
+      become: yes
+      become_method: sudo
+      command: >
+        tar czf {{ fio_tests_results_dir }}/../{{ inventory_hostname }}.tar.gz -C {{ fio_tests_results_dir }} .
+      args:
+        creates: "{{ fio_tests_results_dir }}/../{{ inventory_hostname }}.tar.gz"
+      tags: [ 'results' ]
+
+    - name: Copy fio-tests results locally
+      tags: [ 'results' ]
+      become: yes
+      become_method: sudo
+      ansible.builtin.fetch:
+        src: "{{ fio_tests_results_dir }}/../{{ inventory_hostname }}.tar.gz"
+        dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}.tar.gz"
+        flat: yes
+
+    - name: Extract fio-tests results archive locally
+      become: no
+      delegate_to: localhost
+      ansible.builtin.unarchive:
+        src: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}.tar.gz"
+        dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}"
+        remote_src: no
+      tags: [ 'results' ]
+
+    - name: Remove fio-tests archive on localhost
+      tags: [ 'clean' ]
+      become: yes
+      become_method: sudo
+      delegate_to: localhost
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}.tar.gz"

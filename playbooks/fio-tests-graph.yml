@@ -1,0 +1,43 @@
+---
+- hosts:
+    - baseline
+    - dev
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  tasks:
+    - include_role:
+        name: create_data_partition
+      tags: [ 'oscheck', 'data_partition' ]
+
+    - name: git clone kdevops
+      environment:
+        GIT_SSL_NO_VERIFY:  true
+      git:
+        repo: "{{ kdevops_git }}"
+        dest: "{{ kdevops_data }}"
+        version: "{{ kdevops_git_version }}"
+      retries: 3
+      delay: 5
+      register: result
+      until: not result.failed
+      tags: [ 'oscheck', 'install', 'git']
+
+    - name: Generate fio performance graphs
+      shell: |
+        cd {{ fio_tests_results_dir }}
+        mkdir -p graphs
+        python3 {{ kdevops_data }}/playbooks/python/workflows/fio-tests/fio-plot.py \
+          . --output-dir graphs --prefix "{{ inventory_hostname }}_performance"
+      args:
+        creates: "{{ fio_tests_results_dir }}/graphs/{{ inventory_hostname }}_performance_bandwidth_heatmap.png"
+      become: yes
+
+    - name: List generated graphs
+      shell: ls -la {{ fio_tests_results_dir }}/graphs/
+      become: yes
+      register: graph_list
+
+    - name: Display generated graphs
+      debug:
+        msg: "{{ graph_list.stdout_lines }}"

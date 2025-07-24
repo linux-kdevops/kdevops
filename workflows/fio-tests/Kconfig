@@ -1,0 +1,359 @@
+choice
+	prompt "What type of fio testing do you want to run?"
+	default FIO_TESTS_PERFORMANCE_ANALYSIS
+
+config FIO_TESTS_PERFORMANCE_ANALYSIS
+	bool "Performance analysis tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	output yaml
+	help
+	  Run comprehensive performance analysis tests across different
+	  configurations to understand storage device characteristics.
+	  This includes testing various block sizes, IO depths, and
+	  thread counts to generate performance profiles.
+
+	  A/B testing is enabled to compare performance across different
+	  configurations using baseline and development nodes.
+
+config FIO_TESTS_LATENCY_ANALYSIS
+	bool "Latency analysis tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	output yaml
+	help
+	  Focus on latency characteristics and tail latency analysis
+	  across different workload patterns. This helps identify
+	  performance outliers and latency distribution patterns.
+
+config FIO_TESTS_THROUGHPUT_SCALING
+	bool "Throughput scaling tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	output yaml
+	help
+	  Test how throughput scales with increasing IO depth and
+	  thread count. Useful for understanding the optimal
+	  configuration for maximum throughput.
+
+config FIO_TESTS_MIXED_WORKLOADS
+	bool "Mixed workload tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	output yaml
+	help
+	  Test mixed read/write workloads with various ratios to
+	  simulate real-world application patterns.
+
+endchoice
+
+config FIO_TESTS_DEVICE
+	string "Device to use for fio testing"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/sdc" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	default "/dev/null"
+	help
+	  The block device to use for fio testing. For CI/testing
+	  purposes, /dev/null can be used as a simple target.
+
+config FIO_TESTS_RUNTIME
+	string "Test runtime per job"
+	output yaml
+	default "60"
+	help
+	  Runtime in seconds for each fio job. Default is 60 seconds
+	  for reasonable test duration while allowing comprehensive
+	  testing.
+
+config FIO_TESTS_RAMP_TIME
+	string "Ramp time before measurements"
+	output yaml
+	default "10"
+	help
+	  Time in seconds to ramp up before starting measurements.
+	  This allows the workload to stabilize before collecting
+	  performance data.
+
+menu "Block size configuration"
+
+config FIO_TESTS_BS_4K
+	bool "4K block size tests"
+	output yaml
+	default y
+	help
+	  Enable 4K block size testing. This is the most common
+	  block size for many applications.
+
+config FIO_TESTS_BS_8K
+	bool "8K block size tests"
+	output yaml
+	default y
+	help
+	  Enable 8K block size testing.
+
+config FIO_TESTS_BS_16K
+	bool "16K block size tests"
+	output yaml
+	default y
+	help
+	  Enable 16K block size testing.
+
+config FIO_TESTS_BS_32K
+	bool "32K block size tests"
+	output yaml
+	default n
+	help
+	  Enable 32K block size testing.
+
+config FIO_TESTS_BS_64K
+	bool "64K block size tests"
+	output yaml
+	default n
+	help
+	  Enable 64K block size testing.
+
+config FIO_TESTS_BS_128K
+	bool "128K block size tests"
+	output yaml
+	default n
+	help
+	  Enable 128K block size testing.
+
+endmenu
+
+menu "IO depth configuration"
+
+config FIO_TESTS_IODEPTH_1
+	bool "IO depth 1"
+	output yaml
+	default y
+	help
+	  Test with IO depth of 1 (synchronous IO).
+
+config FIO_TESTS_IODEPTH_4
+	bool "IO depth 4"
+	output yaml
+	default y
+	help
+	  Test with IO depth of 4.
+
+config FIO_TESTS_IODEPTH_8
+	bool "IO depth 8"
+	output yaml
+	default y
+	help
+	  Test with IO depth of 8.
+
+config FIO_TESTS_IODEPTH_16
+	bool "IO depth 16"
+	output yaml
+	default y
+	help
+	  Test with IO depth of 16.
+
+config FIO_TESTS_IODEPTH_32
+	bool "IO depth 32"
+	output yaml
+	default n
+	help
+	  Test with IO depth of 32.
+
+config FIO_TESTS_IODEPTH_64
+	bool "IO depth 64"
+	output yaml
+	default n
+	help
+	  Test with IO depth of 64.
+
+endmenu
+
+menu "Thread/job configuration"
+
+config FIO_TESTS_NUMJOBS_1
+	bool "Single job"
+	output yaml
+	default y
+	help
+	  Test with a single fio job.
+
+config FIO_TESTS_NUMJOBS_2
+	bool "2 jobs"
+	output yaml
+	default y
+	help
+	  Test with 2 concurrent fio jobs.
+
+config FIO_TESTS_NUMJOBS_4
+	bool "4 jobs"
+	output yaml
+	default y
+	help
+	  Test with 4 concurrent fio jobs.
+
+config FIO_TESTS_NUMJOBS_8
+	bool "8 jobs"
+	output yaml
+	default n
+	help
+	  Test with 8 concurrent fio jobs.
+
+config FIO_TESTS_NUMJOBS_16
+	bool "16 jobs"
+	output yaml
+	default n
+	help
+	  Test with 16 concurrent fio jobs.
+
+endmenu
+
+menu "Workload patterns"
+
+config FIO_TESTS_PATTERN_RAND_READ
+	bool "Random read"
+	output yaml
+	default y
+	help
+	  Enable random read workload testing.
+
+config FIO_TESTS_PATTERN_RAND_WRITE
+	bool "Random write"
+	output yaml
+	default y
+	help
+	  Enable random write workload testing.
+
+config FIO_TESTS_PATTERN_SEQ_READ
+	bool "Sequential read"
+	output yaml
+	default y
+	help
+	  Enable sequential read workload testing.
+
+config FIO_TESTS_PATTERN_SEQ_WRITE
+	bool "Sequential write"
+	output yaml
+	default y
+	help
+	  Enable sequential write workload testing.
+
+config FIO_TESTS_PATTERN_MIXED_75_25
+	bool "Mixed 75% read / 25% write"
+	output yaml
+	default n
+	help
+	  Enable mixed workload with 75% reads and 25% writes.
+
+config FIO_TESTS_PATTERN_MIXED_50_50
+	bool "Mixed 50% read / 50% write"
+	output yaml
+	default n
+	help
+	  Enable mixed workload with 50% reads and 50% writes.
+
+endmenu
+
+menu "Advanced configuration"
+
+config FIO_TESTS_IOENGINE
+	string "IO engine to use"
+	output yaml
+	default "io_uring"
+	help
+	  The fio IO engine to use. Options include:
+	  - io_uring: Linux native async IO (recommended)
+	  - libaio: Linux native async IO (legacy)
+	  - psync: POSIX sync IO
+	  - sync: Basic sync IO
+
+config FIO_TESTS_DIRECT
+	bool "Use direct IO"
+	output yaml
+	default y
+	help
+	  Enable direct IO to bypass the page cache. This provides
+	  more accurate storage device performance measurements.
+
+config FIO_TESTS_FSYNC_ON_CLOSE
+	bool "Fsync on close"
+	output yaml
+	default y
+	help
+	  Call fsync() before closing files to ensure data is
+	  written to storage.
+
+config FIO_TESTS_RESULTS_DIR
+	string "Results directory"
+	output yaml
+	default "/data/fio-tests"
+	help
+	  Directory where test results and logs will be stored.
+	  This should be on a different filesystem than the test
+	  target to avoid interference.
+
+config FIO_TESTS_LOG_AVG_MSEC
+	int "Log averaging interval (msec)"
+	output yaml
+	default 1000
+	help
+	  Interval in milliseconds for averaging performance logs.
+	  Lower values provide more granular data but larger log files.
+
+config FIO_TESTS_ENABLE_GRAPHING
+	bool "Enable graphing and visualization"
+	output yaml
+	default y
+	help
+	  Enable comprehensive graphing and visualization capabilities
+	  for fio test results. This installs Python dependencies
+	  including matplotlib, pandas, and seaborn for generating
+	  performance analysis graphs.
+
+	  Graphing features include:
+	  - Performance heatmaps across block sizes and IO depths
+	  - IOPS scaling analysis
+	  - Latency distribution charts
+	  - Workload pattern comparisons
+	  - Baseline vs development A/B comparisons
+	  - Trend analysis and correlation matrices
+
+if FIO_TESTS_ENABLE_GRAPHING
+
+config FIO_TESTS_GRAPH_FORMAT
+	string "Graph output format"
+	output yaml
+	default "png"
+	help
+	  Output format for generated graphs. Common formats include:
+	  - png: Portable Network Graphics (recommended)
+	  - svg: Scalable Vector Graphics
+	  - pdf: Portable Document Format
+	  - jpg: JPEG format
+
+config FIO_TESTS_GRAPH_DPI
+	int "Graph resolution (DPI)"
+	output yaml
+	default 300
+	help
+	  Resolution for generated graphs in dots per inch.
+	  Higher values produce better quality but larger files.
+	  Common values: 150 (screen), 300 (print), 600 (high quality).
+
+config FIO_TESTS_GRAPH_THEME
+	string "Matplotlib theme"
+	output yaml
+	default "default"
+	help
+	  Matplotlib style theme for graphs. Options include:
+	  - default: Default matplotlib style
+	  - seaborn: Clean seaborn style
+	  - dark_background: Dark theme
+	  - ggplot: R ggplot2 style
+	  - bmh: Bayesian Methods for Hackers style
+
+endif # FIO_TESTS_ENABLE_GRAPHING
+
+endmenu
