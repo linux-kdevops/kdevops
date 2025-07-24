@@ -14,4 +14,4 @@
 - name: Install kdevops deps to run make menuconfig
   include_tasks: install-deps/main.yml
   when:
-    - kdevops_first_run
+    - kdevops_first_run | bool
