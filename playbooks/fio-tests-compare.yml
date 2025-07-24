@@ -1,0 +1,33 @@
+---
+- hosts: localhost
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  tasks:
+    - name: Check if baseline and dev hosts exist in inventory
+      fail:
+        msg: "Both baseline and dev hosts must exist for comparison"
+      when: "'baseline' not in groups or 'dev' not in groups"
+
+    - name: Create local graph results comparison directory
+      file:
+        path: "{{ topdir_path }}/workflows/fio-tests/results/graphs"
+        state: directory
+        mode: '0755'
+
+    - name: Generate comparison graphs
+      shell: |
+        python3 {{ topdir_path }}/playbooks/python/workflows/fio-tests/fio-compare.py \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['baseline'][0] }}   \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['dev'][0] }}        \
+          --output-dir {{ topdir_path }}/workflows/fio-tests/results/graphs           \
+          --baseline-label "Baseline"                                                 \
+          --dev-label "Development"
+
+    - name: List comparison results
+      shell: ls -la {{ topdir_path }}/workflows/fio-tests/results/graphs 
+      register: comparison_list
+
+    - name: Display comparison results
+      debug:
+        msg: "{{ comparison_list.stdout_lines }}"

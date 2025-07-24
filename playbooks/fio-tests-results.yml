@@ -1,0 +1,10 @@
+---
+- hosts:
+    - baseline
+    - dev
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  roles:
+    - role: fio-tests
+      tags: ['results']

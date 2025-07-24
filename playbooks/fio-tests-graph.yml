@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  tasks:
+    - name: Ensure fio-tests results have been collected
+      stat:
+        path: "{{ topdir_path }}/workflows/fio-tests/results"
+      register: results_dir
+      tags: ['graph']
+
+    - name: Fail if results directory doesn't exist
+      fail:
+        msg: "Results directory not found. Please run 'make fio-tests-results' first to collect results from target nodes."
+      when: not results_dir.stat.exists
+      tags: ['graph']
+
+    - name: Find all collected result directories
+      find:
+        paths: "{{ topdir_path }}/workflows/fio-tests/results"
+        file_type: directory
+        recurse: no
+      register: result_dirs
+      tags: ['graph']
+
+    - name: Generate performance graphs for each host
+      shell: |
+        host_dir="{{ item.path }}"
+        host_name="{{ item.path | basename }}"
+        results_subdir="${host_dir}/fio-tests-results-${host_name}"
+        
+        # Check if extracted results exist
+        if [[ ! -d "${results_subdir}" ]]; then
+          echo "No extracted results found for ${host_name}"
+          exit 0
+        fi
+        
+        # Create graphs directory
+        mkdir -p "${host_dir}/graphs"
+        
+        # Generate graphs using the fio-plot.py script
+        python3 {{ topdir_path }}/playbooks/python/workflows/fio-tests/fio-plot.py \
+          "${results_subdir}" \
+          --output-dir "${host_dir}/graphs" \
+          --prefix "${host_name}_performance"
+        
+        echo "Generated graphs for ${host_name}"
+      loop: "{{ result_dirs.files }}"
+      when: item.isdir
+      tags: ['graph']
+      register: graph_results
+      ignore_errors: yes
+
+    - name: Display graph generation results
+      debug:
+        msg: "{{ item.stdout_lines | default(['No output']) }}"
+      loop: "{{ graph_results.results }}"
+      when: graph_results is defined
+      tags: ['graph']
+
+    - name: List all generated graphs
+      shell: |
+        for host_dir in {{ topdir_path }}/workflows/fio-tests/results/*/; do
+          if [[ -d "${host_dir}/graphs" ]]; then
+            host_name=$(basename "$host_dir")
+            echo "=== Graphs for ${host_name} ==="
+            ls -la "${host_dir}/graphs/" 2>/dev/null || echo "No graphs found"
+            echo ""
+          fi
+        done
+      register: all_graphs
+      tags: ['graph']
+
+    - name: Display generated graphs summary
+      debug:
+        msg: "{{ all_graphs.stdout_lines }}"
+      tags: ['graph']

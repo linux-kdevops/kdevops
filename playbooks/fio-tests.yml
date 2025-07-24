@@ -1,0 +1,11 @@
+---
+- hosts:
+    - baseline
+    - dev
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  roles:
+    - role: create_data_partition
+      tags: ['data_partition']
+    - role: fio-tests

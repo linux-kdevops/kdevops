@@ -1,0 +1,48 @@
+---
+# fio-tests role defaults
+
+fio_tests_results_dir: "/data/fio-tests"
+fio_tests_binary: "/usr/bin/fio"
+
+# These variables are populated from kconfig via extra_vars.yaml
+# fio_tests_device: ""
+# fio_tests_runtime: ""
+# fio_tests_ramp_time: ""
+# fio_tests_ioengine: ""
+# fio_tests_direct: ""
+# fio_tests_fsync_on_close: ""
+# fio_tests_log_avg_msec: ""
+
+# Test configuration booleans (populated from kconfig)
+# fio_tests_bs_4k: false
+# fio_tests_bs_8k: false
+# fio_tests_bs_16k: false
+# fio_tests_bs_32k: false
+# fio_tests_bs_64k: false
+# fio_tests_bs_128k: false
+
+# fio_tests_iodepth_1: false
+# fio_tests_iodepth_4: false
+# fio_tests_iodepth_8: false
+# fio_tests_iodepth_16: false
+# fio_tests_iodepth_32: false
+# fio_tests_iodepth_64: false
+
+# fio_tests_numjobs_1: false
+# fio_tests_numjobs_2: false
+# fio_tests_numjobs_4: false
+# fio_tests_numjobs_8: false
+# fio_tests_numjobs_16: false
+
+# fio_tests_pattern_rand_read: false
+# fio_tests_pattern_rand_write: false
+# fio_tests_pattern_seq_read: false
+# fio_tests_pattern_seq_write: false
+# fio_tests_pattern_mixed_75_25: false
+# fio_tests_pattern_mixed_50_50: false
+
+# Derived configuration lists
+fio_tests_block_sizes: []
+fio_tests_io_depths: []
+fio_tests_num_jobs: []
+fio_tests_patterns: []

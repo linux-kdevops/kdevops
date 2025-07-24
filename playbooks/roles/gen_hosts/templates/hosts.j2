@@ -39,6 +39,44 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
 [reboot-limit:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% elif kdevops_workflow_enable_fio_tests %}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-fio-tests
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-fio-tests-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-fio-tests
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-fio-tests-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[fio_tests]
+{{ kdevops_host_prefix }}-fio-tests
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-fio-tests-dev
+{% endif %}
+
+[fio_tests:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[service]
+
+[service:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% else %}
 [all]
 localhost ansible_connection=local
