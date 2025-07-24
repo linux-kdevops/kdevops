@@ -4,7 +4,7 @@
 PHONY += clean
 clean: $(clean-subdirs)
 	$(Q)$(MAKE) -C scripts/kconfig/ clean
-	$(Q)@rm -f *.o $(obj-y)
+	$(Q)rm -f *.o $(obj-y)
 
 PHONY += mrproper
 mrproper:
