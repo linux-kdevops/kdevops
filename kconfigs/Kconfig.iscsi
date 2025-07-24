@@ -1,6 +1,10 @@
 # FIXME: need defaults for terraform hosts
 menuconfig KDEVOPS_ENABLE_ISCSI
 	bool "Set up an iSCSI target host"
+	depends on KDEVOPS_WORKFLOW_ENABLE_FSTESTS || \
+			   KDEVOPS_WORKFLOW_ENABLE_PYNFS || \
+			   KDEVOPS_WORKFLOW_ENABLE_NFSTEST || \
+			   KDEVOPS_WORKFLOW_ENABLE_GITR
 	default n
 	help
 	  Provision an additional target node as an iSCSI target.

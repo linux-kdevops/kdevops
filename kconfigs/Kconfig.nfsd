@@ -1,6 +1,10 @@
 # FIXME: need defaults for terraform hosts
 config KDEVOPS_SETUP_NFSD
 	bool "Set up the kernel nfs server"
+	depends on KDEVOPS_WORKFLOW_ENABLE_FSTESTS || \
+			   KDEVOPS_WORKFLOW_ENABLE_PYNFS || \
+			   KDEVOPS_WORKFLOW_ENABLE_NFSTEST || \
+			   KDEVOPS_WORKFLOW_ENABLE_GITR
 	default n
 	help
 	  Configure and bring up the kernel NFS server. This will provision
