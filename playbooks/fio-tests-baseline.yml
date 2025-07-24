@@ -1,0 +1,29 @@
+---
+- hosts:
+    - baseline
+    - dev
+  become: no
+  vars:
+    ansible_ssh_pipelining: True
+  tasks:
+    - name: Create baseline directory structure
+      file:
+        path: "{{ fio_tests_results_dir }}/baseline"
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Save current test configuration as baseline
+      copy:
+        src: "{{ fio_tests_results_dir }}/results_{{ item }}.txt"
+        dest: "{{ fio_tests_results_dir }}/baseline/baseline_{{ item }}.txt"
+        remote_src: yes
+        backup: yes
+      with_fileglob:
+        - "{{ fio_tests_results_dir }}/results_*.txt"
+      become: yes
+      ignore_errors: yes
+
+    - name: Create baseline timestamp
+      shell: date > "{{ fio_tests_results_dir }}/baseline/baseline_timestamp.txt"
+      become: yes

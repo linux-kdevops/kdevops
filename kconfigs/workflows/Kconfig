@@ -189,6 +189,13 @@ config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 	  This will dedicate your configuration to running only the
 	  mmtests workflow for memory fragmentation testing.
 
+config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
+	bool "fio-tests"
+	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+	help
+	  This will dedicate your configuration to running only the
+	  fio-tests workflow for comprehensive storage performance testing.
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -203,6 +210,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "nfstest" if KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 	default "sysbench" if KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 	default "mmtests" if KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
+	default "fio-tests" if KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 
 endif
 
@@ -302,6 +310,14 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MMTESTS
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
 	  Select this option if you want to provision mmtests on a
+	  single target node for by-hand testing.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS
+	bool "fio-tests"
+	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
+	help
+	  Select this option if you want to provision fio-tests on a
 	  single target node for by-hand testing.
 
 endif # !WORKFLOWS_DEDICATED_WORKFLOW
@@ -416,6 +432,17 @@ menu "Configure and run the mmtests tests"
 source "workflows/mmtests/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_MMTESTS
+
+config KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS || KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
+
+if KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
+menu "Configure and run fio-tests"
+source "workflows/fio-tests/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"

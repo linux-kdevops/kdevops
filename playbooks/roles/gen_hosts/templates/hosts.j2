@@ -6,8 +6,42 @@ Each workflow which has its own custom ansible host file generated should use
 its own jinja2 template file and define its own ansible task for its generation.
 #}
 {% if kdevops_workflows_dedicated_workflow %}
+{% if kdevops_workflow_enable_fio_tests %}
+[all]
+{{ kdevops_host_prefix }}-fio-tests
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-fio-tests-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-fio-tests
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-fio-tests-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[fio_tests]
+{{ kdevops_host_prefix }}-fio-tests
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-fio-tests-dev
+{% endif %}
+
+[fio_tests:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% else %}
 [all]
 write-your-own-template-for-your-workflow-and-task
+{% endif %}
 {% else %}
 [all]
 {{ kdevops_hosts_prefix }}

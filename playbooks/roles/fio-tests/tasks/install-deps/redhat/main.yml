@@ -1,0 +1,20 @@
+---
+- name: Install fio for RHEL/CentOS/Fedora
+  package:
+    name:
+      - fio
+      - python3
+    state: present
+  become: yes
+
+- name: Install graphing dependencies for RHEL/CentOS/Fedora
+  package:
+    name:
+      - python3-pip
+      - python3-pandas
+      - python3-matplotlib
+      - python3-seaborn
+      - python3-numpy
+    state: present
+  become: yes
+  when: fio_tests_enable_graphing is defined and fio_tests_enable_graphing

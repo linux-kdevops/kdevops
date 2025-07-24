@@ -12,6 +12,7 @@ Table of Contents
       * [Runs some kernel selftests in a parallel manner](#runs-some-kernel-selftests-in-a-parallel-manner)
       * [CXL](#cxl)
       * [sysbench](#sysbench)
+      * [fio-tests](#fio-tests)
    * [kdevops chats](#kdevops-chats)
    * [kdevops on discord](#kdevops-on-discord)
       * [kdevops IRC](#kdevops-irc)
@@ -228,6 +229,15 @@ kdevops supports automation of sysbench tests on VMs with or without
 [PCIe passthrough](docs/libvirt-pcie-passthrough.md) and different cloud
 providers. For details refer to the
 [kdevops sysbench documentation](docs/sysbench/sysbench.md).
+
+### fio-tests
+
+kdevops includes comprehensive storage performance testing through the fio-tests
+workflow, adapted from the original [fio-tests framework](https://github.com/mcgrof/fio-tests).
+This workflow provides flexible I/O benchmarking with configurable test matrices,
+A/B testing capabilities, and advanced graphing and visualization support. For
+detailed configuration and usage information, refer to the
+[kdevops fio-tests documentation](docs/fio-tests.md).
 
 ## kdevops chats
 

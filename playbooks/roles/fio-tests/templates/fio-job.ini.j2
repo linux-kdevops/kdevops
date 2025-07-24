@@ -1,0 +1,18 @@
+[global]
+ioengine={{ fio_tests_ioengine }}
+direct={{ fio_tests_direct | int }}
+fsync_on_close={{ fio_tests_fsync_on_close | int }}
+group_reporting=1
+time_based=1
+runtime={{ fio_tests_runtime }}
+ramp_time={{ fio_tests_ramp_time }}
+
+[{{ pattern.name }}_bs{{ block_size }}_iodepth{{ io_depth }}_jobs{{ num_jobs }}]
+filename={{ fio_tests_device }}
+rw={{ pattern.rw }}
+{% if pattern.rwmixread is defined and pattern.rw in ['randrw', 'rw'] %}
+rwmixread={{ pattern.rwmixread }}
+{% endif %}
+bs={{ block_size }}
+iodepth={{ io_depth }}
+numjobs={{ num_jobs }}

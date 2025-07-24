@@ -53,3 +53,9 @@ jobs:
           echo "Running simple make targets on ${{ matrix.distro_container }} environment"
           make mrproper
 
+      - name: Test fio-tests defconfig
+        run: |
+          echo "Testing fio-tests CI configuration"
+          make defconfig-fio-tests-ci
+          make
+          echo "Configuration test passed for fio-tests"
