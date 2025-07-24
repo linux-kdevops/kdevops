@@ -1,4 +1,4 @@
 ---
 iscsi_target_packages:
   - targetcli-fb
-  - sg3_utils
+  - sg3-utils
