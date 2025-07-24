@@ -1,6 +1,7 @@
 # FIXME: need defaults for terraform hosts
 config KDEVOPS_SETUP_SMBD
 	bool "Set up the Samba SMB server"
+	depends on KDEVOPS_WORKFLOW_ENABLE_FSTESTS
 	default n
 	help
 	  Configure and bring up the Samba SMB server. This will provision

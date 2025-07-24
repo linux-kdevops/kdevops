@@ -1,5 +1,6 @@
 config KDEVOPS_SETUP_KRB5
 	bool "Set up KRB5"
+	depends on KDEVOPS_WORKFLOW_ENABLE_FSTESTS
 	default n
 	help
 	  Configure and bring up a MIT Kerberos V5 KDC.
