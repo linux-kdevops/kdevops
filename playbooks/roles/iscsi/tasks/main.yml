@@ -51,7 +51,7 @@
   become_flags: 'su - -c'
   become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
-    name: target.service
+    name: "{{ iscsi_target_service_name }}"
     state: started
     enabled: true
 

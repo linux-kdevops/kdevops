@@ -5,3 +5,5 @@ iscsi_target_packages:
 
 iscsi_initiator_packages:
   - open-iscsi
+
+iscsi_target_service_name: target.service

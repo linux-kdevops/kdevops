@@ -2,3 +2,5 @@
 iscsi_target_packages:
   - targetcli-fb
   - sg3-utils
+
+iscsi_target_service_name: targetclid.socket
