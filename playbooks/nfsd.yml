@@ -1,5 +1,5 @@
 ---
 - name: Set up and start the NFS server with configurable exports
-  hosts: all
+  hosts: nfsd
   roles:
     - role: nfsd

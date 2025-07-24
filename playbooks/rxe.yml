@@ -1,5 +1,5 @@
 ---
 - name: Set up software-emulated RoCE RDMA over Ethernet (rxe) via udev
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: rxe

@@ -1,5 +1,5 @@
 ---
 - name: Configure and run the nfstest workflow for NFS testing
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: nfstest

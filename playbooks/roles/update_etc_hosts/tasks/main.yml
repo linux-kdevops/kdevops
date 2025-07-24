@@ -26,7 +26,7 @@
 
 - name: Build list of hosts
   set_fact:
-    ueh_hosts: "{{ groups.all | flatten(levels=1) | reject('eq', inventory_hostname) }}"
+    ueh_hosts: "{{ ansible_play_hosts_all | difference([inventory_hostname]) }}"
 
 - debug:
     var: ueh_hosts

@@ -1,5 +1,5 @@
 ---
 - name: Set up software-emulated iWARP RDMA over TCP/IP (siw) via udev
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: siw

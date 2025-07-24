@@ -1,5 +1,5 @@
 ---
 - name: Git regresion filesystem test workflow
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: gitr

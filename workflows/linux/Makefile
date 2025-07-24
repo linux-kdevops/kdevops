@@ -154,7 +154,7 @@ linux-reboot:
 
 PHONY += uname
 uname:
-	$(Q)ansible all -i hosts -b -m command -a "uname -r" -o \
+	$(Q)ansible 'baseline:dev' -i hosts -b -m command -a "uname -r" -o \
 	| awk -F '|' '{gsub(/^ +| +$$/, "", $$2); printf "%-30s %s\n", $$1, $$4}' \
 	| sed -e 's|(stdout)||'
 

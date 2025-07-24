@@ -1,4 +1,5 @@
 [all]
+localhost ansible_connection=local
 {{ kdevops_hosts_prefix }}
 {% if kdevops_baseline_and_dev == True %}
 {{ kdevops_hosts_prefix }}-dev

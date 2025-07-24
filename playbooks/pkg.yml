@@ -1,5 +1,5 @@
 ---
 - name: Package name wrapper
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: pkg

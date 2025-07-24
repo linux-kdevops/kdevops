@@ -27,7 +27,7 @@ Below is an example playbook task:
 
 ```
 ---
-- hosts: all
+- hosts: baseline:dev
   roles:
     - role: common
 ```

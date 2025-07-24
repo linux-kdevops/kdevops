@@ -5,6 +5,6 @@
     - role: fstests_prep_localhost
 
 - name: Configure and run the filesystem testing suite workflow
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: fstests

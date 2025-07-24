@@ -7,9 +7,11 @@ its own jinja2 template file and define its own ansible task for its generation.
 #}
 {% if kdevops_workflows_dedicated_workflow %}
 [all]
+localhost ansible_connection=local
 write-your-own-template-for-your-workflow-and-task
 {% else %}
 [all]
+localhost ansible_connection=local
 {{ kdevops_hosts_prefix }}
 {% if kdevops_baseline_and_dev == True %}
 {{ kdevops_hosts_prefix }}-dev

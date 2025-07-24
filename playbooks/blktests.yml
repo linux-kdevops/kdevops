@@ -1,5 +1,5 @@
 ---
 - name: Configure and run the block layer testing workflow
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: blktests

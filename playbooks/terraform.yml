@@ -1,7 +1,6 @@
 ---
-- name: Provision target nodes with terraform
-  hosts: all
+- name: Manage infrastructure lifecycle and SSH access with Terraform
+  hosts: baseline:dev
   gather_facts: false
-  hosts: all
   roles:
     - role: terraform

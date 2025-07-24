@@ -1,5 +1,5 @@
 ---
 - name: Configure and run pynfs testing workflow
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: pynfs

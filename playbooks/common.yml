@@ -1,5 +1,5 @@
 ---
 - name: Common tasks
-  hosts: all
+  hosts: baseline:dev
   roles:
     - role: common
