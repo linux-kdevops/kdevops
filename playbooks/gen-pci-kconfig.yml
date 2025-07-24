@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Generate dynamic PCI-E passthrough Kconfig files for libvirt guests
+  hosts: localhost
   roles:
     - role: gen_pci_kconfig

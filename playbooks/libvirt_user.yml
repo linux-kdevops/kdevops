@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Allow user to run libvirt guests
+  hosts: localhost
   roles:
     - role: libvirt_user

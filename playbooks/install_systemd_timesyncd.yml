@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Install and configure systemd-timesyncd for NTP time sync
+  hosts: localhost
   roles:
     - role: install_systemd_timesyncd

@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Enable fstests JUnit XML result processing
+  hosts: localhost
   roles:
     - role: fstests_prep_localhost
 

@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Update OpenSSH client configuration file (libguestfs)
+  hosts: localhost
   roles:
     - role: update_ssh_config_guestfs

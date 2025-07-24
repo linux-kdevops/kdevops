@@ -1,4 +1,5 @@
 ---
-- hosts: localhost
+- name: Apply hypervisor tuning settings (KSM and Zswap)
+  hosts: localhost
   roles:
     - role: hypervisor-tuning
