@@ -1,5 +1,6 @@
 ---
-- ansible.builtin.include_role:
+- name: Include common role
+  ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool
@@ -39,7 +40,7 @@
         label: "Adding block device: /dev/{{ item.key }}"
       with_dict: "{{ ansible_devices }}"
 
-- name: Create {{ data_path }} partition if not created yet
+- name: Create data partition if not created yet
   ansible.builtin.include_role:
     name: create_partition
   vars:

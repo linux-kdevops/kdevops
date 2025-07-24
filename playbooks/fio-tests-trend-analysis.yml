@@ -1,0 +1,33 @@
+---
+- name: Generate fio test trend analysis
+  hosts:
+    - baseline
+    - dev
+  become: false
+  vars:
+    ansible_ssh_pipelining: true
+  tasks:
+    - name: Include create_data_partition role
+      ansible.builtin.include_role:
+        name: create_data_partition
+      tags: ["oscheck", "data_partition"]
+
+    - name: Generate fio trend analysis
+      ansible.builtin.shell: |
+        cd {{ fio_tests_results_dir }}
+        mkdir -p analysis
+        python3 {{ kdevops_data }}/playbooks/python/workflows/fio-tests/fio-trend-analysis.py \
+          . --output-dir analysis
+      args:
+        creates: "{{ fio_tests_results_dir }}/analysis/block_size_trends.png"
+      become: true
+
+    - name: List generated analysis files
+      ansible.builtin.command: ls -la {{ fio_tests_results_dir }}/analysis/
+      become: true
+      register: analysis_list
+      changed_when: false
+
+    - name: Display generated analysis files
+      ansible.builtin.debug:
+        msg: "{{ analysis_list.stdout_lines }}"

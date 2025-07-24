@@ -1,0 +1,35 @@
+---
+- name: Compare fio test results between baseline and dev
+  hosts: localhost
+  become: false
+  vars:
+    ansible_ssh_pipelining: true
+  tasks:
+    - name: Check if baseline and dev hosts exist in inventory
+      ansible.builtin.fail:
+        msg: "Both baseline and dev hosts must exist for comparison"
+      when: "'baseline' not in groups or 'dev' not in groups"
+
+    - name: Create local graph results comparison directory
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/workflows/fio-tests/results/graphs"
+        state: directory
+        mode: "0755"
+
+    - name: Generate comparison graphs
+      ansible.builtin.shell: |
+        python3 {{ topdir_path }}/playbooks/python/workflows/fio-tests/fio-compare.py \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['baseline'][0] }}/fio-tests-results-{{ groups['baseline'][0] }}   \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['dev'][0] }}/fio-tests-results-{{ groups['dev'][0] }}        \
+          --output-dir {{ topdir_path }}/workflows/fio-tests/results/graphs           \
+          --baseline-label "Baseline"                                                 \
+          --dev-label "Development"
+      changed_when: true
+    - name: List comparison results
+      ansible.builtin.command: ls -la {{ topdir_path }}/workflows/fio-tests/results/graphs
+      register: comparison_list
+      changed_when: false
+
+    - name: Display comparison results
+      ansible.builtin.debug:
+        msg: "{{ comparison_list.stdout_lines }}"

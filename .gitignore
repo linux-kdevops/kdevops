@@ -70,6 +70,8 @@ workflows/sysbench/results/
 workflows/mmtests/results/
 tmp
 
+workflows/fio-tests/results/
+
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.service
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.timer
 playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml

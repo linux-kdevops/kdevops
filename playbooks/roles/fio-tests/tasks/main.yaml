@@ -1,0 +1,175 @@
+---
+- name: Set derived configuration variables
+  ansible.builtin.set_fact:
+    fio_tests_block_sizes: >-
+      {{
+        (['4k'] if fio_tests_bs_4k else []) +
+        (['8k'] if fio_tests_bs_8k else []) +
+        (['16k'] if fio_tests_bs_16k else []) +
+        (['32k'] if fio_tests_bs_32k else []) +
+        (['64k'] if fio_tests_bs_64k else []) +
+        (['128k'] if fio_tests_bs_128k else [])
+      }}
+    fio_tests_io_depths: >-
+      {{
+        ([1] if fio_tests_iodepth_1 else []) +
+        ([4] if fio_tests_iodepth_4 else []) +
+        ([8] if fio_tests_iodepth_8 else []) +
+        ([16] if fio_tests_iodepth_16 else []) +
+        ([32] if fio_tests_iodepth_32 else []) +
+        ([64] if fio_tests_iodepth_64 else [])
+      }}
+    fio_tests_num_jobs: >-
+      {{
+        ([1] if fio_tests_numjobs_1 else []) +
+        ([2] if fio_tests_numjobs_2 else []) +
+        ([4] if fio_tests_numjobs_4 else []) +
+        ([8] if fio_tests_numjobs_8 else []) +
+        ([16] if fio_tests_numjobs_16 else [])
+      }}
+    fio_tests_patterns: >-
+      {{
+        ([{'name': 'randread', 'rw': 'randread', 'rwmixread': 100}] if fio_tests_pattern_rand_read else []) +
+        ([{'name': 'randwrite', 'rw': 'randwrite', 'rwmixread': 0}] if fio_tests_pattern_rand_write else []) +
+        ([{'name': 'seqread', 'rw': 'read', 'rwmixread': 100}] if fio_tests_pattern_seq_read else []) +
+        ([{'name': 'seqwrite', 'rw': 'write', 'rwmixread': 0}] if fio_tests_pattern_seq_write else []) +
+        ([{'name': 'mixed_75_25', 'rw': 'randrw', 'rwmixread': 75}] if fio_tests_pattern_mixed_75_25 else []) +
+        ([{'name': 'mixed_50_50', 'rw': 'randrw', 'rwmixread': 50}] if fio_tests_pattern_mixed_50_50 else [])
+      }}
+
+- name: Calculate total test combinations and timeout
+  ansible.builtin.set_fact:
+    fio_tests_total_combinations: >-
+      {{ fio_tests_block_sizes | length * fio_tests_io_depths | length *
+         fio_tests_num_jobs | length * fio_tests_patterns | length }}
+    fio_test_time_per_job: "{{ (fio_tests_runtime | int) + (fio_tests_ramp_time | int) }}"
+
+- name: Calculate async timeout with safety margin
+  ansible.builtin.set_fact:
+    # Each test runs twice (JSON + normal), add 60s per test for overhead, add 30% margin
+    fio_tests_async_timeout: >-
+      {{ ((fio_tests_total_combinations | int * fio_test_time_per_job | int * 2) +
+          (fio_tests_total_combinations | int * 60) * 1.3) | int }}
+
+- name: Display test configuration
+  ansible.builtin.debug:
+    msg: |
+      FIO Test Configuration:
+      - Total test combinations: {{ fio_tests_total_combinations }}
+      - Runtime per test: {{ fio_tests_runtime }}s
+      - Ramp time per test: {{ fio_tests_ramp_time }}s
+      - Estimated total time: {{ (fio_tests_total_combinations | int * fio_test_time_per_job | int * 2 / 60) | round(1) }} minutes
+      - Async timeout: {{ (fio_tests_async_timeout | int / 60) | round(1) }} minutes
+      {% if fio_tests_device == '/dev/null' %}
+      - Note: Using /dev/null - fsync_on_close and direct IO disabled automatically
+      {% endif %}
+
+- name: Install fio and dependencies
+  ansible.builtin.include_tasks: install-deps/main.yml
+- name: Create results directory
+  ansible.builtin.file:
+    path: "{{ fio_tests_results_dir }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Create fio job files directory
+  ansible.builtin.file:
+    path: "{{ fio_tests_results_dir }}/jobs"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Generate fio job files
+  ansible.builtin.template:
+    src: fio-job.ini.j2
+    dest: "{{ fio_tests_results_dir }}/jobs/{{ item.0.name }}_bs{{ item.1 }}_iodepth{{ item.2 }}_jobs{{ item.3 }}.ini"
+    mode: "0644"
+  vars:
+    pattern: "{{ item.0 }}"
+    block_size: "{{ item.1 }}"
+    io_depth: "{{ item.2 }}"
+    num_jobs: "{{ item.3 }}"
+  with_nested:
+    - "{{ fio_tests_patterns }}"
+    - "{{ fio_tests_block_sizes }}"
+    - "{{ fio_tests_io_depths }}"
+    - "{{ fio_tests_num_jobs }}"
+  become: true
+
+- name: Run fio tests
+  ansible.builtin.shell: |
+    cd {{ fio_tests_results_dir }}/jobs
+    for job_file in *.ini; do
+      echo "Running test: $job_file"
+      # Run test with both JSON and normal output
+      fio "$job_file" --output="{{ fio_tests_results_dir }}/results_${job_file%.ini}.json" \
+                      --output-format=json \
+                      --write_bw_log="{{ fio_tests_results_dir }}/bw_${job_file%.ini}" \
+                      --write_iops_log="{{ fio_tests_results_dir }}/iops_${job_file%.ini}" \
+                      --write_lat_log="{{ fio_tests_results_dir }}/lat_${job_file%.ini}" \
+                      --log_avg_msec={{ fio_tests_log_avg_msec }}
+      # Also create text output for compatibility
+      fio "$job_file" --output="{{ fio_tests_results_dir }}/results_${job_file%.ini}.txt" \
+                      --output-format=normal
+    done
+  become: true
+  async: "{{ fio_tests_async_timeout | default(7200) }}"
+  poll: 30
+  changed_when: true
+
+- name: Remove old fio-tests results archive if it exists
+  ansible.builtin.file:
+    path: "{{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    state: absent
+  tags: ["results"]
+  become: true
+
+- name: Archive fio-tests results directory on remote host
+  become: true
+  ansible.builtin.shell: |
+    cd {{ fio_tests_results_dir }}
+    tar czf /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz \
+      --exclude='*.tar.gz' \
+      results_*.json results_*.txt *.log jobs/ 2>/dev/null || true
+    mv /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz {{ fio_tests_results_dir }}/ || true
+  changed_when: true
+  tags: ["results"]
+
+- name: Remove previously fetched fio-tests results archive if it exists
+  become: false
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  tags: ["results"]
+  with_items:
+    - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
+
+- name: Copy fio-tests results
+  tags: ["results"]
+  become: true
+  ansible.builtin.fetch:
+    src: "{{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/"
+    flat: true
+
+- name: Ensure local fio-tests results extraction directory exists
+  become: false
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
+    state: directory
+    mode: "0755"
+    recurse: true
+  tags: ["results"]
+
+- name: Extract fio-tests results archive locally
+  become: false
+  delegate_to: localhost
+  ansible.builtin.unarchive:
+    src: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
+    remote_src: false
+  tags: ["results"]

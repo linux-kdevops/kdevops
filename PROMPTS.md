@@ -124,6 +124,111 @@ source "workflows/mmtests/Kconfig.fs"
 
    This separation is preferred as it helps us scale.
 
+## Port an external project into kdevops
+
+The fio-tests was an older external project however its more suitably placed
+into kdevops as jinja2 lets us easily scale this project. The projects also
+were authored by the same person and the same license was used. The porting
+took a few separate prompts as described below.
+
+### Initial implementation of fio-tests workflow on kdevops
+
+**Prompt:**
+Now that we merged steady state to kdevops -- now let's add specific target
+workflow support for different target different simple workflows. Learn from
+how sysbench added two guests so we can do A/B testing in two separate guests.
+The workflows you will focus on will be the workflows from
+https://github.com/mcgrof/fio-tests. We already took steady state and
+pre-conditioning from there so no need to do that. All we need to do is just
+now target the different other workflows. Leverage the Kconfig documentation we
+used on that project and adapt it to leverage output yaml on kdevops. Then also
+to help test things we can simply add a basic test so that
+.github/workflows/docker-tests.yml can run some tests using /dev/null as a
+target block device for just one simple workflow.
+
+**AI:** Claude Code
+**Commit:** TDB
+**Result:** Excellent implementation with comprehensive workflow structure.
+**Grading:** 90%
+
+**Notes:**
+
+The implementation successfully:
+- Added complete fio-tests workflow with A/B testing support following sysbench patterns
+- Created comprehensive Kconfig structure with output yaml support for all options
+- Implemented configurable test matrices (block sizes, IO depths, job counts, patterns)
+- Added ansible role with template-based job generation
+- Integrated with main kdevops workflow system and makefiles
+- Created CI-optimized defconfig using /dev/null target device
+- Updated GitHub Actions workflow for automated testing
+
+Minor areas for improvement:
+- Could have included more detailed help text in some Kconfig options
+- Template generation could be more dynamic for complex configurations
+- Didn't add documentation, which means we should extend CLAUDE.md to
+  add documentation when adding a new workflow.
+- Did not pick up on the trend to prefer to have 'make foo-results' to always
+  copy results locally.
+
+### Extend fio-tests with graphing support
+
+**Prompt:**
+The fio-tests project had support for graphing. Bring that over and add that to
+kdevops. I am the author of fio-tests so I own all the code. Be sure to use
+SPDX for my top header files with the copyleft-next license as is done with
+tons of code on kdevops.
+
+**AI:** Claude Code
+**Commit:** TDB
+**Result:** Comprehensive graphing implementation with proper licensing.
+**Grading:** 95%
+
+**Notes:**
+
+Outstanding implementation that:
+- Improved upon the graphs I had originally had on fio-tests and actually
+  innovated on some! Also took the initiative to do A/B performance analysis!
+- Created three comprehensive Python scripts with proper SPDX copyleft-next-0.3.1 headers
+- Implemented advanced graphing: performance analysis, A/B comparison, trend analysis
+- Added configurable graphing options through Kconfig (format, DPI, themes)
+- Included conditional dependency installation across distributions
+- Created ansible playbooks for automated graph generation
+- Added make targets for different types of analysis
+- Updated CI configuration with graphing support
+
+The implementation perfectly followed kdevops patterns and demonstrated
+excellent understanding of the codebase structure. The graphing capabilities
+are comprehensive and production-ready.
+
+### Add the fio-tests documentation
+
+**Prompt:**
+Now add documentation for fio-tests on kdevops. Extend README.md with a small
+section and point to its own documentation file. You can use the upstream
+fio-tests https://github.com/mcgrof/fio-tests page for inspiration, but
+obviously we want to port this to how you've implemented support on kdevops.
+You can point back to the old https://github.com/mcgrof/fio-tests page as an
+origin story. Also extend PROMPTS.md with the few prompts I've given you to
+help add support for fio-tests and graphing support.
+
+**AI:** Claude Code
+**Commit:** TDB
+**Result:** Comprehensive documentation with examples and troubleshooting.
+**Grading:** 90%
+
+**Notes:**
+
+The documentation implementation includes:
+- Updated README.md with fio-tests section linking to detailed documentation
+- Created comprehensive docs/fio-tests.md with full workflow coverage
+- Included origin story referencing original fio-tests framework
+- Added detailed configuration examples and troubleshooting guides
+- Documented all graphing capabilities with usage examples
+- Extended PROMPTS.md with the implementation prompts for future AI reference
+
+This demonstrates the complete lifecycle of implementing a complex workflow in
+kdevops from initial implementation through comprehensive documentation.
+
 ## Kernel development and A/B testing support
 
 ### Adding A/B kernel testing support for different kernel versions
