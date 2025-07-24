@@ -62,7 +62,7 @@ include scripts/ansible.Makefile
 
 LIMIT_HOSTS :=
 ifneq (,$(HOSTS))
-LIMIT_HOSTS := '-l $(subst ${space},$(comma),$(HOSTS))'
+LIMIT_HOSTS := --limit $(subst ${space},$(comma),$(HOSTS))
 endif
 
 export LIMIT_TESTS :=
