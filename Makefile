@@ -26,6 +26,10 @@ KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/tem
 export KDEVOPS_NODES_TEMPLATE :=
 export KDEVOPS_MRPROPER :=
 
+ifneq ($(strip $(CONFIG_ANSIBLE_CFG_FILE)),)
+ANSIBLE_CFG_FILE := $(shell echo $(CONFIG_ANSIBLE_CFG_FILE) | tr --delete '"')
+export ANSIBLE_CONFIG := $(ANSIBLE_CFG_FILE)
+endif
 ANSIBLE_INVENTORY_FILE := $(shell echo $(CONFIG_ANSIBLE_CFG_INVENTORY) | tr --delete '"')
 
 KDEVOPS_INSTALL_TARGETS :=
@@ -195,9 +199,8 @@ include scripts/gen-nodes.Makefile
 	make -f scripts/build.Makefile help                             ;\
 	false)
 
-
-ansible.cfg: .config
-	@$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+$(ANSIBLE_CFG_FILE): .config
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ansible_cfg.yml \
 		--extra-vars=@./.extra_vars_auto.yaml
@@ -216,7 +219,7 @@ playbooks/secret.yml:
 	@echo "$(CONFIG_KDEVOPS_REG_TWOLINE_REGCODE_VAR): $(CONFIG_KDEVOPS_REG_TWOLINE_REGCODE)" >> $@
 
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_DISTRO_EXTRA_ADDONS))
-$(KDEVOPS_EXTRA_ADDON_DEST): .config ansible.cfg $(KDEVOPS_EXTRA_ADDON_SOURCE)
+$(KDEVOPS_EXTRA_ADDON_DEST): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_EXTRA_ADDON_SOURCE)
 	$(Q)cp $(KDEVOPS_EXTRA_ADDON_SOURCE) $(KDEVOPS_EXTRA_ADDON_DEST)
 endif
 
@@ -227,13 +230,13 @@ include scripts/bringup.Makefile
 endif
 
 DEFAULT_DEPS += $(ANSIBLE_INVENTORY_FILE)
-$(ANSIBLE_INVENTORY_FILE): .config ansible.cfg $(KDEVOPS_HOSTS_TEMPLATE)
+$(ANSIBLE_INVENTORY_FILE): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_HOSTS_TEMPLATE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_hosts.yml \
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(KDEVOPS_NODES)
-$(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config ansible.cfg $(KDEVOPS_NODES_TEMPLATE)
+$(KDEVOPS_NODES) $(KDEVOPS_VAGRANT): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_NODES_TEMPLATE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_nodes.yml \
 		--extra-vars=@./extra_vars.yaml
@@ -264,7 +267,7 @@ mrproper:
 	$(Q)rm -f $(KDEVOPS_NODES)
 	$(Q)rm -f $(ANSIBLE_CFG_INVENTORY) $(KDEVOPS_MRPROPER)
 	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
-	$(Q)rm -f ansible.cfg
+	$(Q)rm -f $(ANSIBLE_CFG_FILE)
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
 	$(Q)rm -rf include
 	$(Q)rm -rf guestfs
