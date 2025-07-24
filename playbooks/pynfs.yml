@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run pynfs testing workflow
+  hosts: all
   roles:
     - role: pynfs

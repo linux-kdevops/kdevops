@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: bootlinux
+  hosts: all
   roles:
     - role: bootlinux

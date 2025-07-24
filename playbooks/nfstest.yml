@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run the nfstest workflow for NFS testing
+  hosts: all
   roles:
     - role: nfstest

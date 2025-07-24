@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: cxl
+  hosts: all
   roles:
     - role: cxl

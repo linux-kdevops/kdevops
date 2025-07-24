@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run Linux kernel selftests (kselftests)
+  hosts: all
   roles:
     - role: selftests

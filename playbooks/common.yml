@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Common tasks
+  hosts: all
   roles:
     - role: common

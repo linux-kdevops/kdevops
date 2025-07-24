@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Configure and run the reboot-limit workflow
+  hosts: all
   roles:
     - role: reboot-limit

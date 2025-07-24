@@ -1,5 +1,6 @@
 ---
 - name: Provision target nodes with terraform
+  hosts: all
   gather_facts: false
   hosts: all
   roles:
