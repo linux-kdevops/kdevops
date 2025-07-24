@@ -51,41 +51,40 @@ KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_guestfs
 	$(Q)make linux-clone
 
 libvirt_pcie_passthrough_permissions:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/libvirt_pcie_passthrough.yml
 
 $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)if [[ "$(CONFIG_KDEVOPS_SSH_CONFIG_UPDATE)" == "y" ]]; then \
-		ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-			--inventory localhost, \
+		ansible-playbook $(ANSIBLE_VERBOSE) \
 			playbooks/update_ssh_config_guestfs.yml \
 			--extra-vars=@./extra_vars.yaml; \
 			LIBVIRT_DEFAULT_URI=$(CONFIG_LIBVIRT_URI) \
 			$(TOPDIR)/scripts/update_ssh_config_guestfs.py; \
 	fi
-	$(Q)ansible $(ANSIBLE_VERBOSE) -i hosts 'baseline:dev' -m wait_for_connection
+	$(Q)ansible $(ANSIBLE_VERBOSE) 'baseline:dev:service' -m wait_for_connection
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 install_libguestfs:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
+		--limit 'localhost' \
 		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags install-deps
 
 bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=local --inventory localhost, \
+		--limit 'localhost' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags network,pool,base_image
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/guestfs.yml \
+		--limit 'baseline:dev:service' \
+		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags bringup
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=local --inventory localhost, \
+		--limit 'localhost' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags console
@@ -97,7 +96,7 @@ PHONY += status_guestfs
 
 destroy_guestfs:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/guestfs.yml \
+		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags destroy
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)

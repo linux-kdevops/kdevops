@@ -80,21 +80,19 @@ extend-extra-args-vagrant:
 	fi
 
 vagrant_private_box_install:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		$(KDEVOPS_HOSTFILE) $(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant_boxes.yml
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		$(KDEVOPS_PLAYBOOKS_DIR)/install_vagrant_boxes.yml
 
 vagrant_9p_linux_clone:
 	$(Q)make linux-clone
 
 libvirt_pcie_passthrough_permissions:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/libvirt_pcie_passthrough.yml
 
 $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)if [[ "$(CONFIG_KDEVOPS_SSH_CONFIG_UPDATE)" == "y" ]]; then \
-		ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-			--inventory localhost, \
+		ansible-playbook $(ANSIBLE_VERBOSE) \
 			playbooks/update_ssh_config_vagrant.yml
 	fi
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)

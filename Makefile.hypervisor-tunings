@@ -14,8 +14,7 @@ HYPERVISOR_TUNING_ARGS += hypervisor_tunning_zswap_max_pool_percent=$(ZSWAP_MAX_
 endif
 
 kdevops_hypervisor_tunning: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/hypervisor-tuning.yml \
 		--extra-vars=@./extra_vars.yaml
 PHONY += kdevops_hypervisor_tunning

@@ -73,13 +73,13 @@ endif
 
 nfstest:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--limit 'baseline:dev' \
 		--skip-tags run_tests,copy_results \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
 nfstest-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline \
+		--limit 'baseline' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
@@ -92,7 +92,7 @@ nfstest-baseline-kernelci:
 
 nfstest-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
@@ -105,7 +105,7 @@ nfstest-dev-kernelci:
 
 nfstest-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml

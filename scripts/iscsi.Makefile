@@ -7,7 +7,6 @@ ANSIBLE_EXTRA_ARGS += $(ISCSI_EXTRA_ARGS)
 
 iscsi:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l iscsi \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/iscsi.yml
 

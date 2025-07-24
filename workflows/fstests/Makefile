@@ -138,19 +138,22 @@ endif
 endif
 
 fstests: $(FSTESTS_BASELINE_EXTRA)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l localhost,baseline,dev \
-		-i hosts playbooks/fstests.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'localhost:baseline:dev' \
+		playbooks/fstests.yml \
 		--skip-tags run_tests,copy_results $(LIMIT_HOSTS)
 
 fstests-kdevops-setup: $(KDEVOPS_EXTRA_VARS) $(FSTESTS_BASELINE_EXTRA)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -l baseline,dev \
-		-i hosts playbooks/fstests.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		playbooks/fstests.yml \
 		--tags vars,kdevops_fstests_setup,gendisks \
 		$(LIMIT_HOSTS)
 
 fstests-baseline: $(FSTESTS_BASELINE_EXTRA)
 	$(Q)PYTHONUNBUFFERED=1 ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
 		--extra-vars '{ $(FSTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
@@ -163,7 +166,8 @@ fstests-baseline-kernelci: $(KDEVOPS_EXTRA_VARS)
 
 fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags run_tests,copy_results \
 		--skip-tags git_update \
 		--extra-vars \
@@ -173,7 +177,8 @@ fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
 
 fstests-baseline-run-oscheck-only: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags run_tests,copy_results \
 		--skip-tags git_update,reboot,clean_results \
 		--extra-vars \
@@ -183,14 +188,14 @@ fstests-baseline-run-oscheck-only: $(KDEVOPS_EXTRA_VARS)
 
 fstests-config: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags vars,generate-fstests-config \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)
 
 fstests-config-debug: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/fstests.yml \
 		-e 'fstests_debug_localhost=True' \
 		--tags vars,generate-fstests-config \
@@ -198,7 +203,8 @@ fstests-config-debug: $(KDEVOPS_EXTRA_VARS)
 
 fstests-dev: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/fstests.yml \
+		--limit 'dev' \
+		playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
 		--extra-vars \
 		'{ $(FSTESTS_DYNAMIC_RUNTIME_VARS) }' \
@@ -206,7 +212,8 @@ fstests-dev: $(KDEVOPS_EXTRA_VARS)
 
 fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags vars,tfb \
 		--skip-tags copy_final \
 		--extra-vars \
@@ -215,7 +222,8 @@ fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
 
 fstests-baseline-results-tfb-trim: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags vars,tfb \
 		--skip-tags copy_final \
 		--extra-vars \
@@ -224,7 +232,8 @@ fstests-baseline-results-tfb-trim: $(KDEVOPS_EXTRA_VARS)
 
 fstests-baseline-results: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/fstests.yml \
+		--limit 'baseline' \
+		playbooks/fstests.yml \
 		--tags copy_results,print_results,tfb \
 		--extra-vars '{ kdevops_run_fstests: True }' \
 		--extra-vars=@./extra_vars.yaml \
@@ -234,7 +243,8 @@ fstests-results: fstests-baseline-results
 
 fstests-dev-results: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/fstests.yml \
+		--limit 'dev' \
+		playbooks/fstests.yml \
 		--tags copy_results,print_results \
 		--extra-vars '{ kdevops_run_fstests: True }' \
 		--extra-vars=@./extra_vars.yaml \

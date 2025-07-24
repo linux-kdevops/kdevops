@@ -20,42 +20,42 @@ include $(TOPDIR)/workflows/cxl/Makefile.kernel
 
 cxl:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--skip-tags run_tests,copy_results \
 		$(LIMIT_HOSTS)
 
 cxl-test-probe:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,cxl-test-prep,cxl-test-probe \
 		--extra-vars '{ $(CXL_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 cxl-test-meson:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,cxl-test-prep,cxl-test-meson \
 		--extra-vars '{ $(CXL_DYNAMIC_RUNTIME_VARS) }' \
 		$(LIMIT_HOSTS)
 
 cxl-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,copy_results $(LIMIT_HOSTS)
 
 cxl-mem-setup:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,extra-vars,cxl-mem-setup $(LIMIT_HOSTS)
 
 cxl-create-dc-region:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,cxl-create-dc-region $(LIMIT_HOSTS)
 
 cxl-dcd-setup:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/cxl.yml \
+		playbooks/cxl.yml \
 		--tags vars,cxl-dcd-setup $(LIMIT_HOSTS)
 
 cxl-help-menu:

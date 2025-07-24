@@ -116,13 +116,13 @@ endif
 
 ltp:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline,dev \
+		--limit 'baseline:dev' \
 		--skip-tags run_tests,copy_results \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l baseline \
+		--limit 'baseline' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
@@ -135,7 +135,7 @@ ltp-baseline-kernelci:
 
 ltp-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
@@ -148,7 +148,7 @@ ltp-dev-kernelci:
 
 ltp-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i $(KDEVOPS_HOSTFILE) -l dev \
+		--limit 'dev' \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml

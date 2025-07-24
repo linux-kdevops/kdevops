@@ -65,11 +65,11 @@ take effect So for instance you would have:
 
 ```bash
 # Does the actual work
-ansible-playbook -i hosts playbooks/libvirt_user.yml
+ansible-playbook playbooks/libvirt_user.yml
 
 # Verify if the changes are already effective if not warn the user to log
 # out and back in.
-ansible-playbook -i hosts playbooks/libvirt_user.yml -e "only_verify_user=True"
+ansible-playbook playbooks/libvirt_user.yml -e "only_verify_user=True"
 ```
 
 ## Running libvirt as a regular user

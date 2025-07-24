@@ -67,12 +67,13 @@ extend-extra-args-blktests:
 
 blktests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts playbooks/blktests.yml \
+		playbooks/blktests.yml \
 		--skip-tags run_tests,copy_results $(LIMIT_HOSTS)
 
 blktests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/blktests.yml \
+		--limit 'baseline' \
+		playbooks/blktests.yml \
 		--tags run_tests,copy_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
@@ -85,14 +86,16 @@ blktests-baseline-kernelci:
 
 blktests-baseline-skip-kdevops-update:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/blktests.yml \
+		--limit 'baseline' \
+		playbooks/blktests.yml \
 		--tags run_tests,copy_results --skip-tags git_update \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 blktests-baseline-run-oscheck-only:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/blktests.yml \
+		--limit 'baseline' \
+		playbooks/blktests.yml \
 		--tags run_tests,copy_results \
 		--skip-tags git_update,reboot,clean_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
@@ -100,14 +103,16 @@ blktests-baseline-run-oscheck-only:
 
 blktests-dev:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/blktests.yml \
+		--limit 'dev' \
+		playbooks/blktests.yml \
 		--tags run_tests,copy_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 blktests-baseline-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l baseline playbooks/blktests.yml \
+		--limit 'baseline' \
+		playbooks/blktests.yml \
 		--tags copy_results,print_results \
 		--extra-vars '{ kdevops_run_blktests: True }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
@@ -116,7 +121,8 @@ blktests-results: blktests-baseline-results
 
 blktests-dev-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-i hosts -l dev playbooks/blktests.yml \
+		--limit 'dev' \
+		playbooks/blktests.yml \
 		--tags copy_results,print_results \
 		--extra-vars '{ kdevops_run_blktests: True }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)

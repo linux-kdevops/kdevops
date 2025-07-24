@@ -769,9 +769,7 @@ class KernelCrashWatchdog:
             subprocess.run(
                 [
                     "ansible",
-                    "-i",
-                    "hosts",
-                    "all",
+                    "'baseline:dev'",
                     "-m",
                     "wait_for_connection",
                     "-l",

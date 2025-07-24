@@ -42,8 +42,7 @@ endif # CONFIG_KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH
 HELP_TARGETS += dynamic-kconfig-pci-help
 
 dynamic_pcipassthrough_kconfig:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
-		--inventory localhost, \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/gen-pci-kconfig.yml \
 		--extra-vars '{ $(PCIE_RUNTIME_VARS) }'
 
