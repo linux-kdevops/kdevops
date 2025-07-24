@@ -13,7 +13,7 @@ config KDEVOPS_ANSIBLE_PROVISION_ENABLE
 	help
 	  If enabled we will provision the target hosts with ansible as a last
 	  last step after bringup. This playbook used to provision is
-	  configurable refer to CONFIG_KDEVOPS_ANSIBLE_INVENTORY_FILE.
+	  configurable refer to CONFIG_ANSIBLE_CFG_INVENTORY.
 
 if KDEVOPS_ANSIBLE_PROVISION_ENABLE
 
@@ -97,12 +97,6 @@ config KDEVOPS_DEVCONFIG_SYSTEMD_WATCHDOG_TIMEOUT_KEXEC
           Configures the systemd watchdog KexecWatchdogSec setting.
 
 endif # KDEVOPS_DEVCONFIG_ENABLE_SYSTEMD_WATCHDOG
-
-config KDEVOPS_ANSIBLE_INVENTORY_FILE
-	string "The ansible inventory file to use"
-	default $(shell, scripts/append-makefile-vars.sh $(KDEVOPS_HOSTFILE))
-	help
-	  The file to use for the ansible inventory.
 
 config HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
 	bool
