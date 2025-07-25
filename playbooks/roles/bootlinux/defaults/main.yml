@@ -52,3 +52,15 @@ kdevops_workflow_enable_cxl: False
 
 bootlinux_cxl_test: False
 bootlinux_tree_set_by_cli: False
+
+# A/B testing defaults
+bootlinux_ab_same_ref: True
+bootlinux_ab_different_ref: False
+
+# Development kernel settings (used when bootlinux_ab_different_ref is True)
+bootlinux_dev_tree: ""
+bootlinux_dev_tree_ref: "master"
+bootlinux_dev_tree_kernelrelease: ""
+bootlinux_dev_tree_localversion: ""
+bootlinux_tree_custom_kernelrelease: False
+bootlinux_tree_custom_localversion: false
