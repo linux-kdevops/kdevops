@@ -51,6 +51,74 @@
     - not kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
 
+- name: Determine if this is a dev node for A/B testing
+  set_fact:
+    bootlinux_is_dev_node: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+
+- name: Set development group full custom kernel release
+  set_fact:
+    target_linux_kernelrelease: "{{ bootlinux_dev_tree_kernelrelease if bootlinux_dev_tree_kernelrelease != '' else target_linux_kernelrelease }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_kernelrelease|bool
+    - bootlinux_is_dev_node|default(false)|bool
+
+- name: Set development group local append version
+  set_fact:
+    target_linux_localversion: "{{ bootlinux_dev_tree_localversion if bootlinux_dev_tree_localversion != '' else target_linux_localversion }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_localversion|bool
+    - bootlinux_is_dev_node|default(false)|bool
+
+- name: Set development kernel parameters for dev nodes
+  set_fact:
+    target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
+    target_linux_ref: "{{ bootlinux_dev_tree_ref }}"
+    target_linux_config: "config-{{ bootlinux_dev_tree_ref }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_is_dev_node|default(false)|bool
+
+- name: Determine active kernel parameters for A/B testing with 9P
+  set_fact:
+    active_linux_ref: "{{ bootlinux_dev_tree_ref }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_kernelrelease|bool
+    - bootlinux_9p|bool
+  run_once: true
+  delegate_to: localhost
+
+- name: Determine full custom kernel release for A/B testing with 9P
+  set_fact:
+    active_linux_kernelrelease: "{{ hostvars[groups['dev'][0]]['target_linux_kernelrelease'] if hostvars[groups['dev'][0]]['target_linux_kernelrelease'] is defined else target_linux_kernelrelease }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_kernelrelease|bool
+    - bootlinux_9p|bool
+  run_once: true
+  delegate_to: localhost
+
+- name: Determine localversion kernel release for A/B testing with 9P
+  set_fact:
+    active_linux_localversion: "{{ hostvars[groups['dev'][0]]['target_linux_localversion'] if hostvars[groups['dev'][0]]['target_linux_localversion'] is defined else target_linux_localversion }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_localversion|bool
+    - bootlinux_9p|bool
+  run_once: true
+  delegate_to: localhost
+
 - name: Create data partition
   ansible.builtin.include_role:
     name: create_data_partition
