@@ -56,10 +56,11 @@ resource "azurerm_network_interface_security_group_association" "kdevops_sg_asso
 }
 
 resource "azurerm_network_interface" "kdevops_nic" {
-  count               = local.kdevops_num_boxes
-  name                = format("kdevops_nic_%02d", count.index + 1)
-  location            = var.azure_location
-  resource_group_name = azurerm_resource_group.kdevops_group.name
+  count                          = local.kdevops_num_boxes
+  accelerated_networking_enabled = true
+  name                           = format("kdevops_nic_%02d", count.index + 1)
+  location                       = var.azure_location
+  resource_group_name            = azurerm_resource_group.kdevops_group.name
 
   ip_configuration {
     name                          = "kdevops_nic_configuration"
