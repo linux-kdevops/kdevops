@@ -243,6 +243,11 @@ include scripts/ci.Makefile
 include scripts/archive.Makefile
 include scripts/defconfig.Makefile
 
+PHONY += style
+style:
+	$(Q)python3 scripts/detect_whitespace_issues.py
+	$(Q)python3 scripts/check_commit_format.py
+
 PHONY += clean
 clean:
 	$(Q)$(MAKE) -f scripts/build.Makefile $@
