@@ -49,12 +49,12 @@
     - ansible_hosts_template.stat.exists
   tags: vars
 
-- name: Verify fstest config file file exists {{ fs_config_path }}
+- name: Verify fstest config file exists
   stat:
     path: "{{ fs_config_path }}"
   register: fstests_config_file_reg
   when:
-    - is_fstests
+    - is_fstests|bool
 
 - name: Generate the Ansible hosts file
   tags: [ 'hosts' ]
