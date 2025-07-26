@@ -109,7 +109,7 @@
     - ansible_nodes_template.stat.exists
   tags: vars
 
-- name: Verify fstest config file file exists {{ fs_config_path }}
+- name: Verify fstest config file exists
   stat:
     path: "{{ fs_config_path }}"
   register: fstests_config_file_reg
