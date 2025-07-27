@@ -186,10 +186,13 @@
   become_method: sudo
   command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
   vars:
-    target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
+    target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 if (grub_boot_number_cmd is defined and grub_boot_number_cmd.stdout_lines is defined) else '' }}"
   tags: [ 'saved' ]
   when:
+    - grub_boot_number_cmd is defined
+    - grub_boot_number_cmd.rc is defined
     - grub_boot_number_cmd.rc == 0
+    - grub_boot_number_cmd.stdout is defined
     - grub_boot_number_cmd.stdout != ""
 
 - name: Itemize kernel and GRUB entry we just selected
@@ -200,6 +203,9 @@
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
   tags: [ 'saved' ]
   when:
+    - grub_boot_number_cmd is defined
+    - grub_boot_number_cmd.rc is defined
     - grub_boot_number_cmd.rc == 0
+    - grub_boot_number_cmd.stdout is defined
     - grub_boot_number_cmd.stdout != ""
 
