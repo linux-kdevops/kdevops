@@ -3,10 +3,6 @@
 resource "azurerm_resource_group" "kdevops_group" {
   name     = "kdevops_resource_group"
   location = var.azure_location
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 locals {
@@ -18,10 +14,6 @@ resource "azurerm_virtual_network" "kdevops_network" {
   address_space       = [local.kdevops_private_net]
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 resource "azurerm_subnet" "kdevops_subnet" {
@@ -37,10 +29,6 @@ resource "azurerm_public_ip" "kdevops_publicip" {
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
   allocation_method   = "Static"
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 resource "azurerm_network_security_group" "kdevops_sg" {
@@ -58,10 +46,6 @@ resource "azurerm_network_security_group" "kdevops_sg" {
     destination_port_range     = "22"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
-  }
-
-  tags = {
-    environment = "kdevops tests"
   }
 }
 
@@ -82,10 +66,6 @@ resource "azurerm_network_interface" "kdevops_nic" {
     subnet_id                     = azurerm_subnet.kdevops_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = element(azurerm_public_ip.kdevops_publicip.*.id, count.index)
-  }
-
-  tags = {
-    environment = "kdevops tests"
   }
 }
 
@@ -131,10 +111,6 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   admin_ssh_key {
     username   = var.ssh_config_user
     public_key = var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
-  }
-
-  tags = {
-    environment = "kdevops tests"
   }
 }
 
