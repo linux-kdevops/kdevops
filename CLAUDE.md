@@ -13,6 +13,37 @@ and complex testing laboratories for kernel subsystems.
 **Main Repository**: https://github.com/linux-kdevops/kdevops
 **License**: copyleft-next-0.3.1
 
+## ⚠️ CRITICAL RULE: NEVER FAKE TEST RESULTS
+
+**ABSOLUTELY NEVER generate, synthesize, mock, or fake test results of any kind.**
+
+kdevops is a professional testing framework used for Linux kernel development and
+performance analysis. All test results MUST come from actual execution on real
+Device Under Test (DUT) systems.
+
+### What this means:
+- **NEVER** create synthetic performance data or benchmark results
+- **NEVER** generate mock IOPS, bandwidth, latency, or throughput numbers
+- **NEVER** create fake JSON test output or fabricated metrics
+- **ALWAYS** run actual tests on real VMs, bare metal, or cloud instances
+- **ALWAYS** collect real data from actual fio, fstests, blktests execution
+- **ALWAYS** verify that test systems are running and accessible before analysis
+
+### Valid approaches:
+- ✅ Execute real tests: `ansible -i hosts all -m shell -a "fio --output-format=json ..."`
+- ✅ Collect actual JSON output from running VMs
+- ✅ Parse and analyze real performance data from live systems
+- ✅ Generate graphs and reports from actual test execution results
+
+### Forbidden approaches:
+- ❌ Creating synthetic performance numbers for demonstrations
+- ❌ Generating mock test results for visualization examples
+- ❌ Fabricating benchmark data to show workflows
+- ❌ Using placeholder values like "let's assume 50K IOPS"
+
+**Violation of this rule undermines the entire purpose of the kdevops testing framework
+and produces misleading results that could affect important development decisions.**
+
 ## Core Architecture
 
 ### Build System
