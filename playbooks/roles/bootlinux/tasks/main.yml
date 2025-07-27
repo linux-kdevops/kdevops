@@ -19,6 +19,14 @@
   ansible.builtin.import_tasks:
     file: install-deps/main.yml
 
+# When using 9P builds, we still need make on the guest for modules_install
+- name: Install essential build tools for 9P builds
+  ansible.builtin.import_tasks:
+    file: install-minimal-deps/main.yml
+  when:
+    - bootlinux_9p|bool
+    - not workflow_linux_packaged|bool
+
 # We do this regardless of what distro you use
 - name: Install b4
   become: yes
