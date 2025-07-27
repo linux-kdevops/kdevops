@@ -36,7 +36,8 @@ endif # HAVE_SUPPORTS_PURE_IOMAP
 
 choice
 	prompt "Kernel build location"
-	default BOOTLINUX_TARGETS
+	default BOOTLINUX_TARGETS if !LIBVIRT || GUESTFS_LACKS_9P
+	default BOOTLINUX_9P if LIBVIRT && !GUESTFS_LACKS_9P
 	help
 	  Choose where you want to compile the test kernel. The help
 	  for the choices below explain how each alternative works.
