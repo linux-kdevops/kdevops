@@ -117,6 +117,12 @@
   when:
     - kernel_release_file.stat.exists
 
+- name: Set default kernelrelease if not determined
+  ansible.builtin.set_fact:
+    kernelrelease: "unknown"
+  when:
+    - kernelrelease is not defined
+
 - name: Get the kernel release of the kernel to be installed
   tags:
     - vars
@@ -134,7 +140,11 @@
       /boot/grub/grub.cfg | awk '{print NR-1" ... "$0}' |
       grep {{ kernelrelease }} | head -1 | awk '{print $1}'
   when:
+    - kernel_release_file is defined
+    - kernel_release_file.stat is defined
     - kernel_release_file.stat.exists
+    - kernelrelease is defined
+    - kernelrelease != "unknown"
     - ansible_os_family != "RedHat" or ansible_distribution_major_version | int < 8
 
 - name: Construct the command line to determine default boot entry for RHEL >= 8
@@ -146,7 +156,11 @@
       cat $f;
       done | grep title | awk '{ gsub("title ", "", $0); print }' | grep '{{ kernelrelease }}';
   when:
+    - kernel_release_file is defined
+    - kernel_release_file.stat is defined
     - kernel_release_file.stat.exists
+    - kernelrelease is defined
+    - kernelrelease != "unknown"
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version | int >= 8
 
@@ -166,6 +180,8 @@
   register: grub_boot_number_cmd
   changed_when: false
   when:
+    - kernel_release_file is defined
+    - kernel_release_file.stat is defined
     - kernel_release_file.stat.exists
 
 - name: Obtain command to set default kernel to boot
