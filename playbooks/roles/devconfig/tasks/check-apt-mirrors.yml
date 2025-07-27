@@ -1,0 +1,63 @@
+---
+# Only run mirror checks for Debian testing (trixie) where mirror issues are common
+- name: Extract current APT mirror hostname
+  shell: |
+    grep -E "^deb\s+http" /etc/apt/sources.list | head -1 | awk '{print $2}' | sed 's|http://||' | cut -d'/' -f1
+  register: apt_mirror_host
+  changed_when: false
+  ignore_errors: yes
+
+- name: Check connectivity to current APT mirror
+  wait_for:
+    host: "{{ apt_mirror_host.stdout }}"
+    port: 80
+    timeout: 10
+  register: mirror_connectivity
+  ignore_errors: yes
+  when: apt_mirror_host.stdout != ""
+
+- name: Display mirror check results
+  debug:
+    msg: |
+      Current APT mirror: {{ apt_mirror_host.stdout | default('Not found') }}
+      Mirror connectivity: {{ 'OK' if mirror_connectivity is not failed else 'FAILED' }}
+  when: apt_mirror_host.stdout != ""
+
+- name: Fall back to official Debian mirrors if current mirror fails
+  block:
+    - name: Backup current sources.list
+      copy:
+        src: /etc/apt/sources.list
+        dest: /etc/apt/sources.list.backup
+        remote_src: yes
+      become: yes
+
+    - name: Apply Debian testing fallback sources
+      template:
+        src: debian-testing-fallback-sources.list
+        dest: /etc/apt/sources.list
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+    - name: Update APT cache after mirror change
+      apt:
+        update_cache: yes
+        cache_valid_time: 0
+      become: yes
+
+    - name: Inform user about mirror fallback
+      debug:
+        msg: |
+          WARNING: The configured APT mirror '{{ apt_mirror_host.stdout }}' is not accessible.
+          Falling back to official Debian testing mirrors:
+          - deb.debian.org for main packages
+          - security.debian.org for security updates
+
+          This may result in slower package downloads depending on your location.
+          Consider configuring a local mirror for better performance.
+
+  when:
+    - apt_mirror_host.stdout != ""
+    - mirror_connectivity is failed
