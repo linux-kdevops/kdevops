@@ -1,0 +1,30 @@
+# Milvus configuration file
+etcd:
+  endpoints:
+    - {{ ai_vector_db_milvus_etcd_native_client_url }}
+  rootPath: milvus
+
+minio:
+  address: localhost
+  port: 9000
+  accessKeyID: {{ ai_vector_db_milvus_minio_native_access_key }}
+  secretAccessKey: {{ ai_vector_db_milvus_minio_native_secret_key }}
+  bucketName: milvus-bucket
+  useSSL: false
+
+proxy:
+  port: {{ ai_vector_db_milvus_port }}
+
+log:
+  level: info
+  path: {{ ai_vector_db_milvus_native_log_path }}
+
+dataNode:
+  dataPath: {{ ai_vector_db_milvus_native_data_path }}
+
+indexNode:
+  enableDisk: true
+
+common:
+  security:
+    authorizationEnabled: false

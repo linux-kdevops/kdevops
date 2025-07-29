@@ -1,0 +1,8 @@
+---
+- name: Install Milvus Vector Database
+  hosts: ai
+  become: yes
+  become_user: root
+  roles:
+    - role: milvus
+      tags: [ 'ai', 'vector_db', 'milvus', 'install' ]

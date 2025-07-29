@@ -1,0 +1,172 @@
+choice
+	prompt "Which Milvus container image to use?"
+	default AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_5
+
+config AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_5
+	bool "milvusdb/milvus:v2.5.10"
+	output yaml
+	help
+	  Use the latest stable Milvus 2.5.x release with enhanced
+	  performance and stability features.
+
+config AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_4
+	bool "milvusdb/milvus:v2.4.17"
+	output yaml
+	help
+	  Use Milvus 2.4.x for compatibility with existing workloads
+	  or when specific 2.4 features are required.
+
+endchoice
+
+config AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_STRING
+	string
+	output yaml
+	default "milvusdb/milvus:v2.5.10" if AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_5
+	default "milvusdb/milvus:v2.4.17" if AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_4
+
+config AI_VECTOR_DB_MILVUS_CONTAINER_NAME
+	string "The local Milvus container name"
+	default "milvus-ai-benchmark"
+	output yaml
+	help
+	  Set the name for the Milvus Docker container.
+
+config AI_VECTOR_DB_MILVUS_ETCD_CONTAINER_IMAGE_STRING
+	string "etcd container image"
+	output yaml
+	default "quay.io/coreos/etcd:v3.5.18" if AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_5
+	default "quay.io/coreos/etcd:v3.5.5" if AI_VECTOR_DB_MILVUS_CONTAINER_IMAGE_2_4
+	help
+	  The etcd container image to use for Milvus metadata storage.
+
+config AI_VECTOR_DB_MILVUS_ETCD_CONTAINER_NAME
+	string "The local etcd container name"
+	default "milvus-etcd"
+	output yaml
+	help
+	  Set the name for the etcd Docker container.
+
+config AI_VECTOR_DB_MILVUS_MINIO_CONTAINER_IMAGE_STRING
+	string "MinIO container image"
+	output yaml
+	default "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+	help
+	  The MinIO container image to use for Milvus object storage.
+
+config AI_VECTOR_DB_MILVUS_MINIO_CONTAINER_NAME
+	string "The local MinIO container name"
+	default "milvus-minio"
+	output yaml
+	help
+	  Set the name for the MinIO Docker container.
+
+config AI_VECTOR_DB_MILVUS_MINIO_ACCESS_KEY
+	string "MinIO access key"
+	output yaml
+	default "minioadmin"
+	help
+	  Access key for MinIO object storage.
+
+config AI_VECTOR_DB_MILVUS_MINIO_SECRET_KEY
+	string "MinIO secret key"
+	output yaml
+	default "minioadmin"
+	help
+	  Secret key for MinIO object storage.
+
+config AI_VECTOR_DB_MILVUS_DOCKER_DATA_PATH
+	string "Host path for persistent data storage"
+	output yaml
+	default "/data/milvus-data"
+	help
+	  Directory on the host where Milvus data will be persisted.
+	  This includes vector data, metadata, and logs.
+
+config AI_VECTOR_DB_MILVUS_DOCKER_ETCD_DATA_PATH
+	string "Host path for etcd data storage"
+	output yaml
+	default "/data/milvus-etcd"
+	help
+	  Directory on the host where etcd data will be persisted.
+
+config AI_VECTOR_DB_MILVUS_DOCKER_MINIO_DATA_PATH
+	string "Host path for MinIO data storage"
+	output yaml
+	default "/data/milvus-minio"
+	help
+	  Directory on the host where MinIO data will be persisted.
+
+config AI_VECTOR_DB_MILVUS_DOCKER_NETWORK_NAME
+	string "Docker network name"
+	output yaml
+	default "milvus-network"
+	help
+	  Name of the Docker network to create for Milvus containers.
+
+config AI_VECTOR_DB_MILVUS_WEB_UI_PORT
+	int "Milvus web UI port"
+	output yaml
+	default "9091"
+	help
+	  Port for accessing the Milvus web UI interface.
+
+config AI_VECTOR_DB_MILVUS_MINIO_API_PORT
+	int "MinIO API port"
+	output yaml
+	default "9000"
+	help
+	  Port for MinIO API access.
+
+config AI_VECTOR_DB_MILVUS_MINIO_CONSOLE_PORT
+	int "MinIO console port"
+	output yaml
+	default "9001"
+	help
+	  Port for MinIO web console access.
+
+config AI_VECTOR_DB_MILVUS_ETCD_CLIENT_PORT
+	int "etcd client port"
+	output yaml
+	default "2379"
+	help
+	  Port for etcd client connections.
+
+config AI_VECTOR_DB_MILVUS_ETCD_PEER_PORT
+	int "etcd peer port"
+	output yaml
+	default "2380"
+	help
+	  Port for etcd peer connections.
+
+menu "Docker resource limits"
+
+config AI_VECTOR_DB_MILVUS_MEMORY_LIMIT
+	string "Milvus container memory limit"
+	output yaml
+	default "8g"
+	help
+	  Memory limit for the Milvus container. Adjust based on
+	  your system resources and dataset size.
+
+config AI_VECTOR_DB_MILVUS_CPU_LIMIT
+	string "Milvus container CPU limit"
+	output yaml
+	default "4.0"
+	help
+	  CPU limit for the Milvus container (number of CPUs).
+
+config AI_VECTOR_DB_MILVUS_ETCD_MEMORY_LIMIT
+	string "etcd container memory limit"
+	output yaml
+	default "1g"
+	help
+	  Memory limit for the etcd container.
+
+config AI_VECTOR_DB_MILVUS_MINIO_MEMORY_LIMIT
+	string "MinIO container memory limit"
+	output yaml
+	default "2g"
+	help
+	  Memory limit for the MinIO container.
+
+endmenu

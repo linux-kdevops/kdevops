@@ -1,0 +1,96 @@
+---
+- name: Check if Docker packages are installed (Debian)
+  command: dpkg -l docker.io docker-compose
+  register: docker_packages_check
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker and Python dependencies
+  package:
+    name:
+      - docker.io
+      - docker-compose
+      - python3-pip
+      - python3-setuptools
+      - python3-packaging
+    state: present
+  become: yes
+  when:
+    - ansible_os_family == "Debian"
+    - docker_packages_check.rc != 0
+
+- name: Check if Docker packages are installed (RedHat)
+  command: rpm -q docker docker-compose
+  register: docker_packages_check_rh
+  changed_when: false
+  failed_when: false
+  when: ansible_os_family == "RedHat"
+
+- name: Install Docker and Python dependencies (RedHat)
+  package:
+    name:
+      - docker
+      - docker-compose
+      - python3-pip
+      - python3-setuptools
+    state: present
+  become: yes
+  when:
+    - ansible_os_family == "RedHat"
+    - docker_packages_check_rh.rc != 0
+
+- name: Check if user is in docker group
+  shell: groups {{ data_user | default(ansible_user_id) }} | grep -q docker
+  register: user_docker_group_check
+  changed_when: false
+  failed_when: false
+
+- name: Add user to docker group
+  user:
+    name: "{{ data_user | default(ansible_user_id) }}"
+    groups: docker
+    append: yes
+  become: yes
+  when: user_docker_group_check.rc != 0
+
+- name: Ensure Docker service is started
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Create Milvus directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ data_user | default(ansible_user_id) }}"
+  become: yes
+  loop:
+    - "{{ ai_vector_db_milvus_data_dir }}"
+    - "{{ ai_vector_db_milvus_config_dir }}"
+    - "{{ ai_vector_db_milvus_log_dir }}"
+    - "{{ ai_vector_db_milvus_data_dir }}/volumes/etcd"
+    - "{{ ai_vector_db_milvus_data_dir }}/volumes/minio"
+    - "{{ ai_vector_db_milvus_data_dir }}/volumes/milvus"
+
+- name: Check if docker-compose.yml exists
+  stat:
+    path: "{{ ai_vector_db_milvus_config_dir }}/docker-compose.yml"
+  register: docker_compose_exists
+
+- name: Remove old docker-compose override file if exists
+  file:
+    path: "{{ ai_vector_db_milvus_config_dir }}/docker-compose.override.yml"
+    state: absent
+  become: yes
+  when: not docker_compose_exists.stat.exists
+
+- name: Create Milvus docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ ai_vector_db_milvus_config_dir }}/docker-compose.yml"
+    mode: '0644'
+  become: yes

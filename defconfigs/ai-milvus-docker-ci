@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# AI vector database benchmarking for CI testing
+# Uses minimal dataset size and short runtime for quick verification
+
+CONFIG_KDEVOPS_FIRST_RUN=y
+CONFIG_GUESTFS=y
+CONFIG_GUESTFS_DEBIAN=y
+CONFIG_GUESTFS_DEBIAN_TRIXIE=y
+
+# Enable AI workflow
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_AI=y
+CONFIG_AI_TESTS_VECTOR_DATABASE=y
+
+# Docker deployment
+CONFIG_AI_VECTOR_DB_MILVUS=y
+CONFIG_AI_VECTOR_DB_MILVUS_DOCKER=y
+
+# CI-optimized: Use custom small dataset
+CONFIG_AI_DATASET_CUSTOM=y
+
+# Small vector dimensions for faster processing
+CONFIG_AI_VECTOR_DIM_128=y
+
+# Minimal query configurations
+CONFIG_AI_BENCHMARK_QUERY_TOPK_1=y
+CONFIG_AI_BENCHMARK_BATCH_1=y
+
+# Fast HNSW indexing
+CONFIG_AI_INDEX_HNSW=y
+
+# Short runtime for CI
+# These will be overridden by environment variables in CI:
+# AI_VECTOR_DATASET_SIZE=1000
+# AI_BENCHMARK_RUNTIME=30
+
+# Reduced resource limits for CI
+CONFIG_AI_VECTOR_DB_MILVUS_MEMORY_LIMIT="2g"
+CONFIG_AI_VECTOR_DB_MILVUS_CPU_LIMIT="2.0"
+
+# Enable graphing for result verification
+CONFIG_AI_BENCHMARK_ENABLE_GRAPHING=y
+
+# XFS filesystem (fastest for AI workloads)
+CONFIG_AI_FILESYSTEM_XFS=y
+
+# A/B testing enabled for baseline/dev comparison
+CONFIG_KDEVOPS_BASELINE_AND_DEV=y

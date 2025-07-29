@@ -1,0 +1,56 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Stop and remove Milvus container
+  docker_container:
+    name: "{{ ai_milvus_container_name }}"
+    state: absent
+  when: ai_milvus_docker|bool
+  ignore_errors: yes
+
+- name: Stop and remove MinIO container
+  docker_container:
+    name: "{{ ai_minio_container_name }}"
+    state: absent
+  when: ai_milvus_docker|bool
+  ignore_errors: yes
+
+- name: Stop and remove etcd container
+  docker_container:
+    name: "{{ ai_etcd_container_name }}"
+    state: absent
+  when: ai_milvus_docker|bool
+  ignore_errors: yes
+
+- name: Remove Docker network
+  docker_network:
+    name: "{{ ai_docker_network_name }}"
+    state: absent
+  when: ai_milvus_docker|bool
+  ignore_errors: yes
+
+- name: Clean up Python packages (optional)
+  pip:
+    name:
+      - pymilvus
+      - matplotlib
+      - seaborn
+      - plotly
+    state: absent
+  when: ai_benchmark_enable_graphing|bool
+  ignore_errors: yes
+
+- name: Display uninstall completion message
+  debug:
+    msg: |
+      AI benchmark components uninstalled successfully.
+      Data directories preserved:
+      - {{ ai_docker_data_path }}
+      - {{ ai_benchmark_results_dir }}
+
+      To completely remove all data, run the ai-destroy target.

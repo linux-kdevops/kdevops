@@ -1,0 +1,74 @@
+---
+# Milvus vector database defaults
+ai_vector_db_milvus_version: "2.3.0"
+ai_vector_db_milvus_docker: true
+ai_vector_db_milvus_compose_version: "v2.3.0"
+
+# Deployment options
+ai_vector_db_milvus_data_dir: "/data/milvus"
+ai_vector_db_milvus_config_dir: "/etc/milvus"
+ai_vector_db_milvus_log_dir: "/var/log/milvus"
+
+# Network configuration
+ai_vector_db_milvus_port: 19530
+ai_vector_db_milvus_grpc_port: 19530
+ai_vector_db_milvus_metrics_port: 9091
+ai_vector_db_milvus_web_ui_port: 9091
+ai_vector_db_milvus_etcd_client_port: 2379
+ai_vector_db_milvus_minio_api_port: 9000
+ai_vector_db_milvus_minio_console_port: 9001
+
+# Resource limits
+ai_vector_db_milvus_memory_limit: "8Gi"
+ai_vector_db_milvus_cpu_limit: "4"
+
+# Storage backend
+ai_vector_db_milvus_storage_type: "local"  # local, s3, minio
+ai_vector_db_milvus_storage_path: "{{ ai_vector_db_milvus_data_dir }}/storage"
+
+# Index configuration
+ai_vector_db_milvus_index_type: "IVF_FLAT"
+ai_vector_db_milvus_metric_type: "L2"
+ai_vector_db_milvus_nlist: 1024
+
+# Collection defaults
+ai_vector_db_milvus_default_collection: "benchmark_collection"
+ai_vector_db_milvus_default_dim: 768
+ai_vector_db_milvus_default_shards: 2
+
+# Benchmark configuration
+ai_vector_db_milvus_benchmark_enable: true
+ai_vector_db_milvus_benchmark_datasets:
+  - sift1m
+  - gist1m
+ai_vector_db_milvus_benchmark_batch_size: 10000
+ai_vector_db_milvus_benchmark_num_queries: 10000
+
+# Results and filesystem configuration
+ai_benchmark_results_dir: "/data/benchmark-results"
+ai_filesystem: "{{ kdevops_filesystem | default('xfs') }}"
+ai_data_device_path: "/data"
+ai_mkfs_opts: ""
+ai_mount_opts: "defaults"
+
+# Docker container configuration
+ai_vector_db_milvus_container_name: "milvus-standalone"
+ai_vector_db_milvus_etcd_container_name: "milvus-etcd"
+ai_vector_db_milvus_minio_container_name: "milvus-minio"
+
+# Docker image configuration
+ai_vector_db_milvus_container_image_string: "milvusdb/milvus:{{ ai_vector_db_milvus_version }}"
+ai_vector_db_milvus_etcd_container_image_string: "quay.io/coreos/etcd:v3.5.5"
+ai_vector_db_milvus_minio_container_image_string: "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+
+# Docker volume paths
+ai_vector_db_milvus_docker_data_path: "{{ ai_vector_db_milvus_data_dir }}/volumes/milvus"
+ai_vector_db_milvus_docker_etcd_data_path: "{{ ai_vector_db_milvus_data_dir }}/volumes/etcd"
+ai_vector_db_milvus_docker_minio_data_path: "{{ ai_vector_db_milvus_data_dir }}/volumes/minio"
+
+# MinIO configuration
+ai_vector_db_milvus_minio_access_key: "minioadmin"
+ai_vector_db_milvus_minio_secret_key: "minioadmin"
+
+# Docker network
+ai_vector_db_milvus_docker_network_name: "milvus"

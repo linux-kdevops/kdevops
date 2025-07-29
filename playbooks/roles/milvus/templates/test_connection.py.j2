@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Test Milvus connection"""
+
+from pymilvus import connections, utility
+
+try:
+    # Connect to Milvus
+    connections.connect(
+        alias="default",
+        host="localhost",
+        port="{{ ai_vector_db_milvus_port }}"
+    )
+    
+    # Check if connected
+    if utility.list_collections():
+        print("✓ Successfully connected to Milvus")
+        print(f"  Server version: {utility.get_server_version()}")
+        print(f"  Collections: {utility.list_collections()}")
+    else:
+        print("✓ Successfully connected to Milvus (no collections yet)")
+        print(f"  Server version: {utility.get_server_version()}")
+    
+except Exception as e:
+    print(f"✗ Failed to connect to Milvus: {e}")
+    exit(1)

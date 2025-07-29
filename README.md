@@ -14,6 +14,7 @@ Table of Contents
       * [reboot-limit](#reboot-limit)
       * [sysbench](#sysbench)
       * [fio-tests](#fio-tests)
+      * [AI workflow](#ai-workflow)
    * [kdevops chats](#kdevops-chats)
    * [kdevops on discord](#kdevops-on-discord)
       * [kdevops IRC](#kdevops-irc)
@@ -273,6 +274,22 @@ A/B testing capabilities, and advanced graphing and visualization support. For
 detailed configuration and usage information, refer to the
 [kdevops fio-tests documentation](docs/fio-tests.md).
 
+### AI workflow
+
+kdevops now supports AI/ML system benchmarking, starting with vector databases
+like Milvus. Similar to fstests, you can quickly set up and benchmark AI
+infrastructure with just a few commands:
+
+```bash
+make defconfig-ai-milvus-docker
+make bringup
+make ai
+```
+
+The AI workflow supports A/B testing, filesystem performance impact analysis,
+and comprehensive benchmarking of vector similarity search workloads. For
+details, see the [kdevops AI workflow documentation](docs/ai/README.md).
+
 ## kdevops chats
 
 We use discord and IRC. Right now we have more folks on discord than on IRC.
@@ -324,6 +341,7 @@ want to just use the kernel that comes with your Linux distribution.
   * [kdevops NFS docs](docs/nfs.md)
   * [kdevops selftests docs](docs/selftests.md)
   * [kdevops reboot-limit docs](docs/reboot-limit.md)
+  * [kdevops AI workflow docs](docs/ai/README.md)
 
 # kdevops general documentation
 

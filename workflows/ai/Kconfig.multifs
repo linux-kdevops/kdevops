@@ -1,0 +1,162 @@
+menu "Multi-filesystem testing configuration"
+
+config AI_ENABLE_MULTIFS_TESTING
+	bool "Enable multi-filesystem testing"
+	default n
+	output yaml
+	help
+	  Enable testing the same AI workload across multiple filesystem
+	  configurations. This allows comparing performance characteristics
+	  between different filesystems and their configurations.
+
+	  When enabled, the AI benchmark will run sequentially across all
+	  selected filesystem configurations, allowing for detailed
+	  performance analysis across different storage backends.
+
+if AI_ENABLE_MULTIFS_TESTING
+
+config AI_MULTIFS_TEST_XFS
+	bool "Test XFS configurations"
+	default y
+	output yaml
+	help
+	  Enable testing AI workloads on XFS filesystem with different
+	  block size configurations.
+
+if AI_MULTIFS_TEST_XFS
+
+menu "XFS configuration profiles"
+
+config AI_MULTIFS_XFS_4K_4KS
+	bool "XFS 4k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test AI workloads on XFS with 4k filesystem block size
+	  and 4k sector size. This is the most common configuration
+	  and provides good performance for most workloads.
+
+config AI_MULTIFS_XFS_16K_4KS
+	bool "XFS 16k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test AI workloads on XFS with 16k filesystem block size
+	  and 4k sector size. Larger block sizes can improve performance
+	  for sequential I/O patterns common in AI workloads.
+
+config AI_MULTIFS_XFS_32K_4KS
+	bool "XFS 32k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test AI workloads on XFS with 32k filesystem block size
+	  and 4k sector size. Even larger block sizes can provide
+	  benefits for large sequential I/O operations typical in
+	  AI vector database workloads.
+
+config AI_MULTIFS_XFS_64K_4KS
+	bool "XFS 64k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test AI workloads on XFS with 64k filesystem block size
+	  and 4k sector size. Maximum supported block size for XFS,
+	  optimized for very large file operations and high-throughput
+	  AI workloads with substantial data transfers.
+
+endmenu
+
+endif # AI_MULTIFS_TEST_XFS
+
+config AI_MULTIFS_TEST_EXT4
+	bool "Test ext4 configurations"
+	default y
+	output yaml
+	help
+	  Enable testing AI workloads on ext4 filesystem with different
+	  configurations including bigalloc options.
+
+if AI_MULTIFS_TEST_EXT4
+
+menu "ext4 configuration profiles"
+
+config AI_MULTIFS_EXT4_4K
+	bool "ext4 4k block size"
+	default y
+	output yaml
+	help
+	  Test AI workloads on ext4 with standard 4k block size.
+	  This is the default ext4 configuration.
+
+config AI_MULTIFS_EXT4_16K_BIGALLOC
+	bool "ext4 16k bigalloc"
+	default y
+	output yaml
+	help
+	  Test AI workloads on ext4 with 16k bigalloc enabled.
+	  Bigalloc reduces metadata overhead and can improve
+	  performance for large file workloads.
+
+endmenu
+
+endif # AI_MULTIFS_TEST_EXT4
+
+config AI_MULTIFS_TEST_BTRFS
+	bool "Test btrfs configurations"
+	default y
+	output yaml
+	help
+	  Enable testing AI workloads on btrfs filesystem with
+	  common default configuration profile.
+
+if AI_MULTIFS_TEST_BTRFS
+
+menu "btrfs configuration profiles"
+
+config AI_MULTIFS_BTRFS_DEFAULT
+	bool "btrfs default profile"
+	default y
+	output yaml
+	help
+	  Test AI workloads on btrfs with default configuration.
+	  This includes modern defaults with free-space-tree and
+	  no-holes features enabled.
+
+endmenu
+
+endif # AI_MULTIFS_TEST_BTRFS
+
+config AI_MULTIFS_RESULTS_DIR
+	string "Multi-filesystem results directory"
+	output yaml
+	default "/data/ai-multifs-benchmark"
+	help
+	  Directory where multi-filesystem test results and logs will be stored.
+	  Each filesystem configuration will have its own subdirectory.
+
+config AI_MULTIFS_DEVICE
+	string "Device to use for filesystem testing"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for creating filesystems for multi-filesystem testing.
+	  This device will be reformatted with different filesystems during testing.
+
+config AI_MULTIFS_MOUNT_POINT
+	string "Mount point for filesystem testing"
+	output yaml
+	default "/mnt/ai-multifs-test"
+	help
+	  The path where filesystems will be mounted during multi-filesystem testing.
+
+endif # AI_ENABLE_MULTIFS_TESTING
+
+endmenu

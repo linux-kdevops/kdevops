@@ -1,0 +1,130 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Check for ongoing benchmark processes
+  shell: |
+    pgrep -f "python.*milvus_benchmark\.py" | xargs -r ps -p 2>/dev/null | grep -v "sh -c" | grep -v grep | wc -l || echo "0"
+  register: benchmark_check
+  changed_when: false
+  failed_when: false
+
+- name: Fail if benchmark is already running
+  fail:
+    msg: |
+      ERROR: A benchmark is already running on this system!
+      Number of benchmark processes: {{ benchmark_check.stdout }}
+      Please wait for the current benchmark to complete or terminate it before starting a new one.
+  when: benchmark_check.stdout|int > 0
+
+- name: Ensure benchmark results directory exists
+  file:
+    path: "{{ ai_benchmark_results_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Check for benchmark lock file
+  stat:
+    path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+  register: lock_file
+
+- name: Check if lock file is stale (older than 2 hours)
+  set_fact:
+    lock_is_stale: "{{ (ansible_date_time.epoch|int - lock_file.stat.mtime|default(0)|int) > 7200 }}"
+  when: lock_file.stat.exists
+
+- name: Remove stale lock file
+  file:
+    path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+    state: absent
+  when:
+    - lock_file.stat.exists
+    - lock_is_stale|default(false)|bool
+
+- name: Fail if recent benchmark lock exists
+  fail:
+    msg: |
+      ERROR: Benchmark lock file exists at {{ ai_benchmark_results_dir }}/.benchmark.lock
+      This indicates a benchmark may be in progress or was terminated abnormally.
+      Lock file age: {{ (ansible_date_time.epoch|int - lock_file.stat.mtime|default(0)|int) }} seconds
+      If you're sure no benchmark is running, remove the lock file manually.
+  when:
+    - lock_file.stat.exists
+    - not lock_is_stale|default(false)|bool
+
+- name: Create benchmark lock file
+  file:
+    path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+    state: touch
+    mode: '0644'
+  register: lock_created
+
+- name: Create benchmark working directory
+  file:
+    path: "{{ ai_benchmark_results_dir }}/workdir"
+    state: directory
+    mode: '0755'
+
+- name: Copy benchmark script
+  copy:
+    src: milvus_benchmark.py
+    dest: "{{ ai_benchmark_results_dir }}/workdir/milvus_benchmark.py"
+    mode: '0755'
+
+- name: Generate benchmark configuration
+  template:
+    src: benchmark_config.json.j2
+    dest: "{{ ai_benchmark_results_dir }}/workdir/benchmark_config.json"
+    mode: '0644'
+
+- name: Wait for Milvus to be ready
+  wait_for:
+    host: "localhost"
+    port: "{{ ai_vector_db_milvus_port }}"
+    delay: 10
+    timeout: 300
+
+- name: Run Milvus benchmark for iteration {{ item }}
+  command: >
+    python3 {{ ai_benchmark_results_dir }}/workdir/milvus_benchmark.py
+    --config {{ ai_benchmark_results_dir }}/workdir/benchmark_config.json
+    --output {{ ai_benchmark_results_dir }}/results_{{ ansible_hostname }}_{{ item }}.json
+  register: benchmark_result
+  with_sequence: start=1 end={{ ai_benchmark_iterations }}
+  tags: run_benchmark
+
+- name: Display benchmark results
+  debug:
+    var: benchmark_result
+  when: benchmark_result is defined
+
+- name: Remove benchmark lock file on success
+  file:
+    path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+    state: absent
+  when: lock_created is defined and lock_created is changed
+
+- name: Ensure lock file is removed on failure
+  block:
+    - name: Remove benchmark lock file
+      file:
+        path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+        state: absent
+      when: lock_created is defined and lock_created is changed
+  rescue:
+    - name: Always remove lock file on error
+      file:
+        path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+        state: absent
+      when: lock_created is defined and lock_created is changed
+  always:
+    - name: Final cleanup of lock file
+      file:
+        path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
+        state: absent
+      when: lock_created is defined and lock_created is changed
+      failed_when: false

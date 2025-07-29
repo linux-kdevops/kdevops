@@ -1,0 +1,4 @@
+# AI workflow results and temporary files
+results/
+*.pyc
+__pycache__/

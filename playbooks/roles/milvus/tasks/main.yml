@@ -1,0 +1,29 @@
+---
+- include_role:
+    name: create_data_partition
+  tags: [ 'setup', 'data_partition' ]
+
+- include_role:
+    name: common
+  when:
+    - infer_uid_and_group|bool
+
+- name: Ensure data_dir has correct ownership
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+    recurse: yes
+    state: directory
+
+- name: Include Docker installation tasks
+  include_tasks: install_docker.yml
+
+- name: Include setup tasks
+  include_tasks: setup.yml
+
+# Benchmarks are included via separate playbook call with proper tags
+# They are not run during the initial setup phase

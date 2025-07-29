@@ -1,0 +1,8 @@
+---
+- name: Run Milvus Vector Database Benchmarks
+  hosts: ai
+  vars:
+    ai_vector_db_milvus_benchmark_enable: true
+  roles:
+    - role: ../roles/milvus
+      tags: [ 'ai', 'vector_db', 'milvus', 'benchmark' ]
