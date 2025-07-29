@@ -28,26 +28,26 @@ parser = argparse.ArgumentParser(
     description="Generate a Coccinelle checker for atomic context in transitive callers of a target function."
 )
 parser.add_argument(
-    "--levels", "-l",
+    "--levels",
+    "-l",
     type=int,
     required=True,
-    help="Maximum number of transitive caller levels to follow (e.g., 5)"
+    help="Maximum number of transitive caller levels to follow (e.g., 5)",
 )
 parser.add_argument(
-    "--target", "-t",
+    "--target",
+    "-t",
     type=str,
     required=True,
-    help="Target function to trace (e.g., __find_get_block_slow)"
+    help="Target function to trace (e.g., __find_get_block_slow)",
 )
 parser.add_argument(
-    "--output", "-o",
-    type=str,
-    required=True,
-    help="Output .cocci file to generate"
+    "--output", "-o", type=str, required=True, help="Output .cocci file to generate"
 )
 args = parser.parse_args()
 max_depth = args.levels
 target_func = args.target
+
 
 # Add a function to get the number of processors for parallel jobs
 def get_nprocs():
@@ -55,6 +55,7 @@ def get_nprocs():
         return multiprocessing.cpu_count()
     except:
         return 1  # Default to 1 if can't determine
+
 
 outfile = args.output
 header = f"""// SPDX-License-Identifier: GPL-2.0
@@ -141,10 +142,11 @@ register_caller(fn, None)
 """
 with open(outfile, "w") as f:
     f.write(header)
-    
+
     # Generate all the caller chain rules
     for level in range(1, max_depth + 1):
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} caller discovery
 @caller{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -162,12 +164,14 @@ transitive_caller << virtual.transitive_caller;
 @@
 print(f"🔄 Chain level {level}: {{fn}} calls {{transitive_caller}} at {{p[0].file}}:{{p[0].line}}")
 register_caller(fn, p[0].file)
-""")
+"""
+        )
 
     # Check for atomic context in each caller in our chain
     for level in range(1, max_depth + 1):
         # First, check for common atomic primitives
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} atomic context check - Common atomic primitives
 @atomiccheck{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -246,10 +250,12 @@ key = (p1[0].file, p1[0].line, transitive_caller)
 if key not in seen_atomic:
     seen_atomic.add(key)
     print(f"⚠️  WARNING: atomic context at level {level}: {{p1[0].current_element}} at {{p1[0].file}}:{{p1[0].line}} may reach {{transitive_caller}}() → eventually {target_func}()")
-""")
+"""
+        )
 
         # Check for lock-related functions directly calling our chain
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} atomic context check - Lock-related functions
 @atomic_fn_check{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -275,10 +281,12 @@ transitive_caller << virtual.transitive_caller;
 atomic_keywords = ['lock', 'irq', 'atomic', 'bh', 'intr', 'preempt', 'disable', 'napi', 'rcu']
 if any(kw in lock_fn.lower() for kw in atomic_keywords):
     print(f"⚠️  WARNING: potential atomic function at level {level}: {{lock_fn}} (name suggests lock handling) contains call to {{transitive_caller}}() at {{p[0].file}}:{{p[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
         # Check for spinlock regions
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} spinlock region check
 @spinlock_region{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -319,10 +327,12 @@ key = (p1[0].file, p1[0].line, p3[0].line, transitive_caller)
 if key not in seen_spinlock_regions:
     seen_spinlock_regions.add(key)
     print(f"⚠️  WARNING: spinlock region at level {level}: {{p1[0].current_element}} at {{p1[0].file}}:{{p1[0].line}} contains call to {{transitive_caller}}() at line {{p3[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
         # Look for functions that can't sleep
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} check - Can't sleep contexts
 @cant_sleep{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -346,10 +356,12 @@ p2 << cant_sleep{level}.p2;
 transitive_caller << virtual.transitive_caller;
 @@
 print(f"⚠️  WARNING: Non-sleeping context at {{p1[0].file}}:{{p1[0].line}} but calls {{transitive_caller}}() at line {{p2[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
         # Check for network driver contexts
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} check - Network driver contexts (commonly atomic)
 @netdriver{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -389,10 +401,12 @@ p2 << netdriver{level}.p2;
 transitive_caller << virtual.transitive_caller;
 @@
 print(f"⚠️  WARNING: Network driver context at {{p1[0].file}}:{{p1[0].line}} but calls {{transitive_caller}}() at line {{p2[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
         # Check for functions that might call from atomic context by name
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} check - Function with name suggesting atomic context
 @atomic_name{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -411,10 +425,12 @@ p << atomic_name{level}.p;
 transitive_caller << virtual.transitive_caller;
 @@
 print(f"⚠️  WARNING: Function with atomic-suggesting name {{atomic_fn}} calls {{transitive_caller}}() at {{p[0].file}}:{{p[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
         # Check for sleep-incompatible contexts but target function might sleep
-        f.write(f"""
+        f.write(
+            f"""
 // Level {level} check - Target function called in context where might_sleep is used
 @might_sleep_check{level} depends on after_start exists@
 identifier virtual.transitive_caller;
@@ -436,8 +452,11 @@ p2 << might_sleep_check{level}.p2;
 transitive_caller << virtual.transitive_caller;
 @@
 print(f"⚠️  WARNING: Function has might_sleep() at {{p1[0].file}}:{{p1[0].line}} but also calls {{transitive_caller}}() at line {{p2[0].line}} → eventually {target_func}()")
-""")
+"""
+        )
 
     f.write("\n")
 
-print(f"✅ Generated {outfile} with enhanced atomic checks for `{target_func}` up to {max_depth} levels. Run with: make coccicheck MODE=report COCCI={outfile} J={get_nprocs()}")
+print(
+    f"✅ Generated {outfile} with enhanced atomic checks for `{target_func}` up to {max_depth} levels. Run with: make coccicheck MODE=report COCCI={outfile} J={get_nprocs()}"
+)

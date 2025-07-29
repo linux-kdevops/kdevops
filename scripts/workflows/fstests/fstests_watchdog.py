@@ -17,6 +17,7 @@ import configparser
 import argparse
 from itertools import chain
 
+
 def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config):
     if "CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE" in config and not use_ssh:
         configured_kernel = None
@@ -35,8 +36,11 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
         kernel = kssh.get_uname(host).rstrip()
 
     section = fstests.get_section(host, config)
-    (last_test, last_test_time, current_time_str, delta_seconds, stall_suspect) = \
-        fstests.get_fstest_host(use_remote, use_ssh, host, basedir, kernel, section, config)
+    (last_test, last_test_time, current_time_str, delta_seconds, stall_suspect) = (
+        fstests.get_fstest_host(
+            use_remote, use_ssh, host, basedir, kernel, section, config
+        )
+    )
 
     checktime = fstests.get_checktime(host, basedir, kernel, section, last_test)
     percent_done = (delta_seconds * 100 / checktime) if checktime > 0 else 0
@@ -49,10 +53,9 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
             stall_str = "Hung-Stalled"
 
     crash_state = "OK"
-    watchdog = KernelCrashWatchdog(host_name=host,
-                                   decode_crash=True,
-                                   reset_host=True,
-                                   save_warnings=True)
+    watchdog = KernelCrashWatchdog(
+        host_name=host, decode_crash=True, reset_host=True, save_warnings=True
+    )
     crash_file, warning_file = watchdog.check_and_reset_host()
     if crash_file:
         crash_state = "CRASH"
@@ -60,7 +63,9 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
         crash_state = "WARNING"
 
     if not verbose:
-        soak_duration_seconds = int(config.get("CONFIG_FSTESTS_SOAK_DURATION", '0').strip('"'))
+        soak_duration_seconds = int(
+            config.get("CONFIG_FSTESTS_SOAK_DURATION", "0").strip('"')
+        )
         uses_soak = fstests.fstests_test_uses_soak_duration(last_test or "")
         is_soaking = uses_soak and soak_duration_seconds != 0
         soaking_str = "(soak)" if is_soaking else ""
@@ -83,30 +88,56 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
     sys.stdout.write("Delta: %d total second\n" % (delta_seconds))
     sys.stdout.write("\t%d minutes\n" % (delta_seconds / 60))
     sys.stdout.write("\t%d seconds\n" % (delta_seconds % 60))
-    sys.stdout.write("Timeout-status: %s\n" % ("POSSIBLE-STALL" if stall_suspect else "OK"))
+    sys.stdout.write(
+        "Timeout-status: %s\n" % ("POSSIBLE-STALL" if stall_suspect else "OK")
+    )
     sys.stdout.write("Crash-status  : %s\n" % crash_state)
 
+
 def _main():
-    parser = argparse.ArgumentParser(description='fstest-watchdog')
-    parser.add_argument('hostfile', metavar='<ansible hostfile>', type=str,
-                        default='hosts',
-                        help='Ansible hostfile to use')
-    parser.add_argument('hostsection', metavar='<ansible hostsection>', type=str,
-                        default='baseline',
-                        help='The name of the section to read hosts from')
-    parser.add_argument('--verbose', const=True, default=False, action="store_const",
-                        help='Be verbose on output.')
-    parser.add_argument('--use-systemd-remote', const=True, default=True, action="store_const",
-                        help='Use systemd-remote uploaded journals if available')
-    parser.add_argument('--use-ssh', const=True, default=False, action="store_const",
-                        help='Force to only use ssh for journals.')
+    parser = argparse.ArgumentParser(description="fstest-watchdog")
+    parser.add_argument(
+        "hostfile",
+        metavar="<ansible hostfile>",
+        type=str,
+        default="hosts",
+        help="Ansible hostfile to use",
+    )
+    parser.add_argument(
+        "hostsection",
+        metavar="<ansible hostsection>",
+        type=str,
+        default="baseline",
+        help="The name of the section to read hosts from",
+    )
+    parser.add_argument(
+        "--verbose",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Be verbose on output.",
+    )
+    parser.add_argument(
+        "--use-systemd-remote",
+        const=True,
+        default=True,
+        action="store_const",
+        help="Use systemd-remote uploaded journals if available",
+    )
+    parser.add_argument(
+        "--use-ssh",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Force to only use ssh for journals.",
+    )
     args = parser.parse_args()
 
     if not os.path.isfile(args.hostfile):
         sys.stdout.write("%s does not exist\n" % (args.hostfile))
         sys.exit(1)
 
-    dotconfig = os.path.dirname(os.path.abspath(args.hostfile)) + '/.config'
+    dotconfig = os.path.dirname(os.path.abspath(args.hostfile)) + "/.config"
     config = fstests.get_config(dotconfig)
     if not config:
         sys.stdout.write("%s does not exist\n" % (dotconfig))
@@ -119,11 +150,16 @@ def _main():
         if group is not None:
             remote_gid = group[2]
             if remote_gid not in os.getgrouplist(os.getlogin(), os.getgid()):
-                sys.stderr.write("Your username is not part of the group %s\n" % remote_group)
+                sys.stderr.write(
+                    "Your username is not part of the group %s\n" % remote_group
+                )
                 sys.stderr.write("Fix this and try again")
                 sys.exit(1)
         else:
-            sys.stderr.write("The group %s was not found, add Kconfig support for the systemd-remote-journal group used" % remote_group)
+            sys.stderr.write(
+                "The group %s was not found, add Kconfig support for the systemd-remote-journal group used"
+                % remote_group
+            )
             sys.exit(1)
 
     hosts = fstests.get_hosts(args.hostfile, args.hostsection)
@@ -133,13 +169,13 @@ def _main():
         f"{'Kernel':<38}  {'Crash-status':<10}\n"
     )
     for h in hosts:
-        print_fstest_host_status(h, args.verbose,
-                                 args.use_systemd_remote,
-                                 args.use_ssh,
-                                 basedir,
-                                 config)
+        print_fstest_host_status(
+            h, args.verbose, args.use_systemd_remote, args.use_ssh, basedir, config
+        )
 
-    soak_duration_seconds = int(config.get("CONFIG_FSTESTS_SOAK_DURATION", '0').strip('"'))
+    soak_duration_seconds = int(
+        config.get("CONFIG_FSTESTS_SOAK_DURATION", "0").strip('"')
+    )
     journal_method = "ssh"
     if "CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE" in config and not args.use_ssh:
         journal_method = "systemd-journal-remote"
@@ -147,5 +183,6 @@ def _main():
     sys.stdout.write("\n%25s%20s\n" % ("Journal-method", "Soak-duration(s)"))
     sys.stdout.write("%25s%20d\n" % (journal_method, soak_duration_seconds))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     ret = _main()

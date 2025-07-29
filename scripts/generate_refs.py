@@ -120,7 +120,7 @@ def _ref_generator_choices_static(args, conf_name, ref_name, ref_help):
         # Add "_USER_REF" suffix to avoid static duplicates when both user
         # and default Kconfig files exists. Fixes 'warning: choice value used
         # outside its choice group'
-        if 'refs' in args and args.refs != 0:
+        if "refs" in args and args.refs != 0:
             conf_name = conf_name + "_USER_REF"
         refs.update({ref_name: conf_name})
         f.write("config {}\n".format(conf_name))
@@ -328,7 +328,9 @@ def kreleases(args) -> None:
             for release in data["releases"]:
                 if release["moniker"] == args.moniker:
                     # Check if release.json is aa.bb.cc type
-                    if re.compile(r'^\d+\.\d+(\.\d+|-rc\d+)?$').match(release["version"]):
+                    if re.compile(r"^\d+\.\d+(\.\d+|-rc\d+)?$").match(
+                        release["version"]
+                    ):
                         reflist.append("v" + release["version"])
                     else:
                         reflist.append(release["version"])
