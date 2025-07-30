@@ -14,10 +14,17 @@ import sys
 import subprocess
 from lib import git
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Get list of expunge files not yet committed in git')
-    parser.add_argument('expunge_dir', metavar='<directory with expunge files>', type=str,
-                        help='directory with expunge files')
+    parser = argparse.ArgumentParser(
+        description="Get list of expunge files not yet committed in git"
+    )
+    parser.add_argument(
+        "expunge_dir",
+        metavar="<directory with expunge files>",
+        type=str,
+        help="directory with expunge files",
+    )
     args = parser.parse_args()
 
     block_expunge_dir = args.expunge_dir
@@ -36,5 +43,6 @@ def main():
                     short_file = f.split("../")[1]
                 sys.stdout.write("%s\n" % (short_file))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

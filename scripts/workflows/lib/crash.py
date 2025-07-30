@@ -262,7 +262,7 @@ class KernelCrashWatchdog:
         save_warnings=False,
         context_prefix=0,
         context_postfix=35,
-        ssh_timeout = 180,
+        ssh_timeout=180,
     ):
         self.host_name = host_name
         self.output_dir = os.path.join(output_dir, host_name)
@@ -411,7 +411,7 @@ class KernelCrashWatchdog:
 
                     if not key_log_line:
                         logger.warning(f"Error getting key log line for {file_path}")
-                        continue;
+                        continue
                     # Use the first relevant line for any context
                     log_hash = hashlib.md5(key_log_line.encode()).hexdigest()
                     self.known_crashes.append(log_hash)
@@ -551,9 +551,7 @@ class KernelCrashWatchdog:
                 seconds = float(match.group(1))
                 wall_time = boot_time + timedelta(seconds=seconds)
                 timestamp = wall_time.strftime("%b %d %H:%M:%S")
-                converted_lines.append(
-                    f"{timestamp} {self.host_name} {match.group(2)}"
-                )
+                converted_lines.append(f"{timestamp} {self.host_name} {match.group(2)}")
             else:
                 converted_lines.append(line)
 
@@ -780,7 +778,9 @@ class KernelCrashWatchdog:
             )
             logger.info(f"{self.host_name} is now reachable.")
         except subprocess.TimeoutExpired:
-            logger.error(f"Timeout: SSH connection to {self.host_name} did not succeed within {self.ssh_timeout} seconds. This kernel is probably seriously broken.")
+            logger.error(
+                f"Timeout: SSH connection to {self.host_name} did not succeed within {self.ssh_timeout} seconds. This kernel is probably seriously broken."
+            )
             sys.exit(1)
         except subprocess.CalledProcessError as e:
             logger.warning(f"Failed to wait for SSH on {self.host_name}: {e}")

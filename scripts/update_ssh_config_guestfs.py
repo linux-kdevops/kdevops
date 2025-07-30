@@ -30,6 +30,7 @@ ssh_template = """Host {name} {addr}
 	LogLevel FATAL
 """
 
+
 # We take the first IPv4 address on the first non-loopback interface.
 def get_addr(name):
     attempt = 0
@@ -38,7 +39,15 @@ def get_addr(name):
         if attempt > 60:
             raise Exception(f"Unable to get an address for {name} after 60s")
 
-        result = subprocess.run(['/usr/bin/virsh','qemu-agent-command',name,'{"execute":"guest-network-get-interfaces"}'], capture_output=True)
+        result = subprocess.run(
+            [
+                "/usr/bin/virsh",
+                "qemu-agent-command",
+                name,
+                '{"execute":"guest-network-get-interfaces"}',
+            ],
+            capture_output=True,
+        )
         # Did it error out? Sleep and try again.
         if result.returncode != 0:
             time.sleep(1)
@@ -48,15 +57,15 @@ def get_addr(name):
         netinfo = json.loads(result.stdout)
 
         ret = None
-        for iface in netinfo['return']:
-            if iface['name'] == 'lo':
+        for iface in netinfo["return"]:
+            if iface["name"] == "lo":
                 continue
-            if 'ip-addresses' not in iface:
+            if "ip-addresses" not in iface:
                 continue
-            for addr in iface['ip-addresses']:
-                if addr['ip-address-type'] != 'ipv4':
+            for addr in iface["ip-addresses"]:
+                if addr["ip-address-type"] != "ipv4":
                     continue
-                ret = addr['ip-address']
+                ret = addr["ip-address"]
                 break
 
         # If we didn't get an address, try again
@@ -64,11 +73,12 @@ def get_addr(name):
             return ret
         time.sleep(1)
 
+
 def main():
-    topdir = os.environ.get('TOPDIR', '.')
+    topdir = os.environ.get("TOPDIR", ".")
 
     # load extra_vars
-    with open(f'{topdir}/extra_vars.yaml') as stream:
+    with open(f"{topdir}/extra_vars.yaml") as stream:
         extra_vars = yaml.safe_load(stream)
 
     # slurp in the guestfs_nodes list
@@ -76,23 +86,28 @@ def main():
         nodes = yaml.safe_load(stream)
 
     if extra_vars.get("topdir_path_has_sha256sum", False):
-        ssh_config = f'{Path.home()}/.ssh/config_kdevops_{extra_vars["topdir_path_sha256sum"]}'
+        ssh_config = (
+            f'{Path.home()}/.ssh/config_kdevops_{extra_vars["topdir_path_sha256sum"]}'
+        )
     else:
-        ssh_config = f'{Path.home()}/.ssh/config_kdevops_{extra_vars["kdevops_host_prefix"]}'
+        ssh_config = (
+            f'{Path.home()}/.ssh/config_kdevops_{extra_vars["kdevops_host_prefix"]}'
+        )
 
     # make a stanza for each node
-    sshconf = open(ssh_config, 'w')
-    for node in nodes['guestfs_nodes']:
-        name = node['name']
+    sshconf = open(ssh_config, "w")
+    for node in nodes["guestfs_nodes"]:
+        name = node["name"]
         addr = get_addr(name)
         context = {
-            "name" : name,
-            "addr" : addr,
-            "sshkey" : f"{extra_vars['guestfs_path']}/{name}/ssh/id_ed25519"
+            "name": name,
+            "addr": addr,
+            "sshkey": f"{extra_vars['guestfs_path']}/{name}/ssh/id_ed25519",
         }
         sshconf.write(ssh_template.format(**context))
     sshconf.close()
     os.chmod(ssh_config, 0o600)
+
 
 if __name__ == "__main__":
     main()

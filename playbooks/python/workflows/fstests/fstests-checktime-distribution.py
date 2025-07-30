@@ -16,12 +16,21 @@ import subprocess
 import collections
 
 oscheck_ansible_python_dir = os.path.dirname(os.path.abspath(__file__))
-oscheck_sort_expunge = oscheck_ansible_python_dir + "/../../../scripts/workflows/fstests/sort-expunges.sh"
+oscheck_sort_expunge = (
+    oscheck_ansible_python_dir + "/../../../scripts/workflows/fstests/sort-expunges.sh"
+)
+
 
 def main():
-    parser = argparse.ArgumentParser(description='Creates check.time.distribution files for all found check.time files')
-    parser.add_argument('results', metavar='<directory with check.time files>', type=str,
-                        help='directory with check.time files')
+    parser = argparse.ArgumentParser(
+        description="Creates check.time.distribution files for all found check.time files"
+    )
+    parser.add_argument(
+        "results",
+        metavar="<directory with check.time files>",
+        type=str,
+        help="directory with check.time files",
+    )
     args = parser.parse_args()
 
     expunge_kernel_dir = ""
@@ -31,22 +40,22 @@ def main():
     for root, dirs, all_files in os.walk(args.results):
         for fname in all_files:
             f = os.path.join(root, fname)
-            #sys.stdout.write("%s\n" % f)
+            # sys.stdout.write("%s\n" % f)
             if os.path.isdir(f):
                 continue
             if not os.path.isfile(f):
                 continue
-            if not f.endswith('check.time'):
+            if not f.endswith("check.time"):
                 continue
 
             # f may be results/oscheck-xfs/4.19.0-4-amd64/check.time
-            time_distribution = f + '.distribution'
+            time_distribution = f + ".distribution"
 
             if os.path.isfile(time_distribution):
                 os.unlink(time_distribution)
 
-            checktime = open(f, 'r')
-            distribution = open(time_distribution, 'w')
+            checktime = open(f, "r")
+            distribution = open(time_distribution, "w")
 
             sys.stdout.write("checktime: %s\n" % f)
 
@@ -57,17 +66,17 @@ def main():
             num_tests = 0
             for line in all_lines:
                 line = line.strip()
-                m = re.match(r"^(?P<GROUP>\w+)/"
-                              "(?P<NUMBER>\d+)\s+"
-                              "(?P<TIME>\d+)$", line)
+                m = re.match(
+                    r"^(?P<GROUP>\w+)/" "(?P<NUMBER>\d+)\s+" "(?P<TIME>\d+)$", line
+                )
                 if not m:
                     continue
                 testline = m.groupdict()
                 num_tests += 1
-                if int(testline['TIME']) in results:
-                    results[int(testline['TIME'])] += 1
+                if int(testline["TIME"]) in results:
+                    results[int(testline["TIME"])] += 1
                 else:
-                    results[int(testline['TIME'])] = 1
+                    results[int(testline["TIME"])] = 1
             od = collections.OrderedDict(sorted(results.items()))
 
             v_total = 0
@@ -76,8 +85,11 @@ def main():
                 v_total += v
 
             if num_tests != v_total:
-                sys.stdout.write("Unexpected error, total tests: %d but computed sum test: %d\n" % (num_tests, v_total))
+                sys.stdout.write(
+                    "Unexpected error, total tests: %d but computed sum test: %d\n"
+                    % (num_tests, v_total)
+                )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

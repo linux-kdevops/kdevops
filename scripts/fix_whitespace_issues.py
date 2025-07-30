@@ -12,19 +12,20 @@ import os
 import sys
 from pathlib import Path
 
+
 def fix_file_whitespace(file_path):
     """Fix whitespace issues in a single file"""
     issues_fixed = []
 
     try:
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             content = f.read()
 
         # Skip binary files
-        if b'\0' in content:
+        if b"\0" in content:
             return issues_fixed
 
-        original_content = content.decode('utf-8', errors='ignore')
+        original_content = content.decode("utf-8", errors="ignore")
         lines = original_content.splitlines(keepends=True)
         modified = False
 
@@ -33,12 +34,12 @@ def fix_file_whitespace(file_path):
         for line_num, line in enumerate(lines, 1):
             original_line = line
             # Remove trailing whitespace but preserve line endings
-            if line.endswith('\r\n'):
-                cleaned_line = line.rstrip(' \t\r\n') + '\r\n'
-            elif line.endswith('\n'):
-                cleaned_line = line.rstrip(' \t\n') + '\n'
+            if line.endswith("\r\n"):
+                cleaned_line = line.rstrip(" \t\r\n") + "\r\n"
+            elif line.endswith("\n"):
+                cleaned_line = line.rstrip(" \t\n") + "\n"
             else:
-                cleaned_line = line.rstrip(' \t')
+                cleaned_line = line.rstrip(" \t")
 
             if original_line != cleaned_line:
                 issues_fixed.append(f"Line {line_num}: Removed trailing whitespace")
@@ -52,7 +53,7 @@ def fix_file_whitespace(file_path):
         i = 0
         while i < len(new_lines):
             line = new_lines[i]
-            if line.strip() == '':
+            if line.strip() == "":
                 blank_count += 1
                 if blank_count <= 2:
                     final_lines.append(line)
@@ -65,21 +66,22 @@ def fix_file_whitespace(file_path):
             i += 1
 
         # Fix missing newline at end of file
-        new_content = ''.join(final_lines)
-        if new_content and not new_content.endswith('\n'):
-            new_content += '\n'
+        new_content = "".join(final_lines)
+        if new_content and not new_content.endswith("\n"):
+            new_content += "\n"
             issues_fixed.append("Added missing newline at end of file")
             modified = True
 
         # Write back if modified
         if modified:
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
     except Exception as e:
         issues_fixed.append(f"Error processing file: {e}")
 
     return issues_fixed
+
 
 def main():
     """Main function to fix whitespace issues"""
@@ -88,10 +90,15 @@ def main():
     else:
         # Default to git tracked files with modifications
         import subprocess
+
         try:
-            result = subprocess.run(['git', 'diff', '--name-only'],
-                                  capture_output=True, text=True, check=True)
-            paths = result.stdout.strip().split('\n') if result.stdout.strip() else []
+            result = subprocess.run(
+                ["git", "diff", "--name-only"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            paths = result.stdout.strip().split("\n") if result.stdout.strip() else []
             if not paths:
                 print("No modified files found in git")
                 return 0
@@ -113,7 +120,7 @@ def main():
 
         if path.is_file():
             # Skip certain file types
-            if path.suffix in ['.pyc', '.so', '.o', '.bin', '.jpg', '.png', '.gif']:
+            if path.suffix in [".pyc", ".so", ".o", ".bin", ".jpg", ".png", ".gif"]:
                 continue
 
             fixes = fix_file_whitespace(path)
@@ -133,5 +140,6 @@ def main():
         print("✅ No whitespace issues found to fix!")
         return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

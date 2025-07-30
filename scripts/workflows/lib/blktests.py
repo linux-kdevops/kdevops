@@ -7,17 +7,20 @@ import argparse
 import re
 from itertools import chain
 
+
 class BlktestsError(Exception):
     pass
+
 
 def blktests_check_pid(host):
     pid = kssh.first_process_name_pid(host, "check")
     if pid <= 0:
         return pid
-    dir = "/proc/" + str(pid)  + "/cwd/tests"
+    dir = "/proc/" + str(pid) + "/cwd/tests"
     if kssh.dir_exists(host, dir):
         return pid
     return 0
+
 
 def get_blktest_host(host, basedir, kernel, section, config):
     stall_suspect = False
@@ -39,7 +42,7 @@ def get_blktest_host(host, basedir, kernel, section, config):
     last_test_time = latest_dmesg_blktest_line.split("at ")[1].rstrip()
     current_time_str = kssh.get_current_time(host).rstrip()
 
-    blktests_date_str_format = '%Y-%m-%d %H:%M:%S'
+    blktests_date_str_format = "%Y-%m-%d %H:%M:%S"
     d1 = datetime.strptime(last_test_time, blktests_date_str_format)
     d2 = datetime.strptime(current_time_str, blktests_date_str_format)
 
@@ -49,20 +52,26 @@ def get_blktest_host(host, basedir, kernel, section, config):
     if "CONFIG_BLKTESTS_WATCHDOG" not in config:
         enable_watchdog = False
     else:
-        enable_watchdog = config["CONFIG_BLKTESTS_WATCHDOG"].strip('\"')
+        enable_watchdog = config["CONFIG_BLKTESTS_WATCHDOG"].strip('"')
 
     if enable_watchdog:
-        max_new_test_time = config["CONFIG_BLKTESTS_WATCHDOG_MAX_NEW_TEST_TIME"].strip('\"')
+        max_new_test_time = config["CONFIG_BLKTESTS_WATCHDOG_MAX_NEW_TEST_TIME"].strip(
+            '"'
+        )
         max_new_test_time = int(max_new_test_time)
         if not max_new_test_time:
             max_new_test_time = 60
 
-        hung_multiplier_long_tests = config["CONFIG_BLKTESTS_WATCHDOG_HUNG_MULTIPLIER_LONG_TESTS"].strip('\"')
+        hung_multiplier_long_tests = config[
+            "CONFIG_BLKTESTS_WATCHDOG_HUNG_MULTIPLIER_LONG_TESTS"
+        ].strip('"')
         hung_multiplier_long_tests = int(hung_multiplier_long_tests)
         if not hung_multiplier_long_tests:
             hung_multiplier_long_tests = 10
 
-        hung_fast_test_max_time = config["CONFIG_BLKTESTS_WATCHDOG_HUNG_FAST_TEST_MAX_TIME"].strip('\"')
+        hung_fast_test_max_time = config[
+            "CONFIG_BLKTESTS_WATCHDOG_HUNG_FAST_TEST_MAX_TIME"
+        ].strip('"')
         hung_fast_test_max_time = int(hung_fast_test_max_time)
         if not hung_fast_test_max_time:
             hung_fast_test_max_time = 5
@@ -83,16 +92,21 @@ def get_blktest_host(host, basedir, kernel, section, config):
         # If a test typically takes between 1 second to 30 seconds we can likely
         # safely assume the system has crashed after hung_fast_test_max_time
         # minutes
-        elif last_run_time_s >  0:
+        elif last_run_time_s > 0:
             suspect_crash_time_seconds = 60 * hung_fast_test_max_time
 
-        if delta_seconds >= suspect_crash_time_seconds and 'blktestsstart/000' not in last_test and 'blktestsend/000' not in last_test:
+        if (
+            delta_seconds >= suspect_crash_time_seconds
+            and "blktestsstart/000" not in last_test
+            and "blktestsend/000" not in last_test
+        ):
             stall_suspect = True
 
     return (last_test, last_test_time, current_time_str, delta_seconds, stall_suspect)
 
+
 def get_last_run_time(host, basedir, kernel, section, last_test):
-    results_dir = basedir + '/workflows/blktests/results/last-run/'
+    results_dir = basedir + "/workflows/blktests/results/last-run/"
     if not last_test:
         return 0
     if not os.path.isdir(results_dir):
@@ -115,7 +129,7 @@ def get_last_run_time(host, basedir, kernel, section, last_test):
                 break
     if not ok_file:
         return 0
-    f = open(ok_file, 'r')
+    f = open(ok_file, "r")
     for line in f:
         if not "runtime" in line:
             continue
@@ -129,21 +143,28 @@ def get_last_run_time(host, basedir, kernel, section, last_test):
         return float(time_string_elems[0])
     return 0
 
+
 def get_config(dotconfig):
-    config = configparser.ConfigParser(allow_no_value=True, strict=False, interpolation=None)
+    config = configparser.ConfigParser(
+        allow_no_value=True, strict=False, interpolation=None
+    )
     with open(dotconfig) as lines:
         lines = chain(("[top]",), lines)
         config.read_file(lines)
         return config["top"]
     return None
 
+
 def get_section(host, config):
-    hostprefix = config["CONFIG_KDEVOPS_HOSTS_PREFIX"].strip('\"')
+    hostprefix = config["CONFIG_KDEVOPS_HOSTS_PREFIX"].strip('"')
     return host.split(hostprefix + "-")[1].replace("-", "_")
+
 
 def get_hosts(hostfile, hostsection):
     hosts = []
-    config = configparser.ConfigParser(allow_no_value=True, strict=False, interpolation=None)
+    config = configparser.ConfigParser(
+        allow_no_value=True, strict=False, interpolation=None
+    )
     config.read(hostfile)
     if hostsection not in config:
         return hosts

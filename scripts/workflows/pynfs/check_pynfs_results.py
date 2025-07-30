@@ -12,20 +12,21 @@ import json
 import sys
 import pprint
 
+
 def main():
     base = json.load(open(sys.argv[1]))
     result = json.load(open(sys.argv[2]))
 
     failures = {}
 
-    for case in result['testcase']:
-        if 'failure' in case:
-            failures[case['code']] = case
+    for case in result["testcase"]:
+        if "failure" in case:
+            failures[case["code"]] = case
 
-    for case in base['testcase']:
-        if 'failure' in case:
-            if case['code'] in failures:
-                del failures[case['code']]
+    for case in base["testcase"]:
+        if "failure" in case:
+            if case["code"] in failures:
+                del failures[case["code"]]
 
     if len(failures) != 0:
         pprint.pprint(failures)
@@ -33,6 +34,6 @@ def main():
     else:
         sys.exit(0)
 
+
 if __name__ == "__main__":
     main()
-
