@@ -121,6 +121,7 @@ make V=1 [target]       # Verbose build output
 make AV=1-6 [target]    # Ansible verbose output (levels 0-6)
 make dynconfig          # Generate dynamic configuration
 make style              # Check for whitespace issues - ALWAYS run before completing work
+make fix-whitespace-last-commit # Fixes commit white space damage
 make mrproper           # Clean everything and restart from scratch
 ```
 
@@ -427,6 +428,15 @@ The fixer script will:
 - Reduce excessive blank lines to maximum 2 consecutive
 
 Always run `make style` after using the fixer to verify all issues are resolved.
+
+### Verifying commit has no white space damage
+
+Run the following after you commit something:
+```bash
+make fix-whitespace-last-commit
+```
+
+This will fix all white space only for new files you add.
 
 ## Complex System Interactions
 
