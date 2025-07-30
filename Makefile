@@ -243,6 +243,7 @@ $(KDEVOPS_NODES): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_NODES_TEMPLATE)
 DEFAULT_DEPS += $(LOCALHOST_SETUP_WORK)
 
 include scripts/tests.Makefile
+include scripts/linux-ab-testing.Makefile
 include scripts/ci.Makefile
 include scripts/archive.Makefile
 include scripts/defconfig.Makefile
