@@ -59,6 +59,118 @@
     - not kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
 
+- name: Determine if this is a dev node for A/B testing
+  set_fact:
+    bootlinux_is_dev_node: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+
+- name: Set development group full custom kernel release
+  set_fact:
+    target_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if target_linux_dev_kernelrelease != '' else target_linux_kernelrelease }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_kernelrelease|bool
+    - bootlinux_is_dev_node|bool
+
+- name: Set development group local append version
+  set_fact:
+    target_linux_localversion: "{{ target_linux_dev_localversion if target_linux_dev_localversion != '' else target_linux_localversion }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_tree_custom_localversion|bool
+    - bootlinux_is_dev_node|bool
+
+- name: Set development kernel parameters for dev nodes
+  set_fact:
+    target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
+    target_linux_ref: "{{ target_linux_dev_ref }}"
+    target_linux_config: "config-{{ target_linux_dev_ref }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_is_dev_node|bool
+
+# A/B testing support for 9P builds
+# When using A/B testing with different kernel refs and 9P builds, we need to
+# determine which ref to use based on whether we're targeting dev or baseline nodes.
+# Since 9P builds run on localhost with run_once, we can't rely on per-node variables,
+# so we check the ansible_limit to determine which group is being targeted.
+- name: Determine if we're targeting dev nodes for A/B testing
+  set_fact:
+    targeting_dev_nodes: "{{ groups['dev'] is defined and groups['dev'] | length > 0 and (ansible_limit is not defined or 'dev' in ansible_limit) }}"
+  run_once: true
+  delegate_to: localhost
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+
+- name: Determine active kernel parameters for A/B testing with 9P
+  set_fact:
+    target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
+    active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes|default(false)|bool else target_linux_ref }}"
+    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_kernelrelease|bool) else target_linux_kernelrelease }}"
+    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_localversion|bool) else target_linux_localversion }}"
+    target_linux_config: "config-{{ target_linux_dev_ref }}"
+  when:
+    - kdevops_baseline_and_dev|bool
+    - bootlinux_ab_different_ref|bool
+    - bootlinux_9p|bool
+  run_once: true
+  delegate_to: localhost
+
+- name: Debug kernel ref settings for 9P builds
+  delegate_to: localhost
+  block:
+    - name: Print kernel ref settings for 9P debug (localhost context)
+      debug:
+        msg:
+          - "=== 9P BUILD DEBUG (localhost context) ==="
+          - "bootlinux_9p: {{ bootlinux_9p }}"
+          - "target_linux_git: {{ target_linux_git }}"
+          - "active_linux_ref: {{ active_linux_ref | default('NOT SET') }}"
+          - "active_linux_kernelrelease: {{ active_linux_kernelrelease | default('NOT SET') }}"
+          - "active_linux_localversion: {{ active_linux_localversion | default('NOT SET') }}"
+          - "target_linux_config: {{ target_linux_config }}"
+          - "targeting_dev_nodes: {{ targeting_dev_nodes | default('NOT SET') }}"
+          - "ansible_limit: {{ ansible_limit | default('NOT SET') }}"
+          - "groups['dev']: {{ groups['dev'] | default([]) }}"
+          - "groups['baseline']: {{ groups['baseline'] | default([]) }}"
+
+    - name: End play gracefully for kernel ref debug
+      meta: end_play
+  when:
+    - bootlinux_debug_ref|bool
+    - bootlinux_9p|bool
+  run_once: true
+
+- name: Debug kernel ref settings for non-9P builds
+  block:
+    - name: Print kernel ref settings for non-9P debug (per-node context)
+      debug:
+        msg:
+          - "=== NON-9P BUILD DEBUG ({{ inventory_hostname }}) ==="
+          - "bootlinux_9p: {{ bootlinux_9p }}"
+          - "inventory_hostname: {{ inventory_hostname }}"
+          - "group_names: {{ group_names }}"
+          - "bootlinux_is_dev_node: {{ bootlinux_is_dev_node }}"
+          - "target_linux_git: {{ target_linux_git }}"
+          - "target_linux_ref: {{ target_linux_ref }}"
+          - "target_linux_kernelrelease: {{ target_linux_kernelrelease }}"
+          - "target_linux_localversion: {{ target_linux_localversion }}"
+          - "target_linux_dev_ref: {{ target_linux_dev_ref }}"
+          - "target_linux_dev_kernelrelease: {{ target_linux_dev_kernelrelease }}"
+          - "target_linux_dev_localversion: {{ target_linux_dev_localversion }}"
+
+    - name: End play gracefully for kernel ref debug
+      meta: end_play
+  when:
+    - bootlinux_debug_ref|bool
+    - not bootlinux_9p|bool
+
 - name: Create data partition
   ansible.builtin.include_role:
     name: create_data_partition

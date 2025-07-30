@@ -324,23 +324,39 @@ config BOOTLINUX_TREE_REF
 	default BOOTLINUX_TREE_CEL_LINUX_REF if BOOTLINUX_TREE_CEL_LINUX
 	default BOOTLINUX_TREE_CUSTOM_REF if BOOTLINUX_CUSTOM
 
+config BOOTLINUX_TREE_CUSTOM_KERNELRELEASE
+	bool "Do you want a full custom kernel release name?"
+	output yaml
+	help
+	  Do you want a full custom Linux kernel release which will be output
+	  through uname?
+
 config BOOTLINUX_TREE_KERNELRELEASE
 	string "Linux kernel release version to use"
+	depends on BOOTLINUX_TREE_CUSTOM_KERNELRELEASE
 	help
 	  The Linux kernel release version to use (for uname).
 
 	  The string here (e.g. 'devel') will be appended to the result of make
 	  kernelversion. Example: '6.8.0-rc3-devel'
 
+config BOOTLINUX_TREE_CUSTOM_LOCALVERSION
+	bool "Do you want to append a custom kernel release tag?"
+	output yaml
+	help
+	  Do you want a full custom Linux kernel release which will be output
+	  through uname?
 
 config BOOTLINUX_TREE_LOCALVERSION
 	string "Linux local version to use"
+	depends on BOOTLINUX_TREE_CUSTOM_LOCALVERSION
 	help
 	  The Linux local version to use (for uname).
 
 config BOOTLINUX_SHALLOW_CLONE
 	bool "Shallow git clone"
-	default y
+	default y if !KDEVOPS_BASELINE_AND_DEV
+	depends on !BOOTLINUX_AB_DIFFERENT_REF
 	help
 	  If enabled the git tree cloned with be cloned using a shallow tree
 	  with history truncated. You want to enable this if you really don't
@@ -351,6 +367,10 @@ config BOOTLINUX_SHALLOW_CLONE
 	  just using the targets as dummy target runners and don't expect to
 	  be using 'git log' on the target guests.
 
+	  This option is automatically disabled when using A/B testing with
+	  different kernel references, as shallow clones may not contain all
+	  the required refs for checkout.
+
 config BOOTLINUX_SHALLOW_CLONE_DEPTH
 	int "Shallow git clone depth"
 	default 30 if BOOTLINUX_TREE_SET_BY_CLI
@@ -360,5 +380,85 @@ config BOOTLINUX_SHALLOW_CLONE_DEPTH
 	  Create a shallow clone with a history truncated to the specified
 	  number or revisions. The minimum possible value is 1, otherwise
 	  ignored. Needs git>=1.9.1 to work correctly.
+
+if KDEVOPS_BASELINE_AND_DEV
+
+choice
+	prompt "A/B kernel testing configuration"
+	default BOOTLINUX_AB_SAME_REF
+	help
+	  When A/B testing is enabled, you can choose to use the same
+	  kernel reference for both baseline and dev nodes, or specify
+	  different kernel references to test different kernel versions.
+
+config BOOTLINUX_AB_SAME_REF
+	bool "Use same kernel reference for baseline and dev"
+	output yaml
+	help
+	  Use the same kernel tree and reference for both baseline and
+	  development nodes. This is useful for testing configuration
+	  changes or different test parameters with the same kernel.
+
+config BOOTLINUX_AB_DIFFERENT_REF
+	bool "Use different kernel references for baseline and dev"
+	output yaml
+	help
+	  Use different kernel references for baseline and development
+	  nodes. This enables testing between different kernel versions,
+	  commits, or branches. The baseline will use the main configured
+	  kernel reference, while dev uses a separate reference.
+
+endchoice
+
+if BOOTLINUX_AB_DIFFERENT_REF
+
+config BOOTLINUX_DEV_TREE
+	string "Development kernel tree URL"
+	output yaml
+	default BOOTLINUX_TREE
+	help
+	  Git tree URL for the development kernel. If left empty or same
+	  as the baseline tree, the same tree will be used with a different
+	  reference. This allows testing different branches or forks.
+
+config TARGET_LINUX_DEV_REF
+	string "Development kernel reference"
+	output yaml
+	default $(shell, scripts/infer_last_stable_kernel.sh)
+	help
+	  Git reference (branch, tag, or commit) for the development kernel.
+	  This should be different from the baseline reference to enable
+	  meaningful A/B comparison between kernel versions.
+
+	  The default is automatically inferred as the most recent stable
+	  kernel version (e.g., v6.15) from the git repository.
+
+	  Examples:
+	  - "v6.8" (stable release)
+	  - "linux-next" (latest development)
+	  - "v6.7..v6.8" (range for bisection)
+	  - commit SHA (specific commit)
+
+config TARGET_LINUX_DEV_KERNELRELEASE
+	string "Development kernel release version"
+	depends on BOOTLINUX_TREE_CUSTOM_KERNELRELEASE
+	output yaml
+	help
+	  The string here (e.g. 'devel') will be appended to the result of make
+	  kernelversion. Example: '6.8.0-rc3-devel' but only for the dev group.
+	  Leave it empty unless you want a custom tag at the end.
+
+config TARGET_LINUX_DEV_LOCALVERSION
+	string "Development kernel local version"
+	output yaml
+	depends on BOOTLINUX_TREE_CUSTOM_LOCALVERSION
+	default BOOTLINUX_TREE_LOCALVERSION
+	help
+	  The Linux local version to use for the development kernel (for uname).
+	  If left empty, will use the same as baseline.
+
+endif # BOOTLINUX_AB_DIFFERENT_REF
+
+endif # KDEVOPS_BASELINE_AND_DEV
 
 endif # BOOTLINUX
