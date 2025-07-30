@@ -122,7 +122,7 @@ include scripts/krb5.Makefile
 include scripts/devconfig.Makefile
 include scripts/ssh.Makefile
 
-ANSIBLE_CMD_KOTD_ENABLE := echo KOTD disabled so not running: 
+ANSIBLE_CMD_KOTD_ENABLE := echo KOTD disabled so not running:
 ifeq (y,$(CONFIG_WORKFLOW_KOTD_ENABLE))
 include scripts/kotd.Makefile
 endif # WORKFLOW_KOTD_ENABLE
