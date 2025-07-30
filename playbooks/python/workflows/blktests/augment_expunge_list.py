@@ -15,10 +15,13 @@ import configparser
 from itertools import chain
 
 oscheck_ansible_python_dir = os.path.dirname(os.path.abspath(__file__))
-oscheck_sort_expunge = oscheck_ansible_python_dir + "/../../../scripts/workflows/fstests/sort-expunges.sh"
+oscheck_sort_expunge = (
+    oscheck_ansible_python_dir + "/../../../scripts/workflows/fstests/sort-expunges.sh"
+)
 top_dir = oscheck_ansible_python_dir + "/../../../../"
-blktests_last_kernel = top_dir + 'workflows/blktests/results/last-kernel.txt'
+blktests_last_kernel = top_dir + "workflows/blktests/results/last-kernel.txt"
 expunge_name = "failures.txt"
+
 
 def append_line(output_file, test_failure_line):
     # We want to now add entries like block/xxx where xxx are digits
@@ -26,47 +29,67 @@ def append_line(output_file, test_failure_line):
     output.write("%s\n" % test_failure_line)
     output.close()
 
+
 def is_config_bool_true(config, name):
-    if name in config and config[name].strip('\"') == "y":
+    if name in config and config[name].strip('"') == "y":
         return True
     return False
 
+
 def config_string(config, name):
     if name in config:
-        return config[name].strip('\"')
+        return config[name].strip('"')
     return None
 
+
 def get_config(dotconfig):
-    config = configparser.ConfigParser(allow_no_value=True, strict=False, interpolation=None)
+    config = configparser.ConfigParser(
+        allow_no_value=True, strict=False, interpolation=None
+    )
     with open(dotconfig) as lines:
         lines = chain(("[top]",), lines)
         config.read_file(lines)
         return config["top"]
     return None
 
+
 def read_blktest_last_kernel():
     if not os.path.isfile(blktests_last_kernel):
         return None
-    kfile = open(blktests_last_kernel, 'r')
+    kfile = open(blktests_last_kernel, "r")
     all_lines = kfile.readlines()
     kfile.close()
     for line in all_lines:
         return line.strip()
     return None
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Augments expunge list for blktest')
-    parser.add_argument('results', metavar='<directory with results>', type=str,
-                        help='directory with results file')
-    parser.add_argument('outputdir', metavar='<output directory>', type=str,
-                        help='The directory where to generate the expunge failure.txt ')
-    parser.add_argument('--verbose', const=True, default=False, action="store_const",
-                        help='Print more verbose information')
+    parser = argparse.ArgumentParser(description="Augments expunge list for blktest")
+    parser.add_argument(
+        "results",
+        metavar="<directory with results>",
+        type=str,
+        help="directory with results file",
+    )
+    parser.add_argument(
+        "outputdir",
+        metavar="<output directory>",
+        type=str,
+        help="The directory where to generate the expunge failure.txt ",
+    )
+    parser.add_argument(
+        "--verbose",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Print more verbose information",
+    )
     args = parser.parse_args()
 
     expunge_kernel_dir = ""
 
-    dotconfig = top_dir + '/.config'
+    dotconfig = top_dir + "/.config"
     config = get_config(dotconfig)
     if not config:
         sys.stdout.write("%s does not exist\n" % (dotconfig))
@@ -85,7 +108,7 @@ def main():
                 continue
             if not os.path.isfile(f):
                 continue
-            if not f.endswith('.bad') and not f.endswith('.dmesg'):
+            if not f.endswith(".bad") and not f.endswith(".dmesg"):
                 continue
 
             bad_files.append(f)
@@ -97,13 +120,13 @@ def main():
         # f may be results/last-run/nodev/meta/009.dmesg
         bad_file_list = f.split("/")
         bad_file_list_len = len(bad_file_list) - 1
-        bad_file =      bad_file_list[bad_file_list_len]
-        test_group =    bad_file_list[bad_file_list_len-1]
-        bdev =          bad_file_list[bad_file_list_len-2]
+        bad_file = bad_file_list[bad_file_list_len]
+        test_group = bad_file_list[bad_file_list_len - 1]
+        bdev = bad_file_list[bad_file_list_len - 2]
 
         if args.verbose:
             sys.stdout.write("%s\n" % bad_file_list)
-            sys.stdout.write("\tbad_file: %s\n" %bad_file)
+            sys.stdout.write("\tbad_file: %s\n" % bad_file)
             sys.stdout.write("\ttest_group: %s\n" % test_group)
             sys.stdout.write("\tkernel: %s\n" % kernel)
 
@@ -126,11 +149,11 @@ def main():
             sys.exit(1)
 
         # This is like for example block/xxx where xxx are digits
-        test_failure_line = test_group + '/' + bad_file_test_number
+        test_failure_line = test_group + "/" + bad_file_test_number
 
         # now to stuff this into expunge files such as:
         # expunges/sles/15.3/failures.txt
-        expunge_kernel_dir = args.outputdir + '/' + kernel + '/'
+        expunge_kernel_dir = args.outputdir + "/" + kernel + "/"
         output_dir = expunge_kernel_dir
         output_file = output_dir + expunge_name
         shortcut_kernel_dir = None
@@ -145,19 +168,23 @@ def main():
                 sles_release_name = config_string(config, "CONFIG_KDEVOPS_HOSTS_PREFIX")
                 sles_release_parts = sles_release_name.split("sp")
                 if len(sles_release_parts) <= 1:
-                    sys.stderr.write("Unexpected sles_release_name: %s\n" % sles_release_name)
+                    sys.stderr.write(
+                        "Unexpected sles_release_name: %s\n" % sles_release_name
+                    )
                     sys.exit(1)
-                sles_point_release = sles_release_parts[0].split("sles")[1] + "." + sles_release_parts[1]
+                sles_point_release = (
+                    sles_release_parts[0].split("sles")[1] + "." + sles_release_parts[1]
+                )
 
                 # This becomes generic release directory, not specific to any
                 # kernel.
-                shortcut_dir = args.outputdir + '/' + "sles/" + sles_point_release + '/'
+                shortcut_dir = args.outputdir + "/" + "sles/" + sles_point_release + "/"
                 shortcut_kernel_dir = shortcut_dir
                 shortcut_file = shortcut_dir + expunge_name
             else:
                 ksplit = kernel.split(".")
                 shortcut_kernel = ksplit[0] + "." + ksplit[1] + "." + ksplit[2]
-                shortcut_kernel_dir = args.outputdir + '/' + shortcut_kernel + '/'
+                shortcut_kernel_dir = args.outputdir + "/" + shortcut_kernel + "/"
                 shortcut_dir = shortcut_kernel_dir
                 shortcut_file = shortcut_dir + expunge_name
 
@@ -170,10 +197,13 @@ def main():
                 os.makedirs(output_dir)
 
         if not os.path.isfile(output_file):
-            sys.stdout.write("====%s/%s new failure found file was empty\n" % (test_group, test_failure_line))
+            sys.stdout.write(
+                "====%s/%s new failure found file was empty\n"
+                % (test_group, test_failure_line)
+            )
             append_line(output_file, test_failure_line)
         else:
-            existing_file = open(output_file, 'r')
+            existing_file = open(output_file, "r")
             all_lines = existing_file.readlines()
             existing_file.close()
             found = False
@@ -182,13 +212,18 @@ def main():
                     found = True
                     break
             if not found:
-                sys.stdout.write("%s %s new failure found\n" % (test_group, test_failure_line))
+                sys.stdout.write(
+                    "%s %s new failure found\n" % (test_group, test_failure_line)
+                )
                 append_line(output_file, test_failure_line)
 
     if expunge_kernel_dir != "":
         sys.stdout.write("Sorting %s ...\n" % (expunge_kernel_dir))
-        sys.stdout.write("Running %s %s...\n" % (oscheck_sort_expunge, expunge_kernel_dir))
+        sys.stdout.write(
+            "Running %s %s...\n" % (oscheck_sort_expunge, expunge_kernel_dir)
+        )
         subprocess.call([oscheck_sort_expunge, expunge_kernel_dir])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

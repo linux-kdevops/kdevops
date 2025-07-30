@@ -15,11 +15,14 @@ import configparser
 import argparse
 from itertools import chain
 
+
 def print_blktest_host_status(host, verbose, basedir, config):
     kernel = kssh.get_uname(host).rstrip()
     section = blktests.get_section(host, config)
-    (last_test, last_test_time, current_time_str, delta_seconds, stall_suspect) = blktests.get_blktest_host(host, basedir, kernel, section, config)
-    checktime =  blktests.get_last_run_time(host, basedir, kernel, section, last_test)
+    (last_test, last_test_time, current_time_str, delta_seconds, stall_suspect) = (
+        blktests.get_blktest_host(host, basedir, kernel, section, config)
+    )
+    checktime = blktests.get_last_run_time(host, basedir, kernel, section, last_test)
 
     percent_done = 0
     if checktime > 0:
@@ -38,12 +41,26 @@ def print_blktest_host_status(host, verbose, basedir, config):
             sys.stdout.write("Last    test       : None\n")
         else:
             percent_done_str = "%.0f%%" % (0)
-            sys.stdout.write("%35s%20s%20s%20s%20s%15s%30s\n" % (host, "None", percent_done_str, 0, 0, stall_str, kernel))
+            sys.stdout.write(
+                "%35s%20s%20s%20s%20s%15s%30s\n"
+                % (host, "None", percent_done_str, 0, 0, stall_str, kernel)
+            )
         return
 
     if not verbose:
         percent_done_str = "%.0f%%" % (percent_done)
-        sys.stdout.write("%35s%20s%20s%20s%20s%15s%30s\n" % (host, last_test, percent_done_str, str(delta_seconds), str(checktime), stall_str, kernel))
+        sys.stdout.write(
+            "%35s%20s%20s%20s%20s%15s%30s\n"
+            % (
+                host,
+                last_test,
+                percent_done_str,
+                str(delta_seconds),
+                str(checktime),
+                stall_str,
+                kernel,
+            )
+        )
         return
 
     sys.stdout.write("Host               : %s\n" % (host))
@@ -62,23 +79,37 @@ def print_blktest_host_status(host, verbose, basedir, config):
         sys.stdout.write("OK")
     sys.stdout.write("\n")
 
+
 def _main():
-    parser = argparse.ArgumentParser(description='blktest-watchdog')
-    parser.add_argument('hostfile', metavar='<ansible hostfile>', type=str,
-                        default='hosts',
-                        help='Ansible hostfile to use')
-    parser.add_argument('hostsection', metavar='<ansible hostsection>', type=str,
-                        default='baseline',
-                        help='The name of the section to read hosts from')
-    parser.add_argument('--verbose', const=True, default=False, action="store_const",
-                        help='Be verbose on otput.')
+    parser = argparse.ArgumentParser(description="blktest-watchdog")
+    parser.add_argument(
+        "hostfile",
+        metavar="<ansible hostfile>",
+        type=str,
+        default="hosts",
+        help="Ansible hostfile to use",
+    )
+    parser.add_argument(
+        "hostsection",
+        metavar="<ansible hostsection>",
+        type=str,
+        default="baseline",
+        help="The name of the section to read hosts from",
+    )
+    parser.add_argument(
+        "--verbose",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Be verbose on otput.",
+    )
     args = parser.parse_args()
 
     if not os.path.isfile(args.hostfile):
         sys.stdout.write("%s does not exist\n" % (args.hostfile))
         sys.exit(1)
 
-    dotconfig = os.path.dirname(os.path.abspath(args.hostfile)) + '/.config'
+    dotconfig = os.path.dirname(os.path.abspath(args.hostfile)) + "/.config"
     config = blktests.get_config(dotconfig)
     if not config:
         sys.stdout.write("%s does not exist\n" % (dotconfig))
@@ -86,9 +117,21 @@ def _main():
     basedir = os.path.dirname(dotconfig)
 
     hosts = blktests.get_hosts(args.hostfile, args.hostsection)
-    sys.stdout.write("%35s%20s%20s%20s%20s%15s%30s\n" % ("Hostname", "Test-name", "Completion %", "runtime(s)", "last-runtime(s)", "Stall-status", "Kernel"))
+    sys.stdout.write(
+        "%35s%20s%20s%20s%20s%15s%30s\n"
+        % (
+            "Hostname",
+            "Test-name",
+            "Completion %",
+            "runtime(s)",
+            "last-runtime(s)",
+            "Stall-status",
+            "Kernel",
+        )
+    )
     for h in hosts:
         print_blktest_host_status(h, args.verbose, basedir, config)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     ret = _main()

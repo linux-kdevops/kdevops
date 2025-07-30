@@ -18,7 +18,8 @@ oscheck_ansible_python_dir = os.path.dirname(os.path.abspath(__file__))
 top_dir = oscheck_ansible_python_dir + "/../../../../"
 results_dir = top_dir + "workflows/blktests/results/"
 last_run_dir = results_dir + "last-run/"
-blktests_last_kernel = top_dir + 'workflows/blktests/results/last-kernel.txt'
+blktests_last_kernel = top_dir + "workflows/blktests/results/last-kernel.txt"
+
 
 def clean_empty_dir(target_results):
     for i in range(1, 3):
@@ -31,12 +32,23 @@ def clean_empty_dir(target_results):
                 else:
                     clean_empty_dir(f)
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Get list of expunge files not yet committed in git')
-    parser.add_argument('--clean-dir-only', metavar='<clean_dir_only>', type=str, default='none',
-                        help='Do not perform an evaluation, just clean empty directories on the specified directory')
-    parser.add_argument('--copy-all', action='store_true',
-                        help='Copy all test results without filtering')
+    parser = argparse.ArgumentParser(
+        description="Get list of expunge files not yet committed in git"
+    )
+    parser.add_argument(
+        "--clean-dir-only",
+        metavar="<clean_dir_only>",
+        type=str,
+        default="none",
+        help="Do not perform an evaluation, just clean empty directories on the specified directory",
+    )
+    parser.add_argument(
+        "--copy-all",
+        action="store_true",
+        help="Copy all test results without filtering",
+    )
     args = parser.parse_args()
 
     if not os.path.isfile(blktests_last_kernel):
@@ -44,7 +56,7 @@ def main():
         sys.exit(1)
 
     kernel = None
-    f = open(blktests_last_kernel, 'r')
+    f = open(blktests_last_kernel, "r")
     for line in f:
         kernel = line.strip()
     if not line:
@@ -56,9 +68,11 @@ def main():
         clean_empty_dir(args.clean_dir_only)
         sys.exit(0)
 
-    target_results = results_dir + kernel + '/'
+    target_results = results_dir + kernel + "/"
     if not os.path.isdir(last_run_dir):
-        sys.stdout.write("Ignoring last-run directory %s as it is empty ...\n" % (last_run_dir))
+        sys.stdout.write(
+            "Ignoring last-run directory %s as it is empty ...\n" % (last_run_dir)
+        )
         sys.exit(0)
     sys.stdout.write("Copying %s to %s ...\n" % (last_run_dir, target_results))
     copytree(last_run_dir, target_results, dirs_exist_ok=True)
@@ -89,8 +103,8 @@ def main():
                     test_name = test_name_file_list[0]
 
                 test_dir = os.path.dirname(f)
-                name_lookup_base = test_dir + '/' + test_name + '*'
-                name_lookup = test_dir + '/' + test_name + '.*'
+                name_lookup_base = test_dir + "/" + test_name + "*"
+                name_lookup = test_dir + "/" + test_name + ".*"
                 listing = glob.glob(name_lookup)
                 bad_ext_found = False
                 if len(listing) > 0:
@@ -102,5 +116,6 @@ def main():
                         os.unlink(r)
     clean_empty_dir(target_results)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

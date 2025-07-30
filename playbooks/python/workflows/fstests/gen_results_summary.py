@@ -20,28 +20,32 @@ import time
 from datetime import datetime
 from junitparser import JUnitXml, Property, Properties, Failure, Error, Skipped
 
+
 def get_results(dirroot, results_file):
     """Return a list of files named results_file in a directory hierarchy"""
     for dirpath, _dirs, filenames in os.walk(dirroot):
         if results_file in filenames:
-            yield dirpath + '/' + results_file
+            yield dirpath + "/" + results_file
+
 
 def parse_timestamp(timestamp):
     """Parse an ISO-8601-like timestamp as found in an xUnit file."""
     if timestamp == "":
         return 0
-    for fmt in ('%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%dT%H:%M:%S'):
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S"):
         try:
             return time.mktime(datetime.strptime(timestamp, fmt).timetuple())
         except ValueError:
             pass
-    raise ValueError('no valid timestamp format found')
+    raise ValueError("no valid timestamp format found")
+
 
 def failed_tests(testsuite):
     """This iterator the failed tests from the testsuite."""
     for testcase in testsuite:
         if isinstance(testcase.result, Failure):
             yield testcase
+
 
 def get_property(props, key):
     """Return the value of the first property with the given name"""
@@ -52,6 +56,7 @@ def get_property(props, key):
             return prop.value
     return None
 
+
 def get_properties(props, key):
     """An interator which returns values of properties with a given name."""
     if props is None:
@@ -60,6 +65,7 @@ def get_properties(props, key):
         if prop.name == key:
             yield prop.value
 
+
 def remove_properties(props, key):
     """Remove properties with a given name."""
     if props is None:
@@ -67,6 +73,7 @@ def remove_properties(props, key):
     for prop in props:
         if prop.name == key:
             props.remove(prop)
+
 
 def print_tests(out_f, testsuite, result_type, type_label):
     """Print all of the tests which match a particular result_type"""
@@ -81,17 +88,18 @@ def print_tests(out_f, testsuite, result_type, type_label):
         if result is None:
             continue
         if not found:
-            out_f.write('  %s: ' % type_label)
+            out_f.write("  %s: " % type_label)
             pos = len(type_label) + 4
             found = True
         name_len = len(testcase.name) + 1
         pos += name_len + 1
         if pos > 76:
-            out_f.write('\n    ')
+            out_f.write("\n    ")
             pos = name_len + 5
-        out_f.write(testcase.name + ' ')
+        out_f.write(testcase.name + " ")
     if found:
-        out_f.write('\n')
+        out_f.write("\n")
+
 
 def total_tests(testsuites):
     """Print the total number of tests in an array of testsuites"""
@@ -100,6 +108,7 @@ def total_tests(testsuites):
         if testsuite.tests is not None:
             total += testsuite.tests
     return total
+
 
 def sum_testsuites(testsuites):
     """Summarize all of the test suite statistics"""
@@ -116,6 +125,7 @@ def sum_testsuites(testsuites):
         errors += testsuite.errors
     return (tests, skipped, failures, errors, runtime)
 
+
 def print_summary(out_f, testsuite, verbose, print_section):
     """Print a summary for a particular test suite
 
@@ -126,9 +136,9 @@ def print_summary(out_f, testsuite, verbose, print_section):
     ext4/bigalloc 244 tests, 25 skipped, 5 errors, 880 seconds
        generic/219 generic/235 generic/422 generic/451 generic/456
     """
-    cfg = get_property(testsuite.properties(), 'TESTCFG')
+    cfg = get_property(testsuite.properties(), "TESTCFG")
     if cfg is None:
-        cfg = get_property(testsuite.properties(), 'FSTESTCFG')
+        cfg = get_property(testsuite.properties(), "FSTESTCFG")
 
     runtime = testsuite.time
     tests = testsuite.tests
@@ -139,70 +149,74 @@ def print_summary(out_f, testsuite, verbose, print_section):
         for test_case in testsuite:
             classname = test_case.classname
             class_list = classname.split(".")
-            section = class_list[len(class_list)-1]
+            section = class_list[len(class_list) - 1]
             break
-        out_f.write('%s: %d tests, ' % (section, tests))
+        out_f.write("%s: %d tests, " % (section, tests))
     else:
-        out_f.write('%s: %d tests, ' % (cfg, tests))
+        out_f.write("%s: %d tests, " % (cfg, tests))
     if failures > 0:
-        out_f.write('%d failures, ' % failures)
+        out_f.write("%d failures, " % failures)
     if errors > 0:
-        out_f.write('%d errors, ' % errors)
+        out_f.write("%d errors, " % errors)
     if skipped > 0:
-        out_f.write('%d skipped, ' % skipped)
+        out_f.write("%d skipped, " % skipped)
     if runtime is None:
         runtime = 0
-    out_f.write('%d seconds\n' % runtime)
+    out_f.write("%d seconds\n" % runtime)
     if verbose:
         for test_case in testsuite:
-            status = 'Pass'
+            status = "Pass"
             for result in test_case.result:
                 if isinstance(result, Failure):
-                    status = 'Failed'
+                    status = "Failed"
                 if isinstance(result, Skipped):
-                    status = 'Skipped'
+                    status = "Skipped"
                 if isinstance(result, Error):
-                    status = 'Error'
-            out_f.write("  %-12s %-8s %ds\n" %
-                        (test_case.name, status, test_case.time))
+                    status = "Error"
+            out_f.write("  %-12s %-8s %ds\n" % (test_case.name, status, test_case.time))
     else:
         if failures > 0:
-            print_tests(out_f, testsuite, Failure, 'Failures')
+            print_tests(out_f, testsuite, Failure, "Failures")
         if errors > 0:
-            print_tests(out_f, testsuite, Error, 'Errors')
+            print_tests(out_f, testsuite, Error, "Errors")
+
 
 def print_property_line(out_f, props, key):
     """Print a line containing the given property."""
     value = get_property(props, key)
     if value is not None and value != "":
-        out_f.write('%-10s %s\n' % (key + ':', value))
+        out_f.write("%-10s %s\n" % (key + ":", value))
+
 
 def print_properties(out_f, props, key):
     """Print multiple property lines."""
     for value in get_properties(props, key):
-        out_f.write('%-10s %s\n' % (key + ':', value))
+        out_f.write("%-10s %s\n" % (key + ":", value))
+
 
 def print_header(out_f, props):
     """Print the header of the report."""
-    print_property_line(out_f, props, 'TESTRUNID')
-    print_property_line(out_f, props, 'KERNEL')
-    print_property_line(out_f, props, 'CMDLINE')
-    print_property_line(out_f, props, 'CPUS')
-    print_property_line(out_f, props, 'MEM')
-    print_property_line(out_f, props, 'MNTOPTS')
-    out_f.write('\n')
+    print_property_line(out_f, props, "TESTRUNID")
+    print_property_line(out_f, props, "KERNEL")
+    print_property_line(out_f, props, "CMDLINE")
+    print_property_line(out_f, props, "CPUS")
+    print_property_line(out_f, props, "MEM")
+    print_property_line(out_f, props, "MNTOPTS")
+    out_f.write("\n")
+
 
 def print_trailer(out_f, props):
     """Print the trailer of the report."""
-    out_f.write('\n')
-    print_property_line(out_f, props, 'FSTESTIMG')
-    print_property_line(out_f, props, 'FSTESTPRJ')
-    print_properties(out_f, props, 'FSTESTVER')
-    print_property_line(out_f, props, 'FSTESTCFG')
-    print_property_line(out_f, props, 'FSTESTSET')
-    print_property_line(out_f, props, 'FSTESTEXC')
-    print_property_line(out_f, props, 'FSTESTOPT')
-    print_property_line(out_f, props, 'GCE ID')
+    out_f.write("\n")
+    print_property_line(out_f, props, "FSTESTIMG")
+    print_property_line(out_f, props, "FSTESTPRJ")
+    print_properties(out_f, props, "FSTESTVER")
+    print_property_line(out_f, props, "FSTESTCFG")
+    print_property_line(out_f, props, "FSTESTSET")
+    print_property_line(out_f, props, "FSTESTEXC")
+    print_property_line(out_f, props, "FSTESTOPT")
+    print_property_line(out_f, props, "GCE ID")
+
 
 def check_for_ltm(results_dir, props):
     """Check to see if the results directory was created by the LTM and
@@ -210,15 +224,15 @@ def check_for_ltm(results_dir, props):
     mode.
     """
     try:
-        out_f = open(os.path.join(results_dir, 'ltm-run-stats'))
+        out_f = open(os.path.join(results_dir, "ltm-run-stats"))
         for line in out_f:
-            key, value = line.split(': ', 1)
-            value = value.rstrip('\n').strip('"')
+            key, value = line.split(": ", 1)
+            value = value.rstrip("\n").strip('"')
             remove_properties(props, key)
             props.add_property(Property(key, value))
         out_f.close()
-        remove_properties(props, 'GCE ID')
-        remove_properties(props, 'FSTESTCFG')
+        remove_properties(props, "GCE ID")
+        remove_properties(props, "FSTESTCFG")
         return True
     except IOError:
         try:
@@ -227,9 +241,15 @@ def check_for_ltm(results_dir, props):
             pass
         return False
 
-def gen_results_summary(results_dir, output_fn=None, merge_fn=None,
-                        verbose=False, print_section=False,
-                        results_file='results.xml'):
+
+def gen_results_summary(
+    results_dir,
+    output_fn=None,
+    merge_fn=None,
+    verbose=False,
+    print_section=False,
+    results_file="results.xml",
+):
     """Scan a results directory and generate a summary file"""
     reports = []
     combined = JUnitXml()
@@ -263,16 +283,18 @@ def gen_results_summary(results_dir, output_fn=None, merge_fn=None,
         combined.add_testsuite(testsuite)
         nr_files += 1
 
-    out_f.write('Totals: %d tests, %d skipped, %d failures, %d errors, %ds\n' \
-                % sum_testsuites(reports))
+    out_f.write(
+        "Totals: %d tests, %d skipped, %d failures, %d errors, %ds\n"
+        % sum_testsuites(reports)
+    )
 
     print_trailer(out_f, props)
 
     if merge_fn is not None:
         combined.update_statistics()
-        combined.write(merge_fn + '.new')
+        combined.write(merge_fn + ".new")
         if os.path.exists(merge_fn):
-            os.rename(merge_fn, merge_fn + '.bak')
-        os.rename(merge_fn + '.new', merge_fn)
+            os.rename(merge_fn, merge_fn + ".bak")
+        os.rename(merge_fn + ".new", merge_fn)
 
     return nr_files

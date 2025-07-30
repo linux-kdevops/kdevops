@@ -14,16 +14,37 @@ import os
 import sys
 import subprocess
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Generates expunge arguments to run blktests check based on results directory')
-    parser.add_argument('--test-group', metavar='<group>', type=str,
-                        help='group of tests to focus on otherwise all groups are considered')
-    parser.add_argument('results', metavar='<directory with blktests results>', type=str,
-                        help='directory with blktests results')
-    parser.add_argument('--gen-exclude-args', const=True, default=False, action="store_const",
-                        help='Generate exclude arguments so to be passed to blktests check')
-    parser.add_argument('--verbose', const=True, default=False, action="store_const",
-                        help='Print more verbose information')
+    parser = argparse.ArgumentParser(
+        description="Generates expunge arguments to run blktests check based on results directory"
+    )
+    parser.add_argument(
+        "--test-group",
+        metavar="<group>",
+        type=str,
+        help="group of tests to focus on otherwise all groups are considered",
+    )
+    parser.add_argument(
+        "results",
+        metavar="<directory with blktests results>",
+        type=str,
+        help="directory with blktests results",
+    )
+    parser.add_argument(
+        "--gen-exclude-args",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Generate exclude arguments so to be passed to blktests check",
+    )
+    parser.add_argument(
+        "--verbose",
+        const=True,
+        default=False,
+        action="store_const",
+        help="Print more verbose information",
+    )
     args = parser.parse_args()
 
     bad_files = []
@@ -34,7 +55,7 @@ def main():
                 continue
             if not os.path.isfile(f):
                 continue
-            if f.endswith('.bad') or f.endswith('.dmesg'):
+            if f.endswith(".bad") or f.endswith(".dmesg"):
                 bad_files.append(f)
                 continue
     exclude_args = ""
@@ -58,12 +79,13 @@ def main():
         if args.test_group and args.test_group != group:
             continue
         if args.gen_exclude_args:
-            exclude_args += (" -x %s/%s" % (group, fail))
+            exclude_args += " -x %s/%s" % (group, fail)
         else:
             sys.stdout.write("%s/%s\n" % (group, fail))
 
     if args.gen_exclude_args:
         sys.stdout.write("%s\n" % (exclude_args))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

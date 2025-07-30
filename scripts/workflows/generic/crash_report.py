@@ -104,6 +104,8 @@ def generate_commit_log():
 
 if __name__ == "__main__":
     if not CRASH_DIR.exists():
-        print(f"No crashes, filesystem corruption isues, or kernel warnings were detected on this run.")
+        print(
+            f"No crashes, filesystem corruption isues, or kernel warnings were detected on this run."
+        )
         exit(0)
     generate_commit_log()
