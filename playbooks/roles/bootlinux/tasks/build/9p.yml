@@ -50,7 +50,7 @@
     dest: "{{ bootlinux_9p_host_path }}"
     update: yes
     depth: "{{ target_linux_shallow_depth }}"
-    version: "{{ target_linux_ref }}"
+    version: "{{ active_linux_ref | default(target_linux_ref) }}"
   retries: 3
   delay: 5
   register: result
@@ -106,9 +106,9 @@
   delegate_to: localhost
 
 - name: Set kernel localversion if requested on the control node
-  shell: "echo {{ target_linux_localversion }} > {{ bootlinux_9p_host_path }}/localversion"
+  shell: "echo {{ active_linux_localversion | default(target_linux_localversion) }} > {{ bootlinux_9p_host_path }}/localversion"
   when:
-    - target_linux_localversion is defined and target_linux_localversion != ""
+    - (active_linux_localversion is defined and active_linux_localversion != "") or (target_linux_localversion is defined and target_linux_localversion != "")
   run_once: true
   delegate_to: localhost
 
@@ -139,16 +139,16 @@
   register: target_linux_kernelversion
   tags: [ 'build-linux' ]
   when:
-    - target_linux_kernelrelease | length > 0
+    - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
-- name: Generate user kernelrelease {{ target_linux_kernelversion.stdout }}-{{ target_linux_kernelrelease }}
+- name: Generate user kernelrelease {{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}
   set_fact:
-    target_user_kernelrelease: "{{ target_linux_kernelversion.stdout }}-{{ target_linux_kernelrelease }}"
+    target_user_kernelrelease: "{{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}"
   tags: [ 'build-linux' ]
   when:
-    - target_linux_kernelrelease | length > 0
+    - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
@@ -160,17 +160,17 @@
       KERNELRELEASE={{ target_user_kernelrelease }}
   tags: [ 'build-linux' ]
   when:
-    - target_linux_kernelrelease | length > 0
+    - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} on the control node using {{ nproc_9p.stdout }} threads
   make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
   tags: [ 'build-linux' ]
   when:
-    - target_linux_kernelrelease | length == 0
+    - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length == 0
   run_once: true
   delegate_to: localhost
 
