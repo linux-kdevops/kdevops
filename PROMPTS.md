@@ -123,3 +123,55 @@ source "workflows/mmtests/Kconfig.thpchallenge"
 source "workflows/mmtests/Kconfig.fs"
 
    This separation is preferred as it helps us scale.
+
+## Kernel development and A/B testing support
+
+### Adding A/B kernel testing support for different kernel versions
+
+**Prompt:**
+We want to add support for when users enable KDEVOPS_BASELINE_AND_DEV we want
+to extend workflows/linux/Kconfig with the a choise set of options to either a)
+use the same kernel ref or b) allow the user to specify a different ref tag.
+This will enable A/B testing with different kernel versions. When a different
+kernel refs are desirable we will want to extend the compilation step and
+installation of the Linux kernel in two steps. The first will be for the ref
+and target of A (baseline tag) and the second will be for the target ref of B
+(dev tag). However we want to fold these two steps in one for when
+KDEVOPS_BASELINE_AND_DEV is used and make install is used, it would happen
+transparently for us. The resulting linux kernel directory would end up with
+the "dev" ref at the end. In case a user wants to re-compile a target ref for
+baseline or dev we want to add (if we don't have already) a make linux-baseline
+and make linux-dev so that we can build and install the target ref tag on the
+baseline (A) or dev (B). The make linux target then would serially do make
+linux-baseline and make linux-dev. Extend documentation for all this and also
+add the respective prompt to PROMPTS.md once done. Avoid adding extra spaces to
+code or documentation at the end of each line. These end up in red color on
+diffs and hurt my eyes. Extend CLAUDE.md to understand styling for these rules
+about not wanting lines ending in white space for styling.
+
+**AI:** Claude Code
+**Commit:** [To be determined]
+**Result:** Complete A/B kernel testing implementation with comprehensive configuration options.
+**Grading:** 70%
+
+**Notes:**
+
+The implementation successfully added:
+
+1. **Makefile Implementation**: the AI failed to grasp the value of
+   output yaml, and made ugly Makefile changes to extract variables.
+
+2. **Ansible Integration**: The AI failed to write the required changes on
+   the ansible playbook at first. A secondary prompt made it just move the
+   definitions to the ansible playbook but failed to address serially compiling
+   linux for the baseline group first followed by the dev group after.
+
+3. **Documentation**: The AI is not grasping the preference to respect 80
+   character lengths.
+
+4. **Issues**: The AI failed to understand a really obscure lesson which even
+   humans have issues in understanding in ansible, you can't override a fact
+   and later use it specially if being used on multple hosts. The best thing
+   to do is to use a separate fact if you want a true dynamic variable. This
+   is why we switched to an active ref prefix for the baseline and dev group
+   ref tags.

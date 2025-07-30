@@ -1,0 +1,217 @@
+name: Linux A/B Testing Verification
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  linux-ab-testing-verification:
+    name: Verify Linux A/B Testing Variables
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro_container:
+          - debian:testing
+          - fedora:latest
+        build_method:
+          - target
+          - 9p
+          - builder
+
+    container: ${{ matrix.distro_container }}
+    steps:
+      - name: Document test environment
+        run: |
+          echo "Running Linux A/B testing verification on ${{ matrix.distro_container }}"
+          echo "Build method: ${{ matrix.build_method }}"
+          uname -a
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ matrix.distro_container }}" = "debian:testing" ]; then
+            echo "Installing packages for Debian"
+            apt-get update
+            apt-get install -y ansible-core make gcc ncurses-dev bison flex git python3
+          elif [ "${{ matrix.distro_container }}" = "fedora:latest" ]; then
+            echo "Installing packages for Fedora"
+            dnf install -y ansible make gcc ncurses-devel bison flex git python3
+          else
+            echo "Unknown distribution: ${{ matrix.distro_container }}"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure git for kdevops
+        run: |
+          git config --global --add safe.directory '*'
+          git config --global user.name "kdevops-ci"
+          git config --global user.email "kdevops@lists.linux.dev"
+
+      - name: Apply A/B testing defconfig
+        run: |
+          echo "Applying linux-ab-testing-${{ matrix.build_method }} defconfig"
+          make defconfig-linux-ab-testing-${{ matrix.build_method }}
+
+          # Verify configuration was applied correctly
+          echo "=== Verifying A/B testing configuration ==="
+          grep -E "CONFIG_KDEVOPS_BASELINE_AND_DEV=y" .config || exit 1
+          grep -E "CONFIG_BOOTLINUX_AB_DIFFERENT_REF=y" .config || exit 1
+
+          # Check build method specific configs
+          case "${{ matrix.build_method }}" in
+            target)
+              grep -E "CONFIG_BOOTLINUX_TARGET=y" .config || exit 1
+              ;;
+            9p)
+              grep -E "CONFIG_BOOTLINUX_9P=y" .config || exit 1
+              ;;
+            builder)
+              grep -E "CONFIG_BOOTLINUX_BUILDER=y" .config || exit 1
+              ;;
+          esac
+
+      - name: Run make to generate extra_vars.yaml
+        run: |
+          make
+
+      - name: Extract and verify kernel references
+        run: |
+          echo "=== Extracting kernel references from configuration ==="
+
+          # Get the baseline ref (should be master or main)
+          BASELINE_REF=$(grep "^bootlinux_tree_ref:" extra_vars.yaml | awk '{print $2}')
+          echo "Baseline ref: $BASELINE_REF"
+
+          # Get the dev ref using the inference script
+          DEV_REF=$(grep "^bootlinux_dev_tree_ref:" extra_vars.yaml | awk '{print $2}')
+          echo "Dev ref from config: $DEV_REF"
+
+          # Since we're in a container without /mirror/linux.git, the script will fallback
+          # For CI, we'll simulate getting the latest stable tag
+          if [ -f scripts/infer_last_stable_kernel.sh ]; then
+            INFERRED_STABLE=$(./scripts/infer_last_stable_kernel.sh 2>/dev/null || echo "v6.12")
+            echo "Inferred stable version: $INFERRED_STABLE"
+          fi
+
+          # Verify refs are different
+          if [ "$BASELINE_REF" = "$DEV_REF" ]; then
+            echo "ERROR: Baseline and dev refs should be different for A/B testing"
+            exit 1
+          fi
+
+          # Store refs for later verification
+          echo "BASELINE_REF=$BASELINE_REF" >> $GITHUB_ENV
+          echo "DEV_REF=$DEV_REF" >> $GITHUB_ENV
+
+      - name: Test debug functionality with Ansible
+        run: |
+          echo "=== Testing debug output with DEBUG_REF=1 ==="
+
+          # Create a minimal hosts file for container testing
+          cat > hosts << EOF
+          [all]
+          localhost ansible_connection=local
+
+          [baseline]
+          localhost ansible_connection=local
+
+          [dev]
+          EOF
+
+          # Run the bootlinux playbook with debug enabled and capture output
+          export DEBUG_REF=1
+          ansible-playbook -i hosts playbooks/bootlinux.yml --tags vars,debug -v > debug_output.txt 2>&1 || true
+
+          # Verify debug output based on build method
+          case "${{ matrix.build_method }}" in
+            9p)
+              echo "=== Verifying 9P debug output (localhost context) ==="
+              if grep -q "active_linux_ref" debug_output.txt; then
+                echo "✓ Found active_linux_ref in 9P debug output"
+              else
+                echo "✗ Missing active_linux_ref in 9P debug output"
+                cat debug_output.txt
+                exit 1
+              fi
+              ;;
+            target|builder)
+              echo "=== Verifying non-9P debug output (per-node context) ==="
+              if grep -q "target_linux_ref" debug_output.txt; then
+                echo "✓ Found target_linux_ref in non-9P debug output"
+              else
+                echo "✗ Missing target_linux_ref in non-9P debug output"
+                cat debug_output.txt
+                exit 1
+              fi
+              ;;
+          esac
+
+      - name: Verify A/B testing Makefile rules
+        run: |
+          echo "=== Verifying A/B testing Makefile structure ==="
+
+          # Check that linux target depends on linux-baseline and linux-dev
+          if grep -A5 "^linux:" workflows/linux/Makefile | grep -q "linux-baseline linux-dev"; then
+            echo "✓ Makefile has correct A/B testing dependencies"
+          else
+            echo "✗ Makefile missing A/B testing dependencies"
+            exit 1
+          fi
+
+          # Verify linux-baseline and linux-dev targets exist
+          if grep -q "^linux-baseline:" workflows/linux/Makefile && \
+             grep -q "^linux-dev:" workflows/linux/Makefile; then
+            echo "✓ Both linux-baseline and linux-dev targets exist"
+          else
+            echo "✗ Missing linux-baseline or linux-dev targets"
+            exit 1
+          fi
+
+      - name: Test variable resolution patterns
+        run: |
+          echo "=== Testing variable resolution patterns ==="
+
+          # Create test playbook to verify variable resolution
+          cat > test_vars.yml << 'EOF'
+          ---
+          - hosts: localhost
+            connection: local
+            tasks:
+              - name: Load extra vars
+                include_vars: extra_vars.yaml
+
+              - name: Display loaded variables
+                debug:
+                  msg: |
+                    bootlinux_tree_ref: {{ bootlinux_tree_ref | default('undefined') }}
+                    bootlinux_dev_tree_ref: {{ bootlinux_dev_tree_ref | default('undefined') }}
+                    kdevops_baseline_and_dev: {{ kdevops_baseline_and_dev | default(false) }}
+                    bootlinux_ab_different_ref: {{ bootlinux_ab_different_ref | default(false) }}
+          EOF
+
+          ansible-playbook test_vars.yml -v
+
+      - name: Summary report
+        if: always()
+        run: |
+          echo "=== A/B Testing Verification Summary ==="
+          echo "Distribution: ${{ matrix.distro_container }}"
+          echo "Build Method: ${{ matrix.build_method }}"
+          echo "Baseline Ref: ${BASELINE_REF:-not set}"
+          echo "Dev Ref: ${DEV_REF:-not set}"
+          echo ""
+
+          if [ -f .config ]; then
+            echo "Key configurations:"
+            grep -E "(BASELINE_AND_DEV|AB_DIFFERENT_REF|BOOTLINUX_TARGET|BOOTLINUX_9P|BOOTLINUX_BUILDER)" .config | head -10
+          fi
+
+          echo ""
+          echo "Test completed successfully ✓"

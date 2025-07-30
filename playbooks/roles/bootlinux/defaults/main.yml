@@ -52,3 +52,17 @@ bootlinux_tree_set_by_cli: False
 bootlinux_artifacts_dir: "{{ topdir_path }}/workflows/linux/artifacts"
 kernel_packages: []
 workflow_linux_packaged: false
+
+# A/B testing defaults
+bootlinux_ab_same_ref: True
+bootlinux_ab_different_ref: False
+
+# Development kernel settings (used when bootlinux_ab_different_ref is True)
+bootlinux_dev_tree: ""
+target_linux_dev_ref: "master"
+target_linux_dev_kernelrelease: ""
+target_linux_dev_localversion: ""
+bootlinux_tree_custom_kernelrelease: False
+bootlinux_tree_custom_localversion: false
+bootlinux_is_dev_node: False
+bootlinux_debug_ref: "{{ lookup('env', 'DEBUG_REF') | default(false, true) | bool }}"

@@ -74,6 +74,10 @@ PHONY +=  linux-help-menu
 linux-help-menu:
 	@echo "Linux git kernel development options"
 	@echo "linux              - Git clones a linux git tree, build Linux, installs and reboots into it"
+	@if [[ "$(CONFIG_KDEVOPS_BASELINE_AND_DEV)" == "y" ]]; then \
+		echo "linux-baseline     - Build and install kernel for baseline nodes only" ;\
+		echo "linux-dev          - Build and install kernel for dev nodes only" ;\
+	fi
 	@if [[ "$(CONFIG_BOOTLINUX_9P)" == "y" ]]; then \
 		echo "linux-mount        - Mounts 9p path on targets" ;\
 	fi
@@ -93,11 +97,46 @@ linux-help-end:
 LINUX_HELP_EXTRA :=
 
 PHONY += linux
+ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
+ifeq (y,$(CONFIG_BOOTLINUX_AB_DIFFERENT_REF))
+linux: linux-baseline linux-dev
+else
+linux: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
+		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+endif
+else
 linux: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline:dev' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+endif
+
+PHONY += linux-baseline
+ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
+linux-baseline: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
+		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)" --limit baseline
+else
+linux-baseline:
+	@echo "linux-baseline requires KDEVOPS_BASELINE_AND_DEV=y"
+	@exit 1
+endif
+
+PHONY += linux-dev
+ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
+linux-dev: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
+		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)" --limit dev
+else
+linux-dev:
+	@echo "linux-dev requires KDEVOPS_BASELINE_AND_DEV=y"
+	@exit 1
+endif
 
 PHONY += linux-mount
 linux-mount:
