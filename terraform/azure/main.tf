@@ -1,7 +1,7 @@
 # Azure terraform provider main
 
 resource "azurerm_resource_group" "kdevops_group" {
-  name     = "kdevops_resource_group"
+  name     = var.azure_resource_group_name
   location = var.azure_location
 }
 

@@ -134,3 +134,19 @@ config TERRAFORM_AZURE_LOCATION
 	default "westus2" if TERRAFORM_AZURE_REGION_WESTUS2
 	default "westus3" if TERRAFORM_AZURE_REGION_WESTUS3
 	default "westcentralus" if TERRAFORM_AZURE_REGION_WESTCENTRALUS
+
+config TERRAFORM_AZURE_RESOURCE_GROUP_NAME
+	string "Azure resource group name"
+	output yaml
+	default "kdevops_resource_group"
+	help
+	  An Azure resource group is a container that holds related
+	  resources so they can be managed as a single unit. These
+	  resources share the same life cycle and are deployed,
+	  updated, and deleted together. Resource groups are global
+	  to your subscription.
+
+	  To run concurrent kdevops jobs in Azure, each run must
+	  have a unique resouce group name.
+
+	  https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview#resource-groups
