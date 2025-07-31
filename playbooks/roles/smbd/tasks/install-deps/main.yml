@@ -1,12 +1,12 @@
 ---
 - name: Debian-specific set up
-  ansible.builtin.include_tasks: roles/tasks/nfsd/install-deps/debian/main.yml
+  ansible.builtin.include_tasks: debian/main.yml
   when: ansible_os_family == 'Debian'
 
 - name: SuSE-specific set up
-  ansible.builtin.include_tasks: roles/tasks/nfsd/install-deps/suse/main.yml
+  ansible.builtin.include_tasks: suse/main.yml
   when: ansible_os_family == 'Suse'
 
 - name: Red Hat-specific set up
-  ansible.builtin.include_tasks: roles/tasks/nfsd/install-deps/redhat/main.yml
+  ansible.builtin.include_tasks: redhat/main.yml
   when: ansible_os_family == 'RedHat'

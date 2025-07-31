@@ -1,14 +1,14 @@
 ---
 - name: Debian-specific setup
-  ansible.builtin.include_tasks: roles/smbd/tasks/install-deps/debian/main.yml
+  ansible.builtin.include_tasks: install-deps/debian/main.yml
   when: ansible_os_family == 'Debian'
 
 - name: SuSE-specific setup
-  ansible.builtin.include_tasks: roles/smbd/tasks/install-deps/suse/main.yml
+  ansible.builtin.include_tasks: install-deps/suse/main.yml
   when: ansible_os_family == 'Suse'
 
 - name: Red Hat-specific setup
-  ansible.builtin.include_tasks: roles/smbd/tasks/install-deps/redhat/main.yml
+  ansible.builtin.include_tasks: install-deps/redhat/main.yml
   when: ansible_os_family == 'RedHat'
 
 - name: Create smb.conf
