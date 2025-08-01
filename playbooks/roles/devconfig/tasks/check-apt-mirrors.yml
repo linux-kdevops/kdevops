@@ -1,5 +1,55 @@
 ---
 # Only run mirror checks for Debian testing (trixie) where mirror issues are common
+- name: Check hop count on control host
+  delegate_to: localhost
+  shell: |
+    {{ topdir_path }}/scripts/get-distro-has-hop-count-sources.sh 1
+  register: localhost_hop_count
+  changed_when: false
+  ignore_errors: yes
+
+- name: Extract hop1 mirror info from control host (DEB822 format)
+  delegate_to: localhost
+  shell: |
+    if [ -f /etc/apt/sources.list.d/debian.sources ]; then
+      HOST=$(grep -E "^URIs:" /etc/apt/sources.list.d/debian.sources | head -1 | awk '{print $2}' | sed -E 's|https?://||')
+      echo "${HOST}"
+    fi
+  register: localhost_hop1_mirror_deb822
+  changed_when: false
+  ignore_errors: yes
+  when: localhost_hop_count.stdout == 'y'
+
+- name: Extract hop1 mirror info from control host (legacy format)
+  delegate_to: localhost
+  shell: |
+    if [ -f /etc/apt/sources.list ] && [ ! -f /etc/apt/sources.list.d/debian.sources ]; then
+      LINE=$(grep -v "^#" /etc/apt/sources.list | grep -E "^deb\s+http" | head -1)
+      if [ -n "$LINE" ]; then
+        URL=$(echo $LINE | awk '{print $2}')
+        echo "${URL}" | sed 's|http://||'
+      fi
+    fi
+  register: localhost_hop1_mirror_legacy
+  changed_when: false
+  ignore_errors: yes
+  when: localhost_hop_count.stdout == 'y'
+
+- name: Set hop1 mirror variables
+  set_fact:
+    has_hop1_mirror: "{{ localhost_hop_count.stdout == 'y' }}"
+    hop1_mirror_full: "{{ localhost_hop1_mirror_deb822.stdout if localhost_hop1_mirror_deb822.stdout != '' else localhost_hop1_mirror_legacy.stdout }}"
+  when: localhost_hop_count.stdout == 'y'
+
+- name: Parse hop1 mirror host and path
+  set_fact:
+    hop1_mirror_host: "{{ hop1_mirror_full.split('/')[0] }}"
+    hop1_mirror_path: "/{{ hop1_mirror_full.split('/', 1)[1] if '/' in hop1_mirror_full else 'debian' }}"
+  when:
+    - has_hop1_mirror is defined
+    - has_hop1_mirror | bool
+    - hop1_mirror_full != ''
+
 - name: Check for DEB822-style sources
   stat:
     path: /etc/apt/sources.list.d/debian.sources
@@ -41,6 +91,69 @@
       Current APT mirror: {{ apt_mirror_host.stdout | default('Not found') }}
       Mirror connectivity: {{ 'OK' if mirror_connectivity is not failed else 'FAILED' }}
   when: apt_mirror_host.stdout != ""
+
+- name: Configure APT sources based on hop1 availability and debian testing
+  block:
+    - name: Check connectivity to hop1 mirror if available
+      wait_for:
+        host: "{{ hop1_mirror_host }}"
+        port: 80
+        timeout: 10
+      register: hop1_mirror_connectivity
+      ignore_errors: yes
+      when:
+        - has_hop1_mirror is defined
+        - has_hop1_mirror | bool
+        - hop1_mirror_host is defined
+
+    - name: Use hop1 mirror with DEB822 format for debian testing
+      block:
+        - name: Backup current sources
+          copy:
+            src: "{{ item }}"
+            dest: "{{ item }}.backup"
+            remote_src: yes
+          become: yes
+          loop:
+            - /etc/apt/sources.list
+            - /etc/apt/sources.list.d/debian.sources
+          ignore_errors: yes
+
+        - name: Apply hop1 mirror configuration using DEB822 format
+          template:
+            src: debian-hop1-mirror.sources
+            dest: /etc/apt/sources.list.d/debian.sources
+            owner: root
+            group: root
+            mode: '0644'
+          become: yes
+
+        - name: Remove legacy sources.list if migrating to DEB822
+          file:
+            path: /etc/apt/sources.list
+            state: absent
+          become: yes
+          when: not deb822_sources.stat.exists
+
+        - name: Update APT cache with hop1 mirror
+          apt:
+            update_cache: yes
+            cache_valid_time: 0
+          become: yes
+
+        - name: Inform user about hop1 mirror usage
+          debug:
+            msg: |
+              Using local hop1 mirror with DEB822 format:
+              Mirror: {{ hop1_mirror_host }}{{ hop1_mirror_path }}
+
+              This provides faster package downloads from your local mirror.
+              Sources have been converted to modern DEB822 format.
+      when:
+        - has_hop1_mirror is defined
+        - has_hop1_mirror | bool
+        - hop1_mirror_connectivity is not failed
+        - hop1_mirror_host is defined
 
 - name: Fall back to official Debian mirrors if current mirror fails
   block:
@@ -97,3 +210,4 @@
   when:
     - apt_mirror_host.stdout != ""
     - mirror_connectivity is failed
+    - not (has_hop1_mirror is defined and has_hop1_mirror | bool and hop1_mirror_connectivity is not failed)
