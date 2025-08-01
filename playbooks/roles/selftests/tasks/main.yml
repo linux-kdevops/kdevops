@@ -15,7 +15,7 @@
 # the target node and the localhost because we first need to build
 # the target selftests for the nodes and then actually use them.
 - name: Install dependencies
-  include_tasks: tasks/install-deps/main.yml
+  include_tasks: install-deps/main.yml
 
 - name: Install dependencies to build Linux selftests on host
   tags: [ 'deps' ]
