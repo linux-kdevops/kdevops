@@ -1,13 +1,13 @@
 ---
 - name: Set generic SUSE specific distro facts
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: '{{ ansible_distribution_major_version == "10" }}'
     is_sle11: '{{ ansible_distribution_major_version == "11" }}'
     is_sle12: '{{ ansible_distribution_major_version == "12" }}'
@@ -23,138 +23,138 @@
     is_sle15sp4: '{{ ansible_distribution_version == "15.4" }}'
   when:
     - is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier when not SLE
-  set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle12sp5: False
-    is_sle15sp2: False
-    is_sle15sp3: False
-    is_sle15sp4: False
+  ansible.builtin.set_fact:
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle12sp5: false
+    is_sle15sp2: false
+    is_sle15sp3: false
+    is_sle15sp4: false
   when:
     - not is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we have figured out how to add repos for each
-  set_fact:
+  ansible.builtin.set_fact:
     repos_will_be_added: true
   tags: vars
 
 - name: Disable things which require a repo to be set but that cannot be done
-  set_fact:
+  ansible.builtin.set_fact:
     repos_will_be_added: false
   when:
     - not devconfig_repos_addon|bool
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we are not on sle11 or sle10
-  set_fact:
+  ansible.builtin.set_fact:
     sle10_or_11: false
   tags: snmpd
 
 - name: Are we on SLE11 or SLE10?
-  set_fact:
+  ansible.builtin.set_fact:
     sle10_or_11: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports git-core
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_git_core: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack git-core
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_git_core: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool or is_sle12sp3|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release use the package name git assume false
-  set_fact:
+  ansible.builtin.set_fact:
     use_git_package: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 # This needs perl-Error, so fix that first
 - name: Does this release use the package name git
-  set_fact:
+  ansible.builtin.set_fact:
     use_git_package: true
   when:
     - is_sle|bool
     - is_sle12sp3|bool
     - false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports xfsdump
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_xfsdump: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack xfsdump
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_xfsdump: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros have fio on the main repo
-  set_fact:
-    lacks_fio_main_repo: False
-  tags: [ 'vars' ]
+  ansible.builtin.set_fact:
+    lacks_fio_main_repo: false
+  tags: ["vars"]
 
 # SLES12-SP1 has fio but on ses/2.1/x86_64 repo, and you need another
 # registration key for that. We simply skip fio on it, but only if
 # registering a system. If we use internal repos, it likely *should*
 # be available.
 - name: Does this release lack fio on the main repository
-  set_fact:
-    lacks_fio_main_repo: True
+  ansible.builtin.set_fact:
+    lacks_fio_main_repo: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool or is_sle12sp3|bool or is_sle12sp5|bool
     - suse_register_system|bool or devconfig_repos_addon|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Verify SLE/SLED systems are being registered
-  fail:
+  ansible.builtin.fail:
     msg: "System is SLE/SLED, must include SUSE registration info on playbooks/secret.yml with suse_register_system and suse_registration_code variables set."
   when:
     - not devconfig_repos_addon|bool
-    - 'is_sle|bool'
-    - 'not suse_register_system|bool'
+    - "is_sle|bool"
+    - "not suse_register_system|bool"
 
 - name: Prepare packages source list and register machine
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/prepare_suse_repos.sh --register-system-code {{ suse_registration_code }}"
   when:
     - suse_register_system|bool
@@ -162,31 +162,31 @@
     - suse_registration_code != 0
 
 - name: Assume we have the python2 product for sles15sp first
-  set_fact:
-    sle15_has_python2_product: True
+  ansible.builtin.set_fact:
+    sle15_has_python2_product: true
   when:
     - suse_register_system|bool
     - repos_will_be_added|bool
     - suse_registration_code != 0
     - is_sle15|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Disable the python2 product for sles15sp4
-  set_fact:
-    sle15_has_python2_product: False
+  ansible.builtin.set_fact:
+    sle15_has_python2_product: false
   when:
     - suse_register_system|bool
     - repos_will_be_added|bool
     - suse_registration_code != 0
     - is_sle15|bool
     - is_sle15sp4|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 
 - name: Register for python2 module product when needed
-  become: yes
-  become_method: sudo
-  command: "SUSEConnect -p sle-module-python2/{{ ansible_distribution_version }}/{{ ansible_architecture }}"
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "SUSEConnect -p sle-module-python2/{{ ansible_distribution_version }}/{{ ansible_architecture }}"
   when:
     - suse_register_system|bool
     - repos_will_be_added|bool
@@ -195,9 +195,9 @@
     - sle15_has_python2_product|bool
 
 - name: Add extra addon repositories when enabled
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh {{ item.url }} {{ item.name }}"
   with_items:
     - "{{ devconfig_repos_addon_list }}"
@@ -207,11 +207,11 @@
     - devconfig_repos_addon|bool
 
 - name: Install missing python-xml for releases that need it manually
-  become: yes
-  become_method: sudo
-  command:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
     cmd: "zypper in -y python-xml"
-    warn: no
+    warn: false
   when:
     - (suse_register_system|bool and suse_registration_code != 0) or devconfig_repos_addon|bool
     - repos_will_be_added|bool
@@ -219,9 +219,9 @@
     - is_sle15|bool
 
 - name: Prepare packages source list
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/prepare_suse_repos.sh"
   when:
     - not suse_register_system|bool
@@ -229,27 +229,27 @@
     - repos_will_be_added|bool
 
 - name: Do full upgrade
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     state: dist-upgrade
-    name: '*'
+    name: "*"
   when:
     - repos_will_be_added|bool
     - devconfig_try_upgrade|bool
 
 - name: Reboot system to make the new kernel and modules take effect
-  become: yes
-  become_method: sudo
-  reboot:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.reboot:
   when:
     - repos_will_be_added|bool
     - devconfig_try_upgrade|bool
 
 - name: Install nvme tools
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - nvme-cli
     state: present
@@ -259,9 +259,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install fio when possible
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - fio
     state: present
@@ -271,9 +271,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install git-core when possible
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - git-core
     state: present
@@ -283,9 +283,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install git when possible
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - git
     state: present
@@ -295,9 +295,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install xfsdump when possible
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - xfsdump
     state: present
@@ -307,9 +307,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install packages on newer distro when possible
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - bison
       - libaio-devel
@@ -322,9 +322,9 @@
 
 # sle12sp3 needs m4 to install flex, fix that first
 - name: Install packages not available on sle11 or sle10
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - dump
       - flex
@@ -338,9 +338,9 @@
 
 # fix this for sle12sp3
 - name: Install packages we typically care about
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - e2fsprogs
       - xfsprogs
@@ -367,23 +367,23 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Set default values for if we install snmp / kdump
-  set_fact:
-    install_snmp: False
-    install_kdump: False
-  tags: [ 'vars' ]
+  ansible.builtin.set_fact:
+    install_snmp: false
+    install_kdump: false
+  tags: ["vars"]
 
 - name: Set if we install snmp / kdump
-  set_fact:
-    install_snmp: True
-    install_kdump: True
+  ansible.builtin.set_fact:
+    install_snmp: true
+    install_kdump: true
   when:
     - is_sle15|bool or is_tumbleweed
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Install snmp
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - net-snmp
   when:
@@ -393,9 +393,9 @@
   tags: snmpd
 
 - name: Set up snmp
-  become: yes
-  become_method: sudo
-  template:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: snmpd.conf
     dest: /etc/snmp/snmpd.conf
   when:
@@ -405,12 +405,12 @@
   tags: snmpd
 
 - name: Enable snmpd service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: snmpd
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   when:
     - install_snmp|bool
     - repos_will_be_added|bool
@@ -418,9 +418,9 @@
   tags: snmpd
 
 - name: Start snmpd service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: snmpd
     state: restarted
   when:
@@ -430,9 +430,9 @@
   tags: snmpd
 
 - name: Install kdump
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - kdump
   when:
@@ -442,10 +442,11 @@
   tags: kdump
 
 - name: Get kdump calibration high
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  shell: kdumptool calibrate | grep ^High | awk '{print $2}'
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: kdumptool calibrate | grep ^High | awk '{print $2}'
+  changed_when: false
   register: kdump_high
   when:
     - install_kdump|bool
@@ -454,10 +455,11 @@
   tags: kdump
 
 - name: Get kdump calibration low
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  shell: kdumptool calibrate | grep ^Low | awk '{print $2}'
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: kdumptool calibrate | grep ^Low | awk '{print $2}'
+  changed_when: false
   register: kdump_low
   when:
     - install_kdump|bool
@@ -466,39 +468,39 @@
   tags: kdump
 
 - name: Check to see if kdump is configured on your GRUB config
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: kdump_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)(\s*)crashkernel(.*)'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - install_kdump|bool
     - repos_will_be_added|bool
     - devconfig_try_install_kdevtools|bool
-  tags: [ 'kdump' ]
+  tags: ["kdump"]
 
 - name: Update GRUB configuration to add kdump knobs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")((\s*)(.*)*)(\s*)"$'
-    backrefs: yes
+    backrefs: true
     line: '\1\2 crashkernel={{ kdump_high.stdout }}M,high crashkernel={{ kdump_low.stdout }}M,low"'
   when:
     - not kdump_grep.changed
     - install_kdump|bool
     - repos_will_be_added|bool
     - devconfig_try_install_kdevtools|bool
-  tags: [ 'kdump' ]
+  tags: ["kdump"]
 
 - name: Update your boot GRUB file if necessary
-  import_tasks: update-grub/main.yml
+  ansible.builtin.import_tasks: update-grub/main.yml
   when:
     - not kdump_grep.changed
     - install_kdump|bool
@@ -506,18 +508,18 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Reboot system to ensure kdump is effective
-  become: yes
-  become_method: sudo
-  reboot:
-  tags: [ 'kdump' ]
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.reboot:
+  tags: ["kdump"]
 
 - name: Enable kdump service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: kdump
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   when:
     - install_kdump|bool
     - repos_will_be_added|bool
@@ -525,9 +527,9 @@
   tags: kdump
 
 - name: Start kdump service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: kdump
     state: restarted
   when:
@@ -537,9 +539,9 @@
   tags: kdump
 
 - name: Install systemd-journal-remote
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - systemd-journal-remote
   when:
@@ -548,9 +550,9 @@
   tags: journal
 
 - name: Install systemd-timesyncd
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - systemd-timesyncd
   when:

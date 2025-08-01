@@ -1,9 +1,9 @@
 ---
 - name: Install partition creation base tools
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   vars:
     packages:
@@ -11,10 +11,10 @@
       - e2fsprogs
 
 - name: Install btrfs-progs
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5

@@ -1,23 +1,23 @@
 ---
 - name: Update apt cache
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    update_cache: true
   tags: linux
 
 - name: Install nvme tools
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - nvme-cli
-    update_cache: yes
+    update_cache: true
 
 - name: Install blktests build dependencies
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - bison
       - flex
@@ -65,5 +65,5 @@
       - libnl-utils
       - zlib1g-dev
     state: present
-    update_cache: yes
-  tags: [ 'blktests', 'deps' ]
+    update_cache: true
+  tags: ["blktests", "deps"]

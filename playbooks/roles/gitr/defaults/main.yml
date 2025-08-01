@@ -3,12 +3,12 @@
 # Our sensible defaults for the gitr role.
 #
 # The default is to not run the gitr tests.
-kdevops_run_gitr: False
+kdevops_run_gitr: false
 
 kdevops_workflows_dedicated_workflow: false
 
 gitr_test_list: ""
-gitr_uses_no_devices: False
+gitr_uses_no_devices: false
 
 # NFS-specific defaults
 gitr_nfs_use_kdevops_nfsd: false

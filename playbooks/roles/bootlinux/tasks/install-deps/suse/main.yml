@@ -1,8 +1,8 @@
 ---
 - name: Install Linux kernel build dependencies for SUSE sources
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - bison
       - flex
@@ -28,4 +28,4 @@
       - portmap
       - hwinfo
       - open-iscsi
-    disable_recommends: no
+    disable_recommends: false

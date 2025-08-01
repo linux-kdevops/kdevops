@@ -3,15 +3,15 @@
 # This is used when bootlinux_9p is enabled and the build happens on the host
 
 - name: Update apt cache
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Install minimal build tools for kernel installation
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - make
       - gcc

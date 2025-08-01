@@ -1,15 +1,15 @@
 ---
 - name: Update apt cache
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    update_cache: true
   tags: linux
 
 - name: Install ndctl build deps
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - git
       - meson
@@ -28,5 +28,5 @@
       - libtraceevent-dev
       - libtracefs-dev
     state: present
-    update_cache: yes
-  tags: [ 'cxl', 'deps' ]
+    update_cache: true
+  tags: ["cxl", "deps"]

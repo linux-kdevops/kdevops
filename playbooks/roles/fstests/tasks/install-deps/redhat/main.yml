@@ -10,10 +10,10 @@
     - ansible_distribution != "Fedora"
 
 - name: Install build dependencies for fstests
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -74,10 +74,10 @@
       - ncurses-devel
 
 - name: Install xfsprogs-xfs_scrub
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -90,10 +90,10 @@
     - (ansible_facts['distribution'] != 'RedHat' and ansible_facts['distribution'] != 'CentOS') or ansible_facts['distribution_major_version']|int >= 9
 
 - name: Install btrfs-progs
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -105,10 +105,10 @@
   when: ansible_distribution == 'Fedora'
 
 - name: Install dependencies for building xfsprogs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  dnf:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name: "{{ packages }}"
     enablerepo: "*"
   retries: 3
@@ -127,4 +127,4 @@
       - libselinux-devel
       - libsepol-devel
       - pcre2-devel
-  when: 'fstests_xfs_build_custom_xfsprogs|bool'
+  when: "fstests_xfs_build_custom_xfsprogs|bool"

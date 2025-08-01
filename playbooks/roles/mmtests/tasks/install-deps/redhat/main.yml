@@ -1,19 +1,19 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Install mmtests build dependencies (RedHat/CentOS)
-  become: yes
-  become_method: sudo
-  yum:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name:
       - gcc
       - git
@@ -25,12 +25,12 @@
       - libnuma-devel
       - perl-Math-Gradient
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests runtime dependencies (RedHat/CentOS)
-  become: yes
-  become_method: sudo
-  yum:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name:
       - numactl
       - fio
@@ -42,16 +42,16 @@
       - bc
       - psmisc
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests monitoring dependencies (RedHat/CentOS)
-  become: yes
-  become_method: sudo
-  yum:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name:
       - kernel-tools
       - trace-cmd
       - perf
     state: present
-  tags: ['deps']
+  tags: ["deps"]
   ignore_errors: true

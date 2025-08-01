@@ -14,10 +14,10 @@ ssd_steady_state_bw_mean_limit: "20%"
 ssd_steady_state_bw_mean_dur: "2h"
 ssd_steady_state_bw_slope: "10%"
 ssd_steady_state_bw_slope_dur: "2h"
-kdevops_run_ssd_steady_state: False
+kdevops_run_ssd_steady_state: false
 
 # Prefill configuration defaults
-ssd_steady_state_prefill_verbose: False
+ssd_steady_state_prefill_verbose: false
 ssd_steady_state_prefill_max_size: ""
 ssd_steady_state_prefill_physical_bs: ""
 ssd_steady_state_prefill_ioengine: "io_uring"

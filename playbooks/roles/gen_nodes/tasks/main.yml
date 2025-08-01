@@ -1,21 +1,23 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Get our user
-  command: "whoami"
+  ansible.builtin.command: "whoami"
+  changed_when: false
   register: my_user
 
 - name: Get our primary group
-  command: "id -g -n"
+  ansible.builtin.command: "id -g -n"
+  changed_when: false
   register: my_group
 
 - name: Create guestfs directory
@@ -25,27 +27,27 @@
   when: kdevops_enable_guestfs|bool
 
 - name: Verify Ansible nodes template file exists {{ kdevops_nodes_template_full_path }}
-  stat:
+  ansible.builtin.stat:
     path: "{{ kdevops_nodes_template_full_path }}"
   register: ansible_nodes_template
 
 - name: Set generic nodes array
   tags: vars
-  set_fact:
-    generic_nodes: "{{ [ kdevops_host_prefix ] }}"
+  ansible.builtin.set_fact:
+    generic_nodes: "{{ [kdevops_host_prefix] }}"
   when:
     - not kdevops_baseline_and_dev
 
 - name: Set generic nodes array on dual baseline and dev systems
   tags: vars
-  set_fact:
-    generic_nodes: "{{ [ kdevops_host_prefix ] + [ kdevops_host_prefix + '-dev' ] }}"
+  ansible.builtin.set_fact:
+    generic_nodes: "{{ [kdevops_host_prefix] + [kdevops_host_prefix + '-dev'] }}"
   when:
     - kdevops_baseline_and_dev
 
 - name: Set builder nodes array
   tags: vars
-  set_fact:
+  ansible.builtin.set_fact:
     builder_nodes:
       - "{{ kdevops_host_prefix + '-builder' }}"
   when:
@@ -64,44 +66,44 @@
     - kdevops_enable_iscsi|bool
 
 - name: Set nfsd_nodes list
-  set_fact:
-    nfsd_nodes: "{{ [ kdevops_host_prefix + '-nfsd' ] }}"
+  ansible.builtin.set_fact:
+    nfsd_nodes: "{{ [kdevops_host_prefix + '-nfsd'] }}"
   when:
     - kdevops_nfsd_enable|bool
 
 - name: Add an nfs server if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     generic_nodes: "{{ generic_nodes + nfsd_nodes }}"
   when:
     - kdevops_nfsd_enable|bool
 
 - name: Set smbd_nodes list
-  set_fact:
-    smbd_nodes: "{{ [ kdevops_host_prefix + '-smbd' ] }}"
+  ansible.builtin.set_fact:
+    smbd_nodes: "{{ [kdevops_host_prefix + '-smbd'] }}"
   when:
     - kdevops_smbd_enable|bool
 
 - name: Add an smb server if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     generic_nodes: "{{ generic_nodes + smbd_nodes }}"
   when:
     - kdevops_smbd_enable|bool
 
 - name: Set kdc_nodes list
-  set_fact:
-    kdc_nodes: "{{ [ kdevops_host_prefix + '-kdc' ] }}"
+  ansible.builtin.set_fact:
+    kdc_nodes: "{{ [kdevops_host_prefix + '-kdc'] }}"
   when:
     - kdevops_krb5_enable|bool
 
 - name: Add a KRB5 KDC if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     generic_nodes: "{{ generic_nodes + kdc_nodes }}"
   when:
     - kdevops_krb5_enable|bool
 
 - name: Set fstests config file variable for {{ fstests_fstyp }}
-  set_fact:
-    is_fstests: True
+  ansible.builtin.set_fact:
+    is_fstests: true
     fs_config_path: "{{ kdevops_playbooks_dir_full_path }}/{{ fs_config_role_path }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -110,22 +112,22 @@
   tags: vars
 
 - name: Verify fstest config file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ fs_config_path }}"
   register: fstests_config_file_reg
   when:
     - is_fstests|bool
 
 - name: Check if {{ kdevops_nodes }} exists already
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
   register: kdevops_nodes_dest
 
 - name: Ensure proper permission on {{ kdevops_nodes }}
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
     owner: "{{ my_user.stdout }}"
     group: "{{ my_group.stdout }}"
@@ -133,58 +135,58 @@
     - kdevops_nodes_dest.stat.exists
 
 - name: Generate the generic kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ generic_nodes }}"
     nodes: "{{ all_generic_nodes }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - not kdevops_workflows_dedicated_workflow
     - ansible_nodes_template.stat.exists
 
 - name: Generate the builder kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ builder_nodes }}"
     nodes: "{{ all_generic_nodes }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - bootlinux_builder
     - ansible_nodes_template.stat.exists
 
 - name: Generate the pynfs kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ nfsd_nodes + iscsi_nodes }}"
     nodes: "{{ all_generic_nodes }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_pynfs
     - ansible_nodes_template.stat.exists
 
 - name: Generate the cxl kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ generic_nodes }}"
     nodes: "{{ all_generic_nodes }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_cxl
@@ -221,8 +223,8 @@
     - ansible_nodes_template.stat.exists
 
 - name: Set empty enabled test types list for fstests
-  tags: [ 'hosts' ]
-  set_fact:
+  tags: ["hosts"]
+  ansible.builtin.set_fact:
     fstests_enabled_nodes: []
   when:
     - is_fstests|bool
@@ -239,12 +241,12 @@
     sections_lines: "{{ sections_without_default_and_nfsd | regex_findall('^\\[(.*)', multiline=True) }}"
     clean_section_lines: "{{ sections_lines | regex_replace('\\[') | regex_replace('\\]') }}"
     clean_section_lines_without_fsname: "{{ clean_section_lines | regex_replace(fstests_fstyp + '_') }}"
-    config_sections_targets: "{{ clean_section_lines_without_fsname |  replace(\"'\", '') | split(', ') }}"
-  lineinfile:
+    config_sections_targets: "{{ clean_section_lines_without_fsname | replace(\"'\", '') | split(', ') }}"
+  ansible.builtin.lineinfile:
     path: "{{ topdir_path }}/.config"
-    regexp: '^({{ config_val + item.upper() }})=y'
-    line: ''
-  check_mode: yes
+    regexp: "^({{ config_val + item.upper() }})=y"
+    line: ""
+  check_mode: true
   with_items: "{{ config_sections_targets }}"
   loop_control:
     label: "Checking for {{ config_val + item.upper() }}"
@@ -253,12 +255,12 @@
     - ansible_nodes_template.stat.exists
 
 - name: Now expand the list of enabled fstests for valid configuration sections
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
-  set_fact:
-    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [ node ] }}"
+  ansible.builtin.set_fact:
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [node] }}"
   with_items: "{{ fstests_enabled_test_types_reg.results }}"
   loop_control:
     label: "Checking for {{ item.item }} "
@@ -269,12 +271,12 @@
     - not kdevops_baseline_and_dev
 
 - name: Now expand the list of enabled fstests for valid configuration sections with dev hosts
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
-  set_fact:
-    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [ node ] + [ node + '-dev' ] }}"
+  ansible.builtin.set_fact:
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [node] + [node + '-dev'] }}"
   with_items: "{{ fstests_enabled_test_types_reg.results }}"
   loop_control:
     label: "Checking for {{ item.item }} "
@@ -285,14 +287,14 @@
     - kdevops_baseline_and_dev
 
 - name: Add the nfs server if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_enabled_nodes: "{{ fstests_enabled_nodes + nfsd_nodes }}"
   when:
     - is_fstests|bool
     - kdevops_nfsd_enable|bool
 
 - name: Add the smb server if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_enabled_nodes: "{{ fstests_enabled_nodes + smbd_nodes }}"
   when:
     - is_fstests|bool
@@ -306,28 +308,28 @@
     - kdevops_enable_iscsi|bool
 
 - name: Add the KRB5 KDC if one was selected
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_enabled_nodes: "{{ fstests_enabled_nodes + kdc_nodes }}"
   when:
     - is_fstests|bool
     - kdevops_krb5_enable|bool
 
 - name: Generate the fstests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
-    nodes: "{{ fstests_enabled_nodes |  regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
+    nodes: "{{ fstests_enabled_nodes | regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
     all_generic_nodes: "{{ fstests_enabled_nodes }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - is_fstests|bool
     - ansible_nodes_template.stat.exists
 
 - name: Infer enabled blktests test section types
-  set_fact:
+  ansible.builtin.set_fact:
     blktests_enabled_test_types: >-
       {{
         [kdevops_host_prefix + '-']
@@ -354,7 +356,7 @@
     config_block_test_types: "{{ kdevops_config_data | regex_findall('^' + config_val + '(.*)=y$', multiline=True) }}"
     config_block_test_type_names: "{{ config_block_test_types | lower }}"
     all_nodes: "{{ [kdevops_host_prefix + '-'] | product(config_block_test_type_names) | map('join') | list }}"
-  set_fact:
+  ansible.builtin.set_fact:
     blktests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -363,24 +365,24 @@
     - kdevops_baseline_and_dev
 
 - name: Debug inferring block test types
-  debug:
+  ansible.builtin.debug:
     var: blktests_enabled_test_types
   when:
-    - False
+    - false
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
     - ansible_nodes_template.stat.exists
 
 - name: Generate the blktests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ blktests_enabled_test_types }}"
     all_generic_nodes: "{{ blktests_enabled_test_types }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
@@ -413,7 +415,7 @@
     config_selftests_test_types: "{{ kdevops_config_data | regex_findall('^' + config_val + '(.*)=y$', multiline=True) }}"
     config_selftests_test_type_names: "{{ config_selftests_test_types | lower }}"
     all_nodes: "{{ [kdevops_host_prefix + '-'] | product(config_selftests_test_type_names) | map('join') | list }}"
-  set_fact:
+  ansible.builtin.set_fact:
     selftests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -422,15 +424,15 @@
     - kdevops_baseline_and_dev
 
 - name: Generate the selftests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ selftests_enabled_test_types }}"
     all_generic_nodes: "{{ selftests_enabled_test_types }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
@@ -439,8 +441,9 @@
 - name: Collect dynamically supported filesystems
   vars:
     supported_filesystems_variables: "{{ vars | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
-    supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
-  set_fact:
+    supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_',
+      '') | list }}"
+  ansible.builtin.set_fact:
     sysbench_enabled_filesystems: "{{ supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
   when:
@@ -459,7 +462,7 @@
     enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') }}"
     prefixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') }}"
     enabled_fs_node: "{{ prefixed_fs | map('regex_replace', '_', '-') }}"
-  set_fact:
+  ansible.builtin.set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -477,7 +480,7 @@
     enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') }}"
     prefixed_and_postfixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') | map('regex_replace', '$', '-dev') }}"
     enabled_fs_node: "{{ prefixed_and_postfixed_fs | map('regex_replace', '_', '-') }}"
-  set_fact:
+  ansible.builtin.set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -485,7 +488,7 @@
     - kdevops_baseline_and_dev
 
 - name: Fail if no sysbench tests are enabled
-  fail:
+  ansible.builtin.fail:
     msg: "No sysbench tests are enabled. You should enable at least one."
   when:
     - kdevops_workflows_dedicated_workflow
@@ -494,22 +497,22 @@
     - enabled_sysbench_tests | length == 0
 
 - name: Generate the sysbench kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ enabled_sysbench_tests }}"
     all_generic_nodes: "{{ enabled_sysbench_tests }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_sysbench
     - ansible_nodes_template.stat.exists
 
 - name: Infer enabled mmtests test section types
-  set_fact:
+  ansible.builtin.set_fact:
     mmtests_enabled_test_types: >-
       {{
         [kdevops_host_prefix + '-']
@@ -535,7 +538,7 @@
     config_mmtests_test_types: "{{ kdevops_config_data | regex_findall('^' + config_val + '(.*)=y$', multiline=True) }}"
     config_mmtests_test_type_names: "{{ config_mmtests_test_types | lower }}"
     all_nodes: "{{ [kdevops_host_prefix + '-'] | product(config_mmtests_test_type_names) | map('join') | list }}"
-  set_fact:
+  ansible.builtin.set_fact:
     mmtests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -544,15 +547,15 @@
     - kdevops_baseline_and_dev
 
 - name: Generate the mmtests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ mmtests_enabled_test_types }}"
     all_generic_nodes: "{{ mmtests_enabled_test_types }}"
-  template:
+  ansible.builtin.template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_mmtests
@@ -563,13 +566,13 @@
   register: kdevops_host_timezone
 
 - name: Verify if dedicated workflow defined a custom nodes template and the final file exists {{ kdevops_nodes_template_full_path }}
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
   register: dedicated_nodes_template
 
 - name: Fail if the dedicated workflow has no rules for node configuration
-  tags: [ 'nodes' ]
-  fail:
+  tags: ["nodes"]
+  ansible.builtin.fail:
     msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -580,11 +583,11 @@
   ansible.builtin.file:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
     state: touch
-    mode: '0755'
+    mode: "0755"
 
 - name: Import list of guest nodes
-  include_vars: "{{ topdir_path }}/{{ kdevops_nodes }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ topdir_path }}/{{ kdevops_nodes }}"
+  ignore_errors: true
   when:
     - kdevops_enable_guestfs|bool
 
@@ -598,7 +601,7 @@
 - name: Generate XML files for the libvirt guests for PCI passthrough for guestfs
   delegate_to: localhost
   run_once: true
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     {{ role_path }}/python/gen_pcie_passthrough_guestfs_xml.py
   args:
@@ -621,15 +624,15 @@
     - kdevops_enable_guestfs|bool
 
 - name: Set the conflict flag on if conflict occur
-  set_fact:
-    gdb_port_conflict: True
+  ansible.builtin.set_fact:
+    gdb_port_conflict: true
   when:
     - libvirt_enable_gdb|bool
     - gdb_port_reg.results is defined
     - gdb_port_reg.results | selectattr('rc', 'equalto', 0) | list | length > 0
 
 - name: Fail bringup if gdb port conflict occur
-  fail:
+  ansible.builtin.fail:
     msg: "GDB port conflict occur, please check the base port number {{ libvirt_gdb_baseport }} and try with another"
   when:
     - libvirt_enable_gdb|bool
@@ -639,10 +642,10 @@
   vars:
     hostname: "{{ item.name }}"
     guestidx: "{{ idx }}"
-  template:
+  ansible.builtin.template:
     src: "guestfs_{{ libvirt_machine_type }}.j2.xml"
     dest: "{{ topdir_path }}/guestfs/{{ hostname }}/{{ hostname }}.xml"
-    force: yes
+    force: true
   with_items: "{{ guestfs_nodes }}"
   loop_control:
     index_var: idx

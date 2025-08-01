@@ -24,7 +24,7 @@
 
 - name: Create storage pool path directory and set group (libvirt system uri)
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ libvirt_storage_pool_path }}"
@@ -45,7 +45,7 @@
 
 - name: Create kdevops guestfs storage directory (libvirt system uri)
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ guestfs_base_image_dir }}"
@@ -57,7 +57,7 @@
 
 - name: Check if directory is owned by the correct group (libvirt system uri)
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: stat -c '%G' "{{ libvirt_storage_pool_path }}"
@@ -68,7 +68,7 @@
 
 - name: Check if directory has group write permissions (libvirt system uri)
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: stat -c '%A' "{{ libvirt_storage_pool_path }}"
@@ -79,7 +79,7 @@
 
 - name: Verify storage pool path directory is group-writable (libvirt system uri)
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.fail:
     msg: |

@@ -1,21 +1,22 @@
+---
 - name: Add custom repositories
-  become: yes
-  become_method: sudo
-  copy:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/etc/yum.repos.d/{{ item | basename }}"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   with_items: "{{ kdevops_devconfig_custom_repos | trim | split(',') }}"
   when:
     - kdevops_devconfig_custom_repos
     - kdevops_devconfig_custom_repos | trim | length > 1
 
 - name: Install custom packages
-  become: yes
-  become_method: sudo
-  yum:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name: "{{ item }}"
   retries: 3
   delay: 5

@@ -1,50 +1,50 @@
 ---
 # Install distribution-specific dependencies
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-  tags: [ 'setup', 'deps' ]
+  ansible.builtin.include_tasks: install-deps/main.yml
+  tags: ["setup", "deps"]
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
-  tags: [ 'setup', 'data_partition' ]
+  tags: ["setup", "data_partition"]
 
-- include_role:
+- ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool
 
 - name: Ensure data_dir has correct ownership
-  tags: [ 'setup' ]
-  become: yes
-  become_method: sudo
+  tags: ["setup"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ data_path }}"
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
-    recurse: yes
+    recurse: true
     state: directory
 
 - name: Clone mmtests repository
-  tags: [ 'setup' ]
+  tags: ["setup"]
   ansible.builtin.git:
     repo: "{{ mmtests_git_url }}"
     dest: "{{ mmtests_data_dir }}"
     version: "{{ mmtests_git_version }}"
-    force: yes
+    force: true
 
 - name: Generate mmtests configuration
-  tags: [ 'setup' ]
-  become: yes
-  become_method: sudo
+  tags: ["setup"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.template:
     src: "{{ mmtests_test_type }}-config.j2"
     dest: "{{ mmtests_data_dir }}/configs/config-workload-{{ mmtests_test_type }}-kdevops"
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
 - name: Fail if configured memory percentages overcommit available memory
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Overcommit configuration: anonymous ({{ mmtests_anonymous_memory_percent }}%) +
       file-backed ({{ mmtests_file_memory_percent }}%) exceeds 100% of available memory.
@@ -52,37 +52,38 @@
   when: (mmtests_anonymous_memory_percent + mmtests_file_memory_percent) > 100
 
 - name: Run mmtests autogen in background
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.command: ./bin/autogen-configs
   args:
     chdir: "{{ mmtests_data_dir }}"
 
 - name: Run mmtests autogen in background
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.command: ./bin/autogen-configs
   args:
     chdir: "{{ mmtests_data_dir }}"
 
 - name: Get kernel version
-  tags: [ 'setup', 'run_tests' ]
+  tags: ["setup", "run_tests"]
   ansible.builtin.command: uname -r
+  changed_when: false
   register: kernel_version
 
 - name: Show kernel version
-  tags: [ 'setup', 'run_tests' ]
-  debug:
+  tags: ["setup", "run_tests"]
+  ansible.builtin.debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Build mmtests
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell: >
-    yes yes | ./run-mmtests.sh -b
+    true true | ./run-mmtests.sh -b
     --config configs/config-workload-{{ mmtests_test_type }}-kdevops
     {{ inventory_hostname }}-{{ kernel_version.stdout }}
   args:
@@ -90,39 +91,39 @@
   register: mmtests_build_result
 
 - name: Fail if mmtests build failed
-  fail:
+  ansible.builtin.fail:
     msg: >
       mmtests build failed on {{ inventory_hostname }}.
       Exit code: {{ mmtests_build_result.rc }}
       Stdout: {{ mmtests_build_result.stdout }}
       Stderr: {{ mmtests_build_result.stderr }}
   when: mmtests_build_result.rc != 0
-  tags: [ 'setup' ]
+  tags: ["setup"]
 
 - name: Check if {{ mmtests_device }} is mounted
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
-  command: findmnt --noheadings --output TARGET --source {{ mmtests_device }}
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: findmnt --noheadings --output TARGET --source {{ mmtests_device }}
+  changed_when: false
   register: mountpoint_stat
   failed_when: false
-  changed_when: false
   when: mmtests_requires_mkfs_device | bool
 
 - name: Unmount {{ mmtests_device }} if mounted
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
-  command: umount {{ mmtests_device }}
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: umount {{ mmtests_device }}
   when:
     - mmtests_requires_mkfs_device | bool
     - mountpoint_stat.stdout != ""
 
 # XXX: add variability for the different options for the governor
 - name: Set CPU governor to performance
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell: |
     for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
       if [ -f "$cpu" ]; then
@@ -131,40 +132,40 @@
     done
 
 - name: Drop caches before test
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell: |
     sync
     echo 3 > /proc/sys/vm/drop_caches
   when: mmtests_pretest_dropvmcaches | bool
 
 - name: Configure THP
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell: |
     echo "{{ mmtests_pretest_thp_setting }}" > /sys/kernel/mm/transparent_hugepage/enabled
 
 - name: Manually trigger memory compaction before run
-  tags: [ 'run_tests' ]
-  become: yes
-  become_method: sudo
+  tags: ["run_tests"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell: |
     echo 1 > /proc/sys/vm/compact_memory
   when:
     - mmtests_pretest_compaction | bool
-  ignore_errors: true
+  failed_when: false # Memory compaction may not be supported on all systems
 
 - name: Show kernel version
-  tags: [ 'run_tests' ]
-  debug:
+  tags: ["run_tests"]
+  ansible.builtin.debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Run mmtests in background
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.command: ./run-mmtests.sh --config configs/config-workload-{{ mmtests_test_type }}-kdevops {{ inventory_hostname }}-{{ kernel_version.stdout }}
   args:
     chdir: "{{ mmtests_data_dir }}"
@@ -173,85 +174,85 @@
   register: mmtests_job
 
 - name: Wait for mmtests to complete
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.async_status:
     jid: "{{ mmtests_job.ansible_job_id }}"
   register: mmtests_status
   until: mmtests_status.finished
-  retries: 1440    # 12 hours
-  delay: 60        # check every 60 seconds
+  retries: 1440 # 12 hours
+  delay: 60 # check every 60 seconds
 
 - name: Create local results directory
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: false
-  tags: ['results']
+  tags: ["results"]
 
 - name: Ensure old mmtests results archive is removed if it exists
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     state: absent
-  tags: [ 'results' ]
+  tags: ["results"]
 
 - name: Archive mmtests results directory on remote host
-  become: yes
-  become_method: sudo
-  command: >
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: >
     tar czf {{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz -C {{ mmtests_results_dir }} .
   args:
     creates: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
-  tags: [ 'results' ]
+  tags: ["results"]
 
 - name: Remove previously fetched mmtests results archive if it exists
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  tags: [ 'results' ]
+  tags: ["results"]
   with_items:
     - "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     - "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
 
 - name: Copy mmtests results
-  tags: [ 'results' ]
-  become: yes
-  become_method: sudo
+  tags: ["results"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.fetch:
     src: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/"
-    flat: yes
+    flat: true
 
 - name: Ensure local mmtests results extraction directory exists
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
     state: directory
-    mode: '0755'
-    recurse: yes
-  tags: [ 'results' ]
+    mode: "0755"
+    recurse: true
+  tags: ["results"]
 
 - name: Extract mmtests results archive locally
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.unarchive:
     src: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
-    remote_src: no
-  tags: [ 'results' ]
+    remote_src: false
+  tags: ["results"]
 
 - name: Clean previous mmtests results on DUTs
-  tags: [ 'clean' ]
-  become: yes
-  become_method: sudo
+  tags: ["clean"]
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
@@ -259,9 +260,9 @@
     - "{{ mmtests_results_dir }}"
 
 - name: Clean previous mmtests results on localhost
-  tags: [ 'clean' ]
-  become: yes
-  become_method: sudo
+  tags: ["clean"]
+  become: true
+  become_method: ansible.builtin.sudo
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ item }}"

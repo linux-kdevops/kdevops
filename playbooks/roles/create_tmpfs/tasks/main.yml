@@ -33,7 +33,7 @@
 
 - name: Mount {{ tmpfs_mounted_on }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   throttle: 1
   ansible.posix.mount:
@@ -42,8 +42,7 @@
     fstype: "tmpfs"
     opts: "{{ tmpfs_mount_options }}"
     state: mounted
-  when:
-    mountpoint_stat != 0
+  when: mountpoint_stat != 0
 
 - name: Update permissions on {{ tmpfs_mounted_on }}
   become: true

@@ -1,16 +1,17 @@
 ---
-- include_role:
+- name: Include package management role
+  ansible.builtin.include_role:
     name: pkg
 
 # Distribution-specific setup for mmtests dependencies
 - name: Debian/Ubuntu distribution specific setup
-  import_tasks: tasks/install-deps/debian/main.yml
+  ansible.builtin.import_tasks: tasks/install-deps/debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
 
 - name: SUSE distribution specific setup
-  import_tasks: tasks/install-deps/suse/main.yml
+  ansible.builtin.import_tasks: tasks/install-deps/suse/main.yml
   when: ansible_facts['os_family']|lower == 'suse'
 
 - name: RedHat distribution specific setup
-  import_tasks: tasks/install-deps/redhat/main.yml
+  ansible.builtin.import_tasks: tasks/install-deps/redhat/main.yml
   when: ansible_facts['os_family']|lower == 'redhat'

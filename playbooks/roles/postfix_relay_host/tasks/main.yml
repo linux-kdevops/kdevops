@@ -1,49 +1,49 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
   when:
     - postfix_relay_host_setup|bool
 
 - name: Check to see if /etc/postfix/main.cf exists
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  stat:
-    path=/etc/postfix/main.cf
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.stat:
+    path: /etc/postfix/main.cf
   register: postfix_config_main_file
   when:
     - postfix_relay_host_setup|bool
-  tags: [ 'postfix' ]
+  tags: ["postfix"]
 
 - name: Set relayhost on /etc/postfix/main.cf
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/postfix/main.cf
-    regexp: '^(relayhost)(.*)'
-    line: 'relayhost = {{ postfix_relay_host }}'
+    regexp: "^(relayhost)(.*)"
+    line: "relayhost = {{ postfix_relay_host }}"
   when:
     - postfix_relay_host_setup|bool
     - postfix_config_main_file.stat.exists
-  tags: [ 'postfix' ]
+  tags: ["postfix"]
 
 - name: Enable and restart postfix service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: postfix
-    enabled: yes
+    enabled: true
     state: restarted
-    masked: no
+    masked: false
   when:
     - postfix_relay_host_setup|bool
     - postfix_config_main_file.stat.exists

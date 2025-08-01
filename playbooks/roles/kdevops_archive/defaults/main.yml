@@ -11,8 +11,8 @@ kdevops_results_archive_dir: "{{ topdir_path }}/../{{ kdevops_results_name }}"
 kdevops_archive_mirror_present: false
 kdevops_archive_host: "{{ kdevops_results_repo_path.split(':')[0] }}"
 kdevops_archive: "/mirror/{{ kdevops_results_name }}.git"
-kdevops_archive_demo: False
-bootlinux_tree_set_by_cli: False
+kdevops_archive_demo: false
+bootlinux_tree_set_by_cli: false
 kdevops_archive_base: "selftests/gh/linux-modules-kpd/20241021"
 kdevops_archive_test_number: "0001"
 kdevops_archive_prefix: "{{ kdevops_archive_base }}/{{ kdevops_archive_test_number }}/v6.12-rc4/"

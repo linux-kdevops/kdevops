@@ -1,7 +1,7 @@
 # SPDX-License-Identifier copyleft-next-0.3.1
 ---
-kdevops_bootlinux: False
-infer_uid_and_group: False
+kdevops_bootlinux: false
+infer_uid_and_group: false
 
 data_path: "/data"
 data_user: "root"
@@ -19,7 +19,7 @@ target_linux_git: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.
 target_linux_shallow_depth: 0
 target_linux_tree: "linux-stable"
 target_linux_dir_path: "{{ data_path }}/{{ target_linux_tree }}"
-kdevops_baseline_and_dev: False
+kdevops_baseline_and_dev: false
 
 target_linux_ref: "v4.19.133"
 target_linux_delta_file:
@@ -33,36 +33,36 @@ make: "make"
 target_linux_make_cmd: "{{ make }} -j{{ ansible_processor_vcpus }}"
 target_linux_make_install_cmd: "{{ target_linux_make_cmd }} modules_install install"
 
-uninstall_kernel_enable: False
+uninstall_kernel_enable: false
 
 # If defined we'll apply this delta for you.
 # target_linux_extra_patch: foo.patch
 
-bootlinux_b4_am_this_host: False
+bootlinux_b4_am_this_host: false
 
-bootlinux_9p: False
+bootlinux_9p: false
 bootlinux_targets: false
 bootlinux_builder: false
 
-kdevops_workflow_enable_cxl: False
+kdevops_workflow_enable_cxl: false
 
-bootlinux_cxl_test: False
-bootlinux_tree_set_by_cli: False
+bootlinux_cxl_test: false
+bootlinux_tree_set_by_cli: false
 
 bootlinux_artifacts_dir: "{{ topdir_path }}/workflows/linux/artifacts"
 kernel_packages: []
 workflow_linux_packaged: false
 
 # A/B testing defaults
-bootlinux_ab_same_ref: True
-bootlinux_ab_different_ref: False
+bootlinux_ab_same_ref: true
+bootlinux_ab_different_ref: false
 
 # Development kernel settings (used when bootlinux_ab_different_ref is True)
 bootlinux_dev_tree: ""
 target_linux_dev_ref: "master"
 target_linux_dev_kernelrelease: ""
 target_linux_dev_localversion: ""
-bootlinux_tree_custom_kernelrelease: False
+bootlinux_tree_custom_kernelrelease: false
 bootlinux_tree_custom_localversion: false
-bootlinux_is_dev_node: False
+bootlinux_is_dev_node: false
 bootlinux_debug_ref: "{{ lookup('env', 'DEBUG_REF') | default(false, true) | bool }}"

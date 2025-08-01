@@ -12,7 +12,7 @@
   tags: vars
 
 - name: Set up the /data mount point
-  tags: ['data_partition']
+  tags: ["data_partition"]
   ansible.builtin.include_role:
     name: create_data_partition
 
@@ -29,29 +29,38 @@
     gitr_run_uniqifier: "{{ ansible_date_time.iso8601_basic_short }}"
 
 - name: Clean up our localhost results/last-run directory
-  local_action: file path="{{ gitr_results_target }}/" state=absent
+  ansible.builtin.file:
+    path: "{{ gitr_results_target }}/"
+    state: absent
+  delegate_to: localhost
   run_once: true
-  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+  tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  local_action: file path="{{ gitr_results_target }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ gitr_results_target }}/"
+    state: directory
+  delegate_to: localhost
   run_once: true
-  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+  tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Get used target kernel version
-  tags: [ 'copy_results' ]
-  command: "uname -r"
+  tags: ["copy_results"]
+  ansible.builtin.command: "uname -r"
+  changed_when: false
   register: uname_cmd
 
 - name: Store last kernel variable
-  tags: [ 'copy_results' ]
-  set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+  tags: ["copy_results"]
+  ansible.builtin.set_fact:
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   run_once: true
 
 - name: Document used target kernel version
-  local_action: "shell echo {{ last_kernel }} > {{ gitr_results_target }}/../last-kernel.txt"
-  tags: [ 'run_tests', 'copy_results', 'print_results' ]
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ gitr_results_target }}/../last-kernel.txt
+  changed_when: false
+  delegate_to: localhost
+  tags: ["run_tests", "copy_results", "print_results"]
   run_once: true
 
 - name: Ensure the local results directory exists
@@ -78,7 +87,7 @@
 - name: Remove the old test file system
   tags: gitr
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.posix.mount:
     path: "{{ gitr_mnt }}"
@@ -158,7 +167,7 @@
   tags: gitr
   ansible.builtin.include_role:
     name: create_nfs_mount
-  vars:  # noqa: var-naming[no-role-prefix]
+  vars: # noqa: var-naming[no-role-prefix]
     nfs_mounted_on: "{{ gitr_mnt }}"
     nfs_server_hostname: "{{ gitr_nfs_server_host }}"
     nfs_server_export: "{{ nfsd_export_path }}/{{ gitr_nfs_server_export }}"
@@ -171,7 +180,7 @@
   tags: gitr
   ansible.builtin.include_role:
     name: create_nfs_mount
-  vars:  # noqa: var-naming[no-role-prefix]
+  vars: # noqa: var-naming[no-role-prefix]
     nfs_mounted_on: "{{ gitr_mnt }}"
     nfs_server_hostname: "{{ gitr_nfs_server_host }}"
     nfs_server_export: "{{ nfsd_export_path }}/{{ gitr_nfs_server_export }}"
@@ -183,7 +192,7 @@
 - name: Remove existing git build directory
   tags: gitr
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ gitr_mnt }}/git"
@@ -219,7 +228,7 @@
     - not kdevops_workflows_dedicated_workflow|bool
 
 - name: Build git on the target nodes
-  tags: ['gitr', 'build']
+  tags: ["gitr", "build"]
   community.general.make:
     chdir: "{{ gitr_mnt }}/git"
     jobs: "{{ ansible_processor_nproc }}"
@@ -373,18 +382,18 @@
     - ansible_os_family == 'RedHat'
 
 - name: Verify last-run kernel directory exists
-  tags: [ 'copy_results' ]
+  tags: ["copy_results"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}"
   register: last_run_kernel_dir
 
 - name: Copy over the last-run into the results directory for archiving into kdevops
-  copy:
+  ansible.builtin.copy:
     src: "{{ gitr_results_full_path }}/last-run/{{ last_kernel }}"
     dest: "{{ gitr_results_full_path }}/"
   run_once: true
-  tags: [ 'copy_results' ]
+  tags: ["copy_results"]
   delegate_to: localhost
   when:
     - last_run_kernel_dir.stat.exists

@@ -1,26 +1,26 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Update apt cache
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    update_cache: true
   tags: deps
 
 - name: Install mmtests build dependencies
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - build-essential
       - git
@@ -33,12 +33,12 @@
       - libmath-gradient-perl
     state: present
     update_cache: true
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests runtime dependencies
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - numactl
       - fio
@@ -51,16 +51,16 @@
       - psmisc
     state: present
     update_cache: true
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests monitoring dependencies
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - trace-cmd
       - perf-tools-unstable
     state: present
     update_cache: true
-  tags: ['deps']
+  tags: ["deps"]
   ignore_errors: true

@@ -1,7 +1,7 @@
 ---
 - name: Install local dependencies for fstests command and control
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - python3-junitparser

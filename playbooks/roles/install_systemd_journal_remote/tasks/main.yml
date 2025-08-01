@@ -1,64 +1,63 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 # Distro specific
 - name: Install systemd-journal-remote
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Set up the server /etc/systemd/journal-remote.conf
-  tags: [ 'journal' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  tags: ["journal"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: "journal-remote.conf.j2"
     dest: "/etc/systemd/journal-remote.conf"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Use custom systemd-journal-remote.service to disable SSL
-  tags: [ 'journal' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  tags: ["journal"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: "systemd-journal-remote.service.j2"
     dest: "/lib/systemd/system/systemd-journal-remote.service"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
     - devconfig_systemd_journal_use_http|bool
 
 - name: Ensure our user is part of the systemd-journal-remote group
-  tags: [ 'journal' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  tags: ["journal"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.user:
-    name:  "{{ ansible_user_id }}"
+    name: "{{ ansible_user_id }}"
     groups: systemd-journal-remote
-    append: yes
+    append: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Restart systemd-journal-remote on the server
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-journal-remote.service
     daemon_reload: true
@@ -68,9 +67,9 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Ensure systemd-journal-remote.service is running on the server
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-journal-remote.service
     state: started
@@ -78,16 +77,16 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Set group sticky bit for /var/log/journal/remote/
-  tags: [ 'journal' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
+  tags: ["journal"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
     path: "/var/log/journal/remote/"
     owner: systemd-journal-remote
     group: systemd-journal-remote
     mode: u=rwx,g=rwx,o=rx,g+s
-    recurse: True
+    recurse: true
     state: directory
   when:
     - devconfig_enable_systemd_journal_remote|bool

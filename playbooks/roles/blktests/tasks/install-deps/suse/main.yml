@@ -1,12 +1,12 @@
 ---
 - name: Set generic SUSE specific distro facts
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
 
 - name: Set SLE specific version labels to make checks easier
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: '{{ ansible_distribution_major_version == "10" }}'
     is_sle11: '{{ ansible_distribution_major_version == "11" }}'
     is_sle12: '{{ ansible_distribution_major_version == "12" }}'
@@ -24,48 +24,48 @@
     - is_sle|bool
 
 - name: Set SLE specific version labels to make checks easier when not SLE
-  set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle12sp5: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle15sp2: False
-    is_sle15sp3: False
-    is_sle15sp4: False
+  ansible.builtin.set_fact:
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle12sp5: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle15sp2: false
+    is_sle15sp3: false
+    is_sle15sp4: false
   when:
     - not is_sle|bool
 
 - name: By default we assume we have figured out how to add repos on a release
-  set_fact:
+  ansible.builtin.set_fact:
     repos_present: true
 
 - name: Lets us disable things which require a zypper repo present
-  set_fact:
+  ansible.builtin.set_fact:
     repos_present: false
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
 
 - name: The default is to assume all distros supports nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: false
 
 - name: Does this release lack nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool
 
 - name: Install NVMe tools
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - nvme-cli
@@ -75,8 +75,8 @@
     - not lacks_nvme_utils|bool
 
 - name: Install build dependencies for blktests
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - bison
@@ -120,8 +120,8 @@
     - repos_present|bool
 
 - name: Install tumblweed packages
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - libgdbm6
@@ -131,8 +131,8 @@
     - is_tumbleweed|bool
 
 - name: Install leap packages
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - libgdbm4
@@ -143,8 +143,8 @@
     - is_tumbleweed|bool
 
 - name: Install libgdbm4
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - libgdbm4
@@ -156,8 +156,8 @@
 # to find way to get autoconf-archive for sles15sp4
 # as it is required...
 - name: Install autoconf-archive for building nbd
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - autoconf-archive
@@ -167,42 +167,42 @@
     - is_sle15sp2|bool or is_sle15sp3|bool
 
 - name: The default is to assume we do not want to add the benchmark repo
-  set_fact:
-    add_benchmark_repo: False
+  ansible.builtin.set_fact:
+    add_benchmark_repo: false
 
 - name: Does this release require the benchmark repo
-  set_fact:
-    add_benchmark_repo: True
+  ansible.builtin.set_fact:
+    add_benchmark_repo: true
   when:
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool or is_sle12sp5|bool
 
 - name: Add benchmark sles12sp5 opensuse repo when needed
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_12_SP5/ benchmark benchmark"
   when:
     - is_sle12sp5|bool
 
 - name: Add benchmark sles15sp2 opensuse repo when needed
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP2/ benchmark benchmark"
   when:
     - is_sle15sp2|bool
 
 - name: Add benchmark sles15sp3 opensuse repo when needed
-  become: yes
-  become_method: sudo
-  script:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP3/ benchmark benchmark"
   when:
     - is_sle15sp3|bool or is_sle15sp4|bool
 
 - name: Install dbench when needed
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - dbench
@@ -211,18 +211,18 @@
     - add_benchmark_repo|bool
 
 - name: The default is to assume we do not want to to compile nbd manually
-  set_fact:
-    compile_nbd: False
+  ansible.builtin.set_fact:
+    compile_nbd: false
 
 - name: Set when we need to compile nbd
-  set_fact:
-    compile_nbd: True
+  ansible.builtin.set_fact:
+    compile_nbd: true
   when:
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool or is_leap|bool
 
 - name: Install build dependencies for nbd
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - glib2-devel
@@ -231,19 +231,19 @@
     - repos_present|bool
     - compile_nbd|bool
 
-- name: git clone nbd
-  git:
+- name: Git clone nbd
+  ansible.builtin.git:
     repo: "{{ nbd_git }}"
     dest: "{{ nbd_data }}"
-    update: yes
+    update: true
     version: "{{ nbd_version }}"
   when:
     - repos_present|bool
     - compile_nbd|bool
-  tags: [ 'git', 'blktests', 'nbd' ]
+  tags: ["git", "blktests", "nbd"]
 
 - name: Skip documentation for nbd as we lack the requirement of docbook2man
-  file:
+  ansible.builtin.file:
     path: "{{ nbd_data }}/man/{{ item }}"
     state: touch
   with_items:
@@ -254,39 +254,39 @@
     - "nbdtab.5.sh.in"
   loop_control:
     label: "Faking generation of documentation for nbd{{ item }}"
-  tags: [ 'blktests', 'nbd' ]
+  tags: ["blktests", "nbd"]
   when:
     - repos_present|bool
     - compile_nbd|bool
 
 - name: Run autogen for nbd
-  command: "./autogen.sh"
-  tags: [ 'blktests', 'nbd' ]
+  ansible.builtin.command: "./autogen.sh"
+  tags: ["blktests", "nbd"]
   args:
     chdir: "{{ nbd_data }}"
 
 - name: Run configure for nbd
-  command: "./configure"
-  tags: [ 'blktests', 'nbd' ]
+  ansible.builtin.command: "./configure"
+  tags: ["blktests", "nbd"]
   args:
     chdir: "{{ nbd_data }}"
 
 - name: Get nproc
-  command: "{{ num_jobs }}"
-  tags: [ 'git', 'blktests', 'nbd' ]
+  ansible.builtin.command: "{{ num_jobs }}"
+  tags: ["git", "blktests", "nbd"]
   register: nproc
 
 - name: Build nbd
-  tags: [ 'git', 'blktests', 'nbd' ]
-  make:
+  tags: ["git", "blktests", "nbd"]
+  community.general.make:
     chdir: "{{ nbd_data }}"
     jobs: "{{ nproc.stdout }}"
 
 - name: Install nbd
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "{{  make }} install"
-  tags: [ 'git', 'blktests', 'nbd' ]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "{{  make }} install"
+  tags: ["git", "blktests", "nbd"]
   args:
     chdir: "{{ nbd_data }}"

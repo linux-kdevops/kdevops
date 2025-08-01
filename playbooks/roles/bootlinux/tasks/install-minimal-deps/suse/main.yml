@@ -3,9 +3,9 @@
 # This is used when bootlinux_9p is enabled and the build happens on the host
 
 - name: Install minimal build tools for kernel installation
-  become: yes
-  become_method: sudo
-  zypper:
+  become: true
+  become_method: ansible.builtin.sudo
+  community.general.zypper:
     name:
       - make
       - gcc

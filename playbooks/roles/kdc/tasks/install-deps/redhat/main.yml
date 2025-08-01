@@ -1,9 +1,9 @@
 ---
 - name: Install kdc dependencies
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5

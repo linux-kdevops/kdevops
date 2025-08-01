@@ -1,17 +1,17 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 # Distro specific
 - name: Install kdevops deps to run make menuconfig
-  include_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
   when:
     - kdevops_first_run | bool

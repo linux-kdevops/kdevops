@@ -1,8 +1,8 @@
 ---
 # task to install packages common across supported distros
 - name: Install packages common to all supported distros
-  become: yes
-  package:
+  become: true
+  ansible.builtin.package:
     name:
       - numactl
     state: present

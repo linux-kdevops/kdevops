@@ -3,4 +3,4 @@
 # Our sensible defaults for the ltp role.
 #
 # The default is to not run the ltp tests.
-kdevops_run_ltp: False
+kdevops_run_ltp: false

@@ -3,7 +3,7 @@
 mirror_user_system_dir: "~/.config/systemd/user/"
 local_systemd_path: "/usr/local/lib/systemd/system/"
 
-install_linux_mirror:  False
+install_linux_mirror: false
 # Please keep these in alphabetical order
 defaults_blktrace_git: "https://git.kernel.dk/blktrace"
 defaults_dbench_git: "https://github.com/linux-kdevops/dbench.git"
@@ -27,4 +27,4 @@ mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/lin
 
 install_only_git_daemon: false
 
-linux_mirror_nfs: False
+linux_mirror_nfs: false
