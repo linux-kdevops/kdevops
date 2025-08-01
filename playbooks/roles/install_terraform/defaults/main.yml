@@ -3,7 +3,7 @@
 
 # You can override these
 terraform_version: "1.2.3"
-force_install_if_present: False
+force_install_if_present: false
 
 # Ignores using distro packages and installs from zip file instead
-force_install_zip: False
+force_install_zip: false

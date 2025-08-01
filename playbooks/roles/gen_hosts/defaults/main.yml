@@ -2,9 +2,9 @@
 ---
 topdir_path: "/dev/null"
 
-hosts_type_generic: True
-hosts_type_fs: False
-hosts_type_block: False
+hosts_type_generic: true
+hosts_type_fs: false
+hosts_type_block: false
 
 kdevops_hosts_template: "hosts.in"
 kdevops_playbooks_dir: "/dev/null"
@@ -12,33 +12,33 @@ kdevops_genhosts_templates_dir: "/dev/null"
 kdevops_hosts_prefix: "kdevops"
 kdevops_python_interpreter: "/usr/bin/python3"
 kdevops_python_old_interpreter: "/usr/bin/python2"
-kdevops_baseline_and_dev: False
+kdevops_baseline_and_dev: false
 kdevops_playbooks_dir_full_path: "/dev/null"
 kdevops_hosts_template_full_path: "/dev/null"
 
-kdevops_workflows_dedicated_workflow: False
-kdevops_workflow_enable_fstests: False
-kdevops_workflow_enable_blktests: False
-kdevops_workflow_enable_selftests: False
+kdevops_workflows_dedicated_workflow: false
+kdevops_workflow_enable_fstests: false
+kdevops_workflow_enable_blktests: false
+kdevops_workflow_enable_selftests: false
 
-kdevops_workflow_enable_cxl: False
-kdevops_workflow_enable_pynfs: False
-kdevops_workflow_enable_gitr: False
-kdevops_workflow_enable_ltp: False
+kdevops_workflow_enable_cxl: false
+kdevops_workflow_enable_pynfs: false
+kdevops_workflow_enable_gitr: false
+kdevops_workflow_enable_ltp: false
 kdevops_workflow_enable_nfstest: false
 kdevops_workflow_enable_sysbench: false
 kdevops_workflow_enable_fio_tests: false
-kdevops_workflow_enable_mmtests: False
+kdevops_workflow_enable_mmtests: false
 
-is_fstests: False
+is_fstests: false
 fstests_fstyp: "bogus"
 fs_config_role_path: "/dev/null"
 fs_config_data: "[section_1]"
 
-kdevops_nfsd_enable: False
-kdevops_loopback_nfs_enable: False
-kdevops_smbd_enable: False
-kdevops_krb5_enable: False
+kdevops_nfsd_enable: false
+kdevops_loopback_nfs_enable: false
+kdevops_smbd_enable: false
+kdevops_krb5_enable: false
 kdevops_enable_iscsi: false
 
 bootlinux_builder: false

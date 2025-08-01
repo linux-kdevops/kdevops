@@ -19,7 +19,7 @@
 
 - name: Install dependencies for gitr
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ gitr_packages }}"
@@ -27,7 +27,7 @@
 
 - name: Install CPAN modules for gitr
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   community.general.cpanm:
     name: "{{ item }}"
@@ -56,7 +56,7 @@
 
     - name: Install cvsps
       become: true
-      become_flags: 'su - -c'
+      become_flags: "su - -c"
       become_method: ansible.builtin.sudo
       community.general.make:
         target: install

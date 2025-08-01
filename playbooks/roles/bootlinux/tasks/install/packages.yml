@@ -23,7 +23,7 @@
 
     - name: Add the core kernel package
       ansible.builtin.set_fact:
-        kernel_packages: "{{ kernel_packages + ['/tmp/' + item.path | basename ] }}"
+        kernel_packages: "{{ kernel_packages + ['/tmp/' + item.path | basename] }}"
       when:
         - "'devel' not in item.path"
         - "'headers' not in item.path"

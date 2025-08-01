@@ -1,7 +1,7 @@
 ---
 - name: Install ktls dependencies
-  become: yes
-  become_method: sudo
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
       - python3-cryptography

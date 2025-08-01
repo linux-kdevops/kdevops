@@ -1,4 +1,5 @@
 ---
-- hosts: all
+- name: Apply steady state configuration
+  hosts: all
   roles:
     - role: steady_state

@@ -3,9 +3,9 @@
 # This is used when bootlinux_9p is enabled and the build happens on the host
 
 - name: Install minimal build tools for kernel installation
-  become: yes
-  become_method: sudo
-  yum:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name:
       - make
       - gcc
@@ -15,9 +15,9 @@
     - ansible_facts['distribution_major_version']|int < 8
 
 - name: Install minimal build tools for kernel installation (dnf)
-  become: yes
-  become_method: sudo
-  dnf:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
     name:
       - make
       - gcc

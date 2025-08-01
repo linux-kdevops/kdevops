@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  failed_when: false
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -34,9 +34,9 @@
 
 # We do this regardless of what distro you use
 - name: Install b4
-  become: yes
-  become_method: sudo
-  pip:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.pip:
     name:
       - b4
   when:
@@ -46,28 +46,28 @@
     - not workflow_linux_packaged|bool
 
 - name: Set bootlinux_b4_am_this_host as a fact for dev hosts only
-  set_fact:
+  ansible.builtin.set_fact:
     bootlinux_b4_am_this_host: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
   when:
     - kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
 
 - name: Enable b4 am all hosts if not deploying dev and baseline nodes
-  set_fact:
-    bootlinux_b4_am_this_host: True
+  ansible.builtin.set_fact:
+    bootlinux_b4_am_this_host: true
   when:
     - not kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
 
 - name: Determine if this is a dev node for A/B testing
-  set_fact:
+  ansible.builtin.set_fact:
     bootlinux_is_dev_node: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
   when:
     - kdevops_baseline_and_dev|bool
     - bootlinux_ab_different_ref|bool
 
 - name: Set development group full custom kernel release
-  set_fact:
+  ansible.builtin.set_fact:
     target_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if target_linux_dev_kernelrelease != '' else target_linux_kernelrelease }}"
   when:
     - kdevops_baseline_and_dev|bool
@@ -76,7 +76,7 @@
     - bootlinux_is_dev_node|bool
 
 - name: Set development group local append version
-  set_fact:
+  ansible.builtin.set_fact:
     target_linux_localversion: "{{ target_linux_dev_localversion if target_linux_dev_localversion != '' else target_linux_localversion }}"
   when:
     - kdevops_baseline_and_dev|bool
@@ -85,7 +85,7 @@
     - bootlinux_is_dev_node|bool
 
 - name: Set development kernel parameters for dev nodes
-  set_fact:
+  ansible.builtin.set_fact:
     target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
     target_linux_ref: "{{ target_linux_dev_ref }}"
     target_linux_config: "config-{{ target_linux_dev_ref }}"
@@ -100,7 +100,7 @@
 # Since 9P builds run on localhost with run_once, we can't rely on per-node variables,
 # so we check the ansible_limit to determine which group is being targeted.
 - name: Determine if we're targeting dev nodes for A/B testing
-  set_fact:
+  ansible.builtin.set_fact:
     targeting_dev_nodes: "{{ groups['dev'] is defined and groups['dev'] | length > 0 and (ansible_limit is not defined or 'dev' in ansible_limit) }}"
   run_once: true
   delegate_to: localhost
@@ -109,11 +109,13 @@
     - bootlinux_ab_different_ref|bool
 
 - name: Determine active kernel parameters for A/B testing with 9P
-  set_fact:
+  ansible.builtin.set_fact:
     target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
-    active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes|default(false)|bool else target_linux_ref }}"
-    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_kernelrelease|bool) else target_linux_kernelrelease }}"
-    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_localversion|bool) else target_linux_localversion }}"
+    active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes | default(false) | bool else target_linux_ref }}"
+    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes | default(false) | bool and bootlinux_tree_custom_kernelrelease | bool)
+      else target_linux_kernelrelease }}"
+    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes | default(false) | bool and bootlinux_tree_custom_localversion | bool) else
+      target_linux_localversion }}"
     target_linux_config: "config-{{ target_linux_dev_ref }}"
   when:
     - kdevops_baseline_and_dev|bool
@@ -124,9 +126,14 @@
 
 - name: Debug kernel ref settings for 9P builds
   delegate_to: localhost
+  when:
+    - bootlinux_debug_ref|bool
+    - bootlinux_9p|bool
+  run_once: true
+
   block:
     - name: Print kernel ref settings for 9P debug (localhost context)
-      debug:
+      ansible.builtin.debug:
         msg:
           - "=== 9P BUILD DEBUG (localhost context) ==="
           - "bootlinux_9p: {{ bootlinux_9p }}"
@@ -141,16 +148,15 @@
           - "groups['baseline']: {{ groups['baseline'] | default([]) }}"
 
     - name: End play gracefully for kernel ref debug
-      meta: end_play
+      ansible.builtin.meta: end_play
+- name: Debug kernel ref settings for non-9P builds
   when:
     - bootlinux_debug_ref|bool
-    - bootlinux_9p|bool
-  run_once: true
+    - not bootlinux_9p|bool
 
-- name: Debug kernel ref settings for non-9P builds
   block:
     - name: Print kernel ref settings for non-9P debug (per-node context)
-      debug:
+      ansible.builtin.debug:
         msg:
           - "=== NON-9P BUILD DEBUG ({{ inventory_hostname }}) ==="
           - "bootlinux_9p: {{ bootlinux_9p }}"
@@ -166,11 +172,7 @@
           - "target_linux_dev_localversion: {{ target_linux_dev_localversion }}"
 
     - name: End play gracefully for kernel ref debug
-      meta: end_play
-  when:
-    - bootlinux_debug_ref|bool
-    - not bootlinux_9p|bool
-
+      ansible.builtin.meta: end_play
 - name: Create data partition
   ansible.builtin.include_role:
     name: create_data_partition
@@ -178,16 +180,16 @@
     - not workflow_linux_packaged|bool
 
 - name: Mount bootlinux 9p on each target node
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  mount:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.posix.mount:
     name: "{{ target_linux_dir_path }}"
     src: "{{ bootlinux_9p_mount_tag }}"
     fstype: "9p"
     opts: "ro,trans=virtio,version=9p2000.L,posixacl,cache=none"
     state: "mounted"
-  tags: [ 'data_partition', '9p_mount' ]
+  tags: ["data_partition", "9p_mount"]
   when:
     - bootlinux_9p|bool
 
@@ -210,29 +212,30 @@
     - bootlinux_builder|bool
 
 - name: Run uname before
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
+  changed_when: false
   register: uname_cmd_before
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
 
 - name: Check kernel uname for uninstall
-  debug:
+  ansible.builtin.debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd_before.stdout_lines.0 }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
 
 - name: Set kernel version if user did not provide one with KVER command line argument
-  set_fact:
+  ansible.builtin.set_fact:
     uninstall_kernel_ver: "{{ uname_cmd_before.stdout_lines.0 }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   when:
     - uninstall_kernel_enable|bool
     - uninstall_kernel_ver is not defined
 
 - name: Check if files for old kernel exist
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths:
       - "/boot/"
@@ -253,19 +256,19 @@
       - "{{ uninstall_kernel_ver }}"
       - "{{ uninstall_kernel_ver }}+"
   register: found_uninstall_kfiles
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   when:
     - uninstall_kernel_enable|bool
     - uninstall_kernel_ver is defined
 
 - name: Remove an old version of Linux manually specified
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
     state: absent
     path: "{{ item.path }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   with_items:
     - "{{ found_uninstall_kfiles.files }}"
   loop_control:
@@ -279,28 +282,27 @@
 # option. This let's us work with hardware serial consoles
 # say on IPMIs and virtual guests ('virsh console').
 - name: Ensure we can get the GRUB prompt on reboot
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: '^GRUB_TERMINAL='
+    regexp: "^GRUB_TERMINAL="
     line: GRUB_TERMINAL="console serial"
 
 - name: Update your boot GRUB file if necessary
-  tags: [ 'uninstall-linux', 'manual-update-grub' ]
-  import_tasks: update-grub/main.yml
-
+  tags: ["uninstall-linux", "manual-update-grub"]
+  ansible.builtin.import_tasks: update-grub/main.yml
 - name: Ensure we have DEFAULTDEBUG set
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: grub_default_saved_cmd
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/sysconfig/kernel
-    regexp: '^DEFAULTDEBUG='
-    line: DEFAULTDEBUG=yes
-  tags: [ 'saved' ]
+    regexp: "^DEFAULTDEBUG="
+    line: DEFAULTDEBUG=true
+  tags: ["saved"]
   when: ansible_facts['os_family']|lower == 'redhat'
 
 - name: Install packages on each target node
@@ -310,52 +312,50 @@
     - workflow_linux_packaged|bool
 
 - name: Install {{ target_linux_tree }} on the target nodes
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "{{ target_linux_make_install_cmd }}"
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "{{ target_linux_make_install_cmd }}"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'install-linux' ]
+  tags: ["install-linux"]
   when:
     - not workflow_linux_packaged|bool
 
 - name: Install {{ target_linux_tree }} cxl_test on the target nodes
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "{{ target_linux_make_install_cmd }} M=tools/testing/cxl INSTALL_MOD_DIR=updates"
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "{{ target_linux_make_install_cmd }} M=tools/testing/cxl INSTALL_MOD_DIR=updates"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'install-linux', 'cxl-install' ]
+  tags: ["install-linux", "cxl-install"]
   when:
     - kdevops_workflow_enable_cxl|bool
     - not workflow_linux_packaged|bool
 
 - name: Set the default kernel if necessary
-  tags: [ 'saved' ]
-  import_tasks: update-grub/install.yml
-  # when:
-  #   - ansible_facts['os_family']|lower != 'redhat'
-
+  tags: ["saved"]
+  ansible.builtin.import_tasks: update-grub/install.yml
 - name: Reboot into Linux {{ target_linux_tree }}
-  become: yes
-  become_method: sudo
-  reboot:
-  tags: [ 'reboot' ]
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.reboot:
+  tags: ["reboot"]
 
 - name: Run uname
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
+  changed_when: false
   register: uname_cmd
-  tags: [ 'uname' ]
+  tags: ["uname"]
 
 - name: Check kernel uname
-  debug:
+  ansible.builtin.debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd.stdout_lines.0 }}"
-  tags: [ 'uname' ]
+  tags: ["uname"]

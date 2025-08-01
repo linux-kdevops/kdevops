@@ -22,7 +22,7 @@
       RedHat:
         - "nfs-utils"
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ packages[ansible_os_family] }}"
@@ -38,7 +38,7 @@
 
 - name: Mount {{ nfs_mounted_on }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   throttle: 1
   ansible.posix.mount:
@@ -47,5 +47,4 @@
     fstype: "nfs"
     opts: "{{ nfs_mount_options }}"
     state: mounted
-  when:
-    mountpoint_stat != 0
+  when: mountpoint_stat != 0

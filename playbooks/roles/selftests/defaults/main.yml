@@ -8,21 +8,21 @@ target_linux_dir_path: "{{ data_path }}/{{ target_linux_tree }}"
 bootlinux_9p_host_path: "/home/user/linux/"
 
 # These are selftests specific
-kdevops_workflow_enable_selftests: False
-kdevops_run_selftests: False
-run_tests_on_failures: False
-selftests_skip_run: False
-selftests_skip_reboot: False
-selftests_build_radix_tree: False
-selftests_build_selftests_dir: False
+kdevops_workflow_enable_selftests: false
+kdevops_run_selftests: false
+run_tests_on_failures: false
+selftests_skip_run: false
+selftests_skip_reboot: false
+selftests_build_radix_tree: false
+selftests_build_selftests_dir: false
 selftests_radix_tree_dir: "tools/testing/radix-tree"
 
-selftests_section_firmware: False
-selftests_section_kmod: False
-selftests_section_maple: False
-selftests_section_sysctl: False
-selftests_section_xarray: False
-selftests_section_vma: False
+selftests_section_firmware: false
+selftests_section_kmod: false
+selftests_section_maple: false
+selftests_section_sysctl: false
+selftests_section_xarray: false
+selftests_section_vma: false
 
 selftests_ksrc: "tools/testing/selftests/"
 selftests_data: "{{ target_linux_dir_path }}/{{ selftests_ksrc }}"
@@ -31,9 +31,9 @@ selftests_data_target: "{{ data_path }}/selftests/"
 selftests_workdir: "{{ selftests_data_target }}/kselftest/kselftest_install/"
 selftest_timeout_argument: ""
 
-selftest_userspace: False
-selftest_kernelspace: False
+selftest_userspace: false
+selftest_kernelspace: false
 
-selftest_xarray: False
-selftest_maple: False
-selftest_vma: False
+selftest_xarray: false
+selftest_maple: false
+selftest_vma: false

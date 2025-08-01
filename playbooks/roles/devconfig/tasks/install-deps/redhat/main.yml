@@ -2,7 +2,7 @@
 # Install dependenciesfor oscheck on Red Hat based systems
 
 - name: Register system with Red Hat
-  become: yes
+  become: true
   community.general.redhat_subscription:
     state: present
     org_id: "{{ rhel_org_id }}"
@@ -13,21 +13,21 @@
     - rhel_activation_key
 
 - name: Check whether custom repofile exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ devconfig_custom_yum_repofile }}"
   register: custom_repofile
   delegate_to: localhost
   when: devconfig_custom_yum_repofile
 
 - name: Add custom yum repo
-  become: yes
-  become_method: sudo
-  copy:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.copy:
     src: "{{ devconfig_custom_yum_repofile }}"
     dest: "/etc/yum.repos.d/{{ devconfig_custom_yum_repofile | basename }}"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   when:
     - devconfig_custom_yum_repofile
     - custom_repofile.stat.exists
@@ -51,11 +51,11 @@
     state: present
 
 - name: Refresh cache and upgrade all present packages
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
-    name: '*'
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
+    name: "*"
     state: latest
   retries: 3
   delay: 5
@@ -65,9 +65,9 @@
     - devconfig_try_upgrade|bool
 
 - name: Reboot system to make the new kernel and modules take effect
-  become: yes
-  become_method: sudo
-  reboot:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.reboot:
   when:
     - devconfig_try_upgrade|bool
 
@@ -78,7 +78,7 @@
     - ansible_distribution != "Fedora"
 
 - name: Build install package list
-  set_fact:
+  ansible.builtin.set_fact:
     packages:
       - bison
       - flex
@@ -108,31 +108,31 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Add btrfs-progs to install package list
-  set_fact:
-    packages: "{{ packages + [ 'btrfs-progs' ] }}"
+  ansible.builtin.set_fact:
+    packages: "{{ packages + ['btrfs-progs'] }}"
   when:
     - devconfig_try_install_kdevtools|bool
     - ansible_distribution == 'Fedora'
 
 - name: Add GNU screen to install package list
-  set_fact:
-    packages: "{{ packages + [ 'screen' ] }}"
+  ansible.builtin.set_fact:
+    packages: "{{ packages + ['screen'] }}"
   when:
     - devconfig_try_install_kdevtools|bool
     - ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Add Tmux to install package list
-  set_fact:
-    packages: "{{ packages + [ 'tmux' ] }}"
+  ansible.builtin.set_fact:
+    packages: "{{ packages + ['tmux'] }}"
   when:
     - devconfig_try_install_kdevtools|bool
     - ansible_facts['os_family']|lower == 'redhat' or ansible_facts['distribution_major_version'] | int >= 8
 
 - name: Install packages we typically care about
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -142,9 +142,9 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Set up snmp
-  become: yes
-  become_method: sudo
-  template:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: snmpd.conf
     dest: /etc/snmp/snmpd.conf
   when:
@@ -152,20 +152,20 @@
   tags: snmpd
 
 - name: Enable snmpd service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: snmpd
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   tags: snmpd
   when:
     - devconfig_try_install_kdevtools|bool
 
 - name: Start snmpd service
-  become: yes
-  become_method: sudo
-  systemd:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.systemd:
     name: snmpd
     state: restarted
   tags: snmpd
@@ -173,10 +173,10 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install systemd-journal-remote
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: "systemd-journal-remote"
   retries: 3
   delay: 5
@@ -188,10 +188,10 @@
   tags: journal
 
 - name: Install systemd-timesyncd
-  become: yes
-  become_method: sudo
-  yum:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.dnf:
+    update_cache: true
     name: systemd-udev
   retries: 3
   delay: 5

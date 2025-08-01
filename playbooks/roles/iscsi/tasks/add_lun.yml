@@ -1,7 +1,7 @@
 ---
 - name: Allocate an LVM logical device on the iSCSI target
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
   community.general.lvol:
@@ -11,7 +11,7 @@
 
 - name: Create an iSCSI backstore for the new device
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
   ansible.builtin.command:
@@ -27,7 +27,7 @@
 
 - name: Create the new Logical Unit
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
   ansible.builtin.command:
@@ -42,10 +42,10 @@
 
 - name: Back up the iSCSI target configuration
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
-  throttle: 1  # running this in parallel can clobber the backup file
+  throttle: 1 # running this in parallel can clobber the backup file
   ansible.builtin.command:
     cmd: "targetctl save"
   changed_when: true

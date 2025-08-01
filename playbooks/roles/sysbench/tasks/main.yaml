@@ -12,10 +12,10 @@
   tags: vars
 
 - name: Create a few directories which kdevops uses for sysbench if they do not exist
-  tags: [ 'mkfs' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  tags: ["mkfs"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -25,11 +25,10 @@
 
 # Distro specific
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-
-- include_role:
+  ansible.builtin.include_tasks: install-deps/main.yml
+- ansible.builtin.include_role:
     name: create_data_partition
-  tags: [ 'mkfs' ]
+  tags: ["mkfs"]
 
 - name: MySQL Docker
   ansible.builtin.import_tasks: mysql-docker/main.yaml

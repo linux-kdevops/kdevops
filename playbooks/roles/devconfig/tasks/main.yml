@@ -1,30 +1,30 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars,vars_simple,vars_extra
 
 - name: Wait for target nodes to become reachable
-  wait_for_connection:
+  ansible.builtin.wait_for_connection:
 
 - name: Gathering facts
-  setup:
+  ansible.builtin.setup:
   tags: always
 
 # Update /etc/hostname first so the change gets picked up by the reboot
 # that occurs during the distro-specific tasks
 
 - name: Ensure /etc/hostname is set
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: hostname
     dest: /etc/hostname
   tags: hostname
@@ -33,14 +33,14 @@
 
 # Check and fix APT mirrors for Debian testing before installing dependencies
 - name: Check and fix APT mirrors for Debian testing
-  include_tasks: check-apt-mirrors.yml
+  ansible.builtin.include_tasks: check-apt-mirrors.yml
   when:
     - devconfig_debian_testing is defined
     - devconfig_debian_testing | bool
 
 - name: Install dependencies
   ansible.builtin.include_tasks: install-deps/main.yml
-  tags: ['vars', 'vars_simple']
+  tags: ["vars", "vars_simple"]
 
 - name: Configure custom repositories and install packages
   ansible.builtin.import_tasks: config-custom-repos-and-packages/main.yml
@@ -51,24 +51,24 @@
 
 - name: Check if /mirror directory exists on localhost
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: /mirror
   register: mirror_dir
   run_once: true
 
 - name: Create an empty gitconfig if it doesn't exist on the localhost
   delegate_to: localhost
-  file:
+  ansible.builtin.file:
     path: "{{ dev_gitconfig_src }}"
     state: touch
-    mode: '0644'
+    mode: "0644"
   when:
     - mirror_dir.stat.exists
   run_once: true
 
 - name: Check if any safe.directory entries exist
   delegate_to: localhost
-  command: git config --global --get-all safe.directory
+  ansible.builtin.command: git config --global --get-all safe.directory
   register: git_safe_dirs
   failed_when: false
   changed_when: false
@@ -77,7 +77,7 @@
 
 - name: Add safe.directory = * if not already set
   delegate_to: localhost
-  command: git config --global --add safe.directory '*'
+  ansible.builtin.command: git config --global --add safe.directory '*'
   when:
     - mirror_dir.stat.exists
     - "'*' not in git_safe_dirs.stdout_lines"
@@ -85,54 +85,54 @@
 
 - name: Check if the developer has a git config
   delegate_to: localhost
-  stat:
-    path={{ dev_gitconfig_src }}
+  ansible.builtin.stat:
+    path: "{{ dev_gitconfig_src }}"
   run_once: true
   register: dev_git_config_file
 
 - name: Copy the developer's gitconfig *if* it exists
-  copy:
-    src={{ dev_gitconfig_src }}
-    dest={{ dev_gitconfig_dest }}
+  ansible.builtin.copy:
+    src: "{{ dev_gitconfig_src }}"
+    dest: "{{ dev_gitconfig_dest }}"
   when: dev_git_config_file.stat.exists
 
 - name: Copy the developer's gitconfig *if* it exists to root
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  copy:
-    src={{ dev_gitconfig_dest }}
-    dest=/root/
-    remote_src=yes
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.copy:
+    src: "{{ dev_gitconfig_dest }}"
+    dest: "/root/"
+    remote_src: true
   when: dev_git_config_file.stat.exists
 
 - name: Check if the system has a user vimrc file
-  stat:
-    path=~/.vimrc
+  ansible.builtin.stat:
+    path: ~/.vimrc
   register: dev_vimrc_file
   tags: vimrc
 
 - name: Copy over our default kernel hacking vimrc
-  template:
+  ansible.builtin.template:
     src: vimrc
     dest: ~/.vimrc
   tags: vimrc
   when: not dev_vimrc_file.stat.exists
 
 - name: Check if the system has a user vimrc file as root
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  stat:
-    path=~/.vimrc
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.stat:
+    path: ~/.vimrc
   register: dev_root_vimrc_file
   tags: vimrc
 
 - name: Copy over our default kernel hacking vimrc for root
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: vimrc
     dest: ~/.vimrc
   tags: vimrc
@@ -140,19 +140,19 @@
 
 - name: Check if the developer has a configuration file with favorite bash hacks
   delegate_to: localhost
-  stat:
-    path={{ dev_bash_config_hacks_src }}
+  ansible.builtin.stat:
+    path: "{{ dev_bash_config_hacks_src }}"
   register: dev_bash_config_file
 
 - name: Copy the developer's favorite bash hacks over *if* it exists
-  copy:
-    src={{ dev_bash_config_hacks_src }}
-    dest={{ dev_bash_config_hacks_dest }}
+  ansible.builtin.copy:
+    src: "{{ dev_bash_config_hacks_src }}"
+    dest: "{{ dev_bash_config_hacks_dest }}"
   when: dev_bash_config_file.stat.exists
   register: dev_bash_config_file_copied
 
 - name: Source the developer's bash hack script
-  shell: |
+  ansible.builtin.shell: |
     SOURCE_BASH_HACKS="test -s {{ dev_bash_config_hacks_generic }}  && . {{ dev_bash_config_hacks_generic }} || true"
     if [ -f {{ dev_bash_config }} ]; then
       if ! grep "{{ dev_bash_config_hacks_name }}" {{ dev_bash_config }}  2>&1 > /dev/null ; then
@@ -168,20 +168,20 @@
   when: dev_bash_config_file_copied is success
 
 - name: Copy the developer's favorite bash hacks over for root *if* it exists
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  copy:
-    src={{ dev_bash_config_hacks_src }}
-    dest=/root/
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.copy:
+    src: "{{ dev_bash_config_hacks_src }}"
+    dest: "/root/"
   when: dev_bash_config_file.stat.exists
   register: dev_bash_config_file_copied_root
 
 - name: Source the developer's bash hack script for root
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  shell: |
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: |
     SOURCE_BASH_HACKS="test -s {{ dev_bash_config_hacks_generic }}  && . {{ dev_bash_config_hacks_generic }} || true"
     if [ -f {{ dev_bash_config_root }} ]; then
       if ! grep "{{ dev_bash_config_hacks_name }}" {{ dev_bash_config_root }}  2>&1 > /dev/null ; then
@@ -197,133 +197,133 @@
   when: dev_bash_config_file_copied_root is success
 
 - name: Check to see if system has GRUB2
-  stat:
-    path=/etc/default/grub
+  ansible.builtin.stat:
+    path: /etc/default/grub
   register: grub2_config_file
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if stupid /etc/default/grub.d/15_timeout.cfg exists
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  stat:
-    path=/etc/default/grub.d/15_timeout.cfg
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.stat:
+    path: /etc/default/grub.d/15_timeout.cfg
   register: stupid_cloud_grub_timeout
   when:
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Remove stupid cloud /etc/default/grub.d/15_timeout.cfg
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  file:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
     path: /etc/default/grub.d/15_timeout.cfg
     state: absent
   when:
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the GRUB GRUB_CMDLINE_LINUX is present
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: grub_cmdline_linux_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the GRUB GRUB_CMDLINE_LINUX is empty
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: cmdline_linux_empty_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX)=\"\"'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - grub_cmdline_linux_grep.changed
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the consoleblank is used
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: console_blank_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)(\s*)consoleblank(.*)'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - grub_cmdline_linux_grep.changed
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the console is already configured on your GRUB config
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: console_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)(\s*)console(.*)'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - grub_cmdline_linux_grep.changed
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Update GRUB configuration to add console kernel parameters
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")((\s*)(.*)*)(\s*)"$'
-    backrefs: yes
+    backrefs: true
     line: '\1\2 {{ devconfig_kernel_console }}"'
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - not console_grep.changed
     - not cmdline_linux_empty_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Update GRUB configuration to add console kernel parameters for consoleblank configs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")((\s*)(.*)*)(\s*)"$'
-    backrefs: yes
+    backrefs: true
     line: '\1 {{ devconfig_kernel_console }}"'
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - console_blank_grep.changed|bool
     - not cmdline_linux_empty_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Add new GRUB console kernel parameters to your empty GRUB_CMDLINE_LINUX
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX)=\"\"'
     line: 'GRUB_CMDLINE_LINUX="{{ devconfig_kernel_console }}"'
@@ -334,13 +334,13 @@
     - devconfig_enable_console|bool
     - cmdline_linux_empty_grep.changed
     - not console_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Add new GRUB GRUB_CMDLINE_LINUX with console kernel parameters
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     insertafter: EOF
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)'
@@ -349,87 +349,87 @@
     - grub2_config_file.stat.exists
     - not grub_cmdline_linux_grep.changed
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the GRUB timeout is defined in your configuration
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: grub_timeout_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: '^(GRUB_TIMEOUT=)(.*)'
-    line: ''
-  check_mode: yes
+    regexp: "^(GRUB_TIMEOUT=)(.*)"
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Update GRUB timeout
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: '^(GRUB_TIMEOUT=)(.*)'
-    line: 'GRUB_TIMEOUT={{ devconfig_grub_timeout }}'
+    regexp: "^(GRUB_TIMEOUT=)(.*)"
+    line: "GRUB_TIMEOUT={{ devconfig_grub_timeout }}"
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - grub_timeout_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Add GRUB timeout
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     insertafter: EOF
-    regexp: '^(GRUB_TIMEOUT=)(.*)'
-    line: 'GRUB_TIMEOUT={{ devconfig_grub_timeout }}'
+    regexp: "^(GRUB_TIMEOUT=)(.*)"
+    line: "GRUB_TIMEOUT={{ devconfig_grub_timeout }}"
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - not grub_timeout_grep
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the GRUB serial command is defined
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: serial_command_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_SERIAL_COMMAND=\")(.*)\"\s*"'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Update GRUB configuration to add GRUB console parameters if set
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_SERIAL_COMMAND=\")((\s*)(.*)*)(\s*)"$'
-    backrefs: yes
+    backrefs: true
     line: '\1{{ devconfig_grub_console }}"'
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - serial_command_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Add GRUB console parameters
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     insertafter: EOF
     regexp: '^(GRUB_SERIAL_COMMAND=\")(.*)'
@@ -438,56 +438,56 @@
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - not serial_command_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Check to see if the GRUB terminal settings is defined
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   register: grub_terminal_grep
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: '^(GRUB_TERMINAL)=(.*)'
-    line: ''
-  check_mode: yes
+    regexp: "^(GRUB_TERMINAL)=(.*)"
+    line: ""
+  check_mode: true
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
-  tags: [ 'console' ]
+  tags: ["console"]
 
 # We use "console serial" so to enable real consoles to be
 # preferred first, and fallback to the serial as secondary
 # option. This let's us work with hardware serial consoles
 # say on IPMIs and virtual guests ('virsh console').
 - name: Update GRUB terminal to be serial
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: '^(GRUB_TERMINAL=)(.*)$'
-    backrefs: yes
+    regexp: "^(GRUB_TERMINAL=)(.*)$"
+    backrefs: true
     line: '\1"console serial"'
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - grub_terminal_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Add GRUB terminal setting
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     insertafter: EOF
-    regexp: '^(GRUB_TERMINAL=)(.*)$'
+    regexp: "^(GRUB_TERMINAL=)(.*)$"
     line: 'GRUB_TERMINAL="console serial"'
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
     - not grub_terminal_grep.changed
-  tags: [ 'console' ]
+  tags: ["console"]
 
 - name: Update your boot GRUB file if necessary
   ansible.builtin.import_tasks: update-grub/main.yml
@@ -497,24 +497,24 @@
     - not console_grep.changed or console_blank_grep.changed
 
 - name: Set up the client /etc/systemd/journal-upload.conf
-  tags: [ 'journal' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  tags: ["journal"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: "journal-upload.conf.j2"
     dest: "/etc/systemd/journal-upload.conf"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Enable and restart systemd-journal-upload.service on the client
-  tags: [ 'journal', 'journal-upload-restart' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  tags: ["journal", "journal-upload-restart"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-journal-upload.service
     enabled: true
@@ -524,11 +524,11 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Ensure systemd-journal-remote.service is running on the server
-  tags: [ 'journal-status' ]
+  tags: ["journal-status"]
   delegate_to: localhost
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-journal-remote.service
     state: started
@@ -537,10 +537,10 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Ensure systemd-journal-upload.service is running
-  tags: [ 'journal-status' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  tags: ["journal-status"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-journal-upload.service
     state: started
@@ -548,31 +548,31 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Set up the client /etc/systemd/timesyncd.conf
-  tags: [ 'timesyncd' ]
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  template:
+  tags: ["timesyncd"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.template:
     src: "timesyncd.conf.j2"
     dest: "/etc/systemd/timesyncd.conf"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - devconfig_enable_systemd_timesyncd|bool
 
 - name: Enable NTP on client
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "timedatectl set-ntp true"
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "timedatectl set-ntp true"
   when:
     - devconfig_enable_systemd_timesyncd_ntp|bool
 
 - name: Restart systemd-timesyncd.service on the client
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: systemd-timesyncd.service
     daemon_reload: true
@@ -582,105 +582,103 @@
     - devconfig_enable_systemd_timesyncd|bool
 
 - name: Ensure systemd-timesyncd.service is running on the client
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "timedatectl status"
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "timedatectl status"
   when:
     - devconfig_enable_systemd_timesyncd|bool
 
 - name: Gather ipv4 address
-  tags: [ 'journal_ln', 'vars_extra' ]
-  setup:
+  tags: ["journal_ln", "vars_extra"]
+  ansible.builtin.setup:
     gather_subset:
       - "all_ipv4_addresses"
   when:
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: "Group up facts we'll give to the host"
-  tags: [ 'journal_ln' ]
-  set_fact:
-    node_host_ip: "{{ ansible_ssh_host}} {{ ansible_default_ipv4.address }}"
+  tags: ["journal_ln"]
+  ansible.builtin.set_fact:
+    node_host_ip: "{{ ansible_ssh_host }} {{ ansible_default_ipv4.address }}"
   delegate_facts: true
-  when:
-    devconfig_enable_systemd_journal_remote|bool
+  when: devconfig_enable_systemd_journal_remote|bool
 
 - name: Set up symlinks for journals
-  tags: [ 'journal_ln' ]
+  tags: ["journal_ln"]
   delegate_to: localhost
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  command: "{{ topdir_path }}/workflows/kdevops/scripts/jounal-ln.sh {{ devconfig_systemd_journal_remote_path }} {{ node_host_ip }}"
-  when:
-    devconfig_enable_systemd_journal_remote|bool
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command: "{{ topdir_path }}/workflows/kdevops/scripts/jounal-ln.sh {{ devconfig_systemd_journal_remote_path }} {{ node_host_ip }}"
+  when: devconfig_enable_systemd_journal_remote|bool
 
 - name: Enables systemd's watchdog
-  stat:
-    path=/etc/systemd/system.conf
+  ansible.builtin.stat:
+    path: /etc/systemd/system.conf
   register: systemd_config_file
-  tags: [ 'systemd_watchdog' ]
+  tags: ["systemd_watchdog"]
 
 - name: Add systemd watchdog RuntimeWatchdogSec setting
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/systemd/system.conf
     insertafter: EOF
-    regexp: '^(RuntimeWatchdogSec=)(.*)$'
-    line: 'RuntimeWatchdogSec={{ devconfig_systemd_watchdog_runtime_timeout }}'
+    regexp: "^(RuntimeWatchdogSec=)(.*)$"
+    line: "RuntimeWatchdogSec={{ devconfig_systemd_watchdog_runtime_timeout }}"
   when:
     - systemd_config_file.stat.exists
     - devconfig_enable_systemd_watchdog|bool
-  tags: [ 'systemd_watchdog' ]
+  tags: ["systemd_watchdog"]
 
 - name: Add systemd watchdog RebootWatchdogSec setting
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/systemd/system.conf
     insertafter: EOF
-    regexp: '^(RebootWatchdogSec=)(.*)$'
-    line: 'RebootWatchdogSec={{ devconfig_systemd_watchdog_reboot_timeout }}'
+    regexp: "^(RebootWatchdogSec=)(.*)$"
+    line: "RebootWatchdogSec={{ devconfig_systemd_watchdog_reboot_timeout }}"
   when:
     - systemd_config_file.stat.exists
     - devconfig_enable_systemd_watchdog|bool
-  tags: [ 'systemd_watchdog' ]
+  tags: ["systemd_watchdog"]
 
 - name: Add systemd watchdog KExecWatchdogSec setting
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  lineinfile:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.lineinfile:
     path: /etc/systemd/system.conf
     insertafter: EOF
-    regexp: '^(KExecWatchdogSec=)(.*)$'
-    line: 'KExecWatchdogSec={{ devconfig_systemd_watchdog_kexec_timeout }}'
+    regexp: "^(KExecWatchdogSec=)(.*)$"
+    line: "KExecWatchdogSec={{ devconfig_systemd_watchdog_kexec_timeout }}"
   when:
     - systemd_config_file.stat.exists
     - devconfig_enable_systemd_watchdog|bool
-  tags: [ 'systemd_watchdog' ]
+  tags: ["systemd_watchdog"]
 
 - name: Set sysctl vm.overcommit_memory={{ devconfig_sysctl_mm_overcommit_memory }}
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.posix.sysctl:
     name: vm.overcommit_memory
     sysctl_file: "{{ devconfig_sysctl_conf }}"
     value: "{{ devconfig_sysctl_mm_overcommit_memory }}"
     state: present
-    sysctl_set: yes
-    reload: yes
+    sysctl_set: true
+    reload: true
   when:
     - devconfig_enable_sysctl_tuning
     - devconfig_enable_sysctl_mm_overcommit_memory
-  tags: [ 'sysctl' ]
+  tags: ["sysctl"]
 
 - name: Rev the kernel to the latest distribution kotd
   ansible.builtin.import_tasks: kotd-rev-kernel/main.yml
   when:
     - devconfig_enable_kotd|bool
-  tags: [ 'kotd' ]
+  tags: ["kotd"]

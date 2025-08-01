@@ -22,7 +22,7 @@
 - name: Check if dnsmasq service is enabled
   # noqa: command-instead-of-module
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "systemctl is-enabled dnsmasq"
@@ -36,7 +36,7 @@
 - name: Check if dnsmasq service is active
   # noqa: command-instead-of-module
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "systemctl is-active dnsmasq"
@@ -62,7 +62,7 @@
 
 - name: Check if libvirt default network is running
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   environment:
     LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
@@ -75,7 +75,7 @@
 
 - name: Start the libvirt default network
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   environment:
     LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"

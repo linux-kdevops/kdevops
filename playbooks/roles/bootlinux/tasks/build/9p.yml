@@ -6,9 +6,9 @@
     file: install-deps/main.yml
 
 - name: Install b4 on host
-  become: yes
-  become_method: sudo
-  pip:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.pip:
     name:
       - b4
   when:
@@ -19,15 +19,15 @@
   delegate_to: localhost
 
 - name: Add safe exception for a clone
-  command: "git config --global --add safe.directory {{ target_linux_git }}"
-  tags: [ 'clone']
+  ansible.builtin.command: "git config --global --add safe.directory {{ target_linux_git }}"
+  tags: ["clone"]
   when:
     - target_linux_git is string and target_linux_git.startswith('/')
   run_once: true
   delegate_to: localhost
 
 - name: Check if target directory exists when using 9p and Linux CLI was set
-  stat:
+  ansible.builtin.stat:
     path: "{{ bootlinux_9p_host_path }}"
   register: target_directory_stat
   run_once: true
@@ -36,7 +36,7 @@
     - bootlinux_tree_set_by_cli|bool
 
 - name: Fail if target directory does not exist when using 9p and Linux CLI was set
-  fail:
+  ansible.builtin.fail:
     msg: "The target directory {{ bootlinux_9p_host_path }} does not exist."
   run_once: true
   delegate_to: localhost
@@ -44,35 +44,35 @@
     - bootlinux_tree_set_by_cli|bool
     - not target_directory_stat.stat.exists
 
-- name: git clone {{ target_linux_tree }} on the control node
-  git:
+- name: Git clone {{ target_linux_tree }} on the control node
+  ansible.builtin.git:
     repo: "{{ target_linux_git }}"
     dest: "{{ bootlinux_9p_host_path }}"
-    update: yes
+    update: true
     depth: "{{ target_linux_shallow_depth }}"
     version: "{{ active_linux_ref | default(target_linux_ref) }}"
   retries: 3
   delay: 5
   register: result
   until: not result.failed
-  tags: [ 'clone']
+  tags: ["clone"]
   when:
     - not bootlinux_tree_set_by_cli|bool
   run_once: true
   delegate_to: localhost
 
 - name: Copy kernel delta if requested on the control node
-  template:
+  ansible.builtin.template:
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ bootlinux_9p_host_path }}/{{ target_linux_extra_patch }}"
-    mode: 0644
+    mode: "0644"
   when:
     - target_linux_extra_patch is defined
   run_once: true
   delegate_to: localhost
 
 - name: Apply kernel delta if requested on the control node
-  command: "git am {{ target_linux_extra_patch }}"
+  ansible.builtin.command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
   when:
@@ -81,13 +81,14 @@
   delegate_to: localhost
 
 - name: Variable values
-  debug:
+  ansible.builtin.debug:
     msg: "{{ target_linux_apply_patch_message_id }}"
   when:
     - target_linux_apply_patch_message_id is defined
 
 - name: Apply message patch set if requested on the control node
-  shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
+  ansible.builtin.shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
+  changed_when: false
   args:
     chdir: "{{ bootlinux_9p_host_path }}"
   when:
@@ -98,22 +99,23 @@
   delegate_to: localhost
 
 - name: Copy configuration for Linux {{ target_linux_tree }} on the control node
-  template:
+  ansible.builtin.template:
     src: "{{ linux_config }}"
     dest: "{{ bootlinux_9p_host_path }}/.config"
-    mode: 0644
+    mode: "0644"
   run_once: true
   delegate_to: localhost
 
 - name: Set kernel localversion if requested on the control node
-  shell: "echo {{ active_linux_localversion | default(target_linux_localversion) }} > {{ bootlinux_9p_host_path }}/localversion"
+  ansible.builtin.shell: "echo {{ active_linux_localversion | default(target_linux_localversion) }} > {{ bootlinux_9p_host_path }}/localversion"
+  changed_when: false
   when:
     - (active_linux_localversion is defined and active_linux_localversion != "") or (target_linux_localversion is defined and target_linux_localversion != "")
   run_once: true
   delegate_to: localhost
 
 - name: Configure Linux {{ target_linux_tree }} on the control node
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     yes "" | make oldconfig
   register: configure_done
@@ -126,79 +128,78 @@
   delegate_to: localhost
 
 - name: Get nproc on the control node
-  command: "{{ num_jobs }}"
-  tags: [ 'build-linux', 'cxl-build' ]
+  ansible.builtin.command: "{{ num_jobs }}"
+  tags: ["build-linux", "cxl-build"]
   register: nproc_9p
   run_once: true
   delegate_to: localhost
 
 - name: Get kernelversion
-  make:
+  community.general.make:
     chdir: "{{ bootlinux_9p_host_path }}"
     target: kernelversion
   register: target_linux_kernelversion
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   when:
     - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
 - name: Generate user kernelrelease {{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}
-  set_fact:
+  ansible.builtin.set_fact:
     target_user_kernelrelease: "{{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}"
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   when:
     - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
 - name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
-  make:
+  community.general.make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
-    params:
-      KERNELRELEASE={{ target_user_kernelrelease }}
-  tags: [ 'build-linux' ]
+    params: KERNELRELEASE={{ target_user_kernelrelease }}
+  tags: ["build-linux"]
   when:
     - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length > 0
   run_once: true
   delegate_to: localhost
 
 - name: Build {{ target_linux_tree }} on the control node using {{ nproc_9p.stdout }} threads
-  make:
+  community.general.make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   when:
     - (active_linux_kernelrelease | default(target_linux_kernelrelease)) | length == 0
   run_once: true
   delegate_to: localhost
 
 - name: Build {{ target_linux_tree }} cxl_test on the control node using {{ nproc_9p.stdout }} threads
-  make:
+  community.general.make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
     params:
       M: "tools/testing/cxl"
-  tags: [ 'build-linux', 'cxl-build' ]
+  tags: ["build-linux", "cxl-build"]
   when:
     - bootlinux_cxl_test|bool
   run_once: true
   delegate_to: localhost
 
 - name: See if snake-oil cert file is present on host
-  stat:
+  ansible.builtin.stat:
     path: "{{ bootlinux_9p_host_path }}/certs/signing_key.pem"
   register: snaik_oil_file_9p
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   run_once: true
   delegate_to: localhost
 
 - name: Ensure we allow world to read the snake oil in case of NFS or 9p read only usage
-  file:
+  ansible.builtin.file:
     path: "{{ bootlinux_9p_host_path }}/certs/signing_key.pem"
     mode: "0755"
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   when:
     - snaik_oil_file_9p.stat.exists
   run_once: true

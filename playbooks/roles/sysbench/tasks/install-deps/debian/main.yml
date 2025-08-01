@@ -1,39 +1,39 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
-  ignore_errors: yes
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Update apt cache
-  become: yes
-  become_method: sudo
-  apt:
-    update_cache: yes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    update_cache: true
   tags: deps
 
 - name: Install sysbench deps
-  become: yes
-  become_method: sudo
-  apt:
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
     name:
       - docker.io
       - locales
       - rsync
     state: present
     update_cache: true
-  tags: ['deps']
-  when: 'sysbench_type_mysql_docker|bool'
+  tags: ["deps"]
+  when: "sysbench_type_mysql_docker|bool"
 
 - name: Install PosgreSQL build deps
-  tags: ['deps']
+  tags: ["deps"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     name:
       - bison
@@ -47,14 +47,14 @@
       - zlib1g-dev
     state: present
     update_cache: true
-  when: 'sysbench_type_postgresql_native|bool'
+  when: "sysbench_type_postgresql_native|bool"
 
 # acl - Required for running Ansible with unpriviledge user (sysbench_postgresql_user)
 # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user
 - name: Install PosgreSQL runtime deps
-  tags: ['deps']
+  tags: ["deps"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     name:
       - acl
@@ -62,24 +62,24 @@
       - nvme-cli
     state: present
     update_cache: true
-  when: 'sysbench_type_postgresql_native|bool'
+  when: "sysbench_type_postgresql_native|bool"
 
 - name: Install sysbench deps
-  tags: ['deps']
+  tags: ["deps"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     name:
       - locales
       - rsync
     state: present
     update_cache: true
-  when: 'sysbench_type_postgresql_native|bool'
+  when: "sysbench_type_postgresql_native|bool"
 
 - name: Install plot deps
-  tags: ['deps']
+  tags: ["deps"]
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   delegate_to: localhost
   ansible.builtin.apt:
     name:
@@ -87,4 +87,4 @@
       - python3-seaborn
     state: present
     update_cache: true
-  when: 'sysbench_type_postgresql_native|bool'
+  when: "sysbench_type_postgresql_native|bool"

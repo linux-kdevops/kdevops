@@ -1,9 +1,9 @@
 # SPDX-License-Identifier copyleft-next-0.3.1
 ---
-only_install: False
-only_verify_user: False
+only_install: false
+only_verify_user: false
 
-skip_install: False
-skip_configuration: False
+skip_install: false
+skip_configuration: false
 
-libvirt_session: False
+libvirt_session: false

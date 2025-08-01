@@ -12,19 +12,19 @@
   tags: vars
 
 - name: Set up the /data mount point
-  tags: ['data_partition']
+  tags: ["data_partition"]
   ansible.builtin.include_role:
     name: create_data_partition
 
 - name: Set the pathname of the results directory on the control node
-  tags: ['vars']
+  tags: ["vars"]
   ansible.builtin.set_fact:
     ltp_test_group: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') }}"
     ltp_results_full_path: "{{ topdir_path }}/workflows/ltp/results"
     ltp_results_target: "../workflows/ltp/results/last-run"
 
 - name: Create the local results directory
-  tags: ['first_run']
+  tags: ["first_run"]
   ansible.builtin.file:
     path: "{{ ltp_results_full_path }}"
     state: directory
@@ -33,29 +33,38 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  local_action: file path="{{ ltp_results_target }}/" state=absent
+  ansible.builtin.file:
+    path: "{{ ltp_results_target }}/"
+    state: absent
+  delegate_to: localhost
   run_once: true
-  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+  tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  local_action: file path="{{ ltp_results_target }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ ltp_results_target }}/"
+    state: directory
+  delegate_to: localhost
   run_once: true
-  tags: [ 'run_tests', 'copy_results', 'clean_local_results' ]
+  tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Get used target kernel version
-  tags: [ 'copy_results' ]
-  command: "uname -r"
+  tags: ["copy_results"]
+  ansible.builtin.command: "uname -r"
+  changed_when: false
   register: uname_cmd
 
 - name: Store last kernel variable
-  tags: [ 'copy_results' ]
-  set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+  tags: ["copy_results"]
+  ansible.builtin.set_fact:
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   run_once: true
 
 - name: Document used target kernel version
-  local_action: "shell echo {{ last_kernel }} > {{ ltp_results_target }}/../last-kernel.txt"
-  tags: [ 'run_tests', 'copy_results', 'print_results' ]
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ ltp_results_target }}/../last-kernel.txt
+  changed_when: false
+  delegate_to: localhost
+  tags: ["run_tests", "copy_results", "print_results"]
   run_once: true
 
 - name: Ensure the local results directory exists
@@ -71,11 +80,11 @@
   vars:
     params:
       files:
-        - '{{ ansible_distribution }}.yml'
-        - '{{ ansible_os_family }}.yml'
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
         - default.yml
       paths:
-        - 'vars'
+        - "vars"
 
 - name: Enable the CodeReady repo
   ansible.builtin.include_role:
@@ -84,30 +93,30 @@
     - ansible_os_family == "RedHat"
 
 - name: Install dependencies for ltp
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ ltp_packages }}"
     state: present
 
 - name: Set the pathname of the build directory
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   ansible.builtin.set_fact:
     ltp_build_dir: "{{ data_path }}/ltp"
 
 - name: Remove existing ltp build directory
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ ltp_build_dir }}"
     state: absent
 
 - name: Shallow-clone the ltp source code from {{ ltp_repo }}
-  tags: ['build', 'clone', 'git', 'ltp']
+  tags: ["build", "clone", "git", "ltp"]
   ansible.builtin.git:
     repo: "{{ ltp_repo }}"
     dest: "{{ ltp_build_dir }}"
@@ -122,7 +131,7 @@
     - kdevops_workflows_dedicated_workflow|bool
 
 - name: Clone the full ltp source code tree from {{ ltp_repo }}
-  tags: ['build', 'clone', 'git', 'ltp']
+  tags: ["build", "clone", "git", "ltp"]
   ansible.builtin.git:
     repo: "{{ ltp_repo }}"
     dest: "{{ ltp_build_dir }}"
@@ -136,29 +145,29 @@
     - not kdevops_workflows_dedicated_workflow|bool
 
 - name: Initialize autotools in the build directory
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: autotools
 
 - name: Configure the ltp build environment
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   ansible.builtin.command:
     cmd: "./configure"
     chdir: "{{ ltp_build_dir }}"
     creates: include/config.h
 
 - name: Build ltp from source
-  tags: ['build', 'ltp']
+  tags: ["build", "ltp"]
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: all
     jobs: "{{ ansible_processor_nproc }}"
 
 - name: Ensure /opt has correct permissions
-  tags: ['ltp']
+  tags: ["ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     state: directory
@@ -166,16 +175,16 @@
     mode: "u=rwx,g=rwx,o=rwxt"
 
 - name: Install ltp on the test systems
-  tags: ['ltp']
+  tags: ["ltp"]
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: install
     jobs: "{{ ansible_processor_nproc }}"
 
 - name: Start the rpcbind service
-  tags: ['ltp']
+  tags: ["ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: rpcbind.service
@@ -183,9 +192,9 @@
     enabled: true
 
 - name: Generate /etc/nfs.conf
-  tags: ['ltp']
+  tags: ["ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.template:
     src: nfs.conf.j2
@@ -195,9 +204,9 @@
     mode: "u=rw,g=r,o=r"
 
 - name: Start the NFSD service
-  tags: ['ltp']
+  tags: ["ltp"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: nfs-server.service
@@ -205,9 +214,9 @@
     enabled: true
 
 - name: Run ltp
-  tags: ['run_tests']
+  tags: ["run_tests"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   environment:
     CREATE_ENTRIES: 1
@@ -217,16 +226,16 @@
   failed_when: false
 
 - name: Look for test results in target node's /opt/ltp/results
-  tags: ['copy_results']
+  tags: ["copy_results"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "/opt/ltp/results/"
   register: results_files
 
 - name: Copy test results to the control node
-  tags: ['copy_results']
+  tags: ["copy_results"]
   ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}/{{ ltp_test_group }}/"
@@ -239,16 +248,16 @@
     label: "Copying {{ item.path | basename }} ..."
 
 - name: Look for test output in target node's /opt/ltp/output
-  tags: ['copy_results']
+  tags: ["copy_results"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "/opt/ltp/output/"
   register: output_files
 
 - name: Copy test output to the control node
-  tags: ['copy_results']
+  tags: ["copy_results"]
   ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}/{{ ltp_test_group }}/"
@@ -261,18 +270,18 @@
     label: "Copying {{ item.path | basename }} ..."
 
 - name: Verify last-run kernel directory exists
-  tags: [ 'copy_results' ]
+  tags: ["copy_results"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}"
   register: last_run_kernel_dir
 
 - name: Copy over the last-run into the results directory for archiving into kdevops
-  copy:
+  ansible.builtin.copy:
     src: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}"
     dest: "{{ ltp_results_full_path }}/"
   run_once: true
-  tags: [ 'copy_results' ]
+  tags: ["copy_results"]
   delegate_to: localhost
   when:
     - last_run_kernel_dir.stat.exists

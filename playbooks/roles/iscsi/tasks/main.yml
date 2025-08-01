@@ -4,15 +4,15 @@
   vars:
     params:
       files:
-        - '{{ ansible_distribution }}.yml'
-        - '{{ ansible_os_family }}.yml'
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
         - default.yml
       paths:
-        - 'vars'
+        - "vars"
 
 - name: Install dependencies for iSCSI target
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ iscsi_target_packages }}"
@@ -26,7 +26,7 @@
 
 - name: Create a directory for storing iSCSI persistent reservations
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "/etc/target/pr"
@@ -38,7 +38,7 @@
 
 - name: Disable firewalld
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: firewalld.service
@@ -48,7 +48,7 @@
 
 - name: Enable the systemd iSCSI service
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: "{{ iscsi_target_service_name }}"
@@ -57,7 +57,7 @@
 
 - name: Enable targetcli auto_save_on_exit
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "targetcli set global auto_save_on_exit=true"
@@ -67,7 +67,7 @@
 
 - name: Create iSCSI target {{ iscsi_target_wwn }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "targetcli iscsi/ create {{ iscsi_target_wwn }}"
@@ -77,7 +77,7 @@
 
 - name: Enable the target's generate_node_acls attribute
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "targetcli iscsi/{{ iscsi_target_wwn }}/tpg1 set attribute generate_node_acls=1"
@@ -87,7 +87,7 @@
 
 - name: Disable initiator authentication
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
     cmd: "targetcli iscsi/{{ iscsi_target_wwn }}/tpg1 set attribute authentication=0"
@@ -97,9 +97,9 @@
 
 - name: Back up the iSCSI target configuration
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
-  throttle: 1  # running this in parallel can clobber the backup file
+  throttle: 1 # running this in parallel can clobber the backup file
   ansible.builtin.command:
     cmd: "targetctl save"
   changed_when: true

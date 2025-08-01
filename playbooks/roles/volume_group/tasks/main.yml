@@ -8,7 +8,7 @@
 
 - name: Install dependencies for LVM support
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:

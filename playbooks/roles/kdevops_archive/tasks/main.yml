@@ -1,25 +1,25 @@
 ---
 - name: Install git-lfs
-  become: yes
-  become_flags: 'su - -c'
-  become_method: sudo
-  package:
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
     name:
       - git-lfs
       - rsync
     state: present
 
 - name: Override kdevops archive repo url to demo URL if in demo mode
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_results_repo_url: "{{ kdevops_results_repo_url_demo }}"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Notify this is a kdevops-results-archive demo
   ansible.builtin.debug:
     msg: "This is a kdevops archive demo: {{ kdevops_results_repo_url }}"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Check if kdevops archive/ directory exists
   ansible.builtin.stat:
@@ -31,28 +31,28 @@
     path: "{{ kdevops_results_local }}"
     state: absent
   when: results_dir.stat.exists
-  become: yes
+  become: true
 
 - name: Create new kdevops archive/ for new results
-  file:
+  ansible.builtin.file:
     path: "{{ kdevops_results_local }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Get list of files from make ci-results for our archive/
-  command: make ci-results
+  ansible.builtin.command: make ci-results
   register: ci_results
   args:
     chdir: "{{ topdir_path }}"
 
 - name: Get current user
-  command: whoami
+  ansible.builtin.command: whoami
   register: current_user
   changed_when: false
 
 - name: Ensure source files are readable by current user
-  become: yes
-  shell: |
+  become: true
+  ansible.builtin.shell: |
     for item in {{ ci_results.stdout_lines | join(' ') }}; do
       if [ -e "$item" ] || compgen -G "$item" > /dev/null; then
         find "$item" -type d -exec chmod 755 {} +
@@ -65,7 +65,7 @@
   when: ci_results.stdout_lines | length > 0
 
 - name: Copy files and directories to the our archive/
-  shell: |
+  ansible.builtin.shell: |
     for item in {{ ci_results.stdout_lines | join(' ') }}; do
       if [ -e "$item" ] || compgen -G "$item" > /dev/null; then
         rsync -a --relative "$item" "{{ kdevops_results_local }}"
@@ -76,20 +76,20 @@
   when: ci_results.stdout_lines | length > 0
 
 - name: Count files and directories in archive/
-  command: find "{{ kdevops_results_local }}" -mindepth 1 -type f,d
+  ansible.builtin.command: find "{{ kdevops_results_local }}" -mindepth 1 -type f,d
   register: kdevops_archive_data
   changed_when: false
 
 - name: Count files and directories we're putting into archive/
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_data_count: "{{ kdevops_archive_data.stdout_lines | length }}"
 
 - name: CI archive not setup
-  debug:
+  ansible.builtin.debug:
     msg: |
       The output of `make ci-results` yielded no files, this likely means
       you have not setup which results we should copy for this target
-      development tree: {{ target_linux_tree}}
+      development tree: {{ target_linux_tree }}
       To set this up you need these set up:
         .ci/build-test/{{ target_linux_tree }}
         .ci/tests-test/{{ target_linux_tree }}
@@ -98,13 +98,13 @@
     - kdevops_archive_data_count | int == 0
 
 - name: Archiving disabled
-  meta: end_play
+  ansible.builtin.meta: end_play
   when:
     - kdevops_archive_data_count | int == 0
 
 - name: Ensure copied files are readable by current user
-  become: yes
-  shell: |
+  become: true
+  ansible.builtin.shell: |
     find "{{ kdevops_results_local }}" -type d -exec chmod 755 {} +
     find "{{ kdevops_results_local }}" -type f -exec chmod 644 {} +
     chown -R {{ current_user.stdout }}:{{ current_user.stdout }} "{{ kdevops_results_local }}"
@@ -112,7 +112,7 @@
     executable: /bin/bash
 
 - name: Copy files and directories to the archive/
-  shell: |
+  ansible.builtin.shell: |
     for item in {{ ci_results.stdout_lines | join(' ') }}; do
       if [ -e "$item" ]; then
         cp -R --parents "$item" "{{ kdevops_results_local }}"
@@ -123,42 +123,42 @@
   when: ci_results.stdout_lines | length > 0
 
 - name: Check if ci.ref file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/ci.ref"
   register: ci_ref_file
 
 - name: Read ci.ref file if it exists
-  slurp:
+  ansible.builtin.slurp:
     path: "{{ topdir_path }}/ci.ref"
   register: ci_ref_content
   when: ci_ref_file.stat.exists
 
 - name: Set kdevops_archive_test_ref from ci.ref
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_ref: "{{ ci_ref_content.content | b64decode | trim }}"
   when: ci_ref_file.stat.exists
 
 - name: Set kdevops_archive_test_ref in case ci.ref is not set
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_ref: "{{ target_linux_tree }}"
   when: not ci_ref_file.stat.exists
 
 - name: Create our archive/ xz file for kdevops-results-archive
-  archive:
+  community.general.archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     format: xz
-    remove: no
+    remove: false
 
 - name: Create the same archive/ zip file for web CI artifacts
-  archive:
+  community.general.archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.zip"
     format: zip
-    remove: no
+    remove: false
 
 - name: Find archive files to verify
-  find:
+  ansible.builtin.find:
     paths: "{{ kdevops_results }}"
     patterns:
       - "*.zip"
@@ -166,7 +166,7 @@
   register: archive_files
 
 - name: Get archive file stat
-  stat:
+  ansible.builtin.stat:
     path: "{{ item.path }}"
   register: archive_stats
   loop: "{{ archive_files.files }}"
@@ -174,30 +174,30 @@
   no_log: true
 
 - name: Display archive file information
-  debug:
+  ansible.builtin.debug:
     msg: "{{ item.stat.path }} ({{ (item.stat.size / 1024 / 1024) | round(2) }}MB)"
   loop: "{{ archive_stats.results }}"
   loop_control:
     label: "{{ item.stat.path | basename }}"
 
 - name: Check if kdevops-results-archive directory exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ kdevops_results_archive_dir }}"
   register: archive_dir
 
 - name: Check if mirror directory exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ kdevops_archive }}"
   register: mirror_dir
 
 - name: Set kdevops_archive_mirror_present based on mirror directory existence
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_mirror_present: "{{ mirror_dir.stat.exists }}"
   when:
     - mirror_dir.stat.exists
 
 - name: Remove kdevops-results-archive always to account for epochs changes
-  file:
+  ansible.builtin.file:
     path: "{{ kdevops_results_archive_dir }}"
     state: absent
   when:
@@ -215,12 +215,12 @@
     - not kdevops_archive_mirror_present | bool
 
 - name: Committing to kdevops-results-archive not possible
-  meta: end_play
+  ansible.builtin.meta: end_play
   when:
     - not kdevops_archive_mirror_present|bool
 
 - name: Clone kdevops-results-archive repository with git LFS and use the local mirror
-  git:
+  ansible.builtin.git:
     repo: "{{ kdevops_results_repo_url }}"
     dest: "{{ kdevops_results_archive_dir }}"
     version: main
@@ -235,96 +235,96 @@
   ansible.builtin.debug:
     msg: "This is a kdevops archive demo, throw away results"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Check if ci.trigger file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/ci.trigger"
   register: ci_trigger_file
 
 - name: Read ci.trigger file if it exists
-  slurp:
+  ansible.builtin.slurp:
     path: "{{ topdir_path }}/ci.trigger"
   register: ci_trigger_content
   when: ci_trigger_file.stat.exists
 
 - name: Set kdevops_archive_test_subject from ci.trigger
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_trigger: "{{ ci_trigger_content.content | b64decode | trim }}"
   when: ci_trigger_file.stat.exists
 
 - name: Set kdevops_archive_test_trigger in case ci.trigger is not set
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_trigger: "{{ target_linux_tree }}"
   when: not ci_trigger_file.stat.exists
 
 - name: Get current date in YYYYMMDD format
-  set_fact:
+  ansible.builtin.set_fact:
     current_date: "{{ '%Y%m%d' | strftime }}"
 
 - name: Construct base directory path
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_base: "{{ kdevops_workflow_name }}/{{ current_user.stdout }}/{{ kdevops_archive_test_trigger }}/{{ current_date }}"
 
 - name: Ensure base directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_base }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: List all directories in base path
-  find:
+  ansible.builtin.find:
     paths: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_base }}"
     file_type: directory
   register: all_dirs
 
 - name: Get directory names only
-  set_fact:
+  ansible.builtin.set_fact:
     dir_names: "{{ all_dirs.files | map(attribute='path') | map('basename') | list }}"
 
 - name: Filter for numbered directories
-  set_fact:
+  ansible.builtin.set_fact:
     numbered_dirs: "{{ dir_names | select('match', '^\\d{4}$') | list }}"
 
 - name: Get highest number or default to 0
-  set_fact:
+  ansible.builtin.set_fact:
     current_highest: "{{ (numbered_dirs | map('int') | max | default(0)) | int }}"
 
 - name: Calculate next number
-  set_fact:
+  ansible.builtin.set_fact:
     next_number_int: "{{ (current_highest | int) + 1 }}"
 
 - name: Convert to padded string
-  set_fact:
-    next_number: "{{ '%04d' % (next_number_int | int)}}"
+  ansible.builtin.set_fact:
+    next_number: "{{ '%04d' % (next_number_int | int) }}"
 
 - name: Set archive test number
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_number: "{{ next_number }}"
 
 - name: Check if ci.subject file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/ci.subject"
   register: ci_subject_file
 
 - name: Read ci.subject file if it exists
-  slurp:
+  ansible.builtin.slurp:
     path: "{{ topdir_path }}/ci.subject"
   register: ci_subject_content
   when: ci_subject_file.stat.exists
 
 - name: Set kdevops_archive_test_subject from ci.subject
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_subject: "{{ ci_subject_content.content | b64decode | trim }}"
   when: ci_subject_file.stat.exists
 
 - name: Set best-effort heuristic subject in case ci.subject is not set
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_subject: "{{ target_linux_tree }} {{ kdevops_archive_test_ref }} result #{{ kdevops_archive_test_number }}"
   when: not ci_subject_file.stat.exists
 
 - name: Generate git-format-patch style filename from subject
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_ci_subject_patchform_name: >-
       {{
         (kdevops_archive_test_subject | lower
@@ -337,35 +337,35 @@
       }}
 
 - name: Set complete archive prefix with subject-based name
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_prefix: "{{ kdevops_archive_base }}/{{ kdevops_archive_test_number }}/{{ kdevops_archive_ci_subject_patchform_name }}/"
 
 - name: Create target directory if it doesn't exist
-  file:
+  ansible.builtin.file:
     path: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Copy archive to target directory
-  copy:
+  ansible.builtin.copy:
     src: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Create .tar.xz symlink for the archive
-  file:
+  ansible.builtin.file:
     src: "{{ kdevops_archive_test_ref }}.xz"
     dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}/{{ kdevops_archive_test_ref }}.tar.xz"
     state: link
 
 - name: Ensure .xz files are tracked by Git LFS
-  command:
+  ansible.builtin.command:
     cmd: git lfs track "*.xz"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
 
 - name: Stage the new archive file
-  command:
+  ansible.builtin.command:
     cmd: git add "{{ kdevops_archive_prefix }}{{ kdevops_archive_test_ref }}*.xz"
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
@@ -373,44 +373,44 @@
     GIT_LFS_SKIP_SMUDGE: "0"
 
 - name: Check if ci.commit_extra file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/ci.commit_extra"
   register: ci_commit_file
 
 - name: Read ci.commit_extra file if it exists
-  slurp:
+  ansible.builtin.slurp:
     path: "{{ topdir_path }}/ci.commit_extra"
   register: ci_commit_content
   when: ci_commit_file.stat.exists
 
 - name: Set kdevops_archive_test_subject from ci.commit_extra
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_commit: "{{ ci_commit_content.content | b64decode | trim }}"
   when: ci_commit_file.stat.exists
 
 - name: Set kdevops_archive_test_subject in case ci.commit_extra is not set
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_test_commit: "No extra test report details available."
   when: not ci_commit_file.stat.exists
 
 - name: Check if ci.result file exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/ci.result"
   register: ci_result_file
 
 - name: Read ci.result file if it exists
-  slurp:
+  ansible.builtin.slurp:
     path: "{{ topdir_path }}/ci.result"
   register: ci_result_content
   when: ci_result_file.stat.exists
 
 - name: Set kdevops_archive_ci_test_result from ci.result
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_ci_test_result: "{{ ci_result_content.content | b64decode | trim }}"
   when: ci_result_file.stat.exists
 
 - name: Set kdevops_archive_ci_test_result in case ci.result is not set
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_archive_ci_test_result: "unknown"
   when: not ci_result_file.stat.exists
 
@@ -441,7 +441,7 @@
   ansible.builtin.copy:
     content: "{{ commit_message }}"
     dest: "{{ tmp_commit_msg.path }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Commit the archive
   ansible.builtin.shell: |
@@ -457,7 +457,7 @@
     state: absent
 
 - name: Push changes to remote repository
-  command:
+  ansible.builtin.command:
     cmd: git push origin main
   args:
     chdir: "{{ kdevops_results_archive_dir }}"
@@ -465,9 +465,9 @@
     GIT_LFS_SKIP_SMUDGE: "0"
     GIT_LFS_FORCE: "1"
   register: git_push_result
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Display push error if it failed
-  debug:
+  ansible.builtin.debug:
     msg: "Failed to push changes: {{ git_push_result.stderr }}"
   when: git_push_result.rc != 0
