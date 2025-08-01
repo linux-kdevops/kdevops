@@ -30,6 +30,14 @@
   tags: hostname
 
 # Distro specific
+
+# Check and fix APT mirrors for Debian testing before installing dependencies
+- name: Check and fix APT mirrors for Debian testing
+  include_tasks: check-apt-mirrors.yml
+  when:
+    - devconfig_debian_testing is defined
+    - devconfig_debian_testing | bool
+
 - name: Install dependencies
   ansible.builtin.include_tasks: install-deps/main.yml
   tags: ['vars', 'vars_simple']
