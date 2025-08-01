@@ -15,10 +15,17 @@ if [[ ! -f $DEBIAN_VERSION_FILE ]]; then
 fi
 
 SOURCES_FILE="/etc/apt/sources.list"
+DEB822_SOURCES_FILE="/etc/apt/sources.list.d/debian.sources"
 
-if [[ ! -f $SOURCES_FILE ]]; then
+# Check for DEB822 format first
+if [[ -f $DEB822_SOURCES_FILE ]]; then
+	SOURCES_FILE=$DEB822_SOURCES_FILE
+	IS_DEB822=true
+elif [[ ! -f $SOURCES_FILE ]]; then
 	echo n
 	exit 0
+else
+	IS_DEB822=false
 fi
 
 which traceroute > /dev/null
@@ -27,9 +34,23 @@ if [[ $? -ne 0 ]]; then
 	exit 0
 fi
 
-LINE=$(grep -v "^#" $SOURCES_FILE | head -1)
-HOST_URL_LINE=$(echo $LINE | awk '{print $2}')
-HOST=$(echo $HOST_URL_LINE | awk -F[/:] '{print $4}')
+# Extract host depending on format
+if [[ "$IS_DEB822" == "true" ]]; then
+	# DEB822 format: URIs: https://deb.debian.org/debian
+	HOST_URL_LINE=$(grep -E "^URIs:" $SOURCES_FILE | head -1 | awk '{print $2}')
+	HOST=$(echo $HOST_URL_LINE | sed -E 's|https?://||' | cut -d'/' -f1)
+else
+	# Legacy format: deb http://deb.debian.org/debian ...
+	LINE=$(grep -v "^#" $SOURCES_FILE | head -1)
+	HOST_URL_LINE=$(echo $LINE | awk '{print $2}')
+	HOST=$(echo $HOST_URL_LINE | awk -F[/:] '{print $4}')
+fi
+
+if [[ -z "$HOST" ]]; then
+	echo n
+	exit 0
+fi
+
 HOP_COUNT=$(traceroute -n -w 1,1,1 $HOST | wc -l)
 HOP_COUNT=$((HOP_COUNT -1))
 
