@@ -51,8 +51,8 @@
   become_method: sudo
   ansible.builtin.lineinfile:
     dest: /etc/hosts
-    regexp: ".*{{ item }}$"
-    line: "{{ hostvars[item].ansible_all_ipv4_addresses | ipaddr(private_network) | first }} {{ item }}"
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_all_ipv4_addresses | ansible.utils.ipaddr(private_network) | first }} {{ item }}"
     state: present
   with_items: "{{ ueh_hosts }}"
   when:
