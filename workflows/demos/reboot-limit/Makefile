@@ -70,15 +70,15 @@ endif
 # the extra_vars.yaml file.
 WORKFLOW_ARGS += $(REBOOT_LIMIT_ARGS)
 
-# The default is our workflow does not have kernel-ci enabled
-REBOOT_LIMIT_KERNEL_CI_LOOP := false
-REBOOT_LIMIT_KERNEL_CI_LOOP_KOTD := false
+# The default is our workflow does not have loop testing enabled
+REBOOT_LIMIT_LOOP := false
+REBOOT_LIMIT_LOOP_KOTD := false
 
-# If kdevops was configured to enable kernel-ci we define our scripts
-ifeq (y,$(CONFIG_KERNEL_CI))
-REBOOT_LIMIT_KERNEL_CI_LOOP      := scripts/workflows/demos/reboot-limit/run_kernel_ci.sh
-REBOOT_LIMIT_KERNEL_CI_LOOP_KOTD := scripts/workflows/demos/reboot-limit/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
+# If reboot-limit was configured to enable loop testing we define our scripts
+ifeq (y,$(CONFIG_REBOOT_LIMIT_ENABLE_LOOP))
+REBOOT_LIMIT_LOOP      := scripts/workflows/demos/reboot-limit/run_loop.sh
+REBOOT_LIMIT_LOOP_KOTD := scripts/workflows/demos/reboot-limit/run_loop_kotd.sh
+endif # CONFIG_REBOOT_LIMIT_ENABLE_LOOP
 
 # By default KDEVOPS_HOSTS_TEMPLATE is defined to be hosts.in, if you want an
 # alternative you can define one, or even have a dynamic one. For an example
@@ -146,14 +146,14 @@ reboot-limit-baseline:
 
 # Once you know the baseline works, you may want to run the baseline in a loop
 # up to the number of times you define. We define this goal in kdevops as
-# the CONFIG_KERNEL_CI_STEADY_STATE_GOAL.
+# the CONFIG_REBOOT_LIMIT_LOOP_STEADY_STATE_GOAL.
 reboot-limit-baseline-loop:
-	$(Q)$(REBOOT_LIMIT_KERNEL_CI_LOOP) baseline
+	$(Q)$(REBOOT_LIMIT_LOOP) baseline
 
-# The kdevops kernel-ci target will try to upgrade your kernel to the latest
+# The kdevops kotd (kernel-of-the-day) target will try to upgrade your kernel to the latest
 # and then run the baseline-loop.
-reboot-limit-baseline-kernelci:
-	$(Q)$(REBOOT_LIMIT_KERNEL_CI_LOOP_KOTD) baseline
+reboot-limit-baseline-kotd:
+	$(Q)$(REBOOT_LIMIT_LOOP_KOTD) baseline
 
 # Resets the boot counters so we start from scratch
 reboot-limit-baseline-reset:
@@ -177,10 +177,10 @@ reboot-limit-dev-baseline:
 		--extra-vars=@./extra_vars.yaml
 
 reboot-limit-dev-loop:
-	$(Q)$(REBOOT_LIMIT_KERNEL_CI_LOOP) dev
+	$(Q)$(REBOOT_LIMIT_LOOP) dev
 
-reboot-limit-dev-kernelci:
-	$(Q)$(REBOOT_LIMIT_KERNEL_CI_LOOP_KOTD) dev
+reboot-limit-dev-kotd:
+	$(Q)$(REBOOT_LIMIT_LOOP_KOTD) dev
 
 reboot-limit-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -195,7 +195,8 @@ reboot-limit-help-menu:
 	@echo "reboot-limit-baseline                    - Run the reboot-linit test on baseline hosts and collect results"
 	@echo "reboot-limit-baseline-reset              - Reset the test boot counter for baseline"
 	@echo "reboot-limit-dev                         - Run the reboot-limti test on dev hosts and collect results"
-	@echo "reboot-limit-baseline-kernelci           - Run the reboot-limit kernel-ci loop"
+	@echo "reboot-limit-baseline-loop               - Run the reboot-limit test in a loop until failure or steady state"
+	@echo "reboot-limit-baseline-kotd               - Run the reboot-limit kotd (kernel-of-the-day) loop"
 	@echo ""
 
 HELP_TARGETS += reboot-limit-help-menu
