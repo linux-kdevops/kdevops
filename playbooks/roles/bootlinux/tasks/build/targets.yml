@@ -10,6 +10,28 @@
     - target_linux_install_b4
     - ansible_facts['os_family']|lower != 'debian'
 
+- name: Verify target git ref exists before cloning
+  command: "git ls-remote {{ target_linux_git }} {{ target_linux_ref }}"
+  register: ref_check
+  tags: [ 'clone']
+
+- name: Fail if git ref does not exist
+  fail:
+    msg: |
+      Failed to verify git ref '{{ target_linux_ref }}' exists in repository '{{ target_linux_git }}'.
+
+      This typically happens when:
+      1. The ref (branch/tag/commit) doesn't exist in the repository
+      2. You're using A/B testing with a shallow clone that doesn't contain the required ref
+      3. The repository URL is incorrect or inaccessible
+
+      Please verify:
+      - The ref '{{ target_linux_ref }}' exists in the repository
+      - If using A/B testing with different refs, ensure shallow cloning is disabled
+      - The repository URL '{{ target_linux_git }}' is correct and accessible
+  when:
+    - ref_check.rc != 0
+
 - name: git clone {{ target_linux_tree }} on the target nodes
   git:
     repo: "{{ target_linux_git }}"
