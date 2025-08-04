@@ -88,13 +88,6 @@ endif # CONFIG_LTP_TESTS_TIRPC
 WORKFLOW_ARGS += $(LTP_ARGS)
 WORKFLOW_ARGS_SEPARATED += ltp_enabled_test_groups='$(subst $(space),+,$(LTP_ENABLED_TEST_GROUPS))'
 
-LTP_KERNEL_CI_LOOP := false
-LTP_KERNEL_CI_LOOP_KOTD := false
-
-ifeq (y,$(CONFIG_KERNEL_CI))
-LTP_KERNEL_CI_LOOP      := scripts/workflows/ltp/run_kernel_ci.sh
-LTP_KERNEL_CI_LOOP_KOTD := scripts/workflows/ltp/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
 
 ifndef LAST_KERNEL
 LAST_KERNEL := $(shell cat workflows/ltp/results/last-kernel.txt 2>/dev/null)
@@ -127,11 +120,6 @@ ltp-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
-ltp-baseline-loop:
-	$(Q)$(LTP_KERNEL_CI_LOOP) baseline
-
-ltp-baseline-kernelci:
-	$(Q)$(LTP_KERNEL_CI_LOOP_KOTD) baseline
 
 ltp-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -140,11 +128,6 @@ ltp-dev-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
-ltp-dev-loop:
-	$(Q)$(LTP_KERNEL_CI_LOOP) dev
-
-ltp-dev-kernelci:
-	$(Q)$(LTP_KERNEL_CI_LOOP_KOTD) dev
 
 ltp-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -162,8 +145,6 @@ ltp-help-menu:
 	@echo "ltp options:"
 	@echo "ltp                              - Git clone ltp, build and install it"
 	@echo "ltp-{baseline,dev}               - Run the ltp test on baseline or dev hosts and collect results"
-	@echo "ltp-{baseline,dev}-loop"         - Run ltp in a loop until error or steady state
-	@echo "ltp-{baseline,dev}-kernelci      - Run ltp kernel-ci loop"
 	@echo ""
 
 HELP_TARGETS += ltp-help-menu
