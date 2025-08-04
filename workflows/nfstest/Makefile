@@ -45,13 +45,6 @@ endif
 WORKFLOW_ARGS += $(NFSTEST_ARGS)
 WORKFLOW_ARGS_SEPARATED += nfstest_enabled_test_groups='$(subst $(space),+,$(NFSTEST_ENABLED_TEST_GROUPS))'
 
-NFSTEST_KERNEL_CI_LOOP := false
-NFSTEST_KERNEL_CI_LOOP_KOTD := false
-
-ifeq (y,$(CONFIG_KERNEL_CI))
-NFSTEST_KERNEL_CI_LOOP      := scripts/workflows/nfstest/run_kernel_ci.sh
-NFSTEST_KERNEL_CI_LOOP_KOTD := scripts/workflows/nfstest/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
 
 ifndef LAST_KERNEL
 LAST_KERNEL := $(shell cat workflows/nfstest/results/last-kernel.txt 2>/dev/null)
@@ -84,11 +77,6 @@ nfstest-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
-nfstest-baseline-loop:
-	$(Q)$(NFSTEST_KERNEL_CI_LOOP) baseline
-
-nfstest-baseline-kernelci:
-	$(Q)$(NFSTEST_KERNEL_CI_LOOP_KOTD) baseline
 
 nfstest-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -97,11 +85,6 @@ nfstest-dev-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfstest.yml
 
-nfstest-dev-loop:
-	$(Q)$(NFSTEST_KERNEL_CI_LOOP) dev
-
-nfstest-dev-kernelci:
-	$(Q)$(NFSTEST_KERNEL_CI_LOOP_KOTD) dev
 
 nfstest-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -119,8 +102,6 @@ nfstest-help-menu:
 	@echo "nfstest options:"
 	@echo "nfstest                              - Git clone nfstest and install it"
 	@echo "nfstest-{baseline,dev}               - Run selected nfstests on baseline or dev hosts and collect results"
-	@echo "nfstest-{baseline,dev}-loop"         - Run nfstest in a loop until error or steady state
-	@echo "nfstest-{baseline,dev}-kernelci      - Run nfstest kernel-ci loop"
 	@echo ""
 
 HELP_TARGETS += nfstest-help-menu
