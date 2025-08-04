@@ -42,12 +42,6 @@ BLKTESTS_ARGS += blktests_data_target='$(BLKTESTS_DATA_TARGET)'
 
 WORKFLOW_ARGS += $(BLKTESTS_ARGS)
 
-BLKTEST_KERNEL_CI_LOOP := false
-BLKTEST_KERNEL_CI_LOOP_KOTD := false
-ifeq (y,$(CONFIG_KERNEL_CI))
-BLKTEST_KERNEL_CI_LOOP := scripts/workflows/blktests/run_kernel_ci.sh
-BLKTEST_KERNEL_CI_LOOP_KOTD := scripts/workflows/blktests/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
 
 EXTRA_VAR_INPUTS += extend-extra-args-blktests
 
@@ -78,11 +72,6 @@ blktests-baseline:
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
-blktests-baseline-loop:
-	$(Q)$(BLKTEST_KERNEL_CI_LOOP) baseline $(LIMIT_HOSTS)
-
-blktests-baseline-kernelci:
-	$(Q)$(BLKTEST_KERNEL_CI_LOOP_KOTD) baseline $(LIMIT_HOSTS)
 
 blktests-baseline-skip-kdevops-update:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -136,8 +125,6 @@ blktests-help-menu:
 	@echo "blktests-dev-results                     - Only collect results for dev hosts"
 	@echo "blktests-baseline-skip-kdevops-update    - Run blktests but skip updating kdevops"
 	@echo "blktests-baseline-run-oscheck-only       - Only run oscheck"
-	@echo "blktests-baseline-loop                   - Run blktests in a loop until a failure is found or steady state is reached"
-	@echo "blktests-baseline-kernelci               - Run blktests kernel-ci loop"
 	@echo ""
 
 HELP_TARGETS += blktests-help-menu
