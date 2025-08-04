@@ -137,15 +137,10 @@ of a baseline by running fstests in a loop 100 times.  If no new failures have
 been found we consider that we have a high confidence in a baseline and then
 it can be used to verify if new development changes are not causing a regression.
 
-The amount of loops you choose to test with fstests is configurable
-with `CONFIG_KERNEL_CI_STEADY_STATE_GOAL`. We default to 100. This value
-is chosen for a few reasons:
-
-  * Running fstests 100 times takes about 1 week
-  * This is a sensible litmus test to ensure no regressions are
-    introduced with a new delta of patches, if you want to build confidence
-    in some possibly intrusive changes to Linux, or backport some patches
-    without regressing the kernel.
+The preferred method for long-term testing with fstests is to use the
+SOAK_DURATION feature, which allows specific tests designed for soak
+testing to run for extended periods. This provides a more targeted approach
+to stress testing compared to simply running all tests in a loop.
 
 The value originally comes from kdevops use at SUSE Linux enterprise
 distributions, as a litmus test to validate kernel releases, so to ensure
