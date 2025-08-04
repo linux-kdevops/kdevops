@@ -51,6 +51,11 @@ config KDEVOPS_HOSTS_PREFIX_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh KDEVOPS_HOSTS_PREFIX)
 
+config KDEVOPS_BASELINE_AND_DEV_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh TEST_AB)
+
 config KDEVOPS_HOSTS_PREFIX
 	string "The hostname prefix to use for nodes"
 	output yaml
@@ -78,7 +83,8 @@ config KDEVOPS_CUSTOM_SSH_KEXALGORITHMS
 
 config KDEVOPS_BASELINE_AND_DEV
 	bool "Enable both a baseline and development system per target test"
-	default n
+	default n if !KDEVOPS_BASELINE_AND_DEV_SET_BY_CLI
+	default y if KDEVOPS_BASELINE_AND_DEV_SET_BY_CLI
 	help
 	  By default kdevops will only spawn a baseline target node (local
 	  virtualization or cloud node) for your Linux kernel testing and
