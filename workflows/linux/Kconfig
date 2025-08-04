@@ -385,7 +385,7 @@ if KDEVOPS_BASELINE_AND_DEV
 
 choice
 	prompt "A/B kernel testing configuration"
-	default BOOTLINUX_AB_SAME_REF
+	default BOOTLINUX_AB_DIFFERENT_REF
 	help
 	  When A/B testing is enabled, you can choose to use the same
 	  kernel reference for both baseline and dev nodes, or specify
