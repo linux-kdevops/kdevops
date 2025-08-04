@@ -4,8 +4,6 @@ config WORKFLOWS_REBOOT_LIMIT
 	select KDEVOPS_TRY_INSTALL_KDEV_TOOLS
 	select KDEVOPS_DEVCONFIG_ENABLE_CONSOLE
 	select KDEVOPS_DEVCONFIG_ENABLE_SYSTEMD_WATCHDOG
-	select KERNEL_CI
-	select KERNEL_CI_ENABLE_STEADY_STATE
 	help
 	  If you are doing kernel tests which includes a reboot, along the way,
 	  or if you do a reboot after a series of tests, you may want to first
@@ -70,6 +68,33 @@ config REBOOT_LIMIT_WATCHDOG_CHECK_TIME
 	  How often to trigger running the reboot-limit watchdog, in seconds.
 
 endif
+
+config REBOOT_LIMIT_ENABLE_LOOP
+	bool "Enable loop testing for reboot-limit"
+	default y
+	help
+	  Enable this to run reboot-limit tests in a loop until a failure
+	  is found or steady state is reached.
+
+if REBOOT_LIMIT_ENABLE_LOOP
+
+config REBOOT_LIMIT_LOOP_STEADY_STATE_GOAL
+	int "Steady-state goal for reboot-limit loop testing"
+	default 100
+	help
+	  The maximum number of successful test loops to run before
+	  declaring steady state achieved. Each loop runs REBOOT_LIMIT_BOOT_MAX
+	  reboots, so the total number of reboots is this value multiplied
+	  by REBOOT_LIMIT_BOOT_MAX.
+
+config REBOOT_LIMIT_LOOP_STEADY_STATE_INCREMENTAL
+	bool "Use incremental steady-state counting"
+	default y
+	help
+	  Enable this so that the loop will resume from the last success
+	  counter after failures rather than resetting to zero.
+
+endif # REBOOT_LIMIT_ENABLE_LOOP
 
 config REBOOT_LIMIT_BOOT_COUNT_CRASH_ENABLE
 	bool "Force a crash after certain period of reboots"
