@@ -73,6 +73,49 @@
   run_once: true
   delegate_to: localhost
 
+- name: Check if target directory exists for dirty check
+  stat:
+    path: "{{ bootlinux_9p_host_path }}"
+  register: git_dir_stat
+  run_once: true
+  delegate_to: localhost
+  when:
+    - not bootlinux_tree_set_by_cli|bool
+
+- name: Check if git tree is dirty
+  command: "git -C {{ bootlinux_9p_host_path }} status --porcelain"
+  register: git_status
+  changed_when: false
+  failed_when: false
+  run_once: true
+  delegate_to: localhost
+  when:
+    - not bootlinux_tree_set_by_cli|bool
+    - git_dir_stat.stat.exists
+    - git_dir_stat.stat.isdir
+
+- name: Fail if git tree has local modifications
+  fail:
+    msg: |
+      Local modifications exist in the destination: {{ bootlinux_9p_host_path }}
+
+      The git tree is dirty with uncommitted changes. This prevents safe git operations.
+
+      To resolve this, you can:
+      1. Commit or stash your changes in {{ bootlinux_9p_host_path }}
+      2. Reset the tree with: git -C {{ bootlinux_9p_host_path }} reset --hard
+      3. Remove the directory and let kdevops clone fresh: rm -rf {{ bootlinux_9p_host_path }}
+
+      Modified files:
+      {{ git_status.stdout }}
+  when:
+    - not bootlinux_tree_set_by_cli|bool
+    - git_dir_stat.stat.exists
+    - git_dir_stat.stat.isdir
+    - git_status.stdout | length > 0
+  run_once: true
+  delegate_to: localhost
+
 - name: git clone {{ target_linux_tree }} on the control node
   git:
     repo: "{{ target_linux_git }}"
