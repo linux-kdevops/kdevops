@@ -62,13 +62,6 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_DEDICATE_GITR))
 WORKFLOW_ARGS_SEPARATED += gitr_enabled_test_groups='$(subst $(space),+,$(GITR_ENABLED_TEST_GROUPS))'
 endif
 
-GITR_KERNEL_CI_LOOP := false
-GITR_KERNEL_CI_LOOP_KOTD := false
-
-ifeq (y,$(CONFIG_KERNEL_CI))
-GITR_KERNEL_CI_LOOP      := scripts/workflows/gitr/run_kernel_ci.sh
-GITR_KERNEL_CI_LOOP_KOTD := scripts/workflows/gitr/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
 
 ifndef LAST_KERNEL
 LAST_KERNEL := $(shell cat workflows/gitr/results/last-kernel.txt 2>/dev/null)
@@ -101,11 +94,6 @@ gitr-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml
 
-gitr-baseline-loop:
-	$(Q)$(GITR_KERNEL_CI_LOOP) baseline
-
-gitr-baseline-kernelci:
-	$(Q)$(GITR_KERNEL_CI_LOOP_KOTD) baseline
 
 gitr-dev-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -114,11 +102,6 @@ gitr-dev-baseline:
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gitr.yml
 
-gitr-dev-loop:
-	$(Q)$(GITR_KERNEL_CI_LOOP) dev
-
-gitr-dev-kernelci:
-	$(Q)$(GITR_KERNEL_CI_LOOP_KOTD) dev
 
 gitr-dev-reset:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -136,8 +119,6 @@ gitr-help-menu:
 	@echo "gitr options:"
 	@echo "gitr                              - Git clone git, build and install it"
 	@echo "gitr-{baseline,dev}               - Run the gitr test on baseline or dev hosts and collect results"
-	@echo "gitr-{baseline,dev}-loop"         - Run gitr in a loop until error or steady state
-	@echo "gitr-{baseline,dev}-kernelci      - Run gitr kernel-ci loop"
 	@echo ""
 
 HELP_TARGETS += gitr-help-menu
