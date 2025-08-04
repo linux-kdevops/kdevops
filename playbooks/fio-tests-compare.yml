@@ -18,8 +18,8 @@
     - name: Generate comparison graphs
       shell: |
         python3 {{ topdir_path }}/playbooks/python/workflows/fio-tests/fio-compare.py \
-          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['baseline'][0] }}   \
-          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['dev'][0] }}        \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['baseline'][0] }}/fio-tests-results-{{ groups['baseline'][0] }}   \
+          {{ topdir_path }}/workflows/fio-tests/results/{{ groups['dev'][0] }}/fio-tests-results-{{ groups['dev'][0] }}        \
           --output-dir {{ topdir_path }}/workflows/fio-tests/results/graphs           \
           --baseline-label "Baseline"                                                 \
           --dev-label "Development"

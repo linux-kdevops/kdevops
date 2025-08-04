@@ -37,6 +37,29 @@
         ([{'name': 'mixed_50_50', 'rw': 'randrw', 'rwmixread': 50}] if fio_tests_pattern_mixed_50_50 else [])
       }}
 
+- name: Calculate total test combinations and timeout
+  set_fact:
+    fio_tests_total_combinations: "{{ fio_tests_block_sizes | length * fio_tests_io_depths | length * fio_tests_num_jobs | length * fio_tests_patterns | length }}"
+    fio_test_time_per_job: "{{ (fio_tests_runtime | int) + (fio_tests_ramp_time | int) }}"
+
+- name: Calculate async timeout with safety margin
+  set_fact:
+    # Each test runs twice (JSON + normal output), add 60s per test for overhead, then add 30% safety margin
+    fio_tests_async_timeout: "{{ ((fio_tests_total_combinations | int * fio_test_time_per_job | int * 2) + (fio_tests_total_combinations | int * 60) * 1.3) | int }}"
+
+- name: Display test configuration
+  debug:
+    msg: |
+      FIO Test Configuration:
+      - Total test combinations: {{ fio_tests_total_combinations }}
+      - Runtime per test: {{ fio_tests_runtime }}s
+      - Ramp time per test: {{ fio_tests_ramp_time }}s
+      - Estimated total time: {{ (fio_tests_total_combinations | int * fio_test_time_per_job | int * 2 / 60) | round(1) }} minutes
+      - Async timeout: {{ (fio_tests_async_timeout | int / 60) | round(1) }} minutes
+      {% if fio_tests_device == '/dev/null' %}
+      - Note: Using /dev/null - fsync_on_close and direct IO disabled automatically
+      {% endif %}
+
 - name: Install fio and dependencies
   include_tasks: install-deps/main.yml
 
@@ -88,7 +111,7 @@
                       --output-format=normal
     done
   become: yes
-  async: 7200  # 2 hours timeout
+  async: "{{ fio_tests_async_timeout | default(7200) }}"
   poll: 30
 
 - name: Remove old fio-tests results archive if it exists
@@ -100,10 +123,12 @@
 
 - name: Archive fio-tests results directory on remote host
   become: yes
-  command: >
-    tar czf {{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz -C {{ fio_tests_results_dir }} .
-  args:
-    creates: "{{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+  shell: |
+    cd {{ fio_tests_results_dir }}
+    tar czf /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz \
+      --exclude='*.tar.gz' \
+      results_*.json results_*.txt *.log jobs/ 2>/dev/null || true
+    mv /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz {{ fio_tests_results_dir }}/ || true
   tags: [ 'results' ]
 
 - name: Remove previously fetched fio-tests results archive if it exists

@@ -45,6 +45,9 @@ fio-tests-trend-analysis:
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests-trend-analysis.yml
 
+fio-tests-estimate:
+	$(Q)python3 scripts/workflows/fio-tests/estimate-runtime.py
+
 fio-tests-help-menu:
 	@echo "fio-tests options:"
 	@echo "fio-tests                 - run fio performance tests"
@@ -53,6 +56,7 @@ fio-tests-help-menu:
 	@echo "fio-tests-graph           - generate performance graphs on localhost"
 	@echo "fio-tests-compare         - compare baseline vs dev results"
 	@echo "fio-tests-trend-analysis  - analyze performance trends"
+	@echo "fio-tests-estimate        - estimate runtime for current configuration"
 	@echo ""
 
 HELP_TARGETS += fio-tests-help-menu

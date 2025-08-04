@@ -59,19 +59,59 @@ config FIO_TESTS_DEVICE
 	  The block device to use for fio testing. For CI/testing
 	  purposes, /dev/null can be used as a simple target.
 
+config FIO_TESTS_QUICK_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh FIO_QUICK)
+
+choice
+	prompt "FIO test runtime duration"
+	default FIO_TESTS_RUNTIME_DEFAULT if !FIO_TESTS_QUICK_SET_BY_CLI
+	default FIO_TESTS_RUNTIME_QUICK if FIO_TESTS_QUICK_SET_BY_CLI
+
+config FIO_TESTS_RUNTIME_DEFAULT
+	bool "Default runtime (60 seconds)"
+	help
+	  Use default runtime of 60 seconds per job for comprehensive
+	  performance testing.
+
+config FIO_TESTS_RUNTIME_QUICK
+	bool "Quick runtime (10 seconds)"
+	help
+	  Use quick runtime of 10 seconds per job for rapid testing
+	  or CI environments.
+
+config FIO_TESTS_RUNTIME_CUSTOM_HIGH
+	bool "Custom high runtime (300 seconds)"
+	help
+	  Use extended runtime of 300 seconds per job for thorough
+	  long-duration testing.
+
+config FIO_TESTS_RUNTIME_CUSTOM_LOW
+	bool "Custom low runtime (5 seconds)"
+	help
+	  Use minimal runtime of 5 seconds per job for very quick
+	  smoke testing.
+
+endchoice
+
 config FIO_TESTS_RUNTIME
 	string "Test runtime per job"
 	output yaml
-	default "60"
+	default "60" if FIO_TESTS_RUNTIME_DEFAULT
+	default "10" if FIO_TESTS_RUNTIME_QUICK
+	default "300" if FIO_TESTS_RUNTIME_CUSTOM_HIGH
+	default "5" if FIO_TESTS_RUNTIME_CUSTOM_LOW
 	help
-	  Runtime in seconds for each fio job. Default is 60 seconds
-	  for reasonable test duration while allowing comprehensive
-	  testing.
+	  Runtime in seconds for each fio job.
 
 config FIO_TESTS_RAMP_TIME
 	string "Ramp time before measurements"
 	output yaml
-	default "10"
+	default "10" if FIO_TESTS_RUNTIME_DEFAULT
+	default "2" if FIO_TESTS_RUNTIME_QUICK
+	default "30" if FIO_TESTS_RUNTIME_CUSTOM_HIGH
+	default "1" if FIO_TESTS_RUNTIME_CUSTOM_LOW
 	help
 	  Time in seconds to ramp up before starting measurements.
 	  This allows the workload to stabilize before collecting
@@ -90,35 +130,40 @@ config FIO_TESTS_BS_4K
 config FIO_TESTS_BS_8K
 	bool "8K block size tests"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable 8K block size testing.
 
 config FIO_TESTS_BS_16K
 	bool "16K block size tests"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable 16K block size testing.
 
 config FIO_TESTS_BS_32K
 	bool "32K block size tests"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable 32K block size testing.
 
 config FIO_TESTS_BS_64K
 	bool "64K block size tests"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable 64K block size testing.
 
 config FIO_TESTS_BS_128K
 	bool "128K block size tests"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable 128K block size testing.
 
@@ -136,35 +181,40 @@ config FIO_TESTS_IODEPTH_1
 config FIO_TESTS_IODEPTH_4
 	bool "IO depth 4"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with IO depth of 4.
 
 config FIO_TESTS_IODEPTH_8
 	bool "IO depth 8"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with IO depth of 8.
 
 config FIO_TESTS_IODEPTH_16
 	bool "IO depth 16"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with IO depth of 16.
 
 config FIO_TESTS_IODEPTH_32
 	bool "IO depth 32"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with IO depth of 32.
 
 config FIO_TESTS_IODEPTH_64
 	bool "IO depth 64"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with IO depth of 64.
 
@@ -182,28 +232,32 @@ config FIO_TESTS_NUMJOBS_1
 config FIO_TESTS_NUMJOBS_2
 	bool "2 jobs"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with 2 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_4
 	bool "4 jobs"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with 4 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_8
 	bool "8 jobs"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with 8 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_16
 	bool "16 jobs"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Test with 16 concurrent fio jobs.
 
@@ -221,35 +275,40 @@ config FIO_TESTS_PATTERN_RAND_READ
 config FIO_TESTS_PATTERN_RAND_WRITE
 	bool "Random write"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable random write workload testing.
 
 config FIO_TESTS_PATTERN_SEQ_READ
 	bool "Sequential read"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable sequential read workload testing.
 
 config FIO_TESTS_PATTERN_SEQ_WRITE
 	bool "Sequential write"
 	output yaml
-	default y
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable sequential write workload testing.
 
 config FIO_TESTS_PATTERN_MIXED_75_25
 	bool "Mixed 75% read / 25% write"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable mixed workload with 75% reads and 25% writes.
 
 config FIO_TESTS_PATTERN_MIXED_50_50
 	bool "Mixed 50% read / 50% write"
 	output yaml
-	default n
+	default y if !FIO_TESTS_QUICK_SET_BY_CLI
+	default n if FIO_TESTS_QUICK_SET_BY_CLI
 	help
 	  Enable mixed workload with 50% reads and 50% writes.
 
@@ -283,6 +342,9 @@ config FIO_TESTS_FSYNC_ON_CLOSE
 	help
 	  Call fsync() before closing files to ensure data is
 	  written to storage.
+
+	  Note: This is automatically disabled when using /dev/null
+	  as the test device since /dev/null doesn't support fsync.
 
 config FIO_TESTS_RESULTS_DIR
 	string "Results directory"

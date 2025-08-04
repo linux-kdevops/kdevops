@@ -5,7 +5,11 @@ direct=0
 {% else %}
 direct={{ fio_tests_direct | int }}
 {% endif %}
+{% if fio_tests_device == '/dev/null' %}
+fsync_on_close=0
+{% else %}
 fsync_on_close={{ fio_tests_fsync_on_close | int }}
+{% endif %}
 group_reporting=1
 time_based=1
 runtime={{ fio_tests_runtime }}
