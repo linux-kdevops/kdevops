@@ -73,12 +73,6 @@ WORKFLOW_ARGS += $(FSTESTS_ARGS)
 WORKFLOW_ARGS_SEPARATED += $(FSTESTS_ARGS_SEPARATED)
 WORKFLOW_ARGS_DIRECT += $(FSTESTS_ARGS_DIRECT)
 
-FSTEST_KERNEL_CI_LOOP := false
-FSTEST_KERNEL_CI_LOOP_KOTD := false
-ifeq (y,$(CONFIG_KERNEL_CI))
-FSTEST_KERNEL_CI_LOOP := scripts/workflows/fstests/run_kernel_ci.sh
-FSTEST_KERNEL_CI_LOOP_KOTD := scripts/workflows/fstests/run_kernel_ci_kotd.sh
-endif # CONFIG_KERNEL_CI
 
 FSTESTS_DYNAMIC_RUNTIME_VARS := "kdevops_run_fstests": True
 ifneq (,$(RUN_FAILURES))
@@ -157,12 +151,6 @@ fstests-baseline: $(FSTESTS_BASELINE_EXTRA)
 		--tags vars,run_tests,copy_results \
 		--extra-vars '{ $(FSTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
-
-fstests-baseline-loop: $(KDEVOPS_EXTRA_VARS)
-	$(Q)$(FSTEST_KERNEL_CI_LOOP) baseline $(LIMIT_HOSTS)
-
-fstests-baseline-kernelci: $(KDEVOPS_EXTRA_VARS)
-	$(Q)$(FSTEST_KERNEL_CI_LOOP_KOTD) baseline $(LIMIT_HOSTS)
 
 fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
@@ -271,8 +259,6 @@ fstests-help-menu:
 	@echo "fstests-dev-results                     - Only collect results for dev hosts"
 	@echo "fstests-baseline-skip-kdevops-update    - Run fstests but skip updating kdevops"
 	@echo "fstests-baseline-run-oscheck-only       - Only run oscheck"
-	@echo "fstests-baseline-loop                   - Run fstests in a loop until a failure is found or steady state is reached"
-	@echo "fstests-baseline-kernelci               - Run fstests kernel-ci loop"
 	@echo ""
 
 HELP_TARGETS += fstests-help-menu
