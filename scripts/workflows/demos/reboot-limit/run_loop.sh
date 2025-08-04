@@ -1,18 +1,25 @@
 #!/bin/bash
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-# Part of kdevops kernel-ci, this is the script which will run the test workflow
-# as many times as indicated up to CONFIG_KERNEL_CI_STEADY_STATE_GOAL
+# Part of kdevops reboot-limit loop testing, this script will run the test workflow
+# as many times as indicated up to CONFIG_REBOOT_LIMIT_LOOP_STEADY_STATE_GOAL
 
 source ${TOPDIR}/.config
 source ${TOPDIR}/scripts/lib.sh
 
-COUNT=1
+# Check if we're resuming from a previous run
+if [[ "$CONFIG_REBOOT_LIMIT_LOOP_STEADY_STATE_INCREMENTAL" == "y" && -f $KERNEL_CI_OK_FILE ]]; then
+	COUNT=$(cat $KERNEL_CI_OK_FILE)
+	let COUNT=$COUNT+1
+else
+	COUNT=1
+	rm -f $KERNEL_CI_OK_FILE
+fi
 
 run_loop()
 {
 	while true; do
-		echo "== kernel-ci reboot-limit test loop $COUNT start: $(date)" > $KERNEL_CI_FAIL_LOG
+		echo "== reboot-limit test loop $COUNT start: $(date)" > $KERNEL_CI_FAIL_LOG
 		echo "/usr/bin/time -f %E make reboot-limit-baseline" >> $KERNEL_CI_FAIL_LOG
 		/usr/bin/time -p -o $KERNEL_CI_LOGTIME make reboot-limit-baseline >> $KERNEL_CI_FAIL_LOG
 		ANSIBLE_CALL_RET=$?
@@ -43,14 +50,14 @@ run_loop()
 		echo $COUNT > $KERNEL_CI_OK_FILE
 
 		let COUNT=$COUNT+1
-		if [[ "$CONFIG_KERNEL_CI_ENABLE_STEADY_STATE" == "y" &&
-		      "$COUNT" -gt "$CONFIG_KERNEL_CI_STEADY_STATE_GOAL" ]]; then
+		if [[ "$CONFIG_REBOOT_LIMIT_ENABLE_LOOP" == "y" &&
+		      "$COUNT" -gt "$CONFIG_REBOOT_LIMIT_LOOP_STEADY_STATE_GOAL" ]]; then
 			exit 0
 		fi
 		sleep 1
 	done
 }
 
-rm -f $KERNEL_CI_FAIL_FILE $KERNEL_CI_OK_FILE
-echo "= kernel-ci full log" > $KERNEL_CI_FULL_LOG
+rm -f $KERNEL_CI_FAIL_FILE
+echo "= reboot-limit loop full log" > $KERNEL_CI_FULL_LOG
 run_loop
