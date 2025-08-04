@@ -32,6 +32,39 @@
   when:
     - ref_check.rc != 0
 
+- name: Check if target directory exists for dirty check
+  stat:
+    path: "{{ target_linux_dir_path }}"
+  register: git_dir_stat
+
+- name: Check if git tree is dirty
+  command: "git -C {{ target_linux_dir_path }} status --porcelain"
+  register: git_status
+  changed_when: false
+  failed_when: false
+  when:
+    - git_dir_stat.stat.exists
+    - git_dir_stat.stat.isdir
+
+- name: Fail if git tree has local modifications
+  fail:
+    msg: |
+      Local modifications exist in the destination: {{ target_linux_dir_path }}
+
+      The git tree is dirty with uncommitted changes. This prevents safe git operations.
+
+      To resolve this, you can:
+      1. Commit or stash your changes in {{ target_linux_dir_path }}
+      2. Reset the tree with: git -C {{ target_linux_dir_path }} reset --hard
+      3. Remove the directory and let kdevops clone fresh: rm -rf {{ target_linux_dir_path }}
+
+      Modified files:
+      {{ git_status.stdout }}
+  when:
+    - git_dir_stat.stat.exists
+    - git_dir_stat.stat.isdir
+    - git_status.stdout | length > 0
+
 - name: git clone {{ target_linux_tree }} on the target nodes
   git:
     repo: "{{ target_linux_git }}"
