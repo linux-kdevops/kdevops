@@ -10,6 +10,16 @@ config BOOTLINUX_TREE_REF_SET_BY_CLI
 	output yaml
 	default $(shell, scripts/check-cli-set-var.sh LINUX_TREE_REF)
 
+config BOOTLINUX_DEV_TREE_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh LINUX_DEV_TREE)
+
+config BOOTLINUX_DEV_TREE_REF_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh LINUX_DEV_TREE_REF)
+
 config BOOTLINUX_HAS_PURE_IOMAP_CONFIG
 	bool
 
@@ -415,7 +425,8 @@ if BOOTLINUX_AB_DIFFERENT_REF
 config BOOTLINUX_DEV_TREE
 	string "Development kernel tree URL"
 	output yaml
-	default BOOTLINUX_TREE
+	default BOOTLINUX_TREE if !BOOTLINUX_DEV_TREE_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_DEV_TREE)) if BOOTLINUX_DEV_TREE_SET_BY_CLI
 	help
 	  Git tree URL for the development kernel. If left empty or same
 	  as the baseline tree, the same tree will be used with a different
@@ -424,7 +435,8 @@ config BOOTLINUX_DEV_TREE
 config TARGET_LINUX_DEV_REF
 	string "Development kernel reference"
 	output yaml
-	default $(shell, scripts/infer_last_stable_kernel.sh)
+	default $(shell, scripts/infer_last_stable_kernel.sh) if !BOOTLINUX_DEV_TREE_REF_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars.sh $(LINUX_DEV_TREE_REF)) if BOOTLINUX_DEV_TREE_REF_SET_BY_CLI
 	help
 	  Git reference (branch, tag, or commit) for the development kernel.
 	  This should be different from the baseline reference to enable
