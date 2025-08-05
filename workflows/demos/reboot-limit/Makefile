@@ -57,7 +57,12 @@ endif
 # it works OK. Note that if enabling kernel-ci the steady state there
 # is separate. And so if this reboot_limit_max is 100 and steady state
 # is 100, we'd have to reboot 10,000 times before reaching steady state.
+# The COUNT parameter can override this value at runtime.
+ifdef COUNT
+REBOOT_LIMIT_MAX:=$(COUNT)
+else
 REBOOT_LIMIT_MAX:=$(subst ",,$(CONFIG_REBOOT_LIMIT_BOOT_MAX))
+endif
 REBOOT_LIMIT_ARGS += reboot_limit_max='$(REBOOT_LIMIT_MAX)'
 
 ifeq (y,$(CONFIG_REBOOT_LIMIT_BOOT_COUNT_CRASH_ENABLE))
@@ -212,6 +217,9 @@ reboot-limit-help-menu:
 	@echo "reboot-limit-dev-kotd                    - Run the reboot-limit kotd loop on dev hosts"
 	@echo "reboot-limit-results                     - Analyze and summarize reboot-limit test results"
 	@echo "reboot-limit-graph                       - Generate graphs from reboot-limit test results"
+	@echo ""
+	@echo "Optional parameters:"
+	@echo "  COUNT=N                                - Override the number of reboots (e.g., make reboot-limit-tests COUNT=2)"
 	@echo ""
 
 HELP_TARGETS += reboot-limit-help-menu
