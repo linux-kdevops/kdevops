@@ -21,14 +21,140 @@
   become: yes
   become_method: sudo
   command: "systemctl reboot"
+  async: 1
+  poll: 0
   when:
     - reboot_limit_test_type == "systemctl_reboot"
+  tags: [ 'run_tests' ]
+
+- name: Wait for system to go down for reboot
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: stopped
+    delay: 5
+    timeout: 60
+  delegate_to: localhost
+  when:
+    - reboot_limit_test_type == "systemctl_reboot"
+  tags: [ 'run_tests' ]
+
+- name: Wait for system to come back after reboot
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: started
+    delay: 10
+    timeout: 300
+  delegate_to: localhost
+  when:
+    - reboot_limit_test_type == "systemctl_reboot"
+  tags: [ 'run_tests' ]
+
+# kexec tasks - prepare the kernel for kexec before rebooting
+- name: Get current kernel version for kexec
+  command: uname -r
+  register: current_kernel_version
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+  tags: [ 'run_tests' ]
+
+- name: Check for kernel image locations for kexec
+  stat:
+    path: "{{ item }}"
+  register: kernel_stat
+  with_items:
+    - "/boot/vmlinuz-{{ current_kernel_version.stdout }}"
+    - "/boot/vmlinux-{{ current_kernel_version.stdout }}"
+    - "/boot/kernel-{{ current_kernel_version.stdout }}"
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+    - current_kernel_version is defined
+  tags: [ 'run_tests' ]
+
+- name: Set kernel path for kexec
+  set_fact:
+    kexec_kernel_path: "{{ item.stat.path }}"
+  with_items: "{{ kernel_stat.results }}"
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+    - item.stat.exists
+  tags: [ 'run_tests' ]
+
+- name: Check for initrd/initramfs locations for kexec
+  stat:
+    path: "{{ item }}"
+  register: initrd_stat
+  with_items:
+    - "/boot/initrd.img-{{ current_kernel_version.stdout }}"
+    - "/boot/initramfs-{{ current_kernel_version.stdout }}.img"
+    - "/boot/initrd-{{ current_kernel_version.stdout }}"
+    - "/boot/initrd-{{ current_kernel_version.stdout }}.img"
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+    - current_kernel_version is defined
+  tags: [ 'run_tests' ]
+
+- name: Set initrd path for kexec
+  set_fact:
+    kexec_initrd_path: "{{ item.stat.path }}"
+  with_items: "{{ initrd_stat.results }}"
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+    - item.stat.exists
+  tags: [ 'run_tests' ]
+
+- name: Read current kernel command line for kexec
+  slurp:
+    src: /proc/cmdline
+  register: cmdline_content
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+  tags: [ 'run_tests' ]
+
+- name: Load kernel into kexec
+  become: yes
+  become_method: sudo
+  command: >
+    kexec -l {{ kexec_kernel_path }}
+    --initrd={{ kexec_initrd_path }}
+    --command-line="{{ cmdline_content.content | b64decode | trim }}"
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+    - kexec_kernel_path is defined
+    - kexec_initrd_path is defined
   tags: [ 'run_tests' ]
 
 - name: Run the reboot test using systemctl kexec
   become: yes
   become_method: sudo
   command: "systemctl kexec"
+  async: 1
+  poll: 0
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+  tags: [ 'run_tests' ]
+
+- name: Wait for system to go down for kexec
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: stopped
+    delay: 5
+    timeout: 60
+  delegate_to: localhost
+  when:
+    - reboot_limit_test_type == "systemctl_kexec"
+  tags: [ 'run_tests' ]
+
+- name: Wait for system to come back after kexec
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: started
+    delay: 10
+    timeout: 300
+  delegate_to: localhost
   when:
     - reboot_limit_test_type == "systemctl_kexec"
   tags: [ 'run_tests' ]
