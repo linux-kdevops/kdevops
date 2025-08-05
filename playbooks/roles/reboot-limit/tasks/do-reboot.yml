@@ -17,36 +17,14 @@
     - reboot_limit_test_type == "ansible"
   tags: [ 'run_tests' ]
 
-- name: Run the reboot test using systemctl reboot
+- name: Reboot using systemctl reboot with proper handling
   become: yes
   become_method: sudo
-  command: "systemctl reboot"
-  async: 1
-  poll: 0
-  when:
-    - reboot_limit_test_type == "systemctl_reboot"
-  tags: [ 'run_tests' ]
-
-- name: Wait for system to go down for reboot
-  wait_for:
-    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
-    port: 22
-    state: stopped
-    delay: 5
-    timeout: 60
-  delegate_to: localhost
-  when:
-    - reboot_limit_test_type == "systemctl_reboot"
-  tags: [ 'run_tests' ]
-
-- name: Wait for system to come back after reboot
-  wait_for:
-    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
-    port: 22
-    state: started
-    delay: 10
-    timeout: 300
-  delegate_to: localhost
+  reboot:
+    msg: "Rebooting system via systemctl reboot for reboot-limit test"
+    reboot_command: "systemctl reboot"
+    post_reboot_delay: 10
+    reboot_timeout: 300
   when:
     - reboot_limit_test_type == "systemctl_reboot"
   tags: [ 'run_tests' ]
@@ -125,36 +103,14 @@
     - kexec_initrd_path is defined
   tags: [ 'run_tests' ]
 
-- name: Run the reboot test using systemctl kexec
+- name: Reboot using systemctl kexec with proper handling
   become: yes
   become_method: sudo
-  command: "systemctl kexec"
-  async: 1
-  poll: 0
-  when:
-    - reboot_limit_test_type == "systemctl_kexec"
-  tags: [ 'run_tests' ]
-
-- name: Wait for system to go down for kexec
-  wait_for:
-    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
-    port: 22
-    state: stopped
-    delay: 5
-    timeout: 60
-  delegate_to: localhost
-  when:
-    - reboot_limit_test_type == "systemctl_kexec"
-  tags: [ 'run_tests' ]
-
-- name: Wait for system to come back after kexec
-  wait_for:
-    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
-    port: 22
-    state: started
-    delay: 10
-    timeout: 300
-  delegate_to: localhost
+  reboot:
+    msg: "Rebooting system via systemctl kexec for reboot-limit test"
+    reboot_command: "systemctl kexec"
+    post_reboot_delay: 10
+    reboot_timeout: 300
   when:
     - reboot_limit_test_type == "systemctl_kexec"
   tags: [ 'run_tests' ]
