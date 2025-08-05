@@ -14,6 +14,10 @@
     name: create_data_partition
   tags: [ 'data_partition' ]
 
+- name: Install dependencies for reboot-limit
+  include_tasks: install-deps/main.yml
+  tags: [ 'install', 'deps' ]
+
 - name: Create the reboot-limit data collection directory for each host
   become: yes
   become_method: sudo

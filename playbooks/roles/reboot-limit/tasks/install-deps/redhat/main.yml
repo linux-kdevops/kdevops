@@ -1,0 +1,10 @@
+---
+- name: Install kexec-tools and dependencies for reboot-limit on Red Hat
+  become: yes
+  become_method: sudo
+  ansible.builtin.yum:
+    name:
+      - kexec-tools
+    state: present
+    update_cache: yes
+  tags: [ 'install', 'kexec' ]
