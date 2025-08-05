@@ -29,6 +29,7 @@ kdevops_workflow_enable_nfstest: false
 kdevops_workflow_enable_sysbench: false
 kdevops_workflow_enable_fio_tests: false
 kdevops_workflow_enable_mmtests: False
+workflows_reboot_limit: False
 
 is_fstests: False
 fstests_fstyp: "bogus"

@@ -6,52 +6,87 @@ Each workflow which has its own custom ansible host file generated should use
 its own jinja2 template file and define its own ansible task for its generation.
 #}
 {% if kdevops_workflows_dedicated_workflow %}
+{% if workflows_reboot_limit %}
 [all]
 localhost ansible_connection=local
-write-your-own-template-for-your-workflow-and-task
+{{ kdevops_host_prefix }}-reboot-limit
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-reboot-limit-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-reboot-limit
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-reboot-limit-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[reboot-limit]
+{{ kdevops_host_prefix }}-reboot-limit
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-reboot-limit-dev
+{% endif %}
+
+[reboot-limit:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% else %}
 [all]
 localhost ansible_connection=local
-{{ kdevops_hosts_prefix }}
+write-your-own-template-for-your-workflow-and-task
+{% endif %}
+{% else %}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}
 {% if kdevops_baseline_and_dev == True %}
-{{ kdevops_hosts_prefix }}-dev
+{{ kdevops_host_prefix }}-dev
 {% endif %}
 {% if kdevops_enable_iscsi %}
-{{ kdevops_hosts_prefix }}-iscsi
+{{ kdevops_host_prefix }}-iscsi
 {% endif %}
 {% if kdevops_nfsd_enable %}
-{{ kdevops_hosts_prefix }}-nfsd
+{{ kdevops_host_prefix }}-nfsd
 {% endif %}
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [baseline]
-{{ kdevops_hosts_prefix }}
+{{ kdevops_host_prefix }}
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [dev]
 {% if kdevops_baseline_and_dev %}
-{{ kdevops_hosts_prefix }}-dev
+{{ kdevops_host_prefix }}-dev
 {% endif %}
 [dev:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% if kdevops_enable_iscsi %}
 [iscsi]
-{{ kdevops_hosts_prefix }}-iscsi
+{{ kdevops_host_prefix }}-iscsi
 [iscsi:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
 {% if kdevops_nfsd_enable %}
 [nfsd]
-{{ kdevops_hosts_prefix }}-nfsd
+{{ kdevops_host_prefix }}-nfsd
 [nfsd:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
 [service]
 {% if kdevops_enable_iscsi %}
-{{ kdevops_hosts_prefix }}-iscsi
+{{ kdevops_host_prefix }}-iscsi
 {% endif %}
 {% if kdevops_nfsd_enable %}
-{{ kdevops_hosts_prefix }}-nfsd
+{{ kdevops_host_prefix }}-nfsd
 {% endif %}
 [service:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"

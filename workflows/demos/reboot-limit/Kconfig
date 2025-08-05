@@ -32,6 +32,14 @@ config REBOOT_LIMIT_TYPE_SYSTEMD_KEXEC
 	help
 	  This will try to reboot instead using systemctl kexec.
 
+config REBOOT_LIMIT_TYPE_COMPARE_BOTH
+	bool "Compare regular reboot vs kexec"
+	help
+	  This will test both regular reboot (ansible) and kexec reboot
+	  sequentially to compare their performance characteristics.
+	  Regular reboot will be tested first, followed by kexec reboot.
+	  Statistics will be collected separately for each reboot type.
+
 endchoice
 
 config REBOOT_LIMIT_TEST_TYPE
@@ -39,6 +47,13 @@ config REBOOT_LIMIT_TEST_TYPE
 	default "ansible" if REBOOT_LIMIT_TYPE_ANSIBLE
 	default "systemctl_reboot" if REBOOT_LIMIT_TYPE_SYSTEMD_REBOOT
 	default "systemctl_kexec" if REBOOT_LIMIT_TYPE_SYSTEMD_KEXEC
+	default "compare_both" if REBOOT_LIMIT_TYPE_COMPARE_BOTH
+
+config REBOOT_LIMIT_COMPARE_BOTH_ENABLED
+	bool
+	default y if REBOOT_LIMIT_TYPE_COMPARE_BOTH
+	help
+	  Internal configuration variable to track when comparison mode is enabled.
 
 config REBOOT_LIMIT_BOOT_MAX
 	int "How many reboots should we do to consider reboots OK?"
@@ -118,6 +133,22 @@ config REBOOT_LIMIT_DATA
 	  This is the target location of where to we'd place the boot statistics
 	  of each node. Note that {{data_path}} corresponds to the location set
 	  by the configuration option CONFIG_WORKFLOW_DATA_PATH.
+
+config REBOOT_LIMIT_DATA_REGULAR
+	string "Where to place regular reboot statistics in comparison mode"
+	default "{{data_path}}/reboot-limit/regular"
+	depends on REBOOT_LIMIT_COMPARE_BOTH_ENABLED
+	help
+	  This is the target location for regular (ansible) reboot statistics
+	  when running in comparison mode.
+
+config REBOOT_LIMIT_DATA_KEXEC
+	string "Where to place kexec reboot statistics in comparison mode"
+	default "{{data_path}}/reboot-limit/kexec"
+	depends on REBOOT_LIMIT_COMPARE_BOTH_ENABLED
+	help
+	  This is the target location for kexec reboot statistics
+	  when running in comparison mode.
 
 config REBOOT_LIMIT_ENABLE_SYSTEMD_ANALYZE
 	bool "Enable data collection of systemd-analyze results"
