@@ -175,19 +175,24 @@ reboot-limit-baseline-reset:
 reboot-limit-tests: reboot-limit-baseline reboot-limit-dev
 
 # Below are the corresponding dev targets
+# Check if dev group has hosts before running
 reboot-limit-dev: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'dev' \
-		playbooks/reboot-limit.yml \
-		--tags vars,first_run,reset \
-		--extra-vars=@./extra_vars.yaml \
-		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'dev' \
-		playbooks/reboot-limit.yml \
-		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml \
-		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
+	$(Q)if grep -A1 '^\[dev\]' hosts | grep -qE '^[a-zA-Z0-9]'; then \
+		ansible-playbook $(ANSIBLE_VERBOSE) \
+			--limit 'dev' \
+			playbooks/reboot-limit.yml \
+			--tags vars,first_run,reset \
+			--extra-vars=@./extra_vars.yaml \
+			--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)" && \
+		ansible-playbook $(ANSIBLE_VERBOSE) \
+			--limit 'dev' \
+			playbooks/reboot-limit.yml \
+			--tags vars,run_tests,copy_results \
+			--extra-vars=@./extra_vars.yaml \
+			--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"; \
+	else \
+		echo "No hosts found in dev group, skipping dev tests"; \
+	fi
 
 reboot-limit-dev-loop:
 	$(Q)$(REBOOT_LIMIT_LOOP) dev
