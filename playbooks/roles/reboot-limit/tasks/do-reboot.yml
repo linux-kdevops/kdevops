@@ -29,7 +29,7 @@
 
 - name: Wait for system to go down for reboot
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
     port: 22
     state: stopped
     delay: 5
@@ -41,7 +41,7 @@
 
 - name: Wait for system to come back after reboot
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
     port: 22
     state: started
     delay: 10
@@ -137,7 +137,7 @@
 
 - name: Wait for system to go down for kexec
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
     port: 22
     state: stopped
     delay: 5
@@ -149,7 +149,7 @@
 
 - name: Wait for system to come back after kexec
   wait_for:
-    host: "{{ ansible_host }}"
+    host: "{{ ansible_ssh_host | default(ansible_host) | default(inventory_hostname) }}"
     port: 22
     state: started
     delay: 10
