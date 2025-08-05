@@ -189,14 +189,23 @@ reboot-limit-dev-reset:
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml
 
+reboot-limit-results:
+	$(Q)echo "Analyzing reboot-limit results..."
+	$(Q)python3 scripts/workflows/demos/reboot-limit/analyze_results.py
+
+reboot-limit-graph: reboot-limit-results
+	$(Q)echo "Graph saved to reboot_limit_analysis.png"
+
 reboot-limit-help-menu:
 	@echo "reboot-limit options:"
 	@echo "reboot-limit                             - Sets up the /data/reboot-limit directory"
-	@echo "reboot-limit-baseline                    - Run the reboot-linit test on baseline hosts and collect results"
+	@echo "reboot-limit-baseline                    - Run the reboot-limit test on baseline hosts and collect results"
 	@echo "reboot-limit-baseline-reset              - Reset the test boot counter for baseline"
-	@echo "reboot-limit-dev                         - Run the reboot-limti test on dev hosts and collect results"
+	@echo "reboot-limit-dev                         - Run the reboot-limit test on dev hosts and collect results"
 	@echo "reboot-limit-baseline-loop               - Run the reboot-limit test in a loop until failure or steady state"
 	@echo "reboot-limit-baseline-kotd               - Run the reboot-limit kotd (kernel-of-the-day) loop"
+	@echo "reboot-limit-results                     - Analyze and summarize reboot-limit test results"
+	@echo "reboot-limit-graph                       - Generate graphs from reboot-limit test results"
 	@echo ""
 
 HELP_TARGETS += reboot-limit-help-menu
