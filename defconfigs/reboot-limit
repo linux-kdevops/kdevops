@@ -1,0 +1,31 @@
+# Demo defconfig for reboot-limit workflow
+#
+# This enables the reboot-limit workflow for system stability testing
+# through continuous reboots with performance monitoring.
+
+# Enable reboot-limit workflow
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_WORKFLOWS_TESTS_DEMOS=y
+CONFIG_WORKFLOWS_REBOOT_LIMIT=y
+
+# Enable data collection for analysis
+CONFIG_REBOOT_LIMIT_ENABLE_DATA_COLLECTION=y
+CONFIG_REBOOT_LIMIT_ENABLE_SYSTEMD_ANALYZE=y
+
+# Enable loop testing for continuous operation
+CONFIG_REBOOT_LIMIT_ENABLE_LOOP=y
+CONFIG_REBOOT_LIMIT_LOOP_STEADY_STATE_GOAL=100
+
+# Set a reasonable number of reboots per test run
+CONFIG_REBOOT_LIMIT_BOOT_MAX=100
+
+# Use default reboot method (Ansible)
+CONFIG_REBOOT_LIMIT_TYPE_ANSIBLE=y
+
+# Enable baseline and development nodes for A/B testing
+CONFIG_KDEVOPS_BASELINE_AND_DEV=y
+
+# Storage configuration
+CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_SIZE_SET_CUSTOM=y
+CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_SIZE=20
