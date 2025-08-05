@@ -47,6 +47,14 @@ ifeq (y,$(CONFIG_REBOOT_LIMIT_ENABLE_DATA_COLLECTION))
 REBOOT_LIMIT_DATA :=$(subst ",,$(CONFIG_REBOOT_LIMIT_DATA))
 REBOOT_LIMIT_ARGS += reboot_limit_data=\"$(REBOOT_LIMIT_DATA)\"
 
+ifeq (y,$(CONFIG_REBOOT_LIMIT_COMPARE_BOTH_ENABLED))
+REBOOT_LIMIT_DATA_REGULAR :=$(subst ",,$(CONFIG_REBOOT_LIMIT_DATA_REGULAR))
+REBOOT_LIMIT_DATA_KEXEC :=$(subst ",,$(CONFIG_REBOOT_LIMIT_DATA_KEXEC))
+REBOOT_LIMIT_ARGS += reboot_limit_data_regular=\"$(REBOOT_LIMIT_DATA_REGULAR)\"
+REBOOT_LIMIT_ARGS += reboot_limit_data_kexec=\"$(REBOOT_LIMIT_DATA_KEXEC)\"
+REBOOT_LIMIT_ARGS += reboot_limit_compare_both_enabled=True
+endif
+
 # This is an example of how to map a boolean from kconfig into ansible
 ifeq (y,$(CONFIG_REBOOT_LIMIT_ENABLE_SYSTEMD_ANALYZE))
 REBOOT_LIMIT_ARGS += reboot_limit_enable_systemd_analyze=True
@@ -74,6 +82,11 @@ endif
 # The variables we append to WORKFLOW_ARGS automatically get used to write
 # the extra_vars.yaml file.
 WORKFLOW_ARGS += $(REBOOT_LIMIT_ARGS)
+
+# Export workflow enabled flag for ansible
+ifeq (y,$(CONFIG_WORKFLOWS_REBOOT_LIMIT))
+WORKFLOW_ARGS += workflows_reboot_limit=True
+endif
 
 # The default is our workflow does not have loop testing enabled
 REBOOT_LIMIT_LOOP := false

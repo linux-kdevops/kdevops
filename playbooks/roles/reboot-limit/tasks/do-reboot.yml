@@ -39,12 +39,14 @@
 
 - name: Check for kernel image locations for kexec
   stat:
-    path: "{{ item }}"
+    path: "{{ kernel_path }}"
   register: kernel_stat
-  with_items:
+  loop:
     - "/boot/vmlinuz-{{ current_kernel_version.stdout }}"
     - "/boot/vmlinux-{{ current_kernel_version.stdout }}"
     - "/boot/kernel-{{ current_kernel_version.stdout }}"
+  loop_control:
+    loop_var: kernel_path
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - current_kernel_version is defined
@@ -52,22 +54,26 @@
 
 - name: Set kernel path for kexec
   set_fact:
-    kexec_kernel_path: "{{ item.stat.path }}"
-  with_items: "{{ kernel_stat.results }}"
+    kexec_kernel_path: "{{ kernel_item.stat.path }}"
+  loop: "{{ kernel_stat.results }}"
+  loop_control:
+    loop_var: kernel_item
   when:
     - reboot_limit_test_type == "systemctl_kexec"
-    - item.stat.exists
+    - kernel_item.stat.exists
   tags: [ 'run_tests' ]
 
 - name: Check for initrd/initramfs locations for kexec
   stat:
-    path: "{{ item }}"
+    path: "{{ initrd_path }}"
   register: initrd_stat
-  with_items:
+  loop:
     - "/boot/initrd.img-{{ current_kernel_version.stdout }}"
     - "/boot/initramfs-{{ current_kernel_version.stdout }}.img"
     - "/boot/initrd-{{ current_kernel_version.stdout }}"
     - "/boot/initrd-{{ current_kernel_version.stdout }}.img"
+  loop_control:
+    loop_var: initrd_path
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - current_kernel_version is defined
@@ -75,11 +81,13 @@
 
 - name: Set initrd path for kexec
   set_fact:
-    kexec_initrd_path: "{{ item.stat.path }}"
-  with_items: "{{ initrd_stat.results }}"
+    kexec_initrd_path: "{{ initrd_item.stat.path }}"
+  loop: "{{ initrd_stat.results }}"
+  loop_control:
+    loop_var: initrd_item
   when:
     - reboot_limit_test_type == "systemctl_kexec"
-    - item.stat.exists
+    - initrd_item.stat.exists
   tags: [ 'run_tests' ]
 
 - name: Read current kernel command line for kexec
