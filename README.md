@@ -11,6 +11,7 @@ Table of Contents
       * [Start testing NFS with in 2 commands](#start-testing-nfs-with-in-2-commands)
       * [Runs some kernel selftests in a parallel manner](#runs-some-kernel-selftests-in-a-parallel-manner)
       * [CXL](#cxl)
+      * [reboot-limit](#reboot-limit)
       * [sysbench](#sysbench)
    * [kdevops chats](#kdevops-chats)
    * [kdevops on discord](#kdevops-on-discord)
@@ -222,6 +223,21 @@ to guests and create custom topologies. kdevops let you build and install
 the latest CXL enabled qemu version as well for you. For more details
 refer to [kdevops cxl docs](docs/cxl.md)
 
+### reboot-limit
+
+Test system stability and boot performance with continuous reboots:
+
+```bash
+make defconfig-reboot-limit
+make
+make bringup
+make reboot-limit-baseline
+make reboot-limit-graph
+```
+
+The reboot-limit workflow helps identify boot regressions, hardware issues,
+and kernel stability problems. For more details see [kdevops reboot-limit docs](docs/reboot-limit.md).
+
 ### sysbench
 
 kdevops supports automation of sysbench tests on VMs with or without
@@ -275,10 +291,11 @@ want to just use the kernel that comes with your Linux distribution.
 ## kdevops workflows which may be dedicated
 
   * [kdevops fstests docs](docs/fstests.md)
-  * [kdevops blktests docs](docs/blktets.md)
+  * [kdevops blktests docs](docs/blktests.md)
   * [kdevops CXL docs](docs/cxl.md)
   * [kdevops NFS docs](docs/nfs.md)
   * [kdevops selftests docs](docs/selftests.md)
+  * [kdevops reboot-limit docs](docs/reboot-limit.md)
 
 # kdevops general documentation
 
