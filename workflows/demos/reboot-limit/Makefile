@@ -163,8 +163,11 @@ reboot-limit-baseline-reset:
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml
 
+# This runs tests on both baseline and dev groups - useful for A/B testing
+reboot-limit-tests: reboot-limit-baseline reboot-limit-dev
+
 # Below are the corresponding dev targets
-reboot-limit-dev-baseline:
+reboot-limit-dev:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'dev' \
 		playbooks/reboot-limit.yml \
@@ -202,8 +205,11 @@ reboot-limit-help-menu:
 	@echo "reboot-limit-baseline                    - Run the reboot-limit test on baseline hosts and collect results"
 	@echo "reboot-limit-baseline-reset              - Reset the test boot counter for baseline"
 	@echo "reboot-limit-dev                         - Run the reboot-limit test on dev hosts and collect results"
+	@echo "reboot-limit-tests                       - Run the reboot-limit test on both baseline and dev hosts (A/B testing)"
 	@echo "reboot-limit-baseline-loop               - Run the reboot-limit test in a loop until failure or steady state"
 	@echo "reboot-limit-baseline-kotd               - Run the reboot-limit kotd (kernel-of-the-day) loop"
+	@echo "reboot-limit-dev-loop                    - Run the reboot-limit test in a loop on dev hosts"
+	@echo "reboot-limit-dev-kotd                    - Run the reboot-limit kotd loop on dev hosts"
 	@echo "reboot-limit-results                     - Analyze and summarize reboot-limit test results"
 	@echo "reboot-limit-graph                       - Generate graphs from reboot-limit test results"
 	@echo ""
