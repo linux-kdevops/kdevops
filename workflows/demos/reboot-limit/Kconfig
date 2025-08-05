@@ -1,9 +1,5 @@
 config WORKFLOWS_REBOOT_LIMIT
 	bool "Reboot-limit"
-	select KDEVOPS_TRY_REFRESH_REPOS
-	select KDEVOPS_TRY_INSTALL_KDEV_TOOLS
-	select KDEVOPS_DEVCONFIG_ENABLE_CONSOLE
-	select KDEVOPS_DEVCONFIG_ENABLE_SYSTEMD_WATCHDOG
 	help
 	  If you are doing kernel tests which includes a reboot, along the way,
 	  or if you do a reboot after a series of tests, you may want to first
