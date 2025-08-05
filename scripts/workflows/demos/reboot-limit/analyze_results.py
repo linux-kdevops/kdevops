@@ -112,6 +112,11 @@ class RebootLimitAnalyzer:
             print("No data to plot")
             return
 
+        # Ensure the output directory exists
+        output_path = Path(output_file)
+        if output_path.parent != Path("."):
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
         # Create figure with subplots
         num_hosts = len(self.hosts_data)
         fig, axes = plt.subplots(num_hosts, 2, figsize=(14, 6 * num_hosts))
@@ -264,8 +269,8 @@ def main():
     parser.add_argument(
         "-o",
         "--output",
-        default="reboot_limit_analysis.png",
-        help="Output filename for plot (default: reboot_limit_analysis.png)",
+        default="workflows/demos/reboot-limit/results/graphs/reboot_limit_analysis.png",
+        help="Output filename for plot (default: workflows/demos/reboot-limit/results/graphs/reboot_limit_analysis.png)",
     )
     parser.add_argument(
         "--no-plot", action="store_true", help="Skip plotting, only show summary"

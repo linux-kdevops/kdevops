@@ -194,7 +194,7 @@ reboot-limit-results:
 	$(Q)python3 scripts/workflows/demos/reboot-limit/analyze_results.py
 
 reboot-limit-graph: reboot-limit-results
-	$(Q)echo "Graph saved to reboot_limit_analysis.png"
+	$(Q)echo "Graph saved to workflows/demos/reboot-limit/results/graphs/reboot_limit_analysis.png"
 
 reboot-limit-help-menu:
 	@echo "reboot-limit options:"
