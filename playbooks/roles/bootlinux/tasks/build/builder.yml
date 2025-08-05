@@ -137,24 +137,55 @@
     - git_directory_stat.stat.exists
     - target_ref_sha.rc != 0
 
-- name: Get target ref SHA after fetch
+- name: Try to resolve ref as direct ref after fetch
   command: "git -C {{ target_linux_dir_path }} rev-parse {{ target_linux_ref }}"
-  register: target_ref_sha_after_fetch
+  register: target_ref_sha_direct
   changed_when: false
+  failed_when: false
   when:
     - not needs_git_clone|bool
     - target_directory_stat.stat.exists
     - git_directory_stat.stat.exists
     - target_ref_sha.rc != 0
 
+- name: Try to resolve ref as remote branch if direct ref failed
+  command: "git -C {{ target_linux_dir_path }} rev-parse origin/{{ target_linux_ref }}"
+  register: target_ref_sha_remote
+  changed_when: false
+  failed_when: false
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+    - target_ref_sha.rc != 0
+    - target_ref_sha_direct.rc != 0
+
+- name: Set resolved ref for checkout
+  set_fact:
+    resolved_ref: |
+      {%- if target_ref_sha.rc == 0 -%}
+      {{ target_linux_ref }}
+      {%- elif target_ref_sha_direct is defined and target_ref_sha_direct.rc == 0 -%}
+      {{ target_linux_ref }}
+      {%- elif target_ref_sha_remote is defined and target_ref_sha_remote.rc == 0 -%}
+      origin/{{ target_linux_ref }}
+      {%- else -%}
+      {{ target_linux_ref }}
+      {%- endif -%}
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+
 - name: Checkout target ref if not on correct ref
-  command: "git -C {{ target_linux_dir_path }} checkout {{ target_linux_ref }}"
+  command: "git -C {{ target_linux_dir_path }} checkout {{ resolved_ref | default(target_linux_ref) }}"
   when:
     - not needs_git_clone|bool
     - target_directory_stat.stat.exists
     - git_directory_stat.stat.exists
     - (target_ref_sha.rc == 0 and current_ref.stdout != target_ref_sha.stdout) or
-      (target_ref_sha.rc != 0 and target_ref_sha_after_fetch is defined and target_ref_sha_after_fetch.rc == 0)
+      (target_ref_sha.rc != 0 and (target_ref_sha_direct is defined and target_ref_sha_direct.rc == 0)) or
+      (target_ref_sha.rc != 0 and (target_ref_sha_remote is defined and target_ref_sha_remote.rc == 0))
 
 - name: Copy the kernel delta to the builder
   ansible.builtin.template:

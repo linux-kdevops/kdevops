@@ -45,7 +45,8 @@ def main():
         dirs[:] = [
             d
             for d in dirs
-            if not d.startswith(".") and d not in ["__pycache__", "node_modules"]
+            if not d.startswith(".")
+            and d not in ["__pycache__", "node_modules", "linux"]
         ]
 
         for file in files:

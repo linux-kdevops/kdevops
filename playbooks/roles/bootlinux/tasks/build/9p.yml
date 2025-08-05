@@ -68,6 +68,7 @@
   run_once: true
   delegate_to: localhost
 
+
 - name: Verify target git ref exists before cloning
   command: "git ls-remote {{ target_linux_git }} {{ active_linux_ref | default(target_linux_ref) }}"
   register: ref_check
@@ -181,10 +182,11 @@
     - git_directory_stat.stat.exists
     - target_ref_sha.rc != 0
 
-- name: Get target ref SHA after fetch
+- name: Try to resolve ref as direct ref after fetch
   command: "git -C {{ bootlinux_9p_host_path }} rev-parse {{ active_linux_ref | default(target_linux_ref) }}"
-  register: target_ref_sha_after_fetch
+  register: target_ref_sha_direct
   changed_when: false
+  failed_when: false
   run_once: true
   delegate_to: localhost
   when:
@@ -193,8 +195,41 @@
     - git_directory_stat.stat.exists
     - target_ref_sha.rc != 0
 
+- name: Try to resolve ref as remote branch if direct ref failed
+  command: "git -C {{ bootlinux_9p_host_path }} rev-parse origin/{{ active_linux_ref | default(target_linux_ref) }}"
+  register: target_ref_sha_remote
+  changed_when: false
+  failed_when: false
+  run_once: true
+  delegate_to: localhost
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+    - target_ref_sha.rc != 0
+    - target_ref_sha_direct.rc != 0
+
+- name: Set resolved ref for checkout
+  set_fact:
+    resolved_ref: |
+      {%- if target_ref_sha.rc == 0 -%}
+      {{ active_linux_ref | default(target_linux_ref) }}
+      {%- elif target_ref_sha_direct is defined and target_ref_sha_direct.rc == 0 -%}
+      {{ active_linux_ref | default(target_linux_ref) }}
+      {%- elif target_ref_sha_remote is defined and target_ref_sha_remote.rc == 0 -%}
+      origin/{{ active_linux_ref | default(target_linux_ref) }}
+      {%- else -%}
+      {{ active_linux_ref | default(target_linux_ref) }}
+      {%- endif -%}
+  run_once: true
+  delegate_to: localhost
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+
 - name: Checkout target ref if not on correct ref
-  command: "git -C {{ bootlinux_9p_host_path }} checkout {{ active_linux_ref | default(target_linux_ref) }}"
+  command: "git -C {{ bootlinux_9p_host_path }} checkout {{ resolved_ref | default(active_linux_ref | default(target_linux_ref)) }}"
   run_once: true
   delegate_to: localhost
   when:
@@ -202,7 +237,8 @@
     - target_directory_stat.stat.exists
     - git_directory_stat.stat.exists
     - (target_ref_sha.rc == 0 and current_ref.stdout != target_ref_sha.stdout) or
-      (target_ref_sha.rc != 0 and target_ref_sha_after_fetch is defined and target_ref_sha_after_fetch.rc == 0)
+      (target_ref_sha.rc != 0 and (target_ref_sha_direct is defined and target_ref_sha_direct.rc == 0)) or
+      (target_ref_sha.rc != 0 and (target_ref_sha_remote is defined and target_ref_sha_remote.rc == 0))
 
 - name: Copy kernel delta if requested on the control node
   template:
