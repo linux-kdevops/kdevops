@@ -10,9 +10,43 @@
     - target_linux_install_b4
     - ansible_os_family == "Debian"
 
+- name: Check if target directory exists
+  stat:
+    path: "{{ target_linux_dir_path }}"
+  register: target_directory_stat
+
+- name: Check if .git directory exists in target path
+  stat:
+    path: "{{ target_linux_dir_path }}/.git"
+  register: git_directory_stat
+  when:
+    - target_directory_stat.stat.exists
+
+- name: Infer that git clone is needed when .git doesn't exist
+  set_fact:
+    needs_git_clone: true
+  when:
+    - target_directory_stat.stat.exists
+    - not git_directory_stat.stat.exists
+
+- name: Set needs_git_clone when directory doesn't exist
+  set_fact:
+    needs_git_clone: true
+  when:
+    - not target_directory_stat.stat.exists
+
+- name: Set needs_git_clone to false when .git exists
+  set_fact:
+    needs_git_clone: false
+  when:
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+
 - name: Verify target git ref exists before cloning
   command: "git ls-remote {{ target_linux_git }} {{ target_linux_ref }}"
   register: ref_check
+  when:
+    - needs_git_clone|bool
 
 - name: Fail if git ref does not exist
   fail:
@@ -29,12 +63,8 @@
       - If using A/B testing with different refs, ensure shallow cloning is disabled
       - The repository URL '{{ target_linux_git }}' is correct and accessible
   when:
+    - needs_git_clone|bool
     - ref_check.rc != 0
-
-- name: Check if target directory exists for dirty check
-  stat:
-    path: "{{ target_linux_dir_path }}"
-  register: git_dir_stat
 
 - name: Check if git tree is dirty
   command: "git -C {{ target_linux_dir_path }} status --porcelain"
@@ -42,8 +72,9 @@
   changed_when: false
   failed_when: false
   when:
-    - git_dir_stat.stat.exists
-    - git_dir_stat.stat.isdir
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
 
 - name: Fail if git tree has local modifications
   fail:
@@ -60,8 +91,9 @@
       Modified files:
       {{ git_status.stdout }}
   when:
-    - git_dir_stat.stat.exists
-    - git_dir_stat.stat.isdir
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
     - git_status.stdout | length > 0
 
 - name: Clone {{ target_linux_tree }}
@@ -75,6 +107,54 @@
   retries: 3
   delay: 5
   until: result is succeeded
+  when:
+    - needs_git_clone|bool
+
+- name: Get current git ref when git exists but clone wasn't needed
+  command: "git -C {{ target_linux_dir_path }} rev-parse HEAD"
+  register: current_ref
+  changed_when: false
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+
+- name: Get target ref SHA
+  command: "git -C {{ target_linux_dir_path }} rev-parse {{ target_linux_ref }}"
+  register: target_ref_sha
+  changed_when: false
+  failed_when: false
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+
+- name: Fetch updates if target ref doesn't exist locally
+  command: "git -C {{ target_linux_dir_path }} fetch origin"
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+    - target_ref_sha.rc != 0
+
+- name: Get target ref SHA after fetch
+  command: "git -C {{ target_linux_dir_path }} rev-parse {{ target_linux_ref }}"
+  register: target_ref_sha_after_fetch
+  changed_when: false
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+    - target_ref_sha.rc != 0
+
+- name: Checkout target ref if not on correct ref
+  command: "git -C {{ target_linux_dir_path }} checkout {{ target_linux_ref }}"
+  when:
+    - not needs_git_clone|bool
+    - target_directory_stat.stat.exists
+    - git_directory_stat.stat.exists
+    - (target_ref_sha.rc == 0 and current_ref.stdout != target_ref_sha.stdout) or
+      (target_ref_sha.rc != 0 and target_ref_sha_after_fetch is defined and target_ref_sha_after_fetch.rc == 0)
 
 - name: Copy the kernel delta to the builder
   ansible.builtin.template:
