@@ -107,10 +107,11 @@ endif # CONFIG_REBOOT_LIMIT_ENABLE_LOOP
 #
 # The playbook reboot-limit.yml is used to run all tasks defined except those
 # with tags "run_tests" or "copy_results".
-reboot-limit:
+reboot-limit: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/reboot-limit.yml \
-		--skip-tags run_tests,copy_results
+		--skip-tags run_tests,copy_results \
+		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
 
 # kdevops supports generic workflows such as the enabling you to then use the
 # /data/ partition to git clone linux, compile linux, install it and reboot
@@ -137,17 +138,19 @@ reboot-limit:
 # tags "first_run" first and then "run_tests" and "copy_results". We always
 # use the vars tag to ensure we get variables defined which we construct on the
 # fly.
-reboot-limit-baseline:
+reboot-limit-baseline: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
 		playbooks/reboot-limit.yml \
 		--tags vars,first_run,reset \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
 		playbooks/reboot-limit.yml \
 		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
 
 # Once you know the baseline works, you may want to run the baseline in a loop
 # up to the number of times you define. We define this goal in kdevops as
@@ -172,17 +175,19 @@ reboot-limit-baseline-reset:
 reboot-limit-tests: reboot-limit-baseline reboot-limit-dev
 
 # Below are the corresponding dev targets
-reboot-limit-dev:
+reboot-limit-dev: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'dev' \
 		playbooks/reboot-limit.yml \
 		--tags vars,first_run,reset \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'dev' \
 		playbooks/reboot-limit.yml \
 		--tags vars,run_tests,copy_results \
-		--extra-vars=@./extra_vars.yaml
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
 
 reboot-limit-dev-loop:
 	$(Q)$(REBOOT_LIMIT_LOOP) dev
