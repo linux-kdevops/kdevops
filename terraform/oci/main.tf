@@ -50,6 +50,7 @@ module "volumes" {
   vol_instance_name       = element(var.kdevops_nodes, count.index)
   vol_volume_count        = var.oci_volumes_per_instance
   vol_volume_size         = var.oci_volumes_size
+  vol_vpus_per_gb         = var.oci_vpus_per_gb
 }
 
 resource "oci_core_vcn" "kdevops_vcn" {

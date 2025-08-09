@@ -98,3 +98,8 @@ variable "oci_volumes_size" {
   description = "The size of additional block volumes, in gibibytes"
   type        = number
 }
+
+variable "oci_vpus_per_gb" {
+  description = "Volume performance units"
+  type        = number
+}

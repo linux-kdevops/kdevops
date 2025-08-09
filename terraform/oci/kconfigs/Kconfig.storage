@@ -122,6 +122,138 @@ config TERRAFORM_OCI_VOLUMES_SIZE
 	default 4096 if TERRAFORM_OCI_VOLUMES_SIZE_4096G
 	default 8192 if TERRAFORM_OCI_VOLUMES_SIZE_8192G
 
+choice
+	prompt "Volume Performance Units for each additional volume"
+	default TERRAFORM_OCI_VPUS_PER_GB_10
+	help
+	  Higher VPUs per GB increases maximum IOPS and throughput,
+	  but costs more. For more information, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Block/Concepts/blockvolumeperformance.htm#vpus
+
+config TERRAFORM_OCI_VPUS_PER_GB_0
+	bool "0 VPUs"
+	help
+	  Lowest cost.
+
+	  2 IOPS/GB, 3,000 IOPS maximum/volume.
+	  480 MBPS maximum/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_10
+	bool "10 VPUs"
+	help
+	  Balanced performance.
+
+	  60 IOPS/GB, 25,000 IOPS maximum/volume.
+	  480 MBPS maximum/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_20
+	bool "20 VPUs"
+	help
+	  Higher performance.
+
+	  75 IOPS/GB, 50,000 IOPS maximum/volume.
+	  680 MBPS maximum/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_30
+	bool "30 VPUs"
+	help
+	  Ultra high performance.
+
+	  90 IOPS/GB, 75,000 IOPS maximum/volume.
+	  880 MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_40
+	bool "40 VPUs"
+	help
+	  Ultra high performance.
+
+	  105 IOPS/GB, 100,000 IOPS maximum/volume.
+	  1,080 MBPS maximum/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_50
+	bool "50 VPUs"
+	help
+	  Ultra high performance.
+
+	  120 IOPS/GB, 125,000 IOPS maximum/volume.
+	  1,280 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_60
+	bool "60 VPUs"
+	help
+	  Ultra high performance.
+
+	  135 IOPS/GB, 150,000 IOPS maximum/volume.
+	  1,480 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_70
+	bool "70 VPUs"
+	help
+	  Ultra high performance.
+
+	  150 IOPS/GB, 175,000 IOPS maximum/volume.
+	  1,680 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_80
+	bool "80 VPUs"
+	help
+	  Ultra high performance.
+
+	  165 IOPS/GB, 200,000 IOPS maximum/volume.
+	  1,880 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_90
+	bool "90 VPUs"
+	help
+	  Ultra high performance.
+
+	  180 IOPS/GB, 225,000 IOPS maximum/volume.
+	  2,080 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_100
+	bool "100 VPUs"
+	help
+	  Ultra high performance.
+
+	  195 IOPS/GB, 250,000 IOPS maximum/volume.
+	  2,280 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_110
+	bool "110 VPUs"
+	help
+	  Ultra high performance.
+
+	  210 IOPS/GB, 275,000 IOPS maximum/volume.
+	  2,480 max MBPS/volume.
+
+config TERRAFORM_OCI_VPUS_PER_GB_120
+	bool "120 VPUs"
+	help
+	  Ultra high performance.
+
+	  225 IOPS/GB, 300,000 IOPS maximum/volume.
+	  2,680 max MBPS/volume.
+
+endchoice
+
+config TERRAFORM_OCI_VPUS_PER_GB
+	int
+	output yaml
+	default 0 if TERRAFORM_OCI_VPUS_PER_GB_0
+	default 10 if TERRAFORM_OCI_VPUS_PER_GB_10
+	default 20 if TERRAFORM_OCI_VPUS_PER_GB_20
+	default 30 if TERRAFORM_OCI_VPUS_PER_GB_30
+	default 40 if TERRAFORM_OCI_VPUS_PER_GB_40
+	default 50 if TERRAFORM_OCI_VPUS_PER_GB_50
+	default 60 if TERRAFORM_OCI_VPUS_PER_GB_60
+	default 70 if TERRAFORM_OCI_VPUS_PER_GB_70
+	default 80 if TERRAFORM_OCI_VPUS_PER_GB_80
+	default 90 if TERRAFORM_OCI_VPUS_PER_GB_90
+	default 100 if TERRAFORM_OCI_VPUS_PER_GB_100
+	default 110 if TERRAFORM_OCI_VPUS_PER_GB_110
+	default 120 if TERRAFORM_OCI_VPUS_PER_GB_120
+
 config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 	string "Data volume's device file name"
 	output yaml
