@@ -37,6 +37,13 @@ resource "oci_core_instance" "kdevops_instance" {
     ssh_authorized_keys = file(var.ssh_config_pubkey_file)
   }
 
+  preemptible_instance_config {
+    preemption_action {
+      type                 = "TERMINATE"
+      preserve_boot_volume = false
+    }
+  }
+
   preserve_boot_volume = false
 }
 
