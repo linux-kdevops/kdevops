@@ -64,11 +64,156 @@ def get_special_device_nvme(pci_id, IOMMUGroup):
     )
 
 
-def get_kconfig_device_name(pci_id, sdevice, IOMMUGroup):
+def get_gpu_memory_info(pci_id):
+    """Try to get GPU memory information from sysfs."""
+    # Try to get memory info from various possible locations
+    mem_paths = [
+        sys_bus_prefix + pci_id + "/mem_info_vram_total",
+        sys_bus_prefix + pci_id + "/drm/card0/mem_info_vram_total",
+    ]
+
+    for mem_path in mem_paths:
+        if os.path.isfile(mem_path):
+            try:
+                with open(mem_path, "r") as f:
+                    mem_bytes = int(f.read().strip())
+                    mem_gb = mem_bytes / (1024 * 1024 * 1024)
+                    return f"{mem_gb:.0f}GB"
+            except:
+                pass
+
+    # Try to get memory from resource file size (less accurate)
+    resource_path = sys_bus_prefix + pci_id + "/resource0"
+    if os.path.isfile(resource_path):
+        try:
+            size = os.path.getsize(resource_path)
+            if size > 0:
+                size_gb = size / (1024 * 1024 * 1024)
+                if size_gb >= 1:
+                    return f"{size_gb:.0f}GB"
+        except:
+            pass
+
+    return None
+
+
+def get_special_device_gpu(pci_id, device_name, IOMMUGroup):
+    """Generate a nice display name for GPU devices."""
+    pci_id_name = strip_kconfig_name(pci_id)
+
+    # Clean up the device name to extract the GPU model
+    gpu_model = device_name
+
+    # Common GPU name patterns to clean up
+    replacements = [
+        ("[AMD/ATI]", "AMD"),
+        ("Advanced Micro Devices, Inc.", "AMD"),
+        ("NVIDIA Corporation", "NVIDIA"),
+        ("Intel Corporation", "Intel"),
+    ]
+
+    for old, new in replacements:
+        gpu_model = gpu_model.replace(old, new).strip()
+
+    # Try to extract specific GPU model from brackets
+    import re
+
+    bracket_match = re.search(r"\[([^\]]+)\]", gpu_model)
+    if bracket_match:
+        model_name = bracket_match.group(1)
+        # Keep the vendor prefix if it's a clean model name
+        if "Radeon" in model_name or "GeForce" in model_name or "Intel" in model_name:
+            gpu_model = model_name
+        else:
+            # Prepend vendor if needed
+            if "AMD" in gpu_model and "Radeon" not in model_name:
+                gpu_model = f"AMD {model_name}"
+            elif (
+                "NVIDIA" in gpu_model
+                and "GeForce" not in model_name
+                and "Quadro" not in model_name
+            ):
+                gpu_model = f"NVIDIA {model_name}"
+            else:
+                gpu_model = model_name
+
+    # Remove any existing memory info from the model name (e.g., "32GB" at the end)
+    gpu_model = re.sub(r"\s+\d+GB\s*$", "", gpu_model)
+
+    # Try to get memory info
+    mem_info = get_gpu_memory_info(pci_id)
+
+    # Build the display name
+    if mem_info:
+        display_name = (
+            f"{pci_id_name} IOMMU group {IOMMUGroup} - GPU - {gpu_model} {mem_info}"
+        )
+    else:
+        display_name = f"{pci_id_name} IOMMU group {IOMMUGroup} - GPU - {gpu_model}"
+
+    return display_name
+
+
+def is_gpu_device(device_name):
+    """Check if a device is a GPU based on its name."""
+    gpu_keywords = [
+        # AMD/ATI
+        "Radeon",
+        "Vega",
+        "Navi",
+        "RDNA",
+        "GCN",
+        "Polaris",
+        "Fiji",
+        "Instinct",
+        "FirePro",
+        "FireGL",
+        "RX",
+        "AMD.*GPU",
+        # NVIDIA
+        "GeForce",
+        "Quadro",
+        "Tesla",
+        "NVIDIA.*GPU",
+        "GTX",
+        "RTX",
+        "Titan",
+        "NVS",
+        "GRID",
+        # Intel
+        "Intel.*Graphics",
+        "UHD Graphics",
+        "HD Graphics",
+        "Iris",
+        "Arc",
+        "Xe Graphics",
+        # Generic
+        "VGA compatible controller",
+        "Display controller",
+        "3D controller",
+        "Graphics",
+    ]
+
+    device_lower = device_name.lower()
+    for keyword in gpu_keywords:
+        if keyword.lower() in device_lower:
+            return True
+    return False
+
+
+def get_kconfig_device_name(
+    pci_id, sdevice, IOMMUGroup, vendor_name=None, device_name=None
+):
     default_name = "%s IOMMU group %s - %s" % (pci_id, IOMMUGroup, sdevice)
     special_name = None
+
+    # Check for NVMe devices
     if os.path.isdir(sys_bus_prefix + pci_id + "/nvme"):
         special_name = get_special_device_nvme(pci_id, IOMMUGroup)
+    # Check for GPU devices
+    elif device_name and is_gpu_device(device_name):
+        special_name = get_special_device_gpu(pci_id, device_name, IOMMUGroup)
+
     if not special_name:
         return strip_kconfig_name(default_name)
     return strip_kconfig_name(special_name)
@@ -107,10 +252,21 @@ def add_pcie_kconfig_target(config_name, sdevice):
 
 
 def add_pcie_kconfig_entry(
-    pci_id, sdevice, domain, bus, slot, function, IOMMUGroup, config_id
+    pci_id,
+    sdevice,
+    domain,
+    bus,
+    slot,
+    function,
+    IOMMUGroup,
+    config_id,
+    vendor_name=None,
+    device_name=None,
 ):
     prefix = passthrough_prefix + "_%04d" % config_id
-    name = get_kconfig_device_name(pci_id, sdevice, IOMMUGroup)
+    name = get_kconfig_device_name(
+        pci_id, sdevice, IOMMUGroup, vendor_name, device_name
+    )
     add_pcie_kconfig_name(prefix, name)
     add_pcie_kconfig_target(prefix, sdevice)
     add_pcie_kconfig_string(prefix, pci_id, "pci_id")
@@ -123,7 +279,9 @@ def add_pcie_kconfig_entry(
     add_pcie_kconfig_string(prefix, function, "function")
 
 
-def add_new_device(slot, sdevice, IOMMUGroup, possible_id):
+def add_new_device(
+    slot, sdevice, IOMMUGroup, possible_id, vendor_name=None, device_name=None
+):
     # Example expeced format 0000:2d:00.0
     m = re.match(
         r"^(?P<DOMAIN>\w+):" "(?P<BUS>\w+):" "(?P<MSLOT>\w+)\." "(?P<FUNCTION>\w+)$",
@@ -154,7 +312,16 @@ def add_new_device(slot, sdevice, IOMMUGroup, possible_id):
         )
 
     add_pcie_kconfig_entry(
-        slot, sdevice, domain, bus, mslot, function, IOMMUGroup, possible_id
+        slot,
+        sdevice,
+        domain,
+        bus,
+        mslot,
+        function,
+        IOMMUGroup,
+        possible_id,
+        vendor_name,
+        device_name,
     )
 
     return possible_id
@@ -184,6 +351,8 @@ def main():
     slot = -1
     sdevice = None
     IOMMUGroup = None
+    vendor_name = None
+    device_name = None
 
     for line in all_lines:
         line = line.strip()
@@ -197,20 +366,31 @@ def main():
         if tag == "Slot":
             if sdevice:
                 num_candidate_devices = add_new_device(
-                    slot, sdevice, IOMMUGroup, num_candidate_devices
+                    slot,
+                    sdevice,
+                    IOMMUGroup,
+                    num_candidate_devices,
+                    vendor_name,
+                    device_name,
                 )
             slot = data
             sdevice = None
             IOMMUGroup = None
+            vendor_name = None
+            device_name = None
         elif tag == "SDevice":
             sdevice = data
         elif tag == "IOMMUGroup":
             IOMMUGroup = data
+        elif tag == "Vendor":
+            vendor_name = data
+        elif tag == "Device":
+            device_name = data
 
     # Handle the last device
     if sdevice and slot:
         num_candidate_devices = add_new_device(
-            slot, sdevice, IOMMUGroup, num_candidate_devices
+            slot, sdevice, IOMMUGroup, num_candidate_devices, vendor_name, device_name
         )
 
     add_pcie_kconfig_string(passthrough_prefix, num_candidate_devices, "NUM_DEVICES")
