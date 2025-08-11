@@ -45,6 +45,15 @@
   ignore_errors: yes
   tags: firstconfig
 
+- name: Update apt cache accepting release info changes
+  become: yes
+  become_method: sudo
+  ansible.builtin.command:
+    cmd: apt-get update --allow-releaseinfo-change
+  changed_when: false
+  ignore_errors: true
+  tags: firstconfig
+
 - name: Upgrade Packages
   become: yes
   become_method: sudo

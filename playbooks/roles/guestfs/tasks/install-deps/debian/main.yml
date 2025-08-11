@@ -1,4 +1,12 @@
 ---
+- name: Update apt cache accepting release info changes
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: apt-get update --allow-releaseinfo-change
+  changed_when: false
+  ignore_errors: true
+
 - name: Install guestfs dependencies for Debian
   become: true
   become_method: ansible.builtin.sudo
