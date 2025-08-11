@@ -1,18 +1,19 @@
 {%- macro gen_pci_passthrough_each(n, device_list) -%}
-{%- set found_pcie_devices_on_node = False -%}
+{%- set ns = namespace(has_devices=false, device_index=1) -%}
 {%- for d in device_list %}
 {%- if n == d.target_guest -%}
-{%- if not found_pcie_devices_on_node -%}
-{% set found_pcie_devices_on_node = True %}
+{%- if not ns.has_devices -%}
+{%- set ns.has_devices = true %}
     pcipassthrough:
-{% endif %}
-      passthrough{{ loop.index | string }}:
+{% endif -%}
+      passthrough{{ ns.device_index | string }}:
         domain: {{ d.domain }}
         bus: {{ d.bus }}
         slot: {{ d.slot }}
         function: {{ d.function }}
-{% endif %}
-{% endfor -%}
+{%- set ns.device_index = ns.device_index + 1 -%}
+{%- endif %}
+{%- endfor -%}
 {%- endmacro -%}
 {%- macro gen_pci_passthrough( device_list ) -%}
 {%- for d in device_list %}
