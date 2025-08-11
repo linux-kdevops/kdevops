@@ -198,6 +198,15 @@ fstests-dev: $(KDEVOPS_EXTRA_VARS)
 		'{ $(FSTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
+fstests-tests: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		playbooks/fstests.yml \
+		--tags vars,run_tests,copy_results \
+		--extra-vars \
+		'{ $(FSTESTS_DYNAMIC_RUNTIME_VARS) }' \
+		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
+
 fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
@@ -249,6 +258,7 @@ fstests-help-menu:
 	@echo "fstests-kdevops-setup                   - Install kdevops specific files, the fstests and running test targets also runs this"
 	@echo "fstests-baseline                        - Run fstests on baseline hosts and collect results"
 	@echo "fstests-dev                             - Run fstests on dev hosts and collect results"
+	@echo "fstests-tests                           - Run fstests on both baseline and dev hosts simultaneously"
 	@echo ""
 	@echo "fstests-config                          - Generates the filesystem configuration file only onto target systems"
 	@echo "fstests-config-debug                    - Generates the filesystem configuration file locally, useful for debugging"
