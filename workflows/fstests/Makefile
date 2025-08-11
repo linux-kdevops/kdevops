@@ -247,6 +247,12 @@ fstests-dev-results: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)
 
+monitor-results: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/monitor-results.yml \
+		--extra-vars=@./extra_vars.yaml \
+		$(LIMIT_HOSTS)
+
 fstests-show-results:
 	@find $(FIND_PATH) -type f $(PATTERN) \
 		| xargs $(XARGS_ARGS) \
@@ -269,6 +275,8 @@ fstests-help-menu:
 	@echo "fstests-dev-results                     - Only collect results for dev hosts"
 	@echo "fstests-baseline-skip-kdevops-update    - Run fstests but skip updating kdevops"
 	@echo "fstests-baseline-run-oscheck-only       - Only run oscheck"
+	@echo ""
+	@echo "monitor-results                          - Collect interim monitoring data without stopping monitoring"
 	@echo ""
 
 HELP_TARGETS += fstests-help-menu

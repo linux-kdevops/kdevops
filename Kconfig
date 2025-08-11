@@ -79,6 +79,10 @@ menu "Target workflows"
 source "kconfigs/workflows/Kconfig"
 endmenu
 
+menu "Monitors"
+source "kconfigs/monitors/Kconfig"
+endmenu
+
 menu "Kdevops configuration"
 source "kconfigs/Kconfig.kdevops"
 endmenu

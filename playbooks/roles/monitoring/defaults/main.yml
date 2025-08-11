@@ -1,0 +1,18 @@
+---
+# Default values for monitoring role
+
+# Enable monitoring services
+enable_monitoring: false
+
+# Enable developmental statistics
+monitor_developmental_stats: false
+
+# Enable folio migration monitoring
+monitor_folio_migration: false
+
+# Folio migration monitoring interval in seconds
+monitor_folio_migration_interval: 60
+
+# Base path to store monitoring results on the control host
+# Workflows can override by setting monitoring_results_base_path
+monitoring_results_base_path: "{{ topdir_path }}/workflows/fstests/results/monitoring"

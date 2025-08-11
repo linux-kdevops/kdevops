@@ -324,6 +324,7 @@ Below is kdevops' recommended documentation reading.
   * [kdevops' evolving make help](docs/evolving-make-help.md)
   * [kdevops configuration](docs/kdevops-configuration.md)
   * [kdevops mirror support](docs/kdevops-mirror.md)
+  * [kdevops monitoring services](docs/monitoring.md)
   * [kdevops first run](docs/kdevops-first-run.md)
   * [kdevops running make](docs/running-make.md)
   * [kdevops libvirt storage pool considerations](docs/libvirt-storage-pool.md)
