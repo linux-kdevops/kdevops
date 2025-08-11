@@ -17,4 +17,5 @@
       - isc-dhcp-client
       - python3-lxml
       - python3-libvirt
+      - ovmf
     state: present
