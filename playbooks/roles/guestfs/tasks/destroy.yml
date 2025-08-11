@@ -27,12 +27,23 @@
 - name: Undefine each stopped target node
   community.libvirt.virt:
     command: "undefine"
-    force: true
+    flags:
+      - "nvram"
+      - "snapshots-metadata"
+      - "checkpoints-metadata"
     name: "{{ inventory_hostname }}"
     uri: "{{ libvirt_uri }}"
   changed_when: true
   when:
     - inventory_hostname in shutdown_vms.list_vms
+  ignore_errors: true
+
+- name: Clean up storage volumes for target nodes
+  ansible.builtin.shell: |
+    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool }} {{ inventory_hostname }}/root.raw 2>/dev/null || true
+    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool }} {{ inventory_hostname }}.raw 2>/dev/null || true
+  changed_when: false
+  ignore_errors: true
 
 - name: Remove per-node configuration files
   ansible.builtin.file:
