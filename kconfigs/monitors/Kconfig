@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+config ENABLE_MONITORING
+	bool "Enable monitoring services during workflow execution"
+	output yaml
+	default n
+	help
+	  Enable monitoring services to collect statistics during workflow
+	  execution. This allows collection of various system metrics while
+	  workflows are running.
+
+	  Monitoring services run in the background during test execution and
+	  automatically collect results afterward. The collected data can be
+	  used for performance analysis, debugging, and understanding system
+	  behavior during tests.
+
+	  Individual workflows must add support for monitoring integration.
+	  Currently supported workflows:
+	  - fstests
+
+if ENABLE_MONITORING
+
+config MONITOR_DEVELOPMENTAL_STATS
+	bool "Enable developmental statistics (not yet upstream)"
+	output yaml
+	default n
+	help
+	  Enable collection of statistics that are still in development
+	  and not yet merged upstream in the Linux kernel.
+
+	  This is useful for testing and validating new kernel features
+	  that provide additional debugging or performance metrics.
+
+if MONITOR_DEVELOPMENTAL_STATS
+
+config MONITOR_FOLIO_MIGRATION
+	bool "Monitor folio migration statistics"
+	output yaml
+	default n
+	help
+	  Enable monitoring of folio migration statistics if available.
+	  This requires the kernel to have the folio migration debugfs
+	  stats patch applied.
+
+	  The statistics are collected from:
+	  /sys/kernel/debug/mm/migrate/stats
+
+	  This feature collects migration statistics periodically during
+	  workflow execution and can generate plots for visualization.
+
+config MONITOR_FOLIO_MIGRATION_INTERVAL
+	int "Folio migration monitoring interval (seconds)"
+	output yaml
+	default 60
+	depends on MONITOR_FOLIO_MIGRATION
+	help
+	  How often to collect folio migration statistics in seconds.
+	  Default is 60 seconds.
+
+	  Lower values provide more granular data but may impact system
+	  performance. Higher values reduce overhead but may miss
+	  short-lived migration events.
+
+endif # MONITOR_DEVELOPMENTAL_STATS
+
+# Future monitoring options can be added here
+# Examples:
+# - Memory pressure monitoring
+# - CPU utilization tracking
+# - I/O statistics collection
+# - Network traffic monitoring
+# - Custom perf event monitoring
+
+endif # ENABLE_MONITORING
