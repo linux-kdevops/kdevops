@@ -119,7 +119,7 @@
           - "virsh"
           - "attach-device"
           - "{{ inventory_hostname }}"
-          - "{{ item }}"
+          - "{{ item.path }}"
           - "--config"
       loop: "{{ passthrough_devices.files }}"
       loop_control:
