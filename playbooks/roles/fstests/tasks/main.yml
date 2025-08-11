@@ -1235,6 +1235,13 @@
   when:
     - fstests_skip_run|bool
 
+# Start monitoring services before running tests
+- import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - kdevops_run_fstests|bool
+    - enable_monitoring|default(false)|bool
+  tags: [ 'oscheck', 'fstests', 'run_tests', 'monitoring', 'monitor_run' ]
+
 # Recent environments runs are showing that environment variables
 # set below are not propagated. So best to stuff what you need
 # into the .kdevops_fstests_setup file which is sourced by root.
@@ -1280,6 +1287,13 @@
     KEEP_DMESG: "yes"
   when:
     - kdevops_run_fstests|bool
+
+# Stop monitoring services and collect data after running tests
+- import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - kdevops_run_fstests|bool
+    - enable_monitoring|default(false)|bool
+  tags: [ 'oscheck', 'fstests', 'run_tests', 'monitoring', 'monitor_collect' ]
 
 - name: Remove watchdog hint that tests have started
   local_action: file path="{{ fstests_workflow_dir }}/.begin" state=absent
