@@ -462,6 +462,49 @@ config HAVE_LIBVIRT_PCIE_PASSTHROUGH
 	bool
 	default $(shell, scripts/check_pciepassthrough_kconfig.sh passthrough_libvirt.generated)
 
+config KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH
+	bool "Enable PCI-E passthrough support"
+	depends on HAVE_LIBVIRT_PCIE_PASSTHROUGH
+	depends on LIBVIRT
+	depends on LIBVIRT_MACHINE_TYPE_Q35
+	default n
+	help
+	  Enable this to configure PCI-E passthrough of devices from the host
+	  to guest VMs. This requires the q35 machine type and proper IOMMU
+	  configuration on the host.
+
+	  If enabled, you can select which PCI devices to pass through to
+	  which guests in the passthrough configuration menu.
+
+if KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH
+
+menu "Configure PCI-E passthrough"
+
+choice
+	prompt "PCI-E passthrough assignment strategy"
+	default KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH_TYPE_EACH
+
+config KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH_TYPE_EACH
+	bool "Manually assign devices to specific guests"
+	help
+	  This lets you manually specify which PCI device gets assigned to
+	  which specific guest. Each device can be assigned to exactly one
+	  guest.
+
+config KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH_TYPE_ROUNDROBIN
+	bool "Round-robin device assignment"
+	help
+	  Automatically distribute PCI devices among guests in a round-robin
+	  fashion. This is useful when you have multiple similar devices
+	  (like NVMe drives) and want to distribute them evenly.
+
+endchoice
+
+source "Kconfig.passthrough_libvirt.generated"
+
+endmenu
+
+endif # KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH
 
 choice
 	prompt "Machine type to use"
