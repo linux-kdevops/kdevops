@@ -27,8 +27,19 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
             configured_kernel = config["CONFIG_BOOTLINUX_TREE_REF"].strip('"')
         remote_path = "/var/log/journal/remote/"
         kernel = systemd_remote.get_uname(remote_path, host, configured_kernel)
+
+        # If we got back the configured kernel (meaning journal didn't have Linux version),
+        # try to get the actual kernel version via SSH as a fallback
         if kernel == configured_kernel:
-            kernel += " (custom)"
+            try:
+                actual_kernel = kssh.get_uname(host).rstrip()
+                if actual_kernel and actual_kernel != "Timeout":
+                    kernel = actual_kernel
+                else:
+                    kernel += " (custom)"
+            except:
+                kernel += " (custom)"
+
         if kernel is None:
             sys.stderr.write("No kernel could be identified for host: %s\n" % host)
             sys.exit(1)

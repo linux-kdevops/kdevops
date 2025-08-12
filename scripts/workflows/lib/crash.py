@@ -480,12 +480,31 @@ class KernelCrashWatchdog:
         if not console_dir.exists():
             return None
 
-        log_files = sorted(console_dir.glob("console.log*"), key=os.path.getmtime)
+        # Sort log files in the correct reading order:
+        # - Rotated files in reverse numeric order (console.log.2, console.log.1, console.log.0)
+        # - Then the current file (console.log)
+        log_files = list(console_dir.glob("console.log*"))
         if not log_files:
             return None
 
-        all_lines = []
+        def sort_key(path):
+            name = path.name
+            if name == "console.log":
+                return (1, 0)  # Current file comes last
+            else:
+                # Extract number from console.log.N
+                match = re.match(r"console\.log\.(\d+)", name)
+                if match:
+                    return (0, -int(match.group(1)))  # Negative for reverse order
+                else:
+                    return (2, name)  # Unknown format, put at the end
 
+        log_files = sorted(log_files, key=sort_key)
+
+        decoded_lines = []
+        last_linux_version_line = None
+
+        # Process files in order, looking for the last "Linux version" line
         for log_file in log_files:
             try:
                 # Try reading file, fallback to sudo chown if permission denied
@@ -509,39 +528,74 @@ class KernelCrashWatchdog:
                     else:
                         raise
 
-                all_lines.extend(raw)
+                # Decode lines from this file
+                file_lines = [l.decode("utf-8", errors="replace").rstrip() for l in raw]
+
+                # Look for Linux version in this file
+                for i, line in enumerate(file_lines):
+                    if "Linux version" in line:
+                        last_linux_version_line = len(decoded_lines) + i
+                        logger.debug(f"Found 'Linux version' in {log_file} at line {i}")
+
+                decoded_lines.extend(file_lines)
+
             except Exception as e:
                 logger.warning(f"Failed to read {log_file}: {e}")
 
-        # Decode all lines safely
-        decoded_lines = [
-            l.decode("utf-8", errors="replace").rstrip() for l in all_lines
-        ]
-
-        # Find last Linux version line
-        linux_indices = [
-            i for i, line in enumerate(decoded_lines) if "Linux version" in line
-        ]
-        if not linux_indices:
-            logger.warning(
-                f"No 'Linux version' line found in console logs for {self.host_name}"
+        if last_linux_version_line is None:
+            # If no Linux version line found (e.g., logs rotated out boot messages),
+            # process all available logs as fallback
+            logger.debug(
+                f"No 'Linux version' line found in console logs for {self.host_name}, "
+                f"processing all {len(decoded_lines)} lines from rotated logs"
             )
-            return None
+            start_index = 0
+        else:
+            start_index = last_linux_version_line
 
-        start_index = linux_indices[-1]
-
+        # Try to get boot time from the target host if reachable
+        boot_time = None
         try:
-            btime_output = subprocess.run(
-                ["awk", "/^btime/ {print $2}", "/proc/stat"],
+            # First try to get boot time from target host via SSH
+            result = subprocess.run(
+                [
+                    "ssh",
+                    "-o",
+                    "ConnectTimeout=5",
+                    "-o",
+                    "StrictHostKeyChecking=no",
+                    self.host_name,
+                    "awk '/^btime/ {print $2}' /proc/stat",
+                ],
                 capture_output=True,
                 text=True,
-                check=True,
+                timeout=10,
             )
-            btime = int(btime_output.stdout.strip())
-            boot_time = datetime.fromtimestamp(btime)
-        except Exception as e:
-            logger.warning(f"Failed to get boot time: {e}")
-            return None
+            if result.returncode == 0 and result.stdout.strip():
+                btime = int(result.stdout.strip())
+                boot_time = datetime.fromtimestamp(btime)
+                logger.debug(
+                    f"Got boot time from target host {self.host_name}: {boot_time}"
+                )
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError) as e:
+            logger.debug(f"Failed to get boot time from target host: {e}")
+
+        # Fallback to localhost boot time (not ideal but better than nothing)
+        if boot_time is None:
+            try:
+                btime_output = subprocess.run(
+                    ["awk", "/^btime/ {print $2}", "/proc/stat"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                btime = int(btime_output.stdout.strip())
+                boot_time = datetime.fromtimestamp(btime)
+                logger.debug(f"Using localhost boot time as fallback: {boot_time}")
+            except Exception as e:
+                logger.warning(f"Failed to get boot time: {e}")
+                # Just return the lines without timestamp conversion
+                return "\n".join(decoded_lines[start_index:])
 
         # Convert logs from last boot only
         converted_lines = []
@@ -553,6 +607,8 @@ class KernelCrashWatchdog:
                 timestamp = wall_time.strftime("%b %d %H:%M:%S")
                 converted_lines.append(f"{timestamp} {self.host_name} {match.group(2)}")
             else:
+                # Keep lines that don't match the kernel timestamp format as-is
+                # This helps preserve any Linux version lines that might be there
                 converted_lines.append(line)
 
         return "\n".join(converted_lines)

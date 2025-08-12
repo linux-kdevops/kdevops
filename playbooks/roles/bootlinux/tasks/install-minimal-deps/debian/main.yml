@@ -2,6 +2,14 @@
 # Install minimal dependencies needed for kernel installation on Debian
 # This is used when bootlinux_9p is enabled and the build happens on the host
 
+- name: Update apt cache accepting release info changes
+  become: yes
+  become_method: sudo
+  ansible.builtin.command:
+    cmd: apt-get update --allow-releaseinfo-change
+  changed_when: false
+  ignore_errors: true
+
 - name: Update apt cache
   become: yes
   become_method: sudo

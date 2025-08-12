@@ -242,7 +242,7 @@ def add_pcie_kconfig_target(config_name, sdevice):
     sys.stdout.write(
         '\tstring  "Target guest to offload %s"\n' % (strip_kconfig_name(sdevice))
     )
-    sys.stdout.write('\tdefault KDEVOPS_HOSTS_PREFIX\n')
+    sys.stdout.write("\tdefault KDEVOPS_HOSTS_PREFIX\n")
     sys.stdout.write("\tdepends on %s\n" % config_name)
     sys.stdout.write("\tdepends on KDEVOPS_LIBVIRT_PCIE_PASSTHROUGH_TYPE_EACH\n")
     sys.stdout.write("\thelp\n")
