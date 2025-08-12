@@ -1,0 +1,472 @@
+---
+- name: Install Perl dependencies for mmtests compare on localhost (Debian/Ubuntu)
+  delegate_to: localhost
+  become: yes
+  become_method: sudo
+  apt:
+    name:
+      - perl
+      - perl-doc
+      - cpanminus
+      - libfile-which-perl
+      - libfile-slurp-perl
+      - libjson-perl
+      - liblist-moreutils-perl
+      - gnuplot
+      - python3-matplotlib
+      - python3-numpy
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family']|lower == 'debian'
+  run_once: true
+  tags: ['compare', 'deps']
+
+- name: Install additional Perl modules via CPAN on localhost (if needed)
+  delegate_to: localhost
+  become: yes
+  become_method: sudo
+  cpanm:
+    name: "{{ item }}"
+  with_items:
+    - File::Temp
+  when: ansible_facts['os_family']|lower == 'debian'
+  run_once: true
+  tags: ['compare', 'deps']
+  ignore_errors: true
+
+- name: Install Perl dependencies for mmtests compare on localhost (SUSE)
+  delegate_to: localhost
+  become: yes
+  become_method: sudo
+  zypper:
+    name:
+      - perl
+      - perl-File-Which
+      - perl-File-Slurp
+      - perl-JSON
+      - perl-List-MoreUtils
+      - perl-Data-Dumper
+      - perl-Digest-MD5
+      - perl-Getopt-Long
+      - perl-Pod-Usage
+      - perl-App-cpanminus
+      - gnuplot
+      - python3-matplotlib
+      - python3-numpy
+    state: present
+  when: ansible_facts['os_family']|lower == 'suse'
+  run_once: true
+  tags: ['compare', 'deps']
+
+- name: Install Perl dependencies for mmtests compare on localhost (RedHat/Fedora)
+  delegate_to: localhost
+  become: yes
+  become_method: sudo
+  yum:
+    name:
+      - perl
+      - perl-File-Which
+      - perl-File-Slurp
+      - perl-JSON
+      - perl-List-MoreUtils
+      - perl-Data-Dumper
+      - perl-Digest-MD5
+      - perl-Getopt-Long
+      - perl-Pod-Usage
+      - perl-App-cpanminus
+      - gnuplot
+      - python3-matplotlib
+      - python3-numpy
+    state: present
+  when: ansible_facts['os_family']|lower == 'redhat'
+  run_once: true
+  tags: ['compare', 'deps']
+
+- name: Create required directories
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ topdir_path }}/workflows/mmtests/results/compare"
+    - "{{ topdir_path }}/tmp"
+  run_once: true
+  tags: ['compare']
+
+- name: Clone mmtests repository locally
+  delegate_to: localhost
+  ansible.builtin.git:
+    repo: "{{ mmtests_git_url }}"
+    dest: "{{ topdir_path }}/tmp/mmtests"
+    version: "{{ mmtests_git_version | default('master') }}"
+    force: yes
+  run_once: true
+  tags: ['compare']
+
+- name: Check if mmtests fixes directory exists
+  delegate_to: localhost
+  stat:
+    path: "{{ topdir_path }}/workflows/mmtests/fixes/"
+  register: fixes_dir
+  run_once: true
+  tags: ['compare']
+
+- name: Find mmtests patches in fixes directory
+  delegate_to: localhost
+  find:
+    paths: "{{ topdir_path }}/workflows/mmtests/fixes/"
+    patterns: "*.patch"
+  register: mmtests_patches
+  when: fixes_dir.stat.exists
+  run_once: true
+  tags: ['compare']
+
+- name: Apply mmtests patches if found
+  delegate_to: localhost
+  ansible.builtin.patch:
+    src: "{{ item.path }}"
+    basedir: "{{ topdir_path }}/tmp/mmtests"
+    strip: 1
+  loop: "{{ mmtests_patches.files }}"
+  when:
+    - fixes_dir.stat.exists
+    - mmtests_patches.files | length > 0
+  run_once: true
+  tags: ['compare']
+  failed_when: false
+  register: patch_results
+
+- name: Get kernel versions from nodes
+  block:
+    - name: Get baseline kernel version
+      command: uname -r
+      register: baseline_kernel_version
+      delegate_to: "{{ groups['baseline'][0] }}"
+      run_once: true
+
+    - name: Get dev kernel version
+      command: uname -r
+      register: dev_kernel_version
+      delegate_to: "{{ groups['dev'][0] }}"
+      run_once: true
+      when:
+        - groups['dev'] is defined
+        - groups['dev'] | length > 0
+  tags: ['compare']
+
+- name: Set node information facts
+  set_fact:
+    baseline_hostname: "{{ groups['baseline'][0] }}"
+    baseline_kernel: "{{ baseline_kernel_version.stdout }}"
+    dev_hostname: "{{ groups['dev'][0] }}"
+    dev_kernel: "{{ dev_kernel_version.stdout }}"
+  run_once: true
+  delegate_to: localhost
+  tags: ['compare']
+
+- name: Create local results directories for mmtests data
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ baseline_hostname }}-{{ baseline_kernel }}"
+    - "{{ dev_hostname }}-{{ dev_kernel }}"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Archive baseline results on remote
+  archive:
+    path: "{{ mmtests_data_dir }}/work/log/{{ baseline_hostname }}-{{ baseline_kernel }}"
+    dest: "/tmp/baseline-mmtests-results.tar.gz"
+    format: gz
+  delegate_to: "{{ groups['baseline'][0] }}"
+  run_once: true
+  tags: ['compare']
+
+- name: Archive dev results on remote
+  archive:
+    path: "{{ mmtests_data_dir }}/work/log/{{ dev_hostname }}-{{ dev_kernel }}"
+    dest: "/tmp/dev-mmtests-results.tar.gz"
+    format: gz
+  delegate_to: "{{ groups['dev'][0] }}"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Fetch baseline results to localhost
+  fetch:
+    src: "/tmp/baseline-mmtests-results.tar.gz"
+    dest: "{{ topdir_path }}/tmp/"
+    flat: yes
+  delegate_to: "{{ groups['baseline'][0] }}"
+  run_once: true
+  tags: ['compare']
+
+- name: Fetch dev results to localhost
+  fetch:
+    src: "/tmp/dev-mmtests-results.tar.gz"
+    dest: "{{ topdir_path }}/tmp/"
+    flat: yes
+  delegate_to: "{{ groups['dev'][0] }}"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Extract baseline results locally
+  delegate_to: localhost
+  unarchive:
+    src: "{{ topdir_path }}/tmp/baseline-mmtests-results.tar.gz"
+    dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
+    remote_src: yes
+  run_once: true
+  tags: ['compare']
+
+- name: Extract dev results locally
+  delegate_to: localhost
+  unarchive:
+    src: "{{ topdir_path }}/tmp/dev-mmtests-results.tar.gz"
+    dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
+    remote_src: yes
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Run mmtests comparison
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: |
+      ./bin/compare-mmtests.pl \
+        --directory work/log/ \
+        --benchmark {{ mmtests_test_type }} \
+        --names {{ baseline_hostname }}-{{ baseline_kernel }},{{ dev_hostname }}-{{ dev_kernel }}
+    chdir: "{{ topdir_path }}/tmp/mmtests"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  register: comparison_text_output
+  tags: ['compare']
+
+- name: Generate HTML comparison output
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: |
+      ./bin/compare-mmtests.pl \
+        --directory work/log/ \
+        --benchmark {{ mmtests_test_type }} \
+        --names {{ baseline_hostname }}-{{ baseline_kernel }},{{ dev_hostname }}-{{ dev_kernel }} \
+        --format html
+    chdir: "{{ topdir_path }}/tmp/mmtests"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  register: comparison_html_output
+  tags: ['compare']
+
+- name: Parse comparison data for template
+  delegate_to: localhost
+  set_fact:
+    comparison_metrics: []
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Generate performance graphs using gnuplot
+  delegate_to: localhost
+  block:
+    - name: Check for available iterations data
+      find:
+        paths: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}/{{ mmtests_test_type }}"
+        patterns: "*.gz"
+        recurse: yes
+      register: iteration_files
+      loop:
+        - "{{ baseline_hostname }}-{{ baseline_kernel }}"
+        - "{{ dev_hostname }}-{{ dev_kernel }}"
+
+    - name: Extract iteration data files
+      ansible.builtin.unarchive:
+        src: "{{ item.path }}"
+        dest: "{{ item.path | dirname }}"
+        remote_src: yes
+      loop: "{{ iteration_files.results | map(attribute='files') | flatten }}"
+      when: iteration_files.results is defined
+
+    - name: Generate comparison graphs with compare-kernels.sh
+      ansible.builtin.command:
+        cmd: |
+          ./compare-kernels.sh \
+            --baseline {{ baseline_hostname }}-{{ baseline_kernel }} \
+            --compare {{ dev_hostname }}-{{ dev_kernel }} \
+            --output-dir {{ topdir_path }}/workflows/mmtests/results/compare
+        chdir: "{{ topdir_path }}/tmp/mmtests/work/log"
+      register: graph_generation
+      failed_when: false
+      environment:
+        MMTESTS_AUTO_PACKAGE_INSTALL: never
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare', 'graphs']
+
+- name: Find generated graph files
+  delegate_to: localhost
+  find:
+    paths: "{{ topdir_path }}/workflows/mmtests/results/compare"
+    patterns: "*.png"
+  register: graph_files
+  run_once: true
+  tags: ['compare', 'graphs']
+
+- name: Read graph files for embedding
+  delegate_to: localhost
+  slurp:
+    src: "{{ item.path }}"
+  register: graph_data
+  loop: "{{ graph_files.files[:10] }}"  # Limit to first 10 graphs
+  when: graph_files.files is defined
+  run_once: true
+  tags: ['compare', 'graphs']
+
+- name: Prepare graph data for template
+  delegate_to: localhost
+  set_fact:
+    performance_graphs: []
+  run_once: true
+  when: graph_files.files is not defined or graph_files.files | length == 0
+  tags: ['compare', 'graphs']
+
+- name: Build graph data list
+  delegate_to: localhost
+  set_fact:
+    performance_graphs: "{{ performance_graphs | default([]) + [{'embedded_data': item.content, 'title': item.item.path | basename | regex_replace('.png', '')}] }}"
+  loop: "{{ graph_data.results | default([]) }}"
+  run_once: true
+  when:
+    - graph_data is defined
+    - graph_data.results is defined
+  tags: ['compare', 'graphs']
+
+- name: Generate benchmark description
+  delegate_to: localhost
+  set_fact:
+    benchmark_description: |
+      {% if mmtests_test_type == 'thpcompact' %}
+      <p><strong>thpcompact</strong> tests memory management performance, specifically:</p>
+      <ul>
+        <li>Base page (4KB) allocation performance</li>
+        <li>Huge page (2MB) allocation performance</li>
+        <li>Memory compaction efficiency</li>
+        <li>Threading scalability</li>
+      </ul>
+      <p><em>Lower values indicate better (faster) performance.</em></p>
+      {% elif mmtests_test_type == 'hackbench' %}
+      <p><strong>hackbench</strong> measures scheduler and IPC performance through:</p>
+      <ul>
+        <li>Process/thread creation and destruction</li>
+        <li>Context switching overhead</li>
+        <li>Inter-process communication</li>
+        <li>Scheduler scalability</li>
+      </ul>
+      <p><em>Lower values indicate better performance.</em></p>
+      {% elif mmtests_test_type == 'kernbench' %}
+      <p><strong>kernbench</strong> measures kernel compilation performance:</p>
+      <ul>
+        <li>Overall system performance</li>
+        <li>CPU and memory bandwidth</li>
+        <li>I/O subsystem performance</li>
+        <li>Parallel compilation efficiency</li>
+      </ul>
+      <p><em>Lower compilation times indicate better performance.</em></p>
+      {% else %}
+      <p><strong>{{ mmtests_test_type }}</strong> benchmark for Linux kernel performance testing.</p>
+      {% endif %}
+  run_once: true
+  tags: ['compare']
+
+- name: Generate comparison report from template
+  delegate_to: localhost
+  template:
+    src: comparison_report.html.j2
+    dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_report.html"
+    mode: '0644'
+  vars:
+    benchmark_name: "{{ mmtests_test_type }}"
+    test_description: "Performance Benchmark"
+    analysis_date: "{{ ansible_date_time.date }}"
+    analysis_time: "{{ ansible_date_time.time }}"
+    baseline_hostname: "{{ baseline_hostname }}"
+    baseline_kernel: "{{ baseline_kernel }}"
+    dev_hostname: "{{ dev_hostname }}"
+    dev_kernel: "{{ dev_kernel }}"
+    benchmark_description: "{{ benchmark_description | default('') }}"
+    raw_comparison_html: "{{ comparison_html_output.stdout | default('') }}"
+    comparison_data: "{{ comparison_metrics | default([]) }}"
+    performance_graphs: "{{ performance_graphs | default([]) }}"
+    monitor_graphs: []
+    summary_stats: []
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Save comparison outputs
+  delegate_to: localhost
+  copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - content: "{{ comparison_text_output.stdout | default('No comparison data') }}"
+      dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison.txt"
+    - content: "{{ comparison_html_output.stdout | default('<p>No comparison data</p>') }}"
+      dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_raw.html"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Copy full results to final location
+  delegate_to: localhost
+  ansible.builtin.copy:
+    src: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}/"
+    dest: "{{ topdir_path }}/workflows/mmtests/results/{{ item.split('-')[0] }}/"
+    remote_src: yes
+  loop:
+    - "{{ baseline_hostname }}-{{ baseline_kernel }}"
+    - "{{ dev_hostname }}-{{ dev_kernel }}"
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Display comparison report location
+  debug:
+    msg: |
+      🎯 mmtests Comparison Reports Generated:
+
+      📊 Enhanced Analysis:
+      - Template-based HTML: {{ topdir_path }}/workflows/mmtests/results/compare/comparison_report.html
+      - PNG graphs: {{ graph_files.matched | default(0) }} files in {{ topdir_path }}/workflows/mmtests/results/compare/
+
+      📋 Standard Reports:
+      - Raw HTML: {{ topdir_path }}/workflows/mmtests/results/compare/comparison_raw.html
+      - Text: {{ topdir_path }}/workflows/mmtests/results/compare/comparison.txt
+
+      📁 Full Results:
+      - Baseline: {{ topdir_path }}/workflows/mmtests/results/{{ baseline_hostname }}/
+      - Dev: {{ topdir_path }}/workflows/mmtests/results/{{ dev_hostname }}/
+
+      🚀 Open comparison_report.html for the best analysis experience!
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare']
+
+- name: Clean up temporary archives on remote nodes
+  file:
+    path: "/tmp/{{ item }}-mmtests-results.tar.gz"
+    state: absent
+  delegate_to: "{{ groups[item][0] }}"
+  loop:
+    - baseline
+    - dev
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ['compare', 'cleanup']

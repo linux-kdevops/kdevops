@@ -13,19 +13,19 @@ mmtests:
 
 mmtests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-l baseline playbooks/mmtests.yml
+		-l 'mmtests:&baseline' playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml  \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
 mmtests-dev:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-l dev playbooks/mmtests.yml \
+		-l 'mmtests:&dev' playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
-mmtests-test: mmtests
+mmtests-tests: mmtests
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
@@ -37,6 +37,13 @@ mmtests-results:
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags results \
+		$(MMTESTS_ARGS)
+
+mmtests-compare:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/mmtests-compare.yml \
+		--extra-vars=@./extra_vars.yaml \
+		--tags deps,compare \
 		$(MMTESTS_ARGS)
 
 mmtests-clean:
@@ -51,8 +58,9 @@ mmtests-help:
 	@echo "mmtests                       : Setup and install mmtests"
 	@echo "mmtests-baseline             : Setup mmtests with baseline configuration"
 	@echo "mmtests-dev                  : Setup mmtests with dev configuration"
-	@echo "mmtests-test                 : Run mmtests tests"
+	@echo "mmtests-tests                : Run mmtests tests"
 	@echo "mmtests-results              : Copy results from guests"
+	@echo "mmtests-compare              : Compare baseline and dev results (AB testing)"
 	@echo "mmtests-clean                : Clean up mmtests installation"
 	@echo ""
 
@@ -61,8 +69,9 @@ HELP_TARGETS += mmtests-help
 PHONY +: mmtests
 PHONY +: mmtests-baseline
 PHONY +: mmtests-dev
-PHONY +: mmtests-test
+PHONY +: mmtests-tests
 PHONY +: mmtests-results
+PHONY +: mmtests-compare
 PHONY +: mmtests-clean
 PHONY +: mmtests-help
 .PHONY: $(PHONY)

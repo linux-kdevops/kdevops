@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Luis Chamberlain <mcgrof@kernel.org>
+Date: Tue, 5 Aug 2025 14:35:00 -0700
+Subject: [PATCH] thpcompact: fix library order in gcc command
+
+The gcc command in thpcompact-install has the libraries specified
+before the source file, which causes linking errors on modern systems:
+
+  undefined reference to `get_mempolicy'
+
+Fix by moving the libraries after the source file, as required by
+modern linkers that process dependencies in order.
+
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ shellpack_src/src/thpcompact/thpcompact-install | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/shellpack_src/src/thpcompact/thpcompact-install b/shellpack_src/src/thpcompact/thpcompact-install
+index 1234567..7654321 100644
+--- a/shellpack_src/src/thpcompact/thpcompact-install
++++ b/shellpack_src/src/thpcompact/thpcompact-install
+@@ -8,7 +8,7 @@
+ install-depends libnuma-devel
+ 
+ mkdir $SHELLPACK_SOURCES/thpcompact-${VERSION}-installed
+-gcc -Wall -g -lpthread -lnuma $SHELLPACK_TEMP/thpcompact.c -o $SHELLPACK_SOURCES/thpcompact-${VERSION}-installed/thpcompact || \
++gcc -Wall -g $SHELLPACK_TEMP/thpcompact.c -lpthread -lnuma -o $SHELLPACK_SOURCES/thpcompact-${VERSION}-installed/thpcompact || \
+ 	die "Failed to build thpcompact"
+ 
+ echo thpcompact installed successfully
+-- 
+2.45.2

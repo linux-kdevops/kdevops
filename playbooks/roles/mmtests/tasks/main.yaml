@@ -21,7 +21,6 @@
     path: "{{ data_path }}"
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
-    recurse: yes
     state: directory
 
 - name: Clone mmtests repository
@@ -31,6 +30,63 @@
     dest: "{{ mmtests_data_dir }}"
     version: "{{ mmtests_git_version }}"
     force: yes
+
+- name: Check if mmtests fixes directory exists
+  tags: [ 'setup' ]
+  delegate_to: localhost
+  stat:
+    path: "{{ topdir_path }}/workflows/mmtests/fixes/"
+  register: fixes_dir
+  run_once: false
+
+- name: Find mmtests patches in fixes directory
+  tags: [ 'setup' ]
+  delegate_to: localhost
+  find:
+    paths: "{{ topdir_path }}/workflows/mmtests/fixes/"
+    patterns: "*.patch"
+  register: mmtests_patches
+  when: fixes_dir.stat.exists
+  run_once: false
+
+- name: Copy patches to remote host
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  copy:
+    src: "{{ item.path }}"
+    dest: "/tmp/{{ item.path | basename }}"
+    mode: '0644'
+  with_items: "{{ mmtests_patches.files }}"
+  when:
+    - fixes_dir.stat.exists
+    - mmtests_patches.files | length > 0
+
+- name: Apply mmtests patches on remote host
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  shell: |
+    cd {{ mmtests_data_dir }}
+    git am /tmp/{{ item.path | basename }}
+  with_items: "{{ mmtests_patches.files }}"
+  when:
+    - fixes_dir.stat.exists
+    - mmtests_patches.files | length > 0
+  ignore_errors: true
+  register: patch_results
+
+- name: Report patch application results
+  tags: [ 'setup' ]
+  debug:
+    msg: |
+      Applied {{ mmtests_patches.files | length | default(0) }} patches from fixes directory:
+      {% for patch in mmtests_patches.files | default([]) %}
+      - {{ patch.path | basename }}
+      {% endfor %}
+  when:
+    - fixes_dir.stat.exists
+    - mmtests_patches.files | length > 0
 
 - name: Generate mmtests configuration
   tags: [ 'setup' ]
