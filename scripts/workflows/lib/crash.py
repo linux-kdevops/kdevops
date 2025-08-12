@@ -494,7 +494,7 @@ class KernelCrashWatchdog:
                         raw = f.readlines()
                 except PermissionError:
                     if getattr(self, "libvirt_uri_system", False):
-                        logger.info(f"Fixing permissions for {log_file}")
+                        logger.debug(f"Fixing permissions for {log_file}")
                         subprocess.run(
                             [
                                 "sudo",
