@@ -53,6 +53,79 @@ def print_fstest_host_status(host, verbose, use_remote, use_ssh, basedir, config
         )
     )
 
+    # If we couldn't get test info from journal/dmesg, try to get it from running processes
+    if last_test is None and not stall_suspect:
+        try:
+            # Check if fstests is actually running by looking at processes
+            import subprocess
+
+            result = subprocess.run(
+                [
+                    "ssh",
+                    "-o",
+                    "ConnectTimeout=5",
+                    "-o",
+                    "StrictHostKeyChecking=no",
+                    host,
+                    "ps aux | grep 'check -s' | grep -v grep",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                # Extract test name from process command line
+                # Format: bash ./check -s section -R xunit test_name
+                process_line = result.stdout.strip()
+                parts = process_line.split()
+                if "check" in process_line and len(parts) > 0:
+                    # Find the test name - it's usually the last argument
+                    test_name = parts[-1]
+                    if "/" in test_name:  # Looks like a test name (e.g., generic/750)
+                        last_test = test_name
+                        # We don't have the start time, but we know it's running
+                        last_test_time = "Unknown (logs rotated)"
+                        current_time_str = "N/A"
+                        # Use SSH to get how long the process has been running
+                        pid_result = subprocess.run(
+                            [
+                                "ssh",
+                                "-o",
+                                "ConnectTimeout=5",
+                                "-o",
+                                "StrictHostKeyChecking=no",
+                                host,
+                                "ps aux | grep 'check -s' | grep -v grep | awk '{print $2}'",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                        )
+                        if pid_result.returncode == 0 and pid_result.stdout.strip():
+                            pid = pid_result.stdout.strip().split()[0]
+                            # Get process runtime in seconds
+                            runtime_result = subprocess.run(
+                                [
+                                    "ssh",
+                                    "-o",
+                                    "ConnectTimeout=5",
+                                    "-o",
+                                    "StrictHostKeyChecking=no",
+                                    host,
+                                    f"ps -o etimes= -p {pid}",
+                                ],
+                                capture_output=True,
+                                text=True,
+                                timeout=10,
+                            )
+                            if (
+                                runtime_result.returncode == 0
+                                and runtime_result.stdout.strip()
+                            ):
+                                delta_seconds = int(runtime_result.stdout.strip())
+        except:
+            pass  # If SSH fails, keep the None values
+
     checktime = fstests.get_checktime(host, basedir, kernel, section, last_test)
     percent_done = (delta_seconds * 100 / checktime) if checktime > 0 else 0
 
