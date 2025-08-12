@@ -553,61 +553,77 @@ class KernelCrashWatchdog:
         else:
             start_index = last_linux_version_line
 
-        # Try to get boot time from the target host if reachable
-        boot_time = None
-        try:
-            # First try to get boot time from target host via SSH
-            result = subprocess.run(
-                [
-                    "ssh",
-                    "-o",
-                    "ConnectTimeout=5",
-                    "-o",
-                    "StrictHostKeyChecking=no",
-                    self.host_name,
-                    "awk '/^btime/ {print $2}' /proc/stat",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                btime = int(result.stdout.strip())
-                boot_time = datetime.fromtimestamp(btime)
-                logger.debug(
-                    f"Got boot time from target host {self.host_name}: {boot_time}"
-                )
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError) as e:
-            logger.debug(f"Failed to get boot time from target host: {e}")
+        # Check if we need to convert timestamps (lines with [timestamp] format)
+        needs_timestamp_conversion = False
+        for line in decoded_lines[
+            start_index : start_index + 10
+        ]:  # Check first 10 lines
+            if re.match(r"\[\s*\d+\.\d+\]", line):
+                needs_timestamp_conversion = True
+                break
 
-        # Fallback to localhost boot time (not ideal but better than nothing)
-        if boot_time is None:
+        boot_time = None
+        if needs_timestamp_conversion:
+            # Only try to get boot time if we need to convert timestamps
             try:
-                btime_output = subprocess.run(
-                    ["awk", "/^btime/ {print $2}", "/proc/stat"],
+                # First try to get boot time from target host via SSH
+                result = subprocess.run(
+                    [
+                        "ssh",
+                        "-o",
+                        "ConnectTimeout=5",
+                        "-o",
+                        "StrictHostKeyChecking=no",
+                        self.host_name,
+                        "awk '/^btime/ {print $2}' /proc/stat",
+                    ],
                     capture_output=True,
                     text=True,
-                    check=True,
+                    timeout=10,
                 )
-                btime = int(btime_output.stdout.strip())
-                boot_time = datetime.fromtimestamp(btime)
-                logger.debug(f"Using localhost boot time as fallback: {boot_time}")
-            except Exception as e:
-                logger.warning(f"Failed to get boot time: {e}")
-                # Just return the lines without timestamp conversion
-                return "\n".join(decoded_lines[start_index:])
+                if result.returncode == 0 and result.stdout.strip():
+                    btime = int(result.stdout.strip())
+                    boot_time = datetime.fromtimestamp(btime)
+                    logger.debug(
+                        f"Got boot time from target host {self.host_name}: {boot_time}"
+                    )
+            except (
+                subprocess.TimeoutExpired,
+                subprocess.SubprocessError,
+                ValueError,
+            ) as e:
+                logger.debug(f"Failed to get boot time from target host: {e}")
+
+            # Fallback to localhost boot time (not ideal but better than nothing)
+            if boot_time is None:
+                try:
+                    btime_output = subprocess.run(
+                        ["awk", "/^btime/ {print $2}", "/proc/stat"],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                    )
+                    btime = int(btime_output.stdout.strip())
+                    boot_time = datetime.fromtimestamp(btime)
+                    logger.debug(f"Using localhost boot time as fallback: {boot_time}")
+                except Exception as e:
+                    logger.warning(f"Failed to get boot time: {e}")
+                    # Just return the lines without timestamp conversion
+                    return "\n".join(decoded_lines[start_index:])
 
         # Convert logs from last boot only
         converted_lines = []
         for line in decoded_lines[start_index:]:
             match = re.match(r"\[\s*(\d+\.\d+)\] (.*)", line)
-            if match:
+            if match and boot_time:
+                # Only convert timestamp if we have a boot_time
                 seconds = float(match.group(1))
                 wall_time = boot_time + timedelta(seconds=seconds)
                 timestamp = wall_time.strftime("%b %d %H:%M:%S")
                 converted_lines.append(f"{timestamp} {self.host_name} {match.group(2)}")
             else:
                 # Keep lines that don't match the kernel timestamp format as-is
+                # or if we don't have boot_time for conversion
                 # This helps preserve any Linux version lines that might be there
                 converted_lines.append(line)
 
