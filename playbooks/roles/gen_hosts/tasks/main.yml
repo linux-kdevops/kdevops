@@ -342,7 +342,7 @@
   tags: [ 'hosts' ]
   template:
     src: "{{ kdevops_hosts_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_hosts }}"
+    dest: "{{ ansible_cfg_inventory }}"
     force: yes
     trim_blocks: True
     lstrip_blocks: True
