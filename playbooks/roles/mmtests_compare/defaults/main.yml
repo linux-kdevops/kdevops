@@ -1,0 +1,6 @@
+---
+# mmtests compare role defaults
+mmtests_data_dir: "{{ data_path }}/mmtests"
+mmtests_results_dir: "{{ mmtests_data_dir }}/work/log/{{ inventory_hostname }}-{{ kernel_version.stdout }}"
+# Git URL is from extra_vars.yaml, fallback to GitHub
+mmtests_git_url: "{{ mmtests_git_url | default('https://github.com/gormanm/mmtests.git') }}"

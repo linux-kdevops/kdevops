@@ -1,0 +1,46 @@
+From d951f7feb7855ee5ea393d2bbe55e93c150295da Mon Sep 17 00:00:00 2001
+From: Luis Chamberlain <mcgrof@kernel.org>
+Date: Tue, 5 Aug 2025 14:12:00 -0700
+Subject: [PATCH] compare: Fix undefined array reference when no operations
+ found
+
+When a benchmark produces no results (e.g., thpcompact when the binary
+fails to build), the compare script would crash with:
+'Can't use an undefined value as an ARRAY reference at Compare.pm line 461'
+
+This happens because $operations[0] doesn't exist when no operations
+are found. Add proper bounds checking to handle empty results gracefully.
+
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ bin/lib/MMTests/Compare.pm | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/bin/lib/MMTests/Compare.pm b/bin/lib/MMTests/Compare.pm
+index 94b0819eca67..6ea1b6173d4e 100644
+--- a/bin/lib/MMTests/Compare.pm
++++ b/bin/lib/MMTests/Compare.pm
+@@ -458,12 +458,14 @@ sub _generateRenderTable() {
+ 
+ 	# Build column format table
+ 	my %resultsTable = %{$self->{_ResultsTable}};
+-	for (my $i = 0; $i <= (scalar(@{$resultsTable{$operations[0]}[0]})); $i++) {
+-		my $fieldFormat = "%${fieldLength}.${precision}f";
+-		if (defined $self->{_CompareTable}) {
+-			push @formatTable, ($fieldFormat, " (%${compareLength}.2f%%)");
+-		} else {
+-			push @formatTable, ($fieldFormat, "");
++	if (@operations > 0 && exists $resultsTable{$operations[0]} && defined $resultsTable{$operations[0]}[0]) {
++		for (my $i = 0; $i <= (scalar(@{$resultsTable{$operations[0]}[0]})); $i++) {
++			my $fieldFormat = "%${fieldLength}.${precision}f";
++			if (defined $self->{_CompareTable}) {
++				push @formatTable, ($fieldFormat, " (%${compareLength}.2f%%)");
++			} else {
++				push @formatTable, ($fieldFormat, "");
++			}
+ 		}
+ 	}
+ 
+-- 
+2.45.2
+
