@@ -22,3 +22,12 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
 [dev:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+[mmtests]
+{% for test_type in mmtests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ test_type }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test_type }}-dev
+{% endif %}
+{% endfor %}
+[mmtests:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"

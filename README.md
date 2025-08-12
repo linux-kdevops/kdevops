@@ -215,6 +215,24 @@ You can also run specific tests:
 
 For more details see [kdevops nfs docs](docs/selftests.md)
 
+### mmtests - Memory Management and Performance Testing
+
+kdevops supports running comprehensive memory management and performance tests through mmtests:
+
+  * `make mmtests` - Run memory management benchmarks
+  * `make mmtests-compare` - Compare baseline vs development kernel performance (A/B testing)
+
+Quick A/B testing setup:
+```bash
+make defconfig-mmtests-ab-testing-thpcompact  # Configure for A/B testing
+make bringup                                  # Provision baseline and dev nodes
+make mmtests                                  # Run tests on both nodes
+make mmtests-compare                          # Generate comparison reports
+```
+
+Results are generated in `workflows/mmtests/results/compare/` with HTML reports,
+performance graphs, and statistical analysis for easy regression detection.
+
 ### CXL
 
 There is CXL support. You can either use virtualized CXL devices or with

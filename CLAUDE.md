@@ -111,7 +111,10 @@ make pynfs              # NFS testing
 make gitr               # Git regression testing
 make ltp                # Linux Test Project
 make sysbench           # Database performance testing
-make mmtests            # Memory management tests from mmtests
+
+# Memory management testing
+make mmtests            # Run memory management tests
+make mmtests-compare    # Compare baseline vs dev results (A/B testing)
 ```
 
 ### Development Utilities
@@ -148,6 +151,58 @@ make mrproper           # Clean everything and restart from scratch
 - **Purpose**: Parallel execution of Linux kernel selftests
 - **Supports**: firmware, kmod, sysctl, and other kernel subsystem tests
 - **Location**: `workflows/selftests/`
+
+### mmtests (Memory Management Testing)
+- **Purpose**: Comprehensive memory management and performance testing
+- **Features**: A/B testing support, automated performance comparison, visual analysis
+- **Location**: `workflows/mmtests/`
+- **Key Capabilities**:
+  - Run various memory and performance benchmarks (thpcompact, thpchallenge, etc.)
+  - A/B testing between baseline and development kernels
+  - Automated performance comparison with statistical analysis
+  - Graph generation for performance visualization
+  - HTML reports with embedded performance graphs
+
+#### mmtests A/B Testing and Comparison
+The mmtests workflow supports advanced A/B testing for kernel performance regression detection:
+
+```bash
+# Setup A/B testing configuration
+make defconfig-mmtests-ab-testing     # Basic A/B testing
+make defconfig-mmtests-ab-testing-thpcompact  # With monitoring
+
+# Run the workflow
+make bringup           # Provision baseline and dev nodes
+make mmtests          # Run tests on both nodes
+make mmtests-compare  # Generate comparison reports
+
+# Results location
+# workflows/mmtests/results/compare/
+#   - comparison.html       # Main HTML report
+#   - comparison.txt        # Text-based comparison
+#   - graph-*.png          # Performance graphs
+#   - comparison_report.html # Enhanced report with embedded graphs
+```
+
+**Comparison Features**:
+- Automated collection of results from baseline and dev nodes
+- Statistical analysis of performance differences
+- Multiple visualization formats:
+  - Performance trend graphs
+  - Sorted performance comparisons
+  - Smoothed data analysis
+  - System monitoring graphs (vmstat, mpstat, proc stats)
+- Professional HTML reports with:
+  - Summary statistics
+  - Detailed per-metric comparisons
+  - Embedded performance graphs
+  - Color-coded performance indicators
+
+**Technical Implementation**:
+- Local mmtests repository management with patch support
+- Support for fixing known mmtests issues via patches in `workflows/mmtests/fixes/`
+- Python and shell scripts for advanced graph generation
+- Robust error handling and dependency management
 
 ## Architecture Highlights
 

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>mmtests Analysis: {{ baseline_hostname }}-{{ baseline_kernel }} vs {{ dev_hostname }}-{{ dev_kernel }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: -1px;
+        }
+        .header .subtitle {
+            margin-top: 10px;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-card .value {
+            font-size: 1.3em;
+            color: #212529;
+            font-weight: 600;
+        }
+        .section {
+            margin: 40px 0;
+        }
+        .section-header {
+            background: linear-gradient(90deg, #667eea 0%, transparent 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+        .section-header h2 {
+            margin: 0;
+            font-weight: 400;
+        }
+        .description {
+            background: #e8f4fd;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .description h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .resultsTable {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+            background: white;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .resultsTable thead th {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .resultsTable tbody td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .resultsTable tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .resultsTable tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .metric-name {
+            font-weight: 600;
+            color: #495057;
+        }
+        .metric-value {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            text-align: right;
+        }
+        .metric-diff {
+            text-align: right;
+            font-weight: 600;
+        }
+        .metric-diff.improvement {
+            color: #28a745;
+        }
+        .metric-diff.regression {
+            color: #dc3545;
+        }
+        .metric-diff.neutral {
+            color: #6c757d;
+        }
+        .graph-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .graph-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .graph-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .graph-card-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .graph-card-header h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1em;
+        }
+        .graph-card-body {
+            padding: 20px;
+            text-align: center;
+        }
+        .graph-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .graph-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 40px;
+            text-align: center;
+            color: #6c757d;
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        @media (max-width: 768px) {
+            .graph-grid {
+                grid-template-columns: 1fr;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>mmtests Performance Analysis</h1>
+            <div class="subtitle">{{ benchmark_name }} Benchmark Comparison</div>
+        </div>
+
+        <div class="content">
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Baseline System</h3>
+                    <div class="value">{{ baseline_hostname }}</div>
+                    <div style="color: #6c757d; margin-top: 5px;">{{ baseline_kernel }}</div>
+                </div>
+                <div class="info-card">
+                    <h3>Development System</h3>
+                    <div class="value">{{ dev_hostname }}</div>
+                    <div style="color: #6c757d; margin-top: 5px;">{{ dev_kernel }}</div>
+                </div>
+                <div class="info-card">
+                    <h3>Test Type</h3>
+                    <div class="value">{{ benchmark_name }}</div>
+                    <div style="color: #6c757d; margin-top: 5px;">{{ test_description }}</div>
+                </div>
+                <div class="info-card">
+                    <h3>Analysis Date</h3>
+                    <div class="value">{{ analysis_date }}</div>
+                    <div style="color: #6c757d; margin-top: 5px;">{{ analysis_time }}</div>
+                </div>
+            </div>
+
+            {% if benchmark_description %}
+            <div class="description">
+                <h3>📊 About {{ benchmark_name }}</h3>
+                {{ benchmark_description | safe }}
+            </div>
+            {% endif %}
+
+            {% if summary_stats %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>📈 Performance Summary</h2>
+                </div>
+                <div class="stats-summary">
+                    {% for stat in summary_stats %}
+                    <div class="stat-item">
+                        <div class="stat-value">{{ stat.value }}</div>
+                        <div class="stat-label">{{ stat.label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if comparison_data %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>📋 Detailed Performance Metrics</h2>
+                </div>
+                <table class="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Baseline</th>
+                            <th>Development</th>
+                            <th>Difference</th>
+                            <th>Change %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for metric in comparison_data %}
+                        <tr>
+                            <td class="metric-name">{{ metric.name }}</td>
+                            <td class="metric-value">{{ metric.baseline }}</td>
+                            <td class="metric-value">{{ metric.dev }}</td>
+                            <td class="metric-diff {{ metric.diff_class }}">
+                                {{ metric.diff }}
+                                {% if metric.is_improvement %}
+                                <span class="badge badge-success">↓ Better</span>
+                                {% elif metric.is_regression %}
+                                <span class="badge badge-danger">↑ Worse</span>
+                                {% else %}
+                                <span class="badge badge-info">→ Same</span>
+                                {% endif %}
+                            </td>
+                            <td class="metric-diff {{ metric.diff_class }}">{{ metric.percent_change }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if performance_graphs %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>📊 Performance Visualization</h2>
+                </div>
+                <div class="graph-grid">
+                    {% for graph in performance_graphs %}
+                    <div class="graph-card">
+                        <div class="graph-card-header">
+                            <h3>{{ graph.title }}</h3>
+                        </div>
+                        <div class="graph-card-body">
+                            {% if graph.embedded_data %}
+                            <img src="data:image/png;base64,{{ graph.embedded_data }}" alt="{{ graph.title }}">
+                            {% elif graph.path %}
+                            <img src="{{ graph.filename }}" alt="{{ graph.title }}">
+                            {% else %}
+                            <div class="graph-placeholder">
+                                <p>Graph pending generation</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if monitor_graphs %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>🖥️ System Monitor Data</h2>
+                </div>
+                <div class="graph-grid">
+                    {% for graph in monitor_graphs %}
+                    <div class="graph-card">
+                        <div class="graph-card-header">
+                            <h3>{{ graph.title }}</h3>
+                        </div>
+                        <div class="graph-card-body">
+                            {% if graph.embedded_data %}
+                            <img src="data:image/png;base64,{{ graph.embedded_data }}" alt="{{ graph.title }}">
+                            {% elif graph.path %}
+                            <img src="{{ graph.filename }}" alt="{{ graph.title }}">
+                            {% else %}
+                            <div class="graph-placeholder">
+                                <p>Monitor data unavailable</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if raw_comparison_html %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>📄 Raw Comparison Output</h2>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px;">
+                    {{ raw_comparison_html | safe }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p><strong>Generated by kdevops mmtests</strong></p>
+            <p>Performance analysis and benchmarking framework for Linux kernel development</p>
+            <p style="margin-top: 20px; font-size: 0.9em;">
+                Report generated on {{ analysis_date }} at {{ analysis_time }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
