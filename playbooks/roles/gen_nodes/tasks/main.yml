@@ -438,10 +438,10 @@
 
 - name: Collect dynamically supported filesystems
   vars:
-    supported_filesystems_variables: "{{ vars | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
-    supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
+    supported_filesystems_variables: "{{ hostvars[inventory_hostname] | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
+    local_supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
   set_fact:
-    sysbench_enabled_filesystems: "{{ supported_filesystems }}"
+    sysbench_enabled_filesystems: "{{ local_supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -453,12 +453,12 @@
     loop_var: fs
   vars:
     fs_section_prefix: "sysbench_{{ fs }}_section_"
-    fs_section_variables: "{{ vars | dict2items | selectattr('key', 'search', '^' + fs_section_prefix) }}"
+    fs_section_variables: "{{ hostvars[inventory_hostname] | dict2items | selectattr('key', 'search', '^' + fs_section_prefix) }}"
     enabled_fs_sysbench: "{{ fs_section_variables | selectattr('value', 'eq', True) | map(attribute='key') | list }}"
-    enabled_fs_sections: "{{ enabled_fs_sysbench | map('regex_replace', '^sysbench_', '') }}"
-    enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') }}"
-    prefixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') }}"
-    enabled_fs_node: "{{ prefixed_fs | map('regex_replace', '_', '-') }}"
+    enabled_fs_sections: "{{ enabled_fs_sysbench | map('regex_replace', '^sysbench_', '') | list }}"
+    enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') | list }}"
+    prefixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') | list }}"
+    enabled_fs_node: "{{ prefixed_fs | map('regex_replace', '_', '-') | list }}"
   set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
@@ -471,12 +471,12 @@
     loop_var: fs
   vars:
     fs_section_prefix: "sysbench_{{ fs }}_section_"
-    fs_section_variables: "{{ vars | dict2items | selectattr('key', 'search', '^' + fs_section_prefix) }}"
+    fs_section_variables: "{{ hostvars[inventory_hostname] | dict2items | selectattr('key', 'search', '^' + fs_section_prefix) }}"
     enabled_fs_sysbench: "{{ fs_section_variables | selectattr('value', 'eq', True) | map(attribute='key') | list }}"
-    enabled_fs_sections: "{{ enabled_fs_sysbench | map('regex_replace', '^sysbench_', '') }}"
-    enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') }}"
-    prefixed_and_postfixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') | map('regex_replace', '$', '-dev') }}"
-    enabled_fs_node: "{{ prefixed_and_postfixed_fs | map('regex_replace', '_', '-') }}"
+    enabled_fs_sections: "{{ enabled_fs_sysbench | map('regex_replace', '^sysbench_', '') | list }}"
+    enabled_fs: "{{ enabled_fs_sections | map('regex_replace', 'section_', '') | list }}"
+    prefixed_and_postfixed_fs: "{{ enabled_fs | map('regex_replace', '^', kdevops_host_prefix + '-') | map('regex_replace', '$', '-dev') | list }}"
+    enabled_fs_node: "{{ prefixed_and_postfixed_fs | map('regex_replace', '_', '-') | list }}"
   set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
