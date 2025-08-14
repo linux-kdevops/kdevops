@@ -1,0 +1,12 @@
+# Lambda Labs storage configuration
+#
+# NOTE: The Lambda Labs terraform provider (elct9620/lambdalabs v0.3.0) does NOT support
+# storage volume management. Instances come with their default storage only.
+#
+# If you need additional storage, you must:
+# 1. Use the Lambda Labs web console to attach volumes manually
+# 2. Or use a different cloud provider that supports storage management
+#
+# This file is kept as a placeholder for future provider updates.
+
+# No configuration options available - provider doesn't support storage management

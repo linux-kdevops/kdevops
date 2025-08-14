@@ -9,8 +9,13 @@ config KDEVOPS_ENABLE_NIXOS
 	bool
 	output yaml
 
+config CLOUD_INITIALIZED
+	bool
+	default $(shell, test -f .cloud.initialized && echo y || echo n) = "y"
+
 choice
 	prompt "Node bring up method"
+	default TERRAFORM if CLOUD_INITIALIZED
 	default GUESTFS
 
 config GUESTFS

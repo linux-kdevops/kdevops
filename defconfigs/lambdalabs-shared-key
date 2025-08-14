@@ -1,0 +1,11 @@
+# Lambda Labs configuration with shared SSH key (legacy mode)
+# Uses a single SSH key name across all projects
+# Less secure but simpler for testing
+CONFIG_TERRAFORM=y
+CONFIG_TERRAFORM_LAMBDALABS=y
+CONFIG_TERRAFORM_LAMBDALABS_SMART_CHEAPEST=y
+CONFIG_TERRAFORM_LAMBDALABS_SSH_KEY_SHARED=y
+# Manual key name can be set via menuconfig
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY=y
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE=y
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_EMPTY_PASSPHRASE=y

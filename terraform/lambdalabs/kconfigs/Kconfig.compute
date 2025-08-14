@@ -1,0 +1,34 @@
+# Lambda Labs compute configuration
+
+# Smart cheapest instance selection
+config TERRAFORM_LAMBDALABS_SMART_CHEAPEST
+	bool "Automatically select cheapest available instance in closest region"
+	default y
+	help
+	  Enable smart inference that:
+	  1. Determines your location from public IP
+	  2. Finds all available instance/region combinations
+	  3. Selects the cheapest instance type
+	  4. Picks the closest region where that instance is available
+
+	  This ensures you get the most affordable option with lowest latency.
+
+if !TERRAFORM_LAMBDALABS_SMART_CHEAPEST
+# Include dynamically generated instance types only if not using smart selection
+source "terraform/lambdalabs/kconfigs/Kconfig.compute.generated"
+endif
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE
+	string
+	output yaml
+	default $(shell, python3 scripts/lambdalabs_smart_inference.py instance) if TERRAFORM_LAMBDALABS_SMART_CHEAPEST
+	default "gpu_1x_a10"
+
+# OS image is not configurable - provider limitation
+config TERRAFORM_LAMBDALABS_IMAGE
+	string
+	default "ubuntu-22.04"
+	help
+	  Lambda Labs terraform provider does NOT support OS/image selection.
+	  The provider always deploys Ubuntu 22.04. This is a placeholder
+	  config that exists only for consistency with other cloud providers.

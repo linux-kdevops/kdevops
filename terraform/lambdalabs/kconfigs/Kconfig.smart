@@ -1,0 +1,25 @@
+# Lambda Labs Smart Inference Configuration
+
+config TERRAFORM_LAMBDALABS_SMART_CHEAPEST
+	bool "Automatically select cheapest available instance in closest region"
+	default y
+	help
+	  Enable smart inference that:
+	  1. Determines your location from public IP
+	  2. Finds all available instance/region combinations
+	  3. Selects the cheapest instance type
+	  4. Picks the closest region where that instance is available
+
+	  This ensures you get the most affordable option with lowest latency.
+
+if TERRAFORM_LAMBDALABS_SMART_CHEAPEST
+
+config TERRAFORM_LAMBDALABS_SMART_INSTANCE
+	string
+	default $(shell, python3 scripts/lambdalabs_smart_inference.py instance)
+
+config TERRAFORM_LAMBDALABS_SMART_REGION
+	string
+	default $(shell, python3 scripts/lambdalabs_smart_inference.py region)
+
+endif # TERRAFORM_LAMBDALABS_SMART_CHEAPEST

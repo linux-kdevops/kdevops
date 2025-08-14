@@ -1,0 +1,57 @@
+# Manual region selection (included when TERRAFORM_LAMBDALABS_REGION_MANUAL is set)
+
+choice
+	prompt "Lambda Labs region"
+	default TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	depends on TERRAFORM_LAMBDALABS_REGION_MANUAL
+
+config TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	bool "us-tx-1 - Texas, USA"
+
+config TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1
+	bool "us-midwest-1 - Midwest, USA"
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_1
+	bool "us-west-1 - West Coast, USA"
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_2
+	bool "us-west-2 - West Coast, USA (alt)"
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_3
+	bool "us-west-3 - West Coast, USA (alt 2)"
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1
+	bool "us-south-1 - South, USA"
+
+config TERRAFORM_LAMBDALABS_REGION_EU_CENTRAL_1
+	bool "europe-central-1 - Central Europe"
+
+config TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_1
+	bool "asia-northeast-1 - Northeast Asia"
+
+config TERRAFORM_LAMBDALABS_REGION_ASIA_SOUTH_1
+	bool "asia-south-1 - South Asia"
+
+config TERRAFORM_LAMBDALABS_REGION_ME_WEST_1
+	bool "me-west-1 - Middle East West"
+
+config TERRAFORM_LAMBDALABS_REGION_US_EAST_1
+	bool "us-east-1 - East Coast, USA"
+
+endchoice
+
+config TERRAFORM_LAMBDALABS_REGION
+	string
+	output yaml
+	default "us-tx-1" if TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	default "us-midwest-1" if TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1
+	default "us-west-1" if TERRAFORM_LAMBDALABS_REGION_US_WEST_1
+	default "us-west-2" if TERRAFORM_LAMBDALABS_REGION_US_WEST_2
+	default "us-west-3" if TERRAFORM_LAMBDALABS_REGION_US_WEST_3
+	default "us-south-1" if TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1
+	default "europe-central-1" if TERRAFORM_LAMBDALABS_REGION_EU_CENTRAL_1
+	default "asia-northeast-1" if TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_1
+	default "asia-south-1" if TERRAFORM_LAMBDALABS_REGION_ASIA_SOUTH_1
+	default "me-west-1" if TERRAFORM_LAMBDALABS_REGION_ME_WEST_1
+	default "us-east-1" if TERRAFORM_LAMBDALABS_REGION_US_EAST_1
+	default "us-tx-1"

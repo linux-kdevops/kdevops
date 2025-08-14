@@ -1,0 +1,33 @@
+if TERRAFORM_LAMBDALABS
+
+# Lambda Labs Terraform Provider Limitations:
+# The elct9620/lambdalabs provider (v0.3.0) has significant limitations:
+# - NO OS/distribution selection (always Ubuntu 22.04)
+# - NO storage volume management
+# - NO custom user creation (always uses "ubuntu" user)
+# - NO user data/cloud-init support
+#
+# Only these features are supported:
+# - Region selection
+# - GPU instance type selection
+# - SSH key management
+
+menu "Resource Location"
+source "terraform/lambdalabs/kconfigs/Kconfig.location"
+endmenu
+
+menu "Compute"
+source "terraform/lambdalabs/kconfigs/Kconfig.compute"
+endmenu
+
+# Storage menu removed - not supported by provider
+# OS image selection removed - not supported by provider
+
+menu "Identity & Access"
+source "terraform/lambdalabs/kconfigs/Kconfig.identity"
+endmenu
+
+# Note: Storage and OS configuration files are kept as placeholders
+# for future provider updates but contain no options currently
+
+endif # TERRAFORM_LAMBDALABS
