@@ -143,7 +143,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Generate user kernelrelease {{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}
+- name: Generate user kernelrelease {{ target_linux_kernelversion.stdout | default('') }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}
   set_fact:
     target_user_kernelrelease: "{{ target_linux_kernelversion.stdout }}-{{ active_linux_kernelrelease | default(target_linux_kernelrelease) }}"
   tags: [ 'build-linux' ]
@@ -152,7 +152,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease }} on the control node using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease | default('') }} on the control node using {{ nproc_9p.stdout }} threads
   make:
     jobs: "{{ nproc_9p.stdout }}"
     chdir: "{{ bootlinux_9p_host_path }}"
