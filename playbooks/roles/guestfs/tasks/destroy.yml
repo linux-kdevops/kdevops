@@ -29,8 +29,8 @@
     command: "undefine"
     flags:
       - "nvram"
-      - "snapshots-metadata"
-      - "checkpoints-metadata"
+      - "snapshots_metadata"
+      - "checkpoints_metadata"
     name: "{{ inventory_hostname }}"
     uri: "{{ libvirt_uri }}"
   changed_when: true
@@ -40,8 +40,8 @@
 
 - name: Clean up storage volumes for target nodes
   ansible.builtin.shell: |
-    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool }} {{ inventory_hostname }}/root.raw 2>/dev/null || true
-    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool }} {{ inventory_hostname }}.raw 2>/dev/null || true
+    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool_path }} {{ inventory_hostname }}/root.raw 2>/dev/null || true
+    virsh -c {{ libvirt_uri }} vol-delete --pool {{ kdevops_storage_pool_path }} {{ inventory_hostname }}.raw 2>/dev/null || true
   changed_when: false
   ignore_errors: true
 
