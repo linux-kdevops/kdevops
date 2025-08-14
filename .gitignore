@@ -95,5 +95,6 @@ workflows/linux/refs/user
 
 scripts/kconfig/.nconf-cfg
 .dynamic-kconfig.*
+Kconfig.passthrough_libvirt.generated
 
 archive/
