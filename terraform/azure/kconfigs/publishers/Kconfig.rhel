@@ -4,7 +4,7 @@ if TARGET_ARCH_X86_64
 
 choice
 	prompt "Red Hat Enterprise Linux release"
-	default TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
+	default TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
 	help
 	  This option specifies which of a publisher's offers to use
 	  when creating kdevops compute instances.
@@ -20,6 +20,12 @@ config TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_9
 	help
 	  This option sets the OS image to Red Hat Enterprise Linux
 	  release 8 update 9.
+
+config TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_10
+	bool "RHEL 8.10 x64"
+	help
+	  This option sets the OS image to Red Hat Enterprise Linux
+	  release 8 update 10.
 
 config TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
 	bool "RHEL 9.5 x64"
@@ -40,6 +46,7 @@ config TERRAFORM_AZURE_IMAGE_OFFER
 	output yaml
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_7_9
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_9
+	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_10
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
 	default "RHEL" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
 
@@ -48,6 +55,7 @@ config TERRAFORM_AZURE_IMAGE_SKU
 	output yaml
 	default "7_9" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_7_9
 	default "8_9" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_9
+	default "8_10" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_8_10
 	default "9_5" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_5
 	default "9_6" if TERRAFORM_AZURE_IMAGE_LINUX_RHEL_9_6
 
