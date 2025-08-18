@@ -195,14 +195,14 @@ config TERRAFORM_GCE_DISK_IOPS
 	int "Provisioned IOPS for each attached disk"
 	output yaml
 	range 125 120000
-	default 240
+	default 3000
 	depends on TERRAFORM_GCE_DISK_NEEDS_IOPS
 
 config TERRAFORM_GCE_DISK_THROUGHPUT
 	int "Provisioned throughput for each attached disk"
 	output yaml
-	range 125 600
-	default 240
+	range 125 2400
+	default 300
 	depends on TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
 
 config TERRAFORM_GCE_DATA_VOLUME_DEVICE_FILE_NAME
