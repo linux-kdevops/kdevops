@@ -12,9 +12,11 @@ config GUESTFS_BASE_IMAGE_DIR
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	bool
+	output yaml
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
 	bool
+	output yaml
 
 config GUESTFS_REQUIRES_UEFI
 	bool
@@ -27,20 +29,24 @@ config GUESTFS_CUSTOM_RAW_IMAGE_URL
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
 	string
+	output yaml
 	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-generic-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
 	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
 	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-nocloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
 	bool
+	output yaml
 
 config GUESTFS_CUSTOM_RAW_IMAGE_SHA512SUMS_URL
 	string
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
+	output yaml
 	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/SHA512SUMS" if GUESTFS_DEBIAN_TRIXIE
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE_ROLLING
 	bool
+	output yaml
 
 config GUESTFS_HAS_DISTRO_SOURCE_COPY_CAPABILITIES
 	bool
