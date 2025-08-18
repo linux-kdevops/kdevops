@@ -4,7 +4,6 @@ kdevops_enable_guestfs: False
 kdevops_enable_terraform: False
 kdevops_nodes: "kdevops_nodes.yaml"
 kdevops_baseline_and_dev: False
-workflows_reboot_limit: False
 kdevops_workflow_enable_cxl: False
 kdevops_workflow_enable_pynfs: False
 kdevops_workflow_enable_gitr: False
