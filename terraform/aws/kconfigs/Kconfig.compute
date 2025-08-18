@@ -99,9 +99,6 @@ config TERRAFORM_AWS_DISTRO_DEBIAN
 config TERRAFORM_AWS_DISTRO_FEDORA
 	bool "Fedora Core"
 
-config TERRAFORM_AWS_DISTRO_OL
-	bool "Oracle Linux"
-
 config TERRAFORM_AWS_DISTRO_RHEL
 	bool "Red Hat Enterprise Linux"
 
@@ -116,7 +113,6 @@ endchoice
 source "terraform/aws/kconfigs/distros/Kconfig.amazon"
 source "terraform/aws/kconfigs/distros/Kconfig.debian"
 source "terraform/aws/kconfigs/distros/Kconfig.fedora"
-source "terraform/aws/kconfigs/distros/Kconfig.oracle"
 source "terraform/aws/kconfigs/distros/Kconfig.rhel"
 source "terraform/aws/kconfigs/distros/Kconfig.sles"
 source "terraform/aws/kconfigs/distros/Kconfig.custom"
