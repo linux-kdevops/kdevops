@@ -259,11 +259,14 @@ config TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME
 	output yaml
 	default "/dev/oracleoci/oraclevdb"
 	help
-	  Data volume's device file name
+	  This option sets the name of the block device on each
+	  target node that is to be used for the /data file system.
 
 config TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME
 	string "Sparse volume's device file name"
 	output yaml
 	default "/dev/oracleoci/oraclevdc"
 	help
-	  Sparse volume's device file name
+	  This option sets the name of the block device on each
+	  target node that can be used for the fstests sparse device
+	  tests.
