@@ -102,7 +102,7 @@
 - name: Build the custom source
   ansible.builtin.template:
     src: "{{ role_path }}/templates/custom-source.j2"
-    dst: "{{ custom_source }}"
+    dest: "{{ custom_source }}"
     mode: "u=rw,g=r,o=r"
   when:
     - not result.stat.exists
@@ -118,7 +118,7 @@
 - name: Build the custom index
   ansible.builtin.template:
     src: "{{ role_path }}/templates/custom-index.j2"
-    dst: "{{ custom_index }}"
+    dest: "{{ custom_index }}"
     mode: "u=rw,g=r,o=r"
   when:
     - not result.stat.exists
