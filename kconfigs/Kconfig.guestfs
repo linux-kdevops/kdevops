@@ -12,6 +12,7 @@ config GUESTFS_BASE_IMAGE_DIR
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	bool
+	output yaml
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
 	bool
