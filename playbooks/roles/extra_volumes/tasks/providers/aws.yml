@@ -1,0 +1,48 @@
+---
+- name: Install tmpfiles.d configuration for /dev/disk/kdevops/
+  become: true
+  ansible.builtin.template:
+    src: "kdevops-disk.conf.j2"
+    dest: "/etc/tmpfiles.d/kdevops-disk.conf"
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r"
+
+- name: Create /dev/disk/kdevops/ directory using tmpfiles
+  become: true
+  ansible.builtin.command: "systemd-tmpfiles --create /etc/tmpfiles.d/kdevops-disk.conf"
+  changed_when: true
+
+- name: Extract the "extra volumes" map
+  delegate_to: localhost
+  run_once: true
+  cloud.terraform.terraform_output:
+    format: json
+    name: "extra_volumes_map"
+    project_path: "{{ topdir_path }}/terraform/aws"
+  register: terraform_output
+
+- name: Install the script that creates symlinks in /dev/disk/kdevops
+  become: true
+  vars:
+    volume_mapping: "{{ terraform_output.value[inventory_hostname] }}"
+  ansible.builtin.template:
+    src: "udev-ebs-tagger.j2"
+    dest: "/usr/local/bin/udev-ebs-tagger"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: Create the "extra volumes" udev rule
+  become: true
+  ansible.builtin.template:
+    src: 99-aws-ebs.rules.j2
+    dest: "/etc/udev/rules.d/99-aws-ebs.rules"
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r"
+
+- name: Force the target node to reload its udev ruleset and trigger block devices
+  become: true
+  ansible.builtin.shell: "udevadm control --reload && udevadm trigger --subsystem-match=block --action=add"
+  changed_when: true

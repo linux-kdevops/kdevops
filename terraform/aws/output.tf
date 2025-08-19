@@ -14,3 +14,9 @@ output "block_device_map" {
   value       = zipmap(var.kdevops_nodes[*],
                        module.kdevops_ebs_volumes[*].ebs_volume_map)
 }
+
+output "extra_volumes_map" {
+  description = "Tag to volume ID mappings for udev configuration"
+  value       = zipmap(var.kdevops_nodes[*],
+                       module.kdevops_ebs_volumes[*].extra_volumes_tags)
+}

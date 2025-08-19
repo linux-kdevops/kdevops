@@ -11,6 +11,10 @@ resource "aws_ebs_volume" "kdevops_volume" {
   size                 = var.vol_size
   throughput           = var.vol_throughput
   type                 = var.vol_type
+
+  tags = {
+    FixedName = format("extra-volume-%02d", count.index)
+  }
 }
 
 resource "aws_volume_attachment" "kdevops_attachment" {
