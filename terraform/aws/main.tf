@@ -15,9 +15,6 @@ resource "aws_vpc" "kdevops_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = {
-    Name = "kdevops"
-  }
 }
 
 resource "aws_subnet" "kdevops_subnet" {
@@ -132,10 +129,6 @@ resource "aws_instance" "kdevops_instance" {
     data.template_cloudinit_config.kdevops_config.*.rendered,
     count.index,
   )
-
-  tags = {
-    Name = element(var.kdevops_nodes, count.index),
-  }
 }
 
 module "kdevops_ebs_volumes" {
@@ -158,9 +151,6 @@ resource "aws_eip" "kdevops_eip" {
 
 resource "aws_internet_gateway" "kdevops_gw" {
   vpc_id = aws_vpc.kdevops_vpc.id
-  tags = {
-    Name = "kdevops-gw"
-  }
 }
 
 resource "aws_route_table" "kdevops_rt" {
@@ -168,9 +158,6 @@ resource "aws_route_table" "kdevops_rt" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.kdevops_gw.id
-  }
-  tags = {
-    Name = "kdevops_rt"
   }
 }
 
