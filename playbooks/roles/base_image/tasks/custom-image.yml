@@ -4,6 +4,7 @@
     custom_image_dir: "{{ kdevops_storage_pool_path }}/guestfs/custom_images/{{ base_image_os_version }}"
 
 - name: Ensure the custom image directory exists
+  become: true
   ansible.builtin.file:
     path: "{{ custom_image_dir }}"
     state: directory
@@ -172,6 +173,7 @@
   register: custom_source_stat
 
 - name: Build the custom source
+  become: true
   ansible.builtin.template:
     src: "{{ role_path }}/templates/custom-source.j2"
     dest: "{{ custom_source }}"
