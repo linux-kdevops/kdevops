@@ -4,6 +4,7 @@
     custom_image_dir: "{{ kdevops_storage_pool_path }}/guestfs/custom_images/{{ base_image_os_version }}"
 
 - name: Ensure the custom image directory exists
+  become: true
   ansible.builtin.file:
     path: "{{ custom_image_dir }}"
     state: directory
@@ -34,6 +35,8 @@
   register: custom_image_stat
 
 - name: Fetch the custom image
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.get_url:
     url: "{{ guestfs_custom_raw_image_url }}"
     dest: "{{ custom_image_dir }}"
@@ -72,6 +75,8 @@
       register: sha512sums_stat
 
     - name: Fetch the sha512sums file
+      become: true
+      become_method: ansible.builtin.sudo
       ansible.builtin.get_url:
         url: "{{ guestfs_custom_raw_image_sha512sums_url }}"
         dest: "{{ custom_image_dir }}"
@@ -158,6 +163,8 @@
         - not sentinel_stat.stat.exists
 
     - name: Touch the custom image sentinel
+      become: true
+      become_method: ansible.builtin.sudo
       ansible.builtin.file:
         path: "{{ custom_image_ok }}"
         state: touch
@@ -172,6 +179,7 @@
   register: custom_source_stat
 
 - name: Build the custom source
+  become: true
   ansible.builtin.template:
     src: "{{ role_path }}/templates/custom-source.j2"
     dest: "{{ custom_source }}"
@@ -188,6 +196,8 @@
   register: custom_index_stat
 
 - name: Build the custom index
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.template:
     src: "{{ role_path }}/templates/custom-index.j2"
     dest: "{{ custom_index }}"
@@ -223,6 +233,8 @@
       Custom virt-builder image: {{ custom_image }}
 
 - name: Generating the index for {{ base_image_os_version }}
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.command:
     argv:
       - "virt-builder-repository"
