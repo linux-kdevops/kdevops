@@ -85,6 +85,78 @@
         chdir: "{{ custom_image_dir }}"
       changed_when: false
 
+    - name: Get the UID of the kdevops user on the control host
+      ansible.builtin.command:
+        cmd: "id -u kdevops"
+      register: id_output
+      changed_when: false
+      failed_when: false
+      when:
+        - not sentinel_stat.stat.exists
+
+    - name: Set the kdevops UID for custom image
+      ansible.builtin.set_fact:
+        kdevops_uid: "-u {{ id_output.stdout }}"
+      when:
+        - not sentinel_stat.stat.exists
+        - id_output.rc == 0
+
+    - name: Set default kdevops UID for custom image if user doesn't exist
+      ansible.builtin.set_fact:
+        kdevops_uid: ""
+      when:
+        - not sentinel_stat.stat.exists
+        - id_output.rc != 0
+
+    - name: Create a temporary file for virt-customize commands
+      ansible.builtin.tempfile:
+        state: file
+      register: custom_command_file
+      when:
+        - not sentinel_stat.stat.exists
+
+    - name: Construct the virt-customize command file for custom image
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/virt-builder.j2"
+        dest: "{{ custom_command_file.path }}"
+        mode: "u=rw"
+      when:
+        - not sentinel_stat.stat.exists
+
+    - name: Customize the downloaded image with kdevops user and settings
+      become: true
+      become_method: ansible.builtin.sudo
+      ansible.builtin.command:
+        argv:
+          - "virt-customize"
+          - "-a"
+          - "{{ custom_image }}"
+          - "--commands-from-file"
+          - "{{ custom_command_file.path }}"
+      when:
+        - libvirt_uri_system|bool
+        - not sentinel_stat.stat.exists
+
+    - name: Customize the downloaded image with kdevops user and settings (non-root)
+      ansible.builtin.command:
+        argv:
+          - "virt-customize"
+          - "-a"
+          - "{{ custom_image }}"
+          - "--commands-from-file"
+          - "{{ custom_command_file.path }}"
+      when:
+        - not libvirt_uri_system|bool
+        - not sentinel_stat.stat.exists
+
+    - name: Clean up the virt-customize command file
+      ansible.builtin.file:
+        path: "{{ custom_command_file.path }}"
+        state: absent
+      when:
+        - custom_command_file.path is defined
+        - not sentinel_stat.stat.exists
+
     - name: Touch the custom image sentinel
       ansible.builtin.file:
         path: "{{ custom_image_ok }}"
