@@ -458,6 +458,16 @@ config LIBVIRT_MEM_MB
 	help
 	  How much MiB of RAM to use per guest.
 
+config LIBVIRT_IMAGE_SIZE
+	string "VM image size"
+	output yaml
+	default "20G"
+	depends on GUESTFS
+	help
+	  The size of the VM disk image for all libvirt images, whether they
+	  are base images (created with virt-builder) or custom images
+	  (downloaded and resized with qemu-img resize).
+
 config HAVE_LIBVIRT_PCIE_PASSTHROUGH
 	bool
 	default $(shell, scripts/check_pciepassthrough_kconfig.sh passthrough_libvirt.generated)
