@@ -8,7 +8,7 @@
 
 - name: Create custom upstream OS image
   ansible.builtin.include_tasks:
-    file: "{{ role_path }}/tasks/custom_image.yml"
+    file: "{{ role_path }}/tasks/custom-image.yml"
   when:
     - guestfs_has_custom_raw_image|bool
 
