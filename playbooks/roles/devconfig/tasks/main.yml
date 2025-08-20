@@ -29,6 +29,48 @@
     dest: /etc/hostname
   tags: hostname
 
+- name: Ensure locales-all package is installed
+  become: true
+  become_flags: 'su - -c'
+  become_method: sudo
+  ansible.builtin.package:
+    name: locales-all
+    state: present
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
+  tags: firstconfig
+
+- name: Configure en_US.UTF-8 locale files
+  become: true
+  become_flags: 'su - -c'
+  become_method: sudo
+  ansible.builtin.lineinfile:
+    path: "{{ item.path }}"
+    line: "{{ item.line }}"
+    create: true
+    mode: '0644'
+    owner: root
+    group: root
+  loop:
+    - { path: '/etc/default/locale', line: 'LANG=en_US.UTF-8' }
+    - { path: '/etc/default/locale', line: 'LANGUAGE=en_US:en' }
+    - { path: '/etc/locale.gen', line: 'en_US.UTF-8 UTF-8' }
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
+  tags: firstconfig
+
+- name: Generate and update locales
+  become: true
+  become_flags: 'su - -c'
+  become_method: sudo
+  ansible.builtin.shell: |
+    locale-gen en_US.UTF-8
+    update-locale LANG=en_US.UTF-8
+  changed_when: true
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
+  tags: firstconfig
+
 # Distro specific
 
 # Check and fix APT mirrors for Debian testing before installing dependencies
