@@ -14,6 +14,7 @@
     update_cache: true
     name:
       - libguestfs-tools
+      - dhcpcd-base
       - isc-dhcp-client
       - python3-lxml
       - python3-libvirt
