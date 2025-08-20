@@ -155,7 +155,10 @@ def plot_folio_migration(stats_files, output_file):
 
             # Different line styles for baseline vs dev
             if is_dev:
-                linestyle = (0, (5, 3))  # Custom dash pattern: 5 points on, 3 points off
+                linestyle = (
+                    0,
+                    (5, 3),
+                )  # Custom dash pattern: 5 points on, 3 points off
                 linewidth = 2.3
                 alpha = 0.9
             else:
@@ -167,7 +170,10 @@ def plot_folio_migration(stats_files, output_file):
             color = color_map.get(name, plt.cm.tab10(idx % 10))
 
             if is_dev:
-                linestyle = (0, (5, 3))  # Custom dash pattern: 5 points on, 3 points off
+                linestyle = (
+                    0,
+                    (5, 3),
+                )  # Custom dash pattern: 5 points on, 3 points off
                 linewidth = 2.3
                 alpha = 0.9
             else:
