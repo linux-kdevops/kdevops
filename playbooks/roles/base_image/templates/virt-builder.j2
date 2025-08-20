@@ -11,7 +11,7 @@ mkdir {{ target_dir }}
 copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
 {% endif %}
 
-install sudo,qemu-guest-agent,python3,bash
+install sudo,qemu-guest-agent,python3,bash,locales-all
 run-command useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
 edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
@@ -63,9 +63,10 @@ uninstall cloud-init
 write /etc/default/locale:LANG=en_US.UTF-8
 append-line /etc/default/locale:LANGUAGE=en_US:en
 write /etc/locale.gen:en_US.UTF-8 UTF-8
+run-command locale-gen en_US.UTF-8
+run-command update-locale LANG=en_US.UTF-8
 firstboot-command locale-gen en_US.UTF-8
 firstboot-command update-locale LANG=en_US.UTF-8
-firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force locales
 firstboot-command systemctl stop ssh
 firstboot-command systemctl start ssh
 
