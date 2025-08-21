@@ -1,0 +1,201 @@
+menu "Docker Storage Configuration for AI Workloads"
+
+config AI_DOCKER_STORAGE_ENABLE
+	bool "Enable dedicated Docker storage for AI workloads"
+	default y
+	output yaml
+	help
+	  Configure a dedicated storage device for Docker containers
+	  and images used in AI workloads. This prevents Docker from
+	  filling up the root filesystem and provides better performance
+	  isolation for container operations.
+
+	  When enabled, Docker data will be stored on a dedicated device
+	  and filesystem optimized for container workloads.
+
+if AI_DOCKER_STORAGE_ENABLE
+
+config AI_DOCKER_DEVICE
+	string "Device to use for Docker storage"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for Docker storage. This device will be
+	  formatted and mounted to store Docker containers, images,
+	  and volumes for AI workloads.
+
+config AI_DOCKER_MOUNT_POINT
+	string "Mount point for Docker storage"
+	output yaml
+	default "/var/lib/docker/"
+	help
+	  The path where the Docker storage filesystem will be mounted.
+	  Docker will be configured to use this path via a symlink from
+	  /var/lib/docker.
+
+choice
+	prompt "Docker storage filesystem"
+	default AI_DOCKER_FSTYPE_XFS
+
+config AI_DOCKER_FSTYPE_XFS
+	bool "XFS"
+	help
+	  Use XFS filesystem for Docker storage. XFS provides excellent
+	  performance for large files and is recommended for production
+	  Docker deployments. Supports various block sizes for testing
+	  large block size (LBS) configurations.
+
+config AI_DOCKER_FSTYPE_BTRFS
+	bool "Btrfs"
+	help
+	  Use Btrfs filesystem for Docker storage. Btrfs provides
+	  advanced features like snapshots and compression, which can
+	  be beneficial for Docker layer management.
+
+config AI_DOCKER_FSTYPE_EXT4
+	bool "ext4"
+	help
+	  Use ext4 filesystem for Docker storage. Ext4 is a mature
+	  and reliable filesystem with good all-around performance.
+
+endchoice
+
+config AI_DOCKER_FSTYPE
+	string
+	output yaml
+	default "xfs" if AI_DOCKER_FSTYPE_XFS
+	default "btrfs" if AI_DOCKER_FSTYPE_BTRFS
+	default "ext4" if AI_DOCKER_FSTYPE_EXT4
+
+if AI_DOCKER_FSTYPE_XFS
+
+choice
+	prompt "XFS block size configuration"
+	default AI_DOCKER_XFS_BLOCKSIZE_4K
+
+config AI_DOCKER_XFS_BLOCKSIZE_4K
+	bool "4K block size (default)"
+	help
+	  Use 4K (4096 bytes) block size. This is the default and most
+	  compatible configuration.
+
+config AI_DOCKER_XFS_BLOCKSIZE_8K
+	bool "8K block size"
+	help
+	  Use 8K (8192 bytes) block size for improved performance with
+	  larger I/O operations.
+
+config AI_DOCKER_XFS_BLOCKSIZE_16K
+	bool "16K block size (LBS)"
+	help
+	  Use 16K (16384 bytes) block size. This is a large block size
+	  configuration that may require kernel LBS support.
+
+config AI_DOCKER_XFS_BLOCKSIZE_32K
+	bool "32K block size (LBS)"
+	help
+	  Use 32K (32768 bytes) block size. This is a large block size
+	  configuration that requires kernel LBS support.
+
+config AI_DOCKER_XFS_BLOCKSIZE_64K
+	bool "64K block size (LBS)"
+	help
+	  Use 64K (65536 bytes) block size. This is the maximum XFS block
+	  size and requires kernel LBS support.
+
+endchoice
+
+config AI_DOCKER_XFS_BLOCKSIZE
+	int
+	output yaml
+	default 4096 if AI_DOCKER_XFS_BLOCKSIZE_4K
+	default 8192 if AI_DOCKER_XFS_BLOCKSIZE_8K
+	default 16384 if AI_DOCKER_XFS_BLOCKSIZE_16K
+	default 32768 if AI_DOCKER_XFS_BLOCKSIZE_32K
+	default 65536 if AI_DOCKER_XFS_BLOCKSIZE_64K
+
+choice
+	prompt "XFS sector size"
+	default AI_DOCKER_XFS_SECTORSIZE_4K
+
+config AI_DOCKER_XFS_SECTORSIZE_4K
+	bool "4K sector size (default)"
+	help
+	  Use 4K (4096 bytes) sector size. This is the standard
+	  configuration for most modern drives.
+
+config AI_DOCKER_XFS_SECTORSIZE_512
+	bool "512 byte sector size"
+	depends on AI_DOCKER_XFS_BLOCKSIZE_4K
+	help
+	  Use legacy 512 byte sector size. Only available with 4K block size.
+
+config AI_DOCKER_XFS_SECTORSIZE_8K
+	bool "8K sector size"
+	depends on AI_DOCKER_XFS_BLOCKSIZE_8K || AI_DOCKER_XFS_BLOCKSIZE_16K || AI_DOCKER_XFS_BLOCKSIZE_32K || AI_DOCKER_XFS_BLOCKSIZE_64K
+	help
+	  Use 8K (8192 bytes) sector size. Requires block size >= 8K.
+
+config AI_DOCKER_XFS_SECTORSIZE_16K
+	bool "16K sector size (LBS)"
+	depends on AI_DOCKER_XFS_BLOCKSIZE_16K || AI_DOCKER_XFS_BLOCKSIZE_32K || AI_DOCKER_XFS_BLOCKSIZE_64K
+	help
+	  Use 16K (16384 bytes) sector size. Requires block size >= 16K
+	  and kernel LBS support.
+
+config AI_DOCKER_XFS_SECTORSIZE_32K
+	bool "32K sector size (LBS)"
+	depends on AI_DOCKER_XFS_BLOCKSIZE_32K || AI_DOCKER_XFS_BLOCKSIZE_64K
+	help
+	  Use 32K (32768 bytes) sector size. Requires block size >= 32K
+	  and kernel LBS support.
+
+endchoice
+
+config AI_DOCKER_XFS_SECTORSIZE
+	int
+	output yaml
+	default 512 if AI_DOCKER_XFS_SECTORSIZE_512
+	default 4096 if AI_DOCKER_XFS_SECTORSIZE_4K
+	default 8192 if AI_DOCKER_XFS_SECTORSIZE_8K
+	default 16384 if AI_DOCKER_XFS_SECTORSIZE_16K
+	default 32768 if AI_DOCKER_XFS_SECTORSIZE_32K
+
+config AI_DOCKER_XFS_MKFS_OPTS
+	string "Additional XFS mkfs options for Docker storage"
+	output yaml
+	default ""
+	help
+	  Additional options to pass to mkfs.xfs when creating the Docker
+	  storage filesystem. Block and sector sizes are configured above.
+
+endif # AI_DOCKER_FSTYPE_XFS
+
+config AI_DOCKER_BTRFS_MKFS_OPTS
+	string "Btrfs mkfs options for Docker storage"
+	output yaml
+	default "-f"
+	depends on AI_DOCKER_FSTYPE_BTRFS
+	help
+	  Options to pass to mkfs.btrfs when creating the Docker storage
+	  filesystem.
+
+config AI_DOCKER_EXT4_MKFS_OPTS
+	string "ext4 mkfs options for Docker storage"
+	output yaml
+	default "-F"
+	depends on AI_DOCKER_FSTYPE_EXT4
+	help
+	  Options to pass to mkfs.ext4 when creating the Docker storage
+	  filesystem.
+
+endif # AI_DOCKER_STORAGE_ENABLE
+
+endmenu

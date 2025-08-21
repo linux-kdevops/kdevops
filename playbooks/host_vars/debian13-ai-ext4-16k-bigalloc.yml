@@ -1,0 +1,8 @@
+---
+# ext4 16k bigalloc configuration
+ai_docker_fstype: "ext4"
+ai_docker_ext4_mkfs_opts: "-b 4096 -C 16384 -O bigalloc"
+filesystem_type: "ext4"
+filesystem_block_size: "16k-bigalloc"
+ai_filesystem: "ext4"
+ai_data_device_path: "/var/lib/docker"

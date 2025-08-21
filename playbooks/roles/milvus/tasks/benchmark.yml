@@ -1,0 +1,61 @@
+---
+# Check if Milvus is actually running before attempting benchmarks
+- name: Check if Milvus is accessible
+  ansible.builtin.wait_for:
+    port: "{{ ai_vector_db_milvus_port }}"
+    host: localhost
+    timeout: 5
+    state: started
+  register: milvus_running
+  # TODO: Review - was ignore_errors: true
+  failed_when: false  # Always succeed - review this condition
+
+- name: Set Milvus availability flag
+  ansible.builtin.set_fact:
+    milvus_is_available: "{{ milvus_running.failed is not defined or not milvus_running.failed }}"
+
+- name: Debug Milvus check result
+  ansible.builtin.debug:
+    msg: |
+      Milvus check result: {{ milvus_running }}
+      Is succeeded: {{ milvus_running is succeeded }}
+      Is failed: {{ milvus_running is failed }}
+      Milvus is available: {{ milvus_is_available }}
+
+- name: Skip benchmarks if Milvus is not running
+  ansible.builtin.debug:
+    msg: |
+      Milvus is not running on port {{ ai_vector_db_milvus_port }}.
+      In native mode, Milvus server is not available.
+      Skipping benchmarks. Use Docker mode for full functionality.
+  when: not milvus_is_available
+
+- name: Run benchmark tasks only if Milvus is available
+  block:
+    - name: Create benchmark results directory
+      ansible.builtin.file:
+        path: "{{ ai_benchmark_results_dir }}/milvus"
+        state: directory
+        mode: '0755'
+
+    - name: Generate benchmark configuration
+      ansible.builtin.template:
+        src: benchmark_config.json.j2
+        dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/benchmark_config.json"
+        mode: '0644'
+
+    - name: Run Milvus benchmarks
+      ansible.builtin.command: >
+        python3 {{ ai_vector_db_milvus_data_dir }}/scripts/milvus_benchmark.py
+        --config {{ ai_vector_db_milvus_data_dir }}/scripts/benchmark_config.json
+        --output {{ ai_benchmark_results_dir }}/milvus/results_{{ ansible_date_time.epoch }}.json
+      register: benchmark_result
+      when: ai_vector_db_milvus_benchmark_enable | bool
+
+    - name: Display benchmark summary
+      ansible.builtin.debug:
+        msg: "{{ benchmark_result.stdout_lines[-20:] }}"
+      when:
+        - ai_vector_db_milvus_benchmark_enable|bool
+        - benchmark_result is defined
+  when: milvus_is_available

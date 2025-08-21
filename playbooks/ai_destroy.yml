@@ -1,0 +1,24 @@
+---
+- name: Destroy Milvus Vector Database
+  hosts: ai
+  become: true
+  tasks:
+    - name: Stop Milvus containers
+      community.docker.docker_compose:
+        project_src: "{{ ai_vector_db_milvus_config_dir }}"
+        state: absent
+      when: ai_vector_db_milvus_docker | bool
+      # TODO: Review - was ignore_errors: true
+      failed_when: false  # Always succeed - review this condition
+
+    - name: Remove Milvus data directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ai_vector_db_milvus_data_dir }}"
+        - "{{ ai_vector_db_milvus_config_dir }}"
+        - "{{ ai_vector_db_milvus_log_dir }}"
+      when: ai_vector_db_force_destroy | default(false) | bool
+
+  tags: ['ai', 'vector_db', 'milvus', 'destroy']

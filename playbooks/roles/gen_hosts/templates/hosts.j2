@@ -77,6 +77,114 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
 [service:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% elif kdevops_workflow_enable_ai %}
+{% if ai_enable_multifs_testing|default(false)|bool %}
+{# Multi-filesystem section-based hosts #}
+[all]
+localhost ansible_connection=local
+{% for node in all_generic_nodes %}
+{{ node }}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for node in all_generic_nodes %}
+{% if not node.endswith('-dev') %}
+{{ node }}
+{% endif %}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for node in all_generic_nodes %}
+{% if node.endswith('-dev') %}
+{{ node }}
+{% endif %}
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[ai]
+{% for node in all_generic_nodes %}
+{{ node }}
+{% endfor %}
+
+[ai:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% set fs_configs = [] %}
+{% for node in all_generic_nodes %}
+{% set node_parts = node.split('-') %}
+{% if node_parts|length >= 3 %}
+{% set fs_type = node_parts[2] %}
+{% set fs_config = node_parts[3:] | select('ne', 'dev') | join('_') %}
+{% set fs_group = fs_type + '_' + fs_config if fs_config else fs_type %}
+{% if fs_group not in fs_configs %}
+{% set _ = fs_configs.append(fs_group) %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{% for fs_group in fs_configs %}
+[ai_{{ fs_group }}]
+{% for node in all_generic_nodes %}
+{% set node_parts = node.split('-') %}
+{% if node_parts|length >= 3 %}
+{% set fs_type = node_parts[2] %}
+{% set fs_config = node_parts[3:] | select('ne', 'dev') | join('_') %}
+{% set node_fs_group = fs_type + '_' + fs_config if fs_config else fs_type %}
+{% if node_fs_group == fs_group %}
+{{ node }}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+[ai_{{ fs_group }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endfor %}
+{% else %}
+{# Single-node AI hosts #}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-ai
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-ai-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-ai
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-ai-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[ai]
+{{ kdevops_host_prefix }}-ai
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-ai-dev
+{% endif %}
+
+[ai:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
 {% else %}
 [all]
 localhost ansible_connection=local

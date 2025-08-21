@@ -1,0 +1,25 @@
+{
+    "milvus": {
+        "host": "localhost",
+        "port": {{ ai_vector_db_milvus_port }},
+        "collection_name": "{{ ai_vector_db_milvus_default_collection }}",
+        "dimension": {{ ai_vector_db_milvus_default_dim }},
+        "index_type": "{{ ai_vector_db_milvus_index_type }}",
+        "metric_type": "{{ ai_vector_db_milvus_metric_type }}",
+        "nlist": {{ ai_vector_db_milvus_nlist }},
+        "num_shards": {{ ai_vector_db_milvus_default_shards }}
+    },
+    "benchmark": {
+        "datasets": {{ ai_vector_db_milvus_benchmark_datasets | to_json }},
+        "batch_size": {{ ai_vector_db_milvus_benchmark_batch_size }},
+        "num_queries": {{ ai_vector_db_milvus_benchmark_num_queries }},
+        "top_k": [1, 10, 100],
+        "nprobe": [1, 10, 50, 100]
+    },
+    "filesystem": {
+        "type": "{{ ai_filesystem }}",
+        "mount_point": "{{ ai_data_device_path }}",
+        "mkfs_opts": "{{ ai_mkfs_opts | default('') }}",
+        "mount_opts": "{{ ai_mount_opts | default('defaults') }}"
+    }
+}

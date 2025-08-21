@@ -1,0 +1,8 @@
+---
+# btrfs default configuration (dev)
+ai_docker_fstype: "btrfs"
+ai_docker_btrfs_mkfs_opts: "-f"
+filesystem_type: "btrfs"
+filesystem_block_size: "default"
+ai_filesystem: "btrfs"
+ai_data_device_path: "/var/lib/docker"

@@ -1,0 +1,10 @@
+---
+# XFS 32k block, 4k sector configuration (dev)
+ai_docker_fstype: "xfs"
+ai_docker_xfs_blocksize: 32768
+ai_docker_xfs_sectorsize: 4096
+ai_docker_xfs_mkfs_opts: ""
+filesystem_type: "xfs"
+filesystem_block_size: "32k-4ks"
+ai_filesystem: "xfs"
+ai_data_device_path: "/var/lib/docker"
