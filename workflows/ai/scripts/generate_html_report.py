@@ -180,7 +180,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="header">
-        <h1>AI Vector Database Benchmark Results</h1>
+        <h1>Milvus Vector Database Benchmark Results</h1>
         <div class="subtitle">Generated on {timestamp}</div>
     </div>
     
@@ -238,11 +238,13 @@ HTML_TEMPLATE = """
     </div>
     
     <div id="detailed-results" class="section">
-        <h2>Detailed Results Table</h2>
+        <h2>Milvus Performance by Storage Filesystem</h2>
+        <p>This table shows how Milvus vector database performs when its data is stored on different filesystem types and configurations.</p>
         <table class="results-table">
             <thead>
                 <tr>
-                    <th>Host</th>
+                    <th>Filesystem</th>
+                    <th>Configuration</th>
                     <th>Type</th>
                     <th>Insert QPS</th>
                     <th>Query QPS</th>
@@ -293,27 +295,53 @@ def load_results(results_dir):
                 # Get filesystem from JSON data
                 fs_type = data.get("filesystem", None)
 
-                # If not in JSON, try to parse from filename (backwards compatibility)
-                if not fs_type and "debian13-ai" in filename:
-                    host_parts = (
-                        filename.replace("results_debian13-ai-", "")
-                        .replace("_1.json", "")
+                # Always try to parse from filename first since JSON data might be wrong
+                if "-ai-" in filename:
+                    # Handle both debian13-ai- and prod-ai- prefixes
+                    cleaned_filename = filename.replace("results_", "")
+
+                    # Extract the part after -ai-
+                    if "debian13-ai-" in cleaned_filename:
+                        host_part = cleaned_filename.replace("debian13-ai-", "")
+                    elif "prod-ai-" in cleaned_filename:
+                        host_part = cleaned_filename.replace("prod-ai-", "")
+                    else:
+                        # Generic extraction
+                        ai_index = cleaned_filename.find("-ai-")
+                        if ai_index != -1:
+                            host_part = cleaned_filename[ai_index + 4 :]  # Skip "-ai-"
+                        else:
+                            host_part = cleaned_filename
+
+                    # Remove file extensions and dev suffix
+                    host_part = (
+                        host_part.replace("_1.json", "")
                         .replace("_2.json", "")
                         .replace("_3.json", "")
-                        .split("-")
+                        .replace("-dev", "")
                     )
-                    if "xfs" in host_parts[0]:
+
+                    # Parse filesystem type and block size
+                    if host_part.startswith("xfs-"):
                         fs_type = "xfs"
-                        block_size = host_parts[1] if len(host_parts) > 1 else "4k"
-                    elif "ext4" in host_parts[0]:
+                        # Extract block size: xfs-4k-4ks -> 4k
+                        parts = host_part.split("-")
+                        if len(parts) >= 2:
+                            block_size = parts[1]  # 4k, 16k, 32k, 64k
+                        else:
+                            block_size = "4k"
+                    elif host_part.startswith("ext4-"):
                         fs_type = "ext4"
-                        block_size = host_parts[1] if len(host_parts) > 1 else "4k"
-                    elif "btrfs" in host_parts[0]:
+                        parts = host_part.split("-")
+                        block_size = parts[1] if len(parts) > 1 else "4k"
+                    elif host_part.startswith("btrfs"):
                         fs_type = "btrfs"
                         block_size = "default"
                     else:
-                        fs_type = "unknown"
-                        block_size = "unknown"
+                        # Fallback to JSON data if available
+                        if not fs_type:
+                            fs_type = "unknown"
+                            block_size = "unknown"
                 else:
                     # Set appropriate block size based on filesystem
                     if fs_type == "btrfs":
@@ -371,12 +399,36 @@ def generate_table_rows(results, best_configs):
         if config_key in best_configs:
             row_class += " best-config"
 
+        # Generate descriptive labels showing Milvus is running on this filesystem
+        if result["filesystem"] == "xfs" and result["block_size"] != "default":
+            storage_label = f"XFS {result['block_size'].upper()}"
+            config_details = f"Block size: {result['block_size']}, Milvus data on XFS"
+        elif result["filesystem"] == "ext4":
+            storage_label = "EXT4"
+            if "bigalloc" in result.get("host", "").lower():
+                config_details = "EXT4 with bigalloc, Milvus data on ext4"
+            else:
+                config_details = (
+                    f"Block size: {result['block_size']}, Milvus data on ext4"
+                )
+        elif result["filesystem"] == "btrfs":
+            storage_label = "BTRFS"
+            config_details = "Default Btrfs settings, Milvus data on Btrfs"
+        else:
+            storage_label = result["filesystem"].upper()
+            config_details = f"Milvus data on {result['filesystem']}"
+
+        # Extract clean node identifier from hostname
+        node_name = result["host"].replace("results_", "").replace(".json", "")
+
         row = f"""
         <tr class="{row_class}">
-            <td>{result['host']}</td>
+            <td><strong>{storage_label}</strong></td>
+            <td>{config_details}</td>
             <td>{result['type']}</td>
             <td>{result['insert_qps']:,}</td>
             <td>{result['query_qps']:,}</td>
+            <td><code>{node_name}</code></td>
             <td>{result['timestamp']}</td>
         </tr>
         """
@@ -483,8 +535,8 @@ def generate_html_report(results_dir, graphs_dir, output_path):
             <li><a href="#block-size-analysis">Block Size Analysis</a></li>"""
 
         filesystem_comparison_section = """<div id="filesystem-comparison" class="section">
-        <h2>Filesystem Performance Comparison</h2>
-        <p>Comparison of vector database performance across different filesystems, showing both baseline and development kernel results.</p>
+        <h2>Milvus Storage Filesystem Comparison</h2>
+        <p>Comparison of Milvus vector database performance when its data is stored on different filesystem types (XFS, ext4, Btrfs) with various configurations.</p>
         <div class="graph-container">
             <img src="graphs/filesystem_comparison.png" alt="Filesystem Comparison">
         </div>
@@ -499,9 +551,9 @@ def generate_html_report(results_dir, graphs_dir, output_path):
     </div>"""
 
         # Multi-fs mode: show filesystem info
-        fourth_card_title = "Filesystems Tested"
+        fourth_card_title = "Storage Filesystems"
         fourth_card_value = str(len(filesystems_tested))
-        fourth_card_label = ", ".join(filesystems_tested).upper()
+        fourth_card_label = ", ".join(filesystems_tested).upper() + " for Milvus Data"
     else:
         # Single filesystem mode - hide multi-fs sections
         filesystem_nav_items = ""

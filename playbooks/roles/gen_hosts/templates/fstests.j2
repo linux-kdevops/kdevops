@@ -70,6 +70,7 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [krb5:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
+{% if kdevops_enable_iscsi or kdevops_nfsd_enable or kdevops_smbd_enable or kdevops_krb5_enable %}
 [service]
 {% if kdevops_enable_iscsi %}
 {{ kdevops_hosts_prefix }}-iscsi
@@ -85,3 +86,4 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
 [service:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}

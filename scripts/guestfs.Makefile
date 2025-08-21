@@ -79,7 +79,7 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 		--extra-vars=@./extra_vars.yaml \
 		--tags network,pool,base_image
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev:service' \
+		--limit 'baseline:dev:service:ai' \
 		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags bringup

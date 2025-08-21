@@ -134,9 +134,18 @@
   ansible.builtin.command: >
     python3 {{ local_scripts_dir }}/analyze_results.py
     --results-dir {{ local_results_dir }}
-    --output-dir {{ local_results_dir }}
+    --output-dir {{ local_results_dir }}/graphs
     {% if ai_benchmark_enable_graphing | bool %}--config {{ local_scripts_dir }}/analysis_config.json{% endif %}
   register: analysis_result
+  run_once: true
+  delegate_to: localhost
+  when: collected_results.files is defined and collected_results.files | length > 0
+  tags: ['results', 'analysis']
+  failed_when: analysis_result.rc != 0
+
+- name: Display analysis script output
+  ansible.builtin.debug:
+    var: analysis_result
   run_once: true
   delegate_to: localhost
   when: collected_results.files is defined and collected_results.files | length > 0
@@ -155,35 +164,8 @@
     - collected_results.files | length > 0
   tags: ['results', 'graphs']
 
-- name: Generate performance graphs
-  ansible.builtin.command: >
-    python3 {{ local_scripts_dir }}/generate_better_graphs.py
-    {{ local_results_dir }}
-    {{ local_results_dir }}/graphs
-  register: graph_generation_result
-  failed_when: false
-  run_once: true
-  delegate_to: localhost
-  when:
-    - collected_results.files is defined
-    - collected_results.files | length > 0
-    - ai_benchmark_enable_graphing|bool
-  tags: ['results', 'graphs']
-
-- name: Fallback to basic graphs if better graphs fail
-  ansible.builtin.command: >
-    python3 {{ local_scripts_dir }}/generate_graphs.py
-    {{ local_results_dir }}
-    {{ local_results_dir }}/graphs
-  run_once: true
-  delegate_to: localhost
-  when:
-    - collected_results.files is defined
-    - collected_results.files | length > 0
-    - ai_benchmark_enable_graphing|bool
-    - graph_generation_result is defined
-    - graph_generation_result.rc != 0
-  tags: ['results', 'graphs']
+# Graph generation is now handled by analyze_results.py above
+# No separate graph generation step needed
 
 - name: Generate HTML report
   ansible.builtin.command: >

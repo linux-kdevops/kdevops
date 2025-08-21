@@ -29,16 +29,17 @@ def extract_filesystem_from_filename(filename):
         if "_" in node_name:
             parts = node_name.split("_")
             node_name = "_".join(parts[:-1])  # Remove last part (iteration)
-        
+
         # Extract filesystem type from node name
         if "-xfs-" in node_name:
             return "xfs"
         elif "-ext4-" in node_name:
-            return "ext4"  
+            return "ext4"
         elif "-btrfs-" in node_name:
             return "btrfs"
-    
+
     return "unknown"
+
 
 def extract_node_config_from_filename(filename):
     """Extract detailed node configuration from filename"""
@@ -50,13 +51,14 @@ def extract_node_config_from_filename(filename):
         if "_" in node_name:
             parts = node_name.split("_")
             node_name = "_".join(parts[:-1])  # Remove last part (iteration)
-        
+
         # Remove -dev suffix if present
         node_name = node_name.replace("-dev", "")
-        
+
         return node_name.replace("debian13-ai-", "")
-    
+
     return "unknown"
+
 
 def detect_filesystem():
     """Detect the filesystem type of /data on test nodes"""
@@ -104,7 +106,7 @@ def load_results(results_dir):
                 # Extract node type from filename
                 filename = os.path.basename(json_file)
                 data["filename"] = filename
-                
+
                 # Extract filesystem type and config from filename
                 data["filesystem"] = extract_filesystem_from_filename(filename)
                 data["node_config"] = extract_node_config_from_filename(filename)

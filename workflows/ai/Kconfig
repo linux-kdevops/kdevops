@@ -161,4 +161,17 @@ config AI_BENCHMARK_ITERATIONS
 # Docker storage configuration
 source "workflows/ai/Kconfig.docker-storage"
 
+# Multi-filesystem configuration
+config AI_MULTIFS_ENABLE
+	bool "Enable multi-filesystem benchmarking"
+	output yaml
+	default n
+	help
+	  Run AI benchmarks across multiple filesystem configurations
+	  to compare performance characteristics.
+
+if AI_MULTIFS_ENABLE
+source "workflows/ai/Kconfig.multifs"
+endif
+
 endif # KDEVOPS_WORKFLOW_ENABLE_AI
