@@ -54,67 +54,83 @@ class MilvusBenchmark:
         )
         self.logger = logging.getLogger(__name__)
 
-    def get_filesystem_info(self, path: str = "/data") -> Dict[str, str]:
+    def get_filesystem_info(self, path: str = "/data/milvus") -> Dict[str, str]:
         """Detect filesystem type for the given path"""
-        try:
-            # Use df -T to get filesystem type
-            result = subprocess.run(
-                ["df", "-T", path], capture_output=True, text=True, check=True
-            )
+        # Try primary path first, fallback to /data for backwards compatibility
+        paths_to_try = [path]
+        if path != "/data" and not os.path.exists(path):
+            paths_to_try.append("/data")
 
-            lines = result.stdout.strip().split("\n")
-            if len(lines) >= 2:
-                # Second line contains the filesystem info
-                # Format: Filesystem Type 1K-blocks Used Available Use% Mounted on
-                parts = lines[1].split()
-                if len(parts) >= 2:
-                    filesystem_type = parts[1]
-                    mount_point = parts[-1] if len(parts) >= 7 else path
+        for check_path in paths_to_try:
+            try:
+                # Use df -T to get filesystem type
+                result = subprocess.run(
+                    ["df", "-T", check_path], capture_output=True, text=True, check=True
+                )
 
-                    return {
-                        "filesystem": filesystem_type,
-                        "mount_point": mount_point,
-                        "data_path": path,
-                    }
-        except subprocess.CalledProcessError as e:
-            self.logger.warning(f"Failed to detect filesystem for {path}: {e}")
-        except Exception as e:
-            self.logger.warning(f"Error detecting filesystem for {path}: {e}")
+                lines = result.stdout.strip().split("\n")
+                if len(lines) >= 2:
+                    # Second line contains the filesystem info
+                    # Format: Filesystem Type 1K-blocks Used Available Use% Mounted on
+                    parts = lines[1].split()
+                    if len(parts) >= 2:
+                        filesystem_type = parts[1]
+                        mount_point = parts[-1] if len(parts) >= 7 else check_path
+
+                        return {
+                            "filesystem": filesystem_type,
+                            "mount_point": mount_point,
+                            "data_path": check_path,
+                        }
+            except subprocess.CalledProcessError as e:
+                self.logger.warning(
+                    f"Failed to detect filesystem for {check_path}: {e}"
+                )
+                continue
+            except Exception as e:
+                self.logger.warning(f"Error detecting filesystem for {check_path}: {e}")
+                continue
 
         # Fallback: try to detect from /proc/mounts
-        try:
-            with open("/proc/mounts", "r") as f:
-                mounts = f.readlines()
+        for check_path in paths_to_try:
+            try:
+                with open("/proc/mounts", "r") as f:
+                    mounts = f.readlines()
 
-            # Find the mount that contains our path
-            best_match = ""
-            best_fs = "unknown"
+                # Find the mount that contains our path
+                best_match = ""
+                best_fs = "unknown"
 
-            for line in mounts:
-                parts = line.strip().split()
-                if len(parts) >= 3:
-                    mount_point = parts[1]
-                    fs_type = parts[2]
+                for line in mounts:
+                    parts = line.strip().split()
+                    if len(parts) >= 3:
+                        mount_point = parts[1]
+                        fs_type = parts[2]
 
-                    # Check if this mount point is a prefix of our path
-                    if path.startswith(mount_point) and len(mount_point) > len(
-                        best_match
-                    ):
-                        best_match = mount_point
-                        best_fs = fs_type
+                        # Check if this mount point is a prefix of our path
+                        if check_path.startswith(mount_point) and len(
+                            mount_point
+                        ) > len(best_match):
+                            best_match = mount_point
+                            best_fs = fs_type
 
-            if best_fs != "unknown":
-                return {
-                    "filesystem": best_fs,
-                    "mount_point": best_match,
-                    "data_path": path,
-                }
+                if best_fs != "unknown":
+                    return {
+                        "filesystem": best_fs,
+                        "mount_point": best_match,
+                        "data_path": check_path,
+                    }
 
-        except Exception as e:
-            self.logger.warning(f"Error reading /proc/mounts: {e}")
+            except Exception as e:
+                self.logger.warning(f"Error reading /proc/mounts for {check_path}: {e}")
+                continue
 
         # Final fallback
-        return {"filesystem": "unknown", "mount_point": "/", "data_path": path}
+        return {
+            "filesystem": "unknown",
+            "mount_point": "/",
+            "data_path": paths_to_try[0],
+        }
 
     def connect_to_milvus(self) -> bool:
         """Connect to Milvus server"""
@@ -440,13 +456,47 @@ class MilvusBenchmark:
         """Run complete benchmark suite"""
         self.logger.info("Starting Milvus benchmark suite...")
 
-        # Detect filesystem information
-        fs_info = self.get_filesystem_info("/data")
+        # Detect filesystem information - Milvus data path first
+        milvus_data_path = "/data/milvus"
+        if os.path.exists(milvus_data_path):
+            # Multi-fs mode: Milvus data is on dedicated filesystem
+            fs_info = self.get_filesystem_info(milvus_data_path)
+            self.logger.info(
+                f"Multi-filesystem mode: Using {milvus_data_path} for filesystem detection"
+            )
+        else:
+            # Single-fs mode: fallback to /data
+            fs_info = self.get_filesystem_info("/data")
+            self.logger.info(
+                f"Single-filesystem mode: Using /data for filesystem detection"
+            )
+
         self.results["system_info"] = fs_info
+        
+        # Add kernel version and hostname to system info
+        try:
+            import socket
+            
+            # Get hostname
+            self.results["system_info"]["hostname"] = socket.gethostname()
+            
+            # Get kernel version using uname -r
+            kernel_result = subprocess.run(['uname', '-r'], capture_output=True, text=True, check=True)
+            self.results["system_info"]["kernel_version"] = kernel_result.stdout.strip()
+            
+            self.logger.info(
+                f"System info: hostname={self.results['system_info']['hostname']}, "
+                f"kernel={self.results['system_info']['kernel_version']}"
+            )
+        except Exception as e:
+            self.logger.warning(f"Could not collect kernel info: {e}")
+            self.results["system_info"]["kernel_version"] = "unknown"
+            self.results["system_info"]["hostname"] = "unknown"
+        
         # Also add filesystem at top level for compatibility with existing graphs
         self.results["filesystem"] = fs_info["filesystem"]
         self.logger.info(
-            f"Detected filesystem: {fs_info['filesystem']} at {fs_info['mount_point']}"
+            f"Detected filesystem: {fs_info['filesystem']} at {fs_info['mount_point']} (data path: {fs_info['data_path']})"
         )
 
         if not self.connect_to_milvus():

@@ -69,6 +69,24 @@ HTML_TEMPLATE = """
             color: #7f8c8d;
             font-size: 0.9em;
         }}
+        .config-box {{
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .config-box h3 {{
+            margin-top: 0;
+            color: #2c3e50;
+        }}
+        .config-box ul {{
+            margin: 10px 0;
+            padding-left: 20px;
+        }}
+        .config-box li {{
+            margin: 5px 0;
+        }}
         .section {{
             background: white;
             padding: 30px;
@@ -162,15 +180,16 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="header">
-        <h1>AI Vector Database Benchmark Results</h1>
+        <h1>Milvus Vector Database Benchmark Results</h1>
         <div class="subtitle">Generated on {timestamp}</div>
     </div>
     
     <nav class="navigation">
         <ul>
             <li><a href="#summary">Summary</a></li>
+            {filesystem_nav_items}
             <li><a href="#performance-metrics">Performance Metrics</a></li>
-            <li><a href="#performance-trends">Performance Trends</a></li>
+            <li><a href="#performance-heatmap">Performance Heatmap</a></li>
             <li><a href="#detailed-results">Detailed Results</a></li>
         </ul>
     </nav>
@@ -192,34 +211,40 @@ HTML_TEMPLATE = """
             <div class="label">{best_query_config}</div>
         </div>
         <div class="card">
-            <h3>Test Runs</h3>
-            <div class="value">{total_tests}</div>
-            <div class="label">Benchmark Executions</div>
+            <h3>{fourth_card_title}</h3>
+            <div class="value">{fourth_card_value}</div>
+            <div class="label">{fourth_card_label}</div>
+        </div>
+    </div>
+    
+    {filesystem_comparison_section}
+    
+    {block_size_analysis_section}
+    
+    <div id="performance-heatmap" class="section">
+        <h2>Performance Heatmap</h2>
+        <p>Heatmap visualization showing performance metrics across all tested configurations.</p>
+        <div class="graph-container">
+            <img src="graphs/performance_heatmap.png" alt="Performance Heatmap">
         </div>
     </div>
     
     <div id="performance-metrics" class="section">
         <h2>Performance Metrics</h2>
-        <p>Key performance indicators for Milvus vector database operations.</p>
-        <div class="graph-container">
-            <img src="graphs/performance_heatmap.png" alt="Performance Metrics">
-        </div>
-    </div>
-    
-    <div id="performance-trends" class="section">
-        <h2>Performance Trends</h2>
-        <p>Performance comparison between baseline and development configurations.</p>
-        <div class="graph-container">
-            <img src="graphs/performance_trends.png" alt="Performance Trends">
+        {config_summary}
+        <div class="graph-grid">
+            {performance_trend_graphs}
         </div>
     </div>
     
     <div id="detailed-results" class="section">
-        <h2>Detailed Results Table</h2>
+        <h2>Milvus Performance by Storage Filesystem</h2>
+        <p>This table shows how Milvus vector database performs when its data is stored on different filesystem types and configurations.</p>
         <table class="results-table">
             <thead>
                 <tr>
-                    <th>Host</th>
+                    <th>Filesystem</th>
+                    <th>Configuration</th>
                     <th>Type</th>
                     <th>Insert QPS</th>
                     <th>Query QPS</th>
@@ -260,51 +285,77 @@ def load_results(results_dir):
                 data = json.load(f)
                 # Get filesystem from JSON data first, then fallback to filename parsing
                 filename = os.path.basename(json_file)
-                
+
                 # Skip results without valid performance data
                 insert_perf = data.get("insert_performance", {})
                 query_perf = data.get("query_performance", {})
                 if not insert_perf or not query_perf:
                     continue
-                
+
                 # Get filesystem from JSON data
                 fs_type = data.get("filesystem", None)
-                
-                # If not in JSON, try to parse from filename (backwards compatibility)
-                if not fs_type and "debian13-ai" in filename:
-                    host_parts = (
-                        filename.replace("results_debian13-ai-", "")
-                        .replace("_1.json", "")
+
+                # Always try to parse from filename first since JSON data might be wrong
+                if "-ai-" in filename:
+                    # Handle both debian13-ai- and prod-ai- prefixes
+                    cleaned_filename = filename.replace("results_", "")
+
+                    # Extract the part after -ai-
+                    if "debian13-ai-" in cleaned_filename:
+                        host_part = cleaned_filename.replace("debian13-ai-", "")
+                    elif "prod-ai-" in cleaned_filename:
+                        host_part = cleaned_filename.replace("prod-ai-", "")
+                    else:
+                        # Generic extraction
+                        ai_index = cleaned_filename.find("-ai-")
+                        if ai_index != -1:
+                            host_part = cleaned_filename[ai_index + 4 :]  # Skip "-ai-"
+                        else:
+                            host_part = cleaned_filename
+
+                    # Remove file extensions and dev suffix
+                    host_part = (
+                        host_part.replace("_1.json", "")
                         .replace("_2.json", "")
                         .replace("_3.json", "")
-                        .split("-")
+                        .replace("-dev", "")
                     )
-                    if "xfs" in host_parts[0]:
+
+                    # Parse filesystem type and block size
+                    if host_part.startswith("xfs-"):
                         fs_type = "xfs"
-                        block_size = host_parts[1] if len(host_parts) > 1 else "4k"
-                    elif "ext4" in host_parts[0]:
+                        # Extract block size: xfs-4k-4ks -> 4k
+                        parts = host_part.split("-")
+                        if len(parts) >= 2:
+                            block_size = parts[1]  # 4k, 16k, 32k, 64k
+                        else:
+                            block_size = "4k"
+                    elif host_part.startswith("ext4-"):
                         fs_type = "ext4"
-                        block_size = host_parts[1] if len(host_parts) > 1 else "4k"
-                    elif "btrfs" in host_parts[0]:
+                        parts = host_part.split("-")
+                        block_size = parts[1] if len(parts) > 1 else "4k"
+                    elif host_part.startswith("btrfs"):
                         fs_type = "btrfs"
                         block_size = "default"
                     else:
-                        fs_type = "unknown"
-                        block_size = "unknown"
+                        # Fallback to JSON data if available
+                        if not fs_type:
+                            fs_type = "unknown"
+                            block_size = "unknown"
                 else:
                     # Set appropriate block size based on filesystem
                     if fs_type == "btrfs":
                         block_size = "default"
                     else:
                         block_size = data.get("block_size", "default")
-                
+
                 # Default to unknown if still not found
                 if not fs_type:
                     fs_type = "unknown"
                     block_size = "unknown"
-                
+
                 is_dev = "dev" in filename
-                
+
                 # Calculate average QPS from query performance data
                 query_qps = 0
                 query_count = 0
@@ -316,7 +367,7 @@ def load_results(results_dir):
                             query_count += 1
                 if query_count > 0:
                     query_qps = query_qps / query_count
-                
+
                 results.append(
                     {
                         "host": filename.replace("results_", "").replace(".json", ""),
@@ -348,12 +399,36 @@ def generate_table_rows(results, best_configs):
         if config_key in best_configs:
             row_class += " best-config"
 
+        # Generate descriptive labels showing Milvus is running on this filesystem
+        if result["filesystem"] == "xfs" and result["block_size"] != "default":
+            storage_label = f"XFS {result['block_size'].upper()}"
+            config_details = f"Block size: {result['block_size']}, Milvus data on XFS"
+        elif result["filesystem"] == "ext4":
+            storage_label = "EXT4"
+            if "bigalloc" in result.get("host", "").lower():
+                config_details = "EXT4 with bigalloc, Milvus data on ext4"
+            else:
+                config_details = (
+                    f"Block size: {result['block_size']}, Milvus data on ext4"
+                )
+        elif result["filesystem"] == "btrfs":
+            storage_label = "BTRFS"
+            config_details = "Default Btrfs settings, Milvus data on Btrfs"
+        else:
+            storage_label = result["filesystem"].upper()
+            config_details = f"Milvus data on {result['filesystem']}"
+
+        # Extract clean node identifier from hostname
+        node_name = result["host"].replace("results_", "").replace(".json", "")
+
         row = f"""
         <tr class="{row_class}">
-            <td>{result['host']}</td>
+            <td><strong>{storage_label}</strong></td>
+            <td>{config_details}</td>
             <td>{result['type']}</td>
             <td>{result['insert_qps']:,}</td>
             <td>{result['query_qps']:,}</td>
+            <td><code>{node_name}</code></td>
             <td>{result['timestamp']}</td>
         </tr>
         """
@@ -362,10 +437,66 @@ def generate_table_rows(results, best_configs):
     return "\n".join(rows)
 
 
+def generate_config_summary(results_dir):
+    """Generate configuration summary HTML from results"""
+    # Try to load first result file to get configuration
+    result_files = glob.glob(os.path.join(results_dir, "results_*.json"))
+    if not result_files:
+        return ""
+
+    try:
+        with open(result_files[0], "r") as f:
+            data = json.load(f)
+            config = data.get("config", {})
+
+            # Format configuration details
+            config_html = """
+        <div class="config-box">
+            <h3>Test Configuration</h3>
+            <ul>
+                <li><strong>Vector Dataset Size:</strong> {:,} vectors</li>
+                <li><strong>Vector Dimensions:</strong> {}</li>
+                <li><strong>Index Type:</strong> {} (M={}, ef_construction={}, ef={})</li>
+                <li><strong>Benchmark Runtime:</strong> {} seconds</li>
+                <li><strong>Batch Size:</strong> {:,}</li>
+                <li><strong>Test Iterations:</strong> {} runs with identical configuration</li>
+            </ul>
+        </div>
+            """.format(
+                config.get("vector_dataset_size", "N/A"),
+                config.get("vector_dimensions", "N/A"),
+                config.get("index_type", "N/A"),
+                config.get("index_hnsw_m", "N/A"),
+                config.get("index_hnsw_ef_construction", "N/A"),
+                config.get("index_hnsw_ef", "N/A"),
+                config.get("benchmark_runtime", "N/A"),
+                config.get("batch_size", "N/A"),
+                len(result_files),
+            )
+            return config_html
+    except Exception as e:
+        print(f"Warning: Could not generate config summary: {e}")
+        return ""
+
+
 def find_performance_trend_graphs(graphs_dir):
-    """Find performance trend graph"""
-    # Not used in basic implementation since we embed the graph directly
-    return ""
+    """Find performance trend graphs"""
+    graphs = []
+    # Look for filesystem-specific graphs in multi-fs mode
+    for fs in ["xfs", "ext4", "btrfs"]:
+        graph_path = f"{fs}_performance_trends.png"
+        if os.path.exists(os.path.join(graphs_dir, graph_path)):
+            graphs.append(
+                f'<div class="graph-container"><img src="graphs/{graph_path}" alt="{fs.upper()} Performance Trends"></div>'
+            )
+    # Fallback to simple performance trends for single mode
+    if not graphs and os.path.exists(
+        os.path.join(graphs_dir, "performance_trends.png")
+    ):
+        graphs.append(
+            '<div class="graph-container"><img src="graphs/performance_trends.png" alt="Performance Trends"></div>'
+        )
+    return "\n".join(graphs)
 
 
 def generate_html_report(results_dir, graphs_dir, output_path):
@@ -393,6 +524,50 @@ def generate_html_report(results_dir, graphs_dir, output_path):
     if summary["performance_summary"]["best_query_qps"]["config"]:
         best_configs.add(summary["performance_summary"]["best_query_qps"]["config"])
 
+    # Check if multi-filesystem testing is enabled (more than one filesystem)
+    filesystems_tested = summary.get("filesystems_tested", [])
+    is_multifs_enabled = len(filesystems_tested) > 1
+
+    # Generate conditional sections based on multi-fs status
+    if is_multifs_enabled:
+        filesystem_nav_items = """
+            <li><a href="#filesystem-comparison">Filesystem Comparison</a></li>
+            <li><a href="#block-size-analysis">Block Size Analysis</a></li>"""
+
+        filesystem_comparison_section = """<div id="filesystem-comparison" class="section">
+        <h2>Milvus Storage Filesystem Comparison</h2>
+        <p>Comparison of Milvus vector database performance when its data is stored on different filesystem types (XFS, ext4, Btrfs) with various configurations.</p>
+        <div class="graph-container">
+            <img src="graphs/filesystem_comparison.png" alt="Filesystem Comparison">
+        </div>
+    </div>"""
+
+        block_size_analysis_section = """<div id="block-size-analysis" class="section">
+        <h2>XFS Block Size Analysis</h2>
+        <p>Performance analysis of XFS filesystem with different block sizes (4K, 16K, 32K, 64K).</p>
+        <div class="graph-container">
+            <img src="graphs/xfs_block_size_analysis.png" alt="XFS Block Size Analysis">
+        </div>
+    </div>"""
+
+        # Multi-fs mode: show filesystem info
+        fourth_card_title = "Storage Filesystems"
+        fourth_card_value = str(len(filesystems_tested))
+        fourth_card_label = ", ".join(filesystems_tested).upper() + " for Milvus Data"
+    else:
+        # Single filesystem mode - hide multi-fs sections
+        filesystem_nav_items = ""
+        filesystem_comparison_section = ""
+        block_size_analysis_section = ""
+
+        # Single mode: show test iterations
+        fourth_card_title = "Test Iterations"
+        fourth_card_value = str(summary["total_tests"])
+        fourth_card_label = "Identical Configuration Runs"
+
+    # Generate configuration summary
+    config_summary = generate_config_summary(results_dir)
+
     # Generate HTML
     html_content = HTML_TEMPLATE.format(
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -401,6 +576,14 @@ def generate_html_report(results_dir, graphs_dir, output_path):
         best_insert_config=summary["performance_summary"]["best_insert_qps"]["config"],
         best_query_qps=f"{summary['performance_summary']['best_query_qps']['value']:,}",
         best_query_config=summary["performance_summary"]["best_query_qps"]["config"],
+        fourth_card_title=fourth_card_title,
+        fourth_card_value=fourth_card_value,
+        fourth_card_label=fourth_card_label,
+        filesystem_nav_items=filesystem_nav_items,
+        filesystem_comparison_section=filesystem_comparison_section,
+        block_size_analysis_section=block_size_analysis_section,
+        config_summary=config_summary,
+        performance_trend_graphs=find_performance_trend_graphs(graphs_dir),
         table_rows=generate_table_rows(results, best_configs),
     )
 

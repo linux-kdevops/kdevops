@@ -1,0 +1,42 @@
+{
+    "milvus": {
+        "host": "{{ ai_milvus_host }}",
+        "port": {{ ai_milvus_port }},
+        "database_name": "{{ ai_milvus_database_name }}_{{ fs_config.name }}"
+    },
+    "benchmark": {
+        "vector_dataset_size": {{ ai_vector_dataset_size }},
+        "vector_dimensions": {{ ai_vector_dimensions }},
+        "index_type": "{{ ai_index_type }}",
+        "iterations": {{ ai_benchmark_iterations }},
+        "runtime_seconds": {{ ai_benchmark_runtime }},
+        "warmup_seconds": {{ ai_benchmark_warmup_time }},
+        "query_patterns": {
+            "topk_1": {{ ai_benchmark_query_topk_1 | lower }},
+            "topk_10": {{ ai_benchmark_query_topk_10 | lower }},
+            "topk_100": {{ ai_benchmark_query_topk_100 | lower }}
+        },
+        "batch_sizes": {
+            "batch_1": {{ ai_benchmark_batch_1 | lower }},
+            "batch_10": {{ ai_benchmark_batch_10 | lower }},
+            "batch_100": {{ ai_benchmark_batch_100 | lower }}
+        }
+    },
+    "index_params": {
+{% if ai_index_type == "HNSW" %}
+        "M": {{ ai_index_hnsw_m }},
+        "efConstruction": {{ ai_index_hnsw_ef_construction }},
+        "ef": {{ ai_index_hnsw_ef }}
+{% elif ai_index_type == "IVF_FLAT" %}
+        "nlist": {{ ai_index_ivf_nlist }},
+        "nprobe": {{ ai_index_ivf_nprobe }}
+{% endif %}
+    },
+    "filesystem": {
+        "name": "{{ fs_config.name }}",
+        "type": "{{ fs_config.filesystem }}",
+        "mkfs_cmd": "{{ fs_config.mkfs_cmd }}",
+        "mount_opts": "{{ fs_config.mount_opts }}",
+        "data_directory": "{{ current_fs_benchmark_dir }}"
+    }
+}

@@ -1,0 +1,279 @@
+---
+- name: Create multi-filesystem comparison script
+  copy:
+    content: |
+      #!/usr/bin/env python3
+      """
+      Multi-Filesystem AI Benchmark Comparison Report Generator
+
+      This script analyzes AI benchmark results across different filesystem
+      configurations and generates a comprehensive comparison report.
+      """
+
+      import json
+      import glob
+      import os
+      import sys
+      from datetime import datetime
+      from typing import Dict, List, Any
+
+      def load_filesystem_results(results_dir: str) -> Dict[str, Any]:
+          """Load results from all filesystem configurations"""
+          fs_results = {}
+
+          # Find all filesystem configuration directories
+          fs_dirs = [d for d in os.listdir(results_dir)
+                    if os.path.isdir(os.path.join(results_dir, d)) and d != 'comparison']
+
+          for fs_name in fs_dirs:
+              fs_path = os.path.join(results_dir, fs_name)
+
+              # Load configuration
+              config_file = os.path.join(fs_path, 'filesystem_config.txt')
+              config_info = {}
+              if os.path.exists(config_file):
+                  with open(config_file, 'r') as f:
+                      config_info['config_text'] = f.read()
+
+              # Load benchmark results
+              result_files = glob.glob(os.path.join(fs_path, 'results_*.json'))
+              benchmark_results = []
+
+              for result_file in result_files:
+                  try:
+                      with open(result_file, 'r') as f:
+                          data = json.load(f)
+                          benchmark_results.append(data)
+                  except Exception as e:
+                      print(f"Error loading {result_file}: {e}")
+
+              fs_results[fs_name] = {
+                  'config': config_info,
+                  'results': benchmark_results,
+                  'path': fs_path
+              }
+
+          return fs_results
+
+      def generate_comparison_report(fs_results: Dict[str, Any], output_dir: str):
+          """Generate HTML comparison report"""
+          html = []
+
+          # HTML header
+          html.append("<!DOCTYPE html>")
+          html.append("<html lang='en'>")
+          html.append("<head>")
+          html.append("    <meta charset='UTF-8'>")
+          html.append("    <title>AI Multi-Filesystem Benchmark Comparison</title>")
+          html.append("    <style>")
+          html.append("        body { font-family: Arial, sans-serif; margin: 20px; }")
+          html.append("        .header { background-color: #f0f8ff; padding: 20px; border-radius: 5px; margin-bottom: 20px; }")
+          html.append("        .fs-section { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }")
+          html.append("        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }")
+          html.append("        .comparison-table th, .comparison-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }")
+          html.append("        .comparison-table th { background-color: #f2f2f2; }")
+          html.append("        .metric-best { background-color: #d4edda; font-weight: bold; }")
+          html.append("        .metric-worst { background-color: #f8d7da; }")
+          html.append("        .chart-container { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }")
+          html.append("    </style>")
+          html.append("</head>")
+          html.append("<body>")
+
+          # Report header
+          html.append("    <div class='header'>")
+          html.append("        <h1>🗂️ AI Multi-Filesystem Benchmark Comparison</h1>")
+          html.append(f"        <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
+          html.append(f"        <p><strong>Filesystem Configurations Tested:</strong> {len(fs_results)}</p>")
+          html.append("    </div>")
+
+          # Performance comparison table
+          html.append("    <h2>📊 Performance Comparison Summary</h2>")
+          html.append("    <table class='comparison-table'>")
+          html.append("        <tr>")
+          html.append("            <th>Filesystem</th>")
+          html.append("            <th>Avg Insert Rate (vectors/sec)</th>")
+          html.append("            <th>Avg Index Time (sec)</th>")
+          html.append("            <th>Avg Query QPS (Top-10, Batch-1)</th>")
+          html.append("            <th>Avg Query Latency (ms)</th>")
+          html.append("        </tr>")
+
+          # Calculate metrics for comparison
+          fs_metrics = {}
+          for fs_name, fs_data in fs_results.items():
+              if not fs_data['results']:
+                  continue
+
+              # Calculate averages across all iterations
+              insert_rates = []
+              index_times = []
+              query_qps = []
+              query_latencies = []
+
+              for result in fs_data['results']:
+                  if 'insert_performance' in result:
+                      insert_rates.append(result['insert_performance'].get('vectors_per_second', 0))
+
+                  if 'index_performance' in result:
+                      index_times.append(result['index_performance'].get('creation_time_seconds', 0))
+
+                  if 'query_performance' in result:
+                      qp = result['query_performance']
+                      if 'topk_10' in qp and 'batch_1' in qp['topk_10']:
+                          batch_data = qp['topk_10']['batch_1']
+                          query_qps.append(batch_data.get('queries_per_second', 0))
+                          query_latencies.append(batch_data.get('average_time_seconds', 0) * 1000)
+
+              fs_metrics[fs_name] = {
+                  'insert_rate': sum(insert_rates) / len(insert_rates) if insert_rates else 0,
+                  'index_time': sum(index_times) / len(index_times) if index_times else 0,
+                  'query_qps': sum(query_qps) / len(query_qps) if query_qps else 0,
+                  'query_latency': sum(query_latencies) / len(query_latencies) if query_latencies else 0
+              }
+
+          # Find best/worst for highlighting
+          if fs_metrics:
+              best_insert = max(fs_metrics.keys(), key=lambda x: fs_metrics[x]['insert_rate'])
+              best_index = min(fs_metrics.keys(), key=lambda x: fs_metrics[x]['index_time'])
+              best_qps = max(fs_metrics.keys(), key=lambda x: fs_metrics[x]['query_qps'])
+              best_latency = min(fs_metrics.keys(), key=lambda x: fs_metrics[x]['query_latency'])
+
+              worst_insert = min(fs_metrics.keys(), key=lambda x: fs_metrics[x]['insert_rate'])
+              worst_index = max(fs_metrics.keys(), key=lambda x: fs_metrics[x]['index_time'])
+              worst_qps = min(fs_metrics.keys(), key=lambda x: fs_metrics[x]['query_qps'])
+              worst_latency = max(fs_metrics.keys(), key=lambda x: fs_metrics[x]['query_latency'])
+
+          # Generate comparison rows
+          for fs_name, metrics in fs_metrics.items():
+              html.append("        <tr>")
+              html.append(f"            <td><strong>{fs_name}</strong></td>")
+
+              # Insert rate
+              cell_class = ""
+              if fs_name == best_insert:
+                  cell_class = "metric-best"
+              elif fs_name == worst_insert:
+                  cell_class = "metric-worst"
+              html.append(f"            <td class='{cell_class}'>{metrics['insert_rate']:.2f}</td>")
+
+              # Index time
+              cell_class = ""
+              if fs_name == best_index:
+                  cell_class = "metric-best"
+              elif fs_name == worst_index:
+                  cell_class = "metric-worst"
+              html.append(f"            <td class='{cell_class}'>{metrics['index_time']:.2f}</td>")
+
+              # Query QPS
+              cell_class = ""
+              if fs_name == best_qps:
+                  cell_class = "metric-best"
+              elif fs_name == worst_qps:
+                  cell_class = "metric-worst"
+              html.append(f"            <td class='{cell_class}'>{metrics['query_qps']:.2f}</td>")
+
+              # Query latency
+              cell_class = ""
+              if fs_name == best_latency:
+                  cell_class = "metric-best"
+              elif fs_name == worst_latency:
+                  cell_class = "metric-worst"
+              html.append(f"            <td class='{cell_class}'>{metrics['query_latency']:.2f}</td>")
+
+              html.append("        </tr>")
+
+          html.append("    </table>")
+
+          # Individual filesystem details
+          html.append("    <h2>📁 Individual Filesystem Details</h2>")
+          for fs_name, fs_data in fs_results.items():
+              html.append(f"    <div class='fs-section'>")
+              html.append(f"        <h3>{fs_name}</h3>")
+
+              if 'config_text' in fs_data['config']:
+                  html.append("        <h4>Configuration:</h4>")
+                  html.append("        <pre>" + fs_data['config']['config_text'][:500] + "</pre>")
+
+              html.append(f"        <p><strong>Benchmark Iterations:</strong> {len(fs_data['results'])}</p>")
+
+              if fs_name in fs_metrics:
+                  metrics = fs_metrics[fs_name]
+                  html.append("        <table class='comparison-table'>")
+                  html.append("            <tr><th>Metric</th><th>Value</th></tr>")
+                  html.append(f"            <tr><td>Average Insert Rate</td><td>{metrics['insert_rate']:.2f} vectors/sec</td></tr>")
+                  html.append(f"            <tr><td>Average Index Time</td><td>{metrics['index_time']:.2f} seconds</td></tr>")
+                  html.append(f"            <tr><td>Average Query QPS</td><td>{metrics['query_qps']:.2f}</td></tr>")
+                  html.append(f"            <tr><td>Average Query Latency</td><td>{metrics['query_latency']:.2f} ms</td></tr>")
+                  html.append("        </table>")
+
+              html.append("    </div>")
+
+          # Footer
+          html.append("    <div style='margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;'>")
+          html.append("        <h3>📝 Analysis Notes</h3>")
+          html.append("        <ul>")
+          html.append("            <li>Green highlighting indicates the best performing filesystem for each metric</li>")
+          html.append("            <li>Red highlighting indicates the worst performing filesystem for each metric</li>")
+          html.append("            <li>Results are averaged across all benchmark iterations for each filesystem</li>")
+          html.append("            <li>Performance can vary based on hardware, kernel version, and workload characteristics</li>")
+          html.append("        </ul>")
+          html.append("    </div>")
+
+          html.append("</body>")
+          html.append("</html>")
+
+          # Write HTML report
+          report_file = os.path.join(output_dir, "multi_filesystem_comparison.html")
+          with open(report_file, 'w') as f:
+              f.write("\n".join(html))
+
+          print(f"Multi-filesystem comparison report generated: {report_file}")
+
+          # Generate JSON summary
+          summary_data = {
+              'generation_time': datetime.now().isoformat(),
+              'filesystem_count': len(fs_results),
+              'metrics_summary': fs_metrics,
+              'raw_results': {fs: data['results'] for fs, data in fs_results.items()}
+          }
+
+          summary_file = os.path.join(output_dir, "multi_filesystem_summary.json")
+          with open(summary_file, 'w') as f:
+              json.dump(summary_data, f, indent=2)
+
+          print(f"Multi-filesystem summary data: {summary_file}")
+
+      def main():
+          results_dir = "{{ ai_multifs_results_dir }}"
+          comparison_dir = os.path.join(results_dir, "comparison")
+          os.makedirs(comparison_dir, exist_ok=True)
+
+          print("Loading filesystem results...")
+          fs_results = load_filesystem_results(results_dir)
+
+          if not fs_results:
+              print("No filesystem results found!")
+              return 1
+
+          print(f"Found results for {len(fs_results)} filesystem configurations")
+          print("Generating comparison report...")
+
+          generate_comparison_report(fs_results, comparison_dir)
+
+          print("Multi-filesystem comparison completed!")
+          return 0
+
+      if __name__ == "__main__":
+          sys.exit(main())
+    dest: "{{ ai_multifs_results_dir }}/generate_comparison.py"
+    mode: '0755'
+
+- name: Run multi-filesystem comparison analysis
+  command: python3 {{ ai_multifs_results_dir }}/generate_comparison.py
+  register: comparison_result
+
+- name: Display comparison completion message
+  debug:
+    msg: |
+      Multi-filesystem comparison completed!
+      Comparison report: {{ ai_multifs_results_dir }}/comparison/multi_filesystem_comparison.html
+      Summary data: {{ ai_multifs_results_dir }}/comparison/multi_filesystem_summary.json
