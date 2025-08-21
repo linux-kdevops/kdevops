@@ -1,0 +1,57 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+- name: Update SSH configuration for NixOS VMs
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ensure .ssh directory exists
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/.ssh"
+        state: directory
+        mode: "0700"
+
+    - name: Check if SSH key exists
+      ansible.builtin.stat:
+        path: "{{ topdir_path }}/.ssh/kdevops_id_rsa"
+      register: ssh_key
+
+    - name: Generate SSH key pair if not exists
+      ansible.builtin.command: |
+        ssh-keygen -t rsa -b 4096 -f {{ topdir_path }}/.ssh/kdevops_id_rsa -N '' -C 'kdevops@nixos'
+      when: not ssh_key.stat.exists
+
+    - name: Set proper permissions on SSH key
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: "0600"
+      loop:
+        - "{{ topdir_path }}/.ssh/kdevops_id_rsa"
+        - "{{ topdir_path }}/.ssh/kdevops_id_rsa.pub"
+      when: ssh_key.stat.exists or ssh_key.changed
+
+    - name: Get list of NixOS VMs
+      ansible.builtin.shell: |
+        virsh -c {{ libvirt_uri | default('qemu:///system') }} list --name | grep -E "({{ kdevops_host_prefix }}|nixos)" || true
+      register: nixos_vms
+      changed_when: false
+
+    - name: Update SSH config entries
+      ansible.builtin.blockinfile:
+        path: "{{ topdir_path }}/.ssh/config"
+        create: true
+        mode: "0600"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - NixOS VMs"
+        block: |
+          {% for vm in nixos_vms.stdout_lines %}
+          Host {{ vm }}
+              HostName {{ hostvars[vm]['ansible_host'] | default('192.168.100.2') }}
+              User kdevops
+              Port 22
+              IdentityFile {{ topdir_path }}/.ssh/kdevops_id_rsa
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              LogLevel ERROR
+
+          {% endfor %}
+      when: nixos_vms.stdout_lines | length > 0

@@ -1,0 +1,138 @@
+{ config, pkgs, lib, ... }:
+
+{
+  imports = [
+    ./hardware-configuration.nix
+{% if nixos_enable_workflow_deps %}
+    ./workflow-deps.nix
+{% endif %}
+{% if nixos_custom_config_path != "" %}
+    {{ nixos_custom_config_path }}
+{% endif %}
+  ];
+
+  # Nix configuration
+{% if nixos_use_local_mirror is defined and nixos_use_local_mirror and nixos_mirror_url is defined and nixos_mirror_url != "" %}
+  nix.settings = {
+    substituters = [
+      "{{ nixos_mirror_url }}"
+      "https://cache.nixos.org"
+    ];
+    trusted-substituters = [
+      "{{ nixos_mirror_url }}"
+      "https://cache.nixos.org"
+    ];
+    # Prefer local mirror
+    extra-substituters = [ "{{ nixos_mirror_url }}" ];
+  };
+{% endif %}
+
+  # Boot configuration
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/vda";
+  boot.loader.timeout = 1;
+
+  # Kernel
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # Enable 9p support if configured
+{% if bootlinux_9p is defined and bootlinux_9p %}
+  boot.kernelModules = [ "9p" "9pnet_virtio" ];
+  boot.initrd.kernelModules = [ "9p" "9pnet_virtio" ];
+{% endif %}
+
+  # Networking
+  networking.useDHCP = lib.mkDefault true;
+
+  # Enable SSH
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "yes";
+      PasswordAuthentication = false;
+      PubkeyAuthentication = true;
+    };
+  };
+
+  # Users
+  users.users.root = {
+    openssh.authorizedKeys.keys = [
+{% if nixos_ssh_authorized_key is defined %}
+      "{{ nixos_ssh_authorized_key }}"
+{% else %}
+      # SSH key will be generated during provisioning
+{% endif %}
+    ];
+  };
+
+  users.users.kdevops = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "libvirt" "kvm" ];
+    openssh.authorizedKeys.keys = [
+{% if nixos_ssh_authorized_key is defined %}
+      "{{ nixos_ssh_authorized_key }}"
+{% else %}
+      # SSH key will be generated during provisioning
+{% endif %}
+    ];
+  };
+
+  # Sudo without password for kdevops user
+  security.sudo.wheelNeedsPassword = false;
+
+  # Basic packages
+  environment.systemPackages = with pkgs; [
+    vim
+    git
+    tmux
+    htop
+    wget
+    curl
+    rsync
+    python3
+    gcc
+    gnumake
+    binutils
+    coreutils
+    findutils
+    procps
+    util-linux
+  ];
+
+  # Enable libvirt for nested virtualization if needed
+  virtualisation.libvirtd.enable = false;
+
+  # Filesystems
+  fileSystems."/" = {
+    device = "/dev/vda1";
+    fsType = "ext4";
+  };
+
+{% if bootlinux_9p is defined and bootlinux_9p %}
+  # 9P mount for shared kernel source
+  fileSystems."/mnt/linux" = {
+    device = "linux_source";
+    fsType = "9p";
+    options = [ "trans=virtio" "version=9p2000.L" "cache=loose" ];
+  };
+{% endif %}
+
+  # Time zone
+  time.timeZone = "UTC";
+
+  # Locale
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  # State version
+  system.stateVersion = "24.05";
+
+  # Enable nix flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Optimize storage
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
+}

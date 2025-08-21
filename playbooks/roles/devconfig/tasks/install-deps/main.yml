@@ -22,6 +22,7 @@
     - files:
         - "{{ ansible_facts['os_family'] | lower }}.yml"
       skip: true
+  when: ansible_facts['os_family'] != 'NixOS'
   tags: vars
 
 - name: Debian-specific setup

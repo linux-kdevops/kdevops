@@ -184,9 +184,17 @@ write-your-own-template-for-your-workflow-and-task
 {% else %}
 [all]
 localhost ansible_connection=local
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }} ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
 {{ kdevops_host_prefix }}
+{% endif %}
 {% if kdevops_baseline_and_dev == True %}
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
 {{ kdevops_host_prefix }}-dev
+{% endif %}
 {% endif %}
 {% if kdevops_enable_iscsi %}
 {{ kdevops_host_prefix }}-iscsi
@@ -197,12 +205,20 @@ localhost ansible_connection=local
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [baseline]
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }} ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
 {{ kdevops_host_prefix }}
+{% endif %}
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [dev]
 {% if kdevops_baseline_and_dev %}
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
 {{ kdevops_host_prefix }}-dev
+{% endif %}
 {% endif %}
 [dev:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
