@@ -1,0 +1,24 @@
+services:
+  milvus-standalone:
+    environment:
+      MILVUS_DATA_DIR: /var/lib/milvus
+      MILVUS_LOG_DIR: /var/log/milvus
+    volumes:
+      - {{ ai_vector_db_milvus_data_dir }}/volumes/milvus:/var/lib/milvus
+      - {{ ai_vector_db_milvus_log_dir }}:/var/log/milvus
+    ports:
+      - "{{ ai_vector_db_milvus_port }}:19530"
+      - "{{ ai_vector_db_milvus_metrics_port }}:9091"
+    deploy:
+      resources:
+        limits:
+          memory: {{ ai_vector_db_milvus_memory_limit }}
+          cpus: '{{ ai_vector_db_milvus_cpu_limit }}'
+
+  etcd:
+    volumes:
+      - {{ ai_vector_db_milvus_data_dir }}/volumes/etcd:/etcd
+
+  minio:
+    volumes:
+      - {{ ai_vector_db_milvus_data_dir }}/volumes/minio:/minio_data

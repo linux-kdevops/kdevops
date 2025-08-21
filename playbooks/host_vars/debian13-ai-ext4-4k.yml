@@ -1,0 +1,8 @@
+---
+# ext4 4k block configuration
+ai_docker_fstype: "ext4"
+ai_docker_ext4_mkfs_opts: "-b 4096"
+filesystem_type: "ext4"
+filesystem_block_size: "4k"
+ai_filesystem: "ext4"
+ai_data_device_path: "/var/lib/docker"

@@ -1,0 +1,220 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  # TODO: Review - was ignore_errors: true
+  failed_when: false  # Always succeed - review this condition
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Set local directories
+  ansible.builtin.set_fact:
+    local_results_dir: "{{ topdir_path }}/workflows/ai/results"
+    local_scripts_dir: "{{ topdir_path }}/workflows/ai/scripts"
+  run_once: true
+  delegate_to: localhost
+
+- name: Create local directories if they don't exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ local_results_dir }}"
+    - "{{ local_scripts_dir }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: Create analysis directory
+  ansible.builtin.file:
+    path: "{{ ai_benchmark_results_dir }}/analysis"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Copy analysis scripts to scripts directory
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ local_scripts_dir }}/{{ item }}"
+    mode: '0755'
+    force: yes
+  loop:
+    - analyze_results.py
+    - generate_graphs.py
+    - generate_html_report.py
+  run_once: true
+  delegate_to: localhost
+  become: true
+
+- name: Generate analysis configuration
+  ansible.builtin.template:
+    src: analysis_config.json.j2
+    dest: "{{ local_scripts_dir }}/analysis_config.json"
+    mode: '0644'
+  run_once: true
+  delegate_to: localhost
+  when: ai_benchmark_enable_graphing | bool
+
+- name: Check if benchmark results exist
+  ansible.builtin.stat:
+    path: "{{ ai_benchmark_results_dir }}"
+  register: results_dir_check
+
+- name: Find benchmark result files on remote host
+  ansible.builtin.find:
+    paths: "{{ ai_benchmark_results_dir }}"
+    patterns: "results_*.json"
+  register: remote_results
+  when: results_dir_check.stat.exists
+
+- name: Clean up entire local results directory before collection
+  ansible.builtin.file:
+    path: "{{ local_results_dir }}"
+    state: absent
+  run_once: true
+  delegate_to: localhost
+  become: true
+  when:
+    - results_dir_check.stat.exists
+    - remote_results.files is defined
+
+- name: Recreate local results directory with correct permissions
+  ansible.builtin.file:
+    path: "{{ local_results_dir }}"
+    state: directory
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  when:
+    - results_dir_check.stat.exists
+    - remote_results.files is defined
+
+- name: Collect result files from all hosts
+  ansible.builtin.fetch:
+    src: "{{ item.path }}"
+    dest: "{{ local_results_dir }}/{{ item.path | basename }}"
+    flat: true
+    mode: '0644'
+  loop: "{{ remote_results.files | default([]) }}"
+  when:
+    - results_dir_check.stat.exists
+    - remote_results.files is defined
+
+- name: Check if any results were collected
+  ansible.builtin.find:
+    paths: "{{ local_results_dir }}"
+    patterns: "*results_*.json"
+  register: collected_results
+  run_once: true
+  delegate_to: localhost
+
+- name: Display message if no results found
+  ansible.builtin.debug:
+    msg: |
+      No benchmark results found to analyze.
+      Please run 'make ai-tests' first to generate benchmark results.
+  when: collected_results.files is not defined or collected_results.files | length == 0
+  run_once: true
+  delegate_to: localhost
+
+- name: Ensure results directory has correct permissions
+  ansible.builtin.file:
+    path: "{{ local_results_dir }}"
+    owner: "{{ lookup('env', 'USER') }}"
+    group: "{{ lookup('env', 'USER') }}"
+    mode: '0755'
+    recurse: true
+  run_once: true
+  delegate_to: localhost
+  become: true
+  tags: ['results', 'analysis']
+
+- name: Run results analysis
+  ansible.builtin.command: >
+    python3 {{ local_scripts_dir }}/analyze_results.py
+    --results-dir {{ local_results_dir }}
+    --output-dir {{ local_results_dir }}
+    {% if ai_benchmark_enable_graphing | bool %}--config {{ local_scripts_dir }}/analysis_config.json{% endif %}
+  register: analysis_result
+  run_once: true
+  delegate_to: localhost
+  when: collected_results.files is defined and collected_results.files | length > 0
+  tags: ['results', 'analysis']
+
+
+- name: Create graphs directory
+  ansible.builtin.file:
+    path: "{{ local_results_dir }}/graphs"
+    state: directory
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+  when:
+    - collected_results.files is defined
+    - collected_results.files | length > 0
+  tags: ['results', 'graphs']
+
+- name: Generate performance graphs
+  ansible.builtin.command: >
+    python3 {{ local_scripts_dir }}/generate_better_graphs.py
+    {{ local_results_dir }}
+    {{ local_results_dir }}/graphs
+  register: graph_generation_result
+  failed_when: false
+  run_once: true
+  delegate_to: localhost
+  when:
+    - collected_results.files is defined
+    - collected_results.files | length > 0
+    - ai_benchmark_enable_graphing|bool
+  tags: ['results', 'graphs']
+
+- name: Fallback to basic graphs if better graphs fail
+  ansible.builtin.command: >
+    python3 {{ local_scripts_dir }}/generate_graphs.py
+    {{ local_results_dir }}
+    {{ local_results_dir }}/graphs
+  run_once: true
+  delegate_to: localhost
+  when:
+    - collected_results.files is defined
+    - collected_results.files | length > 0
+    - ai_benchmark_enable_graphing|bool
+    - graph_generation_result is defined
+    - graph_generation_result.rc != 0
+  tags: ['results', 'graphs']
+
+- name: Generate HTML report
+  ansible.builtin.command: >
+    python3 {{ local_scripts_dir }}/generate_html_report.py
+    {{ local_results_dir }}
+    {{ local_results_dir }}/graphs
+    {{ local_results_dir }}/benchmark_report.html
+  register: html_generation_result
+  run_once: true
+  delegate_to: localhost
+  when:
+    - collected_results.files is defined
+    - collected_results.files | length > 0
+
+- name: Display analysis completion message
+  ansible.builtin.debug:
+    msg: |
+      Benchmark analysis completed!
+      Results available in: {{ local_results_dir }}/
+      Summary report: {{ local_results_dir }}/benchmark_summary.txt
+      HTML report: {{ local_results_dir }}/benchmark_report.html
+      {% if ai_benchmark_enable_graphing | bool %}
+      Graphs generated in: {{ local_results_dir }}/graphs/
+      {% endif %}
+
+      To view the HTML report:
+      - Open {{ local_results_dir }}/benchmark_report.html in a web browser
+  run_once: true
+  delegate_to: localhost
+  when:
+    - collected_results.files is defined
+    - collected_results.files | length > 0
+    - analysis_result is defined
+    - analysis_result.rc == 0

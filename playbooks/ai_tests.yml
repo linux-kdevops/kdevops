@@ -1,0 +1,31 @@
+---
+# AI Tests/Benchmarks playbook
+# This ensures AI infrastructure is setup before running benchmarks
+
+- name: AI Tests - Ensure Milvus is installed
+  hosts: ai
+  become: true
+  become_user: root
+  roles:
+    - role: milvus
+      when: ai_vector_db_milvus | default(false) | bool
+      tags: ['ai', 'milvus', 'setup']
+
+- name: AI Tests - Vector Database Benchmarks
+  hosts: ai
+  become: true
+  vars:
+    # Skip infrastructure setup when running tests
+    ai_skip_setup: true
+  roles:
+    - role: ai_run_benchmarks
+      when: ai_vector_db_milvus | default(false) | bool
+      tags: ['ai', 'benchmark']
+
+- name: AI Tests - Results Collection
+  hosts: ai
+  become: true
+  roles:
+    - role: ai_collect_results
+      when: ai_collect_results | default(true) | bool
+      tags: ['ai', 'results']

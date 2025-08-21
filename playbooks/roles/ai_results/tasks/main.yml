@@ -1,0 +1,22 @@
+---
+# AI Results collection role
+# This role collects and aggregates benchmark results from various AI components
+
+- name: Create central results directory
+  ansible.builtin.file:
+    path: "{{ ai_benchmark_results_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Find all benchmark result files
+  ansible.builtin.find:
+    paths: "{{ ai_benchmark_results_dir }}"
+    patterns: "*.json"
+    recurse: true
+  register: result_files
+
+- name: Display found result files
+  ansible.builtin.debug:
+    msg: "Found {{ result_files.files | length }} result files"
+
+# Future: Add result aggregation, analysis, and reporting tasks here

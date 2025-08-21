@@ -1,0 +1,107 @@
+---
+- name: Install Python virtual environment support
+  ansible.builtin.package:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+  become: true
+
+- name: Check if virtual environment exists
+  ansible.builtin.stat:
+    path: "{{ data_path }}/ai-benchmark/venv"
+  register: venv_stat
+
+- name: Create Python virtual environment for AI benchmarks
+  ansible.builtin.command: python3 -m venv {{ data_path }}/ai-benchmark/venv
+  when: not venv_stat.stat.exists
+
+- name: Upgrade pip in virtual environment
+  ansible.builtin.command: "{{ data_path }}/ai-benchmark/venv/bin/python -m pip install --upgrade pip"
+  register: pip_upgrade
+  changed_when: "'Successfully installed' in pip_upgrade.stdout"
+
+- name: Install required Python packages in virtual environment
+  ansible.builtin.pip:
+    name:
+      - "pymilvus>={{ ai_vector_db_milvus_version }}"
+      - numpy
+      - pandas
+      - tqdm
+    virtualenv: "{{ data_path }}/ai-benchmark/venv"
+    state: present
+
+- name: Verify pymilvus is installed in virtual environment
+  ansible.builtin.command: "{{ data_path }}/ai-benchmark/venv/bin/python -c 'import pymilvus; print(pymilvus.__version__)'"
+  register: pymilvus_version
+  changed_when: false
+  failed_when: false
+
+- name: Display pymilvus version
+  ansible.builtin.debug:
+    msg: "pymilvus version: {{ pymilvus_version.stdout }}"
+  when: pymilvus_version.rc == 0
+
+- name: Check Docker Compose services status
+  ansible.builtin.shell: |
+    cd {{ ai_vector_db_milvus_config_dir }}
+    docker-compose ps --format json
+  when: ai_vector_db_milvus_docker | bool
+  become: true
+  register: docker_status_check
+  changed_when: false
+  failed_when: false
+
+- name: Start Milvus with Docker Compose
+  ansible.builtin.shell: |
+    cd {{ ai_vector_db_milvus_config_dir }}
+    docker-compose up -d
+  when: docker_status_check.rc != 0 or "running" not in docker_status_check.stdout
+  become: true
+  register: docker_compose_result
+  changed_when: "'Started' in docker_compose_result.stderr or 'Created' in docker_compose_result.stderr"
+
+- name: Wait for Milvus to be ready
+  ansible.builtin.wait_for:
+    port: "{{ ai_vector_db_milvus_port }}"
+    host: localhost
+    delay: 60
+    timeout: 300
+
+- name: Create benchmark scripts directory
+  ansible.builtin.file:
+    path: "{{ ai_vector_db_milvus_data_dir }}/scripts"
+    state: directory
+    mode: '0755'
+  register: scripts_dir_result
+
+- name: Check if benchmark scripts exist
+  ansible.builtin.stat:
+    path: "{{ ai_vector_db_milvus_data_dir }}/scripts/{{ item }}"
+  loop:
+    - milvus_benchmark.py
+    - milvus_utils.py
+  register: benchmark_scripts_check
+
+- name: Copy benchmark scripts
+  ansible.builtin.copy:
+    src: "{{ item.item }}"
+    dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/"
+    mode: '0755'
+  loop: "{{ benchmark_scripts_check.results }}"
+  when: not item.stat.exists or scripts_dir_result is changed
+
+- name: Create initial connection test script
+  ansible.builtin.template:
+    src: test_connection.py.j2
+    dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/test_connection.py"
+    mode: '0755'
+
+- name: Test Milvus connection
+  ansible.builtin.command: "{{ data_path }}/ai-benchmark/venv/bin/python {{ ai_vector_db_milvus_data_dir }}/scripts/test_connection.py"
+  register: connection_test
+  changed_when: false
+
+- name: Display connection test result
+  ansible.builtin.debug:
+    msg: "{{ connection_test.stdout }}"

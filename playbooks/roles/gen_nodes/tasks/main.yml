@@ -642,6 +642,40 @@
     - ansible_nodes_template.stat.exists
 
 
+- name: Generate the AI kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-ai'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-ai'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_ai
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+
+- name: Generate the AI kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-ai', kdevops_host_prefix + '-ai-dev'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-ai', kdevops_host_prefix + '-ai-dev'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_ai
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+
 - name: Get the control host's timezone
   ansible.builtin.command: "timedatectl show -p Timezone --value"
   register: kdevops_host_timezone

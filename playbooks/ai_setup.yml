@@ -1,0 +1,6 @@
+---
+- name: Setup AI benchmark environment
+  hosts: ai
+  roles:
+    - ai_setup
+  tags: ['ai', 'ai_setup']
