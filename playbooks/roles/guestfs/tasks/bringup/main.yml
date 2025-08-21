@@ -1,10 +1,15 @@
 ---
 - name: List defined libvirt guests
   run_once: true
+  delegate_to: localhost
   community.libvirt.virt:
     command: list_vms
     uri: "{{ libvirt_uri }}"
   register: defined_vms
+
+- name: Debug defined VMs
+  debug:
+    msg: "Hostname: {{ inventory_hostname }}, Defined VMs: {{ hostvars['localhost']['defined_vms']['list_vms'] | default([]) }}, Check: {{ inventory_hostname not in (hostvars['localhost']['defined_vms']['list_vms'] | default([])) }}"
 
 - name: Provision each target node
   when:
@@ -25,10 +30,13 @@
             path: "{{ ssh_key_dir }}"
             state: directory
             mode: "u=rwx"
+          delegate_to: localhost
 
         - name: Generate fresh keys for each target node
           ansible.builtin.command:
             cmd: 'ssh-keygen -q -t ed25519 -f {{ ssh_key }} -N ""'
+            creates: "{{ ssh_key }}"
+          delegate_to: localhost
 
     - name: Set the pathname of the root disk image for each target node
       ansible.builtin.set_fact:
@@ -38,15 +46,18 @@
       ansible.builtin.file:
         path: "{{ storagedir }}/{{ inventory_hostname }}"
         state: directory
+      delegate_to: localhost
 
     - name: Duplicate the root disk image for each target node
       ansible.builtin.command:
         cmd: "cp --reflink=auto {{ base_image }} {{ root_image }}"
+      delegate_to: localhost
 
     - name: Get the timezone of the control host
       ansible.builtin.command:
         cmd: "timedatectl show -p Timezone --value"
       register: host_timezone
+      delegate_to: localhost
 
     - name: Build the root image for each target node (as root)
       become: true
@@ -103,6 +114,7 @@
         name: "{{ inventory_hostname }}"
         xml: "{{ lookup('file', xml_file) }}"
         uri: "{{ libvirt_uri }}"
+      delegate_to: localhost
 
     - name: Find PCIe passthrough devices
       ansible.builtin.find:
@@ -110,6 +122,7 @@
         file_type: file
         patterns: "pcie_passthrough_*.xml"
       register: passthrough_devices
+      delegate_to: localhost
 
     - name: Attach PCIe passthrough devices to each target node
       environment:
@@ -124,6 +137,7 @@
       loop: "{{ passthrough_devices.files }}"
       loop_control:
         label: "Doing PCI-E passthrough for device {{ item }}"
+      delegate_to: localhost
       when:
         - passthrough_devices.matched > 0
 
@@ -142,3 +156,4 @@
     name: "{{ inventory_hostname }}"
     uri: "{{ libvirt_uri }}"
     state: running
+  delegate_to: localhost

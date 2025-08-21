@@ -52,7 +52,6 @@ Vector databases heavily depend on storage performance. The workflow tests acros
 - **XFS**: Default for many production deployments
 - **ext4**: Traditional Linux filesystem
 - **btrfs**: Copy-on-write with compression support
-- **ZFS**: Advanced features for data integrity
 
 ## Configuration Dimensions
 

@@ -1,0 +1,109 @@
+# AI Multi-Filesystem Performance Testing Configuration (Distro Kernel)
+# This configuration enables testing AI workloads across multiple filesystem
+# configurations including XFS (4k and 16k block sizes), ext4 (4k and 16k bigalloc),
+# and btrfs (default profile) using the distribution kernel without A/B testing.
+
+# Base virtualization setup
+CONFIG_LIBVIRT=y
+CONFIG_LIBVIRT_MACHINE_TYPE_Q35=y
+CONFIG_LIBVIRT_STORAGE_POOL_PATH="/opt/kdevops/libvirt"
+CONFIG_LIBVIRT_ENABLE_LARGEIO=y
+CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_NVME=y
+CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_SIZE="50GiB"
+
+# Network configuration
+CONFIG_LIBVIRT_ENABLE_BRIDGED_NETWORKING=y
+CONFIG_LIBVIRT_NET_NAME="kdevops"
+
+# Host configuration
+CONFIG_KDEVOPS_HOSTS_TEMPLATE="hosts.j2"
+CONFIG_VAGRANT_NVME_DISK_SIZE="50GiB"
+
+# Base system requirements
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_AI=y
+
+# AI Workflow Configuration
+CONFIG_KDEVOPS_WORKFLOW_ENABLE_AI=y
+CONFIG_AI_TESTS_VECTOR_DATABASE=y
+CONFIG_AI_MILVUS_DOCKER=y
+CONFIG_AI_VECTOR_DB_TYPE_MILVUS=y
+
+# Milvus Configuration
+CONFIG_AI_MILVUS_HOST="localhost"
+CONFIG_AI_MILVUS_PORT=19530
+CONFIG_AI_MILVUS_DATABASE_NAME="ai_benchmark"
+
+# Test Parameters (optimized for multi-fs testing)
+CONFIG_AI_BENCHMARK_ITERATIONS=3
+CONFIG_AI_DATASET_1M=y
+CONFIG_AI_VECTOR_DIM_128=y
+CONFIG_AI_BENCHMARK_RUNTIME="180"
+CONFIG_AI_BENCHMARK_WARMUP_TIME="30"
+
+# Query patterns
+CONFIG_AI_BENCHMARK_QUERY_TOPK_1=y
+CONFIG_AI_BENCHMARK_QUERY_TOPK_10=y
+
+# Batch sizes
+CONFIG_AI_BENCHMARK_BATCH_1=y
+CONFIG_AI_BENCHMARK_BATCH_10=y
+
+# Index configuration
+CONFIG_AI_INDEX_HNSW=y
+CONFIG_AI_INDEX_TYPE="HNSW"
+CONFIG_AI_INDEX_HNSW_M=16
+CONFIG_AI_INDEX_HNSW_EF_CONSTRUCTION=200
+CONFIG_AI_INDEX_HNSW_EF=64
+
+# Results and visualization
+CONFIG_AI_BENCHMARK_RESULTS_DIR="/data/ai-benchmark"
+CONFIG_AI_BENCHMARK_ENABLE_GRAPHING=y
+CONFIG_AI_BENCHMARK_GRAPH_FORMAT="png"
+CONFIG_AI_BENCHMARK_GRAPH_DPI=300
+CONFIG_AI_BENCHMARK_GRAPH_THEME="default"
+
+# Multi-filesystem testing configuration
+CONFIG_AI_ENABLE_MULTIFS_TESTING=y
+CONFIG_AI_MULTIFS_RESULTS_DIR="/data/ai-multifs-benchmark"
+
+# Enable dedicated Milvus storage with node-based filesystem
+CONFIG_AI_MILVUS_STORAGE_ENABLE=y
+CONFIG_AI_MILVUS_USE_NODE_FS=y
+CONFIG_AI_MILVUS_DEVICE="/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops3"
+CONFIG_AI_MILVUS_MOUNT_POINT="/data/milvus"
+
+# XFS configurations
+CONFIG_AI_MULTIFS_TEST_XFS=y
+CONFIG_AI_MULTIFS_XFS_4K_4KS=y
+CONFIG_AI_MULTIFS_XFS_16K_4KS=y
+CONFIG_AI_MULTIFS_XFS_32K_4KS=y
+CONFIG_AI_MULTIFS_XFS_64K_4KS=y
+
+# ext4 configurations
+CONFIG_AI_MULTIFS_TEST_EXT4=y
+CONFIG_AI_MULTIFS_EXT4_4K=y
+CONFIG_AI_MULTIFS_EXT4_16K_BIGALLOC=y
+
+# btrfs configurations
+CONFIG_AI_MULTIFS_TEST_BTRFS=y
+CONFIG_AI_MULTIFS_BTRFS_DEFAULT=y
+
+# Standard filesystem configuration (for comparison)
+CONFIG_AI_FILESYSTEM_XFS=y
+CONFIG_AI_FILESYSTEM="xfs"
+CONFIG_AI_FSTYPE="xfs"
+CONFIG_AI_XFS_MKFS_OPTS="-f -s size=4096"
+CONFIG_AI_XFS_MOUNT_OPTS="rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota"
+
+# Use distribution kernel (no kernel building)
+# CONFIG_BOOTLINUX is not set
+
+# Memory configuration
+CONFIG_LIBVIRT_MEM_MB=16384
+
+# Disable A/B testing to use single baseline configuration
+# CONFIG_KDEVOPS_BASELINE_AND_DEV is not set

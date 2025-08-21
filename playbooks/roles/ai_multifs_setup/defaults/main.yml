@@ -1,0 +1,49 @@
+---
+# Default values for AI multi-filesystem testing
+ai_multifs_results_dir: "/data/ai-multifs-benchmark"
+ai_multifs_device: "/dev/vdb"
+ai_multifs_mount_point: "/mnt/ai-multifs-test"
+
+# Filesystem configurations to test
+ai_multifs_configurations:
+  - name: "xfs_4k_4ks"
+    filesystem: "xfs"
+    mkfs_cmd: "mkfs.xfs -f -s size=4096 -b size=4096"
+    mount_opts: "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota"
+    enabled: "{{ ai_multifs_test_xfs and ai_multifs_xfs_4k_4ks }}"
+
+  - name: "xfs_16k_4ks"
+    filesystem: "xfs"
+    mkfs_cmd: "mkfs.xfs -f -s size=4096 -b size=16384"
+    mount_opts: "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota"
+    enabled: "{{ ai_multifs_test_xfs and ai_multifs_xfs_16k_4ks }}"
+
+  - name: "xfs_32k_4ks"
+    filesystem: "xfs"
+    mkfs_cmd: "mkfs.xfs -f -s size=4096 -b size=32768"
+    mount_opts: "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota"
+    enabled: "{{ ai_multifs_test_xfs and ai_multifs_xfs_32k_4ks }}"
+
+  - name: "xfs_64k_4ks"
+    filesystem: "xfs"
+    mkfs_cmd: "mkfs.xfs -f -s size=4096 -b size=65536"
+    mount_opts: "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota"
+    enabled: "{{ ai_multifs_test_xfs and ai_multifs_xfs_64k_4ks }}"
+
+  - name: "ext4_4k"
+    filesystem: "ext4"
+    mkfs_cmd: "mkfs.ext4 -F -b 4096"
+    mount_opts: "rw,relatime,data=ordered"
+    enabled: "{{ ai_multifs_test_ext4 and ai_multifs_ext4_4k }}"
+
+  - name: "ext4_16k_bigalloc"
+    filesystem: "ext4"
+    mkfs_cmd: "mkfs.ext4 -F -b 4096 -C 16384"
+    mount_opts: "rw,relatime,data=ordered"
+    enabled: "{{ ai_multifs_test_ext4 and ai_multifs_ext4_16k_bigalloc }}"
+
+  - name: "btrfs_default"
+    filesystem: "btrfs"
+    mkfs_cmd: "mkfs.btrfs -f"
+    mount_opts: "rw,relatime,space_cache=v2,discard=async"
+    enabled: "{{ ai_multifs_test_btrfs and ai_multifs_btrfs_default }}"
