@@ -1,0 +1,516 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+- name: Install NixOS dependencies on localhost
+  hosts: localhost
+  gather_facts: true
+  tags: install-deps
+  tasks:
+    - name: Check if nix is installed
+      ansible.builtin.command: which nix
+      register: nix_check
+      # TODO: Review - was ignore_errors: true
+      failed_when: false  # Always succeed - review this condition
+      changed_when: false
+
+    - name: Install nix package manager
+      become: true
+      when: nix_check.rc != 0
+      block:
+        - name: Download nix installer
+          ansible.builtin.get_url:
+            url: https://nixos.org/nix/install
+            dest: /tmp/install-nix.sh
+            mode: '0755'
+
+        - name: Install nix
+          ansible.builtin.shell: |
+            sh /tmp/install-nix.sh --daemon --yes
+          args:
+            creates: /nix
+
+    - name: Ensure libvirt is installed
+      become: true
+      ansible.builtin.package:
+        name:
+          - libvirt0
+          - qemu-kvm
+          - libvirt-daemon-system
+          - libvirt-clients
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure libvirt is installed (RedHat)
+      become: true
+      ansible.builtin.package:
+        name:
+          - libvirt
+          - qemu-kvm
+          - libvirt-daemon
+        state: present
+      when: ansible_os_family == "RedHat"
+
+- name: Generate NixOS configurations
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: generate-configs
+  tasks:
+    - name: Create NixOS directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ nixos_config_dir }}"
+        - "{{ nixos_generation_dir }}"
+        - "{{ nixos_storage_dir }}"
+
+    - name: Ensure SSH key exists for configuration
+      block:
+        - name: Determine SSH key path based on directory
+          ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
+          register: ssh_key_path_result
+          changed_when: false
+
+        - name: Set SSH key path
+          ansible.builtin.set_fact:
+            nixos_ssh_key_path: "{{ ssh_key_path_result.stdout | trim }}"
+
+        - name: Generate SSH key for NixOS VMs if not exists
+          openssh_keypair:
+            path: "{{ nixos_ssh_key_path }}"
+            type: rsa
+            size: 2048
+            comment: "kdevops@nixos"
+            force: false
+
+        - name: Read SSH public key
+          ansible.builtin.slurp:
+            src: "{{ nixos_ssh_key_path }}.pub"
+          register: ssh_public_key
+
+        - name: Set SSH key in fact
+          ansible.builtin.set_fact:
+            nixos_ssh_authorized_key: "{{ ssh_public_key['content'] | b64decode | trim }}"
+
+    - name: Template base NixOS configuration
+      ansible.builtin.template:
+        src: nixos/configuration.nix.j2
+        dest: "{{ nixos_generation_dir }}/configuration.nix"
+        mode: '0644'
+
+    - name: Template hardware configuration
+      ansible.builtin.template:
+        src: nixos/hardware-configuration.nix.j2
+        dest: "{{ nixos_generation_dir }}/hardware-configuration.nix"
+        mode: '0644'
+
+    - name: Generate workflow dependencies configuration
+      ansible.builtin.template:
+        src: nixos/workflow-deps.nix.j2
+        dest: "{{ nixos_generation_dir }}/workflow-deps.nix"
+        mode: '0644'
+      when: nixos_enable_workflow_deps | bool
+
+    - name: Debug SSH key path
+      ansible.builtin.debug:
+        msg: "Using SSH key: {{ hostvars['localhost']['nixos_ssh_key_path'] | default('NOT SET') }}"
+
+    - name: Generate VM definitions
+      ansible.builtin.template:
+        src: nixos/vms.nix.j2
+        dest: "{{ nixos_generation_dir }}/vms.nix"
+        mode: '0644'
+
+    - name: Generate flake.nix if enabled
+      ansible.builtin.template:
+        src: nixos/flake.nix.j2
+        dest: "{{ nixos_config_dir }}/flake.nix"
+        mode: '0644'
+      when: nixos_use_flakes | bool
+
+# The setup phase is integrated into generate-configs to ensure SSH keys are available
+
+- name: Build and deploy NixOS VMs
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: build-vms
+  tasks:
+    - name: Create disk image configuration
+      ansible.builtin.copy:
+        content: |
+          { config, lib, pkgs, ... }:
+
+          {
+            imports = [
+              ./configuration.nix
+            ];
+
+            # Ensure proper boot configuration for disk image
+            boot.loader.grub.device = lib.mkForce "/dev/vda";
+            boot.loader.grub.enable = lib.mkForce true;
+
+            fileSystems."/" = lib.mkForce {
+              device = "/dev/disk/by-label/nixos";
+              fsType = "ext4";
+              autoResize = true;
+            };
+          }
+        dest: "{{ nixos_generation_dir }}/disk-image.nix"
+
+    - name: Check if NixOS disk image already exists
+      ansible.builtin.stat:
+        path: "{{ nixos_storage_dir }}/nixos-image-result"
+      register: disk_image_exists
+
+    - name: Build NixOS disk image
+      ansible.builtin.shell: |
+        # Source nix profile and set PATH
+        export PATH="/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+        if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix.sh ]; then
+          . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+        fi
+
+        # Configure Nix to use local mirror if available
+        {% if nixos_use_local_mirror is defined and nixos_use_local_mirror and nixos_mirror_url is defined and nixos_mirror_url != "" %}
+        export NIX_CONFIG="substituters = {{ nixos_mirror_url }} https://cache.nixos.org"
+        echo "Using local Nix cache mirror: {{ nixos_mirror_url }}"
+        {% endif %}
+
+        cd {{ nixos_generation_dir }}
+
+        # Build a QCOW2 disk image with NixOS installed
+        echo "Building NixOS disk image (this may take a while)..."
+
+        # Create a wrapper expression for make-disk-image.nix
+        cat > make-image.nix <<'EOF'
+        let
+          pkgs = import <nixpkgs> {};
+          lib = pkgs.lib;
+
+          # Build a complete NixOS system configuration
+          nixosSystem = import "${pkgs.path}/nixos" {
+            configuration = {
+              imports = [
+                ./configuration.nix
+                ./disk-image.nix
+              ];
+
+              # Ensure we have a bootable system
+              boot.loader.grub.enable = lib.mkForce true;
+              boot.loader.grub.device = lib.mkForce "/dev/vda";
+              boot.loader.grub.configurationLimit = 1;
+
+              # Critical: ensure the system can boot
+              boot.kernelModules = [ "virtio_pci" "virtio_blk" "virtio_net" ];
+              boot.initrd.availableKernelModules = [ "virtio_pci" "virtio_blk" "virtio_net" ];
+
+              # Ensure networking works
+              networking.useDHCP = lib.mkDefault true;
+
+              # Make sure we have a working system
+              system.stateVersion = "24.05";
+
+              # Ensure SSH starts
+              systemd.services.sshd.wantedBy = [ "multi-user.target" ];
+            };
+          };
+        in
+        import "${pkgs.path}/nixos/lib/make-disk-image.nix" {
+          inherit pkgs lib;
+          config = nixosSystem.config;
+          diskSize = 20480;
+          format = "qcow2";
+          partitionTableType = "legacy";
+          # Important: include the bootloader!
+          installBootLoader = true;
+        }
+        EOF
+
+        # Force rebuild by clearing any cached result
+        rm -f {{ nixos_storage_dir }}/nixos-image-result
+
+        nix-build make-image.nix \
+          --no-out-link \
+          --arg forceRebuild true \
+          -o {{ nixos_storage_dir }}/nixos-image-result
+
+        # Return the path to the disk image
+        readlink -f {{ nixos_storage_dir }}/nixos-image-result/nixos.qcow2
+      register: build_result
+      changed_when: "'Building NixOS disk image' in build_result.stdout"
+      when: not disk_image_exists.stat.exists
+
+    - name: Get existing disk image path
+      ansible.builtin.shell: |
+        readlink -f {{ nixos_storage_dir }}/nixos-image-result/nixos.qcow2
+      register: existing_image_path
+      when: disk_image_exists.stat.exists
+
+    - name: Store disk image path
+      ansible.builtin.set_fact:
+        nixos_disk_image_path: >-
+          {{
+            build_result.stdout_lines | last | trim
+            if (build_result.stdout_lines is defined)
+            else existing_image_path.stdout | trim
+          }}
+
+    - name: Copy NixOS disk image for each VM
+      ansible.builtin.shell: |
+        SOURCE_IMAGE="{{ nixos_disk_image_path | default(nixos_storage_dir + '/nixos-image-result/nixos.qcow2') }}"
+        TARGET_IMAGE="{{ nixos_storage_dir }}/{{ item }}.qcow2"
+
+        # Remove target if it exists and copy fresh
+        if [ -f "$TARGET_IMAGE" ]; then
+          rm -f "$TARGET_IMAGE"
+        fi
+
+        cp "$SOURCE_IMAGE" "$TARGET_IMAGE"
+        chmod u+w "$TARGET_IMAGE"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      when: nixos_disk_image_path is defined
+
+    - name: Generate VM wrapper scripts
+      ansible.builtin.template:
+        src: nixos/run-vm-wrapper.sh.j2
+        dest: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
+        mode: '0755'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        index_var: vm_idx
+      vars:
+        vm_name: "{{ item }}"
+        vm_index: "{{ vm_idx }}"
+        vm_memory: "{{ nixos_vm_memory_mb | default(4096) }}"
+        vm_vcpus: "{{ nixos_vm_vcpus | default(4) }}"
+
+- name: Ensure default libvirt network is available
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: bringup
+  tasks:
+    - name: Check if default network exists and is active
+      ansible.builtin.shell: virsh net-info default
+      register: default_network_info
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: Start default network if not active
+      ansible.builtin.shell: virsh net-start default
+      when: default_network_info.rc != 0 or 'Active:' not in default_network_info.stdout or 'yes' not in default_network_info.stdout.split('Active:')[1].split('\n')[0]
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+- name: Provision NixOS VMs with libvirt
+  hosts: baseline,dev
+  gather_facts: false
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: bringup
+  tasks:
+    - name: Check if VM already exists
+      ansible.builtin.shell: virsh domstate "{{ inventory_hostname }}"
+      register: vm_status
+      failed_when: false
+      delegate_to: localhost
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: Provision VM with libvirt
+      when: vm_status.rc != 0 or 'shut off' in vm_status.stdout
+      delegate_to: localhost
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+      block:
+        - name: Generate libvirt XML for VM
+          ansible.builtin.template:
+            src: nixos/vm-libvirt.xml.j2
+            dest: "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
+          vars:
+            vm_name: "{{ inventory_hostname }}"
+            vm_memory: "{{ nixos_vm_memory_mb | default(4096) }}"
+            vm_vcpus: "{{ nixos_vm_vcpus | default(4) }}"
+            vm_disk: "{{ nixos_storage_dir }}/{{ inventory_hostname }}.qcow2"
+
+        - name: Define VM in libvirt
+          ansible.builtin.shell: virsh define "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
+          failed_when: false
+
+        - name: Start VM
+          ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+          failed_when: false
+
+    - name: Ensure VM is running
+      ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+      register: start_result
+      failed_when:
+        - start_result.rc != 0
+        - "'already active' not in start_result.stderr"
+      delegate_to: localhost
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+- name: Setup SSH access for NixOS VMs
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: bringup
+  tasks:
+    - name: Wait for VMs to get IP addresses from DHCP
+      ansible.builtin.shell: |
+        for i in {1..90}; do
+          IP=$(virsh domifaddr {{ item }} --source lease 2>/dev/null | awk '/192\.168\.122\./ {print $4}' | cut -d'/' -f1)
+          if [ -n "$IP" ]; then
+            echo "$IP"
+            exit 0
+          fi
+          sleep 3
+        done
+        exit 1
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      register: vm_ips
+      retries: 2
+      delay: 10
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: Set VM IP facts
+      ansible.builtin.set_fact:
+        nixos_vm_ips: "{{ dict(groups['all'] | reject('equalto', 'localhost') | list | zip(vm_ips.results | map(attribute='stdout'))) }}"
+
+    - name: Determine SSH key path for SSH config update
+      ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
+      register: ssh_key_path_for_config
+      changed_when: false
+
+    - name: Wait for SSH to be available on VMs
+      ansible.builtin.wait_for:
+        host: "{{ nixos_vm_ips[item] }}"
+        port: 22
+        delay: 10
+        timeout: 300
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Update SSH config for NixOS VMs
+      ansible.builtin.command: |
+        python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py update \
+          {{ item }} \
+          {{ nixos_vm_ips[item] }} \
+          22 \
+          kdevops \
+          {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+          {{ ssh_key_path_for_config.stdout | trim }} \
+          'NixOS VM'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      when: nixos_update_ssh_config | default(true) | bool
+
+- name: Show VM access information
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: console
+  tasks:
+    - name: Display VM access information
+      ansible.builtin.debug:
+        msg: |
+          NixOS VMs are running and accessible via libvirt.
+
+          SSH Access:
+          {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+          - {{ vm }}: ssh {{ vm }}
+          {% endfor %}
+
+          VM Management:
+          {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+          - {{ vm }}: virsh {start|shutdown|destroy} {{ vm }}
+          {% endfor %}
+
+          VM Status:
+          - Check status: virsh list --all
+          - Get IP: virsh domifaddr <vm_name>
+
+- name: Destroy NixOS VMs
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tags: [destroy, never]
+  tasks:
+    - name: Stop VMs using wrapper scripts
+      ansible.builtin.command: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh stop"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      # TODO: Review - was ignore_errors: true
+      failed_when: false  # Always succeed - review this condition
+
+    - name: Remove SSH config entries for NixOS VMs
+      ansible.builtin.command: |
+        python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py remove \
+          {{ item }} \
+          '' \
+          '' \
+          '' \
+          {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+          '' \
+          'NixOS VM'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      when: nixos_update_ssh_config | default(true) | bool
+      # TODO: Review - was ignore_errors: true
+      failed_when: false  # Always succeed - review this condition
+
+    - name: Remove VM disk images
+      ansible.builtin.file:
+        path: "{{ nixos_storage_dir }}/{{ item }}.qcow2"
+        state: absent
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Remove VM wrapper scripts
+      ansible.builtin.file:
+        path: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
+        state: absent
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Remove NixOS disk image symlink
+      ansible.builtin.file:
+        path: "{{ nixos_storage_dir }}/nixos-image-result"
+        state: absent
+
+    - name: Remove extra drive directories
+      ansible.builtin.file:
+        path: "{{ nixos_storage_dir }}/extra-drives"
+        state: absent
+
+    - name: Clean up generated NixOS configuration
+      ansible.builtin.file:
+        path: "{{ nixos_generation_dir }}"
+        state: absent
+
+    - name: Garbage collect cached NixOS disk images from Nix store
+      ansible.builtin.shell: |
+        # Source nix profile if available
+        if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix.sh ]; then
+          . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+        fi
+
+        # Find nix-collect-garbage command
+        NIX_COLLECT_GARBAGE=$(which nix-collect-garbage 2>/dev/null || find /nix -name "nix-collect-garbage" -type f 2>/dev/null | head -1)
+
+        if [ -n "$NIX_COLLECT_GARBAGE" ]; then
+          echo "Running Nix garbage collection to remove cached disk images..."
+          sudo $NIX_COLLECT_GARBAGE -d 2>&1 | grep -E "(deleting|freed|store paths)" || true
+        else
+          echo "Warning: nix-collect-garbage not found, cached images may remain"
+        fi
+      register: gc_result
+      failed_when: false
+      changed_when: "'freed' in gc_result.stdout"

@@ -1,0 +1,38 @@
+{
+  description = "kdevops NixOS VMs";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/{{ nixos_channel }}";
+  };
+
+  outputs = { self, nixpkgs }: {
+    nixosConfigurations = {
+{% for node in groups['all'] if node != 'localhost' %}
+      "{{ node }}" = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./generated/configuration.nix
+          ./generated/hardware-configuration.nix
+{% if nixos_enable_workflow_deps %}
+          ./generated/workflow-deps.nix
+{% endif %}
+          ({ ... }: {
+            networking.hostName = "{{ node }}";
+          })
+        ];
+      };
+{% endfor %}
+    };
+
+    # Build all VMs
+    defaultPackage.x86_64-linux =
+      nixpkgs.legacyPackages.x86_64-linux.writeShellScriptBin "build-vms" ''
+        echo "Building NixOS VMs..."
+{% for node in groups['all'] if node != 'localhost' %}
+        echo "Building {{ node }}..."
+        nix build .#nixosConfigurations.{{ node }}.config.system.build.vm
+{% endfor %}
+        echo "All VMs built successfully!"
+      '';
+  };
+}

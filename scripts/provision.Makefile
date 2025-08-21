@@ -60,6 +60,10 @@ ifeq (y,$(CONFIG_GUESTFS))
 include scripts/guestfs.Makefile
 endif
 
+ifeq (y,$(CONFIG_NIXOS))
+include scripts/nixos.Makefile
+endif
+
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_DEVCONFIG)
 

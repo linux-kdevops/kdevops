@@ -79,6 +79,20 @@
   when:
     - not kdevops_workflows_dedicated_workflow
     - ansible_hosts_template.stat.exists
+    - not kdevops_enable_nixos|default(false)|bool
+
+- name: Generate the Ansible inventory file for NixOS
+  tags: ['hosts']
+  ansible.builtin.template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ ansible_cfg_inventory }}"
+    force: true
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - not kdevops_workflows_dedicated_workflow
+    - ansible_hosts_template.stat.exists
+    - kdevops_enable_nixos|default(false)|bool
 
 - name: Update Ansible inventory access modification time so make sees it updated
   ansible.builtin.file:
@@ -339,6 +353,7 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_fio_tests
     - ansible_hosts_template.stat.exists
+    - not kdevops_enable_nixos|default(false)|bool
 
 
 - name: Infer enabled mmtests test types
