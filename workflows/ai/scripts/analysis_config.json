@@ -2,5 +2,5 @@
   "enable_graphing": true,
   "graph_format": "png",
   "graph_dpi": 150,
-  "graph_theme": "seaborn"
+  "graph_theme": "default"
 }

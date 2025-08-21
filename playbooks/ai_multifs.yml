@@ -1,0 +1,24 @@
+---
+- hosts: baseline
+  become: yes
+  gather_facts: yes
+  vars:
+    ai_benchmark_results_dir: "{{ ai_multifs_results_dir | default('/data/ai-multifs-benchmark') }}"
+  roles:
+    - role: ai_multifs_setup
+    - role: ai_multifs_run
+  tasks:
+    - name: Final multi-filesystem testing summary
+      debug:
+        msg: |
+          Multi-filesystem AI benchmark testing completed!
+
+          Results directory: {{ ai_multifs_results_dir }}
+          Comparison report: {{ ai_multifs_results_dir }}/comparison/multi_filesystem_comparison.html
+
+          Individual filesystem results:
+          {% for config in ai_multifs_configurations %}
+          {% if config.enabled %}
+          - {{ config.name }}: {{ ai_multifs_results_dir }}/{{ config.name }}/
+          {% endif %}
+          {% endfor %}

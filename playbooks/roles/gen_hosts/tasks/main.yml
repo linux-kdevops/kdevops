@@ -381,6 +381,25 @@
     - workflows_reboot_limit
     - ansible_hosts_template.stat.exists
 
+- name: Load AI nodes configuration for multi-filesystem setup
+  include_vars:
+    file: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    name: guestfs_nodes
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_ai
+    - ai_enable_multifs_testing|default(false)|bool
+    - ansible_hosts_template.stat.exists
+
+- name: Extract AI node names for multi-filesystem setup
+  set_fact:
+    all_generic_nodes: "{{ guestfs_nodes.guestfs_nodes | map(attribute='name') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_ai
+    - ai_enable_multifs_testing|default(false)|bool
+    - guestfs_nodes is defined
+
 - name: Generate the Ansible hosts file for a dedicated AI setup
   tags: ['hosts']
   ansible.builtin.template:

@@ -119,39 +119,30 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 [ai:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
-{% set fs_configs = [] %}
+{# Individual section groups for multi-filesystem testing #}
+{% set section_names = [] %}
 {% for node in all_generic_nodes %}
-{% set node_parts = node.split('-') %}
-{% if node_parts|length >= 3 %}
-{% set fs_type = node_parts[2] %}
-{% set fs_config = node_parts[3:] | select('ne', 'dev') | join('_') %}
-{% set fs_group = fs_type + '_' + fs_config if fs_config else fs_type %}
-{% if fs_group not in fs_configs %}
-{% set _ = fs_configs.append(fs_group) %}
+{% if not node.endswith('-dev') %}
+{% set section = node.replace(kdevops_host_prefix + '-ai-', '') %}
+{% if section != kdevops_host_prefix + '-ai' %}
+{% if section_names.append(section) %}{% endif %}
 {% endif %}
 {% endif %}
 {% endfor %}
 
-{% for fs_group in fs_configs %}
-[ai_{{ fs_group }}]
-{% for node in all_generic_nodes %}
-{% set node_parts = node.split('-') %}
-{% if node_parts|length >= 3 %}
-{% set fs_type = node_parts[2] %}
-{% set fs_config = node_parts[3:] | select('ne', 'dev') | join('_') %}
-{% set node_fs_group = fs_type + '_' + fs_config if fs_config else fs_type %}
-{% if node_fs_group == fs_group %}
-{{ node }}
+{% for section in section_names %}
+[ai_{{ section | replace('-', '_') }}]
+{{ kdevops_host_prefix }}-ai-{{ section }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-ai-{{ section }}-dev
 {% endif %}
-{% endif %}
-{% endfor %}
 
-[ai_{{ fs_group }}:vars]
+[ai_{{ section | replace('-', '_') }}:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
 {% endfor %}
 {% else %}
-{# Single-node AI hosts #}
+{# Single filesystem hosts (original behavior) #}
 [all]
 localhost ansible_connection=local
 {{ kdevops_host_prefix }}-ai
