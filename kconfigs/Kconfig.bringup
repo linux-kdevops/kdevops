@@ -5,6 +5,10 @@ config KDEVOPS_ENABLE_GUESTFS
 	bool
 	output yaml
 
+config KDEVOPS_ENABLE_NIXOS
+	bool
+	output yaml
+
 choice
 	prompt "Node bring up method"
 	default GUESTFS
@@ -39,6 +43,21 @@ config TERRAFORM
 
 	  If you are not using a cloud environment just disable this.
 
+config NIXOS
+	bool "NixOS declarative configuration with libvirt"
+	select KDEVOPS_ENABLE_NIXOS
+	select EXTRA_STORAGE_SUPPORTS_512
+	select EXTRA_STORAGE_SUPPORTS_1K
+	select EXTRA_STORAGE_SUPPORTS_2K
+	select EXTRA_STORAGE_SUPPORTS_4K
+	select EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use NixOS declarative configuration system to provision VMs with
+	  libvirt. This provides a purely functional approach to VM management
+	  with automatic dependency resolution based on enabled workflows.
+	  NixOS will automatically infer the libvirt session type (system vs
+	  user) based on your distribution's defaults, similar to guestfs.
+
 config SKIP_BRINGUP
 	bool "Skip bring up - bare metal or existing nodes"
 	select EXTRA_STORAGE_SUPPORTS_512
@@ -55,10 +74,11 @@ endchoice
 
 config LIBVIRT
 	bool
-	depends on GUESTFS
+	depends on GUESTFS || NIXOS
 	default y
 
 source "kconfigs/Kconfig.guestfs"
+source "kconfigs/Kconfig.nixos"
 source "terraform/Kconfig"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"

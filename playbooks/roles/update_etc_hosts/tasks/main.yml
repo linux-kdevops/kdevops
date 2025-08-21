@@ -57,6 +57,7 @@
   with_items: "{{ ueh_hosts }}"
   when:
     - terraform_private_net_enabled
+    - not (kdevops_enable_nixos | default(false))
 
 - name: Add IP address of all hosts to all hosts
   become: true
@@ -69,6 +70,7 @@
   with_items: "{{ ueh_hosts }}"
   when:
     - not terraform_private_net_enabled
+    - not (kdevops_enable_nixos | default(false))
 
 - name: Fix up hostname on Debian guestfs hosts
   become: true

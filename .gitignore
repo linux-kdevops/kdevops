@@ -100,3 +100,6 @@ scripts/kconfig/.nconf-cfg
 Kconfig.passthrough_libvirt.generated
 
 archive/
+
+# NixOS generated files
+nixos/generated/

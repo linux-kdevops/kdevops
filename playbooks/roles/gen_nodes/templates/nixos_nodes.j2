@@ -1,0 +1,14 @@
+---
+# Ansible nodes file generated for NixOS VMs
+
+{% for node in nodes %}
+{{ node }}:
+  ansible_host: 192.168.100.{{ loop.index + 1 }}
+  ansible_user: kdevops
+  ansible_ssh_private_key_file: {{ topdir_path }}/.ssh/kdevops_id_rsa
+  ansible_python_interpreter: /run/current-system/sw/bin/python3
+  vm_name: {{ node }}
+  vm_memory_mb: {{ nixos_vm_memory_mb }}
+  vm_vcpus: {{ nixos_vm_vcpus }}
+  vm_disk_size_gb: {{ nixos_vm_disk_size_gb }}
+{% endfor %}

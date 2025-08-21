@@ -1,0 +1,101 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+if NIXOS
+
+config NIXOS_STORAGE_DIR
+	string
+	output yaml
+	default "{{ kdevops_storage_pool_path }}/nixos"
+
+config NIXOS_CONFIG_DIR
+	string
+	output yaml
+	default "{{ topdir_path }}/nixos"
+
+config NIXOS_GENERATION_DIR
+	string
+	output yaml
+	default "{{ nixos_config_dir }}/generated"
+
+config NIXOS_USE_FLAKES
+	bool "Use Nix flakes for configuration"
+	output yaml
+	default y
+	help
+	  Use the modern Nix flakes system for managing NixOS configurations.
+	  This provides better reproducibility and dependency management.
+	  If disabled, will use traditional configuration.nix approach.
+
+config NIXOS_CHANNEL
+	string "NixOS channel to use"
+	output yaml
+	default "nixos-unstable"
+	help
+	  The NixOS channel to use for the VMs. Options include:
+	  - nixos-unstable: Latest packages, rolling release
+	  - nixos-24.05: Stable release from May 2024
+	  - nixos-23.11: Stable release from November 2023
+
+config NIXOS_ENABLE_WORKFLOW_DEPS
+	bool "Automatically install workflow dependencies"
+	output yaml
+	default y
+	help
+	  When enabled, NixOS will automatically generate package dependencies
+	  based on all enabled workflows (fstests, blktests, etc.) and include
+	  them in the VM configuration.
+
+config NIXOS_LIBVIRT_SESSION_INFERENCE
+	bool "Automatically infer libvirt session type"
+	output yaml
+	default y
+	help
+	  Automatically detect whether to use libvirt system or user session
+	  based on your distribution's defaults. Similar to guestfs, this will
+	  use system session for most distributions and user session for Fedora.
+
+config NIXOS_CUSTOM_CONFIG_PATH
+	string "Path to custom NixOS configuration template"
+	output yaml
+	default ""
+	help
+	  Optional path to a custom NixOS configuration template that will be
+	  merged with the auto-generated configuration. This allows you to add
+	  custom packages, services, or other NixOS settings.
+
+config NIXOS_VM_MEMORY_MB
+	int "Memory allocation per VM (MB)"
+	output yaml
+	default 4096
+	help
+	  Amount of memory to allocate to each NixOS VM in megabytes.
+
+config NIXOS_VM_DISK_SIZE_GB
+	int "Disk size per VM (GB)"
+	output yaml
+	default 20
+	help
+	  Size of the primary disk for each NixOS VM in gigabytes.
+
+config NIXOS_VM_VCPUS
+	int "Number of vCPUs per VM"
+	output yaml
+	default 4
+	help
+	  Number of virtual CPUs to allocate to each NixOS VM.
+
+config NIXOS_SSH_PORT
+	int "SSH port for NixOS VMs"
+	output yaml
+	default 22
+	help
+	  SSH port to use for connecting to NixOS VMs.
+
+config NIXOS_DEBUG_MODE
+	bool "Enable debug mode for NixOS provisioning"
+	default n
+	help
+	  Enable verbose output and debugging information during NixOS
+	  VM provisioning and configuration generation.
+
+endif # NIXOS

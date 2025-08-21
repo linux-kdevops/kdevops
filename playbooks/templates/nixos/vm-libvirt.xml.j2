@@ -1,0 +1,96 @@
+<domain type='kvm'>
+  <name>{{ vm_name }}</name>
+  <memory unit='MiB'>{{ vm_memory }}</memory>
+  <vcpu placement='static'>{{ vm_vcpus }}</vcpu>
+
+  <os>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+
+  <features>
+    <acpi/>
+    <apic/>
+    <vmport state='off'/>
+  </features>
+
+  <cpu mode='host-passthrough'>
+    <topology sockets='1' cores='{{ vm_vcpus }}' threads='1'/>
+  </cpu>
+
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='none' io='native'/>
+      <source file='{{ vm_disk }}'/>
+      <target dev='vda' bus='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
+    </disk>
+
+{% if bootlinux_9p is defined and bootlinux_9p %}
+    <!-- 9P filesystem for kernel source sharing -->
+    <filesystem type='mount' accessmode='passthrough'>
+      <source dir='{{ topdir_path }}/linux'/>
+      <target dir='linux_source'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
+    </filesystem>
+{% endif %}
+
+    <interface type='network'>
+      <source network='default'/>
+      <model type='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+    </interface>
+
+    <serial type='pty'>
+      <target type='isa-serial' port='0'>
+        <model name='isa-serial'/>
+      </target>
+    </serial>
+
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+
+    <input type='tablet' bus='usb'>
+      <address type='usb' bus='0' port='1'/>
+    </input>
+
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+
+    <graphics type='vnc' port='-1' autoport='yes'>
+      <listen type='address' address='127.0.0.1'/>
+    </graphics>
+
+    <video>
+      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+
+    <memballoon model='virtio'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    </memballoon>
+
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+    </rng>
+  </devices>
+</domain>

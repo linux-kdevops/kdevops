@@ -1,0 +1,45 @@
+# NixOS VM configurations for kdevops
+{ config, pkgs, ... }:
+
+{
+  # VM-specific configurations
+  virtualisation.memorySize = {{ nixos_vm_memory_mb }};
+  virtualisation.diskSize = {{ nixos_vm_disk_size_gb * 1024 }};  # Convert GB to MB
+  virtualisation.cores = {{ nixos_vm_vcpus }};
+
+  # Enable virtio for better performance
+  virtualisation.qemu.options = [
+    "-machine q35,accel=kvm"
+    "-cpu host"
+    "-smp {{ nixos_vm_vcpus }}"
+    "-m {{ nixos_vm_memory_mb }}M"
+  ];
+
+  # Network configuration for VMs
+  networking.useDHCP = true;
+  networking.nameservers = [ "8.8.8.8" "8.8.4.4" ];
+
+  # VM-specific services
+  services.qemuGuest.enable = true;
+
+  # Enable console access
+  services.getty.autologinUser = "kdevops";
+  boot.kernelParams = [ "console=ttyS0,115200n8" "console=tty0" ];
+
+  # Additional VM optimizations
+  boot.initrd.availableKernelModules = [ "virtio_net" "virtio_pci" "virtio_blk" "virtio_scsi" "9p" "9pnet_virtio" ];
+  boot.kernelModules = [ "virtio_balloon" "virtio_rng" ];
+
+{% if bootlinux_9p is defined and bootlinux_9p %}
+  # 9P filesystem support for kernel development
+  fileSystems."/mnt/linux" = {
+    device = "linux_source";
+    fsType = "9p";
+    options = [ "trans=virtio" "version=9p2000.L" "rw" ];
+  };
+{% endif %}
+
+  # Ensure VM can be reached via SSH
+  services.openssh.permitRootLogin = "yes";
+  services.openssh.passwordAuthentication = false;
+}

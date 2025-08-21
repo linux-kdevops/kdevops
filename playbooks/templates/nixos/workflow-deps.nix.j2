@@ -1,0 +1,127 @@
+{ config, pkgs, lib, ... }:
+
+{
+  # Workflow-specific dependencies based on enabled kdevops workflows
+  environment.systemPackages = with pkgs; [
+{% if kdevops_workflow_enable_fstests is defined and kdevops_workflow_enable_fstests %}
+    # fstests dependencies
+    xfsprogs
+    btrfs-progs
+    e2fsprogs
+    f2fs-tools
+    fio
+    dbench
+    stress-ng
+    attr
+    acl
+    quota
+    nfs-utils
+    cifs-utils
+{% endif %}
+
+{% if kdevops_workflow_enable_blktests is defined and kdevops_workflow_enable_blktests %}
+    # blktests dependencies
+    nvme-cli
+    sg3_utils
+    targetcli
+    multipath-tools
+    dmraid
+    lvm2
+    mdadm
+{% endif %}
+
+{% if kdevops_workflow_enable_selftests is defined and kdevops_workflow_enable_selftests %}
+    # selftests dependencies
+    perf-tools
+    numactl
+    libcap
+    libseccomp
+    keyutils
+    iproute2
+    ethtool
+    tc
+{% endif %}
+
+{% if kdevops_workflow_enable_mmtests is defined and kdevops_workflow_enable_mmtests %}
+    # mmtests dependencies
+    gnuplot
+    perl
+    cpupower
+    dmidecode
+    sysstat
+    iotop
+    powertop
+{% endif %}
+
+{% if kdevops_workflow_enable_pynfs is defined and kdevops_workflow_enable_pynfs %}
+    # pynfs dependencies
+    python3
+    python3Packages.ply
+    nfs-utils
+{% endif %}
+
+{% if kdevops_workflow_enable_ltp is defined and kdevops_workflow_enable_ltp %}
+    # LTP dependencies
+    autoconf
+    automake
+    m4
+    libtool
+    pkg-config
+    flex
+    bison
+    libacl
+    libcap
+    libaio
+    libnuma
+    libsepol
+    libselinux
+    libssl
+{% endif %}
+
+{% if kdevops_workflow_enable_sysbench is defined and kdevops_workflow_enable_sysbench %}
+    # sysbench dependencies
+    sysbench
+    mysql
+    postgresql
+{% endif %}
+
+{% if kdevops_workflow_enable_gitr is defined and kdevops_workflow_enable_gitr %}
+    # git regression testing dependencies
+    git
+    gitFull
+    perl
+    subversion
+    mercurial
+{% endif %}
+
+    # Common build tools often needed
+    autoconf
+    automake
+    libtool
+    pkg-config
+    flex
+    bison
+    bc
+    openssl
+    elfutils
+    libelf
+  ];
+
+{% if kdevops_workflow_enable_fstests is defined and kdevops_workflow_enable_fstests %}
+  # Enable required services for fstests
+  services.nfs.server.enable = true;
+  services.rpcbind.enable = true;
+{% endif %}
+
+{% if kdevops_workflow_enable_sysbench is defined and kdevops_workflow_enable_sysbench %}
+  # Database services for sysbench
+  services.mysql = {
+    enable = true;
+    package = pkgs.mariadb;
+  };
+
+  services.postgresql = {
+    enable = true;
+  };
+{% endif %}
+}
