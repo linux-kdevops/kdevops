@@ -381,6 +381,20 @@
     - workflows_reboot_limit
     - ansible_hosts_template.stat.exists
 
+- name: Generate the Ansible hosts file for a dedicated AI setup
+  tags: ['hosts']
+  ansible.builtin.template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ ansible_cfg_inventory }}"
+    force: true
+    trim_blocks: True
+    lstrip_blocks: True
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_ai
+    - ansible_hosts_template.stat.exists
+
 - name: Verify if final host file exists
   ansible.builtin.stat:
     path: "{{ ansible_cfg_inventory }}"

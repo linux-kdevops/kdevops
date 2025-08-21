@@ -1,0 +1,164 @@
+if KDEVOPS_WORKFLOW_ENABLE_AI
+
+choice
+	prompt "What type of AI testing do you want to run?"
+	default AI_TESTS_VECTOR_DATABASE
+
+config AI_TESTS_VECTOR_DATABASE
+	bool "Vector database performance tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	output yaml
+	help
+	  Run vector database performance analysis tests.
+	  This includes testing various vector dimensions, batch sizes,
+	  and query patterns to generate performance profiles for AI workloads.
+
+	  A/B testing is enabled to compare performance across different
+	  configurations using baseline and development nodes.
+
+endchoice
+
+# Vector Database Configuration
+if AI_TESTS_VECTOR_DATABASE
+
+choice
+	prompt "Select vector database system"
+	default AI_VECTOR_DB_MILVUS
+
+config AI_VECTOR_DB_MILVUS
+	bool "Milvus - Open-source vector database"
+	output yaml
+	help
+	  Milvus is a cloud-native vector database built for scalable
+	  similarity search and AI applications. It provides high
+	  performance vector indexing and querying capabilities.
+
+endchoice
+
+# Milvus-specific configuration
+if AI_VECTOR_DB_MILVUS
+
+# CLI override support for CI testing
+config AI_VECTOR_DB_MILVUS_QUICK_TEST_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh AI_VECTOR_DB_MILVUS_QUICK_TEST)
+
+config AI_VECTOR_DB_MILVUS_QUICK_TEST
+	bool "Enable quick test mode for CI/demo"
+	default y if AI_VECTOR_DB_MILVUS_QUICK_TEST_SET_BY_CLI
+	output yaml
+	help
+	  Quick test mode reduces dataset sizes and runtime for rapid validation.
+	  This is useful for CI pipelines and demonstrations.
+
+# Milvus runs in Docker containers only
+config AI_VECTOR_DB_MILVUS_DOCKER
+	bool
+	output yaml
+	default y
+	help
+	  Milvus runs inside Docker containers with embedded etcd and MinIO storage.
+	  Native installation is not supported due to complex build requirements.
+
+config AI_VECTOR_DB_MILVUS_VERSION
+	string "Milvus version"
+	output yaml
+	default "2.3.0"
+	help
+	  The version of Milvus to install and use.
+
+config AI_VECTOR_DB_MILVUS_PORT
+	int "Milvus server port"
+	output yaml
+	default 19530
+	help
+	  The port number where Milvus server is listening.
+	  Default is 19530 for standard Milvus deployment.
+
+config AI_VECTOR_DB_MILVUS_COLLECTION_NAME
+	string "Default collection name"
+	output yaml
+	default "benchmark_collection"
+	help
+	  The default collection name to use for benchmarking tests.
+
+config AI_VECTOR_DB_MILVUS_DIMENSION
+	int "Vector dimension"
+	output yaml
+	default 768
+	range 1 4096
+	help
+	  The dimension of vectors to use in benchmarks.
+	  Common dimensions: 128, 384, 768, 1536
+
+config AI_VECTOR_DB_MILVUS_DATASET_SIZE
+	int "Dataset size (number of vectors)"
+	output yaml
+	default 100000 if AI_VECTOR_DB_MILVUS_QUICK_TEST
+	default 1000000 if !AI_VECTOR_DB_MILVUS_QUICK_TEST
+	help
+	  The number of vectors to insert for benchmarking.
+	  Quick test mode uses smaller dataset for faster execution.
+
+config AI_VECTOR_DB_MILVUS_BATCH_SIZE
+	int "Batch size for insertions"
+	output yaml
+	default 10000
+	help
+	  The batch size to use when inserting vectors.
+
+config AI_VECTOR_DB_MILVUS_NUM_QUERIES
+	int "Number of search queries"
+	output yaml
+	default 1000 if AI_VECTOR_DB_MILVUS_QUICK_TEST
+	default 10000
+	help
+	  The number of search queries to execute during benchmarking.
+
+if AI_VECTOR_DB_MILVUS_DOCKER
+source "workflows/ai/Kconfig.docker"
+endif # AI_VECTOR_DB_MILVUS_DOCKER
+
+if AI_VECTOR_DB_MILVUS_NATIVE
+source "workflows/ai/Kconfig.native"
+endif # AI_VECTOR_DB_MILVUS_NATIVE
+
+endif # AI_VECTOR_DB_MILVUS
+
+endif # AI_TESTS_VECTOR_DATABASE
+
+# Common AI Benchmark Configuration
+config AI_BENCHMARK_RESULTS_DIR
+	string "Benchmark results directory"
+	output yaml
+	default "/data/ai-benchmark"
+	help
+	  Directory where benchmark results will be stored.
+
+config AI_BENCHMARK_ENABLE_GRAPHING
+	bool "Enable performance graphing"
+	output yaml
+	default y
+	help
+	  Generate performance graphs and visualizations from benchmark results.
+
+config AI_BENCHMARK_ITERATIONS
+	int "Number of benchmark iterations"
+	output yaml
+	default 3 if AI_VECTOR_DB_MILVUS_QUICK_TEST
+	default 40 if !AI_VECTOR_DB_MILVUS_QUICK_TEST
+	range 1 100
+	help
+	  The number of iterations to run for each benchmark configuration.
+	  Multiple iterations help ensure consistent results. The default
+	  of 40 is used, that will use up about 100 GiB of storage space
+	  if you use 1,000,000 vectors. This will work for existing defaults
+	  on kdevops taret nodes, as our min drive use is 100 GiB per extra
+	  drive. This should take about 1 full day of testing. If you want
+	  more than 40, be sure to account for increasing your storage drive.
+
+# Docker storage configuration
+source "workflows/ai/Kconfig.docker-storage"
+
+endif # KDEVOPS_WORKFLOW_ENABLE_AI

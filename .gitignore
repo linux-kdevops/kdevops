@@ -32,7 +32,6 @@ scripts/workflows/fstests/lib/__pycache__/
 scripts/workflows/blktests/lib/__pycache__/
 scripts/workflows/lib/__pycache__/
 
-
 include/
 
 # You can override role specific stuff on these
@@ -48,7 +47,9 @@ playbooks/secret.yml
 playbooks/python/workflows/fstests/__pycache__/
 playbooks/python/workflows/fstests/lib/__pycache__/
 playbooks/python/workflows/fstests/gen_results_summary.pyc
+playbooks/roles/ai_run_benchmarks/files/__pycache__/
 
+workflows/ai/results/
 workflows/pynfs/results/
 
 workflows/fstests/new_expunge_files.txt

@@ -1,0 +1,90 @@
+---
+- name: Include role create_data_partition
+  include_role:
+    name: create_data_partition
+  tags: ['setup', 'data_partition']
+
+- name: Include role common
+  include_role:
+    name: common
+  when:
+    - infer_uid_and_group|bool
+
+- name: Ensure data_dir has correct ownership
+  tags: ['setup']
+  become: true
+  # become_method: sudo  # sudo is the default, not needed
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+    recurse: true
+    state: directory
+    mode: '0755'
+
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  # TODO: Review - was ignore_errors: true
+  failed_when: false  # Always succeed - review this condition
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Install Docker if using Docker deployment
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+    state: present
+    update_cache: true
+  when: ai_milvus_docker | bool
+  become: true
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ data_user | default(ansible_user_id) }}"
+    groups: docker
+    append: true
+  when: ai_milvus_docker | bool
+  become: true
+
+- name: Install Python dependencies for AI benchmarks
+  ansible.builtin.pip:
+    name:
+      - pymilvus>=2.3.0
+      - numpy
+      - scikit-learn
+      - pandas
+      - tqdm
+    state: present
+  when: ai_benchmark_enable_graphing | bool
+
+- name: Install additional Python dependencies for graphing
+  ansible.builtin.pip:
+    name:
+      - matplotlib
+      - seaborn
+      - plotly
+    state: present
+  when: ai_benchmark_enable_graphing | bool
+
+- name: Install filesystem utilities for XFS
+  ansible.builtin.apt:
+    name: xfsprogs
+    state: present
+  when: ai_filesystem == "xfs"
+  become: true
+
+- name: Install filesystem utilities for Btrfs
+  ansible.builtin.apt:
+    name: btrfs-progs
+    state: present
+  when: ai_filesystem == "btrfs"
+  become: true
+
+- name: Create benchmark results directory
+  ansible.builtin.file:
+    path: "{{ ai_benchmark_results_dir }}"
+    state: directory
+    mode: '0755'
+  become: true

@@ -1,0 +1,115 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  # TODO: Review - was ignore_errors: true
+  failed_when: false  # Always succeed - review this condition
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Create Docker storage directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ai_docker_data_path }}"
+    - "{{ ai_docker_etcd_data_path }}"
+    - "{{ ai_docker_minio_data_path }}"
+  when: ai_milvus_docker | bool
+  become: true
+
+- name: Create Docker network for Milvus
+  community.docker.docker_network:
+    name: "{{ ai_docker_network_name }}"
+    state: present
+  when: ai_milvus_docker | bool
+
+- name: Start etcd container
+  community.docker.docker_container:
+    name: "{{ ai_etcd_container_name }}"
+    image: "{{ ai_etcd_container_image_string }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ ai_docker_network_name }}"
+    ports:
+      - "{{ ai_etcd_client_port }}:2379"
+      - "{{ ai_etcd_peer_port }}:2380"
+    env:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+      ETCD_SNAPSHOT_COUNT: "50000"
+    command: >
+      etcd -advertise-client-urls=http://127.0.0.1:2379
+      -listen-client-urls http://0.0.0.0:2379
+      --data-dir /etcd
+    volumes:
+      - "{{ ai_docker_etcd_data_path }}:/etcd"
+    memory: "{{ ai_etcd_memory_limit }}"
+  when: ai_milvus_docker | bool
+
+- name: Start MinIO container
+  community.docker.docker_container:
+    name: "{{ ai_minio_container_name }}"
+    image: "{{ ai_minio_container_image_string }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ ai_docker_network_name }}"
+    ports:
+      - "{{ ai_minio_api_port }}:9000"
+      - "{{ ai_minio_console_port }}:9001"
+    env:
+      MINIO_ACCESS_KEY: "{{ ai_minio_access_key }}"
+      MINIO_SECRET_KEY: "{{ ai_minio_secret_key }}"
+    ansible.builtin.command: server /minio_data --console-address ":9001"
+    volumes:
+      - "{{ ai_docker_minio_data_path }}:/minio_data"
+    memory: "{{ ai_minio_memory_limit }}"
+  when: ai_milvus_docker | bool
+
+- name: Wait for etcd to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ ai_etcd_client_port }}"
+    timeout: 60
+  when: ai_milvus_docker | bool
+
+- name: Wait for MinIO to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ ai_minio_api_port }}"
+    timeout: 60
+  when: ai_milvus_docker | bool
+
+- name: Start Milvus container
+  community.docker.docker_container:
+    name: "{{ ai_milvus_container_name }}"
+    image: "{{ ai_milvus_container_image_string }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ ai_docker_network_name }}"
+    ports:
+      - "{{ ai_milvus_port }}:19530"
+      - "{{ ai_milvus_web_ui_port }}:9091"
+    env:
+      ETCD_ENDPOINTS: "{{ ai_etcd_container_name }}:2379"
+      MINIO_ADDRESS: "{{ ai_minio_container_name }}:9000"
+      MINIO_ACCESS_KEY: "{{ ai_minio_access_key }}"
+      MINIO_SECRET_KEY: "{{ ai_minio_secret_key }}"
+    volumes:
+      - "{{ ai_docker_data_path }}:/var/lib/milvus"
+    memory: "{{ ai_milvus_memory_limit }}"
+    cpus: "{{ ai_milvus_cpu_limit }}"
+    ansible.builtin.command: milvus run standalone
+  when: ai_milvus_docker | bool
+
+- name: Wait for Milvus to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ ai_milvus_port }}"
+    timeout: 120
+  when: ai_milvus_docker | bool

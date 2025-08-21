@@ -1,0 +1,58 @@
+---
+# Setup benchmark scripts and directories only
+# This is used when running benchmarks on already-setup infrastructure
+
+- name: Ensure Python dependencies are installed
+  ansible.builtin.package:
+    name:
+      - python3-numpy
+      - python3-pandas
+      - python3-tqdm
+      - python3-pip
+    state: present
+  become: true
+
+- name: Check if pymilvus is installed
+  ansible.builtin.command: python3 -c "import pymilvus; print(pymilvus.__version__)"
+    changed_when: false
+  register: pymilvus_check
+  changed_when: false
+  failed_when: false
+
+- name: Install Python Milvus client with pip
+  ansible.builtin.pip:
+    name:
+      - pymilvus>={{ ai_vector_db_milvus_version }}
+    state: present
+    extra_args: --break-system-packages
+  become: true
+  when: pymilvus_check.rc != 0 or pymilvus_check.stdout is version(ai_vector_db_milvus_version, '<')
+
+- name: Create benchmark scripts directory
+  ansible.builtin.file:
+    path: "{{ ai_vector_db_milvus_data_dir }}/scripts"
+    state: directory
+    mode: '0755'
+  register: scripts_dir_result
+
+- name: Check if benchmark scripts exist
+  ansible.builtin.stat:
+    path: "{{ ai_vector_db_milvus_data_dir }}/scripts/{{ item }}"
+  loop:
+    - milvus_benchmark.py
+    - milvus_utils.py
+  register: benchmark_scripts_check
+
+- name: Copy benchmark scripts
+  ansible.builtin.copy:
+    src: "{{ item.item }}"
+    dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/"
+    mode: '0755'
+  loop: "{{ benchmark_scripts_check.results }}"
+  when: not item.stat.exists or scripts_dir_result is changed
+
+- name: Create initial connection test script
+  ansible.builtin.template:
+    src: test_connection.py.j2
+    dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/test_connection.py"
+    mode: '0755'

@@ -1,0 +1,184 @@
+choice
+	prompt "Native Milvus installation method"
+	default AI_VECTOR_DB_MILVUS_NATIVE_BINARY
+
+config AI_VECTOR_DB_MILVUS_NATIVE_BINARY
+	bool "Install from pre-built binaries"
+	output yaml
+	help
+	  Install Milvus from official pre-built binaries. This is
+	  the recommended approach for production deployments and
+	  provides optimal performance.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_SOURCE
+	bool "Build from source"
+	output yaml
+	help
+	  Build Milvus from source code. This allows for custom
+	  optimizations but requires longer build times and more
+	  dependencies.
+
+endchoice
+
+config AI_VECTOR_DB_MILVUS_NATIVE_VERSION
+	string "Milvus version to install"
+	output yaml
+	default "v2.5.10" if AI_VECTOR_DB_MILVUS_NATIVE_BINARY
+	default "master" if AI_VECTOR_DB_MILVUS_NATIVE_SOURCE
+	help
+	  The Milvus version to install. For binary installation,
+	  use release tags like v2.5.10. For source builds, you
+	  can use branch names or commit hashes.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_INSTALL_PATH
+	string "Installation directory"
+	output yaml
+	default "/opt/milvus"
+	help
+	  Directory where Milvus will be installed.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_DATA_PATH
+	string "Data storage directory"
+	output yaml
+	default "/data/milvus"
+	help
+	  Directory where Milvus will store vector data and metadata.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_LOG_PATH
+	string "Log directory"
+	output yaml
+	default "/var/log/milvus"
+	help
+	  Directory where Milvus will write log files.
+
+menu "Native dependencies configuration"
+
+config AI_VECTOR_DB_MILVUS_ETCD_NATIVE_INSTALL
+	bool "Install etcd natively"
+	output yaml
+	default y
+	help
+	  Install etcd as a native service for Milvus metadata storage.
+
+if AI_VECTOR_DB_MILVUS_ETCD_NATIVE_INSTALL
+
+config AI_VECTOR_DB_MILVUS_ETCD_NATIVE_VERSION
+	string "etcd version"
+	output yaml
+	default "v3.5.18"
+	help
+	  Version of etcd to install.
+
+config AI_VECTOR_DB_MILVUS_ETCD_NATIVE_DATA_DIR
+	string "etcd data directory"
+	output yaml
+	default "/data/etcd"
+	help
+	  Directory where etcd will store its data.
+
+config AI_VECTOR_DB_MILVUS_ETCD_NATIVE_CLIENT_URL
+	string "etcd client URL"
+	output yaml
+	default "http://localhost:2379"
+	help
+	  URL for etcd client connections.
+
+endif # AI_VECTOR_DB_MILVUS_ETCD_NATIVE_INSTALL
+
+config AI_VECTOR_DB_MILVUS_MINIO_NATIVE_INSTALL
+	bool "Install MinIO natively"
+	output yaml
+	default y
+	help
+	  Install MinIO as a native service for Milvus object storage.
+
+if AI_VECTOR_DB_MILVUS_MINIO_NATIVE_INSTALL
+
+config AI_VECTOR_DB_MILVUS_MINIO_NATIVE_VERSION
+	string "MinIO version"
+	output yaml
+	default "RELEASE.2023-03-20T20-16-18Z"
+	help
+	  Version of MinIO to install.
+
+config AI_VECTOR_DB_MILVUS_MINIO_NATIVE_DATA_DIR
+	string "MinIO data directory"
+	output yaml
+	default "/data/minio"
+	help
+	  Directory where MinIO will store object data.
+
+config AI_VECTOR_DB_MILVUS_MINIO_NATIVE_ACCESS_KEY
+	string "MinIO access key"
+	output yaml
+	default "minioadmin"
+	help
+	  Access key for MinIO authentication.
+
+config AI_VECTOR_DB_MILVUS_MINIO_NATIVE_SECRET_KEY
+	string "MinIO secret key"
+	output yaml
+	default "minioadmin"
+	help
+	  Secret key for MinIO authentication.
+
+endif # AI_VECTOR_DB_MILVUS_MINIO_NATIVE_INSTALL
+
+endmenu
+
+menu "Native service configuration"
+
+config AI_VECTOR_DB_MILVUS_NATIVE_USER
+	string "Milvus service user"
+	output yaml
+	default "milvus"
+	help
+	  System user to run the Milvus service.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_GROUP
+	string "Milvus service group"
+	output yaml
+	default "milvus"
+	help
+	  System group for the Milvus service.
+
+config AI_VECTOR_DB_MILVUS_NATIVE_ENABLE_SYSTEMD
+	bool "Create systemd service files"
+	output yaml
+	default y
+	help
+	  Create systemd service files for automatic startup and
+	  service management.
+
+endmenu
+
+if AI_VECTOR_DB_MILVUS_NATIVE_SOURCE
+
+menu "Source build configuration"
+
+config AI_VECTOR_DB_MILVUS_BUILD_DEPENDENCIES
+	bool "Install build dependencies"
+	output yaml
+	default y
+	help
+	  Automatically install required build dependencies including
+	  Go compiler, CMake, and other development tools.
+
+config AI_VECTOR_DB_MILVUS_BUILD_JOBS
+	int "Number of parallel build jobs"
+	output yaml
+	default 0
+	help
+	  Number of parallel jobs for building Milvus. Set to 0
+	  to use all available CPU cores.
+
+config AI_VECTOR_DB_MILVUS_BUILD_TYPE
+	string "Build type"
+	output yaml
+	default "Release"
+	help
+	  CMake build type. Options: Release, Debug, RelWithDebInfo.
+
+endmenu
+
+endif # AI_VECTOR_DB_MILVUS_NATIVE_SOURCE
