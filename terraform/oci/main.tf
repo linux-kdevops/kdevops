@@ -103,10 +103,12 @@ resource "oci_core_route_table" "kdevops_route_table" {
   compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
   display_name   = "kdevops route table"
   vcn_id         = one(oci_core_vcn.kdevops_vcn[*].id)
+
   route_rules {
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = one(oci_core_internet_gateway.kdevops_internet_gateway[*].id)
+    route_type        = "STATIC"
   }
 }
 
