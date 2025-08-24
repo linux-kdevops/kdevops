@@ -17,3 +17,4 @@
     file: "{{ role_path }}/tasks/base-image.yml"
   when:
     - not result.stat.exists
+    - not guestfs_has_custom_raw_image|bool
