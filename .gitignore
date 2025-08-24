@@ -1,6 +1,7 @@
 *.swp
 *.o
 *.retry
+*.patch
 
 .kdevops\.depcheck
 .provisioned_once*
