@@ -50,7 +50,7 @@
   become: true
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
-    cmd: "qemu-img resize {{ custom_image }} {{ libvirt_image_size }}"
+    cmd: "qemu-img resize -f raw {{ custom_image }} {{ libvirt_image_size }}"
   changed_when: true
   when:
     - custom_image_download is changed
@@ -64,6 +64,17 @@
   when:
     - custom_image_download is changed
     - guestfs_has_custom_raw_image_url|bool
+
+- name: Pre-allocate space for the resized image
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "qemu-img create -f raw {{ temp_resized_image.path }} {{ libvirt_image_size }}"
+  changed_when: true
+  when:
+    - custom_image_download is changed
+    - guestfs_has_custom_raw_image_url|bool
+    - temp_resized_image.path is defined
 
 - name: Expand root partition to use full disk
   become: true
