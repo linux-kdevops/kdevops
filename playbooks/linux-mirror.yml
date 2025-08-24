@@ -1,5 +1,18 @@
 ---
 - name: Install Git mirrors using systemd.timer
   hosts: localhost
+  pre_tasks:
+    - name: Check if Nix mirror directory exists
+      ansible.builtin.stat:
+        path: /mirror/nix-cache
+      register: nix_mirror_dir_check
+      when: install_nix_cache_mirror | default(false) | bool
+
+    - name: Set nix mirror available fact
+      ansible.builtin.set_fact:
+        nix_mirror_available: "{{ install_nix_cache_mirror | default(false) | bool and nix_mirror_dir_check.stat.exists | default(false) }}"
+
   roles:
     - role: linux-mirror
+    - role: nix-cache-mirror
+      when: nix_mirror_available | default(false) | bool

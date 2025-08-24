@@ -1,0 +1,133 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  tags: vars
+
+- name: Fail if nix cache mirror is enabled but user is not root
+  ansible.builtin.fail:
+    msg: "Nix cache mirror setup requires root privileges. Please run as root."
+  when:
+    - install_nix_cache_mirror | bool
+    - ansible_user_id != 'root'
+  tags: ["nix-cache", "mirror"]
+
+- name: Install nginx for Nix cache mirror
+  become: true
+  ansible.builtin.package:
+    name:
+      - nginx
+      - curl
+    state: present
+  when: install_nix_cache_mirror | bool
+  tags: ["nix-cache", "mirror"]
+
+- name: Create Nix cache mirror directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ nix_cache_mirror_path }}"
+    state: directory
+    mode: "0755"
+    owner: www-data
+    group: www-data
+  when: install_nix_cache_mirror | bool
+  tags: ["nix-cache", "mirror"]
+
+- name: Template nginx configuration for Nix cache mirror
+  become: true
+  ansible.builtin.template:
+    src: nix-cache-mirror.nginx.j2
+    dest: "{{ nix_cache_mirror_nginx_conf_path }}"
+    mode: "0644"
+    owner: root
+    group: root
+  when: install_nix_cache_mirror | bool
+  notify: reload nginx
+  tags: ["nix-cache", "mirror"]
+
+- name: Enable nginx site for Nix cache mirror
+  become: true
+  ansible.builtin.file:
+    src: "{{ nix_cache_mirror_nginx_conf_path }}"
+    dest: "{{ nix_cache_mirror_nginx_enabled_path }}"
+    state: link
+  when: install_nix_cache_mirror | bool
+  notify: reload nginx
+  tags: ["nix-cache", "mirror"]
+
+- name: Remove default nginx site
+  become: true
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: install_nix_cache_mirror | bool
+  notify: reload nginx
+  tags: ["nix-cache", "mirror"]
+
+- name: Create systemd service for Nix cache syncer
+  become: true
+  ansible.builtin.template:
+    src: nix-cache-sync.service.j2
+    dest: /etc/systemd/system/nix-cache-sync.service
+    mode: "0644"
+  when: install_nix_cache_mirror | bool
+  notify: reload systemd
+  tags: ["nix-cache", "mirror"]
+
+- name: Create systemd timer for Nix cache syncer
+  become: true
+  ansible.builtin.template:
+    src: nix-cache-sync.timer.j2
+    dest: /etc/systemd/system/nix-cache-sync.timer
+    mode: "0644"
+  when: install_nix_cache_mirror | bool
+  notify: reload systemd
+  tags: ["nix-cache", "mirror"]
+
+- name: Enable and start nginx service
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: install_nix_cache_mirror | bool
+  tags: ["nix-cache", "mirror"]
+
+- name: Enable and start nix-cache-sync timer
+  become: true
+  ansible.builtin.systemd:
+    name: nix-cache-sync.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: install_nix_cache_mirror | bool
+  tags: ["nix-cache", "mirror"]
+
+- name: Check if firewalld is running
+  ansible.builtin.command: systemctl is-active firewalld
+  register: firewalld_status
+  ignore_errors: true
+  when:
+    - install_nix_cache_mirror | bool
+    - linux_mirror_nfs | bool
+  tags: ["nix-cache", "mirror"]
+
+- name: Open firewall for Nix cache mirror HTTP traffic
+  become: true
+  ansible.posix.firewalld:
+    port: "{{ nix_cache_mirror_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  when:
+    - install_nix_cache_mirror | bool
+    - linux_mirror_nfs | bool
+    - firewalld_status.rc == 0
+  tags: ["nix-cache", "mirror"]

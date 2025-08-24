@@ -1,0 +1,7 @@
+---
+# Default variables for nix-cache-mirror role
+nix_cache_mirror_path: "/mirror/nix-cache"
+nix_cache_mirror_port: 8080
+nix_cache_upstream_url: "https://cache.nixos.org"
+nix_cache_mirror_nginx_conf_path: "/etc/nginx/sites-available/nix-cache-mirror"
+nix_cache_mirror_nginx_enabled_path: "/etc/nginx/sites-enabled/nix-cache-mirror"

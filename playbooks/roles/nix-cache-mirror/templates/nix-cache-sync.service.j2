@@ -1,0 +1,17 @@
+[Unit]
+Description=Nix Binary Cache Sync Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+ExecStart=/usr/bin/curl -f -s "{{ mirror_nix_cache_upstream_url | default('https://cache.nixos.org') }}/nix-cache-info" -o "{{ nix_cache_mirror_path }}/nix-cache-info"
+ExecStartPost=/bin/bash -c 'find {{ nix_cache_mirror_path }} -name "*.narinfo" -mtime +7 -delete'
+ExecStartPost=/bin/bash -c 'find {{ nix_cache_mirror_path }} -name "*.nar*" -mtime +7 -delete'
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

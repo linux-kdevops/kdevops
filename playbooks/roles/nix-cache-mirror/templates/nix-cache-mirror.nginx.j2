@@ -1,0 +1,77 @@
+server {
+    listen {{ nix_cache_mirror_port }};
+    server_name _;
+
+    # Cache location
+    root {{ nix_cache_mirror_path }};
+
+    # Enable directory listings
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Logging
+    access_log /var/log/nginx/nix-cache-mirror.access.log;
+    error_log /var/log/nginx/nix-cache-mirror.error.log;
+
+    # Main location for cached files
+    location / {
+        try_files $uri $uri/ @upstream;
+
+        # Cache headers for clients
+        expires 1d;
+        add_header Cache-Control "public, immutable";
+
+        # Enable range requests for large files
+        location ~* \.(nar|narinfo)$ {
+            add_header Accept-Ranges bytes;
+        }
+    }
+
+    # Upstream fallback for cache misses
+    location @upstream {
+        # Proxy to upstream cache with caching
+        proxy_pass {{ mirror_nix_cache_upstream_url | default('https://cache.nixos.org') }};
+        proxy_set_header Host cache.nixos.org;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Cache configuration
+        proxy_cache_path {{ nix_cache_mirror_path }}/nginx-cache levels=1:2 keys_zone=nixcache:100m max_size=50g inactive=7d use_temp_path=off;
+        proxy_cache nixcache;
+        proxy_cache_valid 200 206 301 302 7d;
+        proxy_cache_valid 404 1m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+
+        # Store successful requests to filesystem
+        proxy_store on;
+        proxy_store_access user:rw group:rw all:r;
+        proxy_temp_path {{ nix_cache_mirror_path }}/tmp;
+
+        # Add headers to indicate cache status
+        add_header X-Cache-Status $upstream_cache_status;
+        add_header X-Cache-Date $upstream_http_date;
+    }
+
+    # Status endpoint
+    location /status {
+        access_log off;
+        return 200 "Nix Cache Mirror OK\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
