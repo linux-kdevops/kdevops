@@ -91,6 +91,35 @@ config NIXOS_SSH_PORT
 	help
 	  SSH port to use for connecting to NixOS VMs.
 
+config NIXOS_USE_LOCAL_MIRROR
+	bool "Use local Nix binary cache mirror"
+	output yaml
+	default $(shell, scripts/check_nix_mirror.sh USE_NIX_CACHE_MIRROR)
+	help
+	  Enable this to use a local Nix binary cache mirror if available.
+	  This dramatically speeds up NixOS builds by avoiding repeated
+	  downloads of packages from cache.nixos.org.
+
+	  When enabled, kdevops will automatically detect and configure
+	  VMs to use the local mirror if available at /mirror/nix-cache
+	  or via HTTP on port 8080.
+
+	  This requires that you have set up a mirror server using the
+	  defconfig-mirror configuration.
+
+config NIXOS_MIRROR_URL
+	string "Nix binary cache mirror URL"
+	output yaml
+	default $(shell, scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL)
+	depends on NIXOS_USE_LOCAL_MIRROR
+	help
+	  The URL of the local Nix binary cache mirror. This is
+	  automatically detected based on available mirrors:
+	  - HTTP mirror if running on port 8080
+	  - File-based mirror at /mirror/nix-cache (for NFS mounts)
+
+	  Leave empty to auto-detect at runtime.
+
 config NIXOS_DEBUG_MODE
 	bool "Enable debug mode for NixOS provisioning"
 	default n

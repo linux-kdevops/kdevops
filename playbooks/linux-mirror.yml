@@ -3,3 +3,5 @@
   hosts: localhost
   roles:
     - role: linux-mirror
+    - role: nix-cache-mirror
+      when: install_nix_cache_mirror | default(false) | bool
