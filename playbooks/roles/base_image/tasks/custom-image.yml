@@ -46,6 +46,29 @@
     - not custom_image_stat.stat.exists
     - guestfs_has_custom_raw_image_url|bool
 
+- name: Verify custom image checksum immediately after download
+  when:
+    - custom_image_download is changed
+    - guestfs_has_custom_raw_image_sha512sums|bool
+  block:
+    - name: Get the base name of the sha512sums file for verification
+      ansible.builtin.set_fact:
+        sha512sums_file: "{{ guestfs_custom_raw_image_sha512sums_url | basename }}"
+
+    - name: Fetch the sha512sums file for verification
+      become: true
+      become_method: ansible.builtin.sudo
+      ansible.builtin.get_url:
+        url: "{{ guestfs_custom_raw_image_sha512sums_url }}"
+        dest: "{{ custom_image_dir }}"
+        mode: "u=rw,g=r,o=r"
+
+    - name: Verify checksum of freshly downloaded image
+      ansible.builtin.command:
+        cmd: "sha512sum --ignore-missing -c {{ sha512sums_file }}"
+        chdir: "{{ custom_image_dir }}"
+      changed_when: false
+
 - name: Resize custom image to match configured size
   become: true
   become_method: ansible.builtin.sudo
@@ -104,42 +127,10 @@
     get_mime: false
   register: sentinel_stat
 
-- name: Check the custom image
+- name: Configure custom image with kdevops settings
   when:
     - not sentinel_stat.stat.exists
-    - guestfs_has_custom_raw_image_sha512sums|bool
   block:
-    - name: Get the base name of the sha512sums file
-      ansible.builtin.set_fact:
-        sha512sums_file: "{{ guestfs_custom_raw_image_sha512sums_url | basename }}"
-
-    - name: Set the full pathname of sha512sums file
-      ansible.builtin.set_fact:
-        custom_image_sha512sum: "{{ custom_image_dir }}/{{ sha512sums_file }}"
-
-    - name: Check if the sha512sums file already exists
-      ansible.builtin.stat:
-        path: "{{ custom_image_sha512sum }}"
-        get_attributes: false
-        get_checksum: false
-        get_mime: false
-      register: sha512sums_stat
-
-    - name: Fetch the sha512sums file
-      become: true
-      become_method: ansible.builtin.sudo
-      ansible.builtin.get_url:
-        url: "{{ guestfs_custom_raw_image_sha512sums_url }}"
-        dest: "{{ custom_image_dir }}"
-        mode: "u=rw,g=r,o=r"
-      when:
-        - not sha512sums_stat.stat.exists
-
-    - name: Compute checksum of something
-      ansible.builtin.command:
-        cmd: "sha512sum --ignore-missing -c {{ sha512sums_file }}"
-        chdir: "{{ custom_image_dir }}"
-      changed_when: false
 
     - name: Get the UID of the kdevops user on the control host
       ansible.builtin.command:
