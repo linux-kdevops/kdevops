@@ -95,6 +95,21 @@
           ansible.builtin.set_fact:
             nixos_ssh_authorized_key: "{{ ssh_public_key['content'] | b64decode | trim }}"
 
+    - name: Detect local Nix cache mirror URL if enabled
+      ansible.builtin.shell: |
+        bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL
+      register: detected_mirror_url
+      when: nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url is not defined or nixos_mirror_url == "")
+      changed_when: false
+
+    - name: Set detected mirror URL
+      ansible.builtin.set_fact:
+        nixos_mirror_url: "{{ detected_mirror_url.stdout | trim }}"
+      when:
+        - detected_mirror_url is defined
+        - detected_mirror_url.stdout is defined
+        - detected_mirror_url.stdout | trim != ""
+
     - name: Template base NixOS configuration
       ansible.builtin.template:
         src: nixos/configuration.nix.j2
@@ -176,9 +191,18 @@
         fi
 
         # Configure Nix to use local mirror if available
-        {% if nixos_use_local_mirror is defined and nixos_use_local_mirror and nixos_mirror_url is defined and nixos_mirror_url != "" %}
+        {% if nixos_use_local_mirror is defined and nixos_use_local_mirror %}
+        # Dynamically detect mirror URL if not provided
+        {% if nixos_mirror_url is not defined or nixos_mirror_url == "" %}
+        DETECTED_MIRROR=$(bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL)
+        if [ -n "$DETECTED_MIRROR" ]; then
+          export NIX_CONFIG="substituters = $DETECTED_MIRROR https://cache.nixos.org"
+          echo "Using detected local Nix cache mirror: $DETECTED_MIRROR"
+        fi
+        {% else %}
         export NIX_CONFIG="substituters = {{ nixos_mirror_url }} https://cache.nixos.org"
-        echo "Using local Nix cache mirror: {{ nixos_mirror_url }}"
+        echo "Using configured local Nix cache mirror: {{ nixos_mirror_url }}"
+        {% endif %}
         {% endif %}
 
         cd {{ nixos_generation_dir }}

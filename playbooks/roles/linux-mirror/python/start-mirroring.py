@@ -54,7 +54,8 @@ def mirror_entry(mirror, args):
     cmd = cmd + reference_args
     mirror_target = mirror_path + target
     if os.path.isdir(mirror_target):
-        return
+        sys.stdout.write("Skipping %s - mirror already exists at %s\n" % (short_name, mirror_target))
+        return "skipped"
     sys.stdout.write("Mirroring: %s onto %s\n" % (short_name, mirror_target))
     if args.verbose:
         sys.stdout.write("%s\n" % (cmd))
@@ -74,6 +75,7 @@ def mirror_entry(mirror, args):
         process.wait()
         if process.returncode != 0:
             raise Exception(f"Failed clone with:\n%s" % (" ".join(cmd)))
+        return "cloned"
 
 
 def main():
@@ -134,15 +136,36 @@ def main():
                 % (mirror.get("short_name"), args.yaml_mirror, total)
             )
 
+    # Statistics tracking
+    stats = {"skipped": 0, "cloned": 0, "failed": 0}
     # Mirror trees without a reference first
     for mirror in yaml_vars["mirrors"]:
         if not mirror.get("reference"):
-            mirror_entry(mirror, args)
+            result = mirror_entry(mirror, args)
+            if result == "skipped":
+                stats["skipped"] += 1
+            elif result == "cloned":
+                stats["cloned"] += 1
+            else:
+                stats["failed"] += 1
 
     # Mirror trees which need a reference last
     for mirror in yaml_vars["mirrors"]:
         if mirror.get("reference"):
-            mirror_entry(mirror, args)
+            result = mirror_entry(mirror, args)
+            if result == "skipped":
+                stats["skipped"] += 1
+            elif result == "cloned":
+                stats["cloned"] += 1
+            else:
+                stats["failed"] += 1
+    # Print summary
+    sys.stdout.write("\n=== Mirror Summary ===\n")
+    sys.stdout.write("Total repositories: %d\n" % total)
+    sys.stdout.write("Skipped (already exist): %d\n" % stats["skipped"])
+    sys.stdout.write("Cloned (new): %d\n" % stats["cloned"])
+    if stats["failed"] > 0:
+        sys.stdout.write("Failed: %d\n" % stats["failed"])
 
 
 if __name__ == "__main__":

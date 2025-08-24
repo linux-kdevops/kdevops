@@ -1,0 +1,3 @@
+# Nix cache mirror proxy cache configuration
+# This file must be included at http context level
+proxy_cache_path {{ nix_cache_mirror_path }}/nginx-cache levels=1:2 keys_zone=nixcache:100m max_size=50g inactive=7d use_temp_path=off;

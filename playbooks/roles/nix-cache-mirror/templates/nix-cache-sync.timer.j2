@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Nix Binary Cache Sync Service hourly
+Requires=nix-cache-sync.service
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

@@ -379,7 +379,7 @@ choice
 config MIRROR_STABLE_RC_HTTPS
 	bool "HTTPS (kernel.org)"
 	help
-	  If you enable this option then the mirror will use HTTPS to access 
+	  If you enable this option then the mirror will use HTTPS to access
 	  the linux-stable-rc repository on git.kernel.org. The full URL is:
 
 	  https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
@@ -387,7 +387,7 @@ config MIRROR_STABLE_RC_HTTPS
 config MIRROR_STABLE_RC_HTTPS_GOOGLE
 	bool "HTTPS (Google)"
 	help
-	  If you enable this option then the mirror will use HTTPS to access 
+	  If you enable this option then the mirror will use HTTPS to access
 	  the linux-stable-rc repository on kernel.googlesource.com The full
 	  URL is:
 
@@ -675,6 +675,70 @@ endchoice
 config MIRROR_MMTESTS_URL
 	string
 	default DEFAULT_MMTESTS_GITHUB_HTTPS_URL if MIRROR_MMTESTS_HTTPS_GITHUB
+
+config INSTALL_NIX_CACHE_MIRROR
+	bool "Install Nix binary cache mirror"
+	output yaml
+	depends on INSTALL_LOCAL_LINUX_MIRROR
+	help
+	  Enable this to set up a local Nix binary cache mirror for all guests.
+	  This will significantly speed up NixOS VM builds by caching downloaded
+	  packages locally.
+
+	  When enabled, this creates:
+	  - A local Nix binary cache at /mirror/nix-cache/
+	  - An nginx-based cache server on port 8080
+	  - Automatic synchronization from cache.nixos.org
+
+	  This saves bandwidth and speeds up NixOS builds dramatically as the
+	  initial build requires downloading ~679 packages (685MB).
+
+	  The cache will be available to all VMs and systems in your network
+	  at: http://mirror-host:8080/
+
+choice
+	prompt "Nix cache mirror source"
+	default MIRROR_NIX_CACHE_NIXOS_ORG
+	depends on INSTALL_NIX_CACHE_MIRROR
+
+config MIRROR_NIX_CACHE_NIXOS_ORG
+	bool "cache.nixos.org (official)"
+	help
+	  Use the official Nix binary cache at cache.nixos.org as the upstream
+	  source for the mirror.
+
+config MIRROR_NIX_CACHE_NIXOS_ORG_FALLBACK
+	bool "cache.nixos.org with fastly CDN fallback"
+	help
+	  Use cache.nixos.org with additional fastly CDN endpoints as fallbacks
+	  for better reliability and performance.
+
+endchoice
+
+config MIRROR_NIX_CACHE_UPSTREAM_URL
+	string
+	output yaml
+	default "https://cache.nixos.org" if MIRROR_NIX_CACHE_NIXOS_ORG
+	default "https://cache.nixos.org https://nixos.cachix.org" if MIRROR_NIX_CACHE_NIXOS_ORG_FALLBACK
+
+config NIX_CACHE_MIRROR_PORT
+	int "Nix cache mirror nginx port"
+	output yaml
+	default 8080
+	depends on INSTALL_NIX_CACHE_MIRROR
+	help
+	  The port for the local nginx server that will serve the Nix binary cache.
+	  Default is 8080. Ensure this port is available and not blocked by firewall.
+
+config NIX_CACHE_MIRROR_PATH
+	string "Nix cache mirror storage path"
+	output yaml
+	default "/mirror/nix-cache"
+	depends on INSTALL_NIX_CACHE_MIRROR
+	help
+	  Local filesystem path where the Nix binary cache will be stored.
+	  This should be on a filesystem with sufficient space as the cache
+	  can grow to several GB over time.
 
 endif # ENABLE_LOCAL_LINUX_MIRROR
 endif # TERRAFORM
