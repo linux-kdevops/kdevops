@@ -53,7 +53,36 @@
     cmd: "qemu-img resize {{ custom_image }} {{ libvirt_image_size }}"
   changed_when: true
   when:
-    - custom_image_download is changed or custom_image_stat.stat.exists
+    - custom_image_download is changed
+    - guestfs_has_custom_raw_image_url|bool
+
+- name: Create temporary file for partition-expanded image
+  ansible.builtin.tempfile:
+    state: file
+    suffix: .raw
+  register: temp_resized_image
+  when:
+    - custom_image_download is changed
+    - guestfs_has_custom_raw_image_url|bool
+
+- name: Expand root partition to use full disk
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "virt-resize --expand /dev/sda1 {{ custom_image }} {{ temp_resized_image.path }}"
+  changed_when: true
+  when:
+    - custom_image_download is changed
+    - guestfs_has_custom_raw_image_url|bool
+
+- name: Replace original image with partition-expanded one
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: "mv -f {{ temp_resized_image.path }} {{ custom_image }}"
+  changed_when: true
+  when:
+    - custom_image_download is changed
     - guestfs_has_custom_raw_image_url|bool
 
 - name: Check if the custom image sentinel file already exists
