@@ -126,6 +126,11 @@
 
 - name: Debug kernel ref settings for 9P builds
   delegate_to: localhost
+  when:
+    - bootlinux_debug_ref|bool
+    - bootlinux_9p|bool
+  run_once: true
+
   block:
     - name: Print kernel ref settings for 9P debug (localhost context)
       ansible.builtin.debug:
@@ -144,12 +149,11 @@
 
     - name: End play gracefully for kernel ref debug
       ansible.builtin.meta: end_play
+- name: Debug kernel ref settings for non-9P builds
   when:
     - bootlinux_debug_ref|bool
-    - bootlinux_9p|bool
-  run_once: true
+    - not bootlinux_9p|bool
 
-- name: Debug kernel ref settings for non-9P builds
   block:
     - name: Print kernel ref settings for non-9P debug (per-node context)
       ansible.builtin.debug:
@@ -169,10 +173,6 @@
 
     - name: End play gracefully for kernel ref debug
       ansible.builtin.meta: end_play
-  when:
-    - bootlinux_debug_ref|bool
-    - not bootlinux_9p|bool
-
 - name: Create data partition
   ansible.builtin.include_role:
     name: create_data_partition

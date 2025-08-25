@@ -138,6 +138,7 @@
   register: patch_results
 
 - name: Get kernel versions from nodes
+  tags: ["compare"]
   block:
     - name: Get baseline kernel version
       ansible.builtin.command: uname -r
@@ -153,7 +154,6 @@
       when:
         - groups['dev'] is defined
         - groups['dev'] | length > 0
-  tags: ["compare"]
 
 - name: Set node information facts
   ansible.builtin.set_fact:
@@ -274,6 +274,9 @@
 
 - name: Generate performance graphs using gnuplot
   delegate_to: localhost
+  run_once: true
+  when: kdevops_baseline_and_dev|bool
+  tags: ["compare", "graphs"]
   block:
     - name: Check for available iterations data
       ansible.builtin.find:
@@ -305,9 +308,6 @@
       failed_when: false
       environment:
         MMTESTS_AUTO_PACKAGE_INSTALL: never
-  run_once: true
-  when: kdevops_baseline_and_dev|bool
-  tags: ["compare", "graphs"]
 
 - name: Find generated graph files
   delegate_to: localhost

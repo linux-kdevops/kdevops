@@ -107,6 +107,12 @@
         - hop1_mirror_host is defined
 
     - name: Use hop1 mirror with DEB822 format for debian testing
+      when:
+        - has_hop1_mirror is defined
+        - has_hop1_mirror | bool
+        - hop1_mirror_connectivity is not failed
+        - hop1_mirror_host is defined
+
       block:
         - name: Backup current sources
           ansible.builtin.copy:
@@ -141,20 +147,14 @@
             cache_valid_time: 0
           become: true
 
-        - name: Inform user about hop1 mirror usage
-          ansible.builtin.debug:
+        - ansible.builtin.debug:
             msg: |
               Using local hop1 mirror with DEB822 format:
               Mirror: {{ hop1_mirror_host }}{{ hop1_mirror_path }}
 
               This provides faster package downloads from your local mirror.
               Sources have been converted to modern DEB822 format.
-      when:
-        - has_hop1_mirror is defined
-        - has_hop1_mirror | bool
-        - hop1_mirror_connectivity is not failed
-        - hop1_mirror_host is defined
-
+          name: Inform user about hop1 mirror usage
 - name: Fall back to official Debian mirrors if current mirror fails
   block:
     - name: Backup current sources (DEB822 format)
