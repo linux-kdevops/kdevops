@@ -1,9 +1,12 @@
 ---
 - name: Print uname for each host
   tags: ["run_tests"]
-  ansible.builtin.debug: var=ansible_kernel
+  ansible.builtin.debug:
+    var: ansible_kernel
 - name: Hint to our watchdog our reboot-limit tests are about to kick off
-  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
+  ansible.builtin.file:
+    path: "{{ reboot_limit_local_results_dir }}/.begin"
+    state: touch
   delegate_to: localhost
   tags: ["run_tests"]
   run_once: true

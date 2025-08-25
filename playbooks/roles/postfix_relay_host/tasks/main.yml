@@ -16,7 +16,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=/etc/postfix/main.cf
+  ansible.builtin.stat:
+    path: /etc/postfix/main.cf
   register: postfix_config_main_file
   when:
     - postfix_relay_host_setup|bool

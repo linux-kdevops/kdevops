@@ -7,7 +7,8 @@
   tags: ["cxl-dcd-setup"]
   delegate_to: localhost
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]
 
 - name: Show DC extents added
@@ -16,7 +17,8 @@
   register: command_output
   tags: ["cxl-dcd-setup"]
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]
 
 - name: Create dax devices for DC region
@@ -26,7 +28,8 @@
   register: command_output
   tags: ["cxl-dcd-setup"]
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]
 
 - name: Show dax devices added
@@ -35,7 +38,8 @@
   register: command_output
   tags: ["cxl-dcd-setup"]
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]
 
 - name: Convert dax devices to system RAM and online
@@ -45,7 +49,8 @@
   register: command_output
   tags: ["cxl-dcd-setup"]
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]
 
 - name: Show system memory with lsmem
@@ -54,5 +59,6 @@
   register: command_output
   tags: ["cxl-dcd-setup"]
 
-- ansible.builtin.debug: var=command_output.stdout_lines
+- ansible.builtin.debug:
+    var: command_output.stdout_lines
   tags: ["cxl-dcd-setup"]

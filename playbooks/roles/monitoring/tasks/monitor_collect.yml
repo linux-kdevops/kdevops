@@ -113,7 +113,9 @@
     monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
 
 - name: Create local monitoring results directory
-  ansible.builtin.file: path="{{ monitoring_results_path }}" state=directory
+  ansible.builtin.file:
+    path: "{{ monitoring_results_path }}"
+    state: directory
   delegate_to: localhost
   run_once: true
   when:

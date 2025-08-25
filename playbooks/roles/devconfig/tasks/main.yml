@@ -143,7 +143,8 @@
   when: dev_git_config_file.stat.exists
 
 - name: Check if the system has a user vimrc file
-  ansible.builtin.stat: path=~/.vimrc
+  ansible.builtin.stat:
+    path: ~/.vimrc
   register: dev_vimrc_file
   tags: vimrc
 
@@ -158,7 +159,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=~/.vimrc
+  ansible.builtin.stat:
+    path: ~/.vimrc
   register: dev_root_vimrc_file
   tags: vimrc
 
@@ -226,7 +228,8 @@
   when: dev_bash_config_file_copied_root is success
 
 - name: Check to see if system has GRUB2
-  ansible.builtin.stat: path=/etc/default/grub
+  ansible.builtin.stat:
+    path: /etc/default/grub
   register: grub2_config_file
   tags: ["console"]
 
@@ -234,7 +237,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=/etc/default/grub.d/15_timeout.cfg
+  ansible.builtin.stat:
+    path: /etc/default/grub.d/15_timeout.cfg
   register: stupid_cloud_grub_timeout
   when:
     - devconfig_enable_console|bool
@@ -641,7 +645,8 @@
   when: devconfig_enable_systemd_journal_remote|bool
 
 - name: Enables systemd's watchdog
-  ansible.builtin.stat: path=/etc/systemd/system.conf
+  ansible.builtin.stat:
+    path: /etc/systemd/system.conf
   register: systemd_config_file
   tags: ["systemd_watchdog"]
 

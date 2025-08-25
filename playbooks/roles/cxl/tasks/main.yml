@@ -97,7 +97,8 @@
 
 - name: Print uname for each host
   tags: ["ndctl", "cxl-test-prep", "copy_results"]
-  ansible.builtin.debug: var=ansible_kernel
+  ansible.builtin.debug:
+    var: ansible_kernel
 - name: Clear out old meson results directory on target hosts
   become: true
   become_flags: "su - -c"
@@ -161,7 +162,9 @@
     - kdevops_run_cxl_tests|bool
 
 - name: Clean up our localhost results/last-run directory
-  ansible.builtin.file: path="{{ cxl_results_target }}/{{ item }}" state=absent
+  ansible.builtin.file:
+    path: "{{ cxl_results_target }}/{{ item }}"
+    state: absent
   delegate_to: localhost
   with_items:
     - "last-run"
@@ -171,7 +174,9 @@
   tags: ["ndctl", "cxl-test-meson", "copy_results"]
 
 - name: Create empty last-run directory
-  ansible.builtin.file: path="{{ cxl_results_target }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ cxl_results_target }}/"
+    state: directory
   delegate_to: localhost
   run_once: true
   tags: ["ndctl", "cxl-test-meson", "copy_results"]

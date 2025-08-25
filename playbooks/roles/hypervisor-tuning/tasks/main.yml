@@ -16,7 +16,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=/sys/kernel/mm/ksm/run
+  ansible.builtin.stat:
+    path: /sys/kernel/mm/ksm/run
   register: ksm_enable_file
   tags: ["hypervisor"]
 
@@ -33,7 +34,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=/sys/module/zswap/parameters/enabled
+  ansible.builtin.stat:
+    path: /sys/module/zswap/parameters/enabled
   register: zswap_enable_file
   tags: ["hypervisor"]
 
@@ -41,7 +43,8 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.stat: path=/sys/module/zswap/parameters/max_pool_percent
+  ansible.builtin.stat:
+    path: /sys/module/zswap/parameters/max_pool_percent
   register: zswap_max_pool_percent_file
   when:
     - hypervisor_tunning_zswap_enable|bool

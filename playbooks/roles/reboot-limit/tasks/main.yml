@@ -97,13 +97,17 @@
   tags: ["vars"]
 
 - name: Clean up our localhost results directory and files as we are on boot number {{ reboot_limit_count }}
-  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/" state=absent
+  ansible.builtin.file:
+    path: "{{ reboot_limit_local_results_dir }}/"
+    state: absent
   delegate_to: localhost
   run_once: true
   tags: ["clean_local_results", "first_run"]
 
 - name: Create the local results directory
-  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ reboot_limit_local_results_dir }}/"
+    state: directory
   delegate_to: localhost
   run_once: true
   tags: ["first_run"]

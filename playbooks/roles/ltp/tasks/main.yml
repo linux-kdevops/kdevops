@@ -33,13 +33,17 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  ansible.builtin.file: path="{{ ltp_results_target }}/" state=absent
+  ansible.builtin.file:
+    path: "{{ ltp_results_target }}/"
+    state: absent
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  ansible.builtin.file: path="{{ ltp_results_target }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ ltp_results_target }}/"
+    state: directory
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]

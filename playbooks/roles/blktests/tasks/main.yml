@@ -170,7 +170,8 @@
 
 - name: Print uname for each host
   tags: ["blktests", "run_tests"]
-  ansible.builtin.debug: var=ansible_kernel
+  ansible.builtin.debug:
+    var: ansible_kernel
 - name: Get used target kernel version
   tags: ["blktests", "copy_results", "augment_expunge_list"]
   ansible.builtin.command: "uname -r"
@@ -255,7 +256,9 @@
     - blktests_test_devs|length != 0
 
 - name: Hint to watchdog tests are about to kick off
-  ansible.builtin.file: path="{{ blktests_workflow_target }}/.begin" state=touch
+  ansible.builtin.file:
+    path: "{{ blktests_workflow_target }}/.begin"
+    state: touch
   delegate_to: localhost
   tags: ["blktests", "run_tests"]
   when:
@@ -369,7 +372,9 @@
     - kdevops_run_blktests|bool
 
 - name: Remove watchdog hint that tests have started
-  ansible.builtin.file: path="{{ blktests_workflow_target }}/.begin" state=absent
+  ansible.builtin.file:
+    path: "{{ blktests_workflow_target }}/.begin"
+    state: absent
   delegate_to: localhost
   tags: ["blktests", "run_tests"]
   when:
@@ -377,7 +382,9 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  ansible.builtin.file: path="{{ blktests_results_target }}/{{ item }}" state=absent
+  ansible.builtin.file:
+    path: "{{ blktests_results_target }}/{{ item }}"
+    state: absent
   delegate_to: localhost
   with_items:
     - "last-run"

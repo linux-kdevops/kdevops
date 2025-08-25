@@ -265,7 +265,8 @@
 
 - name: Print uname for each host
   tags: ["selftests", "run_tests"]
-  ansible.builtin.debug: var=ansible_kernel
+  ansible.builtin.debug:
+    var: ansible_kernel
 - name: Load configfs module
   tags: ["selftests", "run_tests", "configfs"]
   become: true
@@ -285,7 +286,9 @@
   tags: ["selftests", "run_tests", "clean_results"]
 
 - name: Hint to watchdog tests are about to kick off
-  ansible.builtin.file: path="{{ selftests_workflow_target }}/.begin" state=touch
+  ansible.builtin.file:
+    path: "{{ selftests_workflow_target }}/.begin"
+    state: touch
   delegate_to: localhost
   tags: ["selftests", "run_tests"]
   when:
@@ -388,7 +391,9 @@
     group: root
 
 - name: Remove watchdog hint that tests have started
-  ansible.builtin.file: path="{{ selftests_workflow_target }}/.begin" state=absent
+  ansible.builtin.file:
+    path: "{{ selftests_workflow_target }}/.begin"
+    state: absent
   delegate_to: localhost
   tags: ["selftests", "run_tests"]
   when:
@@ -396,7 +401,9 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  ansible.builtin.file: path="{{ selftests_results_target }}/{{ item }}" state=absent
+  ansible.builtin.file:
+    path: "{{ selftests_results_target }}/{{ item }}"
+    state: absent
   delegate_to: localhost
   with_items:
     - "last-run"
@@ -406,7 +413,9 @@
   tags: ["selftests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  ansible.builtin.file: path="{{ selftests_results_target }}/" state=directory
+  ansible.builtin.file:
+    path: "{{ selftests_results_target }}/"
+    state: directory
   delegate_to: localhost
   run_once: true
   tags: ["selftests", "copy_results", "clean_local_results"]
