@@ -1,7 +1,7 @@
 ---
 - name: Install Perl dependencies for mmtests compare on localhost (Debian/Ubuntu)
   delegate_to: localhost
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -19,11 +19,11 @@
     update_cache: true
   when: ansible_facts['os_family']|lower == 'debian'
   run_once: true
-  tags: ['compare', 'deps']
+  tags: ["compare", "deps"]
 
 - name: Install additional Perl modules via CPAN on localhost (if needed)
   delegate_to: localhost
-  become: yes
+  become: true
   become_method: sudo
   cpanm:
     name: "{{ item }}"
@@ -31,12 +31,12 @@
     - File::Temp
   when: ansible_facts['os_family']|lower == 'debian'
   run_once: true
-  tags: ['compare', 'deps']
+  tags: ["compare", "deps"]
   ignore_errors: true
 
 - name: Install Perl dependencies for mmtests compare on localhost (SUSE)
   delegate_to: localhost
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -56,11 +56,11 @@
     state: present
   when: ansible_facts['os_family']|lower == 'suse'
   run_once: true
-  tags: ['compare', 'deps']
+  tags: ["compare", "deps"]
 
 - name: Install Perl dependencies for mmtests compare on localhost (RedHat/Fedora)
   delegate_to: localhost
-  become: yes
+  become: true
   become_method: sudo
   yum:
     name:
@@ -80,19 +80,19 @@
     state: present
   when: ansible_facts['os_family']|lower == 'redhat'
   run_once: true
-  tags: ['compare', 'deps']
+  tags: ["compare", "deps"]
 
 - name: Create required directories
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ topdir_path }}/workflows/mmtests/results/compare"
     - "{{ topdir_path }}/tmp"
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Clone mmtests repository locally
   delegate_to: localhost
@@ -100,9 +100,9 @@
     repo: "{{ mmtests_git_url }}"
     dest: "{{ topdir_path }}/tmp/mmtests"
     version: "{{ mmtests_git_version | default('master') }}"
-    force: yes
+    force: true
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Check if mmtests fixes directory exists
   delegate_to: localhost
@@ -110,7 +110,7 @@
     path: "{{ topdir_path }}/workflows/mmtests/fixes/"
   register: fixes_dir
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Find mmtests patches in fixes directory
   delegate_to: localhost
@@ -120,7 +120,7 @@
   register: mmtests_patches
   when: fixes_dir.stat.exists
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Apply mmtests patches if found
   delegate_to: localhost
@@ -133,7 +133,7 @@
     - fixes_dir.stat.exists
     - mmtests_patches.files | length > 0
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
   failed_when: false
   register: patch_results
 
@@ -153,7 +153,7 @@
       when:
         - groups['dev'] is defined
         - groups['dev'] | length > 0
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Set node information facts
   set_fact:
@@ -163,20 +163,20 @@
     dev_kernel: "{{ dev_kernel_version.stdout }}"
   run_once: true
   delegate_to: localhost
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Create local results directories for mmtests data
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ baseline_hostname }}-{{ baseline_kernel }}"
     - "{{ dev_hostname }}-{{ dev_kernel }}"
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Archive baseline results on remote
   archive:
@@ -185,7 +185,7 @@
     format: gz
   delegate_to: "{{ groups['baseline'][0] }}"
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Archive dev results on remote
   archive:
@@ -195,45 +195,45 @@
   delegate_to: "{{ groups['dev'][0] }}"
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Fetch baseline results to localhost
   fetch:
     src: "/tmp/baseline-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/"
-    flat: yes
+    flat: true
   delegate_to: "{{ groups['baseline'][0] }}"
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Fetch dev results to localhost
   fetch:
     src: "/tmp/dev-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/"
-    flat: yes
+    flat: true
   delegate_to: "{{ groups['dev'][0] }}"
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Extract baseline results locally
   delegate_to: localhost
   unarchive:
     src: "{{ topdir_path }}/tmp/baseline-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
-    remote_src: yes
+    remote_src: true
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Extract dev results locally
   delegate_to: localhost
   unarchive:
     src: "{{ topdir_path }}/tmp/dev-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
-    remote_src: yes
+    remote_src: true
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Run mmtests comparison
   delegate_to: localhost
@@ -247,7 +247,7 @@
   run_once: true
   when: kdevops_baseline_and_dev|bool
   register: comparison_text_output
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Generate HTML comparison output
   delegate_to: localhost
@@ -262,7 +262,7 @@
   run_once: true
   when: kdevops_baseline_and_dev|bool
   register: comparison_html_output
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Parse comparison data for template
   delegate_to: localhost
@@ -270,7 +270,7 @@
     comparison_metrics: []
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Generate performance graphs using gnuplot
   delegate_to: localhost
@@ -279,7 +279,7 @@
       find:
         paths: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}/{{ mmtests_test_type }}"
         patterns: "*.gz"
-        recurse: yes
+        recurse: true
       register: iteration_files
       loop:
         - "{{ baseline_hostname }}-{{ baseline_kernel }}"
@@ -289,7 +289,7 @@
       ansible.builtin.unarchive:
         src: "{{ item.path }}"
         dest: "{{ item.path | dirname }}"
-        remote_src: yes
+        remote_src: true
       loop: "{{ iteration_files.results | map(attribute='files') | flatten }}"
       when: iteration_files.results is defined
 
@@ -307,7 +307,7 @@
         MMTESTS_AUTO_PACKAGE_INSTALL: never
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare', 'graphs']
+  tags: ["compare", "graphs"]
 
 - name: Find generated graph files
   delegate_to: localhost
@@ -316,17 +316,17 @@
     patterns: "*.png"
   register: graph_files
   run_once: true
-  tags: ['compare', 'graphs']
+  tags: ["compare", "graphs"]
 
 - name: Read graph files for embedding
   delegate_to: localhost
   slurp:
     src: "{{ item.path }}"
   register: graph_data
-  loop: "{{ graph_files.files[:10] }}"  # Limit to first 10 graphs
+  loop: "{{ graph_files.files[:10] }}" # Limit to first 10 graphs
   when: graph_files.files is defined
   run_once: true
-  tags: ['compare', 'graphs']
+  tags: ["compare", "graphs"]
 
 - name: Prepare graph data for template
   delegate_to: localhost
@@ -334,7 +334,7 @@
     performance_graphs: []
   run_once: true
   when: graph_files.files is not defined or graph_files.files | length == 0
-  tags: ['compare', 'graphs']
+  tags: ["compare", "graphs"]
 
 - name: Build graph data list
   delegate_to: localhost
@@ -345,7 +345,7 @@
   when:
     - graph_data is defined
     - graph_data.results is defined
-  tags: ['compare', 'graphs']
+  tags: ["compare", "graphs"]
 
 - name: Generate benchmark description
   delegate_to: localhost
@@ -382,14 +382,14 @@
       <p><strong>{{ mmtests_test_type }}</strong> benchmark for Linux kernel performance testing.</p>
       {% endif %}
   run_once: true
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Generate comparison report from template
   delegate_to: localhost
   template:
     src: comparison_report.html.j2
     dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_report.html"
-    mode: '0644'
+    mode: "0644"
   vars:
     benchmark_name: "{{ mmtests_test_type }}"
     test_description: "Performance Benchmark"
@@ -407,14 +407,14 @@
     summary_stats: []
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Save comparison outputs
   delegate_to: localhost
   copy:
     content: "{{ item.content }}"
     dest: "{{ item.dest }}"
-    mode: '0644'
+    mode: "0644"
   loop:
     - content: "{{ comparison_text_output.stdout | default('No comparison data') }}"
       dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison.txt"
@@ -422,20 +422,20 @@
       dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_raw.html"
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Copy full results to final location
   delegate_to: localhost
   ansible.builtin.copy:
     src: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}/"
     dest: "{{ topdir_path }}/workflows/mmtests/results/{{ item.split('-')[0] }}/"
-    remote_src: yes
+    remote_src: true
   loop:
     - "{{ baseline_hostname }}-{{ baseline_kernel }}"
     - "{{ dev_hostname }}-{{ dev_kernel }}"
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Display comparison report location
   debug:
@@ -457,7 +457,7 @@
       🚀 Open comparison_report.html for the best analysis experience!
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare']
+  tags: ["compare"]
 
 - name: Clean up temporary archives on remote nodes
   file:
@@ -469,4 +469,4 @@
     - dev
   run_once: true
   when: kdevops_baseline_and_dev|bool
-  tags: ['compare', 'cleanup']
+  tags: ["compare", "cleanup"]

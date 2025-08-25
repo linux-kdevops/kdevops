@@ -1,17 +1,17 @@
 ---
 - name: Update apt cache
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
+    update_cache: true
   tags: linux
 
 - name: Force dbench compilation on Debian
   set_fact:
-    compile_dbench: False
+    compile_dbench: false
 
 - name: Install dbench build dependencies
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -46,5 +46,5 @@
       - libsmbclient-dev
       - libiscsi-dev
     state: present
-    update_cache: yes
-  tags: [ 'dbench', 'deps' ]
+    update_cache: true
+  tags: ["dbench", "deps"]

@@ -1,11 +1,12 @@
+---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
 
 - name: Install dependencies
@@ -35,9 +36,9 @@
   community.crypto.openssl_csr_pipe:
     privatekey_path: "{{ ca_dir }}/ca-cert.key"
     common_name: "kdevops {{ kdevops_host_prefix }} CA"
-    use_common_name_for_san: false  # since we do not specify SANs, don't use CN as a SAN
+    use_common_name_for_san: false # since we do not specify SANs, don't use CN as a SAN
     basic_constraints:
-      - 'CA:TRUE'
+      - "CA:TRUE"
     basic_constraints_critical: true
     key_usage:
       - keyCertSign
@@ -56,7 +57,7 @@
 - name: Create private key for new TLS certificate
   community.crypto.openssl_privatekey:
     path: "/etc/pki/tls/private/ktls.key"
-  become: yes
+  become: true
 
 - name: Copy CA cert to all of the hosts
   ansible.builtin.copy:
@@ -64,8 +65,8 @@
     dest: "/etc/pki/tls/certs/ca-cert.pem"
     owner: root
     group: root
-    mode: 0644
-  become: yes
+    mode: "0644"
+  become: true
 
 - name: Create certificate signing request (CSR) for new certificate
   community.crypto.openssl_csr_pipe:
@@ -74,7 +75,7 @@
       - "DNS:{{ ansible_host }}"
       - "IP:{{ ansible_default_ipv4.address }}"
   register: csr
-  become: yes
+  become: true
 
 - name: Sign certificate with our CA
   community.crypto.x509_certificate_pipe:
@@ -82,8 +83,8 @@
     provider: ownca
     ownca_path: "{{ ca_dir }}/ca-cert.pem"
     ownca_privatekey_path: "{{ ca_dir }}/ca-cert.key"
-    ownca_not_after: +365d  # valid for one year
-    ownca_not_before: "-1d"  # valid since yesterday
+    ownca_not_after: +365d # valid for one year
+    ownca_not_before: "-1d" # valid since yesterday
   delegate_to: localhost
   register: certificate
 
@@ -91,7 +92,7 @@
   copy:
     dest: "/etc/pki/tls/certs/ktls.pem"
     content: "{{ certificate.certificate }}"
-  become: yes
+  become: true
 
 - name: Install new /etc/tlshd.conf
   ansible.builtin.copy:
@@ -99,11 +100,11 @@
     dest: "/etc/tlshd.conf"
     owner: root
     group: root
-    mode: 0644
-  become: yes
+    mode: "0644"
+  become: true
 
 - name: Enable and start tlshd
-  become: yes
+  become: true
   ansible.builtin.systemd_service:
     name: tlshd.service
     enabled: true

@@ -5,7 +5,7 @@
     - infer_uid_and_group|bool
 
 - name: Establish the fixed device name of the data device
-  tags: [ 'data_partition' ]
+  tags: ["data_partition"]
   when:
     - kdevops_enable_terraform|bool
     - kdevops_terraform_provider == "aws"
@@ -26,8 +26,7 @@
         local_map: "{{ block_device_dict[inventory_hostname] }}"
       ansible.builtin.set_fact:
         data_volume_id: "{{ 'nvme-Amazon_Elastic_Block_Store_' + item.value | regex_replace('-', '') }}"
-      when:
-        item.key == "/dev/sdf"
+      when: item.key == "/dev/sdf"
       with_dict: "{{ local_map }}"
 
     # This task replaces the value of data_device only in the scope of this role
@@ -46,9 +45,9 @@
   vars:
     disk_setup_device: "{{ data_device }}"
     disk_setup_fstype: "{{ data_fstype }}"
-    disk_setup_label : "{{ data_label }}"
+    disk_setup_label: "{{ data_label }}"
     disk_setup_fs_opts: "{{ data_fs_opts }}"
     disk_setup_path: "{{ data_path }}"
     disk_setup_user: "{{ data_user }}"
     disk_setup_group: "{{ data_group }}"
-  tags: [ 'data_partition' ]
+  tags: ["data_partition"]

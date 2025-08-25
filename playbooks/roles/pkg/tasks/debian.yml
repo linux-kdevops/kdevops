@@ -1,3 +1,4 @@
+---
 - name: debian_libaio rename for buster
   set_fact:
     is_bookworm: '{{ ansible_distribution_release == "bookworm" }}'

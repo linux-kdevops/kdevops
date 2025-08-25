@@ -9,7 +9,7 @@
 
 - name: Rescan iSCSI LUNs on the NFS server
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
   community.general.open_iscsi:
@@ -17,14 +17,14 @@
 
 - name: Rescan iSCSI LUNs on the target node
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   community.general.open_iscsi:
     rescan: true
 
 - name: Enumerate available SCSI devices on the NFS server
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
   ansible.builtin.command:
@@ -40,7 +40,7 @@
 
 - name: Format new iSCSI LUN for {{ export_fstype }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
   community.general.filesystem:
@@ -49,10 +49,10 @@
 
 - name: Mount iSCSI LUN under {{ nfsd_export_path }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
-  throttle: 1  # running this in parallel can clobber fstab changes
+  throttle: 1 # running this in parallel can clobber fstab changes
   ansible.posix.mount:
     path: "{{ nfsd_export_path }}/{{ export_volname }}"
     src: "{{ iscsi_device }}"

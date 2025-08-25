@@ -6,10 +6,10 @@
     - ansible_distribution != "Fedora"
 
 - name: Install packages we care about
-  become: yes
+  become: true
   become_method: sudo
   yum:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -54,10 +54,10 @@
       - zstd
 
 - name: Install btrfs-progs
-  become: yes
+  become: true
   become_method: sudo
   yum:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -103,7 +103,7 @@
     - bootlinux_builder|bool
 
 - name: Remove packages that mess with initramfs
-  become: yes
+  become: true
   become_method: sudo
   yum:
     state: absent

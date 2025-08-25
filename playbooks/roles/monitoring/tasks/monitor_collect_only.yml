@@ -3,7 +3,7 @@
 # This allows peeking at intermediate results during long-running tests
 
 - name: Check if monitoring data exists (without stopping monitoring)
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /root/monitoring/folio_migration_stats.txt
@@ -15,7 +15,7 @@
 # Note: We don't need matplotlib on target hosts - plots are generated on localhost
 
 - name: Create snapshot of monitoring data
-  become: yes
+  become: true
   become_method: sudo
   shell: |
     # Create a snapshot copy to avoid interfering with ongoing monitoring
@@ -44,19 +44,16 @@
     monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
 
 - name: Create local monitoring results directory
-  local_action:
-    module: file
-    path: "{{ monitoring_results_path }}"
-    state: directory
-    mode: '0755'
-  become: no
+  file:
+  delegate_to: localhost
+  become: false
   run_once: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
 - name: Check if snapshot was created
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /root/monitoring/folio_migration_stats_snapshot.txt
@@ -66,13 +63,13 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Copy folio migration stats snapshot to localhost
-  become: yes
+  become: true
   become_method: sudo
   fetch:
     src: /root/monitoring/folio_migration_stats_snapshot.txt
     dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt"
-    flat: yes
-    validate_checksum: False
+    flat: true
+    validate_checksum: false
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
@@ -92,9 +89,10 @@
 
 # Generate plots on localhost from the collected data
 - name: Check if matplotlib is available on localhost
-  local_action: command python3 -c "import matplotlib.pyplot"
+  command: python3 -c "import matplotlib.pyplot"
+  delegate_to: localhost
   register: localhost_matplotlib_check
-  ignore_errors: yes
+  ignore_errors: true
   changed_when: false
   failed_when: false
   run_once: true
@@ -103,10 +101,8 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Collect all monitoring data files
-  local_action:
-    module: find
-    paths: "{{ monitoring_results_path }}"
-    patterns: "*_folio_migration_stats_interim.txt"
+  find:
+  delegate_to: localhost
   register: all_monitoring_files
   run_once: true
   when:
@@ -115,36 +111,11 @@
     - localhost_matplotlib_check.rc == 0
 
 - name: Generate A/B comparison plots for each configuration
-  local_action:
-    module: shell
-    cmd: |
-      # Only process baseline files (not -dev files)
-      if [[ "{{ item }}" == *"-dev_folio_migration_stats_interim.txt" ]]; then
-        exit 0
-      fi
-
-      # Extract base configuration name
-      base_name=$(echo "{{ item }}" | sed 's/_folio_migration_stats_interim.txt$//')
-      baseline_file="{{ item }}"
-      dev_file="${base_name}-dev_folio_migration_stats_interim.txt"
-
-      # Check if corresponding dev file exists
-      if [ ! -f "{{ monitoring_results_path }}/$dev_file" ]; then
-        echo "Dev file not found for $base_name, skipping A/B comparison"
-        exit 0
-      fi
-
-      # Generate A/B comparison plot
-      config_name=$(basename "$base_name")
-      python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py \
-        -o "{{ monitoring_results_path }}/${config_name}_ab_comparison.png" \
-        "{{ monitoring_results_path }}/$baseline_file" \
-        "{{ monitoring_results_path }}/$dev_file"
-
-      echo "Generated A/B comparison: ${config_name}_ab_comparison.png (baseline vs dev)"
+  shell:
+  delegate_to: localhost
   with_items: "{{ all_monitoring_files.files | map(attribute='path') | map('basename') | list }}"
   register: ab_plot_generation
-  ignore_errors: yes
+  ignore_errors: true
   run_once: true
   when:
     - monitor_developmental_stats|default(false)|bool
@@ -153,26 +124,10 @@
     - all_monitoring_files.files | length > 0
 
 - name: Generate comprehensive plot with all results
-  local_action:
-    module: shell
-    cmd: |
-      # Find all interim stats files
-      cd "{{ monitoring_results_path }}"
-      files=$(ls -1 *_folio_migration_stats_interim.txt 2>/dev/null)
-
-      if [ -z "$files" ]; then
-        echo "No monitoring data files found"
-        exit 0
-      fi
-
-      # Generate comprehensive plot with all data
-      python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py \
-        -o "{{ monitoring_results_path }}/all_hosts_comprehensive.png" \
-        $files
-
-      echo "Generated comprehensive plot: all_hosts_comprehensive.png"
+  shell:
+  delegate_to: localhost
   register: comprehensive_plot_generation
-  ignore_errors: yes
+  ignore_errors: true
   run_once: true
   when:
     - monitor_developmental_stats|default(false)|bool
@@ -195,7 +150,7 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Clean up snapshot files on target
-  become: yes
+  become: true
   become_method: sudo
   file:
     path: "{{ item }}"
@@ -206,4 +161,4 @@
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
-  ignore_errors: yes
+  ignore_errors: true

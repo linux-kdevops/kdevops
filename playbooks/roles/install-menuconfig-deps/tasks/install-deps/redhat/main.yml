@@ -1,6 +1,6 @@
 ---
 - name: Install kdevops generic dependencies
-  become: yes
+  become: true
   become_method: sudo
   dnf:
     name:

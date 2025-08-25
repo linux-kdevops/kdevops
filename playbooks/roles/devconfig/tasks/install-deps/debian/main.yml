@@ -27,14 +27,14 @@
   tags: firstconfig
 
 - name: Stop and disable unattended-upgrades related services
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   systemd:
     name: "{{ item }}"
     state: stopped
-    enabled: no
-    daemon_reload: yes
+    enabled: false
+    daemon_reload: true
   loop:
     - unattended-upgrades
     - apt-daily.service
@@ -42,11 +42,11 @@
     - apt-daily-upgrade.service
     - apt-daily-upgrade.timer
     - systemd-networkd-wait-online.service
-  ignore_errors: yes
+  ignore_errors: true
   tags: firstconfig
 
 - name: Update apt cache accepting release info changes
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.command:
     cmd: apt-get update --allow-releaseinfo-change
@@ -55,7 +55,7 @@
   tags: firstconfig
 
 - name: Upgrade Packages
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.apt:
     update_cache: false
@@ -68,8 +68,8 @@
   tags: firstconfig
 
 - name: Remove unattended-upgrades package in case upgrade installed it
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   apt:
     name: unattended-upgrades
@@ -81,8 +81,8 @@
   tags: firstconfig
 
 - name: Remove optional unattended-upgrades configuration files if they exist
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ item }}"
@@ -92,18 +92,18 @@
     - /etc/apt/apt.conf.d/02periodic
     - /etc/apt/apt.conf.d/50unattended-upgrades
     - /etc/apt/apt.conf.d/52unattended-upgrades-local
-  ignore_errors: yes
+  ignore_errors: true
   tags: firstconfig
 
 - name: Stop and disable unattended-upgrades related services
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   systemd:
     name: "{{ item }}"
     state: stopped
-    enabled: no
-    daemon_reload: yes
+    enabled: false
+    daemon_reload: true
   loop:
     - unattended-upgrades
     - apt-daily.service
@@ -111,17 +111,18 @@
     - apt-daily-upgrade.service
     - apt-daily-upgrade.timer
     - systemd-networkd-wait-online.service
-  ignore_errors: yes
+  ignore_errors: true
   tags: firstconfig
 
 - name: Allow for distro source change / upgrade
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
-  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::AllowInsecureRepositories=true -o Acquire::MaxDate=10"
+  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::AllowInsecureRepositories=true
+    -o Acquire::MaxDate=10"
   register: release_info_changed
   changed_when: release_info_changed.rc == 0
-  tags: [ 'apt', 'release-info-change' ]
+  tags: ["apt", "release-info-change"]
   when:
     - devconfig_try_upgrade|bool
 
@@ -135,8 +136,8 @@
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Write custom nsswitch.conf for hop1 mirror heuristic
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.copy:
     content: |
@@ -155,7 +156,7 @@
     dest: /etc/nsswitch.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   when:
     - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
@@ -164,7 +165,7 @@
 - name: Configure APT to ignore `Valid-Until` timestamps on the host
   delegate_to: localhost
   run_once: true
-  become: yes
+  become: true
   become_method: sudo
   copy:
     content: |
@@ -178,7 +179,7 @@
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Configure APT to ignore `Valid-Until` timestamps on the target node
-  become: yes
+  become: true
   become_method: sudo
   copy:
     content: |
@@ -194,43 +195,43 @@
 - name: Ensure we make Valid-Until trick take effect on host
   delegate_to: localhost
   run_once: true
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
+    update_cache: true
   when:
     - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Ensure we make Valid-Until trick take effect on target node
-  become: yes
+  become: true
   become_method: sudo
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   apt:
-    update_cache: yes
+    update_cache: true
   when:
     - distro_debian_has_hop1_sources|bool
     - guestfs_copy_sources_from_host_to_guest|bool
 
 - name: Update apt cache and do dist-upgrade
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
+    update_cache: true
     upgrade: full
-  tags: [ 'apt', 'cache' ]
+  tags: ["apt", "cache"]
   when:
     - devconfig_try_upgrade|bool
 
 - name: Reboot system to make the new kernel and modules take effect
-  become: yes
+  become: true
   become_method: sudo
   reboot:
   when:
     - devconfig_try_upgrade|bool
 
 - name: Install our generic dependencies
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -264,13 +265,13 @@
       - trace-cmd
       - linux-perf
     state: present
-    update_cache: yes
-  tags: [ 'kdevops', 'deps' ]
+    update_cache: true
+  tags: ["kdevops", "deps"]
   when:
     - devconfig_try_install_kdevtools|bool
 
 - name: Set up snmp
-  become: yes
+  become: true
   become_method: sudo
   template:
     src: snmpd.conf
@@ -280,18 +281,18 @@
   tags: snmpd
 
 - name: Enable snmpd service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: snmpd
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   tags: snmpd
   when:
     - devconfig_try_install_kdevtools|bool
 
 - name: Start snmpd service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: snmpd
@@ -301,7 +302,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install and sets up kdump
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -311,18 +312,18 @@
   tags: kdump
 
 - name: Install systemd-journal-remote
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
       - systemd-journal-remote
-    update_cache: yes
+    update_cache: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
   tags: journal
 
 - name: Install systemd-timesyncd
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:

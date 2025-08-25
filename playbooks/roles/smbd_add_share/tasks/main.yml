@@ -1,7 +1,7 @@
 ---
 - name: Create a new LVM partition
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   community.general.lvol:
@@ -12,8 +12,8 @@
     - share_fstype != "tmpfs"
 
 - name: Format new volume for {{ share_fstype }}
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   filesystem:
@@ -23,11 +23,11 @@
     - share_fstype != "tmpfs"
 
 - name: Mount volume under {{ smbd_share_path }}
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  throttle: 1  # running this in parallel can clobber fstab changes
+  throttle: 1 # running this in parallel can clobber fstab changes
   mount:
     path: "{{ smbd_share_path }}/{{ share_volname }}"
     src: "/dev/shares/{{ share_volname }}"
@@ -37,11 +37,11 @@
     - share_fstype != "tmpfs"
 
 - name: Mount tmpfs under {{ smbd_share_path }}
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  throttle: 1  # running this in parallel can clobber fstab changes
+  throttle: 1 # running this in parallel can clobber fstab changes
   mount:
     path: "{{ smbd_share_path }}/{{ share_volname }}"
     src: "tmpfs"
@@ -51,8 +51,8 @@
     - share_fstype == "tmpfs"
 
 - name: Ensure {{ share_volname }} has correct permissions
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   file:
@@ -66,23 +66,23 @@
   command: /usr/sbin/selinuxenabled
   register: selinux_status
   delegate_to: "{{ server_host }}"
-  changed_when: False
-  failed_when: False
+  changed_when: false
+  failed_when: false
 
 - name: Fix SELinux file context under new mount
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   command: /usr/sbin/restorecon -R "{{ smbd_share_path }}/{{ share_volname }}"
   when: selinux_status.rc == 0
 
 - name: Create an SMB share for the new fs
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  throttle: 1  # running this in parallel can clobber smb.conf changes
+  throttle: 1 # running this in parallel can clobber smb.conf changes
   ansible.builtin.blockinfile:
     dest: /etc/samba/smb.conf
     block: "{{ lookup('template', 'share.j2') }}"
@@ -92,12 +92,11 @@
     insertafter: "EOF"
 
 - name: Reload the smb services
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   ansible.builtin.systemd_service:
-    name: smb.service 
+    name: smb.service
     enabled: true
     state: reloaded
-

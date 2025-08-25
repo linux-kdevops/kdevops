@@ -4,7 +4,7 @@
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier
   set_fact:
@@ -23,26 +23,26 @@
     is_sle15sp4: '{{ ansible_distribution_version == "15.4" }}'
   when:
     - is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier when not SLE
   set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle12sp5: False
-    is_sle15sp2: False
-    is_sle15sp3: False
-    is_sle15sp4: False
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle12sp5: false
+    is_sle15sp2: false
+    is_sle15sp3: false
+    is_sle15sp4: false
   when:
     - not is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we have figured out how to add repos for each
   set_fact:
@@ -56,7 +56,7 @@
     - not devconfig_repos_addon|bool
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we are not on sle11 or sle10
   set_fact:
@@ -69,12 +69,12 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports nvme-utils
   set_fact:
     lacks_nvme_utils: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack nvme-utils
   set_fact:
@@ -82,12 +82,12 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports git-core
   set_fact:
     lacks_git_core: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack git-core
   set_fact:
@@ -95,12 +95,12 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool or is_sle12sp3|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release use the package name git assume false
   set_fact:
     use_git_package: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 # This needs perl-Error, so fix that first
 - name: Does this release use the package name git
@@ -110,12 +110,12 @@
     - is_sle|bool
     - is_sle12sp3|bool
     - false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros supports xfsdump
   set_fact:
     lacks_xfsdump: false
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Does this release lack xfsdump
   set_fact:
@@ -123,12 +123,12 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume all distros have fio on the main repo
   set_fact:
-    lacks_fio_main_repo: False
-  tags: [ 'vars' ]
+    lacks_fio_main_repo: false
+  tags: ["vars"]
 
 # SLES12-SP1 has fio but on ses/2.1/x86_64 repo, and you need another
 # registration key for that. We simply skip fio on it, but only if
@@ -136,23 +136,23 @@
 # be available.
 - name: Does this release lack fio on the main repository
   set_fact:
-    lacks_fio_main_repo: True
+    lacks_fio_main_repo: true
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool or is_sle12sp3|bool or is_sle12sp5|bool
     - suse_register_system|bool or devconfig_repos_addon|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Verify SLE/SLED systems are being registered
   fail:
     msg: "System is SLE/SLED, must include SUSE registration info on playbooks/secret.yml with suse_register_system and suse_registration_code variables set."
   when:
     - not devconfig_repos_addon|bool
-    - 'is_sle|bool'
-    - 'not suse_register_system|bool'
+    - "is_sle|bool"
+    - "not suse_register_system|bool"
 
 - name: Prepare packages source list and register machine
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/prepare_suse_repos.sh --register-system-code {{ suse_registration_code }}"
@@ -163,28 +163,28 @@
 
 - name: Assume we have the python2 product for sles15sp first
   set_fact:
-    sle15_has_python2_product: True
+    sle15_has_python2_product: true
   when:
     - suse_register_system|bool
     - repos_will_be_added|bool
     - suse_registration_code != 0
     - is_sle15|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Disable the python2 product for sles15sp4
   set_fact:
-    sle15_has_python2_product: False
+    sle15_has_python2_product: false
   when:
     - suse_register_system|bool
     - repos_will_be_added|bool
     - suse_registration_code != 0
     - is_sle15|bool
     - is_sle15sp4|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 
 - name: Register for python2 module product when needed
-  become: yes
+  become: true
   become_method: sudo
   command: "SUSEConnect -p sle-module-python2/{{ ansible_distribution_version }}/{{ ansible_architecture }}"
   when:
@@ -195,7 +195,7 @@
     - sle15_has_python2_product|bool
 
 - name: Add extra addon repositories when enabled
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh {{ item.url }} {{ item.name }}"
@@ -207,11 +207,11 @@
     - devconfig_repos_addon|bool
 
 - name: Install missing python-xml for releases that need it manually
-  become: yes
+  become: true
   become_method: sudo
   command:
     cmd: "zypper in -y python-xml"
-    warn: no
+    warn: false
   when:
     - (suse_register_system|bool and suse_registration_code != 0) or devconfig_repos_addon|bool
     - repos_will_be_added|bool
@@ -219,7 +219,7 @@
     - is_sle15|bool
 
 - name: Prepare packages source list
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/prepare_suse_repos.sh"
@@ -229,17 +229,17 @@
     - repos_will_be_added|bool
 
 - name: Do full upgrade
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     state: dist-upgrade
-    name: '*'
+    name: "*"
   when:
     - repos_will_be_added|bool
     - devconfig_try_upgrade|bool
 
 - name: Reboot system to make the new kernel and modules take effect
-  become: yes
+  become: true
   become_method: sudo
   reboot:
   when:
@@ -247,7 +247,7 @@
     - devconfig_try_upgrade|bool
 
 - name: Install nvme tools
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -259,7 +259,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install fio when possible
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -271,7 +271,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install git-core when possible
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -283,7 +283,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install git when possible
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -295,7 +295,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install xfsdump when possible
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -307,7 +307,7 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Install packages on newer distro when possible
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -322,7 +322,7 @@
 
 # sle12sp3 needs m4 to install flex, fix that first
 - name: Install packages not available on sle11 or sle10
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -338,7 +338,7 @@
 
 # fix this for sle12sp3
 - name: Install packages we typically care about
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -368,20 +368,20 @@
 
 - name: Set default values for if we install snmp / kdump
   set_fact:
-    install_snmp: False
-    install_kdump: False
-  tags: [ 'vars' ]
+    install_snmp: false
+    install_kdump: false
+  tags: ["vars"]
 
 - name: Set if we install snmp / kdump
   set_fact:
-    install_snmp: True
-    install_kdump: True
+    install_snmp: true
+    install_kdump: true
   when:
     - is_sle15|bool or is_tumbleweed
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Install snmp
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -393,7 +393,7 @@
   tags: snmpd
 
 - name: Set up snmp
-  become: yes
+  become: true
   become_method: sudo
   template:
     src: snmpd.conf
@@ -405,12 +405,12 @@
   tags: snmpd
 
 - name: Enable snmpd service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: snmpd
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   when:
     - install_snmp|bool
     - repos_will_be_added|bool
@@ -418,7 +418,7 @@
   tags: snmpd
 
 - name: Start snmpd service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: snmpd
@@ -430,7 +430,7 @@
   tags: snmpd
 
 - name: Install kdump
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -442,8 +442,8 @@
   tags: kdump
 
 - name: Get kdump calibration high
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   shell: kdumptool calibrate | grep ^High | awk '{print $2}'
   register: kdump_high
@@ -454,8 +454,8 @@
   tags: kdump
 
 - name: Get kdump calibration low
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   shell: kdumptool calibrate | grep ^Low | awk '{print $2}'
   register: kdump_low
@@ -466,36 +466,36 @@
   tags: kdump
 
 - name: Check to see if kdump is configured on your GRUB config
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   register: kdump_grep
   lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")(.*)(\s*)crashkernel(.*)'
-    line: ''
-  check_mode: yes
+    line: ""
+  check_mode: true
   when:
     - install_kdump|bool
     - repos_will_be_added|bool
     - devconfig_try_install_kdevtools|bool
-  tags: [ 'kdump' ]
+  tags: ["kdump"]
 
 - name: Update GRUB configuration to add kdump knobs
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   lineinfile:
     path: /etc/default/grub
     regexp: '^(GRUB_CMDLINE_LINUX=\")((\s*)(.*)*)(\s*)"$'
-    backrefs: yes
+    backrefs: true
     line: '\1\2 crashkernel={{ kdump_high.stdout }}M,high crashkernel={{ kdump_low.stdout }}M,low"'
   when:
     - not kdump_grep.changed
     - install_kdump|bool
     - repos_will_be_added|bool
     - devconfig_try_install_kdevtools|bool
-  tags: [ 'kdump' ]
+  tags: ["kdump"]
 
 - name: Update your boot GRUB file if necessary
   import_tasks: update-grub/main.yml
@@ -506,18 +506,18 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Reboot system to ensure kdump is effective
-  become: yes
+  become: true
   become_method: sudo
   reboot:
-  tags: [ 'kdump' ]
+  tags: ["kdump"]
 
 - name: Enable kdump service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: kdump
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
   when:
     - install_kdump|bool
     - repos_will_be_added|bool
@@ -525,7 +525,7 @@
   tags: kdump
 
 - name: Start kdump service
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: kdump
@@ -537,7 +537,7 @@
   tags: kdump
 
 - name: Install systemd-journal-remote
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -548,7 +548,7 @@
   tags: journal
 
 - name: Install systemd-timesyncd
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:

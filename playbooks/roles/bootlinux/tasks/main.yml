@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -34,7 +34,7 @@
 
 # We do this regardless of what distro you use
 - name: Install b4
-  become: yes
+  become: true
   become_method: sudo
   pip:
     name:
@@ -54,7 +54,7 @@
 
 - name: Enable b4 am all hosts if not deploying dev and baseline nodes
   set_fact:
-    bootlinux_b4_am_this_host: True
+    bootlinux_b4_am_this_host: true
   when:
     - not kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
@@ -112,8 +112,10 @@
   set_fact:
     target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
     active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes|default(false)|bool else target_linux_ref }}"
-    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_kernelrelease|bool) else target_linux_kernelrelease }}"
-    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_localversion|bool) else target_linux_localversion }}"
+    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_kernelrelease|bool) else
+      target_linux_kernelrelease }}"
+    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_localversion|bool) else target_linux_localversion
+      }}"
     target_linux_config: "config-{{ target_linux_dev_ref }}"
   when:
     - kdevops_baseline_and_dev|bool
@@ -178,8 +180,8 @@
     - not workflow_linux_packaged|bool
 
 - name: Mount bootlinux 9p on each target node
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   mount:
     name: "{{ target_linux_dir_path }}"
@@ -187,7 +189,7 @@
     fstype: "9p"
     opts: "ro,trans=virtio,version=9p2000.L,posixacl,cache=none"
     state: "mounted"
-  tags: [ 'data_partition', '9p_mount' ]
+  tags: ["data_partition", "9p_mount"]
   when:
     - bootlinux_9p|bool
 
@@ -212,26 +214,26 @@
 - name: Run uname before
   command: "uname -r"
   register: uname_cmd_before
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
 
 - name: Check kernel uname for uninstall
   debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd_before.stdout_lines.0 }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
 
 - name: Set kernel version if user did not provide one with KVER command line argument
   set_fact:
     uninstall_kernel_ver: "{{ uname_cmd_before.stdout_lines.0 }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   when:
     - uninstall_kernel_enable|bool
     - uninstall_kernel_ver is not defined
 
 - name: Check if files for old kernel exist
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.find:
     paths:
@@ -253,19 +255,19 @@
       - "{{ uninstall_kernel_ver }}"
       - "{{ uninstall_kernel_ver }}+"
   register: found_uninstall_kfiles
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   when:
     - uninstall_kernel_enable|bool
     - uninstall_kernel_ver is defined
 
 - name: Remove an old version of Linux manually specified
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     state: absent
     path: "{{ item.path }}"
-  tags: [ 'uninstall-linux' ]
+  tags: ["uninstall-linux"]
   with_items:
     - "{{ found_uninstall_kfiles.files }}"
   loop_control:
@@ -279,28 +281,28 @@
 # option. This let's us work with hardware serial consoles
 # say on IPMIs and virtual guests ('virsh console').
 - name: Ensure we can get the GRUB prompt on reboot
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   lineinfile:
     path: /etc/default/grub
-    regexp: '^GRUB_TERMINAL='
+    regexp: "^GRUB_TERMINAL="
     line: GRUB_TERMINAL="console serial"
 
 - name: Update your boot GRUB file if necessary
-  tags: [ 'uninstall-linux', 'manual-update-grub' ]
+  tags: ["uninstall-linux", "manual-update-grub"]
   import_tasks: update-grub/main.yml
 
 - name: Ensure we have DEFAULTDEBUG set
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   register: grub_default_saved_cmd
   lineinfile:
     path: /etc/sysconfig/kernel
-    regexp: '^DEFAULTDEBUG='
+    regexp: "^DEFAULTDEBUG="
     line: DEFAULTDEBUG=yes
-  tags: [ 'saved' ]
+  tags: ["saved"]
   when: ansible_facts['os_family']|lower == 'redhat'
 
 - name: Install packages on each target node
@@ -310,52 +312,52 @@
     - workflow_linux_packaged|bool
 
 - name: Install {{ target_linux_tree }} on the target nodes
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{ target_linux_make_install_cmd }}"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'install-linux' ]
+  tags: ["install-linux"]
   when:
     - not workflow_linux_packaged|bool
 
 - name: Install {{ target_linux_tree }} cxl_test on the target nodes
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{ target_linux_make_install_cmd }} M=tools/testing/cxl INSTALL_MOD_DIR=updates"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'install-linux', 'cxl-install' ]
+  tags: ["install-linux", "cxl-install"]
   when:
     - kdevops_workflow_enable_cxl|bool
     - not workflow_linux_packaged|bool
 
 - name: Set the default kernel if necessary
-  tags: [ 'saved' ]
+  tags: ["saved"]
   import_tasks: update-grub/install.yml
   # when:
   #   - ansible_facts['os_family']|lower != 'redhat'
 
 - name: Reboot into Linux {{ target_linux_tree }}
-  become: yes
+  become: true
   become_method: sudo
   reboot:
-  tags: [ 'reboot' ]
+  tags: ["reboot"]
 
 - name: Run uname
   command: "uname -r"
   register: uname_cmd
-  tags: [ 'uname' ]
+  tags: ["uname"]
 
 - name: Check kernel uname
   debug:
     msg: "Target kernel {{ target_linux_ref }} Running kernel {{ running_kernel }}"
   vars:
     running_kernel: "{{ uname_cmd.stdout_lines.0 }}"
-  tags: [ 'uname' ]
+  tags: ["uname"]

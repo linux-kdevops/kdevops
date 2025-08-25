@@ -1,6 +1,6 @@
 ---
 - name: Install libvirt / kvm dependencies
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -12,15 +12,15 @@
     state: present
 
 - name: Enable libvirtd
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: libvirtd
-    enabled: yes
-    masked: no
+    enabled: true
+    masked: false
 
 - name: Make sure libvirtd is running
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     state: started

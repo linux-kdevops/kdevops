@@ -1,24 +1,25 @@
 ---
 - name: Print uname for each host
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   debug: var=ansible_kernel
 
 - name: Hint to our watchdog our reboot-limit tests are about to kick off
-  local_action: file path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
-  tags: [ 'run_tests' ]
+  file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
+  delegate_to: localhost
+  tags: ["run_tests"]
   run_once: true
 
 - name: Run the reboot test using the ansible reboot module
-  become: yes
+  become: true
   become_method: sudo
   reboot:
     post_reboot_delay: 10
   when:
     - reboot_limit_test_type == "ansible"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Reboot using systemctl reboot with proper handling
-  become: yes
+  become: true
   become_method: sudo
   reboot:
     msg: "Rebooting system via systemctl reboot for reboot-limit test"
@@ -27,7 +28,7 @@
     reboot_timeout: 300
   when:
     - reboot_limit_test_type == "systemctl_reboot"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 # kexec tasks - prepare the kernel for kexec before rebooting
 - name: Get current kernel version for kexec
@@ -35,7 +36,7 @@
   register: current_kernel_version
   when:
     - reboot_limit_test_type == "systemctl_kexec"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Check for kernel image locations for kexec
   stat:
@@ -50,7 +51,7 @@
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - current_kernel_version is defined
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Set kernel path for kexec
   set_fact:
@@ -61,7 +62,7 @@
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - kernel_item.stat.exists
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Check for initrd/initramfs locations for kexec
   stat:
@@ -77,7 +78,7 @@
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - current_kernel_version is defined
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Set initrd path for kexec
   set_fact:
@@ -88,7 +89,7 @@
   when:
     - reboot_limit_test_type == "systemctl_kexec"
     - initrd_item.stat.exists
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Read current kernel command line for kexec
   slurp:
@@ -96,10 +97,10 @@
   register: cmdline_content
   when:
     - reboot_limit_test_type == "systemctl_kexec"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Load kernel into kexec
-  become: yes
+  become: true
   become_method: sudo
   command: >
     kexec -l {{ kexec_kernel_path }}
@@ -109,10 +110,10 @@
     - reboot_limit_test_type == "systemctl_kexec"
     - kexec_kernel_path is defined
     - kexec_initrd_path is defined
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Reboot using systemctl kexec with proper handling
-  become: yes
+  become: true
   become_method: sudo
   reboot:
     msg: "Rebooting system via systemctl kexec for reboot-limit test"
@@ -121,110 +122,110 @@
     reboot_timeout: 300
   when:
     - reboot_limit_test_type == "systemctl_kexec"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Check if the reboot limit count variable file exists
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: "{{ reboot_limit_count_file }}"
   register: reboot_limit_reg_count_file
-  tags: [ 'run_tests', 'read_count', 'vars' ]
+  tags: ["run_tests", "read_count", "vars"]
 
 - name: Read last boot count variable file
-  become: yes
+  become: true
   become_method: sudo
   slurp:
     src: "{{ reboot_limit_count_file }}"
   register: reboot_limit_last_count
   when:
     - reboot_limit_reg_count_file.stat.exists
-  tags: [ 'run_tests' , 'read_count', 'vars' ]
+  tags: ["run_tests", "read_count", "vars"]
 
 - name: Set the current boot count into a variable
   set_fact:
     reboot_limit_count: "{{ reboot_limit_last_count['content'] | b64decode | int }}"
-  tags: [ 'run_tests' , 'read_count', 'vars' ]
+  tags: ["run_tests", "read_count", "vars"]
   when:
     - reboot_limit_reg_count_file.stat.exists
 
 - name: Adjust the local boot count variable if we rebooted OK
   set_fact:
     reboot_limit_count: "{{ reboot_limit_count | int + 1 }}"
-  tags: [ 'run_tests' , 'read_count' ]
+  tags: ["run_tests", "read_count"]
   when:
     - reboot_limit_reg_count_file.stat.exists
 
 - name: Set the current boot count into a variable when no prior boot test exists
   set_fact:
     reboot_limit_count: 1
-  tags: [ 'run_tests' , 'read_count', 'vars' ]
+  tags: ["run_tests", "read_count", "vars"]
   when:
     - not reboot_limit_reg_count_file.stat.exists
 
 - name: Enable sysrq key if we're about to force a crash
-  become: yes
+  become: true
   become_method: sudo
   shell: echo 1 > /proc/sys/kernel/sysrq
-  tags: [ 'run_tests' , 'read_count', 'vars', 'crash-check' ]
+  tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
     - reboot_limit_boot_count_crash_enable
     - ((reboot_limit_count | int % reboot_limit_boot_crash_count | int) == 0)
 
 - name: Force a crash if we were asked to
-  become: yes
+  become: true
   become_method: sudo
   shell: echo c > /proc/sysrq-trigger
   ignore_errors: true
-  tags: [ 'run_tests' , 'read_count', 'vars', 'crash-check' ]
+  tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
     - reboot_limit_boot_count_crash_enable
     - ((reboot_limit_count | int % reboot_limit_boot_crash_count | int) == 0)
 
 - name: Write current updated boot count variable file to be {{ reboot_limit_count }}
-  become: yes
+  become: true
   become_method: sudo
   copy:
     content: "{{ reboot_limit_count }}"
     dest: "{{ reboot_limit_count_file }}"
   when:
     - reboot_limit_reg_count_file.stat.exists
-  tags: [ 'run_tests' , 'read_count' ]
+  tags: ["run_tests", "read_count"]
 
 - name: Create last boot count variable file if it does not exist
-  become: yes
+  become: true
   become_method: sudo
   copy:
     content: "1"
     dest: "{{ reboot_limit_count_file }}"
   when:
     - not reboot_limit_reg_count_file.stat.exists
-  tags: [ 'run_tests' , 'read_count' ]
+  tags: ["run_tests", "read_count"]
 
 - name: Wait for boot up to complete before running systemd-analyze
-  become: yes
+  become: true
   become_method: sudo
   command: "systemctl is-system-running --wait"
   when:
     - reboot_limit_enable_systemd_analyze|bool
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Collect systemctl-analyze results
-  become: yes
+  become: true
   become_method: sudo
   command: "systemd-analyze"
   register: systemd_analyze_cmd
   when:
     - reboot_limit_enable_systemd_analyze|bool
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Append systemctl-analyze output
-  become: yes
+  become: true
   become_method: sudo
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   lineinfile:
     path: "{{ reboot_limit_analyze_file }}"
     line: "{{ systemd_analyze_cmd.stdout }}"
-    create: yes
+    create: true
   when:
     - reboot_limit_enable_systemd_analyze|bool

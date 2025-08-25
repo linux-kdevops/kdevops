@@ -8,87 +8,87 @@
   set_fact:
     reboot_type_analyze_file: "{{ data_path }}/{{ ansible_ssh_host }}/{{ reboot_limits_systemctl_analyze_log }}"
     reboot_type_count_file: "{{ data_path }}/{{ ansible_ssh_host }}/{{ reboot_limits_count_log }}"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Create the data collection directory for {{ reboot_type }} reboot type
-  become: yes
+  become: true
   become_method: sudo
   file:
     path: "{{ data_path }}/{{ ansible_ssh_host }}"
     state: directory
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Check if the {{ reboot_type }} reboot count file exists
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: "{{ reboot_type_count_file }}"
   register: reboot_type_count_file_stat
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Read last {{ reboot_type }} boot count
-  become: yes
+  become: true
   become_method: sudo
   slurp:
     src: "{{ reboot_type_count_file }}"
   register: reboot_type_last_count
   when:
     - reboot_type_count_file_stat.stat.exists
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Set the current {{ reboot_type }} boot count into a variable
   set_fact:
     reboot_type_count: "{{ reboot_type_last_count['content'] | b64decode | int }}"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   when:
     - reboot_type_count_file_stat.stat.exists
 
 - name: Adjust the {{ reboot_type }} boot count if we rebooted OK
   set_fact:
     reboot_type_count: "{{ reboot_type_count | int + 1 }}"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   when:
     - reboot_type_count_file_stat.stat.exists
 
 - name: Set the current {{ reboot_type }} boot count when no prior test exists
   set_fact:
     reboot_type_count: 1
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   when:
     - not reboot_type_count_file_stat.stat.exists
 
 - name: Write current {{ reboot_type }} boot count to file ({{ reboot_type_count }})
-  become: yes
+  become: true
   become_method: sudo
   copy:
     content: "{{ reboot_type_count }}"
     dest: "{{ reboot_type_count_file }}"
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Wait for boot up to complete before running systemd-analyze for {{ reboot_type }}
-  become: yes
+  become: true
   become_method: sudo
   command: "systemctl is-system-running --wait"
   when:
     - reboot_limit_enable_systemd_analyze|bool
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Collect systemctl-analyze results for {{ reboot_type }}
-  become: yes
+  become: true
   become_method: sudo
   command: "systemd-analyze"
   register: systemd_analyze_cmd
   when:
     - reboot_limit_enable_systemd_analyze|bool
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
 
 - name: Append systemctl-analyze output for {{ reboot_type }}
-  become: yes
+  become: true
   become_method: sudo
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   lineinfile:
     path: "{{ reboot_type_analyze_file }}"
     line: "{{ systemd_analyze_cmd.stdout }}"
-    create: yes
+    create: true
   when:
     - reboot_limit_enable_systemd_analyze|bool

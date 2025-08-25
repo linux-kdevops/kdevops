@@ -33,7 +33,7 @@
     - is_sle10|bool or is_sle11|bool
 
 - name: Install local dependencies for fstests command and control
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -43,14 +43,14 @@
   when:
     - repos_present|bool
     - install_local_deps|bool
-  tags: [ 'local_deps' ]
+  tags: ["local_deps"]
 
 - name: Install junitparser
-  become: yes
+  become: true
   become_method: sudo
   pip:
     name:
       - junitparser
   when:
     - install_local_deps|bool
-  tags: [ 'local_deps' ]
+  tags: ["local_deps"]

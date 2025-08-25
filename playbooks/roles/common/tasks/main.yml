@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -14,7 +14,7 @@
 
 - name: git reset kdevops
   environment:
-    GIT_SSL_NO_VERIFY:  true
+    GIT_SSL_NO_VERIFY: true
   git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
@@ -22,7 +22,7 @@
   delay: 5
   register: result
   until: not result.failed
-  tags: [ 'kdevops_reset']
+  tags: ["kdevops_reset"]
   when:
     - kdevops_git_reset|bool
 

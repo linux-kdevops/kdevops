@@ -1,13 +1,13 @@
 ---
 - name: Update apt cache
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
+    update_cache: true
   tags: linux
 
 - name: Install ndctl build deps
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -28,5 +28,5 @@
       - libtraceevent-dev
       - libtracefs-dev
     state: present
-    update_cache: yes
-  tags: [ 'cxl', 'deps' ]
+    update_cache: true
+  tags: ["cxl", "deps"]

@@ -1,10 +1,10 @@
 ---
 - name: Mount a tmpfs under {{ nfsd_export_path }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
-  throttle: 1  # running this in parallel can clobber fstab changes
+  throttle: 1 # running this in parallel can clobber fstab changes
   ansible.posix.mount:
     path: "{{ nfsd_export_path }}/{{ export_volname }}"
     src: "tmpfs"

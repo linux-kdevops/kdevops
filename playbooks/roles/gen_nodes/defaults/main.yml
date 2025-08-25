@@ -1,73 +1,73 @@
 # SPDX-License-Identifier GPL-2.0+
 ---
-kdevops_enable_guestfs: False
-kdevops_enable_terraform: False
+kdevops_enable_guestfs: false
+kdevops_enable_terraform: false
 kdevops_nodes: "kdevops_nodes.yaml"
-kdevops_baseline_and_dev: False
-kdevops_workflow_enable_cxl: False
-kdevops_workflow_enable_pynfs: False
-kdevops_workflow_enable_gitr: False
-kdevops_workflow_enable_ltp: False
+kdevops_baseline_and_dev: false
+kdevops_workflow_enable_cxl: false
+kdevops_workflow_enable_pynfs: false
+kdevops_workflow_enable_gitr: false
+kdevops_workflow_enable_ltp: false
 kdevops_workflow_enable_nfstest: false
-kdevops_workflow_enable_selftests: False
-kdevops_workflow_enable_mmtests: False
-kdevops_workflow_enable_fio_tests: False
-kdevops_nfsd_enable: False
-kdevops_smbd_enable: False
-kdevops_krb5_enable: False
+kdevops_workflow_enable_selftests: false
+kdevops_workflow_enable_mmtests: false
+kdevops_workflow_enable_fio_tests: false
+kdevops_nfsd_enable: false
+kdevops_smbd_enable: false
+kdevops_krb5_enable: false
 kdevops_enable_iscsi: false
-workflows_reboot_limit: False
+workflows_reboot_limit: false
 
-virtualbox_provider: False
-libvirt_provider: False
+virtualbox_provider: false
+libvirt_provider: false
 
-libvirt_extra_drive_format: 'qcow2'
+libvirt_extra_drive_format: "qcow2"
 libvirt_vcpus_count: 8
 libvirt_mem_mb: 4096
-gdb_port_conflict: False
-libvirt_enable_gdb: False
+gdb_port_conflict: false
+libvirt_enable_gdb: false
 libvirt_gdb_baseport: 1234
 qemu_bin_path: "/usr/bin/qemu-system-x86_64"
 extra_disk_path: "./nvme_disks"
 extra_disk_driver: "nvme"
 extra_disk_controller: "NVMe"
-nvme_zone_enable: False
+nvme_zone_enable: false
 nvme_zone_drive_size: 102400
 nvme_zone_zasl: 0
-nvme_zone_size: '128M'
+nvme_zone_size: "128M"
 nvme_zone_capacity: 0
 nvme_zone_max_active: 0
 nvme_zone_max_open: 0
 nvme_zone_physical_block_size: 4096
 nvme_zone_logical_block_size: 4096
 kdevops_storage_pool_path: "/var/lib/libvirt/images/"
-libvirt_storage_pool_create: False
-libvirt_uri: 'qemu:///system'
-libvirt_system_uri: 'qemu:///system'
-libvirt_session: False
-libvirt_session_socket: '/run/libvirt/libvirt-sock-ro'
-libvirt_session_management_network_device: 'virbr0'
-libvirt_session_public_network_dev: 'virbr0'
-libvirt_override_machine_type: False
+libvirt_storage_pool_create: false
+libvirt_uri: "qemu:///system"
+libvirt_system_uri: "qemu:///system"
+libvirt_session: false
+libvirt_session_socket: "/run/libvirt/libvirt-sock-ro"
+libvirt_session_management_network_device: "virbr0"
+libvirt_session_public_network_dev: "virbr0"
+libvirt_override_machine_type: false
 libvirt_qemu_group: libvirt-qemu
 # we imply this is this the default for libvirt, we however
 # don't actually use this variable unless libvirt_override_machine_type is
 # True. So by default we use whatever libvirt uses by default.
-libvirt_machine_type: 'pc'
-libvirt_host_passthrough: False
-libvirt_enable_cxl: False
-libvirt_enable_qmp: False
+libvirt_machine_type: "pc"
+libvirt_host_passthrough: false
+libvirt_enable_cxl: false
+libvirt_enable_qmp: false
 libvirt_qemu_qmp_string: ""
-libvirt_qemu_qmp_wait: False
-libvirt_enable_cxl_demo_topo1: False
-libvirt_enable_cxl_demo_topo2: False
-libvirt_enable_cxl_switch_topo1: False
-libvirt_enable_cxl_dcd_topo1: False
-libvirt_extra_drive_id_prefix: 'drv'
-libvirt_extra_storage_drive_nvme: False
-libvirt_extra_storage_drive_virtio: False
-libvirt_extra_storage_drive_ide: False
-libvirt_extra_storage_drive_scsi: False
+libvirt_qemu_qmp_wait: false
+libvirt_enable_cxl_demo_topo1: false
+libvirt_enable_cxl_demo_topo2: false
+libvirt_enable_cxl_switch_topo1: false
+libvirt_enable_cxl_dcd_topo1: false
+libvirt_extra_drive_id_prefix: "drv"
+libvirt_extra_storage_drive_nvme: false
+libvirt_extra_storage_drive_virtio: false
+libvirt_extra_storage_drive_ide: false
+libvirt_extra_storage_drive_scsi: false
 libvirt_extra_storage_aio_mode: "native"
 libvirt_extra_storage_aio_cache_mode: "none"
 # Note that NVMe on qemu does not allow the physical block size
@@ -76,26 +76,25 @@ libvirt_extra_storage_nvme_logical_block_size: 512
 libvirt_extra_storage_virtio_logical_block_size: 512
 libvirt_extra_storage_virtio_physical_block_size: 512
 
-libvirt_largeio_enable: False
-libvirt_largeio_logical_compat: False
+libvirt_largeio_enable: false
+libvirt_largeio_logical_compat: false
 libvirt_largeio_logical_compat_size: 512
 libvirt_largeio_drives_per_space: 6
 libvirt_largeio_base_size: 10240
 libvirt_largeio_pow_limit: 12
 
-kdevops_workflows_dedicated_workflow: False
-kdevops_workflow_enable_fstests: False
-kdevops_workflow_enable_blktests: False
+kdevops_workflows_dedicated_workflow: false
+kdevops_workflow_enable_fstests: false
+kdevops_workflow_enable_blktests: false
 
 builder_nodes: []
 iscsi_nodes: []
-
-is_fstests: False
+is_fstests: false
 fstests_fstyp: "bogus"
 fs_config_role_path: "/dev/null"
 fs_config_data: "[section_1]"
 
-bootlinux_9p: False
+bootlinux_9p: false
 bootlinux_9p_host_path: "/dev/null"
 bootlinux_9p_msize: 0
 bootlinux_9p_fsdev: "ignore"
@@ -105,14 +104,14 @@ bootlinux_9p_driver: "virtio-9p-pci"
 
 bootlinux_builder: false
 
-guestfs_requires_uefi: False
+guestfs_requires_uefi: false
 
-kdevops_workflow_enable_sysbench: False
+kdevops_workflow_enable_sysbench: false
 
-pcie_passthrough_enable: False
-pcie_passthrough_target_type_first_guest: False
-pcie_passthrough_target_type_all_one_guest_name: False
-pcie_passthrough_target_type_each_per_device: False
+pcie_passthrough_enable: false
+pcie_passthrough_target_type_first_guest: false
+pcie_passthrough_target_type_all_one_guest_name: false
+pcie_passthrough_target_type_each_per_device: false
 pcie_passthrough_target_type: "first_guest"
 pcie_passthrough_target: "ignore"
 pcie_passthrough_devices:

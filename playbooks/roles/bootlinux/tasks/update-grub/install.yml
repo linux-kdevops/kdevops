@@ -1,3 +1,4 @@
+---
 # There is slightly confusing user-experience and not complete documentation
 # about the requirements for using grub-set-default in light of the fact that
 # most Linux distributions use sub-menus. You need to use GRUB_DEFAULT=saved
@@ -68,29 +69,29 @@
 #
 #   grub-set-default 2
 - name: Ensure we have GRUB_DEFAULT=saved
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   register: grub_default_saved_cmd
   lineinfile:
     path: /etc/default/grub
-    regexp: '^GRUB_DEFAULT='
+    regexp: "^GRUB_DEFAULT="
     line: GRUB_DEFAULT=saved
-  tags: [ 'saved' ]
+  tags: ["saved"]
 
 - name: Use GRUB_DISABLE_SUBMENU=y to enable grub-set-default use with one digit
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   register: grub_disable_submenu_cmd
   lineinfile:
     path: /etc/default/grub
-    regexp: '^GRUB_DISABLE_SUBMENU='
+    regexp: "^GRUB_DISABLE_SUBMENU="
     line: GRUB_DISABLE_SUBMENU=y
-  tags: [ 'saved' ]
+  tags: ["saved"]
 
 - name: Update your boot GRUB file if necessary to ensure GRUB flat earth
-  tags: [ 'uninstall-linux', 'manual-update-grub' ]
+  tags: ["uninstall-linux", "manual-update-grub"]
   import_tasks: update-grub/main.yml
 
 - name: Get the name of the kernel release to install (source tree)
@@ -191,7 +192,7 @@
   tags:
     - saved
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.shell:
     cmd: "{{ determine_default_kernel_id }}"
@@ -205,23 +206,21 @@
 - name: Obtain command to set default kernel to boot
   set_fact:
     grub_set_default_boot_kernel: grub-set-default
-  when:
-    ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
+  when: ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Obtain command to set default kernel to boot for RHEL >= 8
   set_fact:
     grub_set_default_boot_kernel: grub2-set-default
-  when:
-    ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
+  when: ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
 
 - name: Set the target kernel to be booted by default moving forward if the above command worked
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
   vars:
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 if (grub_boot_number_cmd is defined and grub_boot_number_cmd.stdout_lines is defined) else '' }}"
-  tags: [ 'saved' ]
+  tags: ["saved"]
   when:
     - grub_boot_number_cmd is defined
     - grub_boot_number_cmd.rc is defined
@@ -235,11 +234,10 @@
   vars:
     target_kernel: "{{ target_linux_ref | replace('v', '') }}"
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
-  tags: [ 'saved' ]
+  tags: ["saved"]
   when:
     - grub_boot_number_cmd is defined
     - grub_boot_number_cmd.rc is defined
     - grub_boot_number_cmd.rc == 0
     - grub_boot_number_cmd.stdout is defined
     - grub_boot_number_cmd.stdout != ""
-

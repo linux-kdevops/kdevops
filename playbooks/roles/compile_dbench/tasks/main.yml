@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -18,14 +18,14 @@
   git:
     repo: "{{ dbench_git }}"
     dest: "{{ dbench_data }}"
-    update: yes
-  tags: [ 'git', 'dbench' ]
+    update: true
+  tags: ["git", "dbench"]
   when:
     - compile_dbench|bool
 
 - name: Run autogen for dbench
   command: "./autogen.sh"
-  tags: [ 'dbench' ]
+  tags: ["dbench"]
   args:
     chdir: "{{ dbench_data }}"
   when:
@@ -33,7 +33,7 @@
 
 - name: Run configure for dbench
   command: "./configure"
-  tags: [ 'dbench' ]
+  tags: ["dbench"]
   args:
     chdir: "{{ dbench_data }}"
   when:
@@ -41,13 +41,13 @@
 
 - name: Get nproc
   command: "{{ num_jobs }}"
-  tags: [ 'git', 'dbench' ]
+  tags: ["git", "dbench"]
   register: nproc
   when:
     - compile_dbench|bool
 
 - name: Build dbench
-  tags: [ 'git', 'dbench' ]
+  tags: ["git", "dbench"]
   make:
     chdir: "{{ dbench_data }}"
     jobs: "{{ nproc.stdout }}"
@@ -55,11 +55,11 @@
     - compile_dbench|bool
 
 - name: Install dbench
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{  make }} install"
-  tags: [ 'git', 'dbench' ]
+  tags: ["git", "dbench"]
   args:
     chdir: "{{ dbench_data }}"
   when:

@@ -4,10 +4,10 @@
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Install kdevops generic dependencies
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

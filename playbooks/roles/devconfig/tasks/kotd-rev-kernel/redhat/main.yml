@@ -1,6 +1,6 @@
 ---
 - name: Add KOTD repository
-  become: yes
+  become: true
   become_method: sudo
   get_url:
     url: "{{ devconfig_kotd_repo }}"
@@ -10,10 +10,10 @@
     - devconfig_has_kotd_repo|bool
 
 - name: Parse repository id from repo file
-  become: yes
+  become: true
   become_method: sudo
   vars:
-    repo_file: '{{ devconfig_kotd_repo | basename }}'
+    repo_file: "{{ devconfig_kotd_repo | basename }}"
   shell: grep -E '\[.*\]' /etc/yum.repos.d/{{ repo_file }} | tr -d '[]'
   register: result
   changed_when: false
@@ -22,10 +22,10 @@
     - devconfig_has_kotd_repo|bool
 
 - name: Get kernel version from repository-packages
-  become: yes
+  become: true
   become_method: sudo
   vars:
-    repo_id: '{{ result.stdout }}'
+    repo_id: "{{ result.stdout }}"
   shell: dnf -q --repo={{ repo_id }} repoquery --qf "%{version}-%{release}" kernel.x86_64
   register: result
   changed_when: false
@@ -34,14 +34,14 @@
     - devconfig_has_kotd_repo|bool
 
 - name: Install KOTD
-  become: yes
+  become: true
   become_method: sudo
   vars:
-    kernel_version: '{{ result.stdout }}'
-    arch: 'x86_64'
+    kernel_version: "{{ result.stdout }}"
+    arch: "x86_64"
   ansible.builtin.dnf:
-    update_cache: yes
-    name: 'kernel-{{ kernel_version }}.{{ arch }}'
+    update_cache: true
+    name: "kernel-{{ kernel_version }}.{{ arch }}"
     disable_gpg_check: true
     sslverify: false
     state: present
@@ -50,7 +50,7 @@
     - devconfig_has_kotd_repo|bool
 
 - name: Reboot system to make the new kernel and modules take effect
-  become: yes
+  become: true
   become_method: sudo
   reboot:
   when:

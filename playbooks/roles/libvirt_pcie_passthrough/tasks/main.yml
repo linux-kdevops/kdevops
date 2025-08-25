@@ -1,17 +1,17 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
 
 - name: Check if PCI-E sysfs driver_override file exists
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   vars:
     sysfs_override: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/driver_override"
@@ -25,8 +25,8 @@
     - pcie_passthrough_enable|bool
 
 - name: Enable libvirt to use PCI-E sysfs driver_override file
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ item.stat.path }}"
@@ -40,8 +40,8 @@
     - item.stat.exists
 
 - name: Check if PCI-E sysfs unbind file exists
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   vars:
     sysfs_unbind: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/unbind"
@@ -55,8 +55,8 @@
     - pcie_passthrough_enable|bool
 
 - name: Enable libvirt to use PCI-E sysfs unbind file
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ item.stat.path }}"
@@ -70,7 +70,7 @@
     - item.stat.exists
 
 - name: Deploy udev 10-qemu-hw-users.rules which enables libvirt to use vfio subsystem
-  become: yes
+  become: true
   become_method: sudo
   template:
     src: "10-qemu-hw-users.rules"

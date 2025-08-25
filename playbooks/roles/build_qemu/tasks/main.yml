@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -16,7 +16,7 @@
   register: qemu_present
   changed_when: true
   failed_when: qemu_present.stat.exists and not qemu_present.stat.executable
-  tags: [ 'qemu', 'verify' ]
+  tags: ["qemu", "verify"]
   when:
     - qemu_build|bool
 
@@ -28,12 +28,12 @@
 
 - name: Assume we won't build QEMU first
   set_fact:
-    build_qemu_now: False
+    build_qemu_now: false
   tags: vars
 
 - name: Annotate when we are building QEMU
   set_fact:
-    build_qemu_now: True
+    build_qemu_now: true
   when:
     - qemu_build|bool
     - qemu_force_install_if_present|bool or (qemu_present.stat is not defined)
@@ -43,13 +43,13 @@
   file:
     path: "{{ local_dev_path }}"
     state: directory
-  tags: [ 'qemu', 'build-deps' ]
+  tags: ["qemu", "build-deps"]
   when:
     - build_qemu_now|bool
 
 - name: git clone QEMU using {{ qemu_git }} on {{ qemu_data }}
   environment:
-    GIT_SSL_NO_VERIFY:  true
+    GIT_SSL_NO_VERIFY: true
   git:
     repo: "{{ qemu_git }}"
     dest: "{{ qemu_data }}"
@@ -61,13 +61,13 @@
   file:
     path: "{{ qemu_build_dir }}"
     state: absent
-  tags: [ 'qemu', 'build-deps' ]
+  tags: ["qemu", "build-deps"]
   when:
     - build_qemu_now|bool
 
 - name: Disable downloads
   command: "meson subprojects download"
-  tags: [ 'qemu', 'configure' ]
+  tags: ["qemu", "configure"]
   args:
     chdir: "{{ qemu_data }}"
   when:
@@ -75,7 +75,7 @@
 
 - name: Run configure for QEMU
   command: "./configure --target-list={{ qemu_target }} --disable-download"
-  tags: [ 'qemu', 'configure' ]
+  tags: ["qemu", "configure"]
   args:
     chdir: "{{ qemu_data }}"
   when:
@@ -83,7 +83,7 @@
 
 - name: Get nproc
   command: "{{ num_jobs }}"
-  tags: [ 'qemu', 'configure', 'build' ]
+  tags: ["qemu", "configure", "build"]
   register: nproc
   when:
     - build_qemu_now|bool
@@ -92,17 +92,17 @@
   make:
     chdir: "{{ qemu_data }}"
     jobs: "{{ nproc.stdout }}"
-  tags: [ 'qemu', 'build' ]
+  tags: ["qemu", "build"]
   when:
     - build_qemu_now|bool
 
 - name: Install QEMU
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{ make }} install"
   args:
     chdir: "{{ qemu_data }}"
-  tags: [ 'qemu', 'install' ]
+  tags: ["qemu", "install"]
   when:
     - build_qemu_now|bool

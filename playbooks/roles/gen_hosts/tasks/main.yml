@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -24,8 +24,8 @@
   register: kdevops_hosts_dest
 
 - name: Ensure proper permission on the inventory file
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ ansible_cfg_inventory }}"
@@ -41,7 +41,7 @@
 
 - name: Set fstests config file variable for {{ fstests_fstyp }}
   set_fact:
-    is_fstests: True
+    is_fstests: true
     fs_config_path: "{{ kdevops_playbooks_dir_full_path }}/{{ fs_config_role_path }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -57,25 +57,25 @@
     - is_fstests|bool
 
 - name: Generate the Ansible hosts file for a Linux kernel build
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - bootlinux_builder
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - not kdevops_workflows_dedicated_workflow
     - ansible_hosts_template.stat.exists
@@ -84,36 +84,36 @@
   ansible.builtin.file:
     path: "{{ ansible_cfg_inventory }}"
     state: touch
-    mode: '0755'
+    mode: "0755"
 
 - name: Generate the Ansible inventory file for dedicated cxl work
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ anisble_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_cxl
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file for dedicated pynfs work
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_pynfs
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file for dedicated gitr workflow
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     gitr_enabled_hosts: "{{ gitr_enabled_test_groups|ansible.builtin.split }}"
   template:
@@ -128,22 +128,22 @@
     - ansible_hosts_template.stat.exists
 
 - name: Generate an Ansible inventory file for a dedicated ltp workflow
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     ltp_enabled_hosts: "{{ ltp_enabled_test_groups|ansible.builtin.split }}"
   ansible.builtin.template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_ltp
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file for dedicated nfstest workflow
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     nfstest_enabled_hosts: "{{ nfstest_enabled_test_groups | ansible.builtin.split }}"
   template:
@@ -158,7 +158,7 @@
     - ansible_hosts_template.stat.exists
 
 - name: Set empty enabled test types list for fstests
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   set_fact:
     fstests_enabled_test_types: []
   when:
@@ -179,9 +179,9 @@
     config_sections_targets: "{{ clean_section_lines_without_fsname |  replace(\"'\", '') | split(', ') }}"
   lineinfile:
     path: "{{ topdir_path }}/.config"
-    regexp: '^({{ config_val + item.upper() }})=y'
-    line: ''
-  check_mode: yes
+    regexp: "^({{ config_val + item.upper() }})=y"
+    line: ""
+  check_mode: true
   with_items: "{{ config_sections_targets }}"
   loop_control:
     label: "Checking for {{ config_val + item.upper() }}"
@@ -190,7 +190,7 @@
     - ansible_hosts_template.stat.exists
 
 - name: Now expand the list of enabled fstests for valid configuration sections
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   set_fact:
     fstests_enabled_test_types: "{{ fstests_enabled_test_types  + [ fstests_fstyp + '-' + item.item | regex_replace('_', '-') ] }}"
   with_items: "{{ fstests_enabled_test_types_reg.results }}"
@@ -202,7 +202,7 @@
     - item.changed
 
 - name: Generate the Ansible inventory file for a dedicated fstests setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     fs_config_data: "{{ lookup('file', fs_config_path) }}"
     sections_without_default: "{{ fs_config_data | regex_replace('\\[default\\]', multiline=True) }}"
@@ -213,9 +213,9 @@
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - is_fstests
     - ansible_hosts_template.stat.exists
@@ -238,19 +238,19 @@
   debug:
     var: blktests_enabled_test_types
   when:
-    - False
+    - false
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file for a dedicated blktests setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
@@ -259,25 +259,25 @@
 - name: Infer enabled selftests test section types
   ansible.builtin.set_fact:
     selftests_enabled_test_types: >-
-     {{
-       lookup('file', topdir_path + '/.config')
-       | regex_findall('^CONFIG_SELFTESTS_SECTION_(.*)=y$', multiline=True)
-       | map('lower')
-       | list
-     }}
+      {{
+        lookup('file', topdir_path + '/.config')
+        | regex_findall('^CONFIG_SELFTESTS_SECTION_(.*)=y$', multiline=True)
+        | map('lower')
+        | list
+      }}
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible inventory file for a dedicated selftests setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
@@ -286,7 +286,8 @@
 - name: Collect dynamically supported filesystems
   vars:
     supported_filesystems_variables: "{{ hostvars[inventory_hostname] | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
-    local_supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
+    local_supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_',
+      '') | list }}"
   set_fact:
     sysbench_enabled_filesystems: "{{ local_supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
@@ -312,13 +313,13 @@
     - kdevops_workflow_enable_sysbench
 
 - name: Generate the Ansible inventory file for a dedicated sysbench setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_sysbench
@@ -339,26 +340,26 @@
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible hosts file for a dedicated mmtests setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_mmtests
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible hosts file for a dedicated reboot-limit setup
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
-    force: yes
-    trim_blocks: True
-    lstrip_blocks: True
+    force: true
+    trim_blocks: true
+    lstrip_blocks: true
   when:
     - kdevops_workflows_dedicated_workflow
     - workflows_reboot_limit
@@ -370,7 +371,7 @@
   register: final_hosts_file
 
 - name: Fail if the dedicated workflow has no rules for node configuration for hosts file configuration
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   fail:
     msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
   when:

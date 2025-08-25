@@ -25,24 +25,24 @@
 
 - name: Set SLE specific version labels to make checks easier when not SLE
   set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle12sp5: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle15sp2: False
-    is_sle15sp3: False
-    is_sle15sp4: False
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle12sp5: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle15sp2: false
+    is_sle15sp3: false
+    is_sle15sp4: false
   when:
     - not is_sle|bool
 
 - name: Install every single selftest build dependencies
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

@@ -1,6 +1,6 @@
 ---
 - name: Get the latest PostgreSQL ref
-  tags: ['setup']
+  tags: ["setup"]
   ansible.builtin.shell: |
     set -o pipefail && \
     git ls-remote --tags --sort="-version:refname" \
@@ -15,7 +15,7 @@
   changed_when: false
 
 - name: Git clone PostgreSQL
-  tags: ['setup']
+  tags: ["setup"]
   ansible.builtin.git:
     repo: "https://git.postgresql.org/git/postgresql.git"
     dest: "{{ sysbench_postgresql_repo_path }}"
@@ -25,33 +25,33 @@
     GIT_SSL_NO_VERIFY: "true"
 
 - name: Get number of processing units available
-  tags: ['always']
+  tags: ["always"]
   ansible.builtin.command: nproc --all
   register: _sysbench_punits
   changed_when: _sysbench_punits.rc != 0
 
 - name: Set threads using nproc output
-  tags: ['always']
+  tags: ["always"]
   ansible.builtin.set_fact:
     _sysbench_threads: "{{ _sysbench_punits.stdout }}"
   when:
     - sysbench_threads == 0
 
 - name: Set threads manually
-  tags: ['always']
+  tags: ["always"]
   ansible.builtin.set_fact:
     _sysbench_threads: "{{ sysbench_threads }}"
   when:
     - sysbench_threads != 0
 
 - name: Check if clean is required for PostgreSQL builddir
-  tags: ['setup']
+  tags: ["setup"]
   ansible.builtin.stat:
     path: "{{ sysbench_postgresql_repo_path }}/GNUmakefile"
   register: _sysbench_postgresql_cleanup
 
 - name: Clean PostgreSQL builddir
-  tags: ['setup']
+  tags: ["setup"]
   ansible.builtin.command:
     cmd: |
       make clean
@@ -65,7 +65,7 @@
   ignore_errors: true
 
 - name: Configure PostgreSQL
-  tags: ['setup']
+  tags: ["setup"]
   ansible.builtin.command:
     cmd: >
       ./configure
@@ -77,7 +77,7 @@
   changed_when: _sysbench_postgresql_configure.rc != 0
 
 - name: Build PostgreSQL
-  tags: ['setup']
+  tags: ["setup"]
   community.general.make:
     jobs: "{{ _sysbench_punits.stdout }}"
   args:
@@ -85,7 +85,7 @@
   changed_when: false
 
 - name: Install PostgreSQL
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   become_method: sudo
   community.general.make:
@@ -94,16 +94,16 @@
     chdir: "{{ sysbench_postgresql_repo_path }}"
 
 - name: Create PostgreSQL benchmark user
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   become_method: sudo
   ansible.builtin.user:
     name: "{{ sysbench_postgresql_user }}"
 
 - name: Ensure telemetry data directory exists
-  tags: ['setup', 'db_start']
+  tags: ["setup", "db_start"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.file:
     path: "{{ sysbench_telemetry_path }}"
@@ -111,7 +111,7 @@
     mode: "u=rwx,g=rx,o=rx"
 
 - name: Check if PostgreSQL Server is Running
-  tags: ['always']
+  tags: ["always"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.stat:
@@ -119,7 +119,7 @@
   register: _sysbench_postgresql_stop
 
 - name: Stop the PostgreSQL Server
-  tags: ['always']
+  tags: ["always"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -135,11 +135,12 @@
     - _sysbench_postgresql_stop.stat.exists | bool
 
 - name: Determine filesystem setting used and db page size
-  tags: ['vars']
+  tags: ["vars"]
   vars:
     fs_type_variable: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') | regex_replace('-.+', '') }}"
     fs_command_variable_simple: "sysbench_{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') | regex_replace('-dev$', '') }}_cmd"
-    fs_command_variable: "{{ fs_command_variable_simple | regex_replace('-', '_') | regex_replace('^sysbench_' + fs_type_variable, fs_type_variable + '_section') }}"
+    fs_command_variable: "{{ fs_command_variable_simple | regex_replace('-', '_') | regex_replace('^sysbench_' + fs_type_variable, fs_type_variable + '_section')
+      }}"
     db_page_size_simple: "sysbench_{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') | regex_replace('-dev$', '') }}_db_page_size"
     db_page_size_variable: "{{ db_page_size_simple | regex_replace('-', '_') | regex_replace('^sysbench_' + fs_type_variable, fs_type_variable + '_section') }}"
     fs_sector_size_variable: "sysbench_{{ fs_type_variable }}_sector_size"
@@ -154,32 +155,32 @@
     sysbench_db_page_size: "{{ db_page_size }}"
 
 - name: Set filesystem options for XFS with sector size
-  tags: ['mkfs']
+  tags: ["mkfs"]
   ansible.builtin.set_fact:
     sysbench_fs_opts: "{{ sysbench_fs_opts_without_sector_size }} -s size={{ sysbench_fs_sector_size }} -L {{ sysbench_label }}"
   when: sysbench_fstype != 'ext4'
 
 - name: Set filesystem options for ext4 without sector size
-  tags: ['mkfs']
+  tags: ["mkfs"]
   ansible.builtin.set_fact:
     sysbench_fs_opts: "{{ sysbench_fs_opts_without_sector_size }} -L {{ sysbench_label }}"
   when: sysbench_fstype == 'ext4'
 
 - name: Set environment variable for sector size for ext4
-  tags: ['mkfs']
+  tags: ["mkfs"]
   ansible.builtin.set_fact:
     sysbench_fs_env:
       MKE2FS_DEVICE_SECTSIZE: "{{ sysbench_fs_sector_size }}"
   when: sysbench_fstype == 'ext4'
 
 - name: Clear environment variable for non-ext4 filesystems
-  tags: ['mkfs']
+  tags: ["mkfs"]
   ansible.builtin.set_fact:
     sysbench_fs_env: {}
   when: sysbench_fstype != 'ext4'
 
 - name: Display the filesystem options and environment variable for the current host
-  tags: ['debug']
+  tags: ["debug"]
   ansible.builtin.debug:
     msg: |
       Sysbench device:    {{ sysbench_device }}
@@ -190,24 +191,24 @@
       Sysbench env:       {{ sysbench_fs_env }}
 
 - name: Fail if no filesystem command is found for the host
-  tags: ['mkfs']
+  tags: ["mkfs"]
   ansible.builtin.fail:
     msg: "No filesystem configuration command found for the current host: {{ ansible_host }}"
   when: filesystem_command_for_host is undefined
 
 - name: Unmount {{ sysbench_mnt }}
-  tags: ['clean', 'mkfs']
+  tags: ["clean", "mkfs"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: sudo
   ansible.posix.mount:
     path: "{{ sysbench_mnt }}"
     state: unmounted
 
 - name: Wipe filesystem signatures from the device
-  tags: ['clean', 'mkfs']
+  tags: ["clean", "mkfs"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.command:
     cmd: "wipefs --all {{ sysbench_device }}"
@@ -215,7 +216,7 @@
   changed_when: _sysbench_postgresql_wipefs.rc != 0
 
 - name: Create the filesystem we'll use to place the database under test
-  tags: ['clean', 'mkfs']
+  tags: ["clean", "mkfs"]
   ansible.builtin.include_role:
     name: create_partition
   vars:
@@ -236,7 +237,7 @@
     recurse: true
 
 - name: Initialize the PostgreSQL database
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   become_method: sudo
   become_user: "{{ sysbench_postgresql_user }}"
@@ -247,7 +248,7 @@
   changed_when: _sysbench_postgresql_initdb.rc != 0
 
 - name: Set sysbench_postgresql_full_page_writes based on ansible_host
-  tags: ['vars']
+  tags: ["vars"]
   ansible.builtin.set_fact:
     sysbench_host_is_baseline: "{{ False if ansible_host is search('-dev$') else True }}"
     sysbench_postgresql_full_page_writes: "{{ 'off' if ansible_host is search('-dev$') else 'on' }}"
@@ -255,14 +256,14 @@
     - sysbench_disable_full_page_writes_auto|bool
 
 - name: Set sysbench_postgresql_full_page_writes based on ansible_host
-  tags: ['vars']
+  tags: ["vars"]
   ansible.builtin.set_fact:
-    sysbench_postgresql_full_page_writes: 'off'
+    sysbench_postgresql_full_page_writes: "off"
   when:
     - sysbench_disable_full_page_writes_always|bool
 
 - name: Generate PostgreSQL configuration file from template
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   become_method: sudo
   become_user: "{{ sysbench_postgresql_user }}"
@@ -272,45 +273,45 @@
     mode: "u=rw,g=r,o=r"
 
 - name: Get used target kernel version
-  tags: ['db_start']
+  tags: ["db_start"]
   ansible.builtin.command: "uname -r"
   changed_when: false
   register: _uname_cmd
 
 - name: Store last kernel variable
-  tags: ['db_start']
+  tags: ["db_start"]
   ansible.builtin.set_fact:
     last_kernel: "{{ _uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   run_once: true
 
 - name: Ensure the results directory exists on the localhost
-  tags: ['db_start', 'results']
+  tags: ["db_start", "results"]
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/sysbench/results/"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: true
 
 - name: Ensure the results directory exists on the localhost for each node locally
-  tags: ['db_start', 'results']
+  tags: ["db_start", "results"]
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Ensure the results directory exists on the localhost for each node locally
-  tags: ['db_start', 'plot']
+  tags: ["db_start", "plot"]
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}-ab/"
     state: directory
-    mode: '0755'
+    mode: "0755"
   when: "'-dev' not in inventory_hostname"
 
 - name: Document used target kernel version
-  tags: ['db_start']
+  tags: ["db_start"]
   delegate_to: localhost
   ansible.builtin.shell: |
     echo {{ last_kernel }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}-ab/last-kernel.txt
@@ -319,21 +320,21 @@
   when: "'-dev' not in inventory_hostname"
 
 - name: Document full_page_writes setting on node
-  tags: ['db_start']
+  tags: ["db_start"]
   delegate_to: localhost
   ansible.builtin.shell: |
     echo {{ sysbench_postgresql_full_page_writes }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/full_page_writes.txt
   changed_when: false
 
 - name: Document db blocksize setting on node
-  tags: ['db_start']
+  tags: ["db_start"]
   delegate_to: localhost
   ansible.builtin.shell: |
     echo {{ sysbench_db_page_size }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/postgresql_blocksize.txt
   changed_when: false
 
 - name: Start the PostgreSQL server
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -344,7 +345,7 @@
   changed_when: false
 
 - name: Create PostgreSQL database USER
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -357,7 +358,7 @@
   changed_when: "'CREATE ROLE' in _sysbench_postgresql_create_user_result.stderr"
 
 - name: Create PostgreSQL database DATABASE
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -370,7 +371,7 @@
   changed_when: "'CREATE DATABASE' in _sysbench_postgresql_create_db_result.stderr"
 
 - name: Grant USER privileges to DATABASE
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -379,7 +380,7 @@
   changed_when: false
 
 - name: Grant ALL public Privileges to DATABASE
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -393,7 +394,7 @@
   changed_when: false
 
 - name: Test and Ensure Permissions are Set Correctly
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -413,7 +414,7 @@
 # Keep this at threads=1 as multiple threads don't work when building the
 # initial database.
 - name: Populate sysbench database
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -437,16 +438,16 @@
   changed_when: "'CREATE TABLE' in _sysbench_init_pop.stdout"
 
 - name: Save the output of populating the initial sysbench database
-  tags: ['db_start']
+  tags: ["db_start"]
   become: true
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ _sysbench_init_pop.stdout }}"
     dest: "{{ sysbench_telemetry_path }}/sysbench_populate.txt"
-    mode: '0755'
+    mode: "0755"
 
 - name: Start sysbench run
-  tags: ['run_sysbench']
+  tags: ["run_sysbench"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -471,7 +472,7 @@
   register: sysbench_postgresql_run_output
 
 - name: Stop the PostgreSQL server (Smart Mode)
-  tags: ['run_sysbench']
+  tags: ["run_sysbench"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -488,7 +489,7 @@
   ignore_errors: true
 
 - name: Stop the PostgreSQL server (Fast Mode)
-  tags: ['run_sysbench']
+  tags: ["run_sysbench"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -506,7 +507,7 @@
   ignore_errors: true
 
 - name: Stop the PostgreSQL server (Immediate Mode)
-  tags: ['run_sysbench']
+  tags: ["run_sysbench"]
   become: true
   become_user: "{{ sysbench_postgresql_user }}"
   ansible.builtin.command: >
@@ -523,17 +524,17 @@
     - _sysbench_postgresql_stop_fast.rc | default(0) != 0
 
 - name: Write sysbench run output to log file
-  tags: ['run_sysbench']
+  tags: ["run_sysbench"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ sysbench_postgresql_run_output.stdout }}"
     dest: "{{ sysbench_telemetry_path }}/sysbench_tps.txt"
-    mode: '0755'
+    mode: "0755"
 
 - name: Collect PostgreSQL database cluster control information
-  tags: ['logs']
+  tags: ["logs"]
   become: true
   become_method: sudo
   become_user: "{{ sysbench_postgresql_user }}"
@@ -544,20 +545,20 @@
   changed_when: false
 
 - name: Write PostgreSQL database cluster control information to log file
-  tags: ['logs']
+  tags: ["logs"]
   become: true
   become_method: sudo
   become_user: root
   ansible.builtin.copy:
     content: "{{ _sysbench_postgresql_controldata_output.stdout }}"
     dest: "{{ sysbench_postgresql_controldata_logfile }}"
-    mode: '0755'
+    mode: "0755"
     owner: "{{ sysbench_postgresql_user }}"
     group: "{{ sysbench_postgresql_user }}"
     remote_src: true
 
 - name: Copy telemetry data from each node to the localhost
-  tags: ['results']
+  tags: ["results"]
   ansible.posix.synchronize:
     src: "{{ sysbench_telemetry_path }}/"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/"
@@ -569,7 +570,7 @@
   become: false
 
 - name: Gather kernel logs from each node
-  tags: ['results']
+  tags: ["results"]
   become: true
   become_method: sudo
   ansible.builtin.command: journalctl -k
@@ -577,15 +578,15 @@
   register: journal_cmd
 
 - name: Save kernel logs to local file per node
-  tags: ['results']
+  tags: ["results"]
   ansible.builtin.copy:
     content: "{{ journal_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/dmesg.txt"
-    mode: '0755'
+    mode: "0755"
   delegate_to: localhost
 
 - name: Gather memory fragmentation index on each node
-  tags: ['results']
+  tags: ["results"]
   become: true
   become_method: sudo
   ansible.builtin.command: cat /sys/kernel/debug/extfrag/extfrag_index
@@ -593,15 +594,15 @@
   register: extfrag_index_cmd
 
 - name: Save memory fragmentation index per node
-  tags: ['results']
+  tags: ["results"]
   ansible.builtin.copy:
     content: "{{ extfrag_index_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/extfrag_index.txt"
-    mode: '0755'
+    mode: "0755"
   delegate_to: localhost
 
 - name: Gather memory unusable index on each node
-  tags: ['results']
+  tags: ["results"]
   become: true
   become_method: sudo
   ansible.builtin.command: cat /sys/kernel/debug/extfrag/unusable_index
@@ -609,39 +610,39 @@
   register: unusable_index_cmd
 
 - name: Save memory unusable index per node
-  tags: ['results']
+  tags: ["results"]
   ansible.builtin.copy:
     content: "{{ unusable_index_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/unusable_index.txt"
-    mode: '0755'
+    mode: "0755"
   delegate_to: localhost
 
 - name: Remove all results and telemetry directories on the node
-  tags: ['clean']
+  tags: ["clean"]
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ sysbench_telemetry_path }}/"
   loop_control:
     label: "Removing {{ item }}"
 
 - name: Remove all results and telemetry directories on the host
-  tags: ['clean']
+  tags: ["clean"]
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ topdir_path }}/workflows/sysbench/results/"
   delegate_to: localhost
 
 - name: Find directories under sysbench results target
-  tags: ['plot']
+  tags: ["plot"]
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
   ansible.builtin.find:
@@ -652,7 +653,7 @@
   delegate_to: localhost
 
 - name: Check if sysbench_tps.txt exists in each directory
-  tags: ['plot']
+  tags: ["plot"]
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
   ansible.builtin.stat:
@@ -664,7 +665,7 @@
   delegate_to: localhost
 
 - name: Plot sysbench tps plot for each node
-  tags: ['plot']
+  tags: ["plot"]
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
     host_dir: "{{ item.item.path | basename }}"
@@ -682,7 +683,7 @@
     - "item.stat.exists"
 
 - name: Plot sysbench tps non-atomic Vs atomic
-  tags: ['plot']
+  tags: ["plot"]
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
     sysbench_results_target_ab: "{{ sysbench_results_target }}{{ item }}-ab/"
@@ -705,11 +706,11 @@
   with_items:
     - "{{ hostvars[inventory_hostname]['groups']['baseline'] }}"
   when:
-    - 'kdevops_baseline_and_dev|bool'
-    - 'sysbench_host_is_baseline|bool'
+    - "kdevops_baseline_and_dev|bool"
+    - "sysbench_host_is_baseline|bool"
 
 - name: Plot sysbench TPS variance
-  tags: ['plot']
+  tags: ["plot"]
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
     sysbench_results_target_ab: "{{ sysbench_results_target }}{{ item }}-ab/"
@@ -731,5 +732,5 @@
   with_items:
     - "{{ hostvars[inventory_hostname]['groups']['baseline'] }}"
   when:
-    - 'kdevops_baseline_and_dev|bool'
-    - 'sysbench_host_is_baseline|bool'
+    - "kdevops_baseline_and_dev|bool"
+    - "sysbench_host_is_baseline|bool"

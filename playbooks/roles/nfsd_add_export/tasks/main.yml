@@ -20,8 +20,8 @@
     - export_fstype == "tmpfs"
 
 - name: Ensure {{ export_volname }} has correct permissions
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   file:
@@ -35,20 +35,20 @@
   command: /usr/sbin/selinuxenabled
   register: selinux_status
   delegate_to: "{{ server_host }}"
-  changed_when: False
-  failed_when: False
+  changed_when: false
+  failed_when: false
 
 - name: Fix SELinux file context under new mount
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   command: /usr/sbin/restorecon -R "{{ nfsd_export_path }}/{{ export_volname }}"
   when: selinux_status.rc == 0
 
 - name: Ensure /etc/exports.d exists
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   file:
@@ -56,7 +56,7 @@
     path: "/etc/exports.d"
     owner: "root"
     group: "root"
-    mode: '644'
+    mode: "644"
 
 - name: Copy export options to a template variable
   set_fact:
@@ -89,8 +89,8 @@
     - export_pnfs|bool
 
 - name: Create an exports.d file for the new fs
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   template:
@@ -98,11 +98,11 @@
     dest: /etc/exports.d/{{ export_volname }}.exports
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
 
 - name: Reload the exports table
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
   command: /usr/sbin/exportfs -ra

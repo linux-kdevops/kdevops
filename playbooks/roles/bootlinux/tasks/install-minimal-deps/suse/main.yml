@@ -3,7 +3,7 @@
 # This is used when bootlinux_9p is enabled and the build happens on the host
 
 - name: Install minimal build tools for kernel installation
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:

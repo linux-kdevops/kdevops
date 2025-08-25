@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -101,7 +101,7 @@
 
 - name: Set fstests config file variable for {{ fstests_fstyp }}
   set_fact:
-    is_fstests: True
+    is_fstests: true
     fs_config_path: "{{ kdevops_playbooks_dir_full_path }}/{{ fs_config_role_path }}"
   when:
     - kdevops_workflows_dedicated_workflow
@@ -122,8 +122,8 @@
   register: kdevops_nodes_dest
 
 - name: Ensure proper permission on {{ kdevops_nodes }}
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
@@ -133,7 +133,7 @@
     - kdevops_nodes_dest.stat.exists
 
 - name: Generate the generic kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ generic_nodes }}"
@@ -141,13 +141,13 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - not kdevops_workflows_dedicated_workflow
     - ansible_nodes_template.stat.exists
 
 - name: Generate the builder kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ builder_nodes }}"
@@ -155,13 +155,13 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - bootlinux_builder
     - ansible_nodes_template.stat.exists
 
 - name: Generate the pynfs kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ nfsd_nodes + iscsi_nodes }}"
@@ -169,14 +169,14 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_pynfs
     - ansible_nodes_template.stat.exists
 
 - name: Generate the cxl kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     all_generic_nodes: "{{ generic_nodes }}"
@@ -184,7 +184,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_cxl
@@ -221,7 +221,7 @@
     - ansible_nodes_template.stat.exists
 
 - name: Set empty enabled test types list for fstests
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   set_fact:
     fstests_enabled_nodes: []
   when:
@@ -242,9 +242,9 @@
     config_sections_targets: "{{ clean_section_lines_without_fsname |  replace(\"'\", '') | split(', ') }}"
   lineinfile:
     path: "{{ topdir_path }}/.config"
-    regexp: '^({{ config_val + item.upper() }})=y'
-    line: ''
-  check_mode: yes
+    regexp: "^({{ config_val + item.upper() }})=y"
+    line: ""
+  check_mode: true
   with_items: "{{ config_sections_targets }}"
   loop_control:
     label: "Checking for {{ config_val + item.upper() }}"
@@ -253,7 +253,7 @@
     - ansible_nodes_template.stat.exists
 
 - name: Now expand the list of enabled fstests for valid configuration sections
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
@@ -269,7 +269,7 @@
     - not kdevops_baseline_and_dev
 
 - name: Now expand the list of enabled fstests for valid configuration sections with dev hosts
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   vars:
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
@@ -313,7 +313,7 @@
     - kdevops_krb5_enable|bool
 
 - name: Generate the fstests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ fstests_enabled_nodes |  regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
@@ -321,7 +321,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - is_fstests|bool
     - ansible_nodes_template.stat.exists
@@ -366,13 +366,13 @@
   debug:
     var: blktests_enabled_test_types
   when:
-    - False
+    - false
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
     - ansible_nodes_template.stat.exists
 
 - name: Generate the blktests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ blktests_enabled_test_types }}"
@@ -380,7 +380,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
@@ -422,7 +422,7 @@
     - kdevops_baseline_and_dev
 
 - name: Generate the selftests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ selftests_enabled_test_types }}"
@@ -430,7 +430,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
@@ -439,7 +439,8 @@
 - name: Collect dynamically supported filesystems
   vars:
     supported_filesystems_variables: "{{ hostvars[inventory_hostname] | dict2items | selectattr('key', 'search', '^sysbench_supported_filesystem_') }}"
-    local_supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_', '') | list }}"
+    local_supported_filesystems: "{{ supported_filesystems_variables | selectattr('value', 'eq', True) | map(attribute='key') | map('regex_replace', '^sysbench_supported_filesystem_',
+      '') | list }}"
   set_fact:
     sysbench_enabled_filesystems: "{{ local_supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
@@ -494,7 +495,7 @@
     - enabled_sysbench_tests | length == 0
 
 - name: Generate the sysbench kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ enabled_sysbench_tests }}"
@@ -502,7 +503,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_sysbench
@@ -544,7 +545,7 @@
     - kdevops_baseline_and_dev
 
 - name: Generate the mmtests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ mmtests_enabled_test_types }}"
@@ -552,14 +553,14 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_mmtests
     - ansible_nodes_template.stat.exists
 
 - name: Generate the reboot-limit kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ [kdevops_host_prefix + '-reboot-limit'] }}"
@@ -567,7 +568,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - workflows_reboot_limit
@@ -575,7 +576,7 @@
     - not kdevops_baseline_and_dev
 
 - name: Generate the reboot-limit kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: [ 'hosts' ]
+  tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ [kdevops_host_prefix + '-reboot-limit', kdevops_host_prefix + '-reboot-limit-dev'] }}"
@@ -583,7 +584,7 @@
   template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: yes
+    force: true
   when:
     - kdevops_workflows_dedicated_workflow
     - workflows_reboot_limit
@@ -600,7 +601,7 @@
   register: dedicated_nodes_template
 
 - name: Fail if the dedicated workflow has no rules for node configuration
-  tags: [ 'nodes' ]
+  tags: ["nodes"]
   fail:
     msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
   when:
@@ -612,11 +613,11 @@
   ansible.builtin.file:
     path: "{{ topdir_path }}/{{ kdevops_nodes }}"
     state: touch
-    mode: '0755'
+    mode: "0755"
 
 - name: Import list of guest nodes
   include_vars: "{{ topdir_path }}/{{ kdevops_nodes }}"
-  ignore_errors: yes
+  ignore_errors: true
   when:
     - kdevops_enable_guestfs|bool
 
@@ -654,7 +655,7 @@
 
 - name: Set the conflict flag on if conflict occur
   set_fact:
-    gdb_port_conflict: True
+    gdb_port_conflict: true
   when:
     - libvirt_enable_gdb|bool
     - gdb_port_reg.results is defined
@@ -674,7 +675,7 @@
   template:
     src: "guestfs_{{ libvirt_machine_type }}.j2.xml"
     dest: "{{ topdir_path }}/guestfs/{{ hostname }}/{{ hostname }}.xml"
-    force: yes
+    force: true
   with_items: "{{ guestfs_nodes }}"
   loop_control:
     index_var: idx

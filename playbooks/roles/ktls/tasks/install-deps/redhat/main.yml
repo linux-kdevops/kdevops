@@ -6,10 +6,10 @@
     - ansible_distribution != "Fedora"
 
 - name: Install ktls dependencies
-  become: yes
+  become: true
   become_method: sudo
   dnf:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5

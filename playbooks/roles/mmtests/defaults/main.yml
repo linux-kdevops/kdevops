@@ -13,26 +13,26 @@ mmtests_test_type: "thpcompact"
 
 mmtests_thpcompact_threads_min: 1
 mmtests_thpcompact_threads_max: 32
-mmtests_thpcompact_threads_max_type_manual: False
-mmtests_thpcompact_threads_max_type_auto: False
+mmtests_thpcompact_threads_max_type_manual: false
+mmtests_thpcompact_threads_max_type_auto: false
 mmtests_thpcompact_anonymous_memory_percent: 80
 mmtests_thpcompact_filemap_memory_scale: 4
 
 mmtests_iterations: 5
 mmtests_monitor_interval: 1
-mmtests_requires_mkfs_device: False
+mmtests_requires_mkfs_device: false
 mmtests_device: "/dev/null"
 mmtests_ext4_sector_size: 4k
 mmtests_mkfs_type: "xfs"
 mmtests_mkfs_cmd: ""
 
 # Monitoring configuration
-mmtests_monitor_enable_ftrace: True
-mmtests_monitor_enable_proc_monitoring: True
-mmtests_monitor_enable_mpstat: True
+mmtests_monitor_enable_ftrace: true
+mmtests_monitor_enable_proc_monitoring: true
+mmtests_monitor_enable_mpstat: true
 
 # System configuration
-mmtests_pretest_compaction: False
-mmtests_pretest_dropvmcaches: False
+mmtests_pretest_compaction: false
+mmtests_pretest_dropvmcaches: false
 mmtests_pretest_thp_setting: "always"
-kdevops_workflow_enable_mmtests: False
+kdevops_workflow_enable_mmtests: false

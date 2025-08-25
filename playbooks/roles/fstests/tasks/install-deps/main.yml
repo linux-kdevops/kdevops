@@ -1,6 +1,6 @@
 ---
 - name: Ensure required /media/ directories are created
-  become: yes
+  become: true
   become_method: sudo
   file:
     state: directory

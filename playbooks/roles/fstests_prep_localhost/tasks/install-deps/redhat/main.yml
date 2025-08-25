@@ -1,9 +1,9 @@
 ---
 - name: Install local dependencies for fstests command and control
-  become: yes
+  become: true
   become_method: sudo
   yum:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5
@@ -15,11 +15,11 @@
       - python-pip
 
 - name: Install junitparser
-  become: yes
+  become: true
   become_method: sudo
   pip:
     name:
       - junitparser
   when:
     - install_local_deps|bool
-  tags: [ 'local_deps' ]
+  tags: ["local_deps"]

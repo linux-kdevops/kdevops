@@ -1,3 +1,4 @@
+---
 - name: Check if the ssh config file exists
   stat:
     path: "~/.ssh/config"
@@ -9,7 +10,7 @@
     path: ~/.ssh/config
     regexp: "Include ~/.ssh/config_kdevops_*"
     state: absent
-  check_mode: yes
+  check_mode: true
   changed_when: false
   register: kdevops_ssh_include
   when: ssh_config.stat.exists
@@ -20,7 +21,7 @@
     path: ~/.ssh/config
     regexp: "^#(.*)kdevops_version(.*)"
     state: absent
-  check_mode: yes
+  check_mode: true
   changed_when: false
   register: fixed_ssh_entry
   when: ssh_config.stat.exists
@@ -54,8 +55,8 @@
 - name: Remove any extra new lines
   replace:
     path: ~/.ssh/config
-    regexp: '(^\s*$)'
-    replace: ''
+    regexp: "(^\\s*$)"
+    replace: ""
   when: ssh_config.stat.exists
 
 # ssh include directives must follow a new line.

@@ -35,8 +35,7 @@
     local_map: "{{ block_device_dict[inventory_hostname] }}"
   ansible.builtin.set_fact:
     ebs_volume_ids: "{{ ebs_volume_ids + [ 'nvme-Amazon_Elastic_Block_Store_' + item.value | regex_replace('-', '') ] }}"
-  when:
-    item.key != "/dev/sdf"
+  when: item.key != "/dev/sdf"
   with_dict: "{{ local_map }}"
 
 - name: Add unused EBS volumes to the volume list

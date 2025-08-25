@@ -10,8 +10,8 @@ dev_gitconfig_src: "~/.gitconfig"
 dev_gitconfig_dest: "{{ data_home_dir }}/.gitconfig"
 
 # The bash script we check for on the virtual machine
-dev_bash_config:  "{{ data_home_dir }}/.bashrc"
-dev_bash_config_root:  "/root/.bashrc"
+dev_bash_config: "{{ data_home_dir }}/.bashrc"
+dev_bash_config_root: "/root/.bashrc"
 
 dev_bash_config_hacks_name: "enhance-bash"
 dev_bash_config_hacks_src: "~/.{{ dev_bash_config_hacks_name }}"
@@ -19,42 +19,41 @@ dev_bash_config_hacks_generic: "~/.{{ dev_bash_config_hacks_name }}"
 dev_bash_config_hacks_dest: "{{ data_home_dir }}/.{{ dev_bash_config_hacks_name }}"
 dev_bash_config_hacks_root: "/root/.{{ dev_bash_config_hacks_name }}"
 
-devconfig_try_refresh_repos: False
-devconfig_try_upgrade: False
-devconfig_try_install_kdevtools: False
+devconfig_try_refresh_repos: false
+devconfig_try_upgrade: false
+devconfig_try_install_kdevtools: false
 
-devconfig_repos_addon: False
+devconfig_repos_addon: false
 devconfig_repos_addon_list:
-
-suse_register_system: False
+suse_register_system: false
 suse_registration_code: 0
 
-devconfig_enable_console: False
-devconfig_enable_kotd: False
-devconfig_has_kotd_repo: False
+devconfig_enable_console: false
+devconfig_enable_kotd: false
+devconfig_has_kotd_repo: false
 devconfig_kotd_repo: "http://ignore.com"
 devconfig_kotd_repo_name: "ignore"
-devconfig_enable_systemd_watchdog: False
+devconfig_enable_systemd_watchdog: false
 
-devconfig_enable_sysctl_tuning: False
-devconfig_enable_sysctl_mm_overcommit_memory: False
+devconfig_enable_sysctl_tuning: false
+devconfig_enable_sysctl_mm_overcommit_memory: false
 devconfig_sysctl_conf: "/etc/sysctl.conf"
 devconfig_sysctl_mm_overcommit_memory: 0
 
 rhel_org_id: ""
 rhel_activation_key: ""
 
-kdevops_cli_install: False
-devconfig_enable_systemd_journal_remote: False
+kdevops_cli_install: false
+devconfig_enable_systemd_journal_remote: false
 devconfig_systemd_journal_remote_url: "http://192.168.124.1"
 devconfig_systemd_journal_remote_path: "/var/log/journal/remote/"
 
-devconfig_enable_systemd_timesyncd: False
-devconfig_enable_systemd_timesyncd_ntp: False
-devconfig_enable_systemd_timesyncd_ntp_google: False
-devconfig_enable_systemd_timesyncd_ntp_debian: False
-devconfig_enable_systemd_timesyncd_ntp_google_debian: False
-kdevops_enable_guestfs: False
-guestfs_copy_sources_from_host_to_guest: False
-distro_debian_has_hop1_sources: False
-unattended_upgrades_installed: False
+devconfig_enable_systemd_timesyncd: false
+devconfig_enable_systemd_timesyncd_ntp: false
+devconfig_enable_systemd_timesyncd_ntp_google: false
+devconfig_enable_systemd_timesyncd_ntp_debian: false
+devconfig_enable_systemd_timesyncd_ntp_google_debian: false
+kdevops_enable_guestfs: false
+guestfs_copy_sources_from_host_to_guest: false
+distro_debian_has_hop1_sources: false
+unattended_upgrades_installed: false

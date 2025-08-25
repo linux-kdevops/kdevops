@@ -1,17 +1,17 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Install mmtests build dependencies (RedHat/CentOS)
-  become: yes
+  become: true
   become_method: sudo
   yum:
     name:
@@ -25,10 +25,10 @@
       - libnuma-devel
       - perl-Math-Gradient
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests runtime dependencies (RedHat/CentOS)
-  become: yes
+  become: true
   become_method: sudo
   yum:
     name:
@@ -42,10 +42,10 @@
       - bc
       - psmisc
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests monitoring dependencies (RedHat/CentOS)
-  become: yes
+  become: true
   become_method: sudo
   yum:
     name:
@@ -53,5 +53,5 @@
       - trace-cmd
       - perf
     state: present
-  tags: ['deps']
+  tags: ["deps"]
   ignore_errors: true

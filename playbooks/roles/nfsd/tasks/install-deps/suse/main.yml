@@ -4,11 +4,11 @@
   vars:
     params:
       files:
-        - '{{ansible_distribution}}.yml'
-        - '{{ansible_os_family}}.yml'
+        - "{{ansible_distribution}}.yml"
+        - "{{ansible_os_family}}.yml"
         - default.yml
       paths:
-        - 'vars'
+        - "vars"
 
 - name: Determine which fsprogs package is needed for "{{ nfsd_export_fstype }}"
   set_fact:
@@ -27,7 +27,7 @@
   when: kdevops_krb5_enable|bool
 
 - name: Install nfsd dependencies
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name: "{{ nfsd_packages }}"

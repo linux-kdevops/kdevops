@@ -1,7 +1,7 @@
 ---
 - name: Install Fedora-specific dependencies
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name:
@@ -9,15 +9,15 @@
     state: present
   when:
     - install_linux_mirror|bool
-  tags: [ 'mirror' ]
+  tags: ["mirror"]
 
 - name: Gather service facts
   ansible.builtin.service_facts:
-  tags: [ 'mirror' ]
+  tags: ["mirror"]
 
 - name: Open the firewall on control node for git traffic
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.posix.firewalld:
     zone: libvirt
@@ -29,4 +29,4 @@
     - install_linux_mirror|bool
     - '"firewalld.service" in ansible_facts.services'
     - ansible_facts.services['firewalld.service'].status == "enabled"
-  tags: [ 'mirror' ]
+  tags: ["mirror"]

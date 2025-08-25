@@ -6,7 +6,7 @@
     {{ topdir_path }}/scripts/get-distro-has-hop-count-sources.sh 1
   register: localhost_hop_count
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Extract hop1 mirror info from control host (DEB822 format)
   delegate_to: localhost
@@ -17,7 +17,7 @@
     fi
   register: localhost_hop1_mirror_deb822
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
   when: localhost_hop_count.stdout == 'y'
 
 - name: Extract hop1 mirror info from control host (legacy format)
@@ -32,7 +32,7 @@
     fi
   register: localhost_hop1_mirror_legacy
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
   when: localhost_hop_count.stdout == 'y'
 
 - name: Set hop1 mirror variables
@@ -60,7 +60,7 @@
     grep -E "^URIs:" /etc/apt/sources.list.d/debian.sources | head -1 | awk '{print $2}' | sed -E 's|https?://||' | cut -d'/' -f1
   register: apt_mirror_host_deb822
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
   when: deb822_sources.stat.exists
 
 - name: Extract current APT mirror hostname (legacy format)
@@ -68,7 +68,7 @@
     grep -E "^deb\s+http" /etc/apt/sources.list | head -1 | awk '{print $2}' | sed 's|http://||' | cut -d'/' -f1
   register: apt_mirror_host_legacy
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
   when: not deb822_sources.stat.exists
 
 - name: Set unified mirror hostname
@@ -82,7 +82,7 @@
     port: 80
     timeout: 10
   register: mirror_connectivity
-  ignore_errors: yes
+  ignore_errors: true
   when: apt_mirror_host.stdout != ""
 
 - name: Display mirror check results
@@ -100,7 +100,7 @@
         port: 80
         timeout: 10
       register: hop1_mirror_connectivity
-      ignore_errors: yes
+      ignore_errors: true
       when:
         - has_hop1_mirror is defined
         - has_hop1_mirror | bool
@@ -112,12 +112,12 @@
           copy:
             src: "{{ item }}"
             dest: "{{ item }}.backup"
-            remote_src: yes
-          become: yes
+            remote_src: true
+          become: true
           loop:
             - /etc/apt/sources.list
             - /etc/apt/sources.list.d/debian.sources
-          ignore_errors: yes
+          ignore_errors: true
 
         - name: Apply hop1 mirror configuration using DEB822 format
           template:
@@ -125,21 +125,21 @@
             dest: /etc/apt/sources.list.d/debian.sources
             owner: root
             group: root
-            mode: '0644'
-          become: yes
+            mode: "0644"
+          become: true
 
         - name: Remove legacy sources.list if migrating to DEB822
           file:
             path: /etc/apt/sources.list
             state: absent
-          become: yes
+          become: true
           when: not deb822_sources.stat.exists
 
         - name: Update APT cache with hop1 mirror
           apt:
-            update_cache: yes
+            update_cache: true
             cache_valid_time: 0
-          become: yes
+          become: true
 
         - name: Inform user about hop1 mirror usage
           debug:
@@ -161,16 +161,16 @@
       copy:
         src: /etc/apt/sources.list.d/debian.sources
         dest: /etc/apt/sources.list.d/debian.sources.backup
-        remote_src: yes
-      become: yes
+        remote_src: true
+      become: true
       when: deb822_sources.stat.exists
 
     - name: Backup current sources (legacy format)
       copy:
         src: /etc/apt/sources.list
         dest: /etc/apt/sources.list.backup
-        remote_src: yes
-      become: yes
+        remote_src: true
+      become: true
       when: not deb822_sources.stat.exists
 
     - name: Apply Debian testing fallback sources using modern DEB822 format
@@ -179,21 +179,21 @@
         dest: /etc/apt/sources.list.d/debian.sources
         owner: root
         group: root
-        mode: '0644'
-      become: yes
+        mode: "0644"
+      become: true
 
     - name: Remove legacy sources.list if migrating to DEB822
       file:
         path: /etc/apt/sources.list
         state: absent
-      become: yes
+      become: true
       when: not deb822_sources.stat.exists
 
     - name: Update APT cache after mirror change
       apt:
-        update_cache: yes
+        update_cache: true
         cache_valid_time: 0
-      become: yes
+      become: true
 
     - name: Inform user about mirror fallback
       debug:

@@ -4,15 +4,15 @@
   vars:
     params:
       files:
-        - '{{ ansible_distribution }}.yml'
-        - '{{ ansible_os_family }}.yml'
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
         - default.yml
       paths:
-        - 'vars'
+        - "vars"
 
 - name: Install dependencies for iSCSI initiator
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
     name: "{{ iscsi_initiator_packages }}"
@@ -20,7 +20,7 @@
 
 - name: Discover iSCSI targets and login
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   community.general.open_iscsi:
     portal: "{{ iscsi_target_hostname }}"
@@ -35,7 +35,7 @@
 
 - name: Add an ACL on the iSCSI target for {{ initiator_name['content'] | b64decode | replace('InitiatorName=', '') }}
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
   ansible.builtin.command:
@@ -50,10 +50,10 @@
 
 - name: Back up the iSCSI target configuration
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ iscsi_target_hostname }}"
-  throttle: 1  # running this in parallel can clobber the backup file
+  throttle: 1 # running this in parallel can clobber the backup file
   ansible.builtin.command:
     cmd: "targetctl save"
   changed_when: true

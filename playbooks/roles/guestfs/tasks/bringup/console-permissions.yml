@@ -7,7 +7,7 @@
 
 - name: Look for console.log files in guestfs subdirectories to check for CI enablement
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "{{ topdir_path }}/guestfs"
@@ -18,7 +18,7 @@
 
 - name: Ensure console.log files are owned by the main user for CI monitoring
   become: true
-  become_flags: 'su - -c'
+  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item.path }}"

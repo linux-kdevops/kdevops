@@ -2,11 +2,11 @@
 # Install distribution-specific dependencies
 - name: Install dependencies
   include_tasks: install-deps/main.yml
-  tags: [ 'setup', 'deps' ]
+  tags: ["setup", "deps"]
 
 - include_role:
     name: create_data_partition
-  tags: [ 'setup', 'data_partition' ]
+  tags: ["setup", "data_partition"]
 
 - include_role:
     name: common
@@ -14,8 +14,8 @@
     - infer_uid_and_group|bool
 
 - name: Ensure data_dir has correct ownership
-  tags: [ 'setup' ]
-  become: yes
+  tags: ["setup"]
+  become: true
   become_method: sudo
   ansible.builtin.file:
     path: "{{ data_path }}"
@@ -24,15 +24,15 @@
     state: directory
 
 - name: Clone mmtests repository
-  tags: [ 'setup' ]
+  tags: ["setup"]
   ansible.builtin.git:
     repo: "{{ mmtests_git_url }}"
     dest: "{{ mmtests_data_dir }}"
     version: "{{ mmtests_git_version }}"
-    force: yes
+    force: true
 
 - name: Check if mmtests fixes directory exists
-  tags: [ 'setup' ]
+  tags: ["setup"]
   delegate_to: localhost
   stat:
     path: "{{ topdir_path }}/workflows/mmtests/fixes/"
@@ -40,7 +40,7 @@
   run_once: false
 
 - name: Find mmtests patches in fixes directory
-  tags: [ 'setup' ]
+  tags: ["setup"]
   delegate_to: localhost
   find:
     paths: "{{ topdir_path }}/workflows/mmtests/fixes/"
@@ -50,21 +50,21 @@
   run_once: false
 
 - name: Copy patches to remote host
-  tags: [ 'setup' ]
-  become: yes
+  tags: ["setup"]
+  become: true
   become_method: sudo
   copy:
     src: "{{ item.path }}"
     dest: "/tmp/{{ item.path | basename }}"
-    mode: '0644'
+    mode: "0644"
   with_items: "{{ mmtests_patches.files }}"
   when:
     - fixes_dir.stat.exists
     - mmtests_patches.files | length > 0
 
 - name: Apply mmtests patches on remote host
-  tags: [ 'setup' ]
-  become: yes
+  tags: ["setup"]
+  become: true
   become_method: sudo
   shell: |
     cd {{ mmtests_data_dir }}
@@ -77,7 +77,7 @@
   register: patch_results
 
 - name: Report patch application results
-  tags: [ 'setup' ]
+  tags: ["setup"]
   debug:
     msg: |
       Applied {{ mmtests_patches.files | length | default(0) }} patches from fixes directory:
@@ -89,15 +89,15 @@
     - mmtests_patches.files | length > 0
 
 - name: Generate mmtests configuration
-  tags: [ 'setup' ]
-  become: yes
+  tags: ["setup"]
+  become: true
   become_method: sudo
   ansible.builtin.template:
     src: "{{ mmtests_test_type }}-config.j2"
     dest: "{{ mmtests_data_dir }}/configs/config-workload-{{ mmtests_test_type }}-kdevops"
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
 - name: Fail if configured memory percentages overcommit available memory
   fail:
@@ -108,7 +108,7 @@
   when: (mmtests_anonymous_memory_percent + mmtests_file_memory_percent) > 100
 
 - name: Run mmtests autogen in background
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
   become_method: sudo
   ansible.builtin.command: ./bin/autogen-configs
@@ -116,7 +116,7 @@
     chdir: "{{ mmtests_data_dir }}"
 
 - name: Run mmtests autogen in background
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
   become_method: sudo
   ansible.builtin.command: ./bin/autogen-configs
@@ -124,17 +124,17 @@
     chdir: "{{ mmtests_data_dir }}"
 
 - name: Get kernel version
-  tags: [ 'setup', 'run_tests' ]
+  tags: ["setup", "run_tests"]
   ansible.builtin.command: uname -r
   register: kernel_version
 
 - name: Show kernel version
-  tags: [ 'setup', 'run_tests' ]
+  tags: ["setup", "run_tests"]
   debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Build mmtests
-  tags: [ 'setup' ]
+  tags: ["setup"]
   become: true
   become_method: sudo
   ansible.builtin.shell: >
@@ -153,11 +153,11 @@
       Stdout: {{ mmtests_build_result.stdout }}
       Stderr: {{ mmtests_build_result.stderr }}
   when: mmtests_build_result.rc != 0
-  tags: [ 'setup' ]
+  tags: ["setup"]
 
 - name: Check if {{ mmtests_device }} is mounted
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   command: findmnt --noheadings --output TARGET --source {{ mmtests_device }}
   register: mountpoint_stat
@@ -166,8 +166,8 @@
   when: mmtests_requires_mkfs_device | bool
 
 - name: Unmount {{ mmtests_device }} if mounted
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   command: umount {{ mmtests_device }}
   when:
@@ -176,8 +176,8 @@
 
 # XXX: add variability for the different options for the governor
 - name: Set CPU governor to performance
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   ansible.builtin.shell: |
     for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
@@ -187,8 +187,8 @@
     done
 
 - name: Drop caches before test
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   ansible.builtin.shell: |
     sync
@@ -196,15 +196,15 @@
   when: mmtests_pretest_dropvmcaches | bool
 
 - name: Configure THP
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   ansible.builtin.shell: |
     echo "{{ mmtests_pretest_thp_setting }}" > /sys/kernel/mm/transparent_hugepage/enabled
 
 - name: Manually trigger memory compaction before run
-  tags: [ 'run_tests' ]
-  become: yes
+  tags: ["run_tests"]
+  become: true
   become_method: sudo
   ansible.builtin.shell: |
     echo 1 > /proc/sys/vm/compact_memory
@@ -213,12 +213,12 @@
   ignore_errors: true
 
 - name: Show kernel version
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Run mmtests in background
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   become: true
   become_method: sudo
   ansible.builtin.command: ./run-mmtests.sh --config configs/config-workload-{{ mmtests_test_type }}-kdevops {{ inventory_hostname }}-{{ kernel_version.stdout }}
@@ -229,84 +229,84 @@
   register: mmtests_job
 
 - name: Wait for mmtests to complete
-  tags: [ 'run_tests' ]
+  tags: ["run_tests"]
   become: true
   become_method: sudo
   ansible.builtin.async_status:
     jid: "{{ mmtests_job.ansible_job_id }}"
   register: mmtests_status
   until: mmtests_status.finished
-  retries: 1440    # 12 hours
-  delay: 60        # check every 60 seconds
+  retries: 1440 # 12 hours
+  delay: 60 # check every 60 seconds
 
 - name: Create local results directory
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: false
-  tags: ['results']
+  tags: ["results"]
 
 - name: Ensure old mmtests results archive is removed if it exists
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.file:
     path: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     state: absent
-  tags: [ 'results' ]
+  tags: ["results"]
 
 - name: Archive mmtests results directory on remote host
-  become: yes
+  become: true
   become_method: sudo
   command: >
     tar czf {{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz -C {{ mmtests_results_dir }} .
   args:
     creates: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
-  tags: [ 'results' ]
+  tags: ["results"]
 
 - name: Remove previously fetched mmtests results archive if it exists
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  tags: [ 'results' ]
+  tags: ["results"]
   with_items:
     - "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     - "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
 
 - name: Copy mmtests results
-  tags: [ 'results' ]
-  become: yes
+  tags: ["results"]
+  become: true
   become_method: sudo
   ansible.builtin.fetch:
     src: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/"
-    flat: yes
+    flat: true
 
 - name: Ensure local mmtests results extraction directory exists
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
     state: directory
-    mode: '0755'
-    recurse: yes
-  tags: [ 'results' ]
+    mode: "0755"
+    recurse: true
+  tags: ["results"]
 
 - name: Extract mmtests results archive locally
-  become: no
+  become: false
   delegate_to: localhost
   ansible.builtin.unarchive:
     src: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/mmtests/results/{{ inventory_hostname }}/mmtests-results-{{ inventory_hostname }}"
-    remote_src: no
-  tags: [ 'results' ]
+    remote_src: false
+  tags: ["results"]
 
 - name: Clean previous mmtests results on DUTs
-  tags: [ 'clean' ]
-  become: yes
+  tags: ["clean"]
+  become: true
   become_method: sudo
   ansible.builtin.file:
     path: "{{ item }}"
@@ -315,8 +315,8 @@
     - "{{ mmtests_results_dir }}"
 
 - name: Clean previous mmtests results on localhost
-  tags: [ 'clean' ]
-  become: yes
+  tags: ["clean"]
+  become: true
   become_method: sudo
   delegate_to: localhost
   ansible.builtin.file:

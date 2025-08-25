@@ -1,7 +1,7 @@
 ---
 # task to install packages common across supported distros
 - name: Install packages common to all supported distros
-  become: yes
+  become: true
   package:
     name:
       - numactl

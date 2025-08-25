@@ -8,7 +8,7 @@
 
 - name: Provision each target node
   when:
-    - 'inventory_hostname not in defined_vms.list_vms'
+    - "inventory_hostname not in defined_vms.list_vms"
   block:
     - name: Set the pathname of the ssh directory for each target node
       ansible.builtin.set_fact:
@@ -131,7 +131,7 @@
   file:
     path: "{{ bootlinux_9p_host_path }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: true
   delegate_to: localhost
   when:

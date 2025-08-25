@@ -2,7 +2,7 @@
 # Tasks to start monitoring services before test execution
 
 - name: Check if folio migration stats are available
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /sys/kernel/debug/mm/migrate/stats
@@ -12,19 +12,19 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Create monitoring directory
-  become: yes
+  become: true
   become_method: sudo
   file:
     path: /root/monitoring
     state: directory
-    mode: '0755'
+    mode: "0755"
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
     - folio_migration_stats_file.stat.exists|default(false)
 
 - name: Start folio migration monitoring in background
-  become: yes
+  become: true
   become_method: sudo
   shell: |
     nohup bash -c 'while true; do
@@ -34,7 +34,7 @@
       sleep {{ monitor_folio_migration_interval|default(60) }}
     done' > /root/monitoring/folio_migration.log 2>&1 &
     echo $! > /root/monitoring/folio_migration.pid
-  async: 86400  # Run for up to 24 hours
+  async: 86400 # Run for up to 24 hours
   poll: 0
   register: folio_migration_monitor
   when:
@@ -52,7 +52,7 @@
     - folio_migration_monitor is defined
 
 - name: Verify monitoring started successfully
-  become: yes
+  become: true
   become_method: sudo
   shell: |
     if [ -f /root/monitoring/folio_migration.pid ]; then

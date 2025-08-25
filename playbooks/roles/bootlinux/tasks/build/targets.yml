@@ -1,6 +1,6 @@
 ---
 - name: Install b4
-  become: yes
+  become: true
   become_method: sudo
   pip:
     name:
@@ -14,14 +14,14 @@
   git:
     repo: "{{ target_linux_git }}"
     dest: "{{ target_linux_dir_path }}"
-    update: yes
+    update: true
     depth: "{{ target_linux_shallow_depth }}"
     version: "{{ target_linux_ref }}"
   retries: 3
   delay: 5
   register: result
   until: not result.failed
-  tags: [ 'clone']
+  tags: ["clone"]
 
 - name: Copy kernel delta if requested on the target nodes
   template:
@@ -29,7 +29,7 @@
     dest: "{{ target_linux_dir_path }}/{{ target_linux_extra_patch }}"
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
-    mode: 0644
+    mode: "0644"
   when:
     - target_linux_extra_patch is defined
 
@@ -74,7 +74,7 @@
     dest: "{{ target_linux_dir_path }}/.config"
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
-    mode: 0644
+    mode: "0644"
 
 - name: Set kernel localversion if requested on the target nodes
   shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
@@ -98,7 +98,7 @@
   changed_when: "build.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
 
 - name: Build {{ target_linux_tree }} cxl_test on the target nodes
   command: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
@@ -106,7 +106,7 @@
   changed_when: "build_cxl_test.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
-  tags: [ 'build-linux', 'cxl-build' ]
+  tags: ["build-linux", "cxl-build"]
   when:
     - bootlinux_cxl_test|bool
 
@@ -114,12 +114,12 @@
   stat:
     path: "{{ target_linux_dir_path }}/certs/signing_key.pem"
   register: snaik_oil_file
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
 
 - name: Ensure we allow world to read the snake oil in case of NFS or 9p read only usage
   file:
     path: "{{ target_linux_dir_path }}/certs/signing_key.pem"
     mode: "0755"
-  tags: [ 'build-linux' ]
+  tags: ["build-linux"]
   when:
     - snaik_oil_file.stat.exists

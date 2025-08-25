@@ -1,17 +1,17 @@
 ---
 - hosts: all
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   tasks:
     - name: Import optional extra_args file
       include_vars: "{{ item }}"
-      ignore_errors: yes
+      ignore_errors: true
       with_first_found:
         - files:
-          - "../extra_vars.yml"
-          - "../extra_vars.yaml"
-          - "../extra_vars.json"
+            - "../extra_vars.yml"
+            - "../extra_vars.yaml"
+            - "../extra_vars.json"
           skip: true
       tags: vars
 
@@ -21,4 +21,4 @@
         tasks_from: monitor_collect_only
       when:
         - enable_monitoring|default(false)|bool
-      tags: [ 'monitoring', 'monitor_collect' ]
+      tags: ["monitoring", "monitor_collect"]

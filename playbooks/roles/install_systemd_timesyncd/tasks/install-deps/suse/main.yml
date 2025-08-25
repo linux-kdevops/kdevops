@@ -1,6 +1,6 @@
 ---
 - name: Install systemd-timesyncd
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

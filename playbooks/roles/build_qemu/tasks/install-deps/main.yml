@@ -1,10 +1,10 @@
 ---
 - name: Import optional distribution specific variables
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "{{ ansible_facts['os_family']|lower }}.yml"
+        - "{{ ansible_facts['os_family']|lower }}.yml"
       skip: true
   tags: vars
 

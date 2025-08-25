@@ -1,6 +1,6 @@
 ---
 - name: Install systemd-journal-remote
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

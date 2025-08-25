@@ -1,9 +1,9 @@
 ---
 - name: Install every single selftest build dependencies
-  become: yes
+  become: true
   become_method: sudo
   yum:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   vars:
     packages:

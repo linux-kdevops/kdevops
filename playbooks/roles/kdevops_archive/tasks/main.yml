@@ -1,7 +1,7 @@
 ---
 - name: Install git-lfs
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   package:
     name:
@@ -13,13 +13,13 @@
   set_fact:
     kdevops_results_repo_url: "{{ kdevops_results_repo_url_demo }}"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Notify this is a kdevops-results-archive demo
   ansible.builtin.debug:
     msg: "This is a kdevops archive demo: {{ kdevops_results_repo_url }}"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Check if kdevops archive/ directory exists
   ansible.builtin.stat:
@@ -31,13 +31,13 @@
     path: "{{ kdevops_results_local }}"
     state: absent
   when: results_dir.stat.exists
-  become: yes
+  become: true
 
 - name: Create new kdevops archive/ for new results
   file:
     path: "{{ kdevops_results_local }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Get list of files from make ci-results for our archive/
   command: make ci-results
@@ -51,7 +51,7 @@
   changed_when: false
 
 - name: Ensure source files are readable by current user
-  become: yes
+  become: true
   shell: |
     for item in {{ ci_results.stdout_lines | join(' ') }}; do
       if [ -e "$item" ] || compgen -G "$item" > /dev/null; then
@@ -103,7 +103,7 @@
     - kdevops_archive_data_count | int == 0
 
 - name: Ensure copied files are readable by current user
-  become: yes
+  become: true
   shell: |
     find "{{ kdevops_results_local }}" -type d -exec chmod 755 {} +
     find "{{ kdevops_results_local }}" -type f -exec chmod 644 {} +
@@ -148,14 +148,14 @@
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     format: xz
-    remove: no
+    remove: false
 
 - name: Create the same archive/ zip file for web CI artifacts
   archive:
     path: "{{ kdevops_results_local }}"
     dest: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.zip"
     format: zip
-    remove: no
+    remove: false
 
 - name: Find archive files to verify
   find:
@@ -235,7 +235,7 @@
   ansible.builtin.debug:
     msg: "This is a kdevops archive demo, throw away results"
   when:
-    - 'kdevops_archive_demo|bool'
+    - "kdevops_archive_demo|bool"
 
 - name: Check if ci.trigger file exists
   stat:
@@ -270,7 +270,7 @@
   file:
     path: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_base }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: List all directories in base path
   find:
@@ -344,13 +344,13 @@
   file:
     path: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Copy archive to target directory
   copy:
     src: "{{ kdevops_results }}/{{ kdevops_archive_test_ref }}.xz"
     dest: "{{ kdevops_results_archive_dir }}/{{ kdevops_archive_prefix }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Create .tar.xz symlink for the archive
   file:
@@ -441,7 +441,7 @@
   ansible.builtin.copy:
     content: "{{ commit_message }}"
     dest: "{{ tmp_commit_msg.path }}"
-    mode: '0644'
+    mode: "0644"
 
 - name: Commit the archive
   ansible.builtin.shell: |
@@ -465,7 +465,7 @@
     GIT_LFS_SKIP_SMUDGE: "0"
     GIT_LFS_FORCE: "1"
   register: git_push_result
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Display push error if it failed
   debug:

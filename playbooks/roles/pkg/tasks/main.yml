@@ -2,4 +2,3 @@
 - name: oscheck distribution ospecific setup
   import_tasks: tasks/debian.yml
   when: ansible_facts['os_family']|lower == 'debian'
-

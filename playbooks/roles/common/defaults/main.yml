@@ -4,4 +4,4 @@
 kdevops_data: "/data/kdevops"
 kdevops_git: "https://github.com/linux-kdevops/kdevops.git"
 
-kdevops_git_reset: False
+kdevops_git_reset: false

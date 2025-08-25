@@ -4,7 +4,7 @@
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier
   set_fact:
@@ -22,25 +22,25 @@
     is_sle15sp3: '{{ ansible_distribution_version == "15.3" }}'
   when:
     - is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier when not SLE
   set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle12sp5: False
-    is_sle15sp2: False
-    is_sle15sp3: False
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle12sp5: false
+    is_sle15sp2: false
+    is_sle15sp3: false
   when:
     - not is_sle|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we can add repos for a release
   set_fact:
@@ -53,7 +53,7 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: The default is to assume we are not on sle11 or sle10
   set_fact:
@@ -66,10 +66,10 @@
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
-  tags: [ 'vars' ]
+  tags: ["vars"]
 
 - name: Add extra addon repositories when enabled
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh {{ devconfig_kotd_repo }} {{ devconfig_kotd_repo_name }}"
@@ -77,26 +77,26 @@
     - devconfig_enable_kotd|bool
     - repos_can_be_added|bool
     - devconfig_has_kotd_repo|bool
-  tags: [ 'kotd' ]
+  tags: ["kotd"]
 
 - name: Install kotd
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
       - kernel-default
-    update_cache: yes
-    allow_vendor_change: yes
-    disable_recommends: no
-    force_resolution: yes
+    update_cache: true
+    allow_vendor_change: true
+    disable_recommends: false
+    force_resolution: true
     state: latest
-    force: yes
+    force: true
   when:
     - devconfig_enable_kotd|bool
-  tags: [ 'kotd' ]
+  tags: ["kotd"]
 
 - name: Reboot into kotd
-  tags: [ 'kotd' ]
-  become: yes
+  tags: ["kotd"]
+  become: true
   become_method: sudo
   reboot:

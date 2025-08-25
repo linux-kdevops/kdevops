@@ -1,37 +1,37 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - include_role:
     name: create_data_partition
-  tags: [ 'data_partition' ]
+  tags: ["data_partition"]
 
 # Distro specific
 - include_tasks: install-deps/main.yml
 
 - name: git clone kdevops
   environment:
-    GIT_SSL_NO_VERIFY:  true
+    GIT_SSL_NO_VERIFY: true
   git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
-    update: yes
+    update: true
     version: main
-  tags: [ 'install', 'git']
+  tags: ["install", "git"]
 
 - name: Copy over our .config
   copy:
     src: "{{ playbook_dir }}/../.config"
     dest: "{{ kdevops_dir }}"
-  tags: [ 'install', 'root', 'config']
+  tags: ["install", "root", "config"]
 
 # We do this *after* the /data/ partition is set up so
 # we can house the dbench source code there and so that
@@ -43,89 +43,89 @@
   vars:
     dbench_data: "{{ data_path }}/dbench"
     dbench_git: "{{ blktests_dbench_git }}"
-  tags: [ 'oscheck', 'git', 'dbench']
+  tags: ["oscheck", "git", "dbench"]
 
 - name: Remove any old blktrace as we always clone a fresh tree
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ blktrace_data }}"
     state: absent
-  tags: [ 'git', 'blktests', 'blktrace' ]
+  tags: ["git", "blktests", "blktrace"]
 
 - name: git clone blktrace
   git:
     repo: "{{ blktrace_git }}"
     dest: "{{ blktrace_data }}"
-    update: yes
+    update: true
     version: master
-  tags: [ 'git', 'blktests', 'blktrace' ]
+  tags: ["git", "blktests", "blktrace"]
 
 - name: Get nproc
   command: "{{ num_jobs }}"
-  tags: [ 'blktests', 'build', 'bltkrace' ]
+  tags: ["blktests", "build", "bltkrace"]
   register: nproc
 
 - name: Build blktrace
-  tags: [ 'blktests', 'build', 'bltkrace' ]
+  tags: ["blktests", "build", "bltkrace"]
   make:
     chdir: "{{ blktrace_data }}"
     jobs: "{{ nproc.stdout }}"
 
 - name: Install blktrace
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{  make }} install"
-  tags: [ 'blktests', 'install', 'root', 'blktrace' ]
+  tags: ["blktests", "install", "root", "blktrace"]
   args:
     chdir: "{{ blktrace_data }}"
 
 - name: Remove any old blktets as we always clone a fresh tree
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     path: "{{ blktests_data }}"
     state: absent
-  tags: [ 'git', 'blktests']
+  tags: ["git", "blktests"]
 
 - name: git clone blktests
   git:
     repo: "{{ blktests_git }}"
     dest: "{{ blktests_data }}"
-    update: yes
+    update: true
     version: master
-  tags: [ 'git', 'blktests']
+  tags: ["git", "blktests"]
 
 - name: Build blktests
-  tags: [ 'blktests', 'build']
+  tags: ["blktests", "build"]
   make:
     chdir: "{{ blktests_data }}"
     jobs: "{{ nproc.stdout }}"
 
 - name: Install blktests
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "{{  make }} install"
-  tags: [ 'blktests', 'install', 'root']
+  tags: ["blktests", "install", "root"]
   args:
     chdir: "{{ blktests_data }}"
 
 - name: git pull latest kdevops to ensure expunge list is up to date
   environment:
-    GIT_SSL_NO_VERIFY:  true
+    GIT_SSL_NO_VERIFY: true
   git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
-    update: yes
+    update: true
     version: main
-  tags: [ 'install', 'git', 'git_update', 'run_tests' ]
+  tags: ["install", "git", "git_update", "run_tests"]
 
 - name: Create a symbolic links needed
-  become: yes
+  become: true
   become_method: sudo
   file:
     src: "{{ kdevops_dir }}/workflows/blktests/scripts/{{ item }}"
@@ -135,20 +135,20 @@
     - "oscheck.sh"
   loop_control:
     label: "{{ item }}"
-  tags: [ 'blktests', 'install' ]
+  tags: ["blktests", "install"]
 
 - name: Disable multipathd service for srp blktests tests
-  become: yes
+  become: true
   become_method: sudo
   systemd:
     name: multipathd
-    enabled: no
+    enabled: false
     state: stopped
   tags: multipathd
 
 - name: Reboot system before our test so we know everything is sane
-  tags: [ 'blktests', 'run_tests', 'reboot' ]
-  become: yes
+  tags: ["blktests", "run_tests", "reboot"]
+  become: true
   become_method: sudo
   reboot:
     post_reboot_delay: 10
@@ -156,36 +156,36 @@
 - name: Set the path to blktests workflow
   set_fact:
     blktests_workflow_target: "../workflows/blktests/"
-  tags: [ 'blktests', 'run_tests', 'copy_results', 'prior_run', 'print_results' , 'augment_expunge_list' ]
+  tags: ["blktests", "run_tests", "copy_results", "prior_run", "print_results", "augment_expunge_list"]
 
 - name: Set the path where we collect our blktests results
   set_fact:
     blktests_results_target: "../workflows/blktests/results/"
     blktests_results_full_path: "{{ topdir_path }}/workflows/blktests/results/"
-  tags: [ 'blktests', 'run_tests', 'copy_results', 'prior_run', 'print_results' , 'augment_expunge_list' ]
+  tags: ["blktests", "run_tests", "copy_results", "prior_run", "print_results", "augment_expunge_list"]
 
 - name: Set the path where we collect blktests expunges
   set_fact:
     blktests_expunges_target: "../workflows/blktests/expunges/"
-  tags: [ 'blktests', 'run_tests', 'copy_results', 'prior_run', 'print_results' , 'augment_expunge_list' ]
+  tags: ["blktests", "run_tests", "copy_results", "prior_run", "print_results", "augment_expunge_list"]
 
 - name: Print uname for each host
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
   debug: var=ansible_kernel
 
 - name: Get used target kernel version
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   command: "uname -r"
   register: uname_cmd
 
 - name: Store last kernel variable
   set_fact:
     last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   run_once: true
 
 - name: Create {{ blktests_results_target }} if it does not exist
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ blktests_results_target }}"
@@ -193,27 +193,28 @@
   run_once: true
 
 - name: Document used target kernel version
-  local_action: "shell echo {{ last_kernel }} > {{ blktests_results_target }}/last-kernel.txt"
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  shell: echo {{ last_kernel }} > {{ blktests_results_target }}/last-kernel.txt
+  delegate_to: localhost
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   run_once: true
 
 - name: Load configfs module
-  tags: [ 'blktests', 'run_tests', 'configfs' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "run_tests", "configfs"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "modprobe configfs"
   when:
     - kdevops_run_blktests|bool
 
 - name: Clear out old results directory on target hosts
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   file:
     state: absent
     path: "{{ blktests_data_target }}/results/"
-  tags: [ 'blktests', 'run_tests', 'clean_results' ]
+  tags: ["blktests", "run_tests", "clean_results"]
 
 - name: Verify target test devices are defined
   fail:
@@ -221,21 +222,21 @@
   when:
     - kdevops_run_blktests|bool
     - blktests_test_devs is not defined
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
 
 - name: Verify target test device is not /dev/null
   fail:
     msg: "The variable blktests_test_devs must not be /dev/null"
   when:
     - blktests_test_devs == "/dev/null"
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
 
 - name: Verify target test devices exist {{ blktests_test_devs }}
   vars:
     verify_dev_list: "{{ blktests_test_devs | regex_replace(' ', ' -a -e ') }}"
-  tags: [ 'blktests', 'run_tests' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "test -e {{ verify_dev_list }}"
   when:
@@ -245,9 +246,9 @@
 - name: Verify target test devices are block devices {{ blktests_test_devs }}
   vars:
     verify_dev_list: "{{ blktests_test_devs | regex_replace(' ', ' -a -b ') }}"
-  tags: [ 'blktests', 'run_tests' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "test -b {{ verify_dev_list }}"
   when:
@@ -256,22 +257,23 @@
     - blktests_test_devs|length != 0
 
 - name: Hint to watchdog tests are about to kick off
-  local_action: file path="{{ blktests_workflow_target }}/.begin" state=touch
-  tags: [ 'blktests', 'run_tests' ]
+  file: path="{{ blktests_workflow_target }}/.begin" state=touch
+  delegate_to: localhost
+  tags: ["blktests", "run_tests"]
   when:
     - kdevops_run_blktests|bool
   run_once: true
 
 - name: Enable low-level messages on console
-  become: yes
-  become_flags: 'su - -c'
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: sysctl kernel.printk="8 8 1 7"
 
 - name: Check to see if dynamic test limit scope was set
   set_fact:
     dynamic_limit_tests: "{{ lookup('ansible.builtin.env', 'LIMIT_TESTS') }}"
-  tags: [ 'blktests', 'run_tests', 'limit-tests' ]
+  tags: ["blktests", "run_tests", "limit-tests"]
   when:
     - not run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -279,7 +281,7 @@
 - name: Allow dynamic test override
   set_fact:
     all_limit_tests: "{{ dynamic_limit_tests }}"
-  tags: [ 'blktests', 'run_tests', 'limit-tests' ]
+  tags: ["blktests", "run_tests", "limit-tests"]
   when:
     - not run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -290,7 +292,7 @@
 - name: Empty out test limit if None is set
   set_fact:
     all_limit_tests: ""
-  tags: [ 'blktests', 'run_tests', 'limit-tests' ]
+  tags: ["blktests", "run_tests", "limit-tests"]
   when:
     - not run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -300,7 +302,7 @@
 - name: Empty out test no limits have been set
   set_fact:
     all_limit_tests: ""
-  tags: [ 'blktests', 'run_tests', 'limit-tests' ]
+  tags: ["blktests", "run_tests", "limit-tests"]
   when:
     - not run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -309,7 +311,7 @@
 - name: Run oscheck-get-failures.sh to get list of known failed tests
   vars:
     group: "{{ ansible_host | regex_replace('blktests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
   command: "{{ kdevops_data }}/workflows/blktests/scripts/oscheck-get-failures.sh --test-group {{ group }}"
   args:
     chdir: "{{ blktests_data_target }}"
@@ -321,7 +323,7 @@
 - name: Inform user no failures are known
   fail:
     msg: "No known failures for this run! Go find bugs!"
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
   when:
     - run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -330,7 +332,7 @@
 - name: Set test limit to known failed tests
   set_fact:
     all_limit_tests: "{{ failed_tests_limit.stdout | replace('\n', ' ') }}"
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
   when:
     - run_tests_on_failures|bool
     - kdevops_run_blktests|bool
@@ -338,7 +340,7 @@
 - name: Print list of test limits for this run
   debug:
     msg: "all_limit_tests: {{ all_limit_tests }}"
-  tags: [ 'blktests', 'run_tests', 'limit-tests' ]
+  tags: ["blktests", "run_tests", "limit-tests"]
   when:
     - kdevops_run_blktests|bool
     - all_limit_tests is defined
@@ -347,20 +349,20 @@
 
 - name: Stop blktests if we're debbugging limit_tests
   ansible.builtin.meta: end_play
-  tags: [ 'blktests', 'run_tests' ]
+  tags: ["blktests", "run_tests"]
   when:
     - blktests_skip_run|bool
 
 - name: Run blktests using oscheck.sh
   vars:
     group: "{{ ansible_host | regex_replace('blktests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
-  tags: [ 'blktests', 'run_tests' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   command: "./oscheck.sh --print-start --print-done --test-group {{ group }} {{ oscheck_extra_args }} {{ all_limit_tests }}"
-  ignore_errors: yes
-  no_log: True
+  ignore_errors: true
+  no_log: true
   args:
     chdir: "{{ blktests_data_target }}"
   environment:
@@ -370,41 +372,43 @@
     - kdevops_run_blktests|bool
 
 - name: Remove watchdog hint that tests have started
-  local_action: file path="{{ blktests_workflow_target }}/.begin" state=absent
-  tags: [ 'blktests', 'run_tests' ]
+  file: path="{{ blktests_workflow_target }}/.begin" state=absent
+  delegate_to: localhost
+  tags: ["blktests", "run_tests"]
   when:
     - kdevops_run_blktests|bool
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  local_action: file path="{{ blktests_results_target }}/{{ item }}" state=absent
+  file: path="{{ blktests_results_target }}/{{ item }}" state=absent
+  delegate_to: localhost
   with_items:
     - "last-run"
   loop_control:
     label: "{{ item }}"
   run_once: true
-  tags: [ 'blktests', 'copy_results', 'clean_local_results' ]
+  tags: ["blktests", "copy_results", "clean_local_results"]
 
 - name: Look for results for the last run
-  tags: [ 'blktests', 'copy_results' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "copy_results"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   find:
     paths: "{{ blktests_data_target }}/results/"
-    recurse: yes
+    recurse: true
     patterns: "*"
   register: last_run_results
 
 - name: Copy all test results
-  tags: [ 'blktests', 'copy_results' ]
-  become: yes
-  become_flags: 'su - -c'
+  tags: ["blktests", "copy_results"]
+  become: true
+  become_flags: "su - -c"
   become_method: sudo
   fetch:
     src: "{{ item.path }}"
     dest: "{{ blktests_results_target }}/last-run/{{ item.path | regex_replace(blktests_data_target + 'results/' | regex_escape()) | regex_replace('^/', '') }}"
-    flat: yes
+    flat: true
   with_items: "{{ last_run_results.files }}"
   loop_control:
     label: "{{ item.path | regex_replace(blktests_data_target + 'results/' | regex_escape()) | regex_replace('^/', '') }}"
@@ -412,33 +416,37 @@
     - last_run_results.matched > 0
 
 - name: Augment expunge list just run git diff after this to see new failures found
-  local_action: "shell ./python/workflows/blktests/augment_expunge_list.py {{ blktests_results_target }}/last-run/ {{ blktests_expunges_target }}"
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  shell: ./python/workflows/blktests/augment_expunge_list.py {{ blktests_results_target }}/last-run/ {{ blktests_expunges_target }}
+  delegate_to: localhost
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   run_once: true
 
 - name: Copy last-run files to results directory for target kernel and in place only bad and dmesg files
-  local_action: "shell ./python/workflows/blktests/gen-results-dir.py"
-  tags: [ 'blktests', 'copy_results', 'print_results', 'augment_expunge_list' ]
+  shell: ./python/workflows/blktests/gen-results-dir.py
+  delegate_to: localhost
+  tags: ["blktests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
   when:
     - not blktests_results_all
 
 - name: Copy all last-run files to results directory for full results
-  local_action: "shell ./python/workflows/blktests/gen-results-dir.py --copy-all"
-  tags: [ 'blktests', 'copy_results', 'print_results', 'augment_expunge_list' ]
+  shell: ./python/workflows/blktests/gen-results-dir.py --copy-all
+  delegate_to: localhost
+  tags: ["blktests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
   when:
     - blktests_results_all | bool
 
 - name: Print blktests new expunge files for which are not yet committed
-  local_action: "shell ./python/workflows/blktests/get_new_expunge_files.py {{ blktests_expunges_target }}"
+  shell: ./python/workflows/blktests/get_new_expunge_files.py {{ blktests_expunges_target }}
+  delegate_to: localhost
   register: new_expunges
-  tags: [ 'blktests', 'copy_results', 'print_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
 
 - name: Inform user if new expunge files have been found
   run_once: true
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   debug:
     msg: "New expunge files found: {{ new_expunges.stdout_lines }}"
   when:
@@ -451,14 +459,14 @@
   register: result_dir_check
   delegate_to: localhost
   run_once: true
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
 
 - name: Inform user if results directory is empty
   debug:
     msg: "Skipping compression: {{ blktests_results_full_path }}/{{ last_kernel }} is empty."
   when: result_dir_check.matched == 0
   run_once: true
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   delegate_to: localhost
 
 # You are encouraged to commit the compressed results of failed tests
@@ -470,5 +478,5 @@
     format: xz
   when: result_dir_check.matched != 0
   run_once: true
-  tags: [ 'blktests', 'copy_results', 'augment_expunge_list' ]
+  tags: ["blktests", "copy_results", "augment_expunge_list"]
   delegate_to: localhost

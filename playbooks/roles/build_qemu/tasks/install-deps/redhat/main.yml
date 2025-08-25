@@ -1,6 +1,6 @@
 ---
 - name: Install QEMU build dependencies
-  become: yes
+  become: true
   become_method: sudo
   dnf:
     name:

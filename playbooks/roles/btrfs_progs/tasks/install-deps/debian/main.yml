@@ -1,13 +1,13 @@
 ---
 - name: Update apt cache
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
-  tags: [ 'btrfs-progs', 'update-cache' ]
+    update_cache: true
+  tags: ["btrfs-progs", "update-cache"]
 
 - name: Install btrfs-progs build dependencies
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -18,4 +18,4 @@
       - libudev-dev
       - liblzo2-dev
     state: present
-  tags: [ 'btrfs-progs', 'build-deps' ]
+  tags: ["btrfs-progs", "build-deps"]

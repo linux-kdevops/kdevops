@@ -1,12 +1,12 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
@@ -16,7 +16,7 @@
 - name: Gather network facts
   ansible.builtin.setup:
     gather_subset:
-      - 'network'
+      - "network"
 
 - name: Build network address
   set_fact:
@@ -37,7 +37,7 @@
   register: cloud_init
 
 - name: Disable cloud-init hosts management
-  become: yes
+  become: true
   become_method: sudo
   lineinfile:
     dest: /etc/cloud/cloud.cfg.d/99-kdevops-manage-net-disable
@@ -47,11 +47,11 @@
     - cloud_init.stat.exists
 
 - name: Add IP address of all hosts to all hosts
-  become: yes
+  become: true
   become_method: sudo
   lineinfile:
     dest: /etc/hosts
-    regexp: '.*{{ item }}$'
+    regexp: ".*{{ item }}$"
     line: "{{ hostvars[item].ansible_all_ipv4_addresses | ipaddr(private_network) | first }} {{ item }}"
     state: present
   with_items: "{{ ueh_hosts }}"
@@ -59,11 +59,11 @@
     - terraform_private_net_enabled
 
 - name: Add IP address of all hosts to all hosts
-  become: yes
+  become: true
   become_method: sudo
   lineinfile:
     dest: /etc/hosts
-    regexp: '.*{{ item }}$'
+    regexp: ".*{{ item }}$"
     line: "{{ hostvars[item].ansible_all_ipv4_addresses | first }} {{item}}"
     state: present
   with_items: "{{ ueh_hosts }}"
@@ -71,13 +71,13 @@
     - not terraform_private_net_enabled
 
 - name: Fix up hostname on Debian guestfs hosts
-  become: yes
+  become: true
   become_method: sudo
   lineinfile:
     path: /etc/hosts
-    regexp: '^(127\.0\.1\.1)(\s+)unassigned-hostname\.unassigned-domain\s+({{ ansible_hostname }})$'
-    backrefs: yes
-    line: '\1\2\3'
+    regexp: "^(127\\.0\\.1\\.1)(\\s+)unassigned-hostname\\.unassigned-domain\\s+({{ ansible_hostname }})$"
+    backrefs: true
+    line: "\\1\\2\\3"
   when:
     - ansible_os_family == 'Debian'
     - kdevops_enable_guestfs|bool

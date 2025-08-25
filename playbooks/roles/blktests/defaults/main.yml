@@ -3,9 +3,9 @@
 # Our sensible defaults for the blktests role.
 #
 # We default to not run tests.
-kdevops_run_blktests: False
-run_tests_on_failures: False
-blktests_skip_run: False
+kdevops_run_blktests: false
+run_tests_on_failures: false
+blktests_skip_run: false
 
 # Ror instance you can use "-g quick" but note that this may produce
 # not results as all quick tests may be expunded.
@@ -21,5 +21,5 @@ nbd_git: "https://github.com/NetworkBlockDevice/nbd.git"
 nbd_version: "nbd-3.21"
 nbd_data: "{{data_path}}/nbd"
 
-compile_dbench: False
+compile_dbench: false
 blktests_dbench_git: "https://github.com/linux-kdevops/dbench.git"

@@ -6,6 +6,6 @@ reboot_limit_test_type: "ansible"
 reboot_limits_data: "{{ data_path }}/reboot-limit"
 reboot_limits_systemctl_analyze_log: "systemctl-analyze.txt"
 reboot_limits_count_log: "reboot-count.txt"
-reboot_limit_enable_systemd_analyze: False
-reboot_limit_boot_count_crash_enable: False
+reboot_limit_enable_systemd_analyze: false
+reboot_limit_boot_count_crash_enable: false
 reboot_limit_boot_crash_count: 0

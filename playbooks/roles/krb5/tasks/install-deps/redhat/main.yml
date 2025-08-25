@@ -1,9 +1,9 @@
 ---
 - name: Install krb5 dependencies
-  become: yes
+  become: true
   become_method: sudo
   yum:
-    update_cache: yes
+    update_cache: true
     name: "{{ packages }}"
   retries: 3
   delay: 5

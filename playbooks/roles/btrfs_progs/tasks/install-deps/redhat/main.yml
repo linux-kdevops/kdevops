@@ -1,6 +1,6 @@
 ---
 - name: Install btrfs-progs build dependencies
-  become: yes
+  become: true
   become_method: sudo
   dnf:
     name:

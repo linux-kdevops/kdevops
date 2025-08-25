@@ -1,3 +1,4 @@
+---
 - name: Distribution specific setup
   import_tasks: redhat/main.yml
   when:

@@ -2,7 +2,7 @@
 # Tasks to stop monitoring services and collect data after test execution
 
 - name: Check if folio migration monitoring was started
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /root/monitoring/folio_migration.pid
@@ -12,7 +12,7 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Stop folio migration monitoring
-  become: yes
+  become: true
   become_method: sudo
   shell: |
     if [ -f /root/monitoring/folio_migration.pid ]; then
@@ -41,7 +41,7 @@
     - stop_monitor.changed|default(false)
 
 - name: Check if monitoring data was collected
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /root/monitoring/folio_migration_stats.txt
@@ -51,30 +51,30 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Copy plot_migration_stats.py to target
-  become: yes
+  become: true
   become_method: sudo
   copy:
     src: "{{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py"
     dest: /root/monitoring/plot_migration_stats.py
-    mode: '0755'
+    mode: "0755"
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
     - folio_migration_data_file.stat.exists|default(false)
 
 - name: Check if matplotlib is available for plotting
-  become: yes
+  become: true
   become_method: sudo
   command: python3 -c "import matplotlib.pyplot"
   register: matplotlib_check
-  ignore_errors: yes
+  ignore_errors: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
     - folio_migration_data_file.stat.exists|default(false)
 
 - name: Generate folio migration plots
-  become: yes
+  become: true
   become_method: sudo
   command: |
     python3 /root/monitoring/plot_migration_stats.py
@@ -83,7 +83,7 @@
   args:
     chdir: /root/monitoring
   register: plot_generation
-  ignore_errors: yes
+  ignore_errors: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
@@ -113,27 +113,28 @@
     monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
 
 - name: Create local monitoring results directory
-  local_action: file path="{{ monitoring_results_path }}" state=directory
+  file: path="{{ monitoring_results_path }}" state=directory
+  delegate_to: localhost
   run_once: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
 - name: Copy folio migration stats data to localhost
-  become: yes
+  become: true
   become_method: sudo
   fetch:
     src: /root/monitoring/folio_migration_stats.txt
     dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt"
-    flat: yes
-    validate_checksum: False
+    flat: true
+    validate_checksum: false
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
     - folio_migration_data_file.stat.exists|default(false)
 
 - name: Check if plot was generated
-  become: yes
+  become: true
   become_method: sudo
   stat:
     path: /root/monitoring/folio_migration_plot.png
@@ -143,13 +144,13 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Copy folio migration plot to localhost
-  become: yes
+  become: true
   become_method: sudo
   fetch:
     src: /root/monitoring/folio_migration_plot.png
     dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png"
-    flat: yes
-    validate_checksum: False
+    flat: true
+    validate_checksum: false
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
@@ -170,21 +171,21 @@
 
 # Generate plots on localhost after collecting data
 - name: Check if matplotlib is available on localhost
-  local_action: command python3 -c "import matplotlib.pyplot"
+  command: python3 -c "import matplotlib.pyplot"
+  delegate_to: localhost
   register: localhost_matplotlib_check
-  ignore_errors: yes
+  ignore_errors: true
   run_once: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
 - name: Generate folio migration plots on localhost
-  local_action: |
-    command python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py
-      -o {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
-      {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt
+  command: "python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py\n  -o {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png\n\
+    \  {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt\n"
+  delegate_to: localhost
   register: localhost_plot_generation
-  ignore_errors: yes
+  ignore_errors: true
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool

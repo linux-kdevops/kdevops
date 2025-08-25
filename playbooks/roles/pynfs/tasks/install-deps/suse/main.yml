@@ -1,6 +1,6 @@
 ---
 - name: Install build dependencies for pynfs
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

@@ -4,11 +4,11 @@
   vars:
     params:
       files:
-        - '{{ansible_distribution}}.yml'
-        - '{{ansible_os_family}}.yml'
+        - "{{ansible_distribution}}.yml"
+        - "{{ansible_os_family}}.yml"
         - default.yml
       paths:
-        - 'vars'
+        - "vars"
 
 - name: Determine which fsprogs package is needed for "{{ smbd_share_fstype }}"
   set_fact:
@@ -22,7 +22,7 @@
     - fsprogs
 
 - name: Install smbd dependencies
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name: "{{ smbd_packages }}"

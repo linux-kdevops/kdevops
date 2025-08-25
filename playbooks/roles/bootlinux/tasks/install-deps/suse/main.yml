@@ -1,6 +1,6 @@
 ---
 - name: Install Linux kernel build dependencies for SUSE sources
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -28,4 +28,4 @@
       - portmap
       - hwinfo
       - open-iscsi
-    disable_recommends: no
+    disable_recommends: false

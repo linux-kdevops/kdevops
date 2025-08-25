@@ -6,7 +6,7 @@
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
 
 - name: Install btrfs-progs build dependencies
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

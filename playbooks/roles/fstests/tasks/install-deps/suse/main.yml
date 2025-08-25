@@ -25,19 +25,19 @@
 
 - name: Set SLE specific version labels to make checks easier when not SLE
   set_fact:
-    is_sle10: False
-    is_sle11: False
-    is_sle12: False
-    is_sle15: False
-    is_sle10sp3: False
-    is_sle11sp1: False
-    is_sle11sp4: False
-    is_sle12sp1: False
-    is_sle12sp3: False
-    is_sle12sp5: False
-    is_sle15sp2: False
-    is_sle15sp3: False
-    is_sle15sp4: False
+    is_sle10: false
+    is_sle11: false
+    is_sle12: false
+    is_sle15: false
+    is_sle10sp3: false
+    is_sle11sp1: false
+    is_sle11sp4: false
+    is_sle12sp1: false
+    is_sle12sp3: false
+    is_sle12sp5: false
+    is_sle15sp2: false
+    is_sle15sp3: false
+    is_sle15sp4: false
   when:
     - not is_sle|bool
 
@@ -54,11 +54,11 @@
 
 - name: The default is to assume all distros have the indent package
   set_fact:
-    has_indent: True
+    has_indent: true
 
 - name: Does this release lack indent
   set_fact:
-    has_indent: False
+    has_indent: false
   when:
     - is_sle|bool
     - is_sle15sp3|bool or is_sle15sp4|bool
@@ -75,7 +75,7 @@
     - is_sle10|bool or is_sle11|bool or is_sle12sp1|bool
 
 - name: Install nvme tools
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -86,7 +86,7 @@
     - not lacks_nvme_utils|bool
 
 - name: Install build dependencies for fstests
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -129,7 +129,7 @@
     - repos_present|bool
 
 - name: Install indent when we have it
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -140,7 +140,7 @@
     - has_indent|bool
 
 - name: Install tumblweed packages
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -151,7 +151,7 @@
     - is_tumbleweed|bool
 
 - name: Install leap packages
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -163,7 +163,7 @@
     - is_leap|bool
 
 - name: Install sle15 sp2 and sp3 packages
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -174,16 +174,16 @@
 
 - name: The default is to assume we do not want to add the benchmark repo
   set_fact:
-    add_benchmark_repo: False
+    add_benchmark_repo: false
 
 - name: Does this release require the benchmark repo
   set_fact:
-    add_benchmark_repo: True
+    add_benchmark_repo: true
   when:
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool or is_sle12sp5|bool
 
 - name: add benchmark sles12sp5 openSUSE repo when needed
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_12_SP5/ benchmark benchmark"
@@ -191,7 +191,7 @@
     - is_sle12sp5|bool
 
 - name: Add benchmark sles15sp2 openSUSE repo when needed
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP2/ benchmark benchmark"
@@ -199,7 +199,7 @@
     - is_sle15sp2|bool
 
 - name: Add benchmark sles15sp3 openSUSE repo when needed
-  become: yes
+  become: true
   become_method: sudo
   script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP3/ benchmark benchmark"
@@ -207,7 +207,7 @@
     - is_sle15sp3|bool or is_sle15sp4|bool
 
 - name: Install dbench for sles15-sp2
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -217,7 +217,7 @@
     - add_benchmark_repo|bool
 
 - name: Install nfs-utils
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:
@@ -228,7 +228,7 @@
     - fstests_fstyp == "nfs"
 
 - name: Ensure nfs-client.target is enabled
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.systemd:
     name: nfs-client.target
@@ -238,7 +238,7 @@
     - fstests_fstyp == "nfs"
 
 - name: Install cifs-utils
-  become: yes
+  become: true
   become_method: sudo
   ansible.builtin.package:
     name:

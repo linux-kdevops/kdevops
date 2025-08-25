@@ -1,17 +1,17 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Install mmtests build dependencies (SUSE)
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -24,10 +24,10 @@
       - R-base-devel
       - libnuma-devel
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests runtime dependencies (SUSE)
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -42,10 +42,10 @@
       - psmisc
       - perl-Math-Gradient
     state: present
-  tags: ['deps']
+  tags: ["deps"]
 
 - name: Install mmtests monitoring dependencies (SUSE)
-  become: yes
+  become: true
   become_method: sudo
   zypper:
     name:
@@ -53,5 +53,5 @@
       - trace-cmd
       - perf
     state: present
-  tags: ['deps']
+  tags: ["deps"]
   ignore_errors: true

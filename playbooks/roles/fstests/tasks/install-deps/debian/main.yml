@@ -1,31 +1,31 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_first_found:
     - files:
-      - "../extra_vars.yml"
-      - "../extra_vars.yaml"
-      - "../extra_vars.json"
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
       skip: true
   tags: vars
 
 - name: Update apt cache
-  become: yes
+  become: true
   become_method: sudo
   apt:
-    update_cache: yes
+    update_cache: true
   tags: linux
 
 - name: Install NVMe tools
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
       - nvme-cli
 
 - name: Install fstests build dependencies
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -74,11 +74,11 @@
       - cifs-utils
       - duperemove
     state: present
-    update_cache: yes
-  tags: [ 'fstests', 'deps' ]
+    update_cache: true
+  tags: ["fstests", "deps"]
 
 - name: Install dependencies for building xfsprogs
-  become: yes
+  become: true
   become_method: sudo
   apt:
     name:
@@ -93,4 +93,4 @@
       - libpcre2-dev
       - pkg-config
       - libblkid-dev
-  when: 'fstests_xfs_build_custom_xfsprogs|bool'
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
