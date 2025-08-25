@@ -2,5 +2,5 @@
 # SPDX-License-Identifier GPL-2.0+ OR MIT
 - name: Restart watchdog daemon
   ansible.builtin.service:
-    name: "{{watchdog_service_name}}"
+    name: "{{ watchdog_service_name }}"
     state: restarted
