@@ -2,7 +2,7 @@
 - name: Install systemd-timesyncd
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: systemd-udev
   retries: 3

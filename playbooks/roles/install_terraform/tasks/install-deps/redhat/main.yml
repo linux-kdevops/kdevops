@@ -1,6 +1,6 @@
 ---
 - name: Verify Terraform installation
-  command: "which terraform"
+  ansible.builtin.command: "which terraform"
   register: terraform_present
   changed_when: terraform_present.rc == 1
   failed_when: terraform_present.rc != 0 and terraform_present.rc != 1
@@ -9,7 +9,7 @@
 - name: Download Terraform from the latest release and install locally
   become: true
   become_method: sudo
-  unarchive:
+  ansible.builtin.unarchive:
     src: https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_amd64.zip
     dest: /usr/local/bin
     remote_src: true

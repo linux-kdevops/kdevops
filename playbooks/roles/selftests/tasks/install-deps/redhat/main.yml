@@ -2,7 +2,7 @@
 - name: Install every single selftest build dependencies
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   vars:

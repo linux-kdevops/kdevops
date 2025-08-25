@@ -8,7 +8,7 @@
 - name: Install ktls dependencies
   become: true
   become_method: sudo
-  dnf:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   retries: 3

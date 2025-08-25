@@ -2,7 +2,7 @@
 - name: Add custom repositories
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/etc/yum.repos.d/{{ item | basename }}"
     owner: root
@@ -16,7 +16,7 @@
 - name: Install custom packages
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     name: "{{ item }}"
   retries: 3
   delay: 5

@@ -11,24 +11,24 @@
         - "vars"
 
 - name: Determine which fsprogs package is needed for "{{ nfsd_export_fstype }}"
-  set_fact:
+  ansible.builtin.set_fact:
     fsprogs: "{{ fstype_userspace_progs[nfsd_export_fstype] | default() }}"
 
 - name: Add {{ fsprogs }} to the nfsd packages list
-  set_fact:
+  ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + [fsprogs] }}"
   when:
     - fsprogs is defined
     - fsprogs
 
 - name: Add additional packages needed for krb5 to the nfsd packages list
-  set_fact:
+  ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + ['gssproxy', 'libverto-libev1'] }}"
   when: kdevops_krb5_enable|bool
 
 - name: Install nfsd dependencies
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name: "{{ nfsd_packages }}"
     state: present

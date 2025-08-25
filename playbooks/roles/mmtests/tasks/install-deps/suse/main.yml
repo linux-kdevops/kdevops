@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -13,7 +13,7 @@
 - name: Install mmtests build dependencies (SUSE)
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - gcc
       - git
@@ -29,7 +29,7 @@
 - name: Install mmtests runtime dependencies (SUSE)
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - numactl
       - fio
@@ -47,7 +47,7 @@
 - name: Install mmtests monitoring dependencies (SUSE)
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - kernel-default-devel
       - trace-cmd

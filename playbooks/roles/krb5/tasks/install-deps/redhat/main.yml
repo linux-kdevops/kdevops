@@ -2,7 +2,7 @@
 - name: Install krb5 dependencies
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   retries: 3

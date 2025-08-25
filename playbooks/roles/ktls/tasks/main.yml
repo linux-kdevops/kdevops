@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -10,11 +10,10 @@
       skip: true
 
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Construct the path to the CA directory
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     ca_dir: "{{ topdir_path }}/ca/{{ kdevops_host_prefix }}"
 
 - name: Create directory to hold the CA on local host
@@ -89,7 +88,7 @@
   register: certificate
 
 - name: Write certificate file on host
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/pki/tls/certs/ktls.pem"
     content: "{{ certificate.certificate }}"
   become: true

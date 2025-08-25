@@ -11,13 +11,13 @@
   failed_when: false
   tags: vars
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["data_partition"]
 
 - name: Ensure fio is installed
   become: true
-  package:
+  ansible.builtin.package:
     name: fio
     state: present
 
@@ -32,7 +32,7 @@
 - name: Generate fio steady state configs
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "{{ item }}.j2"
     dest: "{{ steady_state_data }}/{{ item }}"
     mode: "0644"
@@ -81,7 +81,7 @@
 - name: Get device basename from resolved symlink
   become: true
   become_method: sudo
-  set_fact:
+  ansible.builtin.set_fact:
     device_basename: "{{ real_device_path.stdout | basename }}"
   when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
@@ -119,7 +119,7 @@
 - name: Set block device properties as facts
   become: true
   become_method: sudo
-  set_fact:
+  ansible.builtin.set_fact:
     device_physical_block_size: >-
       {{
         (device_sysfs_read.results |
@@ -161,7 +161,7 @@
     effective_blocksize: "{{ effective_blocksize | trim | int }}"
 
 - name: Debug type of device_optimal_io_size
-  debug:
+  ansible.builtin.debug:
     msg: "device_optimal_io_size={{ device_optimal_io_size }} ({{ device_optimal_io_size | type_debug }})"
 
 - name: Validate capacity alignment to physical block size

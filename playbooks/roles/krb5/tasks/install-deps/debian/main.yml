@@ -2,7 +2,7 @@
 - name: Install krb5 dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - krb5-user
     state: present

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -10,19 +10,18 @@
       skip: true
   tags: vars
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["oscheck", "data_partition"]
 
 # Distro specific
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Check if there's an existing xfsprogs directory
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: "{{ fstests_xfs_xfsprogs_data }}"
   register: xfsprogs_dir
   tags: ["oscheck", "git", "fstests"]
@@ -35,21 +34,21 @@
   when:
     - fstests_nfs_section_pnfs|bool
 
-- include_role:
+- ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool
 
 - name: Get nproc
   tags: ["oscheck", "fstests", "build"]
-  command: "nproc"
+  ansible.builtin.command: "nproc"
   register: nproc
 
 - name: Ensure xfsprogs is not root owned
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ fstests_xfs_xfsprogs_data }}"
     state: directory
     recurse: true
@@ -62,7 +61,7 @@
     - xfsprogs_dir.stat.exists
 
 - name: Clean old xfsprogs build
-  command: "git clean -f -x -d"
+  ansible.builtin.command: "git clean -f -x -d"
   args:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
   tags: ["oscheck", "git", "fstests"]
@@ -71,7 +70,7 @@
     - xfsprogs_dir.stat.exists
 
 - name: Clone xfsprogs git repository
-  git:
+  ansible.builtin.git:
     repo: "{{ fstests_xfs_xfsprogs_git }}"
     dest: "{{ fstests_xfs_xfsprogs_data }}"
     update: true
@@ -84,14 +83,14 @@
   when: "fstests_xfs_build_custom_xfsprogs|bool"
 
 - name: Configure xfsprogs
-  make:
+  community.general.make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
     target: configure
   tags: ["oscheck", "fstests", "build"]
   when: "fstests_xfs_build_custom_xfsprogs|bool"
 
 - name: Build xfsprogs
-  make:
+  community.general.make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
     jobs: "{{ nproc.stdout }}"
   tags: ["oscheck", "fstests", "build"]
@@ -101,7 +100,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  make:
+  community.general.make:
     target: install
     params:
       DIST_ROOT: "{{ fstests_xfs_xfsprogs_install_path }}"
@@ -113,7 +112,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: "{{ fstests_xfsdump_data }}"
   register: xfdump_dir
   tags: ["oscheck", "git", "fstests"]
@@ -124,7 +123,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ fstests_xfsdump_data }}"
     recurse: true
     owner: "{{ data_user }}"
@@ -135,7 +134,7 @@
     - xfdump_dir.stat.exists
 
 - name: Clean old xfsdump build
-  command: "git clean -f -x -d"
+  ansible.builtin.command: "git clean -f -x -d"
   args:
     chdir: "{{ fstests_xfsdump_data }}"
   tags: ["oscheck", "git", "fstests"]
@@ -144,7 +143,7 @@
     - xfdump_dir.stat.exists
 
 - name: git clone xfsdump
-  git:
+  ansible.builtin.git:
     repo: "{{ fstests_xfsdump_git }}"
     dest: "{{ fstests_xfsdump_data }}"
     update: true
@@ -155,7 +154,7 @@
 
 - name: Build xfsdump
   tags: ["fstests", "deps"]
-  make:
+  community.general.make:
     chdir: "{{ fstests_xfsdump_data }}"
     jobs: "{{ nproc.stdout }}"
   when:
@@ -165,7 +164,7 @@
   become: true
   become_method: sudo
   tags: ["fstests", "deps"]
-  make:
+  community.general.make:
     chdir: "{{ fstests_xfsdump_data }}"
     target: install
   when:
@@ -175,7 +174,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/root/.bashrc"
     line: "export PATH={{ fstests_xfs_xfsprogs_install_path }}/usr/sbin/:$PATH"
     state: present
@@ -183,7 +182,7 @@
   when: "fstests_xfs_build_custom_xfsprogs|bool"
 
 - name: Create {{ truncated_path }} if needed
-  include_role:
+  ansible.builtin.include_role:
     name: create_partition
   vars:
     disk_setup_device: "{{ sparsefiles_device }}"
@@ -200,7 +199,7 @@
 - name: git clone kdevops
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
     version: "{{ kdevops_git_version }}"
@@ -211,7 +210,7 @@
   tags: ["oscheck", "install", "git"]
 
 - name: Copy over our .config
-  copy:
+  ansible.builtin.copy:
     src: "{{ playbook_dir }}/../.config"
     dest: "{{ kdevops_dir }}"
   tags: ["oscheck", "install", "root", "config"]
@@ -222,7 +221,7 @@
   become_method: sudo
   environment:
     FSTYP: "{{ fstests_fstyp }}"
-  command: "{{  make }} install"
+  ansible.builtin.command: "{{  make }} install"
   tags: ["oscheck", "install", "root"]
   args:
     chdir: "{{ kdevops_dir }}"
@@ -232,7 +231,7 @@
 # we don't have to bother with the setup of that partition
 # in the dbench role.
 - name: Compile dbench from source if needed by the distribution
-  include_role:
+  ansible.builtin.include_role:
     name: compile_dbench
   vars:
     dbench_data: "{{ data_path }}/dbench"
@@ -243,7 +242,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   with_items:
@@ -253,7 +252,7 @@
   tags: ["oscheck", "git", "fstests", "build"]
 
 - name: git clone fstests
-  git:
+  ansible.builtin.git:
     repo: "{{ fstests_git }}"
     dest: "{{ fstests_data }}"
     version: "{{ fstests_git_version }}"
@@ -275,31 +274,31 @@
 
 - name: Build the configure file for fstests
   tags: ["oscheck", "fstests", "build"]
-  command: "make configure"
+  ansible.builtin.command: "make configure"
   args:
     chdir: "{{ fstests_data }}"
 
 - name: Configure fstests
   tags: ["oscheck", "fstests", "build"]
-  command: "./configure --prefix={{ fstests_data_prefix }}"
+  ansible.builtin.command: "./configure --prefix={{ fstests_data_prefix }}"
   args:
     chdir: "{{ fstests_data }}"
 
 - name: Get nproc
   tags: ["oscheck", "fstests", "build"]
-  command: "nproc"
+  ansible.builtin.command: "nproc"
   register: nproc
 
 - name: Build fstests
   tags: ["oscheck", "fstests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ fstests_data }}"
     jobs: "{{ nproc.stdout }}"
 
 - name: Copy udev rules for zoned
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "64-btrfs-zoned.rules"
     dest: "/usr/lib/udev/rules.d/"
     owner: "{{ data_user }}"
@@ -312,7 +311,7 @@
 - name: git pull latest kdevops to ensure expunge lists and scripts are up to date
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
     version: "{{ kdevops_git_version }}"
@@ -327,7 +326,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{  make }} install"
+  ansible.builtin.command: "{{  make }} install"
   tags: ["oscheck", "fstests", "install", "root"]
   args:
     chdir: "{{ fstests_data }}"
@@ -347,7 +346,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "{{ kdevops_fstests_setup }}"
     dest: "/root/{{ kdevops_fstests_setup }}"
     owner: "root"
@@ -361,7 +360,7 @@
   become_flags: "su - -c"
   become_method: sudo
   tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install"]
-  shell: |
+  ansible.builtin.shell: |
     SOURCE_KDEVOPS_FSTESTS_SETUP="test -s ~/{{ kdevops_fstests_setup }} && . ~/{{ kdevops_fstests_setup }} || true"
     if [ -f {{ dev_bash_config }} ]; then
       if ! grep "{{ kdevops_fstests_setup_name }}" {{ dev_bash_config }}  2>&1 > /dev/null ; then
@@ -416,7 +415,7 @@
 - name: Check if there's a host specific fstests at {{ fstests_fstyp }}/{{ inventory_hostname }}.config configuration
   tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ inventory_hostname }}.config"
   register: host_specific_fstests_config
 
@@ -424,7 +423,7 @@
   tags: ["generate-fstests-config"]
   vars:
     target_config: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
-  template:
+  ansible.builtin.template:
     src: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ ansible_host }}.config"
     dest: "{{ target_config }}"
     force: true
@@ -437,7 +436,7 @@
   tags: ["generate-fstests-config"]
   vars:
     target_config: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
     force: true
@@ -451,7 +450,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}//{{ ansible_host }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -465,7 +464,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -503,7 +502,7 @@
     - real_nvme_euis.files | length == 0
 
 - name: Set real nvmes if one is found from EUI list
-  set_fact:
+  ansible.builtin.set_fact:
     nvmes: "{{ real_nvme_euis }}"
   when:
     - fstests_generate_nvme_live_config_enable|bool
@@ -531,7 +530,7 @@
     - fstests_testdev_nvme_fallback_model_serial|bool
 
 - name: Set real nvmes to fallback list if one found
-  set_fact:
+  ansible.builtin.set_fact:
     nvmes: "{{ fallback_nvmes }}"
   when:
     - fstests_generate_nvme_live_config_enable|bool
@@ -542,7 +541,7 @@
   tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
 
 - name: Get NVMe drives we can use for testing
-  set_fact:
+  ansible.builtin.set_fact:
     nvme_symlinks: |
       {%- set x = [] -%}
       {%- for f in nvmes.files %}
@@ -637,7 +636,7 @@
     - nvme_symlinks | length >= 1
 
 - name: Get new partition NVMe symlinks
-  set_fact:
+  ansible.builtin.set_fact:
     nvme_parts: |
       {%- set x = [] -%}
       {%- for f in part_symlinks.files %}
@@ -683,7 +682,7 @@
       {{ nvme_symlinks[0] }}-part12
     fstests_scratch_logdev: "{{ nvme_symlinks[0] }}-part15"
     fstests_scratch_rtdev: "{{ nvme_symlinks[0] }}-part14"
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -720,7 +719,7 @@
       {{ nvme_symlinks[4] }}
       {{ nvme_symlinks[5] }}
       {{ nvme_symlinks[6] }}
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -730,28 +729,28 @@
 
 - name: Set the export volname prefix
   tags: vars
-  set_fact:
+  ansible.builtin.set_fact:
     volname_prefix: "{{ ansible_host|regex_replace(kdevops_host_prefix + '-') }}-fs"
   when:
     - fstests_fstyp == "nfs" or fstests_fstyp == "cifs"
 
 - name: Set the NFS export's fstype
   tags: vars
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_nfs_export_fstype: "{{ nfsd_export_fstype }}"
   when:
     - not fstests_nfs_section_pnfs|bool
 
 - name: Set the NFS export's fstype
   tags: vars
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_nfs_export_fstype: "xfs"
   when:
     - fstests_fstyp == "nfs"
     - fstests_nfs_section_pnfs|bool
 
 - name: Create NFS export for test vol
-  include_role:
+  ansible.builtin.include_role:
     name: nfsd_add_export
   vars:
     server_host: "{{ fstests_nfs_server_host }}"
@@ -765,7 +764,7 @@
     - fstests_nfs_use_kdevops_nfsd|bool
 
 - name: Create NFS export for scratch vol
-  include_role:
+  ansible.builtin.include_role:
     name: nfsd_add_export
   vars:
     server_host: "{{ fstests_nfs_server_host }}"
@@ -786,7 +785,7 @@
   vars:
     fstests_nfs_test_dev: "{{ fstests_nfs_server_host }}:{{ nfsd_export_path }}/{{ volname_prefix }}-t"
     fstests_nfs_scratch_devpool: "{{ fstests_nfs_server_host }}:{{ nfsd_export_path }}/{{ volname_prefix }}-s"
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -835,7 +834,7 @@
     - fstests_nfs_auth_flavor
 
 - name: Create SMB share for test vol
-  include_role:
+  ansible.builtin.include_role:
     name: smbd_add_share
   vars:
     server_host: "{{ fstests_smb_server_host }}"
@@ -847,7 +846,7 @@
     - fstests_cifs_use_kdevops_smbd|bool
 
 - name: Create SMB share for scratch vol
-  include_role:
+  ansible.builtin.include_role:
     name: smbd_add_share
   vars:
     server_host: "{{ fstests_smb_server_host }}"
@@ -866,7 +865,7 @@
   vars:
     fstests_cifs_test_dev: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-t"
     fstests_cifs_scratch_devpool: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-s"
-  template:
+  ansible.builtin.template:
     src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
     dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     force: true
@@ -877,14 +876,14 @@
   tags: ["oscheck", "fstests", "run_tests", "reboot"]
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     post_reboot_delay: 10
 
 - name: Make sure loop device support is loaded
   tags: ["oscheck", "fstests", "run_tests"]
   become: true
   become_method: sudo
-  command: "modprobe loop"
+  ansible.builtin.command: "modprobe loop"
   when:
     - kdevops_run_fstests|bool
 
@@ -893,7 +892,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  group:
+  ansible.builtin.group:
     name: "{{ item }}"
     state: present
   with_items:
@@ -927,7 +926,7 @@
   become_method: sudo
   register: section_grep
   failed_when: not section_grep.changed
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
     regexp: "\\[{{ fstests_section }}\\]$"
     line: ""
@@ -944,7 +943,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "./gendisks.sh -d -m"
+  ansible.builtin.command: "./gendisks.sh -d -m"
   register: gendisk_cmd
   args:
     chdir: "{{ fstests_data_target }}"
@@ -962,7 +961,7 @@
 
 - name: Capture gendisk output
   tags: ["oscheck", "fstests", "run_tests", "gendisks"]
-  debug:
+  ansible.builtin.debug:
     msg: "{{ gendisk_cmd.stdout_lines }}"
   when:
     - kdevops_run_fstests|bool
@@ -976,7 +975,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: |
+  ansible.builtin.command: |
     ./oscheck.sh
       --check-deps
       --journal {{ fstests_journal }}
@@ -997,7 +996,7 @@
     - fstests_testdev_sparsefile_generation|bool
 
 - name: Set the path where we collect our fstests results
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_results_full_path: "{{ topdir_path }}/workflows/fstests/results"
     fstests_workflow_dir: "../workflows/fstests"
     fstests_results_target: "../workflows/fstests/results/last-run/"
@@ -1008,7 +1007,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}"
     recurse: true
     patterns: "check.time"
@@ -1016,7 +1015,7 @@
 
 - name: Copy prior check.time files from {{ fstests_data_target }}
   tags: ["oscheck", "fstests", "run_tests", "checktime"]
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ fstests_workflow_dir }}/{{ item.path | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1031,7 +1030,7 @@
   vars:
     expunge_file: "-E "
     space: " "
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_initial_baseline_args: |
       {%- set x = [] -%}
       {%- for f in checktime_files.files %}
@@ -1046,14 +1045,14 @@
   tags: ["oscheck", "fstests", "run_tests", "checktime"]
 
 - name: Expand tests to skip for initial baseline
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_initial_baseline_args: "--start-after {{ fstests_start_after_test }}"
   when:
     - fstests_start_after|bool
   tags: ["oscheck", "fstests", "run_tests", "checktime"]
 
 - name: Expand tests to skip tests dynamically passed on the command line
-  set_fact:
+  ansible.builtin.set_fact:
     fstests_skip_tests_args: "-e {{ fstests_skip_tests }}"
   when:
     - fstests_skip_tests_enable|bool
@@ -1072,7 +1071,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     state: absent
     path: "{{ fstests_data_target }}/results/"
   tags: ["oscheck", "fstests", "run_tests", "clean_results"]
@@ -1081,33 +1080,32 @@
 
 - name: Print uname for each host
   tags: ["oscheck", "fstests", "run_tests"]
-  debug: var=ansible_kernel
-
+  ansible.builtin.debug: var=ansible_kernel
 - name: Clean up our localhost results/last-run directory
-  file: path="{{ fstests_results_target }}/" state=absent
+  ansible.builtin.file: path="{{ fstests_results_target }}/" state=absent
   delegate_to: localhost
   run_once: true
   tags: ["oscheck", "fstests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  file: path="{{ fstests_results_target }}/" state=directory
+  ansible.builtin.file: path="{{ fstests_results_target }}/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["oscheck", "fstests", "copy_results", "clean_local_results"]
 
 - name: Get used target kernel version
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
   register: uname_cmd
 
 - name: Store last kernel variable
-  set_fact:
+  ansible.builtin.set_fact:
     last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
 
 - name: Document used target kernel version
-  shell: echo {{ last_kernel }} > {{ fstests_results_target }}/../last-kernel.txt
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ fstests_results_target }}/../last-kernel.txt
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
@@ -1136,7 +1134,7 @@
     - devconfig_enable_systemd_journal_remote|bool
 
 - name: Hint to watchdog tests are about to kick off
-  file: path="{{ fstests_workflow_dir }}/.begin" state=touch
+  ansible.builtin.file: path="{{ fstests_workflow_dir }}/.begin" state=touch
   delegate_to: localhost
   tags: ["oscheck", "fstests", "run_tests"]
   when:
@@ -1147,10 +1145,9 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: sysctl kernel.printk="8 8 1 7"
-
+  ansible.builtin.command: sysctl kernel.printk="8 8 1 7"
 - name: Check to see if dynamic test limit scope was set
-  set_fact:
+  ansible.builtin.set_fact:
     dynamic_limit_tests: "{{ lookup('ansible.builtin.env', 'LIMIT_TESTS') }}"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1158,7 +1155,7 @@
     - kdevops_run_fstests|bool
 
 - name: Set test limit scope from CONFIG_FSTESTS_RUN_CUSTOM_TESTS, this may be empty
-  set_fact:
+  ansible.builtin.set_fact:
     all_limit_tests: "{{ limit_tests }}"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1168,7 +1165,7 @@
     - limit_tests != None
 
 - name: Allow dynamic test override
-  set_fact:
+  ansible.builtin.set_fact:
     all_limit_tests: "{{ dynamic_limit_tests }}"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1179,7 +1176,7 @@
     - dynamic_limit_tests | length > 0
 
 - name: Empty out test limit if None is set
-  set_fact:
+  ansible.builtin.set_fact:
     all_limit_tests: ""
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1192,7 +1189,7 @@
   vars:
     fstests_section: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   tags: ["oscheck", "fstests", "run_tests"]
-  command: "{{ kdevops_data }}/workflows/fstests/scripts/oscheck-get-failures.sh --test-section {{ fstests_section }}"
+  ansible.builtin.command: "{{ kdevops_data }}/workflows/fstests/scripts/oscheck-get-failures.sh --test-section {{ fstests_section }}"
   args:
     chdir: "{{ fstests_data_target }}"
   environment:
@@ -1205,7 +1202,7 @@
     - kdevops_run_fstests|bool
 
 - name: Inform user no failures are known
-  fail:
+  ansible.builtin.fail:
     msg: "No known failures for this run! Go find bugs!"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1214,7 +1211,7 @@
     - failed_tests_limit.stdout | replace('\n', ' ') | length == 0
 
 - name: Set test limit to known failed tests
-  set_fact:
+  ansible.builtin.set_fact:
     all_limit_tests: "{{ failed_tests_limit.stdout | replace('\n', ' ') }}"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1222,7 +1219,7 @@
     - kdevops_run_fstests|bool
 
 - name: Print test list limits for this run
-  debug:
+  ansible.builtin.debug:
     msg: "all_limit_tests: {{ all_limit_tests }}"
   tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
   when:
@@ -1238,7 +1235,7 @@
     - fstests_skip_run|bool
 
 # Start monitoring services before running tests
-- import_tasks: ../../monitoring/tasks/monitor_run.yml
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
   when:
     - kdevops_run_fstests|bool
     - enable_monitoring|default(false)|bool
@@ -1257,7 +1254,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: |
+  ansible.builtin.command: |
     ./oscheck.sh
       --print-start
       --print-done
@@ -1292,14 +1289,14 @@
     - kdevops_run_fstests|bool
 
 # Stop monitoring services and collect data after running tests
-- import_tasks: ../../monitoring/tasks/monitor_collect.yml
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
   when:
     - kdevops_run_fstests|bool
     - enable_monitoring|default(false)|bool
   tags: ["oscheck", "fstests", "run_tests", "monitoring", "monitor_collect"]
 
 - name: Remove watchdog hint that tests have started
-  file: path="{{ fstests_workflow_dir }}/.begin" state=absent
+  ansible.builtin.file: path="{{ fstests_workflow_dir }}/.begin" state=absent
   delegate_to: localhost
   tags: ["oscheck", "fstests", "run_tests"]
   when:
@@ -1311,7 +1308,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}"
     recurse: true
     patterns: "check.time"
@@ -1321,7 +1318,7 @@
   tags: ["oscheck", "fstests", "copy_results", "checktime"]
   vars:
     item_path_without_host: "{{ item.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1337,7 +1334,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}"
     recurse: true
     patterns: "check.log"
@@ -1347,7 +1344,7 @@
   tags: ["oscheck", "fstests", "copy_results", "checklog"]
   vars:
     item_path_without_host: "{{ item.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1363,7 +1360,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}"
     recurse: true
     patterns: "*.xml"
@@ -1373,7 +1370,7 @@
   tags: ["oscheck", "fstests", "copy_results", "xunit"]
   vars:
     item_path_without_host: "{{ item.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1389,7 +1386,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}"
     recurse: true
     patterns: "*.out.bad"
@@ -1400,7 +1397,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}/results/"
     recurse: true
     patterns: "*"
@@ -1412,7 +1409,7 @@
 
 - name: Show TFB results files
   tags: ["copy_results", "failed_tests", "tfb"]
-  debug:
+  ansible.builtin.debug:
     msg: "{{ item.path }}"
   with_items: "{{ tfb_reg.files }}"
   loop_control:
@@ -1422,7 +1419,7 @@
 
 - name: Show TFB results total files greater than {{ fstests_tfp_copy_size_limit_bytes | human_readable(true) }}
   tags: ["copy_results", "failed_tests", "tfb"]
-  debug:
+  ansible.builtin.debug:
     msg: "Examined {{ tfb_reg.examined }} files and TFB number of files: {{ tfb_reg.matched }}"
   when:
     - fstests_tfp_copy_enable_list|bool
@@ -1432,7 +1429,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "kdevops TFB trimming enabled, original file size: {{ item.size | human_readable(true) }}"
     dest: "{{ item.path }}"
   with_items: "{{ tfb_reg.files }}"
@@ -1449,7 +1446,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ fstests_data_target }}/results/"
     recurse: true
     patterns: "*.md"
@@ -1464,7 +1461,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item.path }}"
     state: "absent"
   with_items: "{{ tfb_reg.files }}"
@@ -1478,7 +1475,7 @@
   tags: ["oscheck", "fstests", "copy_results", "copy_final", "failed_tests", "tfb"]
   vars:
     item_path_without_host: "{{ item.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1500,7 +1497,7 @@
     tests_group_dir: "{{ tests_full_group_dir | split('/') | last }}"
     tests_full_name: "{{ item.path | basename | split('.') | first }}.full"
     tests_name: "{{ tests_group_dir }}/{{ tests_full_name }}"
-  stat:
+  ansible.builtin.stat:
     path: "{{ tests_full_group_dir }}/{{ tests_full_name }}"
   with_items: "{{ failed_tests.files }}"
   loop_control:
@@ -1517,7 +1514,7 @@
     tests_full_name: "{{ item.item.path | basename | split('.') | first }}.full"
     tests_name: "{{ tests_group_dir }}/{{ tests_full_name }}"
     item_path_without_host: "{{ item.stat.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.stat.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1539,7 +1536,7 @@
     tests_group_dir: "{{ tests_full_group_dir | split('/') | last }}"
     tests_dmesg_name: "{{ item.path | basename | split('.') | first }}.dmesg"
     tests_name: "{{ tests_group_dir }}/{{ tests_dmesg_name }}"
-  stat:
+  ansible.builtin.stat:
     path: "{{ tests_full_group_dir }}/{{ tests_dmesg_name }}"
   with_items: "{{ failed_tests.files }}"
   loop_control:
@@ -1556,7 +1553,7 @@
     tests_dmesg_name: "{{ item.item.path | basename | split('.') | first }}.dmesg"
     tests_name: "{{ tests_group_dir }}/{{ tests_dmesg_name }}"
     item_path_without_host: "{{ item.stat.path | regex_replace('results') | regex_replace(ansible_host) }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.stat.path }}"
     dest: "{{ fstests_results_target }}/{{ item_path_without_host | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -1569,8 +1566,8 @@
     - item.stat.exists
 
 - name: Print fstests results to xunit_results.txt on localhost if xunit xml file was found
-  shell: ./python/workflows/fstests/gen_results_summary --results_file result.xml  --print_section --output_file {{ fstests_results_target }}/{{ last_kernel }}/xunit_results.txt
-    {{ fstests_results_target }}/
+  ansible.builtin.shell: ./python/workflows/fstests/gen_results_summary --results_file result.xml  --print_section --output_file {{ fstests_results_target }}/{{ last_kernel
+    }}/xunit_results.txt {{ fstests_results_target }}/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
@@ -1578,7 +1575,7 @@
   run_once: true
 
 - name: Print fstests bad results for {{ fstests_fstyp }} to bad_results.txt on localhost
-  shell: ./python/workflows/fstests/bad_files_summary.py {{ fstests_fstyp }} {{ fstests_results_target }}/ > {{ fstests_results_target }}/bad_results.txt
+  ansible.builtin.shell: ./python/workflows/fstests/bad_files_summary.py {{ fstests_fstyp }} {{ fstests_results_target }}/ > {{ fstests_results_target }}/bad_results.txt
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
@@ -1586,7 +1583,7 @@
   run_once: true
 
 - name: Create check.time.distribution files for {{ fstests_results_target }}/results
-  shell: ./python/workflows/fstests/fstests-checktime-distribution.py {{ fstests_results_target }}
+  ansible.builtin.shell: ./python/workflows/fstests/fstests-checktime-distribution.py {{ fstests_results_target }}
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   run_once: true
@@ -1594,19 +1591,20 @@
     - checktime_files.matched > 0
 
 - name: Augment expunge list for {{ fstests_fstyp }}, just run git diff after this to see new failures found
-  shell: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
+  ansible.builtin.shell: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   run_once: true
 
 - name: Print fstests new expunge files for {{ fstests_fstyp }} which are not yet committed
-  shell: ./python/workflows/fstests/get_new_expunge_files.py {{ fstests_fstyp }} {{ fstests_workflow_dir }}/expunges/ > {{ fstests_results_target }}/new_expunge_files.txt
+  ansible.builtin.shell: ./python/workflows/fstests/get_new_expunge_files.py {{ fstests_fstyp }} {{ fstests_workflow_dir }}/expunges/ > {{ fstests_results_target
+    }}/new_expunge_files.txt
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
 
 - name: Get stat of new files not yet committed, ie, new expunge files
-  stat: path="{{ fstests_results_target }}/new_expunge_files.txt"
+  ansible.builtin.stat: path="{{ fstests_results_target }}/new_expunge_files.txt"
   delegate_to: localhost
   register: new_expunge_files_stat
   run_once: true
@@ -1615,14 +1613,14 @@
 - name: Inform user if new expunge files have been found
   run_once: true
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  debug:
+  ansible.builtin.debug:
     msg: "New expunge files found in: {{ fstests_results_target | regex_replace('^../', '') }}new_expunge_files.txt"
   when:
     - new_expunge_files_stat.stat.size != 0
 
 - name: Inform user if no failures have been found
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  debug:
+  ansible.builtin.debug:
     msg: No *.bad or xunit xml files were found on the target host
   when:
     - failed_tests.matched == 0
@@ -1632,12 +1630,12 @@
 - name: Verify last-run kernel directory exists
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ fstests_results_full_path }}/last-run/{{ last_kernel }}"
   register: last_run_kernel_dir
 
 - name: Copy over the last-run into the results directory for archiving into kdevops
-  copy:
+  ansible.builtin.copy:
     src: "{{ fstests_results_full_path }}/last-run/{{ last_kernel }}"
     dest: "{{ fstests_results_full_path }}/"
   run_once: true

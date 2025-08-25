@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -11,7 +11,7 @@
   tags: vars
 
 - name: Verify local build QEMU installation
-  stat:
+  ansible.builtin.stat:
     path: "{{ qemu_bin_path }}"
   register: qemu_present
   changed_when: true
@@ -21,18 +21,18 @@
     - qemu_build|bool
 
 - name: Install build-deps for QEMU as per each Linux distribution
-  include_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
   when:
     - qemu_build|bool
     - qemu_force_install_if_present|bool or not qemu_present.stat.exists
 
 - name: Assume we won't build QEMU first
-  set_fact:
+  ansible.builtin.set_fact:
     build_qemu_now: false
   tags: vars
 
 - name: Annotate when we are building QEMU
-  set_fact:
+  ansible.builtin.set_fact:
     build_qemu_now: true
   when:
     - qemu_build|bool
@@ -40,7 +40,7 @@
   tags: vars
 
 - name: Ensure that {{ local_dev_path }} exists
-  file:
+  ansible.builtin.file:
     path: "{{ local_dev_path }}"
     state: directory
   tags: ["qemu", "build-deps"]
@@ -50,7 +50,7 @@
 - name: git clone QEMU using {{ qemu_git }} on {{ qemu_data }}
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "{{ qemu_git }}"
     dest: "{{ qemu_data }}"
     version: "{{ qemu_version }}"
@@ -58,7 +58,7 @@
     - build_qemu_now|bool
 
 - name: Nuke old build directory
-  file:
+  ansible.builtin.file:
     path: "{{ qemu_build_dir }}"
     state: absent
   tags: ["qemu", "build-deps"]
@@ -66,7 +66,7 @@
     - build_qemu_now|bool
 
 - name: Disable downloads
-  command: "meson subprojects download"
+  ansible.builtin.command: "meson subprojects download"
   tags: ["qemu", "configure"]
   args:
     chdir: "{{ qemu_data }}"
@@ -74,7 +74,7 @@
     - build_qemu_now|bool
 
 - name: Run configure for QEMU
-  command: "./configure --target-list={{ qemu_target }} --disable-download"
+  ansible.builtin.command: "./configure --target-list={{ qemu_target }} --disable-download"
   tags: ["qemu", "configure"]
   args:
     chdir: "{{ qemu_data }}"
@@ -82,14 +82,14 @@
     - build_qemu_now|bool
 
 - name: Get nproc
-  command: "{{ num_jobs }}"
+  ansible.builtin.command: "{{ num_jobs }}"
   tags: ["qemu", "configure", "build"]
   register: nproc
   when:
     - build_qemu_now|bool
 
 - name: Build QEMU
-  make:
+  community.general.make:
     chdir: "{{ qemu_data }}"
     jobs: "{{ nproc.stdout }}"
   tags: ["qemu", "build"]
@@ -100,7 +100,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{ make }} install"
+  ansible.builtin.command: "{{ make }} install"
   args:
     chdir: "{{ qemu_data }}"
   tags: ["qemu", "install"]

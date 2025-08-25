@@ -2,7 +2,7 @@
 - name: Install kdevops generic dependencies
   become: true
   become_method: sudo
-  dnf:
+  ansible.builtin.dnf:
     name:
       - gcc
       - make

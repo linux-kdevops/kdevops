@@ -2,7 +2,7 @@
 - name: Install partition creation base tools
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - btrfs-progs
       - e2fsprogs

@@ -16,7 +16,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  filesystem:
+  community.general.filesystem:
     fstype: "{{ share_fstype }}"
     dev: "/dev/shares/{{ share_volname }}"
   when:
@@ -28,7 +28,7 @@
   become_method: sudo
   delegate_to: "{{ server_host }}"
   throttle: 1 # running this in parallel can clobber fstab changes
-  mount:
+  ansible.posix.mount:
     path: "{{ smbd_share_path }}/{{ share_volname }}"
     src: "/dev/shares/{{ share_volname }}"
     fstype: "{{ share_fstype }}"
@@ -42,7 +42,7 @@
   become_method: sudo
   delegate_to: "{{ server_host }}"
   throttle: 1 # running this in parallel can clobber fstab changes
-  mount:
+  ansible.posix.mount:
     path: "{{ smbd_share_path }}/{{ share_volname }}"
     src: "tmpfs"
     fstype: "tmpfs"
@@ -55,7 +55,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ smbd_share_path }}/{{ share_volname }}"
     owner: "{{ share_user }}"
@@ -63,7 +63,7 @@
     mode: "{{ share_mode }}"
 
 - name: Test whether SELinux is enabled
-  command: /usr/sbin/selinuxenabled
+  ansible.builtin.command: /usr/sbin/selinuxenabled
   register: selinux_status
   delegate_to: "{{ server_host }}"
   changed_when: false
@@ -74,7 +74,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  command: /usr/sbin/restorecon -R "{{ smbd_share_path }}/{{ share_volname }}"
+  ansible.builtin.command: /usr/sbin/restorecon -R "{{ smbd_share_path }}/{{ share_volname }}"
   when: selinux_status.rc == 0
 
 - name: Create an SMB share for the new fs

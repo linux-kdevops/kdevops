@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -16,7 +16,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat: path=/etc/postfix/main.cf
+  ansible.builtin.stat: path=/etc/postfix/main.cf
   register: postfix_config_main_file
   when:
     - postfix_relay_host_setup|bool
@@ -26,7 +26,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/postfix/main.cf
     regexp: "^(relayhost)(.*)"
     line: "relayhost = {{ postfix_relay_host }}"
@@ -38,7 +38,7 @@
 - name: Enable and restart postfix service
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: postfix
     enabled: true
     state: restarted

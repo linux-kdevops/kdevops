@@ -11,11 +11,11 @@
         - "vars"
 
 - name: Determine which fsprogs package is needed for "{{ smbd_share_fstype }}"
-  set_fact:
+  ansible.builtin.set_fact:
     fsprogs: "{{ fstype_userspace_progs[smbd_share_fstype] | default() }}"
 
 - name: Add {{ fsprogs }} to the smbd packages list
-  set_fact:
+  ansible.builtin.set_fact:
     smbd_packages: "{{ smbd_packages + [fsprogs] }}"
   when:
     - fsprogs is defined
@@ -24,7 +24,7 @@
 - name: Install smbd dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name: "{{ smbd_packages }}"
     state: present
     update_cache: true

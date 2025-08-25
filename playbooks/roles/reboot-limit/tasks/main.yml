@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -10,18 +10,18 @@
       skip: true
   tags: vars
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["data_partition"]
 
 - name: Install dependencies for reboot-limit
-  include_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
   tags: ["install", "deps"]
 
 - name: Create the reboot-limit data collection directory for each host
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ reboot_limit_data }}/{{ ansible_ssh_host }}"
     state: directory
   when: not reboot_limit_compare_both_enabled|default(false)|bool
@@ -30,7 +30,7 @@
 - name: Create the regular reboot data collection directory for comparison mode
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ reboot_limit_data_regular }}/{{ ansible_ssh_host }}"
     state: directory
   when: reboot_limit_compare_both_enabled|default(false)|bool
@@ -39,7 +39,7 @@
 - name: Create the kexec reboot data collection directory for comparison mode
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ reboot_limit_data_kexec }}/{{ ansible_ssh_host }}"
     state: directory
   when: reboot_limit_compare_both_enabled|default(false)|bool
@@ -48,21 +48,21 @@
 - name: Set the file to collect systemctl-analyze results
   become: true
   become_method: sudo
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_analyze_file: "{{ reboot_limit_data}}/{{ ansible_ssh_host }}/{{ reboot_limits_systemctl_analyze_log }}"
   tags: ["vars"]
 
 - name: Set the file to collect the reboot count
   become: true
   become_method: sudo
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_count_file: "{{ reboot_limit_data}}/{{ ansible_ssh_host }}/{{ reboot_limits_count_log }}"
   tags: ["read_count", "vars"]
 
 - name: Delete old results directory files if a reset was called (single mode)
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   with_items:
@@ -76,7 +76,7 @@
 - name: Delete old results directory files if a reset was called (comparison mode - regular)
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ reboot_limit_data_regular }}/{{ ansible_ssh_host }}"
     state: absent
   when: reboot_limit_compare_both_enabled|default(false)|bool
@@ -85,31 +85,31 @@
 - name: Delete old results directory files if a reset was called (comparison mode - kexec)
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ reboot_limit_data_kexec }}/{{ ansible_ssh_host }}"
     state: absent
   when: reboot_limit_compare_both_enabled|default(false)|bool
   tags: ["reset"]
 
 - name: Set the path where we collect our local reboot-limit results
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_local_results_dir: "../workflows/demos/reboot-limit/results"
   tags: ["vars"]
 
 - name: Clean up our localhost results directory and files as we are on boot number {{ reboot_limit_count }}
-  file: path="{{ reboot_limit_local_results_dir }}/" state=absent
+  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/" state=absent
   delegate_to: localhost
   run_once: true
   tags: ["clean_local_results", "first_run"]
 
 - name: Create the local results directory
-  file: path="{{ reboot_limit_local_results_dir }}/" state=directory
+  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["first_run"]
 
 - name: Run the reboot loop (single mode)
-  include_tasks: do-reboot.yml
+  ansible.builtin.include_tasks: do-reboot.yml
   with_sequence: count={{ reboot_limit_max }}
   loop_control:
     loop_var: reboot_num
@@ -117,7 +117,7 @@
   tags: ["run_tests"]
 
 - name: Run the reboot comparison loop (both regular and kexec)
-  include_tasks: do-reboot-compare.yml
+  ansible.builtin.include_tasks: do-reboot-compare.yml
   with_sequence: count={{ reboot_limit_max }}
   loop_control:
     loop_var: reboot_num
@@ -129,7 +129,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item }}"
     dest: "{{ reboot_limit_local_results_dir }}/{{ item | regex_replace(reboot_limit_data | regex_escape()) | regex_replace('^/', '') }}"
     flat: true
@@ -145,7 +145,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ reboot_limit_data_regular }}/{{ ansible_ssh_host }}/{{ item }}"
     dest: "{{ reboot_limit_local_results_dir }}/regular/{{ ansible_ssh_host }}/{{ item }}"
     flat: true
@@ -159,7 +159,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ reboot_limit_data_kexec }}/{{ ansible_ssh_host }}/{{ item }}"
     dest: "{{ reboot_limit_local_results_dir }}/kexec/{{ ansible_ssh_host }}/{{ item }}"
     flat: true

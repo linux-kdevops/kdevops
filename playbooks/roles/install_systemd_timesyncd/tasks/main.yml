@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -12,14 +12,13 @@
 
 # Distro specific
 - name: Install systemd-timesyncd
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Set up the server /etc/systemd/timesyncd.conf
   tags: ["timesyncd"]
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "timesyncd.conf.j2"
     dest: "/etc/systemd/timesyncd.conf"
     force: true
@@ -32,7 +31,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "timedatectl set-ntp true"
+  ansible.builtin.command: "timedatectl set-ntp true"
   when:
     - devconfig_enable_systemd_timesyncd_ntp|bool
 
@@ -52,6 +51,6 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "timedatectl status"
+  ansible.builtin.command: "timedatectl status"
   when:
     - devconfig_enable_systemd_timesyncd|bool

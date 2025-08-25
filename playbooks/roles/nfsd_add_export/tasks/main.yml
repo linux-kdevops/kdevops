@@ -24,7 +24,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ nfsd_export_path }}/{{ export_volname }}"
     owner: "{{ export_user }}"
@@ -32,7 +32,7 @@
     mode: "{{ export_mode }}"
 
 - name: Test whether SELinux is enabled
-  command: /usr/sbin/selinuxenabled
+  ansible.builtin.command: /usr/sbin/selinuxenabled
   register: selinux_status
   delegate_to: "{{ server_host }}"
   changed_when: false
@@ -43,7 +43,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  command: /usr/sbin/restorecon -R "{{ nfsd_export_path }}/{{ export_volname }}"
+  ansible.builtin.command: /usr/sbin/restorecon -R "{{ nfsd_export_path }}/{{ export_volname }}"
   when: selinux_status.rc == 0
 
 - name: Ensure /etc/exports.d exists
@@ -51,7 +51,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  file:
+  ansible.builtin.file:
     state: directory
     path: "/etc/exports.d"
     owner: "root"
@@ -59,31 +59,31 @@
     mode: "644"
 
 - name: Copy export options to a template variable
-  set_fact:
+  ansible.builtin.set_fact:
     template_export_options: "{{ export_options }}"
 
 - name: Check for an fsid= export option
-  set_fact:
+  ansible.builtin.set_fact:
     fsid_is_present: '{{ "fsid=" in export_options }}'
   when:
     - export_fstype == "tmpfs"
 
 - name: Generate a unique fsid
-  command: "uuidgen -r"
+  ansible.builtin.command: "uuidgen -r"
   register: export_fsid
   when:
     - export_fstype == "tmpfs"
     - not fsid_is_present|bool
 
 - name: Add an fsid= export option
-  set_fact:
+  ansible.builtin.set_fact:
     template_export_options: "{{ export_options }},fsid={{ export_fsid.stdout }}"
   when:
     - export_fstype == "tmpfs"
     - not fsid_is_present|bool
 
 - name: Enable pNFS for the new export
-  set_fact:
+  ansible.builtin.set_fact:
     template_export_options: "{{ export_options }},pnfs"
   when:
     - export_pnfs|bool
@@ -93,7 +93,7 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  template:
+  ansible.builtin.template:
     src: exports.j2
     dest: /etc/exports.d/{{ export_volname }}.exports
     owner: root
@@ -105,4 +105,4 @@
   become_flags: "su - -c"
   become_method: sudo
   delegate_to: "{{ server_host }}"
-  command: /usr/sbin/exportfs -ra
+  ansible.builtin.command: /usr/sbin/exportfs -ra

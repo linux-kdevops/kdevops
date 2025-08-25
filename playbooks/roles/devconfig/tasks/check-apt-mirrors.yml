@@ -2,7 +2,7 @@
 # Only run mirror checks for Debian testing (trixie) where mirror issues are common
 - name: Check hop count on control host
   delegate_to: localhost
-  shell: |
+  ansible.builtin.shell: |
     {{ topdir_path }}/scripts/get-distro-has-hop-count-sources.sh 1
   register: localhost_hop_count
   changed_when: false
@@ -10,7 +10,7 @@
 
 - name: Extract hop1 mirror info from control host (DEB822 format)
   delegate_to: localhost
-  shell: |
+  ansible.builtin.shell: |
     if [ -f /etc/apt/sources.list.d/debian.sources ]; then
       HOST=$(grep -E "^URIs:" /etc/apt/sources.list.d/debian.sources | head -1 | awk '{print $2}' | sed -E 's|https?://||')
       echo "${HOST}"
@@ -22,7 +22,7 @@
 
 - name: Extract hop1 mirror info from control host (legacy format)
   delegate_to: localhost
-  shell: |
+  ansible.builtin.shell: |
     if [ -f /etc/apt/sources.list ] && [ ! -f /etc/apt/sources.list.d/debian.sources ]; then
       LINE=$(grep -v "^#" /etc/apt/sources.list | grep -E "^deb\s+http" | head -1)
       if [ -n "$LINE" ]; then
@@ -36,13 +36,13 @@
   when: localhost_hop_count.stdout == 'y'
 
 - name: Set hop1 mirror variables
-  set_fact:
+  ansible.builtin.set_fact:
     has_hop1_mirror: "{{ localhost_hop_count.stdout == 'y' }}"
     hop1_mirror_full: "{{ localhost_hop1_mirror_deb822.stdout if localhost_hop1_mirror_deb822.stdout != '' else localhost_hop1_mirror_legacy.stdout }}"
   when: localhost_hop_count.stdout == 'y'
 
 - name: Parse hop1 mirror host and path
-  set_fact:
+  ansible.builtin.set_fact:
     hop1_mirror_host: "{{ hop1_mirror_full.split('/')[0] }}"
     hop1_mirror_path: "/{{ hop1_mirror_full.split('/', 1)[1] if '/' in hop1_mirror_full else 'debian' }}"
   when:
@@ -51,12 +51,12 @@
     - hop1_mirror_full != ''
 
 - name: Check for DEB822-style sources
-  stat:
+  ansible.builtin.stat:
     path: /etc/apt/sources.list.d/debian.sources
   register: deb822_sources
 
 - name: Extract current APT mirror hostname (DEB822 format)
-  shell: |
+  ansible.builtin.shell: |
     grep -E "^URIs:" /etc/apt/sources.list.d/debian.sources | head -1 | awk '{print $2}' | sed -E 's|https?://||' | cut -d'/' -f1
   register: apt_mirror_host_deb822
   changed_when: false
@@ -64,7 +64,7 @@
   when: deb822_sources.stat.exists
 
 - name: Extract current APT mirror hostname (legacy format)
-  shell: |
+  ansible.builtin.shell: |
     grep -E "^deb\s+http" /etc/apt/sources.list | head -1 | awk '{print $2}' | sed 's|http://||' | cut -d'/' -f1
   register: apt_mirror_host_legacy
   changed_when: false
@@ -72,12 +72,12 @@
   when: not deb822_sources.stat.exists
 
 - name: Set unified mirror hostname
-  set_fact:
+  ansible.builtin.set_fact:
     apt_mirror_host:
       stdout: "{{ apt_mirror_host_deb822.stdout if deb822_sources.stat.exists else apt_mirror_host_legacy.stdout }}"
 
 - name: Check connectivity to current APT mirror
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ apt_mirror_host.stdout }}"
     port: 80
     timeout: 10
@@ -86,7 +86,7 @@
   when: apt_mirror_host.stdout != ""
 
 - name: Display mirror check results
-  debug:
+  ansible.builtin.debug:
     msg: |
       Current APT mirror: {{ apt_mirror_host.stdout | default('Not found') }}
       Mirror connectivity: {{ 'OK' if mirror_connectivity is not failed else 'FAILED' }}
@@ -95,7 +95,7 @@
 - name: Configure APT sources based on hop1 availability and debian testing
   block:
     - name: Check connectivity to hop1 mirror if available
-      wait_for:
+      ansible.builtin.wait_for:
         host: "{{ hop1_mirror_host }}"
         port: 80
         timeout: 10
@@ -109,7 +109,7 @@
     - name: Use hop1 mirror with DEB822 format for debian testing
       block:
         - name: Backup current sources
-          copy:
+          ansible.builtin.copy:
             src: "{{ item }}"
             dest: "{{ item }}.backup"
             remote_src: true
@@ -120,7 +120,7 @@
           ignore_errors: true
 
         - name: Apply hop1 mirror configuration using DEB822 format
-          template:
+          ansible.builtin.template:
             src: debian-hop1-mirror.sources
             dest: /etc/apt/sources.list.d/debian.sources
             owner: root
@@ -129,20 +129,20 @@
           become: true
 
         - name: Remove legacy sources.list if migrating to DEB822
-          file:
+          ansible.builtin.file:
             path: /etc/apt/sources.list
             state: absent
           become: true
           when: not deb822_sources.stat.exists
 
         - name: Update APT cache with hop1 mirror
-          apt:
+          ansible.builtin.apt:
             update_cache: true
             cache_valid_time: 0
           become: true
 
         - name: Inform user about hop1 mirror usage
-          debug:
+          ansible.builtin.debug:
             msg: |
               Using local hop1 mirror with DEB822 format:
               Mirror: {{ hop1_mirror_host }}{{ hop1_mirror_path }}
@@ -158,7 +158,7 @@
 - name: Fall back to official Debian mirrors if current mirror fails
   block:
     - name: Backup current sources (DEB822 format)
-      copy:
+      ansible.builtin.copy:
         src: /etc/apt/sources.list.d/debian.sources
         dest: /etc/apt/sources.list.d/debian.sources.backup
         remote_src: true
@@ -166,7 +166,7 @@
       when: deb822_sources.stat.exists
 
     - name: Backup current sources (legacy format)
-      copy:
+      ansible.builtin.copy:
         src: /etc/apt/sources.list
         dest: /etc/apt/sources.list.backup
         remote_src: true
@@ -174,7 +174,7 @@
       when: not deb822_sources.stat.exists
 
     - name: Apply Debian testing fallback sources using modern DEB822 format
-      template:
+      ansible.builtin.template:
         src: debian-testing-fallback.sources
         dest: /etc/apt/sources.list.d/debian.sources
         owner: root
@@ -183,20 +183,20 @@
       become: true
 
     - name: Remove legacy sources.list if migrating to DEB822
-      file:
+      ansible.builtin.file:
         path: /etc/apt/sources.list
         state: absent
       become: true
       when: not deb822_sources.stat.exists
 
     - name: Update APT cache after mirror change
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 0
       become: true
 
     - name: Inform user about mirror fallback
-      debug:
+      ansible.builtin.debug:
         msg: |
           WARNING: The configured APT mirror '{{ apt_mirror_host.stdout }}' is not accessible.
           Falling back to official Debian testing mirrors using modern DEB822 format:

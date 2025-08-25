@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -11,20 +11,20 @@
   tags: vars
 
 - name: Verify Terraform variable template file exists {{ kdevops_terraform_tfvars_template_full_path }}
-  stat:
+  ansible.builtin.stat:
     path: "{{ kdevops_nodes_template_full_path }}"
   register: terraform_tfvars_template
 
 - name: Get our user
-  command: "whoami"
+  ansible.builtin.command: "whoami"
   register: my_user
 
 - name: Get our primary group
-  command: "id -g -n"
+  ansible.builtin.command: "id -g -n"
   register: my_group
 
 - name: Check if {{ kdevops_terraform_tfvars }} exists already
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/{{ kdevops_terraform_tfvars }}"
   register: kdevops_tfvars_dest
 
@@ -32,7 +32,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ topdir_path }}/{{ kdevops_terraform_tfvars }}"
     owner: "{{ my_user.stdout }}"
     group: "{{ my_group.stdout }}"
@@ -43,7 +43,7 @@
   tags: ["nodes"]
   vars:
     tfvars_template: "{{ kdevops_terraform_tfvars_template }}"
-  template:
+  ansible.builtin.template:
     src: "{{ tfvars_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_terraform_tfvars }}"
     force: true

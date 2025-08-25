@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -11,13 +11,13 @@
   tags: vars
 
 - name: Include monitor_run tasks
-  include_tasks: monitor_run.yml
+  ansible.builtin.include_tasks: monitor_run.yml
   when:
     - enable_monitoring|default(false)|bool
   tags: ["monitoring", "monitor_run"]
 
 - name: Include monitor_collect tasks
-  include_tasks: monitor_collect.yml
+  ansible.builtin.include_tasks: monitor_collect.yml
   when:
     - enable_monitoring|default(false)|bool
   tags: ["monitoring", "monitor_collect"]

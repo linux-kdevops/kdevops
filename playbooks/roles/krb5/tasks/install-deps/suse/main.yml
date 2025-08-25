@@ -2,7 +2,7 @@
 - name: Install krb5 dependencies
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - krb5
       - krb5-client

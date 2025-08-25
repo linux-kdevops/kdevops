@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -15,7 +15,7 @@
 - name: git reset kdevops
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "{{ kdevops_git }}"
     dest: "{{ kdevops_data }}"
   retries: 3
@@ -27,20 +27,20 @@
     - kdevops_git_reset|bool
 
 - name: Get username we are using
-  command:
+  ansible.builtin.command:
     cmd: whoami
   register: username_on_target
   when:
     - infer_uid_and_group|bool
 
 - name: Set target user as a fact
-  set_fact:
+  ansible.builtin.set_fact:
     target_user: "{{ username_on_target.stdout }}"
   when:
     - infer_uid_and_group|bool
 
 - name: Run getent against the inferred target user
-  getent:
+  ansible.builtin.getent:
     database: passwd
     key: "{{ target_user }}"
   register: getent_running_user
@@ -48,7 +48,7 @@
     - infer_uid_and_group|bool
 
 - name: Run getent against the inferred target group
-  getent:
+  ansible.builtin.getent:
     database: group
     key: "{{ target_user }}"
   register: getent_on_group
@@ -56,7 +56,7 @@
     - infer_uid_and_group|bool
 
 - name: Override user and group with inferred settings if feature is enabled
-  set_fact:
+  ansible.builtin.set_fact:
     data_user: "{{ target_user }}"
     data_group: "{{ ((getent_on_group.values() | first).values() | first).keys() | first }}"
   when:

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -12,12 +12,11 @@
 
 # Distro specific
 - name: Include install-deps task
-  import_tasks: install-deps/main.yml
-
+  ansible.builtin.import_tasks: install-deps/main.yml
 - name: Check if {{ disk_setup_path }} is mounted
   become: true
   become_method: sudo
-  command: mountpoint -q {{ disk_setup_path }}
+  ansible.builtin.command: mountpoint -q {{ disk_setup_path }}
   register: mountpoint_stat
   failed_when: false
   changed_when: false
@@ -26,7 +25,7 @@
 - name: Check if {{ disk_setup_path }} is present on /etc/fstab
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     awk '{print $2}' /etc/fstab  | grep -q ^"{{ disk_setup_path }}"
   register: fstab_grep_stat
@@ -39,7 +38,7 @@
 - name: Partitions | Read all partitions labels and see if they match {{ disk_setup_label }}
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     lsblk -npr -oLABEL | grep -q ^"{{ disk_setup_label }}"
   register: label_grep
@@ -50,7 +49,7 @@
   tags: ["partition"]
 
 - name: Partitions | Check if block {{ disk_setup_device }} exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ disk_setup_device }}"
     follow: true
   register: stat_result
@@ -64,7 +63,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  filesystem:
+  community.general.filesystem:
     state: absent
     fstype: "{{ disk_setup_fstype }}"
     dev: "{{ disk_setup_device }}"
@@ -77,7 +76,7 @@
   tags: ["partition"]
 
 - name: Partitions | Read {{ disk_setup_device }} partitions and mountpoints
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     lsblk -npr -oNAME,MOUNTPOINT {{ disk_setup_device }}
   register: result
@@ -91,7 +90,7 @@
   tags: ["partition"]
 
 - name: Partitions | Collect partition information onto part_mounts
-  set_fact:
+  ansible.builtin.set_fact:
     part_mounts: "{{ result.stdout_lines | map('split') | list }}"
   when: >
     result is success and
@@ -102,7 +101,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  filesystem:
+  community.general.filesystem:
     fstype: "{{ disk_setup_fstype }}"
     dev: "{{ disk_setup_device }}"
     opts: "{{ disk_setup_fs_opts }}"
@@ -124,7 +123,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  mount:
+  ansible.posix.mount:
     path: "{{ disk_setup_path }}"
     src: LABEL="{{ disk_setup_label }}"
     fstype: "{{ disk_setup_fstype }}"
@@ -150,7 +149,7 @@
 - name: Ensure directory {{ disk_setup_path }} is created and with correct permissions
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ disk_setup_path }}"
     owner: "{{ disk_setup_user }}"

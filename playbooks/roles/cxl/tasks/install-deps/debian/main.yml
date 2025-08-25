@@ -2,14 +2,14 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   tags: linux
 
 - name: Install ndctl build deps
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - git
       - meson

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -16,14 +16,14 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat: path=/sys/kernel/mm/ksm/run
+  ansible.builtin.stat: path=/sys/kernel/mm/ksm/run
   register: ksm_enable_file
   tags: ["hypervisor"]
 
 - name: Enable ksm
   become: true
   become_method: sudo
-  shell: echo 1 > /sys/kernel/mm/ksm/run
+  ansible.builtin.shell: echo 1 > /sys/kernel/mm/ksm/run
   tags: ["hypervisor"]
   when:
     - ksm_enable_file.stat.exists
@@ -33,7 +33,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat: path=/sys/module/zswap/parameters/enabled
+  ansible.builtin.stat: path=/sys/module/zswap/parameters/enabled
   register: zswap_enable_file
   tags: ["hypervisor"]
 
@@ -41,7 +41,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  stat: path=/sys/module/zswap/parameters/max_pool_percent
+  ansible.builtin.stat: path=/sys/module/zswap/parameters/max_pool_percent
   register: zswap_max_pool_percent_file
   when:
     - hypervisor_tunning_zswap_enable|bool
@@ -51,7 +51,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  shell: echo {{ hypervisor_tunning_zswap_max_pool_percent }} > /sys/module/zswap/parameters/max_pool_percent
+  ansible.builtin.shell: echo {{ hypervisor_tunning_zswap_max_pool_percent }} > /sys/module/zswap/parameters/max_pool_percent
   register: zswap_max_pool_percent_file
   when:
     - hypervisor_tunning_zswap_enable|bool
@@ -61,7 +61,7 @@
 - name: Enable zswap
   become: true
   become_method: sudo
-  shell: echo 1 > /sys/module/zswap/parameters/enabled
+  ansible.builtin.shell: echo 1 > /sys/module/zswap/parameters/enabled
   tags: ["hypervisor"]
   when:
     - zswap_enable_file.stat.exists

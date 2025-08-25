@@ -2,7 +2,7 @@
 - name: Install btrfs-progs build dependencies
   become: true
   become_method: sudo
-  dnf:
+  ansible.builtin.dnf:
     name:
       - e2fsprogs-devel
       - libblkid-devel

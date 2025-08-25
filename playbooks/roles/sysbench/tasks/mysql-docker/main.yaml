@@ -33,7 +33,7 @@
     fs_cmd: "{{  lookup('vars', 'sysbench_' + fs_command_variable) }}"
     sect_size: "{{  lookup('vars', fs_sector_size_variable) }}"
     db_page_size: "{{  lookup('vars', 'sysbench_' + db_page_size_variable) }}"
-  set_fact:
+  ansible.builtin.set_fact:
     filesystem_command_for_host: "{{ fs_cmd }}"
     sysbench_fs_sector_size: "{{ sect_size }}"
     sysbench_fstype: "{{ fs_type_variable }}"
@@ -42,33 +42,33 @@
   tags: ["vars"]
 
 - name: Set filesystem options for XFS with sector size
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_fs_opts: "{{ sysbench_fs_opts_without_sector_size }} -s size={{ sysbench_fs_sector_size }} -L {{ sysbench_label }}"
   when: sysbench_fstype != 'ext4'
   tags: ["mkfs"]
 
 - name: Set filesystem options for ext4 without sector size
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_fs_opts: "{{ sysbench_fs_opts_without_sector_size }} -L {{ sysbench_label }}"
   when: sysbench_fstype == 'ext4'
   tags: ["mkfs"]
 
 - name: Set environment variable for sector size for ext4
   vars:
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_fs_env:
       MKE2FS_DEVICE_SECTSIZE: "{{ sysbench_fs_sector_size }}"
   when: sysbench_fstype == 'ext4'
   tags: ["mkfs"]
 
 - name: Clear environment variable for non-ext4 filesystems
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_fs_env: {}
   when: sysbench_fstype != 'ext4'
   tags: ["mkfs"]
 
 - name: Display the filesystem options and environment variable for the current host
-  debug:
+  ansible.builtin.debug:
     msg: |
       Sysbench device:    {{ sysbench_device }}
       Sysbench fstype:    {{ sysbench_fstype }}
@@ -79,7 +79,7 @@
   tags: ["debug"]
 
 - name: Fail if no filesystem command is found for the host
-  fail:
+  ansible.builtin.fail:
     msg: "No filesystem configuration command found for the current host: {{ ansible_host }}"
   when: filesystem_command_for_host is undefined
   tags: ["mkfs"]
@@ -110,7 +110,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.mount:
+  ansible.posix.mount:
     path: "{{ sysbench_mnt }}"
     state: unmounted
   tags: ["clean", "mkfs"]
@@ -137,7 +137,7 @@
 
 - name: Set sysbench_mysql_innodb_doublewrite based on ansible_host
   tags: ["vars"]
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_host_is_baseline: "{{ False if ansible_host is search('-dev$') else True }}"
     sysbench_mysql_innodb_doublewrite: "{{ '0' if ansible_host is search('-dev$') else '1' }}"
   when:
@@ -145,7 +145,7 @@
 
 - name: Set sysbench_mysql_innodb_doublewrite based on ansible_host
   tags: ["vars"]
-  set_fact:
+  ansible.builtin.set_fact:
     sysbench_mysql_innodb_doublewrite: "0"
   when:
     - "sysbench_disable_doublewrite_always|bool"
@@ -184,7 +184,7 @@
   become_method: sudo
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "https://github.com/lefred/mysqlshell-plugins.git"
     dest: "{{ sysbench_mysql_container_host_root_path }}/.mysqlsh/plugins/"
     update: true
@@ -193,11 +193,11 @@
 
 - name: Get used target kernel version
   tags: ["db_start"]
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
   register: uname_cmd
 
 - name: Store last kernel variable
-  set_fact:
+  ansible.builtin.set_fact:
     last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   tags: ["db_start"]
   run_once: true
@@ -218,18 +218,18 @@
     state: directory
 
 - name: Document used target kernel version
-  shell: echo {{ last_kernel }} > {{ topdir_path }}/workflows/sysbench/results/last-kernel.txt
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ topdir_path }}/workflows/sysbench/results/last-kernel.txt
   delegate_to: localhost
   tags: ["db_start"]
   run_once: true
 
 - name: Document double write buffer setting on node
-  shell: echo {{ sysbench_mysql_innodb_doublewrite }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/innodb_doublewrite.txt
+  ansible.builtin.shell: echo {{ sysbench_mysql_innodb_doublewrite }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/innodb_doublewrite.txt
   delegate_to: localhost
   tags: ["db_start"]
 
 - name: Document db page size setting on node
-  shell: echo {{ sysbench_db_page_size }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/innodb_page_size.txt
+  ansible.builtin.shell: echo {{ sysbench_db_page_size }} > {{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/innodb_page_size.txt
   delegate_to: localhost
   tags: ["db_start"]
 
@@ -292,7 +292,7 @@
   tags: ["db_start"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_socket_output_explicit.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-mysql-client-explicit-test.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -311,7 +311,7 @@
   tags: ["db_start"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_socket_output.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-mysql-client-test.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -331,7 +331,7 @@
   tags: ["post_entrypoint"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_add_sysbench_user.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0001-add-user.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -351,7 +351,7 @@
   tags: ["post_entrypoint"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_sysbench_privs.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0002-grant-privs-user.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -381,7 +381,7 @@
   tags: ["post_entrypoint"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_pip.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0003-install-python-pip.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -403,7 +403,7 @@
   tags: ["post_entrypoint"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ mysql_pip_install_deps.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0004-install-telemetry-reqs.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -491,7 +491,7 @@
   tags: ["post_entrypoint"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ sysbench_init_pop.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/sysbench_populate.txt"
   when: "sysbench_type_mysql_docker|bool"
@@ -549,7 +549,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ sysbench_job.ansible_job_id }}"
   register: sysbench_result
   until: sysbench_result.finished
@@ -561,8 +561,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: mv "{{ sysbench_result.results_file }}" "{{ sysbench_telemetry_path }}/sysbench_output.txt"
-
+  ansible.builtin.command: mv "{{ sysbench_result.results_file }}" "{{ sysbench_telemetry_path }}/sysbench_output.txt"
 - name: Fetch sysbench container logs
   become: true
   become_flags: "su - -c"
@@ -578,7 +577,7 @@
   become_flags: "su - -c"
   become_method: sudo
   tags: ["run_sysbench"]
-  copy:
+  ansible.builtin.copy:
     content: "{{ sysbench_logs.stdout }}"
     dest: "{{ sysbench_telemetry_path }}/docker-sysbench-results-{{ ansible_date_time.iso8601 }}.log"
   when: "sysbench_type_mysql_docker|bool"
@@ -618,7 +617,7 @@
 
 - name: Copy telemetry data from each node to the localhost
   tags: ["results"]
-  synchronize:
+  ansible.posix.synchronize:
     src: "{{ sysbench_telemetry_path }}/"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/"
     mode: pull
@@ -632,11 +631,11 @@
   tags: ["results"]
   become: true
   become_method: sudo
-  command: journalctl -k
+  ansible.builtin.command: journalctl -k
   register: journal_cmd
 
 - name: Save kernel logs to local file per node
-  copy:
+  ansible.builtin.copy:
     content: "{{ journal_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/dmesg.txt"
   delegate_to: localhost
@@ -646,11 +645,11 @@
   tags: ["results"]
   become: true
   become_method: sudo
-  command: cat /sys/kernel/debug/extfrag/extfrag_index
+  ansible.builtin.command: cat /sys/kernel/debug/extfrag/extfrag_index
   register: extfrag_index_cmd
 
 - name: Save memory fragmentation index per node
-  copy:
+  ansible.builtin.copy:
     content: "{{ extfrag_index_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/extfrag_index.txt"
   delegate_to: localhost
@@ -660,11 +659,11 @@
   tags: ["results"]
   become: true
   become_method: sudo
-  command: cat /sys/kernel/debug/extfrag/unusable_index
+  ansible.builtin.command: cat /sys/kernel/debug/extfrag/unusable_index
   register: unusable_index_cmd
 
 - name: Save memory memory unusable index per node
-  copy:
+  ansible.builtin.copy:
     content: "{{ unusable_index_cmd.stdout }}"
     dest: "{{ topdir_path }}/workflows/sysbench/results/{{ inventory_hostname }}/unusable_index.txt"
   delegate_to: localhost
@@ -674,7 +673,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:
@@ -685,7 +684,7 @@
 
 - name: Remove all results and telemetry directories on the host
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:
@@ -696,7 +695,7 @@
 - name: Find directories under sysbench results target
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
-  find:
+  ansible.builtin.find:
     paths: "{{ sysbench_results_target }}"
     recurse: false
     file_type: directory
@@ -709,7 +708,7 @@
 - name: Check if sysbench_tps.txt exists in each directory
   vars:
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
-  stat:
+  ansible.builtin.stat:
     path: "{{ sysbench_results_target }}/{{ item.path | basename }}/sysbench_tps.txt"
   register: sysbench_tps_exists
   with_items: "{{ sysbench_results_dirs.files }}"
@@ -725,7 +724,8 @@
     sysbench_results_target: "{{ topdir_path }}/workflows/sysbench/results/"
     host_dir: "{{ item.item.path | basename }}"
     output_image: "{{ sysbench_results_target }}/{{ host_dir }}/sysbench_tps_plot.png"
-  command: "./python/workflows/sysbench/sysbench-tps-plot.py {{ sysbench_results_target }}/{{ host_dir }}/sysbench_tps.txt --output {{ output_image }}"
+  ansible.builtin.command: "./python/workflows/sysbench/sysbench-tps-plot.py {{ sysbench_results_target }}/{{ host_dir }}/sysbench_tps.txt --output {{ output_image
+    }}"
   tags: ["plot"]
   delegate_to: localhost
   with_items: "{{ sysbench_tps_exists.results }}"
@@ -746,8 +746,8 @@
     legend2: "{{ fs_type }} innodb_doublewrite=OFF"
     file2: "{{ sysbench_results_target }}/{{ dev_host }}/sysbench_tps.txt"
     output_image: "{{ sysbench_results_target }}a_vs_b.png"
-  command: "./python/workflows/sysbench/sysbench-tps-compare.py --legend1 \"{{ legend1 }}\" --legend2 \"{{ legend2 }}\" --output {{ output_image }} {{ file1 }} {{
-    file2 }}"
+  ansible.builtin.command: "./python/workflows/sysbench/sysbench-tps-compare.py --legend1 \"{{ legend1 }}\" --legend2 \"{{ legend2 }}\" --output {{ output_image }}
+    {{ file1 }} {{ file2 }}"
   tags: ["plot"]
   delegate_to: localhost
   with_items:
@@ -767,8 +767,8 @@
     dev_host: "{{ item }}-dev"
     legend2: "{{ fs_type }} innodb_doublewrite=OFF"
     file2: "{{ sysbench_results_target }}/{{ dev_host }}/sysbench_tps.txt"
-  command: "./python/workflows/sysbench/sysbench-tps-variance.py --legend1 \"{{ legend1 }}\" --legend2 \"{{ legend2 }}\" --dir {{ sysbench_results_target }} {{ file1
-    }} {{ file2}}"
+  ansible.builtin.command: "./python/workflows/sysbench/sysbench-tps-variance.py --legend1 \"{{ legend1 }}\" --legend2 \"{{ legend2 }}\" --dir {{ sysbench_results_target
+    }} {{ file1 }} {{ file2}}"
   tags: ["plot"]
   delegate_to: localhost
   with_items:

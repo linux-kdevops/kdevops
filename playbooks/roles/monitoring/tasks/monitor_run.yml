@@ -4,7 +4,7 @@
 - name: Check if folio migration stats are available
   become: true
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: /sys/kernel/debug/mm/migrate/stats
   register: folio_migration_stats_file
   when:
@@ -14,7 +14,7 @@
 - name: Create monitoring directory
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: /root/monitoring
     state: directory
     mode: "0755"
@@ -26,7 +26,7 @@
 - name: Start folio migration monitoring in background
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     nohup bash -c 'while true; do
       echo "$(date +"%Y-%m-%d %H:%M:%S")" >> /root/monitoring/folio_migration_stats.txt
       cat /sys/kernel/debug/mm/migrate/stats >> /root/monitoring/folio_migration_stats.txt
@@ -43,7 +43,7 @@
     - folio_migration_stats_file.stat.exists|default(false)
 
 - name: Save async job ID for later termination
-  set_fact:
+  ansible.builtin.set_fact:
     folio_migration_monitor_job: "{{ folio_migration_monitor.ansible_job_id }}"
   when:
     - monitor_developmental_stats|default(false)|bool
@@ -54,7 +54,7 @@
 - name: Verify monitoring started successfully
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     if [ -f /root/monitoring/folio_migration.pid ]; then
       pid=$(cat /root/monitoring/folio_migration.pid)
       if ps -p $pid > /dev/null 2>&1; then
@@ -74,7 +74,7 @@
     - folio_migration_stats_file.stat.exists|default(false)
 
 - name: Display monitoring status
-  debug:
+  ansible.builtin.debug:
     msg: "{{ monitor_status.stdout }}"
   when:
     - monitor_developmental_stats|default(false)|bool

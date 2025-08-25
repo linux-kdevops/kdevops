@@ -1,12 +1,12 @@
 ---
 - name: Set generic SUSE specific distro facts
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
 
 - name: Set SLE specific version labels to make checks easier
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: '{{ ansible_distribution_major_version == "10" }}'
     is_sle11: '{{ ansible_distribution_major_version == "11" }}'
     is_sle12: '{{ ansible_distribution_major_version == "12" }}'
@@ -24,7 +24,7 @@
     - is_sle|bool
 
 - name: Set SLE specific version labels to make checks easier when not SLE
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: false
     is_sle11: false
     is_sle12: false
@@ -42,33 +42,33 @@
     - not is_sle|bool
 
 - name: By default we assume we have figured out how to add repos on a release
-  set_fact:
+  ansible.builtin.set_fact:
     repos_present: true
 
 - name: Lets us disable things which require a zypper repo present
-  set_fact:
+  ansible.builtin.set_fact:
     repos_present: false
   when:
     - is_sle|bool
     - is_sle10|bool or is_sle11|bool
 
 - name: The default is to assume all distros have the indent package
-  set_fact:
+  ansible.builtin.set_fact:
     has_indent: true
 
 - name: Does this release lack indent
-  set_fact:
+  ansible.builtin.set_fact:
     has_indent: false
   when:
     - is_sle|bool
     - is_sle15sp3|bool or is_sle15sp4|bool
 
 - name: The default is to assume all distros supports nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: false
 
 - name: Does this release lack nvme-utils
-  set_fact:
+  ansible.builtin.set_fact:
     lacks_nvme_utils: true
   when:
     - is_sle|bool
@@ -173,11 +173,11 @@
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool
 
 - name: The default is to assume we do not want to add the benchmark repo
-  set_fact:
+  ansible.builtin.set_fact:
     add_benchmark_repo: false
 
 - name: Does this release require the benchmark repo
-  set_fact:
+  ansible.builtin.set_fact:
     add_benchmark_repo: true
   when:
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool or is_sle12sp5|bool
@@ -185,7 +185,7 @@
 - name: add benchmark sles12sp5 openSUSE repo when needed
   become: true
   become_method: sudo
-  script:
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_12_SP5/ benchmark benchmark"
   when:
     - is_sle12sp5|bool
@@ -193,7 +193,7 @@
 - name: Add benchmark sles15sp2 openSUSE repo when needed
   become: true
   become_method: sudo
-  script:
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP2/ benchmark benchmark"
   when:
     - is_sle15sp2|bool
@@ -201,7 +201,7 @@
 - name: Add benchmark sles15sp3 openSUSE repo when needed
   become: true
   become_method: sudo
-  script:
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh http://download.opensuse.org/repositories/benchmark/SLE_15_SP3/ benchmark benchmark"
   when:
     - is_sle15sp3|bool or is_sle15sp4|bool

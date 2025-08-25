@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -13,14 +13,14 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   tags: deps
 
 - name: Install sysbench deps
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - docker.io
       - locales

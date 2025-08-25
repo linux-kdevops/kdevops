@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -11,44 +11,43 @@
   tags: vars
 
 - name: Set the path where we collect our local pynfs results
-  set_fact:
+  ansible.builtin.set_fact:
     pynfs_workflow_dir: "../workflows/pynfs"
     pynfs_results_full_path: "{{ topdir_path }}/workflows/pynfs/results"
     pynfs_results_target: "../workflows/pynfs/results/last-run/"
   tags: ["vars"]
 
 - name: Clean up our localhost results directory and files
-  file: path="{{ pynfs_workflow_dir }}/results/" state=absent
+  ansible.builtin.file: path="{{ pynfs_workflow_dir }}/results/" state=absent
   delegate_to: localhost
   run_once: true
   tags: ["clean_local_results"]
 
 - name: Create the local results directory
-  file: path="{{ pynfs_workflow_dir }}/results/" state=directory
+  ansible.builtin.file: path="{{ pynfs_workflow_dir }}/results/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["first_run"]
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["data_partition"]
 
 # Distro specific
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Remove old pynfs dir as we always clone a fresh tree
   tags: ["git", "pynfs"]
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ pynfs_data }}"
     state: absent
 
 - name: Shallow-clone the pynfs source code from {{ pynfs_git }}
   tags: ["git", "pynfs"]
-  git:
+  ansible.builtin.git:
     repo: "{{ pynfs_git }}"
     dest: "{{ pynfs_data }}"
     update: true
@@ -63,7 +62,7 @@
 
 - name: Clone the full pynfs source code tree from {{ pynfs_git }}
   tags: ["git", "pynfs"]
-  git:
+  ansible.builtin.git:
     repo: "{{ pynfs_git }}"
     dest: "{{ pynfs_data }}"
     update: true
@@ -77,19 +76,19 @@
 
 - name: Build pynfs
   tags: ["pynfs"]
-  command: ./setup.py build
+  ansible.builtin.command: ./setup.py build
   args:
     chdir: "{{ pynfs_data }}"
 
 - name: Get the hostname of the NFS server and base volname
   tags: ["vars"]
-  set_fact:
+  ansible.builtin.set_fact:
     nfsd_hostname: "{{ kdevops_host_prefix }}-nfsd"
     volname_base: "pynfs"
 
 - name: Create an export for NFSv4.0 testing
   tags: ["pynfs"]
-  include_role:
+  ansible.builtin.include_role:
     name: nfsd_add_export
   vars:
     server_host: "{{ nfsd_hostname }}"
@@ -100,7 +99,7 @@
 
 - name: Create an export for NFSv4.1 testing
   tags: ["pynfs"]
-  include_role:
+  ansible.builtin.include_role:
     name: nfsd_add_export
   vars:
     server_host: "{{ nfsd_hostname }}"
@@ -111,7 +110,7 @@
 
 - name: Create an export for pNFS testing
   tags: ["pynfs"]
-  include_role:
+  ansible.builtin.include_role:
     name: nfsd_add_export
   vars:
     server_host: "{{ nfsd_hostname }}"
@@ -126,27 +125,27 @@
 - name: Wait until nfsd grace period ends
   tags: ["run_tests"]
   delegate_to: "{{ nfsd_hostname }}"
-  command: /usr/bin/grep -q Y /proc/fs/nfsd/v4_end_grace
+  ansible.builtin.command: /usr/bin/grep -q Y /proc/fs/nfsd/v4_end_grace
   register: result
   retries: 90
   delay: 1
   until: result.rc == 0
 
 - name: Clean up our localhost results/last-run directory
-  file: path="{{ pynfs_results_target }}/" state=absent
+  ansible.builtin.file: path="{{ pynfs_results_target }}/" state=absent
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  file: path="{{ pynfs_results_target }}/" state=directory
+  ansible.builtin.file: path="{{ pynfs_results_target }}/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Run pynfs
   tags: ["run_tests"]
-  script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs.sh"
+  ansible.builtin.script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs.sh"
   environment:
     PYNFS_DATA: "{{ pynfs_data }}"
     EXPORT_BASE: "{{ nfsd_hostname }}:{{ nfsd_export_path }}/{{ volname_base }}"
@@ -154,7 +153,7 @@
 
 - name: Run pynfs pNFS block tests
   tags: ["run_tests"]
-  script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs_block.sh"
+  ansible.builtin.script: "{{ pynfs_workflow_dir }}/scripts/run_pynfs_block.sh"
   environment:
     PYNFS_DATA: "{{ pynfs_data }}"
     EXPORT_BASE: "{{ nfsd_hostname }}:{{ nfsd_export_path }}/{{ volname_base }}"
@@ -164,17 +163,17 @@
 
 - name: Get used target kernel version
   tags: ["copy_results"]
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
   register: uname_cmd
 
 - name: Store kernel_rev variable
   tags: ["copy_results"]
-  set_fact:
+  ansible.builtin.set_fact:
     kernel_rev: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   run_once: true
 
 - name: Document used target kernel version
-  shell: echo {{ kernel_rev }} > {{ pynfs_results_target }}/../last-kernel.txt
+  ansible.builtin.shell: echo {{ kernel_rev }} > {{ pynfs_results_target }}/../last-kernel.txt
   delegate_to: localhost
   tags: ["run_tests", "copy_results", "print_results"]
   run_once: true
@@ -184,7 +183,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
     dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
     flat: true
@@ -197,7 +196,7 @@
   become: true
   become_flags: "su - -c"
   become_method: ansible.builtin.sudo
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
     dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
     flat: true
@@ -209,12 +208,12 @@
 - name: Verify last-run kernel directory exists
   tags: ["copy_results"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}"
   register: last_run_kernel_dir
 
 - name: Copy over the last-run into the results directory for archiving into kdevops
-  copy:
+  ansible.builtin.copy:
     src: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}"
     dest: "{{ pynfs_results_full_path }}/"
   run_once: true

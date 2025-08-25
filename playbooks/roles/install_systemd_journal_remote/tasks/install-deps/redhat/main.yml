@@ -2,7 +2,7 @@
 - name: Install systemd-journal-remote
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "systemd-journal-remote"
   retries: 3

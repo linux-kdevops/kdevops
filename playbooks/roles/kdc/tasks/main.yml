@@ -25,7 +25,7 @@
 - name: Configure /etc/krb5.conf
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: krb5.conf.j2
     dest: /etc/krb5.conf
     owner: root
@@ -45,7 +45,7 @@
 - name: Configure {{ kdc_conf_dir }}/kdc.conf
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: kdc.conf.j2
     dest: "{{ kdc_conf_dir }}/kdc.conf"
     owner: root
@@ -55,7 +55,7 @@
 - name: Configure {{ kdc_data_dir }}/kadm5.acl
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: kadm5.acl.j2
     dest: "{{ kdc_data_dir }}/kadm5.acl"
     owner: root

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -15,7 +15,7 @@
   become_method: sudo
   vars:
     sysfs_override: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/driver_override"
-  stat:
+  ansible.builtin.stat:
     path: "{{ sysfs_override }}"
   with_items: "{{ pcie_passthrough_devices }}"
   loop_control:
@@ -28,7 +28,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item.stat.path }}"
     group: "{{ libvirt_qemu_group }}"
     mode: "0664"
@@ -45,7 +45,7 @@
   become_method: sudo
   vars:
     sysfs_unbind: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/unbind"
-  stat:
+  ansible.builtin.stat:
     path: "{{ sysfs_unbind }}"
   with_items: "{{ pcie_passthrough_devices }}"
   loop_control:
@@ -58,7 +58,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item.stat.path }}"
     group: "{{ libvirt_qemu_group }}"
     mode: "0220"
@@ -72,7 +72,7 @@
 - name: Deploy udev 10-qemu-hw-users.rules which enables libvirt to use vfio subsystem
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "10-qemu-hw-users.rules"
     dest: "/etc/udev/rules.d/"
   when:

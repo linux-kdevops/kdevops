@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -13,7 +13,7 @@
 - name: Install mmtests build dependencies (RedHat/CentOS)
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     name:
       - gcc
       - git
@@ -30,7 +30,7 @@
 - name: Install mmtests runtime dependencies (RedHat/CentOS)
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     name:
       - numactl
       - fio
@@ -47,7 +47,7 @@
 - name: Install mmtests monitoring dependencies (RedHat/CentOS)
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     name:
       - kernel-tools
       - trace-cmd

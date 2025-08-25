@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -12,10 +12,9 @@
 
 # Distro specific
 - name: Install dependencies
-  import_tasks: install-deps/main.yml
-
+  ansible.builtin.import_tasks: install-deps/main.yml
 - name: git clone dbench
-  git:
+  ansible.builtin.git:
     repo: "{{ dbench_git }}"
     dest: "{{ dbench_data }}"
     update: true
@@ -24,7 +23,7 @@
     - compile_dbench|bool
 
 - name: Run autogen for dbench
-  command: "./autogen.sh"
+  ansible.builtin.command: "./autogen.sh"
   tags: ["dbench"]
   args:
     chdir: "{{ dbench_data }}"
@@ -32,7 +31,7 @@
     - compile_dbench|bool
 
 - name: Run configure for dbench
-  command: "./configure"
+  ansible.builtin.command: "./configure"
   tags: ["dbench"]
   args:
     chdir: "{{ dbench_data }}"
@@ -40,7 +39,7 @@
     - compile_dbench|bool
 
 - name: Get nproc
-  command: "{{ num_jobs }}"
+  ansible.builtin.command: "{{ num_jobs }}"
   tags: ["git", "dbench"]
   register: nproc
   when:
@@ -48,7 +47,7 @@
 
 - name: Build dbench
   tags: ["git", "dbench"]
-  make:
+  community.general.make:
     chdir: "{{ dbench_data }}"
     jobs: "{{ nproc.stdout }}"
   when:
@@ -58,7 +57,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{  make }} install"
+  ansible.builtin.command: "{{  make }} install"
   tags: ["git", "dbench"]
   args:
     chdir: "{{ dbench_data }}"

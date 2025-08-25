@@ -38,7 +38,7 @@
     mode: "0755"
 
 - name: Test whether SELinux is enabled
-  command: /usr/sbin/selinuxenabled
+  ansible.builtin.command: /usr/sbin/selinuxenabled
   register: selinux_status
   changed_when: false
   failed_when: false

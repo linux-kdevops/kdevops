@@ -2,29 +2,28 @@
 # This task performs both regular and kexec reboots sequentially for comparison
 - name: Print uname for each host
   tags: ["run_tests"]
-  debug: var=ansible_kernel
-
+  ansible.builtin.debug: var=ansible_kernel
 - name: Hint to our watchdog our reboot-limit comparison tests are about to kick off
-  file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
+  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
   delegate_to: localhost
   tags: ["run_tests"]
   run_once: true
 
 # Phase 1: Regular reboot test
 - name: Starting Phase 1 - Regular reboot test ({{ reboot_num }} of {{ reboot_limit_max }})
-  debug:
+  ansible.builtin.debug:
     msg: "Starting regular reboot test - reboot {{ reboot_num }} of {{ reboot_limit_max }}"
   tags: ["run_tests"]
 
 - name: Run the regular reboot test using the ansible reboot module
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     post_reboot_delay: 10
   tags: ["run_tests"]
 
 - name: Handle regular reboot count and data collection
-  include_tasks: handle-reboot-data.yml
+  ansible.builtin.include_tasks: handle-reboot-data.yml
   vars:
     reboot_type: "regular"
     data_path: "{{ reboot_limit_data_regular }}"
@@ -32,18 +31,18 @@
 
 # Phase 2: Kexec reboot test
 - name: Starting Phase 2 - Kexec reboot test ({{ reboot_num }} of {{ reboot_limit_max }})
-  debug:
+  ansible.builtin.debug:
     msg: "Starting kexec reboot test - reboot {{ reboot_num }} of {{ reboot_limit_max }}"
   tags: ["run_tests"]
 
 # Kexec preparation tasks
 - name: Get current kernel version for kexec
-  command: uname -r
+  ansible.builtin.command: uname -r
   register: current_kernel_version
   tags: ["run_tests"]
 
 - name: Check for kernel image locations for kexec
-  stat:
+  ansible.builtin.stat:
     path: "{{ kernel_path }}"
   register: kernel_stat
   loop:
@@ -57,7 +56,7 @@
   tags: ["run_tests"]
 
 - name: Set kernel path for kexec
-  set_fact:
+  ansible.builtin.set_fact:
     kexec_kernel_path: "{{ kernel_item.stat.path }}"
   loop: "{{ kernel_stat.results }}"
   loop_control:
@@ -67,7 +66,7 @@
   tags: ["run_tests"]
 
 - name: Check for initrd/initramfs locations for kexec
-  stat:
+  ansible.builtin.stat:
     path: "{{ initrd_path }}"
   register: initrd_stat
   loop:
@@ -82,7 +81,7 @@
   tags: ["run_tests"]
 
 - name: Set initrd path for kexec
-  set_fact:
+  ansible.builtin.set_fact:
     kexec_initrd_path: "{{ initrd_item.stat.path }}"
   loop: "{{ initrd_stat.results }}"
   loop_control:
@@ -92,7 +91,7 @@
   tags: ["run_tests"]
 
 - name: Read current kernel command line for kexec
-  slurp:
+  ansible.builtin.slurp:
     src: /proc/cmdline
   register: cmdline_content
   tags: ["run_tests"]
@@ -100,7 +99,7 @@
 - name: Load kernel into kexec
   become: true
   become_method: sudo
-  command: >
+  ansible.builtin.command: >
     kexec -l {{ kexec_kernel_path }}
     --initrd={{ kexec_initrd_path }}
     --command-line="{{ cmdline_content.content | b64decode | trim }}"
@@ -112,7 +111,7 @@
 - name: Run the kexec reboot test using systemctl kexec
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     msg: "Rebooting system via systemctl kexec for reboot-limit comparison test"
     reboot_command: "systemctl kexec"
     post_reboot_delay: 10
@@ -120,7 +119,7 @@
   tags: ["run_tests"]
 
 - name: Handle kexec reboot count and data collection
-  include_tasks: handle-reboot-data.yml
+  ansible.builtin.include_tasks: handle-reboot-data.yml
   vars:
     reboot_type: "kexec"
     data_path: "{{ reboot_limit_data_kexec }}"

@@ -1,10 +1,9 @@
 ---
 - name: Print uname for each host
   tags: ["run_tests"]
-  debug: var=ansible_kernel
-
+  ansible.builtin.debug: var=ansible_kernel
 - name: Hint to our watchdog our reboot-limit tests are about to kick off
-  file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
+  ansible.builtin.file: path="{{ reboot_limit_local_results_dir }}/.begin" state=touch
   delegate_to: localhost
   tags: ["run_tests"]
   run_once: true
@@ -12,7 +11,7 @@
 - name: Run the reboot test using the ansible reboot module
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     post_reboot_delay: 10
   when:
     - reboot_limit_test_type == "ansible"
@@ -21,7 +20,7 @@
 - name: Reboot using systemctl reboot with proper handling
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     msg: "Rebooting system via systemctl reboot for reboot-limit test"
     reboot_command: "systemctl reboot"
     post_reboot_delay: 10
@@ -32,14 +31,14 @@
 
 # kexec tasks - prepare the kernel for kexec before rebooting
 - name: Get current kernel version for kexec
-  command: uname -r
+  ansible.builtin.command: uname -r
   register: current_kernel_version
   when:
     - reboot_limit_test_type == "systemctl_kexec"
   tags: ["run_tests"]
 
 - name: Check for kernel image locations for kexec
-  stat:
+  ansible.builtin.stat:
     path: "{{ kernel_path }}"
   register: kernel_stat
   loop:
@@ -54,7 +53,7 @@
   tags: ["run_tests"]
 
 - name: Set kernel path for kexec
-  set_fact:
+  ansible.builtin.set_fact:
     kexec_kernel_path: "{{ kernel_item.stat.path }}"
   loop: "{{ kernel_stat.results }}"
   loop_control:
@@ -65,7 +64,7 @@
   tags: ["run_tests"]
 
 - name: Check for initrd/initramfs locations for kexec
-  stat:
+  ansible.builtin.stat:
     path: "{{ initrd_path }}"
   register: initrd_stat
   loop:
@@ -81,7 +80,7 @@
   tags: ["run_tests"]
 
 - name: Set initrd path for kexec
-  set_fact:
+  ansible.builtin.set_fact:
     kexec_initrd_path: "{{ initrd_item.stat.path }}"
   loop: "{{ initrd_stat.results }}"
   loop_control:
@@ -92,7 +91,7 @@
   tags: ["run_tests"]
 
 - name: Read current kernel command line for kexec
-  slurp:
+  ansible.builtin.slurp:
     src: /proc/cmdline
   register: cmdline_content
   when:
@@ -102,7 +101,7 @@
 - name: Load kernel into kexec
   become: true
   become_method: sudo
-  command: >
+  ansible.builtin.command: >
     kexec -l {{ kexec_kernel_path }}
     --initrd={{ kexec_initrd_path }}
     --command-line="{{ cmdline_content.content | b64decode | trim }}"
@@ -115,7 +114,7 @@
 - name: Reboot using systemctl kexec with proper handling
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     msg: "Rebooting system via systemctl kexec for reboot-limit test"
     reboot_command: "systemctl kexec"
     post_reboot_delay: 10
@@ -127,7 +126,7 @@
 - name: Check if the reboot limit count variable file exists
   become: true
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: "{{ reboot_limit_count_file }}"
   register: reboot_limit_reg_count_file
   tags: ["run_tests", "read_count", "vars"]
@@ -135,7 +134,7 @@
 - name: Read last boot count variable file
   become: true
   become_method: sudo
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ reboot_limit_count_file }}"
   register: reboot_limit_last_count
   when:
@@ -143,21 +142,21 @@
   tags: ["run_tests", "read_count", "vars"]
 
 - name: Set the current boot count into a variable
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_count: "{{ reboot_limit_last_count['content'] | b64decode | int }}"
   tags: ["run_tests", "read_count", "vars"]
   when:
     - reboot_limit_reg_count_file.stat.exists
 
 - name: Adjust the local boot count variable if we rebooted OK
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_count: "{{ reboot_limit_count | int + 1 }}"
   tags: ["run_tests", "read_count"]
   when:
     - reboot_limit_reg_count_file.stat.exists
 
 - name: Set the current boot count into a variable when no prior boot test exists
-  set_fact:
+  ansible.builtin.set_fact:
     reboot_limit_count: 1
   tags: ["run_tests", "read_count", "vars"]
   when:
@@ -166,7 +165,7 @@
 - name: Enable sysrq key if we're about to force a crash
   become: true
   become_method: sudo
-  shell: echo 1 > /proc/sys/kernel/sysrq
+  ansible.builtin.shell: echo 1 > /proc/sys/kernel/sysrq
   tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
     - reboot_limit_boot_count_crash_enable
@@ -175,7 +174,7 @@
 - name: Force a crash if we were asked to
   become: true
   become_method: sudo
-  shell: echo c > /proc/sysrq-trigger
+  ansible.builtin.shell: echo c > /proc/sysrq-trigger
   ignore_errors: true
   tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
@@ -185,7 +184,7 @@
 - name: Write current updated boot count variable file to be {{ reboot_limit_count }}
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ reboot_limit_count }}"
     dest: "{{ reboot_limit_count_file }}"
   when:
@@ -195,7 +194,7 @@
 - name: Create last boot count variable file if it does not exist
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "1"
     dest: "{{ reboot_limit_count_file }}"
   when:
@@ -205,7 +204,7 @@
 - name: Wait for boot up to complete before running systemd-analyze
   become: true
   become_method: sudo
-  command: "systemctl is-system-running --wait"
+  ansible.builtin.command: "systemctl is-system-running --wait"
   when:
     - reboot_limit_enable_systemd_analyze|bool
   tags: ["run_tests"]
@@ -213,7 +212,7 @@
 - name: Collect systemctl-analyze results
   become: true
   become_method: sudo
-  command: "systemd-analyze"
+  ansible.builtin.command: "systemd-analyze"
   register: systemd_analyze_cmd
   when:
     - reboot_limit_enable_systemd_analyze|bool
@@ -223,7 +222,7 @@
   become: true
   become_method: sudo
   tags: ["run_tests"]
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ reboot_limit_analyze_file }}"
     line: "{{ systemd_analyze_cmd.stdout }}"
     create: true

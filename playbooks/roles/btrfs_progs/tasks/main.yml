@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -10,35 +10,35 @@
       skip: true
   tags: vars
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["data_partition"]
 
 - name: Install build-deps for btrfs_progs as per each Linux distribution
-  include_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
   when:
     - btrfs_progs_build|bool
 
 - name: Assume we won't build btrfs_progs first
-  set_fact:
+  ansible.builtin.set_fact:
     build_btrfs_progs_now: false
   tags: vars
 
 - name: Annotate when we are building btrfs_progs
-  set_fact:
+  ansible.builtin.set_fact:
     build_btrfs_progs_now: true
   when:
     - btrfs_progs_build|bool
   tags: vars
 
 - name: Set bindir for debian systems
-  set_fact:
+  ansible.builtin.set_fact:
     bindir: "/usr/bin"
   when: ansible_facts['os_family']|lower == 'debian'
   tags: vars
 
 - name: Set bindir for non-debian systems
-  set_fact:
+  ansible.builtin.set_fact:
     bindir: "/usr/sbin"
   when: ansible_facts['os_family']|lower != 'debian'
   tags: vars
@@ -46,7 +46,7 @@
 - name: git clone btrfs_progs
   environment:
     GIT_SSL_NO_VERIFY: true
-  git:
+  ansible.builtin.git:
     repo: "{{ btrfs_progs_git }}"
     dest: "{{ btrfs_progs_data }}"
     version: "{{ btrfs_progs_version }}"
@@ -54,13 +54,13 @@
     - build_btrfs_progs_now|bool
 
 - name: Run make clean-all for btrfs_progs
-  make:
+  community.general.make:
     chdir: "{{ btrfs_progs_data }}"
     target: clean-all
   ignore_errors: true
 
 - name: Run autogen.sh for btrfs_progs
-  command: "./autogen.sh"
+  ansible.builtin.command: "./autogen.sh"
   tags: ["btrfs_progs", "configure"]
   args:
     chdir: "{{ btrfs_progs_data }}"
@@ -68,7 +68,7 @@
     - build_btrfs_progs_now|bool
 
 - name: Run configure for btrfs_progs
-  command: "./configure --disable-documentation --enable-experimental --bindir={{ bindir }} --prefix=/usr --exec-prefix=/usr --disable-python"
+  ansible.builtin.command: "./configure --disable-documentation --enable-experimental --bindir={{ bindir }} --prefix=/usr --exec-prefix=/usr --disable-python"
   tags: ["btrfs_progs", "configure"]
   args:
     chdir: "{{ btrfs_progs_data }}"
@@ -76,14 +76,14 @@
     - build_btrfs_progs_now|bool
 
 - name: Get nproc
-  command: "{{ num_jobs }}"
+  ansible.builtin.command: "{{ num_jobs }}"
   tags: ["btrfs_progs", "configure"]
   register: nproc
   when:
     - build_btrfs_progs_now|bool
 
 - name: Build btrfs_progs
-  make:
+  community.general.make:
     chdir: "{{ btrfs_progs_data }}"
     jobs: "{{ nproc.stdout }}"
   tags: ["btrfs_progs", "build"]
@@ -94,7 +94,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{ make }} install"
+  ansible.builtin.command: "{{ make }} install"
   args:
     chdir: "{{ btrfs_progs_data }}"
   tags: ["btrfs_progs", "install"]

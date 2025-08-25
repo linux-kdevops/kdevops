@@ -1,13 +1,13 @@
 ---
 - name: Set generic SUSE specific distro facts
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'
     is_leap: '{{ "Leap" in ansible_distribution }}'
     is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
   tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: '{{ ansible_distribution_major_version == "10" }}'
     is_sle11: '{{ ansible_distribution_major_version == "11" }}'
     is_sle12: '{{ ansible_distribution_major_version == "12" }}'
@@ -25,7 +25,7 @@
   tags: ["vars"]
 
 - name: Set SLE specific version labels to make checks easier when not SLE
-  set_fact:
+  ansible.builtin.set_fact:
     is_sle10: false
     is_sle11: false
     is_sle12: false
@@ -43,12 +43,12 @@
   tags: ["vars"]
 
 - name: The default is to assume we can add repos for a release
-  set_fact:
+  ansible.builtin.set_fact:
     repos_can_be_added: true
   tags: vars
 
 - name: Disable things which require a repo to be set but that cannot be done
-  set_fact:
+  ansible.builtin.set_fact:
     repos_can_be_added: false
   when:
     - is_sle|bool
@@ -56,12 +56,12 @@
   tags: ["vars"]
 
 - name: The default is to assume we are not on sle11 or sle10
-  set_fact:
+  ansible.builtin.set_fact:
     sle10_or_11: false
   tags: snmpd
 
 - name: Are we on SLE11 or SLE10?
-  set_fact:
+  ansible.builtin.set_fact:
     sle10_or_11: true
   when:
     - is_sle|bool
@@ -71,7 +71,7 @@
 - name: Add extra addon repositories when enabled
   become: true
   become_method: sudo
-  script:
+  ansible.builtin.script:
     cmd: "{{ role_path }}/scripts/add-suse-repo-if-not-found.sh {{ devconfig_kotd_repo }} {{ devconfig_kotd_repo_name }}"
   when:
     - devconfig_enable_kotd|bool
@@ -82,7 +82,7 @@
 - name: Install kotd
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - kernel-default
     update_cache: true
@@ -99,4 +99,4 @@
   tags: ["kotd"]
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:

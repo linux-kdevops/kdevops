@@ -1,14 +1,14 @@
 ---
 # Install distribution-specific dependencies
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
+  ansible.builtin.include_tasks: install-deps/main.yml
   tags: ["setup", "deps"]
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["setup", "data_partition"]
 
-- include_role:
+- ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool
@@ -34,7 +34,7 @@
 - name: Check if mmtests fixes directory exists
   tags: ["setup"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/workflows/mmtests/fixes/"
   register: fixes_dir
   run_once: false
@@ -42,7 +42,7 @@
 - name: Find mmtests patches in fixes directory
   tags: ["setup"]
   delegate_to: localhost
-  find:
+  ansible.builtin.find:
     paths: "{{ topdir_path }}/workflows/mmtests/fixes/"
     patterns: "*.patch"
   register: mmtests_patches
@@ -53,7 +53,7 @@
   tags: ["setup"]
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "/tmp/{{ item.path | basename }}"
     mode: "0644"
@@ -66,7 +66,7 @@
   tags: ["setup"]
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     cd {{ mmtests_data_dir }}
     git am /tmp/{{ item.path | basename }}
   with_items: "{{ mmtests_patches.files }}"
@@ -78,7 +78,7 @@
 
 - name: Report patch application results
   tags: ["setup"]
-  debug:
+  ansible.builtin.debug:
     msg: |
       Applied {{ mmtests_patches.files | length | default(0) }} patches from fixes directory:
       {% for patch in mmtests_patches.files | default([]) %}
@@ -100,7 +100,7 @@
     mode: "0644"
 
 - name: Fail if configured memory percentages overcommit available memory
-  fail:
+  ansible.builtin.fail:
     msg: >-
       Overcommit configuration: anonymous ({{ mmtests_anonymous_memory_percent }}%) +
       file-backed ({{ mmtests_file_memory_percent }}%) exceeds 100% of available memory.
@@ -130,7 +130,7 @@
 
 - name: Show kernel version
   tags: ["setup", "run_tests"]
-  debug:
+  ansible.builtin.debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Build mmtests
@@ -146,7 +146,7 @@
   register: mmtests_build_result
 
 - name: Fail if mmtests build failed
-  fail:
+  ansible.builtin.fail:
     msg: >
       mmtests build failed on {{ inventory_hostname }}.
       Exit code: {{ mmtests_build_result.rc }}
@@ -159,7 +159,7 @@
   tags: ["run_tests"]
   become: true
   become_method: sudo
-  command: findmnt --noheadings --output TARGET --source {{ mmtests_device }}
+  ansible.builtin.command: findmnt --noheadings --output TARGET --source {{ mmtests_device }}
   register: mountpoint_stat
   failed_when: false
   changed_when: false
@@ -169,7 +169,7 @@
   tags: ["run_tests"]
   become: true
   become_method: sudo
-  command: umount {{ mmtests_device }}
+  ansible.builtin.command: umount {{ mmtests_device }}
   when:
     - mmtests_requires_mkfs_device | bool
     - mountpoint_stat.stdout != ""
@@ -214,7 +214,7 @@
 
 - name: Show kernel version
   tags: ["run_tests"]
-  debug:
+  ansible.builtin.debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
 - name: Run mmtests in background
@@ -259,7 +259,7 @@
 - name: Archive mmtests results directory on remote host
   become: true
   become_method: sudo
-  command: >
+  ansible.builtin.command: >
     tar czf {{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz -C {{ mmtests_results_dir }} .
   args:
     creates: "{{ mmtests_results_dir_basename }}/mmtests-results-{{ inventory_hostname }}.tar.gz"

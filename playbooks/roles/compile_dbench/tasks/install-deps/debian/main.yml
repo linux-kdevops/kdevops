@@ -2,18 +2,18 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   tags: linux
 
 - name: Force dbench compilation on Debian
-  set_fact:
+  ansible.builtin.set_fact:
     compile_dbench: false
 
 - name: Install dbench build dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - git
       - automake

@@ -2,7 +2,7 @@
 - name: Install build dependencies for ndctl
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   vars:

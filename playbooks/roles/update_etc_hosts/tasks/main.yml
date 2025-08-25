@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -11,7 +11,7 @@
   tags: vars
 
 - name: Wait for target nodes to become reachable
-  wait_for_connection:
+  ansible.builtin.wait_for_connection:
 
 - name: Gather network facts
   ansible.builtin.setup:
@@ -19,27 +19,27 @@
       - "network"
 
 - name: Build network address
-  set_fact:
+  ansible.builtin.set_fact:
     private_network: "{{ terraform_private_net_prefix }}/{{ terraform_private_net_mask }}"
   when:
     - terraform_private_net_enabled
 
 - name: Build list of hosts
-  set_fact:
+  ansible.builtin.set_fact:
     ueh_hosts: "{{ ansible_play_hosts_all | difference([inventory_hostname]) }}"
 
-- debug:
+- ansible.builtin.debug:
     var: ueh_hosts
 
 - name: Stat /etc/cloud/cloud.cfg.d
-  stat:
+  ansible.builtin.stat:
     path: /etc/cloud/cloud.cfg.d
   register: cloud_init
 
 - name: Disable cloud-init hosts management
   become: true
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/cloud/cloud.cfg.d/99-kdevops-manage-net-disable
     line: "manage_etc_hosts: false"
     create: true
@@ -49,7 +49,7 @@
 - name: Add IP address of all hosts to all hosts
   become: true
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/hosts
     regexp: ".*{{ item }}$"
     line: "{{ hostvars[item].ansible_all_ipv4_addresses | ipaddr(private_network) | first }} {{ item }}"
@@ -61,7 +61,7 @@
 - name: Add IP address of all hosts to all hosts
   become: true
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/hosts
     regexp: ".*{{ item }}$"
     line: "{{ hostvars[item].ansible_all_ipv4_addresses | first }} {{item}}"
@@ -73,7 +73,7 @@
 - name: Fix up hostname on Debian guestfs hosts
   become: true
   become_method: sudo
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: "^(127\\.0\\.1\\.1)(\\s+)unassigned-hostname\\.unassigned-domain\\s+({{ ansible_hostname }})$"
     backrefs: true

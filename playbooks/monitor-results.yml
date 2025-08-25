@@ -5,7 +5,7 @@
   become_method: sudo
   tasks:
     - name: Import optional extra_args file
-      include_vars: "{{ item }}"
+      ansible.builtin.include_vars: "{{ item }}"
       ignore_errors: true
       with_first_found:
         - files:
@@ -16,7 +16,7 @@
       tags: vars
 
     - name: Collect monitoring results without stopping monitoring
-      include_role:
+      ansible.builtin.include_role:
         name: monitoring
         tasks_from: monitor_collect_only
       when:

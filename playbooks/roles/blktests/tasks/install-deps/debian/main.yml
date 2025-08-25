@@ -2,14 +2,14 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   tags: linux
 
 - name: Install nvme tools
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - nvme-cli
     update_cache: true
@@ -17,7 +17,7 @@
 - name: Install blktests build dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - bison
       - flex

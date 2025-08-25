@@ -14,7 +14,7 @@
 - name: Configure /etc/krb5.conf
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: krb5.conf.j2
     dest: /etc/krb5.conf
     owner: root

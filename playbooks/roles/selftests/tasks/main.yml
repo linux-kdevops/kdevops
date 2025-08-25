@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -15,12 +15,11 @@
 # the target node and the localhost because we first need to build
 # the target selftests for the nodes and then actually use them.
 - name: Install dependencies
-  include_tasks: install-deps/main.yml
-
+  ansible.builtin.include_tasks: install-deps/main.yml
 - name: Install dependencies to build Linux selftests on host
   tags: ["deps"]
   run_once: true
-  import_tasks: install-deps/main.yml
+  ansible.builtin.import_tasks: install-deps/main.yml
   delegate_to: localhost
   when:
     - bootlinux_9p|bool
@@ -30,7 +29,7 @@
     is_selftest_xarray: "{{ 'xarray' in ansible_host }}"
     is_selftest_maple: "{{ 'maple' in ansible_host }}"
     is_selftest_vma: "{{ 'vma' in ansible_host }}"
-  set_fact:
+  ansible.builtin.set_fact:
     selftest_xarray: "{{ is_selftest_xarray }}"
     selftest_maple: "{{ is_selftest_maple }}"
     selftest_vma: "{{ is_selftest_vma }}"
@@ -38,17 +37,17 @@
 
 - name: Check if this node is in charge of userspace tests
   vars:
-  set_fact:
+  ansible.builtin.set_fact:
     selftest_userspace: "{{ selftest_xarray or selftest_maple or selftest_vma }}"
   tags: ["vars"]
 
 - name: Check if this node is in charge of running kernel tests
-  set_fact:
+  ansible.builtin.set_fact:
     selftest_kernelspace: "{{ not selftest_userspace }}"
   tags: ["vars"]
 
 - name: Debug kernelspace / userspace tests
-  debug:
+  ansible.builtin.debug:
     msg: |
       Host: {{ ansible_host }}
       - selftest_xarray: {{ selftest_xarray }}
@@ -59,19 +58,19 @@
   tags: ["run_tests"]
 
 - name: Fail if both userspace and kernelspace are True
-  fail:
+  ansible.builtin.fail:
     msg: "Both selftest_userspace and selftest_kernelspace are True for host {{ ansible_host }}. This is not expected."
   when: selftest_userspace and selftest_kernelspace
   tags: ["vars"]
 
 - name: Fail if both userspace and kernelspace are False
-  fail:
+  ansible.builtin.fail:
     msg: "Both selftest_userspace and selftest_kernelspace are False for host {{ ansible_host }}. This is not expected."
   when: not selftest_userspace and not selftest_kernelspace
   tags: ["vars"]
 
 - name: Fail if selftest_kernelspace is true on incorrect host
-  fail:
+  ansible.builtin.fail:
     msg: "Both selftest_userspace and selftest_kernelspace are True for host {{ ansible_host }}. This is not expected."
   when: (selftest_kernelspace and (selftest_xarray or selftest_maple or selftest_vma))
   tags: ["vars"]
@@ -81,7 +80,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "/lib/udev/rules.d/50-firmware.rules"
     state: absent
   when:
@@ -92,24 +91,24 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "/lib/firmware"
     state: directory
     mode: "0755"
   when:
     - selftests_section_firmware|bool
 
-- include_role:
+- ansible.builtin.include_role:
     name: create_data_partition
   tags: ["data_partition"]
 
 - name: Get nproc
-  command: "{{ num_jobs }}"
+  ansible.builtin.command: "{{ num_jobs }}"
   tags: ["selftests", "build"]
   register: nproc
 
 - name: Get nproc on host
-  command: "{{ num_jobs }}"
+  ansible.builtin.command: "{{ num_jobs }}"
   tags: ["selftests", "build"]
   register: nproc_host
   when:
@@ -119,7 +118,7 @@
   vars:
     all_tests: "{{ play_hosts | join(' ') | regex_replace('selftests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_')
       }}"
-  set_fact:
+  ansible.builtin.set_fact:
     target_selftest: "{{ ansible_host | regex_replace('selftests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
     all_selftest_targets: "{{ all_tests | regex_replace('maple') | regex_replace('xarray') }}"
   tags: ["selftests", "vars"]
@@ -132,7 +131,7 @@
 # 2) installing built selftests
 - name: Build selftests
   tags: ["selftests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ selftests_data }}"
     jobs: "{{ nproc.stdout }}"
     params:
@@ -144,7 +143,7 @@
 
 - name: Build selftests
   tags: ["selftests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ selftests_data }}"
     jobs: "{{ nproc.stdout }}"
     params:
@@ -156,7 +155,7 @@
 
 - name: Build radix tree tools/testing/radix-tree
   tags: ["selftests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
     jobs: "{{ nproc.stdout }}"
   when:
@@ -171,7 +170,7 @@
 # met.. so you should ensure that build-deps are met before adding a new target
 - name: Build selftests on host on {{ selftests_data_9p }}
   tags: ["selftests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ selftests_data_9p }}"
     jobs: "{{ nproc_host.stdout }}"
     params:
@@ -185,7 +184,7 @@
 
 - name: Build radix tree tools/testing/radix-tree on host
   tags: ["selftests", "build"]
-  command: "make -j{{ nproc.stdout }}"
+  ansible.builtin.command: "make -j{{ nproc.stdout }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}/tools/testing/radix-tree"
   delegate_to: localhost
@@ -196,7 +195,7 @@
 
 - name: Build VMA tools/testing/vma
   tags: ["selftests", "build"]
-  make:
+  community.general.make:
     chdir: "{{ target_linux_dir_path }}/tools/testing/vma"
     jobs: "{{ nproc.stdout }}"
   when:
@@ -205,7 +204,7 @@
 
 - name: Build VMA tools/testing/vma on host
   tags: ["selftests", "build"]
-  command: "make -j{{ nproc.stdout }}"
+  ansible.builtin.command: "make -j{{ nproc.stdout }}"
   args:
     chdir: "{{ bootlinux_9p_host_path }}/tools/testing/vma"
   delegate_to: localhost
@@ -222,7 +221,7 @@
   become: true
   become_method: sudo
   become_flags: "su - -c"
-  make:
+  community.general.make:
     chdir: "{{ selftests_data }}"
     jobs: "{{ nproc.stdout }}"
     target: install
@@ -236,29 +235,29 @@
   tags: ["selftests", "run_tests", "reboot"]
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
     post_reboot_delay: 10
   when:
     - not selftests_skip_reboot|bool
 
 - name: Set the path to selftests workflow
-  set_fact:
+  ansible.builtin.set_fact:
     selftests_workflow_target: "../workflows/selftests/"
   tags: ["selftests", "run_tests", "copy_results", "prior_run", "print_results", "augment_expunge_list"]
 
 - name: Get used target kernel version
   tags: ["selftests", "vars", "copy_results", "augment_expunge_list"]
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
   register: uname_cmd
 
 - name: Store last kernel variable
-  set_fact:
+  ansible.builtin.set_fact:
     last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   tags: ["selftests", "vars", "copy_results", "augment_expunge_list"]
   run_once: true
 
 - name: Set the path where we collect our selftests results
-  set_fact:
+  ansible.builtin.set_fact:
     selftests_results_full_path: "{{ topdir_path }}/workflows/selftests/results/"
     selftests_workflow_dir: "../workflows/selftests"
     selftests_results_target: "../workflows/selftests/results/last-run/{{ last_kernel }}"
@@ -266,14 +265,13 @@
 
 - name: Print uname for each host
   tags: ["selftests", "run_tests"]
-  debug: var=ansible_kernel
-
+  ansible.builtin.debug: var=ansible_kernel
 - name: Load configfs module
   tags: ["selftests", "run_tests", "configfs"]
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "modprobe configfs"
+  ansible.builtin.command: "modprobe configfs"
   when:
     - kdevops_run_selftests|bool
 
@@ -281,13 +279,13 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     state: absent
     path: "{{ selftests_data_target }}/results/"
   tags: ["selftests", "run_tests", "clean_results"]
 
 - name: Hint to watchdog tests are about to kick off
-  file: path="{{ selftests_workflow_target }}/.begin" state=touch
+  ansible.builtin.file: path="{{ selftests_workflow_target }}/.begin" state=touch
   delegate_to: localhost
   tags: ["selftests", "run_tests"]
   when:
@@ -298,8 +296,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: sysctl kernel.printk="8 8 1 7"
-
+  ansible.builtin.command: sysctl kernel.printk="8 8 1 7"
 - name: Stop selftests if we're debbugging
   ansible.builtin.meta: end_play
   tags: ["selftests", "run_tests", "vars"]
@@ -309,12 +306,12 @@
 - name: Set variable we'd use for an override for a timeout for this test
   vars:
     selftest_name: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') }}"
-  set_fact:
+  ansible.builtin.set_fact:
     selftest_timeout_variable: "{{ 'selftests_section_' + selftest_name + '_timeout' }}"
   tags: ["vars"]
 
 - name: Check if selftest timeout variable exists and is not empty
-  set_fact:
+  ansible.builtin.set_fact:
     selftest_timeout_argument: "{{ '--override-timeout ' + (lookup('vars', selftest_timeout_variable, default='') | string) }}"
   when:
     - selftest_kernelspace|bool
@@ -322,7 +319,7 @@
   tags: ["vars"]
 
 - name: Log timeout argument used
-  debug:
+  ansible.builtin.debug:
     msg: "{{ ansible_host }} could use {{ selftest_timeout_variable }} : using timeout argument {{ selftest_timeout_argument }}"
   tags: ["vars"]
   when:
@@ -333,7 +330,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{ command_to_run }}"
+  ansible.builtin.command: "{{ command_to_run }}"
   args:
     chdir: "{{ target_linux_dir_path }}/tools/testing/radix-tree"
   register: selftests_module_out
@@ -357,7 +354,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{ command_to_run }}"
+  ansible.builtin.command: "{{ command_to_run }}"
   args:
     chdir: "{{ test_target_dir }}"
   register: selftests_userspace_out
@@ -387,7 +384,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "./run_kselftest.sh -s {{ selftest_timeout_argument }}"
+  ansible.builtin.command: "./run_kselftest.sh -s {{ selftest_timeout_argument }}"
   args:
     chdir: "{{ selftests_workdir }}"
   register: selftests_out
@@ -400,7 +397,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ selftests_workdir }}"
     state: directory
     mode: "0755"
@@ -408,7 +405,7 @@
     group: root
 
 - name: Remove watchdog hint that tests have started
-  file: path="{{ selftests_workflow_target }}/.begin" state=absent
+  ansible.builtin.file: path="{{ selftests_workflow_target }}/.begin" state=absent
   delegate_to: localhost
   tags: ["selftests", "run_tests"]
   when:
@@ -416,7 +413,7 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  file: path="{{ selftests_results_target }}/{{ item }}" state=absent
+  ansible.builtin.file: path="{{ selftests_results_target }}/{{ item }}" state=absent
   delegate_to: localhost
   with_items:
     - "last-run"
@@ -426,13 +423,13 @@
   tags: ["selftests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  file: path="{{ selftests_results_target }}/" state=directory
+  ansible.builtin.file: path="{{ selftests_results_target }}/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["selftests", "copy_results", "clean_local_results"]
 
 - name: Document used target kernel version
-  shell: echo {{ last_kernel }} > {{ selftests_results_target }}/last-kernel.txt
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ selftests_results_target }}/last-kernel.txt
   delegate_to: localhost
   tags: ["selftests", "copy_results", "augment_expunge_list"]
   run_once: true
@@ -441,14 +438,14 @@
   tags: ["selftests", "copy_results"]
   become: true
   become_method: sudo
-  command: journalctl -k
+  ansible.builtin.command: journalctl -k
   register: journal_cmd
 
 - name: Save kernel logs to local file per node
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ journal_cmd.stdout }}"
     dest: "{{ selftests_workdir }}/dmesg.log"
   tags: ["selftests", "copy_results"]
@@ -458,7 +455,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ selftests_out.stdout_lines|join('\n') }}"
     dest: "{{ selftests_workdir}}/tap.log"
   when:
@@ -470,7 +467,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ selftests_userspace_out.stdout_lines|join('\n') }}"
     dest: "{{ selftests_workdir}}/userspace.log"
   when:
@@ -481,7 +478,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: "{{ selftests_module_out.stdout_lines|join('\n') }}"
     dest: "{{ selftests_workdir}}/module.log"
   when:
@@ -493,7 +490,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  find:
+  ansible.builtin.find:
     paths: "{{ selftests_workdir }}"
     recurse: true
     patterns:
@@ -512,7 +509,7 @@
   become_method: sudo
   vars:
     item_with_target: "{{ target_selftest }}.{{ item.path | basename }}"
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.path }}"
     dest: "{{ selftests_results_target }}/{{ item_with_target }}"
     flat: true
@@ -525,7 +522,7 @@
 - name: Find all *.tap.log files in the selftests_results_target directory
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  find:
+  ansible.builtin.find:
     paths: "{{ selftests_results_target }}"
     patterns: "*.tap.log"
   register: tap_log_files
@@ -533,7 +530,7 @@
 - name: Read each tap.log file
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ item.path }}"
   with_items: "{{ tap_log_files.files }}"
   register: tap_log_contents
@@ -543,13 +540,13 @@
 - name: Initialize tap_failures as an empty list
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     tap_failures: []
 
 - name: Read each tap.log file
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ item.path }}"
   with_items: "{{ tap_log_files.files }}"
   register: tap_log_contents
@@ -559,7 +556,7 @@
 - name: Check for TAP failures in the content of each tap.log
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     tap_failures: "{{ tap_failures + [{'file': item.item.path, 'content': item.content | b64decode | string}] }}"
   when: "'not ok' in (item.content | b64decode | string)"
   with_items: "{{ tap_log_contents.results }}"
@@ -569,7 +566,7 @@
 - name: Fail if TAP failures are found
   tags: ["selftests", "check_results"]
   delegate_to: localhost
-  fail:
+  ansible.builtin.fail:
     msg: |
       Test failures detected in the following TAP logs:
       {% for failure in tap_failures %}

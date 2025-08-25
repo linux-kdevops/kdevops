@@ -11,25 +11,25 @@
         - "vars"
 
 - name: Determine which fsprogs package is needed for "{{ nfsd_export_fstype }}"
-  set_fact:
+  ansible.builtin.set_fact:
     fsprogs: "{{ fstype_userspace_progs[nfsd_export_fstype] | default() }}"
 
 - name: Add {{ fsprogs }} to the nfsd packages list
-  set_fact:
+  ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + [fsprogs] }}"
   when:
     - fsprogs is defined
     - fsprogs | length > 0
 
 - name: Add gssproxy to the nfsd packages list
-  set_fact:
+  ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + ['gssproxy'] }}"
   when: kdevops_krb5_enable|bool
 
 - name: Install nfsd dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name: "{{ nfsd_packages }}"
     state: present
     update_cache: true

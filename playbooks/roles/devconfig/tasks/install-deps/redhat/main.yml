@@ -13,7 +13,7 @@
     - rhel_activation_key
 
 - name: Check whether custom repofile exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ devconfig_custom_yum_repofile }}"
   register: custom_repofile
   delegate_to: localhost
@@ -22,7 +22,7 @@
 - name: Add custom yum repo
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     src: "{{ devconfig_custom_yum_repofile }}"
     dest: "/etc/yum.repos.d/{{ devconfig_custom_yum_repofile | basename }}"
     owner: root
@@ -53,7 +53,7 @@
 - name: Refresh cache and upgrade all present packages
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "*"
     state: latest
@@ -67,7 +67,7 @@
 - name: Reboot system to make the new kernel and modules take effect
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
   when:
     - devconfig_try_upgrade|bool
 
@@ -78,7 +78,7 @@
     - ansible_distribution != "Fedora"
 
 - name: Build install package list
-  set_fact:
+  ansible.builtin.set_fact:
     packages:
       - bison
       - flex
@@ -108,21 +108,21 @@
     - devconfig_try_install_kdevtools|bool
 
 - name: Add btrfs-progs to install package list
-  set_fact:
+  ansible.builtin.set_fact:
     packages: "{{ packages + [ 'btrfs-progs' ] }}"
   when:
     - devconfig_try_install_kdevtools|bool
     - ansible_distribution == 'Fedora'
 
 - name: Add GNU screen to install package list
-  set_fact:
+  ansible.builtin.set_fact:
     packages: "{{ packages + [ 'screen' ] }}"
   when:
     - devconfig_try_install_kdevtools|bool
     - ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Add Tmux to install package list
-  set_fact:
+  ansible.builtin.set_fact:
     packages: "{{ packages + [ 'tmux' ] }}"
   when:
     - devconfig_try_install_kdevtools|bool
@@ -131,7 +131,7 @@
 - name: Install packages we typically care about
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   retries: 3
@@ -144,7 +144,7 @@
 - name: Set up snmp
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: snmpd.conf
     dest: /etc/snmp/snmpd.conf
   when:
@@ -154,7 +154,7 @@
 - name: Enable snmpd service
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: snmpd
     enabled: true
     masked: false
@@ -165,7 +165,7 @@
 - name: Start snmpd service
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: snmpd
     state: restarted
   tags: snmpd
@@ -175,7 +175,7 @@
 - name: Install systemd-journal-remote
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "systemd-journal-remote"
   retries: 3
@@ -190,7 +190,7 @@
 - name: Install systemd-timesyncd
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: systemd-udev
   retries: 3

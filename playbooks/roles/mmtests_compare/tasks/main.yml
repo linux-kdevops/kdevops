@@ -3,7 +3,7 @@
   delegate_to: localhost
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - perl
       - perl-doc
@@ -25,7 +25,7 @@
   delegate_to: localhost
   become: true
   become_method: sudo
-  cpanm:
+  community.general.cpanm:
     name: "{{ item }}"
   with_items:
     - File::Temp
@@ -38,7 +38,7 @@
   delegate_to: localhost
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - perl
       - perl-File-Which
@@ -62,7 +62,7 @@
   delegate_to: localhost
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     name:
       - perl
       - perl-File-Which
@@ -106,7 +106,7 @@
 
 - name: Check if mmtests fixes directory exists
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ topdir_path }}/workflows/mmtests/fixes/"
   register: fixes_dir
   run_once: true
@@ -114,7 +114,7 @@
 
 - name: Find mmtests patches in fixes directory
   delegate_to: localhost
-  find:
+  ansible.builtin.find:
     paths: "{{ topdir_path }}/workflows/mmtests/fixes/"
     patterns: "*.patch"
   register: mmtests_patches
@@ -124,7 +124,7 @@
 
 - name: Apply mmtests patches if found
   delegate_to: localhost
-  ansible.builtin.patch:
+  ansible.posix.patch:
     src: "{{ item.path }}"
     basedir: "{{ topdir_path }}/tmp/mmtests"
     strip: 1
@@ -140,13 +140,13 @@
 - name: Get kernel versions from nodes
   block:
     - name: Get baseline kernel version
-      command: uname -r
+      ansible.builtin.command: uname -r
       register: baseline_kernel_version
       delegate_to: "{{ groups['baseline'][0] }}"
       run_once: true
 
     - name: Get dev kernel version
-      command: uname -r
+      ansible.builtin.command: uname -r
       register: dev_kernel_version
       delegate_to: "{{ groups['dev'][0] }}"
       run_once: true
@@ -156,7 +156,7 @@
   tags: ["compare"]
 
 - name: Set node information facts
-  set_fact:
+  ansible.builtin.set_fact:
     baseline_hostname: "{{ groups['baseline'][0] }}"
     baseline_kernel: "{{ baseline_kernel_version.stdout }}"
     dev_hostname: "{{ groups['dev'][0] }}"
@@ -179,7 +179,7 @@
   tags: ["compare"]
 
 - name: Archive baseline results on remote
-  archive:
+  community.general.archive:
     path: "{{ mmtests_data_dir }}/work/log/{{ baseline_hostname }}-{{ baseline_kernel }}"
     dest: "/tmp/baseline-mmtests-results.tar.gz"
     format: gz
@@ -188,7 +188,7 @@
   tags: ["compare"]
 
 - name: Archive dev results on remote
-  archive:
+  community.general.archive:
     path: "{{ mmtests_data_dir }}/work/log/{{ dev_hostname }}-{{ dev_kernel }}"
     dest: "/tmp/dev-mmtests-results.tar.gz"
     format: gz
@@ -198,7 +198,7 @@
   tags: ["compare"]
 
 - name: Fetch baseline results to localhost
-  fetch:
+  ansible.builtin.fetch:
     src: "/tmp/baseline-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/"
     flat: true
@@ -207,7 +207,7 @@
   tags: ["compare"]
 
 - name: Fetch dev results to localhost
-  fetch:
+  ansible.builtin.fetch:
     src: "/tmp/dev-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/"
     flat: true
@@ -218,7 +218,7 @@
 
 - name: Extract baseline results locally
   delegate_to: localhost
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ topdir_path }}/tmp/baseline-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
     remote_src: true
@@ -227,7 +227,7 @@
 
 - name: Extract dev results locally
   delegate_to: localhost
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ topdir_path }}/tmp/dev-mmtests-results.tar.gz"
     dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
     remote_src: true
@@ -266,7 +266,7 @@
 
 - name: Parse comparison data for template
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     comparison_metrics: []
   run_once: true
   when: kdevops_baseline_and_dev|bool
@@ -276,7 +276,7 @@
   delegate_to: localhost
   block:
     - name: Check for available iterations data
-      find:
+      ansible.builtin.find:
         paths: "{{ topdir_path }}/tmp/mmtests/work/log/{{ item }}/{{ mmtests_test_type }}"
         patterns: "*.gz"
         recurse: true
@@ -311,7 +311,7 @@
 
 - name: Find generated graph files
   delegate_to: localhost
-  find:
+  ansible.builtin.find:
     paths: "{{ topdir_path }}/workflows/mmtests/results/compare"
     patterns: "*.png"
   register: graph_files
@@ -320,7 +320,7 @@
 
 - name: Read graph files for embedding
   delegate_to: localhost
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ item.path }}"
   register: graph_data
   loop: "{{ graph_files.files[:10] }}" # Limit to first 10 graphs
@@ -330,7 +330,7 @@
 
 - name: Prepare graph data for template
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     performance_graphs: []
   run_once: true
   when: graph_files.files is not defined or graph_files.files | length == 0
@@ -338,7 +338,7 @@
 
 - name: Build graph data list
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     performance_graphs: "{{ performance_graphs | default([]) + [{'embedded_data': item.content, 'title': item.item.path | basename | regex_replace('.png', '')}] }}"
   loop: "{{ graph_data.results | default([]) }}"
   run_once: true
@@ -349,7 +349,7 @@
 
 - name: Generate benchmark description
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     benchmark_description: |
       {% if mmtests_test_type == 'thpcompact' %}
       <p><strong>thpcompact</strong> tests memory management performance, specifically:</p>
@@ -386,7 +386,7 @@
 
 - name: Generate comparison report from template
   delegate_to: localhost
-  template:
+  ansible.builtin.template:
     src: comparison_report.html.j2
     dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_report.html"
     mode: "0644"
@@ -411,7 +411,7 @@
 
 - name: Save comparison outputs
   delegate_to: localhost
-  copy:
+  ansible.builtin.copy:
     content: "{{ item.content }}"
     dest: "{{ item.dest }}"
     mode: "0644"
@@ -438,7 +438,7 @@
   tags: ["compare"]
 
 - name: Display comparison report location
-  debug:
+  ansible.builtin.debug:
     msg: |
       🎯 mmtests Comparison Reports Generated:
 
@@ -460,7 +460,7 @@
   tags: ["compare"]
 
 - name: Clean up temporary archives on remote nodes
-  file:
+  ansible.builtin.file:
     path: "/tmp/{{ item }}-mmtests-results.tar.gz"
     state: absent
   delegate_to: "{{ groups[item][0] }}"

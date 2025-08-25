@@ -8,7 +8,7 @@
 - name: Install packages we care about
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   retries: 3
@@ -56,7 +56,7 @@
 - name: Install btrfs-progs
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     update_cache: true
     name: "{{ packages }}"
   retries: 3
@@ -105,6 +105,6 @@
 - name: Remove packages that mess with initramfs
   become: true
   become_method: sudo
-  yum:
+  ansible.builtin.dnf:
     state: absent
     name: dracut-config-generic

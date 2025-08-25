@@ -2,7 +2,7 @@
 - name: Add KOTD repository
   become: true
   become_method: sudo
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ devconfig_kotd_repo }}"
     dest: /etc/yum.repos.d
   when:
@@ -14,7 +14,7 @@
   become_method: sudo
   vars:
     repo_file: "{{ devconfig_kotd_repo | basename }}"
-  shell: grep -E '\[.*\]' /etc/yum.repos.d/{{ repo_file }} | tr -d '[]'
+  ansible.builtin.shell: grep -E '\[.*\]' /etc/yum.repos.d/{{ repo_file }} | tr -d '[]'
   register: result
   changed_when: false
   when:
@@ -26,7 +26,7 @@
   become_method: sudo
   vars:
     repo_id: "{{ result.stdout }}"
-  shell: dnf -q --repo={{ repo_id }} repoquery --qf "%{version}-%{release}" kernel.x86_64
+  ansible.builtin.shell: dnf -q --repo={{ repo_id }} repoquery --qf "%{version}-%{release}" kernel.x86_64
   register: result
   changed_when: false
   when:
@@ -52,6 +52,6 @@
 - name: Reboot system to make the new kernel and modules take effect
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
   when:
     - devconfig_try_upgrade|bool

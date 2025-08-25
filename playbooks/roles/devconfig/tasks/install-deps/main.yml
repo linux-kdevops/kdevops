@@ -1,13 +1,13 @@
 ---
 - name: Gather os_family
-  setup:
+  ansible.builtin.setup:
     gather_subset:
       - "os_family"
   when: ansible_os_family is not defined
   tags: vars_simple
 
 - name: Import optional user secret specific variables
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -16,7 +16,7 @@
   tags: vars
 
 - name: Import optional distribution specific variables
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:

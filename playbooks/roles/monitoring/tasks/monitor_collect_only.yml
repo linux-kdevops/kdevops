@@ -5,7 +5,7 @@
 - name: Check if monitoring data exists (without stopping monitoring)
   become: true
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: /root/monitoring/folio_migration_stats.txt
   register: folio_migration_data_file
   when:
@@ -17,7 +17,7 @@
 - name: Create snapshot of monitoring data
   become: true
   become_method: sudo
-  shell: |
+  ansible.builtin.shell: |
     # Create a snapshot copy to avoid interfering with ongoing monitoring
     cp /root/monitoring/folio_migration_stats.txt /root/monitoring/folio_migration_stats_snapshot.txt
   args:
@@ -31,7 +31,7 @@
 # Plot generation happens on localhost, not on target hosts
 
 - name: Debug monitoring collection status
-  debug:
+  ansible.builtin.debug:
     msg: |
       Collecting monitoring data (without stopping monitoring)
       monitor_developmental_stats: {{ monitor_developmental_stats|default(false) }}
@@ -40,11 +40,11 @@
       Data file exists: {{ folio_migration_data_file.stat.exists|default(false) }}
 
 - name: Set monitoring results path
-  set_fact:
+  ansible.builtin.set_fact:
     monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
 
 - name: Create local monitoring results directory
-  file:
+  ansible.builtin.file:
   delegate_to: localhost
   become: false
   run_once: true
@@ -55,7 +55,7 @@
 - name: Check if snapshot was created
   become: true
   become_method: sudo
-  stat:
+  ansible.builtin.stat:
     path: /root/monitoring/folio_migration_stats_snapshot.txt
   register: folio_migration_snapshot_file
   when:
@@ -65,7 +65,7 @@
 - name: Copy folio migration stats snapshot to localhost
   become: true
   become_method: sudo
-  fetch:
+  ansible.builtin.fetch:
     src: /root/monitoring/folio_migration_stats_snapshot.txt
     dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt"
     flat: true
@@ -78,7 +78,7 @@
 # Plots are generated on localhost, not fetched from targets
 
 - name: Display interim monitoring data collection summary
-  debug:
+  ansible.builtin.debug:
     msg: |
       Interim folio migration monitoring data collected (monitoring still running).
       Data saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt
@@ -89,7 +89,7 @@
 
 # Generate plots on localhost from the collected data
 - name: Check if matplotlib is available on localhost
-  command: python3 -c "import matplotlib.pyplot"
+  ansible.builtin.command: python3 -c "import matplotlib.pyplot"
   delegate_to: localhost
   register: localhost_matplotlib_check
   ignore_errors: true
@@ -101,7 +101,7 @@
     - monitor_folio_migration|default(false)|bool
 
 - name: Collect all monitoring data files
-  find:
+  ansible.builtin.find:
   delegate_to: localhost
   register: all_monitoring_files
   run_once: true
@@ -111,7 +111,7 @@
     - localhost_matplotlib_check.rc == 0
 
 - name: Generate A/B comparison plots for each configuration
-  shell:
+  ansible.builtin.shell:
   delegate_to: localhost
   with_items: "{{ all_monitoring_files.files | map(attribute='path') | map('basename') | list }}"
   register: ab_plot_generation
@@ -124,7 +124,7 @@
     - all_monitoring_files.files | length > 0
 
 - name: Generate comprehensive plot with all results
-  shell:
+  ansible.builtin.shell:
   delegate_to: localhost
   register: comprehensive_plot_generation
   ignore_errors: true
@@ -135,7 +135,7 @@
     - localhost_matplotlib_check.rc == 0
 
 - name: Log plot generation summary
-  debug:
+  ansible.builtin.debug:
     msg: |
       {% if localhost_matplotlib_check.rc != 0 %}
       Skipping plot generation - matplotlib not available on localhost
@@ -152,7 +152,7 @@
 - name: Clean up snapshot files on target
   become: true
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:

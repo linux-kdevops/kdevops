@@ -2,7 +2,7 @@
 - name: Install QEMU build dependencies
   become: true
   become_method: sudo
-  dnf:
+  ansible.builtin.dnf:
     name:
       - glusterfs-common
       - gnutls-dev

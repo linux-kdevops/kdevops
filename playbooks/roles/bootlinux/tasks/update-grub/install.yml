@@ -73,7 +73,7 @@
   become_flags: "su - -c"
   become_method: sudo
   register: grub_default_saved_cmd
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: "^GRUB_DEFAULT="
     line: GRUB_DEFAULT=saved
@@ -84,7 +84,7 @@
   become_flags: "su - -c"
   become_method: sudo
   register: grub_disable_submenu_cmd
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: "^GRUB_DISABLE_SUBMENU="
     line: GRUB_DISABLE_SUBMENU=y
@@ -92,8 +92,7 @@
 
 - name: Update your boot GRUB file if necessary to ensure GRUB flat earth
   tags: ["uninstall-linux", "manual-update-grub"]
-  import_tasks: update-grub/main.yml
-
+  ansible.builtin.import_tasks: update-grub/main.yml
 - name: Get the name of the kernel release to install (source tree)
   tags:
     - vars
@@ -204,12 +203,12 @@
     - kernel_release_file.stat.exists
 
 - name: Obtain command to set default kernel to boot
-  set_fact:
+  ansible.builtin.set_fact:
     grub_set_default_boot_kernel: grub-set-default
   when: ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Obtain command to set default kernel to boot for RHEL >= 8
-  set_fact:
+  ansible.builtin.set_fact:
     grub_set_default_boot_kernel: grub2-set-default
   when: ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
 
@@ -217,7 +216,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
+  ansible.builtin.command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
   vars:
     target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 if (grub_boot_number_cmd is defined and grub_boot_number_cmd.stdout_lines is defined) else '' }}"
   tags: ["saved"]
@@ -229,7 +228,7 @@
     - grub_boot_number_cmd.stdout != ""
 
 - name: Itemize kernel and GRUB entry we just selected
-  debug:
+  ansible.builtin.debug:
     msg: "{{ target_kernel }} determined to be {{ target_boot_entry }} on the GRUB2 flat menu. Ran: grub-set-default {{ target_boot_entry }}"
   vars:
     target_kernel: "{{ target_linux_ref | replace('v', '') }}"

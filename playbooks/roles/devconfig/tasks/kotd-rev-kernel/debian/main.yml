@@ -3,7 +3,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "apt-get update  --allow-releaseinfo-change"
+  ansible.builtin.command: "apt-get update  --allow-releaseinfo-change"
   register: release_info_changed
   changed_when: "release_info_changed.rc == 0"
   args:
@@ -15,7 +15,7 @@
 - name: Update apt cache and do dist-upgrade
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
     upgrade: full
   tags: ["apt", "cache"]
@@ -25,6 +25,6 @@
 - name: Reboot system to make the new kernel and modules take effect
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
   when:
     - devconfig_try_upgrade|bool

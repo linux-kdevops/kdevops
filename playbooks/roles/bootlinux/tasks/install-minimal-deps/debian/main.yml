@@ -13,13 +13,13 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
 
 - name: Install minimal build tools for kernel installation
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - make
       - gcc

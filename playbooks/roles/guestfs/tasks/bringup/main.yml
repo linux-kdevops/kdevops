@@ -128,7 +128,7 @@
         - passthrough_devices.matched > 0
 
 - name: Ensure 9P host directory exists before bringing nodes on libvirt
-  file:
+  ansible.builtin.file:
     path: "{{ bootlinux_9p_host_path }}"
     state: directory
     mode: "0755"

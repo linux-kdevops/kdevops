@@ -4,14 +4,14 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
 
 # apt-get build-dep does not capture all requirements
 - name: Install Linux kernel build dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - bison
       - flex

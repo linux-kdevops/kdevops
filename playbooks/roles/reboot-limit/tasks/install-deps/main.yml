@@ -1,12 +1,12 @@
 ---
-- include_role:
+- ansible.builtin.include_role:
     name: pkg
 
 # tasks to install dependencies for reboot-limit
 - name: reboot-limit distribution specific setup
-  import_tasks: tasks/install-deps/debian/main.yml
+  ansible.builtin.import_tasks: tasks/install-deps/debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
-- import_tasks: tasks/install-deps/suse/main.yml
+- ansible.builtin.import_tasks: tasks/install-deps/suse/main.yml
   when: ansible_facts['os_family']|lower == 'suse'
-- import_tasks: tasks/install-deps/redhat/main.yml
+- ansible.builtin.import_tasks: tasks/install-deps/redhat/main.yml
   when: ansible_facts['os_family']|lower == 'redhat'

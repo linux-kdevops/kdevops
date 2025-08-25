@@ -14,7 +14,7 @@
 - name: Enable libvirtd
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: libvirtd
     enabled: true
     masked: false
@@ -22,6 +22,6 @@
 - name: Make sure libvirtd is running
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     state: started
     name: libvirtd

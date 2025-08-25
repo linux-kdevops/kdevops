@@ -1,9 +1,9 @@
 ---
 # tasks to install dependencies for pynfs
 - name: oscheck distribution ospecific setup
-  include_tasks: debian/main.yml
+  ansible.builtin.include_tasks: debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
-- include_tasks: suse/main.yml
+- ansible.builtin.include_tasks: suse/main.yml
   when: ansible_facts['os_family']|lower == 'suse'
-- include_tasks: redhat/main.yml
+- ansible.builtin.include_tasks: redhat/main.yml
   when: ansible_facts['os_family']|lower == 'redhat'

@@ -2,14 +2,14 @@
 - name: Update apt cache
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   tags: ["btrfs-progs", "update-cache"]
 
 - name: Install btrfs-progs build dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - libext2fs-dev
       - pkg-config

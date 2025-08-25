@@ -2,7 +2,7 @@
 - name: Install Linux kernel build dependencies for SUSE sources
   become: true
   become_method: sudo
-  zypper:
+  community.general.zypper:
     name:
       - bison
       - flex

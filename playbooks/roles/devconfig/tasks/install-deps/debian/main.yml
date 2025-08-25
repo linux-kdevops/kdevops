@@ -1,19 +1,19 @@
 ---
 - name: Check if unattended-upgrades is installed
-  command: dpkg-query -W -f='${Status}' unattended-upgrades
+  ansible.builtin.command: dpkg-query -W -f='${Status}' unattended-upgrades
   register: unattended_upgrade_status
   ignore_errors: true
   changed_when: false
   tags: firstconfig
 
 - name: Set fact if unattended-upgrades is installed
-  set_fact:
+  ansible.builtin.set_fact:
     unattended_upgrades_installed: "{{ 'install ok installed' in unattended_upgrade_status.stdout }}"
   when:
     - kdevops_enable_guestfs|bool
 
 - name: Verify unattended-upgrades is not installed
-  fail:
+  ansible.builtin.fail:
     msg: |
       The unattended-upgrades package is installed on the base image, this
       can cause tons of issues with CIs. Fix this by running the following
@@ -30,7 +30,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
     enabled: false
@@ -71,7 +71,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name: unattended-upgrades
     state: absent
   register: removal_result
@@ -84,7 +84,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:
@@ -99,7 +99,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
     enabled: false
@@ -118,7 +118,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::AllowInsecureRepositories=true
+  ansible.builtin.command: "apt-get update  --allow-releaseinfo-change -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false -o Acquire::AllowInsecureRepositories=true
     -o Acquire::MaxDate=10"
   register: release_info_changed
   changed_when: release_info_changed.rc == 0
@@ -167,7 +167,7 @@
   run_once: true
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: |
       Acquire::Check-Valid-Until "false";
       Acquire::Check-Date "false";
@@ -181,7 +181,7 @@
 - name: Configure APT to ignore `Valid-Until` timestamps on the target node
   become: true
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     content: |
       Acquire::Check-Valid-Until "false";
       Acquire::Check-Date "false";
@@ -197,7 +197,7 @@
   run_once: true
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   when:
     - distro_debian_has_hop1_sources|bool
@@ -207,7 +207,7 @@
   become: true
   become_method: sudo
   become_flags: "su - -c"
-  apt:
+  ansible.builtin.apt:
     update_cache: true
   when:
     - distro_debian_has_hop1_sources|bool
@@ -216,7 +216,7 @@
 - name: Update apt cache and do dist-upgrade
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     update_cache: true
     upgrade: full
   tags: ["apt", "cache"]
@@ -226,14 +226,14 @@
 - name: Reboot system to make the new kernel and modules take effect
   become: true
   become_method: sudo
-  reboot:
+  ansible.builtin.reboot:
   when:
     - devconfig_try_upgrade|bool
 
 - name: Install our generic dependencies
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - grub2
       - nvme-cli
@@ -273,7 +273,7 @@
 - name: Set up snmp
   become: true
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: snmpd.conf
     dest: /etc/snmp/snmpd.conf
   when:
@@ -283,7 +283,7 @@
 - name: Enable snmpd service
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: snmpd
     enabled: true
     masked: false
@@ -294,7 +294,7 @@
 - name: Start snmpd service
   become: true
   become_method: sudo
-  systemd:
+  ansible.builtin.systemd:
     name: snmpd
     state: restarted
   tags: snmpd
@@ -304,7 +304,7 @@
 - name: Install and sets up kdump
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - kdump-tools
   when:
@@ -314,7 +314,7 @@
 - name: Install systemd-journal-remote
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - systemd-journal-remote
     update_cache: true
@@ -325,7 +325,7 @@
 - name: Install systemd-timesyncd
   become: true
   become_method: sudo
-  apt:
+  ansible.builtin.apt:
     name:
       - systemd-timesyncd
   when:

@@ -15,7 +15,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: nfs.conf.j2
     dest: /etc/nfs.conf
     owner: root
@@ -49,7 +49,7 @@
     mode: "0755"
 
 - name: Test whether SELinux is enabled
-  command: /usr/sbin/selinuxenabled
+  ansible.builtin.command: /usr/sbin/selinuxenabled
   register: selinux_status
   changed_when: false
   failed_when: false
@@ -58,7 +58,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  copy:
+  ansible.builtin.copy:
     src: "{{ playbook_dir }}/roles/nfsd/templates/nfsd_policy.te"
     dest: "/root/nfsd_policy.te"
     owner: root
@@ -70,21 +70,21 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: /usr/bin/checkmodule -M -m -o /root/nfsd_policy.mod /root/nfsd_policy.te
+  ansible.builtin.command: /usr/bin/checkmodule -M -m -o /root/nfsd_policy.mod /root/nfsd_policy.te
   when: selinux_status.rc == 0
 
 - name: Compile SELinux policy module into policy package
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: /usr/bin/semodule_package -o /root/nfsd_policy.pp -m /root/nfsd_policy.mod
+  ansible.builtin.command: /usr/bin/semodule_package -o /root/nfsd_policy.pp -m /root/nfsd_policy.mod
   when: selinux_status.rc == 0
 
 - name: Install SELinux policy module
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  command: /usr/sbin/semodule -i /root/nfsd_policy.pp
+  ansible.builtin.command: /usr/sbin/semodule -i /root/nfsd_policy.pp
   when: selinux_status.rc == 0
 
 - name: Allow nfsd full access to {{ nfsd_export_path }}
@@ -99,7 +99,7 @@
 
 # FIXME: open ports instead
 - name: Populate service facts
-  service_facts:
+  ansible.builtin.service_facts:
 
 - name: Turn off firewalld
   become: true

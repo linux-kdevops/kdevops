@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_first_found:
     - files:
@@ -17,7 +17,7 @@
   tags: ["mirror"]
 
 - name: Fail if linux_mirror_nfs is enabled but user is not root
-  fail:
+  ansible.builtin.fail:
     msg: "NFS server setup is enabled, but you are not running as root. Please run as root to set up NFS."
   when:
     - not install_only_git_daemon|bool
@@ -27,7 +27,7 @@
 
 - name: Set up the mirrors.yaml based on preferences configured
   tags: ["mirror"]
-  template:
+  ansible.builtin.template:
     src: "mirrors.yaml.j2"
     dest: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml"
     force: true
@@ -42,7 +42,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  file:
+  ansible.builtin.file:
     path: "{{ local_systemd_path }}"
     state: directory
     mode: "0755"
@@ -55,7 +55,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  template:
+  ansible.builtin.template:
     src: "{{ item }}.j2"
     dest: "{{ local_systemd_path }}/{{ item }}"
     force: true
@@ -71,7 +71,7 @@
 - name: Start mirroring
   delegate_to: localhost
   run_once: true
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     {{ role_path }}/python/start-mirroring.py --verbose
   args:
@@ -85,7 +85,7 @@
 - name: Generate systemd service and timer unit files
   delegate_to: localhost
   run_once: true
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     {{ role_path }}/python/gen-mirror-files.py --refresh 360m --refresh-on-boot 10m
   args:
@@ -97,7 +97,7 @@
   tags: ["mirror"]
 
 - name: load variables from yaml file
-  include_vars:
+  ansible.builtin.include_vars:
     file: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml"
     name: mirrors
   tags: ["mirror", "status-check"]
@@ -105,7 +105,7 @@
     - not install_only_git_daemon|bool
 
 - name: Set scope based on user (root uses system scope)
-  set_fact:
+  ansible.builtin.set_fact:
     systemd_scope: "{{ 'system' if ansible_user_id == 'root' else 'user' }}"
     systemd_dir: "{{ '/etc/systemd/system/' if ansible_user_id == 'root' else mirror_user_system_dir }}"
   tags: ["mirror"]
@@ -113,7 +113,7 @@
     - not install_only_git_daemon|bool
 
 - name: Copy systemd service file to user/system systemd dir
-  copy:
+  ansible.builtin.copy:
     src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     dest: "{{ systemd_dir }}/"
   with_items:
@@ -125,7 +125,7 @@
     - not install_only_git_daemon|bool
 
 - name: Copy systemd timer file to user/system systemd dir
-  copy:
+  ansible.builtin.copy:
     src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     dest: "{{ systemd_dir }}/"
   with_items:
@@ -178,7 +178,7 @@
     - not install_only_git_daemon|bool
 
 - name: Service status
-  debug:
+  ansible.builtin.debug:
     var: "{{ item }}.status.ActiveState"
   with_items:
     - "{{ mirror_service_status.item }}"
@@ -200,7 +200,7 @@
     - not install_only_git_daemon|bool
 
 - name: Service timer status
-  debug:
+  ansible.builtin.debug:
     var: "{{ item }}.status.ActiveState"
   with_items:
     - "{{ mirror_timer_status.item }}"
@@ -311,7 +311,7 @@
 
 - name: Ensure NFS firewall rules are set (for root user and if NFS is enabled)
   become: true
-  ansible.builtin.firewalld:
+  ansible.posix.firewalld:
     service: "{{ item }}"
     permanent: true
     state: enabled

@@ -33,30 +33,30 @@
   run_once: true
 
 - name: Clean up our localhost results/last-run directory
-  file: path="{{ ltp_results_target }}/" state=absent
+  ansible.builtin.file: path="{{ ltp_results_target }}/" state=absent
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Create empty last-run directory
-  file: path="{{ ltp_results_target }}/" state=directory
+  ansible.builtin.file: path="{{ ltp_results_target }}/" state=directory
   delegate_to: localhost
   run_once: true
   tags: ["run_tests", "copy_results", "clean_local_results"]
 
 - name: Get used target kernel version
   tags: ["copy_results"]
-  command: "uname -r"
+  ansible.builtin.command: "uname -r"
   register: uname_cmd
 
 - name: Store last kernel variable
   tags: ["copy_results"]
-  set_fact:
+  ansible.builtin.set_fact:
     last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
   run_once: true
 
 - name: Document used target kernel version
-  shell: echo {{ last_kernel }} > {{ ltp_results_target }}/../last-kernel.txt
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ ltp_results_target }}/../last-kernel.txt
   delegate_to: localhost
   tags: ["run_tests", "copy_results", "print_results"]
   run_once: true
@@ -266,12 +266,12 @@
 - name: Verify last-run kernel directory exists
   tags: ["copy_results"]
   delegate_to: localhost
-  stat:
+  ansible.builtin.stat:
     path: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}"
   register: last_run_kernel_dir
 
 - name: Copy over the last-run into the results directory for archiving into kdevops
-  copy:
+  ansible.builtin.copy:
     src: "{{ ltp_results_full_path }}/last-run/{{ last_kernel }}"
     dest: "{{ ltp_results_full_path }}/"
   run_once: true

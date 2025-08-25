@@ -2,7 +2,7 @@
 - name: Install b4
   become: true
   become_method: sudo
-  pip:
+  ansible.builtin.pip:
     name:
       - b4
   when:
@@ -11,7 +11,7 @@
     - ansible_facts['os_family']|lower != 'debian'
 
 - name: git clone {{ target_linux_tree }} on the target nodes
-  git:
+  ansible.builtin.git:
     repo: "{{ target_linux_git }}"
     dest: "{{ target_linux_dir_path }}"
     update: true
@@ -24,7 +24,7 @@
   tags: ["clone"]
 
 - name: Copy kernel delta if requested on the target nodes
-  template:
+  ansible.builtin.template:
     src: "{{ target_linux_extra_patch }}"
     dest: "{{ target_linux_dir_path }}/{{ target_linux_extra_patch }}"
     owner: "{{ data_user }}"
@@ -34,14 +34,14 @@
     - target_linux_extra_patch is defined
 
 - name: Apply kernel delta if requested on the target nodes
-  command: "git am {{ target_linux_extra_patch }}"
+  ansible.builtin.command: "git am {{ target_linux_extra_patch }}"
   args:
     chdir: "{{ target_linux_dir_path }}"
   when:
     - target_linux_extra_patch is defined
 
 - name: Set git user name and email if needed
-  shell: |
+  ansible.builtin.shell: |
     if ! $(git config --get user.email) ; then
       git config --global user.email user@example.com
     fi
@@ -54,13 +54,13 @@
     - bootlinux_b4_am_this_host|bool
 
 - name: Variable values
-  debug:
+  ansible.builtin.debug:
     msg: "{{ target_linux_apply_patch_message_id }}"
   when:
     - target_linux_apply_patch_message_id is defined
 
 - name: Apply message patch set if requested on the target nodes
-  shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
+  ansible.builtin.shell: b4 am -o - {{target_linux_apply_patch_message_id}} | git am
   args:
     chdir: "{{ target_linux_dir_path }}"
   when:
@@ -69,7 +69,7 @@
     - bootlinux_b4_am_this_host|bool
 
 - name: Copy configuration for Linux {{ target_linux_tree }} to the target nodes
-  template:
+  ansible.builtin.template:
     src: "{{ linux_config }}"
     dest: "{{ target_linux_dir_path }}/.config"
     owner: "{{ data_user }}"
@@ -77,12 +77,12 @@
     mode: "0644"
 
 - name: Set kernel localversion if requested on the target nodes
-  shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
+  ansible.builtin.shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
   when:
     - target_linux_localversion is defined and target_linux_localversion != ""
 
 - name: Configure Linux {{ target_linux_tree }} on the target nodes
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     yes "" | make oldconfig
   register: configure_done
@@ -93,7 +93,7 @@
     executable: /bin/bash
 
 - name: Build {{ target_linux_tree }} on the target nodes
-  command: "{{ target_linux_make_cmd }}"
+  ansible.builtin.command: "{{ target_linux_make_cmd }}"
   register: build
   changed_when: "build.rc == 0"
   args:
@@ -101,7 +101,7 @@
   tags: ["build-linux"]
 
 - name: Build {{ target_linux_tree }} cxl_test on the target nodes
-  command: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
+  ansible.builtin.command: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
   register: build_cxl_test
   changed_when: "build_cxl_test.rc == 0"
   args:
@@ -111,13 +111,13 @@
     - bootlinux_cxl_test|bool
 
 - name: See if snake-oil cert file is present on client
-  stat:
+  ansible.builtin.stat:
     path: "{{ target_linux_dir_path }}/certs/signing_key.pem"
   register: snaik_oil_file
   tags: ["build-linux"]
 
 - name: Ensure we allow world to read the snake oil in case of NFS or 9p read only usage
-  file:
+  ansible.builtin.file:
     path: "{{ target_linux_dir_path }}/certs/signing_key.pem"
     mode: "0755"
   tags: ["build-linux"]
