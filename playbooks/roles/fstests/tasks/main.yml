@@ -1575,8 +1575,8 @@
     - item.stat.exists
 
 - name: Print fstests results to xunit_results.txt on localhost if xunit xml file was found
-  ansible.builtin.shell: ./python/workflows/fstests/gen_results_summary --results_file result.xml  --print_section --output_file {{ fstests_results_target }}/{{ last_kernel
-    }}/xunit_results.txt {{ fstests_results_target }}/
+  ansible.builtin.command: ./python/workflows/fstests/gen_results_summary --results_file result.xml  --print_section --output_file {{ fstests_results_target }}/{{
+    last_kernel }}/xunit_results.txt {{ fstests_results_target }}/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
@@ -1592,7 +1592,7 @@
   run_once: true
 
 - name: Create check.time.distribution files for {{ fstests_results_target }}/results
-  ansible.builtin.shell: ./python/workflows/fstests/fstests-checktime-distribution.py {{ fstests_results_target }}
+  ansible.builtin.command: ./python/workflows/fstests/fstests-checktime-distribution.py {{ fstests_results_target }}
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   run_once: true
@@ -1600,7 +1600,7 @@
     - checktime_files.matched > 0
 
 - name: Augment expunge list for {{ fstests_fstyp }}, just run git diff after this to see new failures found
-  ansible.builtin.shell: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
+  ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   run_once: true
