@@ -17,7 +17,7 @@
     name: create_data_partition
   tags: ["ndctl", "data_partition"]
 
-- name: git clone ndctl
+- name: Git clone ndctl
   ansible.builtin.git:
     repo: "{{ ndctl_git }}"
     dest: "{{ ndctl_data }}"
@@ -125,7 +125,7 @@
   when:
     - kdevops_run_cxl_tests|bool
 
-- name: modprobe cxl_test
+- name: Modprobe cxl_test
   become: true
   become_flags: "su - -c"
   become_method: sudo
@@ -136,7 +136,7 @@
   when:
     - kdevops_run_cxl_tests|bool
 
-- name: modprobe -r cxl_test
+- name: Modprobe -r cxl_test
   become: true
   become_flags: "su - -c"
   become_method: sudo

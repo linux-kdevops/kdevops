@@ -3,7 +3,7 @@
     name: pkg
 
 # tasks to install dependencies for reboot-limit
-- name: reboot-limit distribution specific setup
+- name: Reboot-limit distribution specific setup
   ansible.builtin.import_tasks: tasks/install-deps/debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
 - ansible.builtin.import_tasks: tasks/install-deps/suse/main.yml

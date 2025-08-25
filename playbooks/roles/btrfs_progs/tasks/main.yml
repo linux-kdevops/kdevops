@@ -43,7 +43,7 @@
   when: ansible_facts['os_family']|lower != 'debian'
   tags: vars
 
-- name: git clone btrfs_progs
+- name: Git clone btrfs_progs
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:

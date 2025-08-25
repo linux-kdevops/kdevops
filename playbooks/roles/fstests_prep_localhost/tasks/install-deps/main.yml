@@ -1,6 +1,6 @@
 ---
 # tasks to install dependencies for oscheck
-- name: oscheck distribution ospecific setup
+- name: Oscheck distribution ospecific setup
   ansible.builtin.import_tasks: tasks/install-deps/debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
 - ansible.builtin.import_tasks: tasks/install-deps/suse/main.yml

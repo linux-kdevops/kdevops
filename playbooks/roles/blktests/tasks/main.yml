@@ -16,7 +16,7 @@
 
 # Distro specific
 - ansible.builtin.include_tasks: install-deps/main.yml
-- name: git clone kdevops
+- name: Git clone kdevops
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:
@@ -53,7 +53,7 @@
     state: absent
   tags: ["git", "blktests", "blktrace"]
 
-- name: git clone blktrace
+- name: Git clone blktrace
   ansible.builtin.git:
     repo: "{{ blktrace_git }}"
     dest: "{{ blktrace_data }}"
@@ -90,7 +90,7 @@
     state: absent
   tags: ["git", "blktests"]
 
-- name: git clone blktests
+- name: Git clone blktests
   ansible.builtin.git:
     repo: "{{ blktests_git }}"
     dest: "{{ blktests_data }}"
@@ -113,7 +113,7 @@
   args:
     chdir: "{{ blktests_data }}"
 
-- name: git pull latest kdevops to ensure expunge list is up to date
+- name: Git pull latest kdevops to ensure expunge list is up to date
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:

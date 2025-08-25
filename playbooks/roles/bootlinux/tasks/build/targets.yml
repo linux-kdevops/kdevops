@@ -10,7 +10,7 @@
     - target_linux_install_b4
     - ansible_facts['os_family']|lower != 'debian'
 
-- name: git clone {{ target_linux_tree }} on the target nodes
+- name: Git clone {{ target_linux_tree }} on the target nodes
   ansible.builtin.git:
     repo: "{{ target_linux_git }}"
     dest: "{{ target_linux_dir_path }}"

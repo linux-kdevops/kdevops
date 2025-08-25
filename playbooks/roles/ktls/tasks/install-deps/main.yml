@@ -1,6 +1,6 @@
 ---
 # tasks to install dependencies for pynfs
-- name: oscheck distribution ospecific setup
+- name: Oscheck distribution ospecific setup
   ansible.builtin.include_tasks: debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
 - ansible.builtin.include_tasks: suse/main.yml

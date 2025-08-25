@@ -44,7 +44,7 @@
     - bootlinux_tree_set_by_cli|bool
     - not target_directory_stat.stat.exists
 
-- name: git clone {{ target_linux_tree }} on the control node
+- name: Git clone {{ target_linux_tree }} on the control node
   ansible.builtin.git:
     repo: "{{ target_linux_git }}"
     dest: "{{ bootlinux_9p_host_path }}"

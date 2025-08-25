@@ -1,5 +1,5 @@
 ---
-- name: cxl
+- name: Cxl
   hosts: baseline:dev
   roles:
     - role: cxl

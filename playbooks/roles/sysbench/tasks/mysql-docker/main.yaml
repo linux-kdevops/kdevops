@@ -177,7 +177,7 @@
   with_items:
     - "{{ sysbench_mysql_container_host_root_path }}/.mysqlsh/"
 
-- name: git clone our mysqlsh plugin for telemetry
+- name: Git clone our mysqlsh plugin for telemetry
   tags: ["setup"]
   become: true
   become_flags: "su - -c"

@@ -1,11 +1,11 @@
 ---
-- name: debian_libaio rename for buster
+- name: Debian_libaio rename for buster
   ansible.builtin.set_fact:
     is_bookworm: '{{ ansible_distribution_release == "bookworm" }}'
     is_buster: '{{ ansible_distribution_release == "buster" }}'
     is_trixie: '{{ ansible_distribution_release == "trixie" }}'
 
-- name: debian_libaio rename for debian releases older than trixie
+- name: Debian_libaio rename for debian releases older than trixie
   ansible.builtin.set_fact:
     pkg_libaio: "libaio1"
   when: >

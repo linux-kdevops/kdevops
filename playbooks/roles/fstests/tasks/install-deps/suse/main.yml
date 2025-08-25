@@ -182,7 +182,7 @@
   when:
     - is_sle15sp2|bool or is_sle15sp3|bool or is_sle15sp4|bool or is_sle12sp5|bool
 
-- name: add benchmark sles12sp5 openSUSE repo when needed
+- name: Add benchmark sles12sp5 openSUSE repo when needed
   become: true
   become_method: sudo
   ansible.builtin.script:

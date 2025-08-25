@@ -96,7 +96,7 @@
     - not install_only_git_daemon|bool
   tags: ["mirror"]
 
-- name: load variables from yaml file
+- name: Load variables from yaml file
   ansible.builtin.include_vars:
     file: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml"
     name: mirrors

@@ -12,7 +12,7 @@
 
 # Distro agnostic stuff goes below
 
-- name: git reset kdevops
+- name: Git reset kdevops
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:

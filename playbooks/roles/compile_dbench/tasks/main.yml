@@ -13,7 +13,7 @@
 # Distro specific
 - name: Install dependencies
   ansible.builtin.import_tasks: install-deps/main.yml
-- name: git clone dbench
+- name: Git clone dbench
   ansible.builtin.git:
     repo: "{{ dbench_git }}"
     dest: "{{ dbench_data }}"

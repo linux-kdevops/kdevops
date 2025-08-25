@@ -231,7 +231,7 @@
     - repos_present|bool
     - compile_nbd|bool
 
-- name: git clone nbd
+- name: Git clone nbd
   ansible.builtin.git:
     repo: "{{ nbd_git }}"
     dest: "{{ nbd_data }}"

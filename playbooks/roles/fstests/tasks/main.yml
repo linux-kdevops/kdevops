@@ -142,7 +142,7 @@
     - fstests_xfsdump_build|bool
     - xfdump_dir.stat.exists
 
-- name: git clone xfsdump
+- name: Git clone xfsdump
   ansible.builtin.git:
     repo: "{{ fstests_xfsdump_git }}"
     dest: "{{ fstests_xfsdump_data }}"
@@ -196,7 +196,7 @@
   when:
     - fstests_testdev_sparsefile_generation|bool
 
-- name: git clone kdevops
+- name: Git clone kdevops
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:
@@ -251,7 +251,7 @@
     - "{{ fstests_data_target }}"
   tags: ["oscheck", "git", "fstests", "build"]
 
-- name: git clone fstests
+- name: Git clone fstests
   ansible.builtin.git:
     repo: "{{ fstests_git }}"
     dest: "{{ fstests_data }}"
@@ -308,7 +308,7 @@
     - fstests_zns_enabled == "y"
     - fstests_fstyp == "btrfs"
 
-- name: git pull latest kdevops to ensure expunge lists and scripts are up to date
+- name: Git pull latest kdevops to ensure expunge lists and scripts are up to date
   environment:
     GIT_SSL_NO_VERIFY: true
   ansible.builtin.git:
