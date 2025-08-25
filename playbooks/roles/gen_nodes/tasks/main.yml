@@ -32,14 +32,14 @@
 - name: Set generic nodes array
   tags: vars
   ansible.builtin.set_fact:
-    generic_nodes: "{{ [ kdevops_host_prefix ] }}"
+    generic_nodes: "{{ [kdevops_host_prefix] }}"
   when:
     - not kdevops_baseline_and_dev
 
 - name: Set generic nodes array on dual baseline and dev systems
   tags: vars
   ansible.builtin.set_fact:
-    generic_nodes: "{{ [ kdevops_host_prefix ] + [ kdevops_host_prefix + '-dev' ] }}"
+    generic_nodes: "{{ [kdevops_host_prefix] + [kdevops_host_prefix + '-dev'] }}"
   when:
     - kdevops_baseline_and_dev
 
@@ -65,7 +65,7 @@
 
 - name: Set nfsd_nodes list
   ansible.builtin.set_fact:
-    nfsd_nodes: "{{ [ kdevops_host_prefix + '-nfsd' ] }}"
+    nfsd_nodes: "{{ [kdevops_host_prefix + '-nfsd'] }}"
   when:
     - kdevops_nfsd_enable|bool
 
@@ -77,7 +77,7 @@
 
 - name: Set smbd_nodes list
   ansible.builtin.set_fact:
-    smbd_nodes: "{{ [ kdevops_host_prefix + '-smbd' ] }}"
+    smbd_nodes: "{{ [kdevops_host_prefix + '-smbd'] }}"
   when:
     - kdevops_smbd_enable|bool
 
@@ -89,7 +89,7 @@
 
 - name: Set kdc_nodes list
   ansible.builtin.set_fact:
-    kdc_nodes: "{{ [ kdevops_host_prefix + '-kdc' ] }}"
+    kdc_nodes: "{{ [kdevops_host_prefix + '-kdc'] }}"
   when:
     - kdevops_krb5_enable|bool
 
@@ -239,7 +239,7 @@
     sections_lines: "{{ sections_without_default_and_nfsd | regex_findall('^\\[(.*)', multiline=True) }}"
     clean_section_lines: "{{ sections_lines | regex_replace('\\[') | regex_replace('\\]') }}"
     clean_section_lines_without_fsname: "{{ clean_section_lines | regex_replace(fstests_fstyp + '_') }}"
-    config_sections_targets: "{{ clean_section_lines_without_fsname |  replace(\"'\", '') | split(', ') }}"
+    config_sections_targets: "{{ clean_section_lines_without_fsname | replace(\"'\", '') | split(', ') }}"
   ansible.builtin.lineinfile:
     path: "{{ topdir_path }}/.config"
     regexp: "^({{ config_val + item.upper() }})=y"
@@ -258,7 +258,7 @@
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
   ansible.builtin.set_fact:
-    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [ node ] }}"
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [node] }}"
   with_items: "{{ fstests_enabled_test_types_reg.results }}"
   loop_control:
     label: "Checking for {{ item.item }} "
@@ -274,7 +274,7 @@
     fs_test_section: "{{ fstests_fstyp + '-' + item.item | regex_replace('_', '-') }}"
     node: "{{ kdevops_host_prefix + '-' + fs_test_section }}"
   ansible.builtin.set_fact:
-    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [ node ] + [ node + '-dev' ] }}"
+    fstests_enabled_nodes: "{{ fstests_enabled_nodes + [node] + [node + '-dev'] }}"
   with_items: "{{ fstests_enabled_test_types_reg.results }}"
   loop_control:
     label: "Checking for {{ item.item }} "
@@ -316,7 +316,7 @@
   tags: ["hosts"]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
-    nodes: "{{ fstests_enabled_nodes |  regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
+    nodes: "{{ fstests_enabled_nodes | regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
     all_generic_nodes: "{{ fstests_enabled_nodes }}"
   ansible.builtin.template:
     src: "{{ node_template }}"

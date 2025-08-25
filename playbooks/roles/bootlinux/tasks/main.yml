@@ -111,11 +111,11 @@
 - name: Determine active kernel parameters for A/B testing with 9P
   ansible.builtin.set_fact:
     target_linux_git: "{{ bootlinux_dev_tree if bootlinux_dev_tree != '' else target_linux_git }}"
-    active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes|default(false)|bool else target_linux_ref }}"
-    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_kernelrelease|bool) else
-      target_linux_kernelrelease }}"
-    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes|default(false)|bool and bootlinux_tree_custom_localversion|bool) else target_linux_localversion
-      }}"
+    active_linux_ref: "{{ target_linux_dev_ref if targeting_dev_nodes | default(false) | bool else target_linux_ref }}"
+    active_linux_kernelrelease: "{{ target_linux_dev_kernelrelease if (targeting_dev_nodes | default(false) | bool and bootlinux_tree_custom_kernelrelease | bool)
+      else target_linux_kernelrelease }}"
+    active_linux_localversion: "{{ target_linux_dev_localversion if (targeting_dev_nodes | default(false) | bool and bootlinux_tree_custom_localversion | bool) else
+      target_linux_localversion }}"
     target_linux_config: "config-{{ target_linux_dev_ref }}"
   when:
     - kdevops_baseline_and_dev|bool

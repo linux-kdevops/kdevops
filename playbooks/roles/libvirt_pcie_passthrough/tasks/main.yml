@@ -14,7 +14,7 @@
   become_flags: "su - -c"
   become_method: sudo
   vars:
-    sysfs_override: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/driver_override"
+    sysfs_override: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id }}/driver_override"
   ansible.builtin.stat:
     path: "{{ sysfs_override }}"
   with_items: "{{ pcie_passthrough_devices }}"
@@ -44,7 +44,7 @@
   become_flags: "su - -c"
   become_method: sudo
   vars:
-    sysfs_unbind: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id}}/unbind"
+    sysfs_unbind: "{{ pcie_sysfs_device_path_prefix }}/{{ item.pcie_id }}/unbind"
   ansible.builtin.stat:
     path: "{{ sysfs_unbind }}"
   with_items: "{{ pcie_passthrough_devices }}"

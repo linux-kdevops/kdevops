@@ -64,7 +64,7 @@
   ansible.builtin.lineinfile:
     dest: /etc/hosts
     regexp: ".*{{ item }}$"
-    line: "{{ hostvars[item].ansible_all_ipv4_addresses | first }} {{item}}"
+    line: "{{ hostvars[item].ansible_all_ipv4_addresses | first }} {{ item }}"
     state: present
   with_items: "{{ ueh_hosts }}"
   when:

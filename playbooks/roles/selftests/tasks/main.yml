@@ -252,7 +252,7 @@
 
 - name: Store last kernel variable
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   tags: ["selftests", "vars", "copy_results", "augment_expunge_list"]
   run_once: true
 
@@ -341,13 +341,7 @@
     - not selftest_vma|bool
   vars:
     command_to_run: >
-      {%- if selftest_xarray  -%}
-      modprobe test_xarray
-      {%- elif selftest_maple -%}
-      modprobe test_maple_tree
-      {%- else -%}
-      echo missing command
-      {%- endif -%}
+      {%- if selftest_xarray -%} modprobe test_xarray{%- elif selftest_maple -%} modprobe test_maple_tree{%- else -%} echo missing command{%- endif -%}
 
 - name: Run userspace selftests
   tags: ["selftests", "run_tests"]
@@ -363,21 +357,10 @@
     - (selftests_build_radix_tree|bool and selftest_userspace|bool and not selftest_vma|bool) or selftest_vma|bool
   vars:
     test_target_dir: >-
-      {%- if selftest_vma -%}
-      {{ target_linux_dir_path }}/tools/testing/vma
-      {%- else -%}
-      {{ target_linux_dir_path }}/tools/testing/radix-tree
-      {%- endif -%}
+      {%- if selftest_vma -%} {{ target_linux_dir_path }}/tools/testing/vma{%- else -%} {{ target_linux_dir_path }}/tools/testing/radix-tree{%- endif -%}
     command_to_run: >-
-      {%- if selftest_vma -%}
-      ./vma
-      {%- elif selftest_xarray -%}
-      ./xarray && modprobe test_xarray
-      {%- elif selftest_maple -%}
-      ./maple && modprobe test_maple_tree
-      {%- else -%}
-      echo missing command
-      {%- endif -%}
+      {%- if selftest_vma -%} ./vma{%- elif selftest_xarray -%} ./xarray && modprobe test_xarray{%- elif selftest_maple -%} ./maple && modprobe test_maple_tree{%-
+      else -%} echo missing command{%- endif -%}
 
 - name: Run kernelspace selftests
   tags: ["selftests", "run_tests"]
@@ -457,7 +440,7 @@
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ selftests_out.stdout_lines|join('\n') }}"
-    dest: "{{ selftests_workdir}}/tap.log"
+    dest: "{{ selftests_workdir }}/tap.log"
   when:
     - kdevops_run_selftests|bool
     - selftest_kernelspace|bool
@@ -469,7 +452,7 @@
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ selftests_userspace_out.stdout_lines|join('\n') }}"
-    dest: "{{ selftests_workdir}}/userspace.log"
+    dest: "{{ selftests_workdir }}/userspace.log"
   when:
     - selftest_userspace|bool
 
@@ -480,7 +463,7 @@
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ selftests_module_out.stdout_lines|join('\n') }}"
-    dest: "{{ selftests_workdir}}/module.log"
+    dest: "{{ selftests_workdir }}/module.log"
   when:
     - selftest_userspace|bool
     - not selftest_vma|bool

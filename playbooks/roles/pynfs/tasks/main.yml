@@ -169,7 +169,7 @@
 - name: Store kernel_rev variable
   tags: ["copy_results"]
   ansible.builtin.set_fact:
-    kernel_rev: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    kernel_rev: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   run_once: true
 
 - name: Document used target kernel version
@@ -185,7 +185,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
-    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
+    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}/{{ kernel_rev }}-v{{ item }}.json"
     flat: true
   with_items:
     - 4.0
@@ -198,7 +198,7 @@
   become_method: ansible.builtin.sudo
   ansible.builtin.fetch:
     src: "{{ pynfs_data }}/pynfs-{{ item }}-results.json"
-    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev}}/{{ kernel_rev }}-v{{ item }}.json"
+    dest: "{{ pynfs_results_full_path }}/last-run/{{ kernel_rev }}/{{ kernel_rev }}-v{{ item }}.json"
     flat: true
   with_items:
     - block

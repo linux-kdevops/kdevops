@@ -23,7 +23,7 @@
 
 - name: Determine filesystem setting used and db page size
   vars:
-    fs_type_variable: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '')  | regex_replace('-.+', '') }}"
+    fs_type_variable: "{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') | regex_replace('-.+', '') }}"
     fs_command_variable_simple: "sysbench_{{ ansible_host | regex_replace('^' + kdevops_host_prefix + '-', '') | regex_replace('-dev$', '') }}_cmd"
     fs_command_variable: "{{ fs_command_variable_simple | regex_replace('-', '_') | regex_replace('^sysbench_' + fs_type_variable, fs_type_variable + '_section')
       }}"
@@ -37,7 +37,7 @@
     filesystem_command_for_host: "{{ fs_cmd }}"
     sysbench_fs_sector_size: "{{ sect_size }}"
     sysbench_fstype: "{{ fs_type_variable }}"
-    sysbench_fs_opts_without_sector_size: "{{ fs_cmd | regex_replace('^[^ ]+ ', '')  }}"
+    sysbench_fs_opts_without_sector_size: "{{ fs_cmd | regex_replace('^[^ ]+ ', '') }}"
     sysbench_db_page_size: "{{ db_page_size }}"
   tags: ["vars"]
 
@@ -198,7 +198,7 @@
 
 - name: Store last kernel variable
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   tags: ["db_start"]
   run_once: true
 
@@ -600,7 +600,7 @@
   become_method: sudo
   ansible.builtin.copy:
     content: "{{ sysbench_mysql_container_logs.stdout }}"
-    dest: "{{ sysbench_telemetry_path}}/docker-mysql-results-{{ ansible_date_time.iso8601 }}.log"
+    dest: "{{ sysbench_telemetry_path }}/docker-mysql-results-{{ ansible_date_time.iso8601 }}.log"
     mode: "u=rw,g=r,o=r"
   when: "sysbench_type_mysql_docker|bool"
 

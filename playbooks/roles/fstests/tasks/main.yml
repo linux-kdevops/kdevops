@@ -611,8 +611,8 @@
     number: "{{ item }}"
     state: present
     part_type: "logical"
-    part_start: "{{ ((item - 5) * test_partsize ) + 1 }}GiB"
-    part_end: "{{ ((item - 4) * test_partsize ) }}GiB"
+    part_start: "{{ ((item - 5) * test_partsize) + 1 }}GiB"
+    part_end: "{{ ((item - 4) * test_partsize) }}GiB"
   loop: "{{ range(5, 17) | list }}"
   when:
     - fstests_testdev_nvme_partition_euis|bool
@@ -730,7 +730,7 @@
 - name: Set the export volname prefix
   tags: vars
   ansible.builtin.set_fact:
-    volname_prefix: "{{ ansible_host|regex_replace(kdevops_host_prefix + '-') }}-fs"
+    volname_prefix: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') }}-fs"
   when:
     - fstests_fstyp == "nfs" or fstests_fstyp == "cifs"
 
@@ -1100,7 +1100,7 @@
 
 - name: Store last kernel variable
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   run_once: true
 
@@ -1194,7 +1194,7 @@
     chdir: "{{ fstests_data_target }}"
   environment:
     FSTYP: "{{ fstests_fstyp }}"
-    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion  | default ('') }}"
+    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion | default('') }}"
     KEEP_DMESG: "yes"
   register: failed_tests_limit
   when:
@@ -1273,11 +1273,11 @@
     FSTYP: "{{ fstests_fstyp }}"
     FSTESTS_SPARSE_FILE_PATH: "{{ sparsefiles_path }}"
     FSTESTS_SETUP_SYSTEM: "{{ fstests_setup_system }}"
-    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion  | default ('') }}"
+    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion | default('') }}"
     FSTESTS_TESTDEV_SPARSEFILE_GENERATION: "{{ sparsefiles_generation }}"
     FSTESTS_SPARSE_FILE_SIZE: "{{ sparsefiles_size }}"
     FSTESTS_SPARSE_FILENAME_PREFIX: "{{ sparsefiles_filename_prefix }}"
-    FSTESTS_RUN_LARGE_DISK_TESTS: "{{ run_large_disk_tests | default ('') }}"
+    FSTESTS_RUN_LARGE_DISK_TESTS: "{{ run_large_disk_tests | default('') }}"
     FSTESTS_RUN_AUTO_GROUP_TESTS: "{{ run_auto_group_tests }}"
     FSTESTS_RUN_CUSTOM_GROUP_TESTS: "{{ run_custom_group_tests }}"
     FSTESTS_EXCLUDE_TEST_GROUPS: "{{ exclude_test_groups }}"

@@ -48,7 +48,7 @@
 - name: Store last kernel variable
   tags: ["copy_results"]
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   run_once: true
 
 - name: Document used target kernel version

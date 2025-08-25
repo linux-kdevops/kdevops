@@ -178,7 +178,7 @@
 
 - name: Store last kernel variable
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\",'') }}"
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
   tags: ["blktests", "copy_results", "augment_expunge_list"]
   run_once: true
 

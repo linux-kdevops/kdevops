@@ -89,7 +89,7 @@
     msg: |
       The output of `make ci-results` yielded no files, this likely means
       you have not setup which results we should copy for this target
-      development tree: {{ target_linux_tree}}
+      development tree: {{ target_linux_tree }}
       To set this up you need these set up:
         .ci/build-test/{{ target_linux_tree }}
         .ci/tests-test/{{ target_linux_tree }}
@@ -296,7 +296,7 @@
 
 - name: Convert to padded string
   ansible.builtin.set_fact:
-    next_number: "{{ '%04d' % (next_number_int | int)}}"
+    next_number: "{{ '%04d' % (next_number_int | int) }}"
 
 - name: Set archive test number
   ansible.builtin.set_fact:

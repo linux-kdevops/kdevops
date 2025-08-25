@@ -34,10 +34,10 @@
   ansible.builtin.debug:
     msg: |
       Collecting monitoring data (without stopping monitoring)
-      monitor_developmental_stats: {{ monitor_developmental_stats|default(false) }}
-      monitor_folio_migration: {{ monitor_folio_migration|default(false) }}
-      enable_monitoring: {{ enable_monitoring|default(false) }}
-      Data file exists: {{ folio_migration_data_file.stat.exists|default(false) }}
+      monitor_developmental_stats: {{ monitor_developmental_stats | default(false) }}
+      monitor_folio_migration: {{ monitor_folio_migration | default(false) }}
+      enable_monitoring: {{ enable_monitoring | default(false) }}
+      Data file exists: {{ folio_migration_data_file.stat.exists | default(false) }}
 
 - name: Set monitoring results path
   ansible.builtin.set_fact:
