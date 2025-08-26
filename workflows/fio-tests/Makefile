@@ -4,24 +4,18 @@ endif
 
 fio-tests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests.yml \
 		$(LIMIT_HOSTS)
 
 fio-tests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests-baseline.yml \
 		$(LIMIT_HOSTS)
 
 fio-tests-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests.yml \
 		--tags results \
@@ -29,24 +23,18 @@ fio-tests-results:
 
 fio-tests-graph:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests-graph.yml \
 		$(LIMIT_HOSTS)
 
 fio-tests-compare:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests-compare.yml \
 		$(LIMIT_HOSTS)
 
 fio-tests-trend-analysis:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--connection=ssh \
-		--inventory hosts \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		playbooks/fio-tests-trend-analysis.yml \
 		$(LIMIT_HOSTS)
