@@ -96,6 +96,7 @@ PHONY += status_guestfs
 
 destroy_guestfs:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev:service' \
 		playbooks/guestfs.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags destroy
