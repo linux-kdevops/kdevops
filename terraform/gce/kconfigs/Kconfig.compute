@@ -77,9 +77,6 @@ config TERRAFORM_GCE_DISTRO_CENTOS
 config TERRAFORM_GCE_DISTRO_DEBIAN
 	bool "Debian"
 
-config TERRAFORM_GCE_DISTRO_FEDORA
-	bool "Fedora"
-
 config TERRAFORM_GCE_DISTRO_OL
 	bool "Oracle Linux"
 
@@ -99,7 +96,6 @@ endchoice
 
 source "terraform/gce/kconfigs/images/Kconfig.centos"
 source "terraform/gce/kconfigs/images/Kconfig.debian"
-source "terraform/gce/kconfigs/images/Kconfig.fedora"
 source "terraform/gce/kconfigs/images/Kconfig.oracle"
 source "terraform/gce/kconfigs/images/Kconfig.opensuse"
 source "terraform/gce/kconfigs/images/Kconfig.rhel"
