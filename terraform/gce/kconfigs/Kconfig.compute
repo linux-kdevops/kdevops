@@ -55,14 +55,22 @@ config TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
 
 endchoice
 
+source "terraform/gce/kconfigs/machines/Kconfig.e2-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.e2-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n1-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.n1-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n2-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n2d-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.n4-highcpu"
+source "terraform/gce/kconfigs/machines/Kconfig.c3-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.c3d-standard"
 source "terraform/gce/kconfigs/machines/Kconfig.c4-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.c4a-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.c4d-standard"
+source "terraform/gce/kconfigs/machines/Kconfig.a2-standard"
 
 choice
 	prompt "OS Distributor"

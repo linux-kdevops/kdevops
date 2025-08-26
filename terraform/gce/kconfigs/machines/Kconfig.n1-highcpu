@@ -1,0 +1,55 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_N1_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	help
+	  The N1 machine series is Compute Engine's first generation
+	  general-purpose machine series available on Intel Skylake,
+	  Broadwell, Haswell, Sandy Bridge, and Ivy Bridge CPU
+	  platforms.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_2
+	bool "n1-highcpu-2"
+	help
+	  2 vCPUs (1 core) and 1.8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_4
+	bool "n1-highcpu-4"
+	help
+	  4 vCPUs (2 cores) and 3.6GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	bool "n1-highcpu-8"
+	help
+	  8 vCPUs (4 cores) and 7.2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_16
+	bool "n1-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 14.4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_32
+	bool "n1-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 28.8GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n1-highcpu-2" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_2
+	default "n1-highcpu-4" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_4
+	default "n1-highcpu-8" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	default "n1-highcpu-16" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_16
+	default "n1-highcpu-32" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N1_HIGHCPU

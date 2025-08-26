@@ -4,40 +4,38 @@ choice
 	prompt "GCE Machine type"
 	default TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
 	help
-	  This option sets the GCE machine type. For other machine
-	  types, refer to this page:
-
-	  https://cloud.google.com/compute/docs/machine-types
+	  The N2 machine series can run on either Intel Cascade Lake
+	  (on smaller configurations) or Intel Ice Lake.
 
 config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_2
 	bool "n2-highcpu-2"
 	depends on TARGET_ARCH_X86_64
 	help
-	  2 vCPU (1 core) and 2GB of memory.
+	  2 vCPUs (1 core) and 2GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
 	bool "n2-highcpu-4"
 	depends on TARGET_ARCH_X86_64
 	help
-	  4 vCPU (2 core) and 4GB of memory.
+	  4 vCPUs (2 cores) and 4GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_8
 	bool "n2-highcpu-8"
 	depends on TARGET_ARCH_X86_64
 	help
-	  8 vCPU (4 cores) and 8GB of memory.
+	  8 vCPUs (4 cores) and 8GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
 	bool "n2-highcpu-16"
 	depends on TARGET_ARCH_X86_64
 	help
-	  16 vCPU (8 cores) and 16GB of memory.
+	  16 vCPUs (8 cores) and 16GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
 	bool "n2-highcpu-32"
 	depends on TARGET_ARCH_X86_64
 	help
-	  32 vCPU (16 cores) and 32GB of memory.
+	  32 vCPUs (16 cores) and 32GB of memory.
 
 endchoice
 

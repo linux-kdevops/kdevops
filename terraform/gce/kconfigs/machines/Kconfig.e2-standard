@@ -1,0 +1,58 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_E2_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	help
+	  The E2 machine series offers both Intel and AMD EPYC
+	  processors, selected for you at the time of VM creation.
+	  Machine types in this series are available in all regions
+	  and zones and support a virtio memory balloon device.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_2
+	bool "e2-standard-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_4
+	bool "e2-standard-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	bool "e2-standard-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_16
+	bool "e2-standard-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_32
+	bool "e2-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "e2-standard-2" if TERRAFORM_GCE_MACHINE_E2_STANDARD_2
+	default "e2-standard-4" if TERRAFORM_GCE_MACHINE_E2_STANDARD_4
+	default "e2-standard-8" if TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	default "e2-standard-16" if TERRAFORM_GCE_MACHINE_E2_STANDARD_16
+	default "e2-standard-32" if TERRAFORM_GCE_MACHINE_E2_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_E2_STANDARD
