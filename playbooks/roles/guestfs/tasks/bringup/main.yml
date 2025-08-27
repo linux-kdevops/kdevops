@@ -102,7 +102,7 @@
         path: "{{ storagedir }}/{{ inventory_hostname }}/extra{{ item }}.{{ libvirt_extra_drive_format }}"
       ansible.builtin.include_tasks:
         file: "{{ role_path }}/tasks/bringup/extra-disks.yml"
-      loop: "{{ range(0, 4) | list }}"
+      loop: "{{ range(0, libvirt_extra_storage_drive_count) | list }}"
       when:
         - not libvirt_enable_largeio|bool
 

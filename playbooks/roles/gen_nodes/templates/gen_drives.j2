@@ -1,6 +1,6 @@
 {% import './templates/drives.j2' as drives %}
 {% if libvirt_extra_storage_drive_ide %}
-{{ drives.gen_drive_ide(4,
+{{ drives.gen_drive_ide(libvirt_extra_storage_drive_count,
 			kdevops_storage_pool_path,
 			hostname,
 			libvirt_extra_drive_format,
@@ -18,7 +18,7 @@
 				    libvirt_extra_storage_aio_cache_mode,
 				    kdevops_storage_pool_path) }}
 {% else %}
-{{ drives.gen_drive_virtio(4,
+{{ drives.gen_drive_virtio(libvirt_extra_storage_drive_count,
                            kdevops_storage_pool_path,
                            hostname,
                            libvirt_extra_drive_format,
@@ -28,7 +28,7 @@
                            libvirt_extra_storage_virtio_physical_block_size) }}
 {% endif %}
 {% elif libvirt_extra_storage_drive_scsi %}
-{{ drives.gen_drive_scsi(4,
+{{ drives.gen_drive_scsi(libvirt_extra_storage_drive_count,
                          kdevops_storage_pool_path,
                          hostname,
                          libvirt_extra_drive_format,
@@ -46,7 +46,7 @@
 				  libvirt_extra_storage_aio_cache_mode,
 				  kdevops_storage_pool_path) }}
 {% else %}
-{{ drives.gen_drive_nvme(4,
+{{ drives.gen_drive_nvme(libvirt_extra_storage_drive_count,
 			 kdevops_storage_pool_path,
 			 hostname,
 			 libvirt_extra_drive_format,
