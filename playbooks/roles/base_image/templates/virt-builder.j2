@@ -11,7 +11,7 @@ mkdir {{ target_dir }}
 copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
 {% endif %}
 
-install sudo,qemu-guest-agent,python3,bash,locales-all
+install sudo,qemu-guest-agent,python3,bash
 run-command useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
 edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
