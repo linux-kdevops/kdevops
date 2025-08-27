@@ -1,6 +1,6 @@
 ---
 - name: Update target /etc/hosts with all targets and disable cloud-init
-  hosts: baseline:dev
+  hosts: baseline:dev:service
   gather_facts: false
   roles:
     - role: update_etc_hosts
