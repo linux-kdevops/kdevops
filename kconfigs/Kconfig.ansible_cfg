@@ -263,6 +263,16 @@ config ANSIBLE_CFG_TASK_DEBUGGER
 
 	  https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_debugger.html#id10
 
+config ANSIBLE_CFG_INVENTORY_CUSTOM
+	bool "Set a custom location for the Ansible inventory"
+	help
+	  When this option is set to N, kdevops creates its
+	  inventory file in a sensible default location. If it is
+	  set to Y, you can set the path and filename of the Ansible
+	  inventory.
+
+if ANSIBLE_CFG_INVENTORY_CUSTOM
+
 config ANSIBLE_CFG_INVENTORY
 	string "Ansible inventory sources"
 	output yaml
@@ -281,6 +291,8 @@ config ANSIBLE_CFG_INVENTORY
 
 	  For more details, refer to the Ansible documentation:
 	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-host-list
+
+endif # ANSIBLE_CFG_INVENTORY_CUSTOM
 
 if DISTRO_OPENSUSE
 
