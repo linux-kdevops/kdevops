@@ -10,7 +10,7 @@ ifeq (y,$(CONFIG_KDEVOPS_SSH_CONFIG_UPDATE))
 SSH_CONFIG_FILE:=$(subst ",,$(CONFIG_KDEVOPS_SSH_CONFIG))
 ANSIBLE_EXTRA_ARGS += sshconfig=$(shell realpath $(SSH_CONFIG_FILE))
 
-ANSIBLE_EXTRA_ARGS += kdevops_ssh_config=$(shell scripts/append-makefile-vars.sh $(CONFIG_KDEVOPS_SSH_CONFIG_PREFIX) $(CONFIG_TOPDIR_PATH_SHA256SUM))
+ANSIBLE_EXTRA_ARGS += kdevops_ssh_config=$(shell scripts/append-makefile-vars.sh $(CONFIG_KDEVOPS_SSH_CONFIG_PREFIX) $(TOPDIR_PATH_SHA256SUM))
 
 endif # CONFIG_KDEVOPS_SSH_CONFIG_UPDATE
 

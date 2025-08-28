@@ -3,6 +3,7 @@
 KDEVOPS_PLAYBOOKS_DIR_FULL_PATH=$(TOPDIR_PATH)/$(KDEVOPS_PLAYBOOKS_DIR)
 KDEVOPS_HOSTS_TEMPLATE_DIR=$(KDEVOPS_PLAYBOOKS_DIR_FULL_PATH)/roles/gen_hosts/templates
 
+GENHOSTS_EXTRA_ARGS += topdir_path='$(TOPDIR_PATH)'
 GENHOSTS_EXTRA_ARGS += kdevops_playbooks_dir='$(KDEVOPS_PLAYBOOKS_DIR)'
 
 # Relative path so that ansible can work with it

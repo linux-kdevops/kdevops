@@ -19,6 +19,7 @@ export KDEVOPS_NODES :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
+export TOPDIR_PATH_SHA256SUM = $(shell ./scripts/compute_sha256sum.sh $(TOPDIR_PATH))
 
 # Export CLI override variables for Kconfig to detect them
 # Note: We accept DECLARE_HOSTS but export as DECLARED_HOSTS for consistency
@@ -89,6 +90,7 @@ INCLUDES = -I include/
 CFLAGS += $(INCLUDES)
 
 ANSIBLE_EXTRA_ARGS += kdevops_version='$(PROJECTRELEASE)'
+ANSIBLE_EXTRA_ARGS += topdir_path_sha256sum='$(TOPDIR_PATH_SHA256SUM)'
 
 export KDEVOPS_HOSTS_TEMPLATE := hosts.j2
 
