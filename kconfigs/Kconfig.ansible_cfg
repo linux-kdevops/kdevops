@@ -18,6 +18,16 @@ config ANSIBLE_CFG_INVENTORY_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh KDEVOPS_HOSTS)
 
+config ANSIBLE_CFG_FILE_CUSTOM
+	bool "Set a custom location for the ansible.cfg file"
+	help
+	  When this option is set to N, kdevops creates an ansible.cfg
+	  in a sensible default location, using the settings defined
+	  in this Kconfig menu. If it is set to Y, you can set the
+	  path and filename of the Ansible configuration file.
+
+if ANSIBLE_CFG_FILE_CUSTOM
+
 config ANSIBLE_CFG_FILE
 	string "Ansible configuration file"
 	output yaml
@@ -40,6 +50,8 @@ config ANSIBLE_CFG_FILE
 
 	  For more details, refer to the Ansible documentation:
 	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#the-configuration-file
+
+endif # ANSIBLE_CFG_FILE_CUSTOM
 
 menu "Ansible Callback Plugin Configuration"
 choice
