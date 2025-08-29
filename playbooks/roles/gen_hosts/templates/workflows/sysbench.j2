@@ -1,0 +1,53 @@
+{# Workflow template for sysbench #}
+[all]
+localhost ansible_connection=local
+{% for test in enabled_sysbench_tests %}
+{{ kdevops_host_prefix }}-{{ test }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test }}-dev
+{% endif %}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for test in enabled_sysbench_tests %}
+{{ kdevops_host_prefix }}-{{ test }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for test in enabled_sysbench_tests %}
+{{ kdevops_host_prefix }}-{{ test }}-dev
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[sysbench]
+{% for test in enabled_sysbench_tests %}
+{{ kdevops_host_prefix }}-{{ test }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test }}-dev
+{% endif %}
+{% endfor %}
+
+[sysbench:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% for test in enabled_sysbench_tests %}
+[sysbench_{{ test | replace('-', '_') }}]
+{{ kdevops_host_prefix }}-{{ test }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test }}-dev
+{% endif %}
+
+[sysbench_{{ test | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endfor %}

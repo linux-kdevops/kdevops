@@ -1,6 +1,3 @@
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := gitr.j2
-endif
 
 GITR_MNT:=$(subst ",,$(CONFIG_GITR_MNT))
 GITR_ARGS += gitr_mnt=$(GITR_MNT)

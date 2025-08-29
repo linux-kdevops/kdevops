@@ -2,9 +2,6 @@
 
 SELFTESTS_ARGS :=
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := selftests.j2
-endif
 
 SELFTESTS_DYNAMIC_RUNTIME_VARS := "kdevops_run_selftests": True
 

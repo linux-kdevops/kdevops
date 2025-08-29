@@ -11,9 +11,6 @@ ID=$(shell id -u)
 
 BLKTESTS_ARGS	:=
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := blktests.j2
-endif
 
 BLKTESTS_GIT:=$(subst ",,$(CONFIG_BLKTESTS_GIT))
 BLKTESTS_DATA:=$(subst ",,$(CONFIG_BLKTESTS_DATA))

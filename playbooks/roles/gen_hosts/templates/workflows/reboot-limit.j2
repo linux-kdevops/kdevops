@@ -1,0 +1,33 @@
+{# Workflow template for reboot-limit #}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-reboot-limit
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-reboot-limit-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-reboot-limit
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-reboot-limit-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[reboot-limit]
+{{ kdevops_host_prefix }}-reboot-limit
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-reboot-limit-dev
+{% endif %}
+
+[reboot-limit:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
