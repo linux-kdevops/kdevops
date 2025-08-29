@@ -1,0 +1,58 @@
+{# Workflow template for blktests #}
+[all]
+localhost ansible_connection=local
+{% for test_type in blktests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ test_type }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test_type }}-dev
+{% endif %}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for test_type in blktests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ test_type }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for test_type in blktests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ test_type }}-dev
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[blktests]
+{% for test_type in blktests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ test_type }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test_type }}-dev
+{% endif %}
+{% endfor %}
+
+[blktests:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% for test_type in blktests_enabled_test_types %}
+[blktests_{{ test_type | replace('-', '_') }}]
+{{ kdevops_host_prefix }}-{{ test_type }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ test_type }}-dev
+{% endif %}
+
+[blktests_{{ test_type | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endfor %}
+
+[service]
+
+[service:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
