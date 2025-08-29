@@ -1,0 +1,16 @@
+---
+# MinIO Docker container defaults
+minio_container_image: "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+minio_container_name: "minio-server"
+minio_api_port: 9000
+minio_console_port: 9001
+minio_access_key: "minioadmin"
+minio_secret_key: "minioadmin"
+minio_data_path: "/data/minio"
+minio_memory_limit: "2g"
+minio_docker_network: "minio-network"
+
+# MinIO service configuration
+minio_enable: true
+minio_create_network: true
+minio_wait_for_ready: true

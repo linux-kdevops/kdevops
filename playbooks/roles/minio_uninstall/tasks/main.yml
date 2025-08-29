@@ -1,0 +1,17 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Stop MinIO container
+  community.docker.docker_container:
+    name: "{{ minio_container_name }}"
+    state: stopped
+  ignore_errors: yes
+
+- name: Display MinIO uninstallation complete
+  debug:
+    msg: "MinIO container stopped"

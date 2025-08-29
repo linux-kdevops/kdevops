@@ -1,0 +1,173 @@
+{# Workflow template for MinIO #}
+{% if minio_enable_multifs_testing|default(false)|bool %}
+{# Multi-filesystem MinIO configuration #}
+[all]
+localhost ansible_connection=local
+{% for config in minio_enabled_section_types|default([]) %}
+{{ config }}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for config in minio_enabled_section_types|default([]) %}
+{% if '-dev' not in config %}
+{{ config }}
+{% endif %}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for config in minio_enabled_section_types|default([]) %}
+{% if '-dev' in config %}
+{{ config }}
+{% endif %}
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+[minio]
+{% for config in minio_enabled_section_types|default([]) %}
+{{ config }}
+{% endfor %}
+
+[minio:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{# Create filesystem-specific groups #}
+{% if minio_multifs_xfs_4k_4ks|default(false)|bool %}
+[minio-xfs-4k]
+{{ kdevops_host_prefix }}-minio-xfs-4k
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-xfs-4k-dev
+{% endif %}
+
+[minio-xfs-4k:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "xfs"
+minio_xfs_blocksize = 4096
+minio_xfs_sectorsize = 4096
+{% endif %}
+
+{% if minio_multifs_xfs_16k_4ks|default(false)|bool %}
+[minio-xfs-16k]
+{{ kdevops_host_prefix }}-minio-xfs-16k
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-xfs-16k-dev
+{% endif %}
+
+[minio-xfs-16k:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "xfs"
+minio_xfs_blocksize = 16384
+minio_xfs_sectorsize = 4096
+{% endif %}
+
+{% if minio_multifs_xfs_32k_4ks|default(false)|bool %}
+[minio-xfs-32k]
+{{ kdevops_host_prefix }}-minio-xfs-32k
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-xfs-32k-dev
+{% endif %}
+
+[minio-xfs-32k:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "xfs"
+minio_xfs_blocksize = 32768
+minio_xfs_sectorsize = 4096
+{% endif %}
+
+{% if minio_multifs_xfs_64k_4ks|default(false)|bool %}
+[minio-xfs-64k]
+{{ kdevops_host_prefix }}-minio-xfs-64k
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-xfs-64k-dev
+{% endif %}
+
+[minio-xfs-64k:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "xfs"
+minio_xfs_blocksize = 65536
+minio_xfs_sectorsize = 4096
+{% endif %}
+
+{% if minio_multifs_ext4_4k|default(false)|bool %}
+[minio-ext4-4k]
+{{ kdevops_host_prefix }}-minio-ext4-4k
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-ext4-4k-dev
+{% endif %}
+
+[minio-ext4-4k:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "ext4"
+minio_ext4_mkfs_opts = "-F"
+{% endif %}
+
+{% if minio_multifs_ext4_16k_bigalloc|default(false)|bool %}
+[minio-ext4-16k-bigalloc]
+{{ kdevops_host_prefix }}-minio-ext4-16k-bigalloc
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-ext4-16k-bigalloc-dev
+{% endif %}
+
+[minio-ext4-16k-bigalloc:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "ext4"
+minio_ext4_mkfs_opts = "-F -O bigalloc -C 16384"
+{% endif %}
+
+{% if minio_multifs_btrfs_default|default(false)|bool %}
+[minio-btrfs]
+{{ kdevops_host_prefix }}-minio-btrfs
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-btrfs-dev
+{% endif %}
+
+[minio-btrfs:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+minio_fstype = "btrfs"
+minio_btrfs_mkfs_opts = "-f"
+{% endif %}
+
+{% else %}
+{# Standard single-filesystem MinIO configuration #}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-minio
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-minio
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-minio-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[minio]
+{{ kdevops_host_prefix }}-minio
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-minio-dev
+{% endif %}
+
+[minio:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
