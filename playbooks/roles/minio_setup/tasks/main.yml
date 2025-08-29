@@ -1,0 +1,100 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Setup dedicated MinIO storage filesystem if configured
+  when:
+    - minio_storage_enable | default(false) | bool
+    - minio_device is defined
+  block:
+    - name: Prepare filesystem mkfs options
+      set_fact:
+        minio_mkfs_opts: >-
+          {%- if minio_fstype == "xfs" -%}
+            -L miniostorage -f -b size={{ minio_xfs_blocksize | default(4096) }} -s size={{ minio_xfs_sectorsize | default(4096) }} {{ minio_xfs_mkfs_opts | default('') }}
+          {%- elif minio_fstype == "btrfs" -%}
+            -L miniostorage {{ minio_btrfs_mkfs_opts | default('-f') }}
+          {%- elif minio_fstype == "ext4" -%}
+            -L miniostorage {{ minio_ext4_mkfs_opts | default('-F') }}
+          {%- elif minio_fstype == "bcachefs" -%}
+            --label=miniostorage {{ minio_bcachefs_mkfs_opts | default('-f') }}
+          {%- else -%}
+            -L miniostorage -f
+          {%- endif -%}
+
+    - name: Create MinIO storage filesystem
+      include_role:
+        name: create_partition
+      vars:
+        disk_setup_device: "{{ minio_device }}"
+        disk_setup_fstype: "{{ minio_fstype | default('xfs') }}"
+        disk_setup_label: "miniostorage"
+        disk_setup_fs_opts: "{{ minio_mkfs_opts }}"
+        disk_setup_path: "{{ minio_mount_point | default('/data/minio') }}"
+        disk_setup_user: "root"
+        disk_setup_group: "root"
+
+- name: Create MinIO data directory
+  file:
+    path: "{{ minio_data_path | default('/data/minio') }}"
+    state: directory
+    mode: '0755'
+  when:
+    - not (minio_storage_enable | default(false) | bool)
+  become: true
+
+- name: Check filesystem type for MinIO data path
+  shell: df -T "{{ minio_data_path }}" | tail -1 | awk '{print $2}'
+  register: minio_fs_type
+  changed_when: false
+
+- name: Get filesystem details
+  shell: |
+    df -h "{{ minio_data_path }}" | tail -1
+  register: minio_fs_details
+  changed_when: false
+
+- name: Display filesystem information
+  debug:
+    msg: |
+      MinIO Storage Configuration:
+        Data Path: {{ minio_data_path }}
+        Filesystem: {{ minio_fs_type.stdout }}
+        Storage Details: {{ minio_fs_details.stdout }}
+
+- name: Create Docker network for MinIO
+  community.docker.docker_network:
+    name: "{{ minio_docker_network }}"
+    state: present
+  when: minio_enable | bool and minio_create_network | bool
+
+- name: Start MinIO container
+  community.docker.docker_container:
+    name: "{{ minio_container_name }}"
+    image: "{{ minio_container_image }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ minio_docker_network }}"
+    ports:
+      - "{{ minio_api_port }}:9000"
+      - "{{ minio_console_port }}:9001"
+    env:
+      MINIO_ACCESS_KEY: "{{ minio_access_key }}"
+      MINIO_SECRET_KEY: "{{ minio_secret_key }}"
+    command: server /minio_data --console-address ":9001"
+    volumes:
+      - "{{ minio_data_path }}:/minio_data"
+    memory: "{{ minio_memory_limit }}"
+  when: minio_enable | bool
+
+- name: Wait for MinIO to be ready
+  wait_for:
+    host: localhost
+    port: "{{ minio_api_port }}"
+    timeout: 60
+  when: minio_enable | bool and minio_wait_for_ready | bool

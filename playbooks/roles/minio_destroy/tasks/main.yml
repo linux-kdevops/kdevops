@@ -1,0 +1,34 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Stop and remove MinIO container
+  community.docker.docker_container:
+    name: "{{ minio_container_name }}"
+    state: absent
+  ignore_errors: yes
+
+- name: Remove Docker network
+  community.docker.docker_network:
+    name: "{{ minio_docker_network_name }}"
+    state: absent
+  ignore_errors: yes
+
+- name: Clean up MinIO data directory
+  file:
+    path: "{{ minio_data_path }}"
+    state: absent
+  when: minio_warp_enable_cleanup | default(true) | bool
+
+- name: Clean up temporary Warp results
+  file:
+    path: "/tmp/warp-results"
+    state: absent
+
+- name: Display MinIO destroy complete
+  debug:
+    msg: "MinIO containers and data have been cleaned up"
