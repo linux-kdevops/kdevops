@@ -110,7 +110,7 @@ config NIXOS_USE_LOCAL_MIRROR
 config NIXOS_MIRROR_URL
 	string "Nix binary cache mirror URL"
 	output yaml
-	default $(shell, scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL)
+	default "$(shell, scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL)"
 	depends on NIXOS_USE_LOCAL_MIRROR
 	help
 	  The URL of the local Nix binary cache mirror. This is
