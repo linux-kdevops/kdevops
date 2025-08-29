@@ -15,7 +15,6 @@
   loop:
     - "{{ ai_docker_data_path }}"
     - "{{ ai_docker_etcd_data_path }}"
-    - "{{ ai_docker_minio_data_path }}"
   when: ai_milvus_docker | bool
   become: true
 
@@ -50,37 +49,26 @@
     memory: "{{ ai_etcd_memory_limit }}"
   when: ai_milvus_docker | bool
 
-- name: Start MinIO container
-  community.docker.docker_container:
-    name: "{{ ai_minio_container_name }}"
-    image: "{{ ai_minio_container_image_string }}"
-    state: started
-    restart_policy: unless-stopped
-    networks:
-      - name: "{{ ai_docker_network_name }}"
-    ports:
-      - "{{ ai_minio_api_port }}:9000"
-      - "{{ ai_minio_console_port }}:9001"
-    env:
-      MINIO_ACCESS_KEY: "{{ ai_minio_access_key }}"
-      MINIO_SECRET_KEY: "{{ ai_minio_secret_key }}"
-    ansible.builtin.command: server /minio_data --console-address ":9001"
-    volumes:
-      - "{{ ai_docker_minio_data_path }}:/minio_data"
-    memory: "{{ ai_minio_memory_limit }}"
+- name: Setup MinIO using shared role
+  include_role:
+    name: minio_setup
+  vars:
+    minio_container_image: "{{ ai_minio_container_image_string }}"
+    minio_container_name: "{{ ai_minio_container_name }}"
+    minio_api_port: "{{ ai_minio_api_port }}"
+    minio_console_port: "{{ ai_minio_console_port }}"
+    minio_access_key: "{{ ai_minio_access_key }}"
+    minio_secret_key: "{{ ai_minio_secret_key }}"
+    minio_data_path: "{{ ai_docker_minio_data_path }}"
+    minio_memory_limit: "{{ ai_minio_memory_limit }}"
+    minio_docker_network: "{{ ai_docker_network_name }}"
+    minio_create_network: false  # Network already created above
   when: ai_milvus_docker | bool
 
 - name: Wait for etcd to be ready
   ansible.builtin.wait_for:
     host: localhost
     port: "{{ ai_etcd_client_port }}"
-    timeout: 60
-  when: ai_milvus_docker | bool
-
-- name: Wait for MinIO to be ready
-  ansible.builtin.wait_for:
-    host: localhost
-    port: "{{ ai_minio_api_port }}"
     timeout: 60
   when: ai_milvus_docker | bool
 

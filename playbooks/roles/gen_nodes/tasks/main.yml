@@ -681,7 +681,7 @@
     mode: '0644'
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ansible_nodes_template.stat.exists
     - not kdevops_baseline_and_dev
     - not ai_enable_multifs_testing|default(false)|bool
@@ -699,7 +699,7 @@
     mode: '0644'
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ansible_nodes_template.stat.exists
     - kdevops_baseline_and_dev
     - not ai_enable_multifs_testing|default(false)|bool
@@ -742,7 +742,7 @@
     ai_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs) | unique }}"
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
 
@@ -753,7 +753,7 @@
     ai_enabled_section_types: "{{ filesystem_nodes }}"
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
     - not kdevops_baseline_and_dev
@@ -767,7 +767,7 @@
     ai_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
     - kdevops_baseline_and_dev
@@ -786,11 +786,127 @@
     force: yes
   when:
     - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflow_enable_ai|default(false)|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
     - ai_enabled_section_types is defined
     - ai_enabled_section_types | length > 0
+
+# MinIO S3 Storage Testing workflow nodes
+
+# Multi-filesystem MinIO configurations
+- name: Collect enabled MinIO multi-filesystem configurations
+  vars:
+    xfs_configs: >-
+      {{
+        [] +
+        (['xfs-4k'] if minio_multifs_xfs_4k_4ks|default(false)|bool else []) +
+        (['xfs-16k'] if minio_multifs_xfs_16k_4ks|default(false)|bool else []) +
+        (['xfs-32k'] if minio_multifs_xfs_32k_4ks|default(false)|bool else []) +
+        (['xfs-64k'] if minio_multifs_xfs_64k_4ks|default(false)|bool else [])
+      }}
+    ext4_configs: >-
+      {{
+        [] +
+        (['ext4-4k'] if minio_multifs_ext4_4k|default(false)|bool else []) +
+        (['ext4-16k-bigalloc'] if minio_multifs_ext4_16k_bigalloc|default(false)|bool else [])
+      }}
+    btrfs_configs: >-
+      {{
+        [] +
+        (['btrfs'] if minio_multifs_btrfs_default|default(false)|bool else [])
+      }}
+  set_fact:
+    minio_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs) | unique }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - minio_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+
+- name: Create MinIO nodes for each filesystem configuration (no dev)
+  vars:
+    filesystem_nodes: "{{ [kdevops_host_prefix + '-minio-'] | product(minio_multifs_enabled_configs | default([])) | map('join') | list }}"
+  set_fact:
+    minio_enabled_section_types: "{{ filesystem_nodes }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - minio_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+    - minio_multifs_enabled_configs is defined
+    - minio_multifs_enabled_configs | length > 0
+
+- name: Create MinIO nodes for each filesystem configuration with dev hosts
+  vars:
+    filesystem_nodes: "{{ [kdevops_host_prefix + '-minio-'] | product(minio_multifs_enabled_configs | default([])) | map('join') | list }}"
+  set_fact:
+    minio_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - minio_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - minio_multifs_enabled_configs is defined
+    - minio_multifs_enabled_configs | length > 0
+
+- name: Generate the MinIO multi-filesystem kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: [ 'hosts' ]
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ minio_enabled_section_types }}"
+    all_generic_nodes: "{{ minio_enabled_section_types }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - minio_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - minio_enabled_section_types is defined
+    - minio_enabled_section_types | length > 0
+
+# Standard MinIO single filesystem nodes
+- name: Generate the MinIO kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-minio'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-minio'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+    - not minio_enable_multifs_testing|default(false)|bool
+
+- name: Generate the MinIO kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-minio', kdevops_host_prefix + '-minio-dev'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-minio', kdevops_host_prefix + '-minio-dev'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_minio|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - not minio_enable_multifs_testing|default(false)|bool
 
 - name: Get the control host's timezone
   ansible.builtin.command: "timedatectl show -p Timezone --value"
