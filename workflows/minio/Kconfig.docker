@@ -1,0 +1,66 @@
+config MINIO_CONTAINER_IMAGE_STRING
+	string "MinIO container image"
+	output yaml
+	default "minio/minio:RELEASE.2024-01-16T16-07-38Z"
+	help
+	The MinIO container image to use for S3 storage benchmarking.
+	Using a recent stable release with performance improvements.
+
+config MINIO_CONTAINER_NAME
+	string "The local MinIO container name"
+	default "minio-warp-server"
+	output yaml
+	help
+	Set the name for the MinIO Docker container.
+
+config MINIO_ACCESS_KEY
+	string "MinIO access key"
+	output yaml
+	default "minioadmin"
+	help
+	Access key for MinIO S3 API access.
+
+config MINIO_SECRET_KEY
+	string "MinIO secret key"
+	output yaml
+	default "minioadmin"
+	help
+	Secret key for MinIO S3 API access.
+
+config MINIO_DATA_PATH
+	string "Host path for MinIO data storage"
+	output yaml
+	default "/data/minio"
+	help
+	Directory on the host where MinIO data will be persisted.
+	If using dedicated storage, this will be the mount point.
+	Otherwise, uses the existing filesystem at this path.
+
+config MINIO_DOCKER_NETWORK_NAME
+	string "Docker network name"
+	output yaml
+	default "minio-warp-network"
+	help
+	Name of the Docker network to create for MinIO containers.
+
+config MINIO_API_PORT
+	int "MinIO API port"
+	output yaml
+	default "9000"
+	help
+	Port for MinIO S3 API access.
+
+config MINIO_CONSOLE_PORT
+	int "MinIO console port"
+	output yaml
+	default "9001"
+	help
+	Port for MinIO web console access.
+
+config MINIO_MEMORY_LIMIT
+	string "MinIO container memory limit"
+	output yaml
+	default "4g"
+	help
+	Memory limit for the MinIO container. Adjust based on
+	your system resources and workload requirements.

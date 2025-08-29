@@ -1,0 +1,14 @@
+{
+  "benchmark": "{{ minio_warp_benchmark_type }}",
+  "endpoint": "http://localhost:{{ minio_api_port }}",
+  "access_key": "{{ minio_access_key }}",
+  "secret_key": "{{ minio_secret_key }}",
+  "bucket": "{{ minio_warp_bucket_name }}",
+  "duration": "{{ minio_warp_duration }}",
+  "concurrent": {{ minio_warp_concurrent_requests }},
+  "object_size": "{{ minio_warp_object_size }}",
+  "objects": {{ minio_warp_objects_per_request }},
+  "auto_terminate": {{ minio_warp_auto_terminate | lower }},
+  "cleanup": {{ minio_warp_enable_cleanup | lower }},
+  "output_format": "{{ minio_warp_output_format }}"
+}
