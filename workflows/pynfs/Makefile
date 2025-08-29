@@ -1,6 +1,3 @@
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := pynfs.j2
-endif
 
 PYNFS_GIT:=$(subst ",,$(CONFIG_PYNFS_GIT))
 PYNFS_ARGS += pynfs_git=$(PYNFS_GIT)

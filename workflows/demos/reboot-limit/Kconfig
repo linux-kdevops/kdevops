@@ -8,6 +8,11 @@ config WORKFLOWS_REBOOT_LIMIT
 	  you really have no idea clearly if you can reboot without issues
 	  forever and may end up with a false positive on an unidentified issue.
 
+config KDEVOPS_WORKFLOW_NAME
+	string
+	output yaml
+	default "reboot-limit" if WORKFLOWS_REBOOT_LIMIT
+
 if WORKFLOWS_REBOOT_LIMIT
 
 menu "Configure and reboot-limit"

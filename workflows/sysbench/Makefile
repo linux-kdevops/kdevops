@@ -1,8 +1,5 @@
 PHONY += sysbench sysbench-test sysbench-telemetry sysbench-help-menu
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := sysbench.j2
-endif
 
 TAGS_SYSBENCH_RUN := db_start
 TAGS_SYSBENCH_RUN += db_test_connection
