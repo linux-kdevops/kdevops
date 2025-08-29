@@ -1,0 +1,86 @@
+---
+- name: Import optional extra_args file
+  include_vars: "{{ item }}"
+  ignore_errors: yes
+  with_items:
+    - "../extra_vars.yaml"
+  tags: vars
+
+- name: Create results analysis script
+  copy:
+    content: |
+      #!/usr/bin/env python3
+      import json
+      import glob
+      import os
+      import sys
+      from pathlib import Path
+
+      def analyze_warp_results():
+          results_dir = Path("{{ playbook_dir }}/../workflows/minio/results")
+          result_files = list(results_dir.glob("warp_benchmark_*.json"))
+
+          if not result_files:
+              print("No Warp benchmark results found.")
+              return
+
+          print("MinIO Warp Benchmark Results Summary")
+          print("=" * 50)
+
+          total_throughput = 0
+          total_requests = 0
+          for result_file in result_files:
+              try:
+                  with open(result_file, 'r') as f:
+                      data = json.load(f)
+
+                  hostname = result_file.name.split('_')[2]
+                  timestamp = result_file.name.split('_')[3].replace('.json', '')
+
+                  # Extract key metrics from Warp results
+                  if 'throughput' in data:
+                      throughput_mbps = data['throughput'].get('average', 0) / (1024 * 1024)
+                      total_throughput += throughput_mbps
+
+                  if 'requests' in data:
+                      req_per_sec = data['requests'].get('average', 0)
+                      total_requests += req_per_sec
+
+                  print(f"\nHost: {hostname}")
+                  print(f"Timestamp: {timestamp}")
+                  print(f"Throughput: {throughput_mbps:.2f} MB/s")
+                  print(f"Requests/sec: {req_per_sec:.2f}")
+
+                  if 'latency' in data:
+                      avg_latency = data['latency'].get('average', 0)
+                      print(f"Average Latency: {avg_latency:.2f} ms")
+
+              except Exception as e:
+                  print(f"Error processing {result_file}: {e}")
+          print("\n" + "=" * 50)
+          print(f"Total Throughput: {total_throughput:.2f} MB/s")
+          print(f"Total Requests/sec: {total_requests:.2f}")
+
+      if __name__ == "__main__":
+          analyze_warp_results()
+    dest: "/tmp/analyze_minio_results.py"
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: Run results analysis
+  command: python3 /tmp/analyze_minio_results.py
+  register: analysis_output
+  delegate_to: localhost
+  run_once: true
+
+- name: Display analysis results
+  debug:
+    var: analysis_output.stdout_lines
+
+- name: Create results summary file
+  copy:
+    content: "{{ analysis_output.stdout }}"
+    dest: "{{ playbook_dir }}/../workflows/minio/results/benchmark_summary.txt"
+  delegate_to: localhost
+  run_once: true

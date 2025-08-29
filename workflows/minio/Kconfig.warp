@@ -1,0 +1,141 @@
+menu "MinIO Warp benchmark configuration"
+
+config MINIO_WARP_RUN_COMPREHENSIVE_SUITE
+	bool "Run comprehensive benchmark suite"
+	default y
+	output yaml
+	help
+	  Run a complete suite of benchmarks including mixed, GET, PUT, DELETE,
+	  LIST operations with various object sizes and concurrency levels.
+	  This provides the most thorough performance analysis.
+
+if !MINIO_WARP_RUN_COMPREHENSIVE_SUITE
+
+choice
+	prompt "Warp benchmark type"
+	default MINIO_WARP_BENCHMARK_MIXED
+	help
+	  Select the primary benchmark type for MinIO Warp testing.
+
+config MINIO_WARP_BENCHMARK_MIXED
+	bool "Mixed workload (GET/PUT/DELETE)"
+	help
+	  Run a mixed workload benchmark combining GET, PUT, and DELETE operations
+	  to simulate realistic S3 usage patterns.
+
+config MINIO_WARP_BENCHMARK_GET
+	bool "GET operations (download)"
+	help
+	  Focus on download performance testing with GET operations.
+
+config MINIO_WARP_BENCHMARK_PUT
+	bool "PUT operations (upload)"
+	help
+	  Focus on upload performance testing with PUT operations.
+
+config MINIO_WARP_BENCHMARK_DELETE
+	bool "DELETE operations"
+	help
+	  Test object deletion performance.
+
+config MINIO_WARP_BENCHMARK_LIST
+	bool "LIST operations"
+	help
+	  Test bucket and object listing performance.
+
+config MINIO_WARP_BENCHMARK_MULTIPART
+	bool "MULTIPART upload"
+	help
+	  Test large file upload performance using multipart uploads.
+
+endchoice
+
+endif # !MINIO_WARP_RUN_COMPREHENSIVE_SUITE
+
+config MINIO_WARP_BENCHMARK_TYPE
+	string "Benchmark type to run"
+	output yaml
+	default "mixed"
+
+config MINIO_WARP_DURATION
+	string "Benchmark duration"
+	output yaml
+	default "5m"
+	help
+	  Duration for each benchmark run. Examples: 30s, 5m, 1h.
+	  Longer durations provide more stable results but take more time.
+
+config MINIO_WARP_CONCURRENT_REQUESTS
+	int "Concurrent requests"
+	output yaml
+	default 10
+	range 1 1000
+	help
+	  Number of concurrent requests to send to MinIO.
+	  Higher values increase load but may overwhelm the system.
+
+config MINIO_WARP_OBJECT_SIZE
+	string "Object size for testing"
+	output yaml
+	default "1MB"
+	help
+	  Size of objects to use in benchmarks. Examples: 1KB, 1MB, 10MB.
+	  Larger objects test throughput, smaller objects test IOPS.
+
+config MINIO_WARP_OBJECTS_PER_REQUEST
+	int "Objects per request"
+	output yaml
+	default 100
+	range 1 10000
+	help
+	  Number of objects to use in the benchmark.
+	  More objects provide better statistical accuracy.
+
+config MINIO_WARP_BUCKET_NAME
+	string "S3 bucket name for testing"
+	output yaml
+	default "warp-benchmark-bucket"
+	help
+	  Name of the S3 bucket to create and use for benchmarking.
+
+config MINIO_WARP_AUTO_TERMINATE
+	bool "Auto-terminate when results stabilize"
+	output yaml
+	default y
+	help
+	  Automatically terminate the benchmark when performance results
+	  have stabilized, potentially reducing test time.
+
+config MINIO_WARP_ENABLE_CLEANUP
+	bool "Clean up test data after benchmarks"
+	output yaml
+	default y
+	help
+	  Remove test objects and buckets after benchmarking completes.
+	  Disable if you want to inspect test data afterwards.
+
+config MINIO_WARP_OUTPUT_FORMAT
+	string "Output format"
+	output yaml
+	default "json"
+	help
+	  Output format for benchmark results. Options: json, csv, text.
+	  JSON format provides the most detailed metrics for analysis.
+
+config MINIO_WARP_ENABLE_WEB_UI
+	bool "Enable Warp Web UI for real-time monitoring"
+	output yaml
+	default n
+	help
+	  Enable the Warp web interface for real-time benchmark monitoring.
+	  Access the UI at http://localhost:7762 during benchmark runs.
+
+config MINIO_WARP_WEB_UI_PORT
+	int "Web UI port"
+	output yaml
+	default 7762
+	depends on MINIO_WARP_ENABLE_WEB_UI
+	help
+	  Port for the Warp web interface.
+
+endmenu

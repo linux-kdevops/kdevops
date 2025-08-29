@@ -1,0 +1,53 @@
+---
+# MinIO S3 Storage Benchmarking Playbook
+
+- name: Install MinIO and setup
+  hosts: minio
+  become: true
+  become_user: root
+  tags: ['minio_install']
+  roles:
+    - role: minio_install
+    - role: minio_setup
+      vars:
+        minio_container_image: "{{ minio_container_image_string }}"
+        minio_container_name: "{{ minio_container_name }}"
+        minio_api_port: "{{ minio_api_port }}"
+        minio_console_port: "{{ minio_console_port }}"
+        minio_access_key: "{{ minio_access_key }}"
+        minio_secret_key: "{{ minio_secret_key }}"
+        minio_data_path: "{{ minio_data_path }}"
+        minio_memory_limit: "{{ minio_memory_limit }}"
+        minio_docker_network: "{{ minio_docker_network_name }}"
+
+- name: Run MinIO Warp benchmarks
+  hosts: minio
+  become: true
+  become_user: root
+  tags: ['minio_warp']
+  roles:
+    - role: minio_warp_run
+
+- name: Uninstall MinIO
+  hosts: minio
+  become: true
+  become_user: root
+  tags: ['minio_uninstall']
+  roles:
+    - role: minio_uninstall
+
+- name: Destroy MinIO and cleanup
+  hosts: minio
+  become: true
+  become_user: root
+  tags: ['minio_destroy']
+  roles:
+    - role: minio_destroy
+
+- name: Analyze MinIO results
+  hosts: minio
+  become: true
+  become_user: root
+  tags: ['minio_results']
+  roles:
+    - role: minio_results

@@ -233,6 +233,13 @@ config KDEVOPS_WORKFLOW_DEDICATE_AI
 	  This will dedicate your configuration to running only the
 	  AI workflow for vector database performance testing.
 
+config KDEVOPS_WORKFLOW_DEDICATE_MINIO
+	bool "minio"
+	select KDEVOPS_WORKFLOW_ENABLE_MINIO
+	help
+	  This will dedicate your configuration to running only the
+	  MinIO workflow for S3 storage benchmarking with Warp testing.
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -250,6 +257,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "mmtests" if KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 	default "fio-tests" if KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 	default "ai" if KDEVOPS_WORKFLOW_DEDICATE_AI
+	default "minio" if KDEVOPS_WORKFLOW_DEDICATE_MINIO
 
 endif
 
@@ -512,6 +520,17 @@ menu "Configure and run AI benchmarks"
 source "workflows/ai/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_AI
+
+config KDEVOPS_WORKFLOW_ENABLE_MINIO
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MINIO || KDEVOPS_WORKFLOW_DEDICATE_MINIO
+
+if KDEVOPS_WORKFLOW_ENABLE_MINIO
+menu "Configure and run MinIO S3 benchmarks"
+source "workflows/minio/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_MINIO
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"
