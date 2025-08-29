@@ -1,0 +1,364 @@
+menu "MinIO Storage Configuration"
+
+# CLI override support for WARP_DEVICE
+config MINIO_DEVICE_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh WARP_DEVICE)
+
+config MINIO_STORAGE_ENABLE
+	bool "Enable dedicated MinIO storage device"
+	default y
+	output yaml
+	help
+	  Configure a dedicated storage device for MinIO data storage.
+	  This allows testing MinIO performance on different filesystems
+	  and configurations by creating and mounting a dedicated partition.
+
+	  When enabled, MinIO data will be stored on a dedicated device
+	  and filesystem optimized for S3 workloads.
+
+if MINIO_STORAGE_ENABLE
+
+config MINIO_DEVICE
+	string "Device to use for MinIO storage"
+	output yaml
+	default $(shell, ./scripts/append-makefile-vars.sh $(WARP_DEVICE)) if MINIO_DEVICE_SET_BY_CLI
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for MinIO storage. This device will be
+	  formatted and mounted to store MinIO S3 data.
+
+	  Can be overridden with WARP_DEVICE environment variable:
+	    make defconfig-minio-warp-xfs-16k WARP_DEVICE=/dev/nvme4n1
+
+config MINIO_MOUNT_POINT
+	string "Mount point for MinIO storage"
+	output yaml
+	default "/data/minio"
+	help
+	  The path where the MinIO storage filesystem will be mounted.
+	  MinIO will store all S3 data under this path.
+
+choice
+	prompt "MinIO storage filesystem"
+	default MINIO_FSTYPE_XFS
+
+config MINIO_FSTYPE_XFS
+	bool "XFS"
+	help
+	  Use XFS filesystem for MinIO storage. XFS provides excellent
+	  performance for large files and is recommended for production
+	  MinIO deployments. Supports various block sizes for testing
+	  large block size (LBS) configurations.
+
+config MINIO_FSTYPE_BTRFS
+	bool "Btrfs"
+	help
+	  Use Btrfs filesystem for MinIO storage. Btrfs provides
+	  advanced features like snapshots and compression, which can
+	  be beneficial for S3 storage management.
+
+config MINIO_FSTYPE_EXT4
+	bool "ext4"
+	help
+	  Use ext4 filesystem for MinIO storage. Ext4 is a mature
+	  and reliable filesystem with good all-around performance.
+
+config MINIO_FSTYPE_BCACHEFS
+	bool "bcachefs"
+	help
+	  Use bcachefs filesystem for MinIO storage. Bcachefs is a
+	  modern filesystem with advanced features like compression,
+	  encryption, and caching.
+
+endchoice
+
+config MINIO_FSTYPE
+	string
+	output yaml
+	default "xfs" if MINIO_FSTYPE_XFS
+	default "btrfs" if MINIO_FSTYPE_BTRFS
+	default "ext4" if MINIO_FSTYPE_EXT4
+	default "bcachefs" if MINIO_FSTYPE_BCACHEFS
+
+if MINIO_FSTYPE_XFS
+
+choice
+	prompt "XFS block size configuration"
+	default MINIO_XFS_BLOCKSIZE_4K
+
+config MINIO_XFS_BLOCKSIZE_4K
+	bool "4K block size (default)"
+	help
+	  Use 4K (4096 bytes) block size. This is the default and most
+	  compatible configuration.
+
+config MINIO_XFS_BLOCKSIZE_8K
+	bool "8K block size"
+	help
+	  Use 8K (8192 bytes) block size for improved performance with
+	  larger I/O operations.
+
+config MINIO_XFS_BLOCKSIZE_16K
+	bool "16K block size (LBS)"
+	help
+	  Use 16K (16384 bytes) block size. This is a large block size
+	  configuration that may require kernel LBS support.
+
+config MINIO_XFS_BLOCKSIZE_32K
+	bool "32K block size (LBS)"
+	help
+	  Use 32K (32768 bytes) block size. This is a large block size
+	  configuration that requires kernel LBS support.
+
+config MINIO_XFS_BLOCKSIZE_64K
+	bool "64K block size (LBS)"
+	help
+	  Use 64K (65536 bytes) block size. This is the maximum XFS block
+	  size and requires kernel LBS support.
+
+endchoice
+
+config MINIO_XFS_BLOCKSIZE
+	int
+	output yaml
+	default 4096 if MINIO_XFS_BLOCKSIZE_4K
+	default 8192 if MINIO_XFS_BLOCKSIZE_8K
+	default 16384 if MINIO_XFS_BLOCKSIZE_16K
+	default 32768 if MINIO_XFS_BLOCKSIZE_32K
+	default 65536 if MINIO_XFS_BLOCKSIZE_64K
+
+choice
+	prompt "XFS sector size"
+	default MINIO_XFS_SECTORSIZE_4K
+
+config MINIO_XFS_SECTORSIZE_4K
+	bool "4K sector size (default)"
+	help
+	  Use 4K (4096 bytes) sector size. This is the standard
+	  configuration for most modern drives.
+
+config MINIO_XFS_SECTORSIZE_512
+	bool "512 byte sector size"
+	depends on MINIO_XFS_BLOCKSIZE_4K
+	help
+	  Use legacy 512 byte sector size. Only available with 4K block size.
+
+config MINIO_XFS_SECTORSIZE_8K
+	bool "8K sector size"
+	depends on MINIO_XFS_BLOCKSIZE_8K || MINIO_XFS_BLOCKSIZE_16K || MINIO_XFS_BLOCKSIZE_32K || MINIO_XFS_BLOCKSIZE_64K
+	help
+	  Use 8K (8192 bytes) sector size. Requires block size >= 8K.
+
+config MINIO_XFS_SECTORSIZE_16K
+	bool "16K sector size (LBS)"
+	depends on MINIO_XFS_BLOCKSIZE_16K || MINIO_XFS_BLOCKSIZE_32K || MINIO_XFS_BLOCKSIZE_64K
+	help
+	  Use 16K (16384 bytes) sector size. Requires block size >= 16K
+	  and kernel LBS support.
+
+config MINIO_XFS_SECTORSIZE_32K
+	bool "32K sector size (LBS)"
+	depends on MINIO_XFS_BLOCKSIZE_32K || MINIO_XFS_BLOCKSIZE_64K
+	help
+	  Use 32K (32768 bytes) sector size. Requires block size >= 32K
+	  and kernel LBS support.
+
+endchoice
+
+config MINIO_XFS_SECTORSIZE
+	int
+	output yaml
+	default 512 if MINIO_XFS_SECTORSIZE_512
+	default 4096 if MINIO_XFS_SECTORSIZE_4K
+	default 8192 if MINIO_XFS_SECTORSIZE_8K
+	default 16384 if MINIO_XFS_SECTORSIZE_16K
+	default 32768 if MINIO_XFS_SECTORSIZE_32K
+
+config MINIO_XFS_MKFS_OPTS
+	string "Additional XFS mkfs options for MinIO storage"
+	output yaml
+	default ""
+	help
+	  Additional options to pass to mkfs.xfs when creating the MinIO
+	  storage filesystem. Block and sector sizes are configured above.
+
+endif # MINIO_FSTYPE_XFS
+
+config MINIO_BTRFS_MKFS_OPTS
+	string "Btrfs mkfs options for MinIO storage"
+	output yaml
+	default "-f"
+	depends on MINIO_FSTYPE_BTRFS
+	help
+	  Options to pass to mkfs.btrfs when creating the MinIO storage
+	  filesystem.
+
+config MINIO_EXT4_MKFS_OPTS
+	string "ext4 mkfs options for MinIO storage"
+	output yaml
+	default "-F"
+	depends on MINIO_FSTYPE_EXT4
+	help
+	  Options to pass to mkfs.ext4 when creating the MinIO storage
+	  filesystem.
+
+config MINIO_BCACHEFS_MKFS_OPTS
+	string "bcachefs mkfs options for MinIO storage"
+	output yaml
+	default "-f"
+	depends on MINIO_FSTYPE_BCACHEFS
+	help
+	  Options to pass to mkfs.bcachefs when creating the MinIO storage
+	  filesystem.
+
+endif # MINIO_STORAGE_ENABLE
+
+# Multi-filesystem configuration when not skipping bringup
+if !KDEVOPS_USE_DECLARED_HOSTS && MINIO_STORAGE_ENABLE
+
+config MINIO_ENABLE_MULTIFS_TESTING
+	bool "Enable multi-filesystem testing"
+	default n
+	output yaml
+	help
+	  Enable testing the same MinIO workload across multiple filesystem
+	  configurations. This allows comparing S3 performance characteristics
+	  between different filesystems and their configurations.
+
+	  When enabled, multiple nodes will be created with different
+	  filesystem configurations for comprehensive performance analysis.
+
+if MINIO_ENABLE_MULTIFS_TESTING
+
+config MINIO_MULTIFS_TEST_XFS
+	bool "Test XFS configurations"
+	default y
+	output yaml
+	help
+	  Enable testing MinIO workloads on XFS filesystem with different
+	  block size configurations.
+
+if MINIO_MULTIFS_TEST_XFS
+
+menu "XFS configuration profiles"
+
+config MINIO_MULTIFS_XFS_4K_4KS
+	bool "XFS 4k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test MinIO workloads on XFS with 4k filesystem block size
+	  and 4k sector size. This is the most common configuration
+	  and provides good performance for most S3 workloads.
+
+config MINIO_MULTIFS_XFS_16K_4KS
+	bool "XFS 16k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test MinIO workloads on XFS with 16k filesystem block size
+	  and 4k sector size. Larger block sizes can improve performance
+	  for large object storage patterns.
+
+config MINIO_MULTIFS_XFS_32K_4KS
+	bool "XFS 32k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test MinIO workloads on XFS with 32k filesystem block size
+	  and 4k sector size. Even larger block sizes can provide
+	  benefits for very large S3 objects.
+
+config MINIO_MULTIFS_XFS_64K_4KS
+	bool "XFS 64k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test MinIO workloads on XFS with 64k filesystem block size
+	  and 4k sector size. Maximum supported block size for XFS,
+	  optimized for very large object operations.
+
+endmenu
+
+endif # MINIO_MULTIFS_TEST_XFS
+
+config MINIO_MULTIFS_TEST_EXT4
+	bool "Test ext4 configurations"
+	default y
+	output yaml
+	help
+	  Enable testing MinIO workloads on ext4 filesystem with different
+	  configurations including bigalloc options.
+
+if MINIO_MULTIFS_TEST_EXT4
+
+menu "ext4 configuration profiles"
+
+config MINIO_MULTIFS_EXT4_4K
+	bool "ext4 4k block size"
+	default y
+	output yaml
+	help
+	  Test MinIO workloads on ext4 with standard 4k block size.
+	  This is the default ext4 configuration.
+
+config MINIO_MULTIFS_EXT4_16K_BIGALLOC
+	bool "ext4 16k bigalloc"
+	default n
+	output yaml
+	help
+	  Test MinIO workloads on ext4 with 16k bigalloc enabled.
+	  Bigalloc reduces metadata overhead and can improve
+	  performance for large S3 objects.
+
+endmenu
+
+endif # MINIO_MULTIFS_TEST_EXT4
+
+config MINIO_MULTIFS_TEST_BTRFS
+	bool "Test btrfs configurations"
+	default y
+	output yaml
+	help
+	  Enable testing MinIO workloads on btrfs filesystem with
+	  common default configuration profile.
+
+if MINIO_MULTIFS_TEST_BTRFS
+
+menu "btrfs configuration profiles"
+
+config MINIO_MULTIFS_BTRFS_DEFAULT
+	bool "btrfs default profile"
+	default y
+	output yaml
+	help
+	  Test MinIO workloads on btrfs with default configuration.
+	  This includes modern defaults with free-space-tree and
+	  no-holes features enabled.
+
+endmenu
+
+endif # MINIO_MULTIFS_TEST_BTRFS
+
+config MINIO_MULTIFS_RESULTS_DIR
+	string "Multi-filesystem results directory"
+	output yaml
+	default "/data/minio-multifs-benchmark"
+	help
+	  Directory where multi-filesystem test results and logs will be stored.
+	  Each filesystem configuration will have its own subdirectory.
+
+endif # MINIO_ENABLE_MULTIFS_TESTING
+
+endif # !SKIP_BRINGUP && MINIO_STORAGE_ENABLE
+
+endmenu

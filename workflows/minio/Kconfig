@@ -1,0 +1,23 @@
+if KDEVOPS_WORKFLOW_ENABLE_MINIO
+
+menu "MinIO S3 Storage Testing"
+
+config KDEVOPS_WORKFLOW_ENABLE_MINIO_WARP
+	bool "Enable MinIO Warp benchmarking"
+	default y
+	help
+	Enable MinIO Warp for S3 storage benchmarking. Warp provides
+	comprehensive S3 API performance testing with multiple benchmark
+	types including GET, PUT, DELETE, LIST, and MULTIPART operations.
+
+if KDEVOPS_WORKFLOW_ENABLE_MINIO_WARP
+
+source "workflows/minio/Kconfig.docker"
+source "workflows/minio/Kconfig.storage"
+source "workflows/minio/Kconfig.warp"
+
+endif # KDEVOPS_WORKFLOW_ENABLE_MINIO_WARP
+
+endmenu
+
+endif # KDEVOPS_WORKFLOW_ENABLE_MINIO
