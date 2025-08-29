@@ -1,8 +1,5 @@
 MMTESTS_ARGS	:=
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := mmtests.j2
-endif
 
 mmtests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \

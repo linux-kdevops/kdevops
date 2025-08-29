@@ -1,0 +1,110 @@
+{# Template for Linux custom kernel workflow #}
+[all]
+localhost ansible_connection=local
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }} ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
+{{ kdevops_host_prefix }}
+{% endif %}
+{% if kdevops_baseline_and_dev == True %}
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
+{{ kdevops_host_prefix }}-dev
+{% endif %}
+{% endif %}
+{% if kdevops_enable_iscsi %}
+{{ kdevops_host_prefix }}-iscsi
+{% endif %}
+{% if kdevops_nfsd_enable %}
+{{ kdevops_host_prefix }}-nfsd
+{% endif %}
+{% if kdevops_smbd_enable|default(false) %}
+{{ kdevops_host_prefix }}-smbd
+{% endif %}
+{% if kdevops_krb5kdc_enable|default(false) %}
+{{ kdevops_host_prefix }}-kdc
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }} ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
+{{ kdevops_host_prefix }}
+{% endif %}
+
+[baseline:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% if kdevops_enable_nixos|default(false) %}
+{{ kdevops_host_prefix }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
+{% else %}
+{{ kdevops_host_prefix }}-dev
+{% endif %}
+
+[dev:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+[linux]
+{{ kdevops_host_prefix }}
+{% if kdevops_baseline_and_dev == True %}
+{{ kdevops_host_prefix }}-dev
+{% endif %}
+
+[linux:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_enable_iscsi %}
+[iscsi]
+{{ kdevops_host_prefix }}-iscsi
+
+[iscsi:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_nfsd_enable %}
+[nfsd]
+{{ kdevops_host_prefix }}-nfsd
+
+[nfsd:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_smbd_enable|default(false) %}
+[smbd]
+{{ kdevops_host_prefix }}-smbd
+
+[smbd:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_krb5kdc_enable|default(false) %}
+[kdc]
+{{ kdevops_host_prefix }}-kdc
+
+[kdc:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+[service]
+{% if kdevops_enable_iscsi %}
+{{ kdevops_host_prefix }}-iscsi
+{% endif %}
+{% if kdevops_nfsd_enable %}
+{{ kdevops_host_prefix }}-nfsd
+{% endif %}
+{% if kdevops_smbd_enable|default(false) %}
+{{ kdevops_host_prefix }}-smbd
+{% endif %}
+{% if kdevops_krb5kdc_enable|default(false) %}
+{{ kdevops_host_prefix }}-kdc
+{% endif %}
+
+[service:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"

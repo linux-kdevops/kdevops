@@ -8,9 +8,6 @@ FSTESTS_BASELINE_EXTRA :=
 
 export FSTYP:=$(subst ",,$(CONFIG_FSTESTS_FSTYP))
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := fstests.j2
-endif
 
 FSTESTS_ARGS += fstests_fstyp='$(FSTYP)'
 FS_CONFIG='$(FSTYP)/$(FSTYP).config'

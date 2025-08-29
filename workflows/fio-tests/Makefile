@@ -1,6 +1,3 @@
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := fio-tests.j2
-endif
 
 fio-tests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
