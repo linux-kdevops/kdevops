@@ -1,6 +1,3 @@
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := ltp.j2
-endif
 
 LTP_REPO:=$(subst ",,$(CONFIG_LTP_REPO))
 LTP_ARGS += ltp_repo=$(LTP_REPO)

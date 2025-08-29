@@ -3,9 +3,6 @@ PHONY += ai-setup ai-uninstall ai-destroy ai-help-menu
 PHONY += ai-tests ai-tests-baseline ai-tests-dev
 PHONY += ai-tests-results
 
-ifeq (y,$(CONFIG_WORKFLOWS_DEDICATED_WORKFLOW))
-export KDEVOPS_HOSTS_TEMPLATE := hosts.j2
-endif
 
 export AI_DATA_TARGET := $(subst ",,$(CONFIG_AI_BENCHMARK_RESULTS_DIR))
 export AI_ARGS :=

@@ -14,7 +14,6 @@ TREE_CONFIG:=config-$(TREE_REF)-pure-iomap
 endif
 
 ifeq (y,$(CONFIG_BOOTLINUX_BUILDER))
-KDEVOPS_HOSTS_TEMPLATE=builder.j2
 endif
 
 # Describes the Linux clone

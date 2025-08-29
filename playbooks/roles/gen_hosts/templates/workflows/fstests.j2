@@ -1,0 +1,72 @@
+{# Workflow template for fstests #}
+[all]
+localhost ansible_connection=local
+{% for node_section in fstests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ node_section }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ node_section }}-dev
+{% endif %}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for node_section in fstests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ node_section }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for node_section in fstests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ node_section }}-dev
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[fstests]
+{% for node_section in fstests_enabled_test_types %}
+{{ kdevops_host_prefix }}-{{ node_section }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ node_section }}-dev
+{% endif %}
+{% endfor %}
+
+[fstests:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% for section in fstests_enabled_test_types %}
+[fstests_{{ section | replace('-', '_') }}]
+{{ kdevops_host_prefix }}-{{ section }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ section }}-dev
+{% endif %}
+
+[fstests_{{ section | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endfor %}
+
+[nfsd]
+{% if kdevops_nfsd_enable %}
+{{ kdevops_host_prefix }}-nfsd
+{% endif %}
+
+[nfsd:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[service]
+{% if kdevops_enable_iscsi %}
+{{ kdevops_host_prefix }}-iscsi
+{% endif %}
+{% if kdevops_nfsd_enable %}
+{{ kdevops_host_prefix }}-nfsd
+{% endif %}
+
+[service:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"

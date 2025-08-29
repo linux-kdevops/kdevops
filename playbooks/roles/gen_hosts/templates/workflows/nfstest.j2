@@ -1,0 +1,41 @@
+{# Workflow template for nfstest #}
+[all]
+localhost ansible_connection=local
+{% for host in nfstest_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endif %}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for host in nfstest_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{% for host in nfstest_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[nfstest]
+{% for host in nfstest_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endif %}
+{% endfor %}
+
+[nfstest:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"

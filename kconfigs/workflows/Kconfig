@@ -228,6 +228,7 @@ config KDEVOPS_WORKFLOW_NAME
 	output yaml
 	default "fstests" if KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 	default "blktests" if KDEVOPS_WORKFLOW_DEDICATE_BLKTESTS
+	default "cxl" if KDEVOPS_WORKFLOW_DEDICATE_CXL
 	default "pynfs" if KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 	default "selftests" if KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 	default "gitr" if KDEVOPS_WORKFLOW_DEDICATE_GITR
@@ -513,5 +514,13 @@ config KDEVOPS_WORKFLOW_GIT_CLONES_KDEVOPS_GIT
 endif # WORKFLOWS_LINUX_TESTS
 
 endif # WORKFLOWS_TESTS
+
+# For Linux custom workflow without tests, still need workflow name for templating
+if WORKFLOW_LINUX_CUSTOM && !WORKFLOWS_TESTS
+config KDEVOPS_WORKFLOW_NAME
+	string
+	output yaml
+	default "linux"
+endif
 
 endif # WORKFLOWS
