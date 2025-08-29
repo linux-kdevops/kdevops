@@ -212,7 +212,9 @@ $(KDEVOPS_PROVISIONED_SSH):
 		--inventory localhost, \
 		playbooks/terraform.yml --tags ssh \
 		--extra-vars=@./extra_vars.yaml
-	$(Q)ansible $(ANSIBLE_VERBOSE) -i hosts all -m wait_for_connection
+	$(Q)ansible $(ANSIBLE_VERBOSE) \
+		-i hosts baseline:dev:service \
+		-m wait_for_connection
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 status_terraform:
