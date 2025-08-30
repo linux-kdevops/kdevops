@@ -162,15 +162,52 @@
     target: all
     jobs: "{{ ansible_processor_nproc }}"
 
-- name: Ensure /opt has correct permissions
-  tags: ["ltp"]
+- name: Set the pathname of the install directory
+  tags: ["build", "ltp"]
+  ansible.builtin.set_fact:
+    ltp_install_dir: "{{ data_path }}/opt"
+
+- name: Remove existing ltp install directory
+  tags: ["build", "ltp"]
   become: true
   become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
-    state: directory
-    path: "/opt"
+    path: "{{ ltp_install_dir }}"
+    state: absent
+
+- name: Create a fresh ltp install directory
+  tags: ["build", "ltp"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ ltp_install_dir }}"
+    owner: "root"
+    group: "root"
     mode: "u=rwx,g=rwx,o=rwxt"
+    state: directory
+
+- name: Remove /opt
+  tags: ["build", "ltp"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "/opt"
+    state: absent
+
+- name: Replace /opt with a symlink
+  tags: ["build", "ltp"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    src: "{{ ltp_install_dir }}"
+    dest: "/opt"
+    owner: "root"
+    group: "root"
+    state: link
 
 - name: Install ltp on the test systems
   tags: ["ltp"]
