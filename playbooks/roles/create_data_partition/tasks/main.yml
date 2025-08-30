@@ -1,15 +1,23 @@
 ---
+- name: Skip data partition creation for declared hosts
+  ansible.builtin.debug:
+    msg: "Skipping data partition creation - using declared hosts with pre-existing infrastructure"
+  when:
+    - kdevops_use_declared_hosts|default(false)|bool
+
 - name: Include common role
   ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool
+    - not kdevops_use_declared_hosts|default(false)|bool
 
 - name: Establish the fixed device name of the data device
   tags: ["data_partition"]
   when:
     - kdevops_enable_terraform|bool
     - kdevops_terraform_provider == "aws"
+    - not kdevops_use_declared_hosts|default(false)|bool
   block:
     - name: Retrieve the block_device_map from terraform
       delegate_to: localhost
@@ -51,4 +59,19 @@
     disk_setup_path: "{{ data_path }}"
     disk_setup_user: "{{ data_user }}"
     disk_setup_group: "{{ data_group }}"
+  tags: ["data_partition"]
+  when:
+    - not kdevops_use_declared_hosts|default(false)|bool
+
+- name: Ensure data path exists and has correct permissions for declared hosts
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    state: directory
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+    mode: "0755"
+  become: true
+  become_method: sudo
+  when:
+    - kdevops_use_declared_hosts|default(false)|bool
   tags: ["data_partition"]

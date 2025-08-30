@@ -1,0 +1,81 @@
+# Configuration for declared hosts that skip bringup process
+
+# CLI override support for DECLARED_HOSTS
+config KDEVOPS_DECLARED_HOSTS_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh DECLARED_HOSTS)
+
+config KDEVOPS_USE_DECLARED_HOSTS
+	bool "Use declared hosts (skip bringup process)"
+	depends on SKIP_BRINGUP || KDEVOPS_DECLARED_HOSTS_SET_BY_CLI
+	select WORKFLOW_INFER_USER_AND_GROUP
+	output yaml
+	default y if SKIP_BRINGUP
+	default y if KDEVOPS_DECLARED_HOSTS_SET_BY_CLI
+	help
+	  Enable this option to use pre-existing hosts that you have already
+	  configured with SSH access. This is useful for:
+
+	  * Bare metal systems
+	  * Pre-provisioned VMs or cloud instances
+	  * Systems managed by other infrastructure tools
+
+	  When this option is enabled:
+	  - SSH keys will not be generated (assumes you already have access)
+	  - Bringup and teardown operations will be skipped
+	  - User and group settings will be inferred from the target hosts
+	  - You must provide the list of hosts in KDEVOPS_DECLARED_HOSTS
+
+	  This option automatically:
+	  - Selects WORKFLOW_INFER_USER_AND_GROUP to detect the correct
+	    user and group on the target systems
+	  - Assumes SSH access is already configured
+
+config KDEVOPS_DECLARED_HOSTS
+	string "List of declared hosts"
+	depends on KDEVOPS_USE_DECLARED_HOSTS
+	output yaml
+	default "$(shell, echo ${DECLARED_HOSTS})" if KDEVOPS_DECLARED_HOSTS_SET_BY_CLI
+	default ""
+	help
+	  Provide a list of hostnames or IP addresses for the pre-existing
+	  systems you want to use. These hosts must already be accessible
+	  via SSH with the appropriate keys configured.
+
+	  Format: Space or comma-separated list
+	  Example: "host1 host2 host3" or "host1,host2,host3"
+
+	  These hosts will be used directly without any bringup process.
+	  Make sure you have:
+	  - SSH access configured
+	  - Required packages installed
+	  - Appropriate user permissions
+
+if KDEVOPS_USE_DECLARED_HOSTS
+
+config KDEVOPS_DECLARED_HOSTS_PYTHON_INTERPRETER
+	string "Python interpreter path on declared hosts"
+	default "/usr/bin/python3"
+	output yaml
+	help
+	  Specify the path to the Python interpreter on the declared hosts.
+	  This is required for Ansible to function properly.
+
+	  Common values:
+	  - /usr/bin/python3 (most modern systems)
+	  - /usr/bin/python (older systems)
+	  - /usr/local/bin/python3 (custom installations)
+
+config KDEVOPS_DECLARED_HOSTS_GROUP_VARS
+	bool "Apply group variables to declared hosts"
+	default y
+	output yaml
+	help
+	  When enabled, kdevops will apply the appropriate group variables
+	  to the declared hosts based on the selected workflow.
+
+	  This ensures that declared hosts receive the same configuration
+	  variables as dynamically provisioned hosts would.
+
+endif # KDEVOPS_USE_DECLARED_HOSTS

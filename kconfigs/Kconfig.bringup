@@ -13,10 +13,16 @@ config CLOUD_INITIALIZED
 	bool
 	default $(shell, test -f .cloud.initialized && echo y || echo n) = "y"
 
+# CLI override detection for DECLARED_HOSTS which should enable SKIP_BRINGUP
+config SKIP_BRINGUP_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh DECLARED_HOSTS)
+	select SKIP_BRINGUP
+
 choice
 	prompt "Node bring up method"
 	default TERRAFORM if CLOUD_INITIALIZED
-	default GUESTFS
+	default GUESTFS if !CLOUD_INITIALIZED
 
 config GUESTFS
 	bool "Use guestfs-tools for local virtualization via KVM and libvirt"
@@ -85,6 +91,7 @@ config LIBVIRT
 source "kconfigs/Kconfig.guestfs"
 source "kconfigs/Kconfig.nixos"
 source "terraform/Kconfig"
+source "kconfigs/Kconfig.declared_hosts"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"
 endif

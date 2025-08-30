@@ -1,0 +1,239 @@
+{# Template for declared hosts that skip bringup process #}
+{# This template is used when users have pre-existing infrastructure like:
+   - Bare metal servers
+   - Pre-provisioned VMs
+   - Cloud instances managed outside of kdevops
+   - Any hosts with existing SSH access
+
+   The hosts are provided via kdevops_declared_hosts variable which contains
+   a list of hostnames/IPs that are already accessible via SSH.
+#}
+{# Parse declared hosts if it's a string #}
+{% if kdevops_declared_hosts is string %}
+{% set parsed_hosts = kdevops_declared_hosts | regex_replace(',', ' ') | split() %}
+{% else %}
+{% set parsed_hosts = kdevops_declared_hosts %}
+{% endif %}
+[all]
+localhost ansible_connection=local
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% if kdevops_workflows_dedicated_workflow %}
+{# For workflows, organize hosts into baseline/dev groups for A/B testing #}
+{% if kdevops_baseline_and_dev %}
+[baseline]
+{# Odd-numbered hosts become baseline nodes #}
+{% for host in parsed_hosts %}
+{% if loop.index is odd %}
+{{ host }}
+{% endif %}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+[dev]
+{# Even-numbered hosts become dev nodes #}
+{% for host in parsed_hosts %}
+{% if loop.index is even %}
+{{ host }}
+{% endif %}
+{% endfor %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% else %}
+{# Without A/B testing, all hosts are baseline #}
+[baseline]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+{% endif %}
+
+{# Add workflow-specific groups based on enabled workflow #}
+{% if workflows_reboot_limit %}
+[reboot-limit]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[reboot-limit:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_fio_tests %}
+[fio_tests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fio_tests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_fstests %}
+[fstests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fstests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{# Add per-section groups if needed #}
+{% for section in fstests_enabled_test_types|default([]) %}
+[fstests_{{ section | replace('-', '_') }}]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fstests_{{ section | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+{% endfor %}
+
+{% elif kdevops_workflow_enable_blktests %}
+[blktests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[blktests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_selftests %}
+[selftests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[selftests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_mmtests %}
+[mmtests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[mmtests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_sysbench %}
+[sysbench]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[sysbench:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_ai|default(false)|bool %}
+[ai]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[ai:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_minio|default(false)|bool %}
+[minio]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[minio:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_cxl %}
+[cxl]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[cxl:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_pynfs %}
+[pynfs]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[pynfs:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_gitr %}
+[gitr]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[gitr:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_ltp %}
+[ltp]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[ltp:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{% elif kdevops_workflow_enable_nfstest %}
+[nfstest]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[nfstest:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+{% endif %}
+
+{% else %}
+{# Non-workflow setup - just use baseline group #}
+[baseline]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{# For non-dedicated workflows (mix mode), add fstests group if enabled #}
+{% if kdevops_workflow_enable_fstests %}
+[fstests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fstests:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+
+{# Add per-section groups if needed #}
+{% for section in fstests_enabled_test_types|default([]) %}
+[fstests_{{ section | replace('-', '_') }}]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fstests_{{ section | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
+{% endfor %}
+{% endif %}
+
+{% endif %}
+
+[service]
+{# Service nodes are typically not needed for declared hosts #}
+
+[service:vars]
+ansible_python_interpreter = "{{ kdevops_declared_hosts_python_interpreter | default(kdevops_python_interpreter) }}"
