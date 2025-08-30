@@ -3,3 +3,5 @@
   hosts: baseline:dev
   roles:
     - role: create_data_partition
+  when:
+    - kdevops_use_declared_hosts|default(false)|bool
