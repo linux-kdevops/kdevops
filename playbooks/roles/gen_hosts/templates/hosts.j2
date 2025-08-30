@@ -5,4 +5,10 @@ proper identation. We don't need identation for the ansible hosts file.
 Each workflow which has its own custom ansible host file generated should use
 its own jinja2 template file and define its own ansible task for its generation.
 #}
+{% if kdevops_declared_hosts is defined and kdevops_declared_hosts %}
+{# Use declared hosts that skip bringup process - for bare metal or pre-existing infrastructure #}
+{% include 'workflows/declared-hosts.j2' %}
+{% else %}
+{# Include workflow-specific template dynamically based on workflow name #}
 {% include 'workflows/' + kdevops_workflow_name + '.j2' %}
+{% endif %}

@@ -1,0 +1,58 @@
+# Configuration for declared hosts that skip bringup process
+
+config KDEVOPS_USE_DECLARED_HOSTS
+	bool "Use declared hosts (skip bringup process)"
+	select WORKFLOW_INFER_USER_AND_GROUP
+	output yaml
+	help
+	  Enable this option to use pre-existing hosts that you have already
+	  configured with SSH access. This is useful for:
+
+	  * Bare metal systems
+	  * Pre-provisioned VMs or cloud instances
+	  * Systems managed by other infrastructure tools
+
+	  When this option is enabled:
+	  - SSH keys will not be generated (assumes you already have access)
+	  - Bringup and teardown operations will be skipped
+	  - User and group settings will be inferred from the target hosts
+	  - You must provide the list of hosts in KDEVOPS_DECLARED_HOSTS
+
+	  This option automatically:
+	  - Selects WORKFLOW_INFER_USER_AND_GROUP to detect the correct
+	    user and group on the target systems
+	  - Assumes SSH access is already configured
+
+if KDEVOPS_USE_DECLARED_HOSTS
+
+config KDEVOPS_DECLARED_HOSTS
+	string "List of declared hosts"
+	output yaml
+	default "$(shell, echo ${DECLARED_HOSTS})"
+	default ""
+	help
+	  Provide a list of hostnames or IP addresses for the pre-existing
+	  systems you want to use. These hosts must already be accessible
+	  via SSH with the appropriate keys configured.
+
+	  Format: Space or comma-separated list
+	  Example: "host1 host2 host3" or "host1,host2,host3"
+
+	  These hosts will be used directly without any bringup process.
+	  Make sure you have:
+	  - SSH access configured
+	  - Required packages installed
+	  - Appropriate user permissions
+
+config KDEVOPS_DECLARED_HOSTS_GROUP_VARS
+	bool "Apply group variables to declared hosts"
+	default y
+	output yaml
+	help
+	  When enabled, kdevops will apply the appropriate group variables
+	  to the declared hosts based on the selected workflow.
+
+	  This ensures that declared hosts receive the same configuration
+	  variables as dynamically provisioned hosts would.
+
+endif # KDEVOPS_USE_DECLARED_HOSTS

@@ -19,6 +19,13 @@ export KDEVOPS_NODES :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
+
+# Export CLI override variables for Kconfig to detect them
+# Note: We accept DECLARE_HOSTS but export as DECLARED_HOSTS for consistency
+ifdef DECLARE_HOSTS
+export DECLARED_HOSTS := $(DECLARE_HOSTS)
+endif
+
 include scripts/refs.Makefile
 
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates

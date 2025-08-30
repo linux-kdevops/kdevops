@@ -10,6 +10,19 @@
       skip: true
   tags: vars
 
+- name: Parse declared hosts list when using declared hosts
+  set_fact:
+    kdevops_declared_hosts: >-
+      {%- if kdevops_declared_hosts is string -%}
+        {{ (kdevops_declared_hosts | default('')) | regex_replace(',', ' ') | split() }}
+      {%- else -%}
+        {{ kdevops_declared_hosts }}
+      {%- endif -%}
+  when:
+    - kdevops_use_declared_hosts
+    - kdevops_declared_hosts is defined
+  tags: vars
+
 - name: Get our user
   ansible.builtin.command: "whoami"
   register: my_user
@@ -75,6 +88,7 @@
   when:
     - is_fstests
     - ansible_hosts_template.stat.exists
+    - not kdevops_use_declared_hosts
 
 - name: Infer enabled blktests test section types
   ansible.builtin.set_fact:
@@ -89,6 +103,7 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_blktests
     - ansible_hosts_template.stat.exists
+    - not kdevops_use_declared_hosts
 
 - name: Debug inferring block test types
   ansible.builtin.debug:
@@ -112,6 +127,7 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_selftests
     - ansible_hosts_template.stat.exists
+    - not kdevops_use_declared_hosts
 
 - name: Collect dynamically supported filesystems
   vars:
@@ -155,6 +171,7 @@
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_mmtests
     - ansible_hosts_template.stat.exists
+    - not kdevops_use_declared_hosts
 
 - name: Load AI nodes configuration for multi-filesystem setup
   include_vars:

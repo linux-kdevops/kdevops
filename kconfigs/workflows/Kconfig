@@ -124,6 +124,7 @@ choice
 config KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 	bool "fstests"
 	select KDEVOPS_WORKFLOW_ENABLE_FSTESTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	help
 	  This will dedicate your configuration only to fstests.
 
@@ -139,12 +140,14 @@ config KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_BLKTESTS
 	bool "blktests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_BLKTESTS
 	help
 	  This will dedicate your configuration only to blktests.
 
 config KDEVOPS_WORKFLOW_DEDICATE_CXL
 	bool "cxl"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_CXL
 	help
 	  This will dedicate your configuration only to cxl work.
@@ -159,6 +162,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_CXL
 
 config KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 	bool "pynfs"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_PYNFS
 	help
 	  This will dedicate your configuration only to running pynfs
@@ -166,6 +170,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 
 config KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 	bool "Linux kernel selftests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 	help
 	  This will dedicate your configuration only to Linux kernel
@@ -174,6 +179,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_GITR
 	bool "gitr"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_GITR
 	help
 	  This will dedicate your configuration to running only the
@@ -181,6 +187,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_GITR
 
 config KDEVOPS_WORKFLOW_DEDICATE_LTP
 	bool "ltp"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_LTP
 	help
 	  This will dedicate your configuration to running only the
@@ -188,6 +195,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_LTP
 
 config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 	bool "nfstest"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_NFSTEST
 	help
 	  This will dedicate your configuration to running only the
@@ -195,6 +203,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 
 config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 	bool "sysbench"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
 	help
 	  This will dedicate your configuration to running only the
@@ -202,6 +211,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 
 config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 	bool "mmtests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_MMTESTS
 	help
 	  This will dedicate your configuration to running only the
@@ -209,6 +219,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 	bool "fio-tests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 	help
 	  This will dedicate your configuration to running only the
@@ -216,6 +227,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_AI
 	bool "ai"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_AI
 	help
 	  This will dedicate your configuration to running only the
@@ -264,6 +276,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FSTESTS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_BLKTESTS
 	bool "blktests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_BLKTESTS
 	help
 	  Select this option if you are doing block layer development and want
@@ -272,6 +285,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_BLKTESTS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_CXL
 	bool "cxl"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_CXL
 	help
 	  Select this option if you are doing cxl development and testing.
@@ -285,6 +299,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_CXL
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_PYNFS
 	bool "pynfs"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_PYNFS
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -294,6 +309,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_PYNFS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SELFTESTS
 	bool "Linux kernel selftest"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 	help
 	  Select this option if you are doing Linux kernel developent and
@@ -301,6 +317,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SELFTESTS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_GITR
 	bool "gitr"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_GITR
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -309,6 +326,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_GITR
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_LTP
 	bool "ltp"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_LTP
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -317,6 +335,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_LTP
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_NFSTEST
 	bool "nfstest"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_NFSTEST
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -325,6 +344,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_NFSTEST
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH
 	bool "sysbench"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -333,6 +353,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_SYSBENCH
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MMTESTS
 	bool "mmtests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_MMTESTS
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -341,6 +362,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_MMTESTS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS
 	bool "fio-tests"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help
@@ -349,6 +371,7 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_FIO_TESTS
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_AI
 	bool "ai"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_AI
 	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
 	help

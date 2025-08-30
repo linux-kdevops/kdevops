@@ -1,5 +1,10 @@
+config WORKFLOW_DATA_PATH_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh DATA_PATH)
+
 config WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
 	bool "Enable custom device to use to create the workflow data parition"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	help
 	  Enable this if you want to override the default data device.
 	  Typically we have enough heuristics with kconfig to get this right
@@ -29,6 +34,7 @@ config WORKFLOW_DATA_DEVICE_CUSTOM
 
 config WORKFLOW_DATA_DEVICE
 	string
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops0" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
 	default "/dev/disk/by-id/virtio-kdevops0" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops0" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
@@ -37,15 +43,20 @@ config WORKFLOW_DATA_DEVICE
 	default TERRAFORM_AWS_DATA_VOLUME_DEVICE_FILE_NAME if TERRAFORM_AWS
 	default TERRAFORM_OCI_DATA_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
 	default WORKFLOW_DATA_DEVICE_CUSTOM if WORKFLOW_DATA_DEVICE_ENABLE_CUSTOM
+	default "" if KDEVOPS_USE_DECLARED_HOSTS
 
 config WORKFLOW_DATA_PATH
 	string "Directory path to place data for workflows"
-	default "/data"
+	default "$(shell, echo ${DATA_PATH})" if WORKFLOW_DATA_PATH_SET_BY_CLI
+	default "/data" if !WORKFLOW_DATA_PATH_SET_BY_CLI
 	help
 	  The data workflow is kept then in a location other than your default
 	  user home directory. Use this option to specify the path which we
 	  will use to place your workflow data. This will be the mount point
 	  for the new worfklow data partition created.
+
+	  When using declared hosts, this path should already exist on the
+	  target systems.
 
 config WORKFLOW_INFER_USER_AND_GROUP
 	bool "Infer user and group to use for the workflow data partition"
