@@ -18,6 +18,7 @@ kdevops_smbd_enable: false
 kdevops_krb5_enable: false
 kdevops_enable_iscsi: false
 workflows_reboot_limit: false
+kdevops_use_declared_hosts: false
 
 virtualbox_provider: false
 libvirt_provider: false
