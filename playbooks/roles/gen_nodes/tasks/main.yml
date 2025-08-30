@@ -25,7 +25,9 @@
     path: "{{ guestfs_path }}"
     state: directory
     mode: "0755"
-  when: kdevops_enable_guestfs|bool
+  when:
+    - kdevops_enable_guestfs|bool
+    - not kdevops_use_declared_hosts
 
 - name: Create nixos directory
   ansible.builtin.file:
