@@ -17,6 +17,31 @@
   ansible.builtin.setup:
   tags: always
 
+# For declared hosts, infer user and group from the target systems
+- name: Infer user on declared hosts
+  ansible.builtin.command: "whoami"
+  register: declared_host_user
+  when:
+    - kdevops_use_declared_hosts
+    - workflow_infer_user_and_group
+  changed_when: false
+
+- name: Infer group on declared hosts
+  ansible.builtin.command: "id -g -n"
+  register: declared_host_group
+  when:
+    - kdevops_use_declared_hosts
+    - workflow_infer_user_and_group
+  changed_when: false
+
+- name: Set inferred user and group for declared hosts
+  set_fact:
+    data_user: "{{ declared_host_user.stdout | default(data_user) }}"
+    data_group: "{{ declared_host_group.stdout | default(data_group) }}"
+  when:
+    - kdevops_use_declared_hosts
+    - workflow_infer_user_and_group
+
 # Update /etc/hostname first so the change gets picked up by the reboot
 # that occurs during the distro-specific tasks
 

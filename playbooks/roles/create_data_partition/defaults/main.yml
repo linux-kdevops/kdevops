@@ -1,2 +1,3 @@
 ---
 kdevops_enable_terraform: false
+kdevops_use_declared_hosts: false
