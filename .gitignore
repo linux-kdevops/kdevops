@@ -108,6 +108,7 @@ nixos/generated/
 
 # Dyanmic cloud kconfig files
 terraform/lambdalabs/kconfigs/Kconfig.compute.generated
+terraform/lambdalabs/kconfigs/Kconfig.compute.mappings
 terraform/lambdalabs/kconfigs/Kconfig.images.generated
 terraform/lambdalabs/kconfigs/Kconfig.location.generated
 terraform/lambdalabs/.terraform_api_key
