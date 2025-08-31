@@ -17,6 +17,17 @@ terraform_private_net_enabled: "false"
 terraform_private_net_prefix: ""
 terraform_private_net_mask: 0
 
+# AWS defaults - these prevent undefined variable errors when AWS is not selected
+terraform_aws_profile: "default"
+terraform_aws_region: "us-west-1"
+terraform_aws_av_zone: "us-west-1c"
+terraform_aws_ns: "debian-12"
+terraform_aws_ami_owner: "136693071363"
+terraform_aws_instance_type: "t2.micro"
+terraform_aws_ebs_volumes_per_instance: "0"
+terraform_aws_ebs_volume_size: 0
+terraform_aws_ebs_volume_type: "gp3"
+
 terraform_oci_assign_public_ip: false
 terraform_oci_use_existing_vcn: false
 
@@ -25,3 +36,15 @@ terraform_openstack_instance_prefix: "invalid"
 terraform_openstack_flavor: "invalid"
 terraform_openstack_image_name: "invalid"
 terraform_openstack_ssh_pubkey_name: "invalid"
+
+# Lambda Labs defaults
+terraform_lambdalabs_region: "us-west-1"
+terraform_lambdalabs_instance_type: "gpu_1x_a10"
+terraform_lambdalabs_ssh_key_name: "kdevops-lambdalabs"
+terraform_lambdalabs_image: "ubuntu-22.04"
+terraform_lambdalabs_persistent_storage: false
+terraform_lambdalabs_persistent_storage_size: 100
+
+# SSH config defaults for templates
+sshconfig: "~/.ssh/config"
+sshconfig_fname: "~/.ssh/config"

@@ -4,8 +4,8 @@
 # order does not matter as terraform is declarative.
 
 variable "ssh_config" {
-  description = "Path to your ssh_config"
-  default     = "~/.ssh/config"
+  description = "Path to SSH config update script"
+  default     = "../scripts/update_ssh_config_lambdalabs.py"
 }
 
 variable "ssh_config_update" {
@@ -13,16 +13,20 @@ variable "ssh_config_update" {
   type        = bool
 }
 
-# Debian AWS ami's use admin as the default user, we override it with cloud-init
-# for whatever username you set here.
+# Lambda Labs instances use ubuntu as the default user
 variable "ssh_config_user" {
   description = "If ssh_config_update is true, and this is set, it will be the user set for each host on your ssh config"
-  default     = "admin"
+  default     = "ubuntu"
 }
 
 variable "ssh_config_pubkey_file" {
   description = "Path to the ssh public key file, alternative to ssh_pubkey_data"
   default     = "~/.ssh/kdevops_terraform.pub"
+}
+
+variable "ssh_config_privkey_file" {
+  description = "Path to the ssh private key file for authentication"
+  default     = "~/.ssh/kdevops_terraform"
 }
 
 variable "ssh_config_use_strict_settings" {

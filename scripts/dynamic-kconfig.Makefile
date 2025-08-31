@@ -6,6 +6,7 @@ DYNAMIC_KCONFIG_PCIE_ARGS :=
 HELP_TARGETS += dynamic-kconfig-help
 
 include $(TOPDIR)/scripts/dynamic-pci-kconfig.Makefile
+include $(TOPDIR)/scripts/dynamic-cloud-kconfig.Makefile
 
 ANSIBLE_EXTRA_ARGS += $(DYNAMIC_KCONFIG_PCIE_ARGS)
 
@@ -19,5 +20,6 @@ PHONY += dynamic-kconfig-help
 
 dynconfig:
 	$(Q)$(MAKE) dynconfig-pci
+	$(Q)$(MAKE) cloud-config
 
 PHONY += dynconfig
