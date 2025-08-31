@@ -1,0 +1,245 @@
+.\" Manpage for lambda-cli
+.\" Contact mcgrof@kernel.org to correct errors or typos.
+.TH LAMBDA-CLI 1 "August 2025" "kdevops 5.0.2" "Lambda Labs CLI Manual"
+.SH NAME
+lambda-cli \- Lambda Labs cloud management CLI for kdevops
+.SH SYNOPSIS
+.B lambda-cli
+[\fB\-h\fR]
+[\fB\-\-output\fR \fIFORMAT\fR]
+\fICOMMAND\fR
+[\fIARGS\fR]
+.SH DESCRIPTION
+.B lambda-cli
+is a structured command-line interface tool for managing Lambda Labs cloud
+resources within the kdevops framework. It provides access to Lambda Labs
+cloud provider functionality for dynamic configuration generation, resource
+management, and cost optimization.
+
+The tool mimics AWS CLI patterns to provide a consistent and scalable
+interface that can be extended for other cloud providers.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show help message and exit
+.TP
+.BR \-o " " \fIFORMAT\fR ", " \-\-output " " \fIFORMAT\fR
+Output format. Valid options are:
+.RS
+.TP
+.B json
+Machine-readable JSON format (default for scripting)
+.TP
+.B text
+Human-readable table format (default for interactive use)
+.RE
+.SH COMMANDS
+.SS instance-types
+Manage Lambda Labs instance types
+.TP
+.B instance-types list
+[\fB\-\-available\-only\fR]
+[\fB\-\-region\fR \fIREGION\fR]
+.RS
+List all instance types. Use \fB\-\-available\-only\fR to show only instances
+with current capacity. Use \fB\-\-region\fR to filter by specific region.
+.RE
+.TP
+.B instance-types get-cheapest
+[\fB\-\-region\fR \fIREGION\fR]
+[\fB\-\-min\-gpus\fR \fIN\fR]
+.RS
+Find the cheapest available instance. Optionally filter by region or
+minimum number of GPUs required.
+.RE
+.SS regions
+Manage Lambda Labs regions
+.TP
+.B regions list
+[\fB\-\-with\-availability\fR]
+.RS
+List all Lambda Labs regions. Use \fB\-\-with\-availability\fR to include
+the count of available instance types in each region.
+.RE
+.SS pricing
+Get pricing information for Lambda Labs instances
+.TP
+.B pricing list
+[\fB\-\-instance\-type\fR \fITYPE\fR]
+.RS
+List pricing for all instance types, or for a specific instance type.
+Shows hourly, daily, and monthly costs.
+.RE
+.SS smart-select
+Intelligent instance and region selection
+.TP
+.B smart-select
+[\fB\-\-mode\fR \fIMODE\fR]
+.RS
+Automatically select optimal instance and region configuration.
+.RE
+.RS
+.TP
+\fIMODE\fR options:
+.TP
+.B cheapest
+Select the globally cheapest available instance and best region (default)
+.TP
+.B closest
+Select based on geographic proximity (not yet implemented)
+.TP
+.B balanced
+Balance between cost and proximity
+.RE
+.SS generate-kconfig
+Generate dynamic Kconfig files for Lambda Labs
+.TP
+.B generate-kconfig
+[\fB\-\-output\-dir\fR \fIDIR\fR]
+.RS
+Generate Kconfig.compute.generated and Kconfig.location.generated files
+based on current Lambda Labs API data. Default output directory is
+terraform/lambdalabs/kconfigs.
+.RE
+.SH ENVIRONMENT
+.TP
+.B LAMBDALABS_API_KEY
+Lambda Labs API key for authentication. If not set, the tool will attempt
+to read credentials from ~/.lambdalabs/credentials.
+.SH FILES
+.TP
+.I ~/.lambdalabs/credentials
+Lambda Labs credentials file containing API key
+.TP
+.I terraform/lambdalabs/kconfigs/Kconfig.compute.generated
+Dynamically generated Kconfig file for instance types
+.TP
+.I terraform/lambdalabs/kconfigs/Kconfig.location.generated
+Dynamically generated Kconfig file for regions
+.SH EXAMPLES
+.SS Basic Usage
+.TP
+List all available instances:
+.B lambda-cli instance-types list --available-only
+.TP
+Get pricing information:
+.B lambda-cli pricing list
+.TP
+Find cheapest instance:
+.B lambda-cli instance-types get-cheapest
+.SS JSON Output
+.TP
+Get regions in JSON format:
+.B lambda-cli --output json regions list
+.TP
+Smart selection with JSON output:
+.B lambda-cli -o json smart-select --mode cheapest
+.SS Filtering
+.TP
+List instances available in specific region:
+.B lambda-cli instance-types list --region us-west-1
+.TP
+Find cheapest instance with at least 2 GPUs:
+.B lambda-cli instance-types get-cheapest --min-gpus 2
+.SS Kconfig Generation
+.TP
+Generate dynamic Kconfig files:
+.B lambda-cli generate-kconfig
+.TP
+Generate to custom directory:
+.B lambda-cli generate-kconfig --output-dir /tmp/kconfigs
+.SH INTEGRATION WITH KDEVOPS
+.SS Makefile Integration
+The lambda-cli tool can be integrated into kdevops Makefiles:
+.PP
+.RS
+.nf
+LAMBDA_CLI := $(TOPDIR_PATH)/scripts/lambda-cli
+
+lambda-list-instances:
+    @$(LAMBDA_CLI) instance-types list --available-only
+
+lambda-smart-select:
+    @$(LAMBDA_CLI) smart-select --mode cheapest
+.fi
+.RE
+.SS Kconfig Integration
+Use lambda-cli in Kconfig shell commands:
+.PP
+.RS
+.nf
+config TERRAFORM_LAMBDALABS_REGION
+    string
+    default $(shell, scripts/lambda-cli smart-select \\
+             --mode cheapest -o json | \\
+             python3 -c "import sys, json; \\
+             print(json.load(sys.stdin).get('region'))")
+.fi
+.RE
+.SS Ansible Integration
+Call lambda-cli from Ansible playbooks:
+.PP
+.RS
+.nf
+- name: Get cheapest Lambda Labs instance
+  command: scripts/lambda-cli instance-types \\
+           get-cheapest --output json
+  register: cheapest_instance
+  delegate_to: localhost
+.fi
+.RE
+.SH EXIT STATUS
+.TP
+.B 0
+Successful execution
+.TP
+.B 1
+General error (invalid arguments, API failure, etc.)
+.SH DIAGNOSTICS
+The lambda-cli tool provides detailed error messages when operations fail.
+Common issues include:
+.TP
+.B "No API key found"
+Set LAMBDALABS_API_KEY environment variable or configure ~/.lambdalabs/credentials
+.TP
+.B "No available instances matching criteria"
+No instances have current capacity matching the specified filters
+.TP
+.B "API request failed"
+Network error or invalid API key
+.SH NOTES
+.SS Caching
+The underlying Lambda Labs API library may cache responses for performance.
+Cache duration is typically 15 minutes for pricing data.
+.SS Fallback Behavior
+When API access fails, lambda-cli will attempt to use sensible defaults:
+.RS
+.IP \(bu 2
+Default instance type: gpu_1x_a10
+.IP \(bu 2
+Default region: us-west-1
+.IP \(bu 2
+Static Kconfig with minimal options
+.RE
+.SS Rate Limiting
+Be aware of Lambda Labs API rate limits when using lambda-cli in automated
+scripts. Consider adding delays between requests in tight loops.
+.SH SEE ALSO
+.BR opentofu (1),
+.PP
+Full documentation at: <https://github.com/linux-kdevops/kdevops>
+.br
+Lambda Labs documentation: <https://docs.lambdalabs.com/cloud/api>
+.SH BUGS
+Report bugs to: <https://github.com/linux-kdevops/kdevops/issues>
+.SH AUTHOR
+Written by the kdevops contributors.
+.PP
+Lambda-cli tool generated by Claude AI.
+.SH COPYRIGHT
+Copyright \(co 2025 Luis Chamberlain <mcgrof@kernel.org>
+.br
+License: MIT
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

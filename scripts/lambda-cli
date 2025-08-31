@@ -1,0 +1,639 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""
+Lambda Labs CLI tool for kdevops
+
+A structured CLI tool that mimics AWS CLI patterns, providing access to
+Lambda Labs cloud provider functionality for dynamic configuration generation
+and resource management.
+"""
+
+import argparse
+import json
+import sys
+import os
+from typing import Dict, List, Any, Optional, Tuple
+from pathlib import Path
+
+# Import the existing Lambda Labs API functions
+try:
+    from lambdalabs_api import (
+        get_api_key,
+        get_instance_types_with_capacity,
+        get_regions,
+        get_instance_pricing,
+        generate_instance_types_kconfig,
+        generate_regions_kconfig,
+        generate_instance_type_mappings,
+    )
+except ImportError:
+    # Try to import from scripts directory if not in path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from lambdalabs_api import (
+        get_api_key,
+        get_instance_types_with_capacity,
+        get_regions,
+        get_instance_pricing,
+        generate_instance_types_kconfig,
+        generate_regions_kconfig,
+        generate_instance_type_mappings,
+    )
+
+
+class LambdaCLI:
+    """Lambda Labs CLI interface"""
+
+    def __init__(self, output_format: str = "json"):
+        """
+        Initialize the CLI with specified output format
+
+        Args:
+            output_format: 'json' or 'text' for output formatting
+        """
+        self.output_format = output_format
+        self.api_key = get_api_key()
+
+    def output(self, data: Any, headers: Optional[List[str]] = None):
+        """
+        Output data in the specified format
+
+        Args:
+            data: Data to output (dict, list, or primitive)
+            headers: Column headers for text format (optional)
+        """
+        if self.output_format == "json":
+            print(json.dumps(data, indent=2))
+        else:
+            # Human-readable text format
+            if isinstance(data, list):
+                if data and isinstance(data[0], dict):
+                    # Table format for list of dicts
+                    if not headers:
+                        headers = list(data[0].keys()) if data else []
+
+                    if headers:
+                        # Calculate column widths
+                        widths = {h: len(h) for h in headers}
+                        for item in data:
+                            for h in headers:
+                                val = str(item.get(h, ""))
+                                widths[h] = max(widths[h], len(val))
+
+                        # Print header
+                        header_line = " | ".join(h.ljust(widths[h]) for h in headers)
+                        print(header_line)
+                        print("-" * len(header_line))
+
+                        # Print rows
+                        for item in data:
+                            row = " | ".join(
+                                str(item.get(h, "")).ljust(widths[h]) for h in headers
+                            )
+                            print(row)
+                else:
+                    # Simple list
+                    for item in data:
+                        print(item)
+            elif isinstance(data, dict):
+                # Key-value format
+                max_key_len = max(len(k) for k in data.keys()) if data else 0
+                for key, value in data.items():
+                    print(f"{key.ljust(max_key_len)} : {value}")
+            else:
+                # Simple value
+                print(data)
+
+    def list_instance_types(
+        self, available_only: bool = False, region: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        List instance types
+
+        Args:
+            available_only: Only show available instances
+            region: Filter by specific region
+
+        Returns:
+            List of instance type information
+        """
+        if not self.api_key:
+            return [
+                {
+                    "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+                }
+            ]
+
+        instances, capacity_map = get_instance_types_with_capacity(self.api_key)
+        pricing = get_instance_pricing()
+
+        result = []
+        for name, info in instances.items():
+            available_regions = capacity_map.get(name, [])
+
+            # Apply filters
+            if available_only and not available_regions:
+                continue
+
+            if region and region not in available_regions:
+                continue
+
+            # Get price from pricing data
+            price_per_hour = pricing.get(name, 0.0)
+
+            item = {
+                "name": name,
+                "price_per_hour": f"${price_per_hour:.2f}",
+                "specs": info.get("specs_overview", ""),
+                "available_regions": len(available_regions),
+            }
+            if region:
+                item["available_in_region"] = region in available_regions
+            result.append(item)
+
+        # Sort by price
+        result.sort(key=lambda x: float(x["price_per_hour"].replace("$", "")))
+
+        return result
+
+    def list_regions(self, with_availability: bool = False) -> List[Dict[str, Any]]:
+        """
+        List regions
+
+        Args:
+            with_availability: Include availability information
+
+        Returns:
+            List of region information
+        """
+        if not self.api_key:
+            return [
+                {
+                    "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+                }
+            ]
+
+        regions = get_regions(self.api_key)
+
+        result = []
+        for region in regions:
+            item = {
+                "name": region["name"],
+                "description": region.get("description", ""),
+            }
+
+            if with_availability:
+                # Count available instance types in this region
+                _, capacity_map = get_instance_types_with_capacity(self.api_key)
+                available_count = sum(
+                    1
+                    for instance, regions_list in capacity_map.items()
+                    if region["name"] in regions_list
+                )
+                item["available_instances"] = available_count
+
+            result.append(item)
+
+        return result
+
+    def get_cheapest_instance(
+        self, region: Optional[str] = None, min_gpus: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Find the cheapest available instance
+
+        Args:
+            region: Specific region to search in
+            min_gpus: Minimum number of GPUs required
+
+        Returns:
+            Cheapest instance information
+        """
+        if not self.api_key:
+            return {
+                "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+            }
+
+        instances, capacity_map = get_instance_types_with_capacity(self.api_key)
+        pricing = get_instance_pricing()
+
+        # Find available instances with pricing
+        available = []
+        for name, info in instances.items():
+            available_regions = capacity_map.get(name, [])
+            if not available_regions:
+                continue
+
+            if region and region not in available_regions:
+                continue
+
+            # Filter by GPU count
+            if min_gpus > 1:
+                parts = name.split("_")
+                if len(parts) >= 2 and "x" in parts[1]:
+                    gpu_count = int(parts[1].replace("x", ""))
+                    if gpu_count < min_gpus:
+                        continue
+
+            price = pricing.get(name, float("inf"))
+            available.append(
+                {
+                    "name": name,
+                    "price": price,
+                    "specs": info.get("specs_overview", ""),
+                    "available_regions": available_regions,
+                }
+            )
+
+        if not available:
+            return {"error": "No available instances matching criteria"}
+
+        # Sort by price and get cheapest
+        cheapest = min(available, key=lambda x: x["price"])
+
+        return {
+            "name": cheapest["name"],
+            "price_per_hour": f"${cheapest['price']:.2f}",
+            "specs": cheapest["specs"],
+            "available_regions": cheapest["available_regions"],
+        }
+
+    def get_pricing(self, instance_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get pricing information
+
+        Args:
+            instance_type: Specific instance type to get pricing for
+
+        Returns:
+            Pricing information
+        """
+        if not self.api_key:
+            return [
+                {
+                    "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+                }
+            ]
+
+        instances, _ = get_instance_types_with_capacity(self.api_key)
+        pricing = get_instance_pricing()
+
+        result = []
+        for name, info in instances.items():
+            if instance_type and name != instance_type:
+                continue
+
+            price = pricing.get(name, 0.0)
+            result.append(
+                {
+                    "instance_type": name,
+                    "price_per_hour": f"${price:.2f}",
+                    "price_per_day": f"${price * 24:.2f}",
+                    "price_per_month": f"${price * 24 * 30:.2f}",
+                    "specs": info.get("specs_overview", ""),
+                }
+            )
+
+        # Sort by price
+        result.sort(key=lambda x: float(x["price_per_hour"].replace("$", "")))
+
+        return result
+
+    def smart_select(self, mode: str = "cheapest") -> Dict[str, Any]:
+        """
+        Smart selection of instance and region
+
+        Args:
+            mode: Selection mode ('cheapest', 'closest', 'balanced')
+
+        Returns:
+            Selected configuration
+        """
+        if mode == "cheapest":
+            # Find cheapest instance globally
+            cheapest = self.get_cheapest_instance()
+            if "error" in cheapest:
+                return cheapest
+
+            # Select closest region with this instance
+            available_regions = cheapest.get("available_regions", [])
+            if not available_regions:
+                return {"error": "No regions available for cheapest instance"}
+
+            # For now, just pick the first available region
+            # In a full implementation, we'd determine closest based on user location
+            selected_region = available_regions[0]
+
+            return {
+                "instance_type": cheapest["name"],
+                "region": selected_region,
+                "price_per_hour": cheapest["price_per_hour"],
+                "selection_mode": "cheapest_global",
+            }
+
+        elif mode == "closest":
+            # This would require geolocation logic
+            # For now, return a placeholder
+            return {
+                "error": "Closest region selection not yet implemented",
+                "hint": "Use --mode cheapest for automatic selection",
+            }
+
+        elif mode == "balanced":
+            # Balance between price and proximity
+            # This is a simplified implementation
+            cheapest = self.get_cheapest_instance()
+            if "error" in cheapest:
+                return cheapest
+
+            return {
+                "instance_type": cheapest["name"],
+                "region": cheapest.get("available_regions", ["us-west-1"])[0],
+                "price_per_hour": cheapest["price_per_hour"],
+                "selection_mode": "balanced",
+            }
+
+        else:
+            return {"error": f"Unknown selection mode: {mode}"}
+
+    def check_availability(self, instance_type: str, region: str) -> Dict[str, Any]:
+        """
+        Check if an instance type is available in a specific region.
+
+        Args:
+            instance_type: Instance type to check
+            region: Region to check
+
+        Returns:
+            Availability status
+        """
+        if not self.api_key:
+            return {
+                "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+            }
+
+        instances, capacity_map = get_instance_types_with_capacity(self.api_key)
+
+        if instance_type not in instances:
+            return {
+                "available": False,
+                "error": f"Instance type {instance_type} not found",
+            }
+
+        available_regions = capacity_map.get(instance_type, [])
+
+        if not available_regions:
+            return {
+                "available": False,
+                "error": f"Instance type {instance_type} has no available capacity in any region",
+            }
+
+        if region not in available_regions:
+            return {
+                "available": False,
+                "error": f"Instance type {instance_type} not available in {region}",
+                "available_regions": available_regions,
+            }
+
+        return {
+            "available": True,
+            "instance_type": instance_type,
+            "region": region,
+            "message": f"Instance {instance_type} is available in {region}",
+        }
+
+    def generate_kconfig(self, output_dir: str = "terraform/lambdalabs/kconfigs"):
+        """
+        Generate Kconfig files for Lambda Labs
+
+        Args:
+            output_dir: Directory to write Kconfig files to
+
+        Returns:
+            Status information
+        """
+        if not self.api_key:
+            return {
+                "error": "No API key found. Please set LAMBDALABS_API_KEY or configure credentials."
+            }
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Generate compute Kconfig
+        compute_kconfig = generate_instance_types_kconfig(self.api_key)
+        compute_path = os.path.join(output_dir, "Kconfig.compute.generated")
+        with open(compute_path, "w") as f:
+            f.write(compute_kconfig)
+
+        # Generate location Kconfig
+        location_kconfig = generate_regions_kconfig(self.api_key)
+        location_path = os.path.join(output_dir, "Kconfig.location.generated")
+        with open(location_path, "w") as f:
+            f.write(location_kconfig)
+
+        # Generate instance type mappings
+        mappings = generate_instance_type_mappings(self.api_key)
+        mappings_path = os.path.join(output_dir, "Kconfig.compute.mappings")
+        with open(mappings_path, "w") as f:
+            f.write(mappings)
+
+        return {
+            "status": "success",
+            "files_generated": [compute_path, location_path, mappings_path],
+            "message": "Kconfig files generated successfully",
+        }
+
+
+def main():
+    """Main CLI entry point"""
+    parser = argparse.ArgumentParser(
+        prog="lambda-cli",
+        description="Lambda Labs CLI for kdevops",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # List all instance types
+  lambda-cli.py instance-types list
+
+  # List available instances only
+  lambda-cli.py instance-types list --available-only
+
+  # Get cheapest instance
+  lambda-cli.py instance-types get-cheapest
+
+  # List regions with availability info
+  lambda-cli.py regions list --with-availability
+
+  # Get pricing information
+  lambda-cli.py pricing list
+
+  # Smart selection
+  lambda-cli.py smart-select --mode cheapest
+
+  # Generate Kconfig files
+  lambda-cli.py generate-kconfig
+
+  # JSON output
+  lambda-cli.py instance-types list --output json
+        """,
+    )
+
+    # Global options
+    parser.add_argument(
+        "--output",
+        "-o",
+        choices=["json", "text"],
+        default="text",
+        help="Output format (default: text)",
+    )
+
+    # Subparsers for different commands
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Instance types commands
+    instance_parser = subparsers.add_parser(
+        "instance-types", help="Manage instance types"
+    )
+    instance_subparsers = instance_parser.add_subparsers(dest="subcommand")
+
+    # instance-types list
+    list_instances = instance_subparsers.add_parser("list", help="List instance types")
+    list_instances.add_argument(
+        "--available-only", action="store_true", help="Show only available instances"
+    )
+    list_instances.add_argument("--region", help="Filter by region")
+
+    # instance-types get-cheapest
+    cheapest_parser = instance_subparsers.add_parser(
+        "get-cheapest", help="Find cheapest instance"
+    )
+    cheapest_parser.add_argument("--region", help="Specific region")
+    cheapest_parser.add_argument(
+        "--min-gpus", type=int, default=1, help="Minimum number of GPUs"
+    )
+
+    # Regions commands
+    region_parser = subparsers.add_parser("regions", help="Manage regions")
+    region_subparsers = region_parser.add_subparsers(dest="subcommand")
+
+    # regions list
+    list_regions = region_subparsers.add_parser("list", help="List regions")
+    list_regions.add_argument(
+        "--with-availability",
+        action="store_true",
+        help="Include availability information",
+    )
+
+    # Pricing commands
+    pricing_parser = subparsers.add_parser("pricing", help="Get pricing information")
+    pricing_subparsers = pricing_parser.add_subparsers(dest="subcommand")
+
+    # pricing list
+    list_pricing = pricing_subparsers.add_parser("list", help="List pricing")
+    list_pricing.add_argument("--instance-type", help="Specific instance type")
+
+    # Smart selection
+    smart_parser = subparsers.add_parser(
+        "smart-select", help="Smart instance/region selection"
+    )
+    smart_parser.add_argument(
+        "--mode",
+        choices=["cheapest", "closest", "balanced"],
+        default="cheapest",
+        help="Selection mode",
+    )
+
+    # Check availability
+    check_parser = subparsers.add_parser(
+        "check-availability", help="Check instance availability"
+    )
+    check_parser.add_argument("instance_type", help="Instance type to check")
+    check_parser.add_argument("region", help="Region to check")
+
+    # Generate Kconfig
+    kconfig_parser = subparsers.add_parser(
+        "generate-kconfig", help="Generate Kconfig files"
+    )
+    kconfig_parser.add_argument(
+        "--output-dir",
+        default="terraform/lambdalabs/kconfigs",
+        help="Output directory for Kconfig files",
+    )
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Initialize CLI
+    cli = LambdaCLI(output_format=args.output)
+
+    # Handle commands
+    try:
+        if args.command == "instance-types":
+            if args.subcommand == "list":
+                result = cli.list_instance_types(
+                    available_only=args.available_only, region=args.region
+                )
+                headers = ["name", "price_per_hour", "specs", "available_regions"]
+                if args.region:
+                    headers.append("available_in_region")
+                cli.output(result, headers=headers)
+
+            elif args.subcommand == "get-cheapest":
+                result = cli.get_cheapest_instance(
+                    region=args.region, min_gpus=args.min_gpus
+                )
+                cli.output(result)
+
+            else:
+                parser.error(f"Unknown subcommand: {args.subcommand}")
+
+        elif args.command == "regions":
+            if args.subcommand == "list":
+                result = cli.list_regions(with_availability=args.with_availability)
+                headers = ["name", "description"]
+                if args.with_availability:
+                    headers.append("available_instances")
+                cli.output(result, headers=headers)
+
+            else:
+                parser.error(f"Unknown subcommand: {args.subcommand}")
+
+        elif args.command == "pricing":
+            if args.subcommand == "list":
+                result = cli.get_pricing(instance_type=args.instance_type)
+                headers = [
+                    "instance_type",
+                    "price_per_hour",
+                    "price_per_day",
+                    "price_per_month",
+                ]
+                cli.output(result, headers=headers)
+
+            else:
+                parser.error(f"Unknown subcommand: {args.subcommand}")
+
+        elif args.command == "smart-select":
+            result = cli.smart_select(mode=args.mode)
+            cli.output(result)
+
+        elif args.command == "check-availability":
+            result = cli.check_availability(args.instance_type, args.region)
+            cli.output(result)
+
+        elif args.command == "generate-kconfig":
+            result = cli.generate_kconfig(output_dir=args.output_dir)
+            cli.output(result)
+
+        else:
+            parser.print_help()
+            sys.exit(1)
+
+    except Exception as e:
+        if args.output == "json":
+            print(json.dumps({"error": str(e)}, indent=2))
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
