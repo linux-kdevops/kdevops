@@ -1,0 +1,20 @@
+#!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+echo "=========================================="
+echo "CRITICAL: Set your Lambda Labs API Key"
+echo "=========================================="
+echo ""
+echo "Your Lambda Labs API key file is not set up."
+echo ""
+echo "To fix this:"
+echo "1. Get your API key from: https://cloud.lambdalabs.com"
+echo "2. Create the directory and file:"
+echo ""
+echo "   mkdir -p ~/.lambdalabs"
+echo "   echo 'your-actual-api-key-here' > ~/.lambdalabs/credentials"
+echo "   chmod 600 ~/.lambdalabs/credentials"
+echo ""
+echo "Then run: make bringup"
+echo ""
+echo "=========================================="
