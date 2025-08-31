@@ -21,6 +21,9 @@ endif
 ifeq (y,$(CONFIG_TERRAFORM_OPENSTACK))
 export KDEVOPS_CLOUD_PROVIDER=openstack
 endif
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
+export KDEVOPS_CLOUD_PROVIDER=lambdalabs
+endif
 
 KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/terraform_nodes.tf.j2
 KDEVOPS_NODES :=		terraform/$(KDEVOPS_CLOUD_PROVIDER)/nodes.tf
@@ -99,7 +102,106 @@ endif # CONFIG_TERRAFORM_SSH_CONFIG_GENKEY
 
 ANSIBLE_EXTRA_ARGS += $(TERRAFORM_EXTRA_VARS)
 
-bringup_terraform:
+# Lambda Labs SSH key management
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
+
+LAMBDALABS_SSH_KEY_NAME := $(subst ",,$(CONFIG_TERRAFORM_LAMBDALABS_SSH_KEY_NAME))
+
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS_SSH_KEY_AUTO_CREATE))
+# Auto-create mode: Always ensure key exists and create if missing
+lambdalabs-ssh-check: $(KDEVOPS_SSH_PUBKEY)
+	@echo "Lambda Labs SSH key setup (auto-create mode)..."
+	@echo "Using SSH key name: $(LAMBDALABS_SSH_KEY_NAME)"
+	@if python3 scripts/lambdalabs_ssh_keys.py check "$(LAMBDALABS_SSH_KEY_NAME)" 2>/dev/null; then \
+		echo "✓ SSH key already exists in Lambda Labs"; \
+	else \
+		echo "Creating new SSH key in Lambda Labs..."; \
+		if python3 scripts/lambdalabs_ssh_keys.py add "$(LAMBDALABS_SSH_KEY_NAME)" "$(KDEVOPS_SSH_PUBKEY)"; then \
+			echo "✓ Successfully created SSH key '$(LAMBDALABS_SSH_KEY_NAME)'"; \
+		else \
+			echo "========================================================"; \
+			echo "ERROR: Could not create SSH key automatically"; \
+			echo "========================================================"; \
+			echo "Please check your Lambda Labs API key configuration:"; \
+			echo "  cat ~/.lambdalabs/credentials"; \
+			echo ""; \
+			echo "Or add the key manually:"; \
+			echo "1. Go to: https://cloud.lambdalabs.com/ssh-keys"; \
+			echo "2. Click 'Add SSH key'"; \
+			echo "3. Name it: $(LAMBDALABS_SSH_KEY_NAME)"; \
+			echo "4. Paste content from: $(KDEVOPS_SSH_PUBKEY)"; \
+			echo "========================================================"; \
+			exit 1; \
+		fi \
+	fi
+else
+# Manual mode: Just check if key exists
+lambdalabs-ssh-check: $(KDEVOPS_SSH_PUBKEY)
+	@echo "Lambda Labs SSH key setup (manual mode)..."
+	@echo "Checking for SSH key: $(LAMBDALABS_SSH_KEY_NAME)"
+	@if python3 scripts/lambdalabs_ssh_keys.py check "$(LAMBDALABS_SSH_KEY_NAME)" 2>/dev/null; then \
+		echo "✓ SSH key exists in Lambda Labs"; \
+	else \
+		echo "========================================================"; \
+		echo "ERROR: SSH key not found"; \
+		echo "========================================================"; \
+		echo "The SSH key '$(LAMBDALABS_SSH_KEY_NAME)' does not exist."; \
+		echo ""; \
+		echo "Please add your SSH key manually:"; \
+		echo "1. Go to: https://cloud.lambdalabs.com/ssh-keys"; \
+		echo "2. Click 'Add SSH key'"; \
+		echo "3. Name it: $(LAMBDALABS_SSH_KEY_NAME)"; \
+		echo "4. Paste content from: $(KDEVOPS_SSH_PUBKEY)"; \
+		echo "========================================================"; \
+		exit 1; \
+	fi
+endif
+
+lambdalabs-ssh-setup: $(KDEVOPS_SSH_PUBKEY)
+	@echo "Setting up Lambda Labs SSH key..."
+	@python3 scripts/lambdalabs_ssh_keys.py add "$(LAMBDALABS_SSH_KEY_NAME)" "$(KDEVOPS_SSH_PUBKEY)" || true
+	@python3 scripts/lambdalabs_ssh_keys.py list
+
+lambdalabs-ssh-list:
+	@echo "Current Lambda Labs SSH keys:"
+	@python3 scripts/lambdalabs_ssh_keys.py list
+
+lambdalabs-ssh-clean:
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS_SSH_KEY_AUTO_CREATE))
+	@echo "Cleaning up auto-created SSH key '$(LAMBDALABS_SSH_KEY_NAME)'..."
+	@if python3 scripts/lambdalabs_ssh_keys.py check "$(LAMBDALABS_SSH_KEY_NAME)" 2>/dev/null; then \
+		echo "Removing SSH key from Lambda Labs..."; \
+		python3 scripts/lambdalabs_ssh_keys.py delete "$(LAMBDALABS_SSH_KEY_NAME)" || true; \
+	else \
+		echo "SSH key not found, nothing to clean"; \
+	fi
+else
+	@echo "Manual SSH key mode - not removing key '$(LAMBDALABS_SSH_KEY_NAME)'"
+	@echo "To remove manually, run: python3 scripts/lambdalabs_ssh_keys.py delete $(LAMBDALABS_SSH_KEY_NAME)"
+endif
+
+else
+lambdalabs-ssh-check:
+	@true
+lambdalabs-ssh-setup:
+	@true
+lambdalabs-ssh-list:
+	@echo "Lambda Labs provider not configured"
+lambdalabs-ssh-clean:
+	@true
+lambdalabs-ssh-clean-after:
+	@true
+endif
+
+# Handle cleanup after destroy for Lambda Labs
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
+ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS_SSH_KEY_AUTO_CREATE))
+lambdalabs-ssh-clean-after:
+	@$(MAKE) lambdalabs-ssh-clean
+endif
+endif
+
+bringup_terraform: lambdalabs-ssh-check
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--inventory localhost, \
 		playbooks/terraform.yml --tags bringup \
@@ -119,7 +221,9 @@ status_terraform:
 		playbooks/terraform.yml --tags status \
 		--extra-vars=@./extra_vars.yaml
 
-destroy_terraform:
+destroy_terraform: destroy_terraform_base lambdalabs-ssh-clean-after
+
+destroy_terraform_base:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--inventory localhost, \
 		playbooks/terraform.yml --tags destroy \

@@ -1,4 +1,89 @@
 ---
+- name: Check Lambda Labs API key configuration (if using Lambda Labs)
+  ansible.builtin.command:
+    cmd: "python3 {{ topdir_path }}/scripts/lambdalabs_credentials.py check"
+  register: api_key_check
+  failed_when: false
+  changed_when: false
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Report Lambda Labs API key configuration status
+  ansible.builtin.fail:
+    msg: |
+      ERROR: Lambda Labs API key is not configured!
+
+      To fix this, configure your Lambda Labs API key using one of these methods:
+
+      Use the kdevops credentials management tool:
+        python3 scripts/lambdalabs_credentials.py set 'your-actual-api-key-here'
+
+      Or manually create the credentials file:
+        mkdir -p ~/.lambdalabs
+        echo "[default]" > ~/.lambdalabs/credentials
+        echo "lambdalabs_api_key=your-actual-api-key-here" >> ~/.lambdalabs/credentials
+        chmod 600 ~/.lambdalabs/credentials
+
+      Get your API key from: https://cloud.lambdalabs.com
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - api_key_check.rc != 0
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Display Lambda Labs API key configuration status
+  ansible.builtin.debug:
+    msg: "{{ api_key_check.stdout }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - api_key_check.rc == 0
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Check Lambda Labs capacity before provisioning (if using Lambda Labs)
+  ansible.builtin.shell:
+    cmd: |
+      {{ topdir_path }}/scripts/lambda-cli --output json check-availability \
+        {{ terraform_lambdalabs_instance_type }} {{ terraform_lambdalabs_region }} | \
+      python3 -c "
+      import sys, json
+      data = json.load(sys.stdin)
+      if data.get('available'):
+          print(data.get('message', 'Instance available'))
+          sys.exit(0)
+      else:
+          print(data.get('error', 'Instance not available'))
+          if 'available_regions' in data:
+              print(f'  Available in: ' + ', '.join(data['available_regions']))
+          sys.exit(1)
+      "
+  register: capacity_check
+  failed_when: false
+  changed_when: false
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+  tags:
+    - bringup
+
+- name: Report Lambda Labs capacity check result
+  ansible.builtin.fail:
+    msg: "{{ capacity_check.stdout }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - capacity_check.rc != 0
+  tags:
+    - bringup
+
+# No longer needed - terraform reads directly from credentials file
+
 - name: Bring up terraform resources
   cloud.terraform.terraform:
     force_init: true

@@ -1,5 +1,6 @@
 choice
 	prompt "Choose your cloud provider"
+	default TERRAFORM_LAMBDALABS if CLOUD_INITIALIZED
 	default TERRAFORM_AWS
 
 config TERRAFORM_GCE
@@ -36,6 +37,14 @@ config TERRAFORM_OPENSTACK
 	  Enabling this means you are going to use OpenStack for your cloud
 	  solution.
 
+config TERRAFORM_LAMBDALABS
+	bool "Lambda Labs"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Enabling this means you are going to use Lambda Labs for your cloud
+	  solution. Lambda Labs provides GPU-accelerated instances optimized
+	  for machine learning and high-performance computing workloads.
+
 endchoice
 
 source "terraform/gce/Kconfig"
@@ -43,3 +52,4 @@ source "terraform/aws/Kconfig"
 source "terraform/azure/Kconfig"
 source "terraform/oci/Kconfig"
 source "terraform/openstack/Kconfig"
+source "terraform/lambdalabs/Kconfig"
