@@ -1,0 +1,18 @@
+lambdalabs_region = "{{ terraform_lambdalabs_region }}"
+lambdalabs_instance_type = "{{ terraform_lambdalabs_instance_type }}"
+lambdalabs_ssh_key_name = "{{ terraform_lambdalabs_ssh_key_name }}"
+# Lambda Labs doesn't support OS image selection - always uses Ubuntu 22.04
+
+ssh_config_pubkey_file = "{{ kdevops_terraform_ssh_config_pubkey_file }}"
+ssh_config_privkey_file = "{{ kdevops_terraform_ssh_config_privkey_file }}"
+ssh_config_user = "{{ kdevops_terraform_ssh_config_user }}"
+ssh_config = "{{ sshconfig }}"
+# Use unique SSH config file per directory to avoid conflicts
+ssh_config_name = "{{ kdevops_ssh_config_prefix }}{{ topdir_path_sha256sum[:8] }}"
+
+ssh_config_update = {{ kdevops_terraform_ssh_config_update | lower }}
+ssh_config_use_strict_settings = {{ kdevops_terraform_ssh_config_update_strict | lower }}
+ssh_config_backup = {{ kdevops_terraform_ssh_config_update_backup | lower }}
+
+# Lambda Labs doesn't support extra storage volumes
+# These lines are removed as the provider doesn't support this feature
