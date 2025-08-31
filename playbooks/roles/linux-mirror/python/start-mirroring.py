@@ -54,7 +54,9 @@ def mirror_entry(mirror, args):
     cmd = cmd + reference_args
     mirror_target = mirror_path + target
     if os.path.isdir(mirror_target):
-        sys.stdout.write("Skipping %s - mirror already exists at %s\n" % (short_name, mirror_target))
+        sys.stdout.write(
+            "Skipping %s - mirror already exists at %s\n" % (short_name, mirror_target)
+        )
         return "skipped"
     sys.stdout.write("Mirroring: %s onto %s\n" % (short_name, mirror_target))
     if args.verbose:
