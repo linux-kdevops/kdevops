@@ -1,0 +1,48 @@
+# Lambda Labs compute configuration
+
+if TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+
+comment "Instance type: Automatically selected (cheapest available)"
+comment "Enable manual region selection to choose specific instance type"
+
+endif # TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+
+# Include dynamically generated instance types when not using smart cheapest selection
+if !TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+source "terraform/lambdalabs/kconfigs/Kconfig.compute.generated"
+endif
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE
+	string
+	output yaml
+	default $(shell, python3 scripts/lambdalabs_smart_inference.py instance) if TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+	# Dynamically generated mappings for all instance types
+	default "cpu_4x_general" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_CPU_4X_GENERAL
+	default "gpu_1x_a10" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10
+	default "gpu_1x_a100" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A100
+	default "gpu_1x_a100_sxm4" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A100_SXM4
+	default "gpu_1x_a6000" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A6000
+	default "gpu_1x_gh200" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_GH200
+	default "gpu_1x_h100_pcie" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_H100_PCIE
+	default "gpu_1x_h100_sxm5" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_H100_SXM5
+	default "gpu_1x_rtx6000" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_RTX6000
+	default "gpu_2x_a100" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_A100
+	default "gpu_2x_a6000" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_A6000
+	default "gpu_2x_h100_sxm5" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_H100_SXM5
+	default "gpu_4x_a100" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_A100
+	default "gpu_4x_a6000" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_A6000
+	default "gpu_4x_h100_sxm5" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_H100_SXM5
+	default "gpu_8x_a100" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_A100
+	default "gpu_8x_a100_80gb_sxm4" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_A100_80GB_SXM4
+	default "gpu_8x_b200_sxm6" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_B200_SXM6
+	default "gpu_8x_h100_sxm5" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_H100_SXM5
+	default "gpu_8x_v100" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_V100
+
+# OS image is not configurable - provider limitation
+config TERRAFORM_LAMBDALABS_IMAGE
+	string
+	default "ubuntu-22.04"
+	help
+	  Lambda Labs terraform provider does NOT support OS/image selection.
+	  The provider always deploys Ubuntu 22.04. This is a placeholder
+	  config that exists only for consistency with other cloud providers.

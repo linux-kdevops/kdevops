@@ -1,0 +1,76 @@
+# Lambda Labs identity and access configuration
+
+# SSH Key Security Model
+# =======================
+# For security, each kdevops project directory should use its own SSH key.
+# This prevents key sharing between different projects and environments.
+#
+# Two modes are supported:
+# 1. Unique keys per directory (recommended) - Each project gets its own key
+# 2. Shared key (legacy) - Use a common key name across projects
+
+choice
+	prompt "Lambda Labs SSH key management strategy"
+	default TERRAFORM_LAMBDALABS_SSH_KEY_UNIQUE
+	help
+	  Choose how SSH keys are managed for Lambda Labs instances.
+
+	  Unique keys (recommended): Each project directory gets its own SSH key,
+	  preventing key sharing between projects. The key name includes a hash
+	  of the directory path for uniqueness.
+
+	  Shared key: Use the same key name across all projects (less secure).
+
+config TERRAFORM_LAMBDALABS_SSH_KEY_UNIQUE
+	bool "Use unique SSH key per project directory (recommended)"
+	help
+	  Generate a unique SSH key name for each kdevops project directory.
+	  This improves security by ensuring projects don't share SSH keys.
+
+	  The key name will be generated based on the directory path, like:
+	  "kdevops-lambda-kdevops-a1b2c3d4"
+
+	  The key will be automatically created and uploaded to Lambda Labs
+	  when you run 'make bringup' if it doesn't already exist.
+
+config TERRAFORM_LAMBDALABS_SSH_KEY_SHARED
+	bool "Use shared SSH key name (legacy)"
+	help
+	  Use a fixed SSH key name that you specify. This is less secure
+	  as multiple projects might share the same key.
+
+	  You'll need to ensure the key exists in Lambda Labs before
+	  running 'make bringup'.
+
+endchoice
+
+config TERRAFORM_LAMBDALABS_SSH_KEY_NAME_CUSTOM
+	string "Custom SSH key name (only for shared mode)"
+	default "kdevops-lambdalabs"
+	depends on TERRAFORM_LAMBDALABS_SSH_KEY_SHARED
+	help
+	  Specify the custom SSH key name to use when in shared mode.
+	  This key must already exist in your Lambda Labs account.
+
+config TERRAFORM_LAMBDALABS_SSH_KEY_NAME
+	string
+	output yaml
+	default $(shell, python3 scripts/lambdalabs_ssh_key_name.py 2>/dev/null || echo "kdevops-lambdalabs") if TERRAFORM_LAMBDALABS_SSH_KEY_UNIQUE
+	default TERRAFORM_LAMBDALABS_SSH_KEY_NAME_CUSTOM if TERRAFORM_LAMBDALABS_SSH_KEY_SHARED
+
+config TERRAFORM_LAMBDALABS_SSH_KEY_AUTO_CREATE
+	bool "Automatically create and upload SSH key if missing"
+	default y if TERRAFORM_LAMBDALABS_SSH_KEY_UNIQUE
+	default n if TERRAFORM_LAMBDALABS_SSH_KEY_SHARED
+	help
+	  When enabled, kdevops will automatically:
+	  1. Generate a new SSH key pair if it doesn't exist
+	  2. Upload the public key to Lambda Labs if not already there
+	  3. Clean up the key when destroying infrastructure
+
+	  This is enabled by default for unique keys mode and disabled
+	  for shared key mode.
+
+# Note: Lambda Labs doesn't support custom SSH users
+# Instances always use the OS default user (ubuntu for Ubuntu 22.04)
+# To handle this, we disable SSH user inference for Lambda Labs

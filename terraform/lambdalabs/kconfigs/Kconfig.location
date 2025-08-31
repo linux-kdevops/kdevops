@@ -1,0 +1,73 @@
+# Lambda Labs location configuration with smart inference
+
+choice
+	prompt "Lambda Labs region selection method"
+	default TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+	help
+	  Select how to choose the Lambda Labs region for deployment.
+
+config TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+	bool "Smart selection - automatically select cheapest instance in closest region"
+	help
+	  Enable smart inference that:
+	  1. Determines your location from public IP
+	  2. Finds all available instance/region combinations
+	  3. Selects the cheapest instance type
+	  4. Picks the closest region where that instance is available
+	  
+	  This ensures you get the most affordable option with lowest latency.
+
+config TERRAFORM_LAMBDALABS_REGION_SMART_INFER
+	bool "Smart inference - automatically select region with available capacity"
+	help
+	  Automatically selects a region that has available capacity for your
+	  chosen instance type. This eliminates manual checking of region availability.
+
+config TERRAFORM_LAMBDALABS_REGION_MANUAL
+	bool "Manual region selection"
+	help
+	  Manually select a specific region. Note that the selected region
+	  may not have capacity for your chosen instance type.
+
+endchoice
+
+if TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+
+comment "Region: Automatically selected (closest with cheapest instance)"
+comment "Instance: Automatically selected (cheapest available)"
+
+endif # TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+
+if TERRAFORM_LAMBDALABS_REGION_SMART_INFER
+
+comment "Region: Automatically selected based on instance availability"
+
+endif # TERRAFORM_LAMBDALABS_REGION_SMART_INFER
+
+if TERRAFORM_LAMBDALABS_REGION_MANUAL
+# Include dynamically generated regions when using manual selection
+source "terraform/lambdalabs/kconfigs/Kconfig.location.generated"
+endif # TERRAFORM_LAMBDALABS_REGION_MANUAL
+
+config TERRAFORM_LAMBDALABS_REGION
+	string
+	output yaml
+	default $(shell, python3 scripts/lambdalabs_smart_inference.py region) if TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+	default $(shell, scripts/lambdalabs_infer_region.py $(TERRAFORM_LAMBDALABS_INSTANCE_TYPE)) if TERRAFORM_LAMBDALABS_REGION_SMART_INFER
+	default "us-tx-1" if TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	default "us-midwest-1" if TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1
+	default "us-west-1" if TERRAFORM_LAMBDALABS_REGION_US_WEST_1
+	default "us-west-2" if TERRAFORM_LAMBDALABS_REGION_US_WEST_2
+	default "us-west-3" if TERRAFORM_LAMBDALABS_REGION_US_WEST_3
+	default "us-south-1" if TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1
+	default "us-south-2" if TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2
+	default "us-south-3" if TERRAFORM_LAMBDALABS_REGION_US_SOUTH_3
+	default "europe-central-1" if TERRAFORM_LAMBDALABS_REGION_EU_CENTRAL_1
+	default "asia-northeast-1" if TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_1
+	default "asia-northeast-2" if TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_2
+	default "asia-south-1" if TERRAFORM_LAMBDALABS_REGION_ASIA_SOUTH_1
+	default "me-west-1" if TERRAFORM_LAMBDALABS_REGION_ME_WEST_1
+	default "us-east-1" if TERRAFORM_LAMBDALABS_REGION_US_EAST_1
+	default "us-east-3" if TERRAFORM_LAMBDALABS_REGION_US_EAST_3
+	default "australia-east-1" if TERRAFORM_LAMBDALABS_REGION_AUSTRALIA_EAST_1
+	default "us-tx-1"
