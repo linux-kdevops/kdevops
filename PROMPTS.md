@@ -280,3 +280,59 @@ The implementation successfully added:
    to do is to use a separate fact if you want a true dynamic variable. This
    is why we switched to an active ref prefix for the baseline and dev group
    ref tags.
+
+## Cloud provider integrations
+
+### Adding Lambda Labs cloud provider support with dynamic Kconfig
+
+**Prompt:**
+The Lambda Labs company helps you use GPUs online, kind of like AWS, or OCI. Add
+support for the terraform support for Lambda Labs. The best provider docs are at
+https://registry.terraform.io/providers/elct9620/lambdalabs/latest/docs . Then
+To create the kconfig values you will implement support to use the lambda cloud
+API to let us query for what type of instances they have available and so forth.
+Therefore the Kconfig stuff for Lambda labs will all be dynamic. So we'll want
+to expand this as part of what make dynconfig does. However note that dynconfig
+does *all* dynamically generated kconfig. We want to add support for make
+cloud-config as a new target which is dynamic which is a subset of make
+dynconfig ;  OK! good luck
+
+**AI:** Claude Code (Opus 4.1)
+**Commit:** [To be determined]
+**Result:** Complete Lambda Labs integration with dynamic Kconfig generation.
+**Grading:** 75%
+
+**Notes:**
+
+The implementation successfully added:
+
+1. **Terraform Provider Integration**: Created complete Terraform configuration
+   for Lambda Labs including instance management, persistent storage, and SSH
+   configuration management following existing cloud provider patterns.
+
+2. **Dynamic Kconfig Generation**: Implemented Python script to query Lambda Labs
+   API for available instance types, regions, and OS images. Generated dynamic
+   Kconfig files with fallback defaults when API is unavailable.
+
+3. **Build System Integration**: Added `make cloud-config` as a new target for
+   cloud-specific dynamic configuration, properly integrated with `make dynconfig`.
+   Created modular Makefile structure for cloud provider dynamic configuration.
+
+4. **Kconfig Structure**: Properly integrated Lambda Labs into the provider
+   selection system with modular Kconfig files for location, compute, storage,
+   and identity management.
+
+Biggest issues:
+
+1. **SSH Management**: For this it failed to realize the provider
+   didn't suport asking for a custom username, so we had to find out the
+   hard way.
+
+2. **Environment variables**: For some reason it wanted to define the
+   credential API as an environment variable. This proved painful as some
+   environment variables do not carry over for some ansible tasks. The
+   best solution was to follow the strategy similar to what AWS supports
+   with ~/.lambdalabs/credentials. This a more secure alternative.
+
+Minor issues:
+- Some whitespace formatting was automatically fixed by the linter

@@ -1,0 +1,10 @@
+# Lambda Labs with smart defaults - cheapest instance and best region
+# Automatically selects the cheapest available instance type
+# Automatically selects the best available region for that instance
+CONFIG_TERRAFORM=y
+CONFIG_TERRAFORM_LAMBDALABS=y
+CONFIG_TERRAFORM_LAMBDALABS_REGION_SMART_INFER=y
+CONFIG_TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10=y
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY=y
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE=y
+CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_EMPTY_PASSPHRASE=y
