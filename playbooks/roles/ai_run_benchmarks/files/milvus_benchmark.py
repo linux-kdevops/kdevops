@@ -472,18 +472,20 @@ class MilvusBenchmark:
             )
 
         self.results["system_info"] = fs_info
-        
+
         # Add kernel version and hostname to system info
         try:
             import socket
-            
+
             # Get hostname
             self.results["system_info"]["hostname"] = socket.gethostname()
-            
+
             # Get kernel version using uname -r
-            kernel_result = subprocess.run(['uname', '-r'], capture_output=True, text=True, check=True)
+            kernel_result = subprocess.run(
+                ["uname", "-r"], capture_output=True, text=True, check=True
+            )
             self.results["system_info"]["kernel_version"] = kernel_result.stdout.strip()
-            
+
             self.logger.info(
                 f"System info: hostname={self.results['system_info']['hostname']}, "
                 f"kernel={self.results['system_info']['kernel_version']}"
@@ -492,7 +494,7 @@ class MilvusBenchmark:
             self.logger.warning(f"Could not collect kernel info: {e}")
             self.results["system_info"]["kernel_version"] = "unknown"
             self.results["system_info"]["hostname"] = "unknown"
-        
+
         # Also add filesystem at top level for compatibility with existing graphs
         self.results["filesystem"] = fs_info["filesystem"]
         self.logger.info(

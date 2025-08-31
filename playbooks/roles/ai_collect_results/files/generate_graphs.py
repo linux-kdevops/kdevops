@@ -9,6 +9,7 @@ import sys
 import glob
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -60,7 +61,7 @@ def _extract_node_info(result):
     # Get hostname from system_info (preferred) or fall back to filename
     system_info = result.get("system_info", {})
     hostname = system_info.get("hostname", "")
-    
+
     # If no hostname in system_info, try extracting from filename
     if not hostname:
         filename = result.get("_file", "")
@@ -69,10 +70,10 @@ def _extract_node_info(result):
         # Remove iteration number if present (_1, _2, etc.)
         if "_" in hostname and hostname.split("_")[-1].isdigit():
             hostname = "_".join(hostname.split("_")[:-1])
-    
+
     # Determine if this is a dev node
     is_dev = hostname.endswith("-dev")
-    
+
     return hostname, is_dev
 
 
@@ -101,16 +102,18 @@ def create_simple_performance_trends(results, output_dir):
         return
 
     # Group results by node
-    node_performance = defaultdict(lambda: {
-        "insert_rates": [],
-        "insert_times": [],
-        "iterations": [],
-        "is_dev": False,
-    })
+    node_performance = defaultdict(
+        lambda: {
+            "insert_rates": [],
+            "insert_times": [],
+            "iterations": [],
+            "is_dev": False,
+        }
+    )
 
     for result in results:
         hostname, is_dev = _extract_node_info(result)
-        
+
         if hostname not in node_performance:
             node_performance[hostname] = {
                 "insert_rates": [],
@@ -135,45 +138,45 @@ def create_simple_performance_trends(results, output_dir):
     if len(fs_performance) > 1:
         # Multi-filesystem mode: separate lines for each filesystem
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-        
+
         colors = ["b", "r", "g", "m", "c", "y", "k"]
         color_idx = 0
-        
+
         for config_key, perf_data in fs_performance.items():
             if not perf_data["insert_rates"]:
                 continue
-                
+
             color = colors[color_idx % len(colors)]
             iterations = list(range(1, len(perf_data["insert_rates"]) + 1))
-            
-            # Plot insert rate  
+
+            # Plot insert rate
             ax1.plot(
                 iterations,
-                perf_data["insert_rates"], 
+                perf_data["insert_rates"],
                 f"{color}-o",
                 linewidth=2,
                 markersize=6,
                 label=config_key.upper(),
             )
-            
+
             # Plot insert time
             ax2.plot(
                 iterations,
                 perf_data["insert_times"],
-                f"{color}-o", 
+                f"{color}-o",
                 linewidth=2,
                 markersize=6,
                 label=config_key.upper(),
             )
-            
+
             color_idx += 1
-            
+
         ax1.set_xlabel("Iteration")
         ax1.set_ylabel("Vectors/Second")
         ax1.set_title("Milvus Insert Rate by Storage Filesystem")
         ax1.grid(True, alpha=0.3)
         ax1.legend()
-        
+
         ax2.set_xlabel("Iteration")
         ax2.set_ylabel("Total Time (seconds)")
         ax2.set_title("Milvus Insert Time by Storage Filesystem")
@@ -182,13 +185,13 @@ def create_simple_performance_trends(results, output_dir):
     else:
         # Single filesystem mode: original behavior
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-        
+
         # Extract insert data from single filesystem
         config_key = list(fs_performance.keys())[0] if fs_performance else None
         if config_key:
             perf_data = fs_performance[config_key]
             iterations = list(range(1, len(perf_data["insert_rates"]) + 1))
-            
+
             # Plot insert rate
             ax1.plot(
                 iterations,
@@ -198,10 +201,10 @@ def create_simple_performance_trends(results, output_dir):
                 markersize=6,
             )
             ax1.set_xlabel("Iteration")
-            ax1.set_ylabel("Vectors/Second") 
+            ax1.set_ylabel("Vectors/Second")
             ax1.set_title("Vector Insert Rate Performance")
             ax1.grid(True, alpha=0.3)
-            
+
             # Plot insert time
             ax2.plot(
                 iterations,
@@ -212,9 +215,9 @@ def create_simple_performance_trends(results, output_dir):
             )
             ax2.set_xlabel("Iteration")
             ax2.set_ylabel("Total Time (seconds)")
-            ax2.set_title("Vector Insert Time Performance") 
+            ax2.set_title("Vector Insert Time Performance")
             ax2.grid(True, alpha=0.3)
-            
+
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, "performance_trends.png"), dpi=150)
     plt.close()
@@ -226,109 +229,133 @@ def create_heatmap_analysis(results, output_dir):
         return
 
     # Group data by filesystem configuration
-    fs_performance = defaultdict(lambda: {
-        "query_data": [],
-        "config_key": "",
-    })
+    fs_performance = defaultdict(
+        lambda: {
+            "query_data": [],
+            "config_key": "",
+        }
+    )
 
     for result in results:
         fs_type, block_size, config_key = _extract_filesystem_config(result)
-        
+
         query_perf = result.get("query_performance", {})
         for topk, topk_data in query_perf.items():
             for batch, batch_data in topk_data.items():
                 qps = batch_data.get("queries_per_second", 0)
-                fs_performance[config_key]["query_data"].append({
-                    "topk": topk,
-                    "batch": batch,
-                    "qps": qps,
-                })
+                fs_performance[config_key]["query_data"].append(
+                    {
+                        "topk": topk,
+                        "batch": batch,
+                        "qps": qps,
+                    }
+                )
                 fs_performance[config_key]["config_key"] = config_key
 
     # Check if we have multi-filesystem data
     if len(fs_performance) > 1:
         # Multi-filesystem mode: separate heatmaps for each filesystem
         num_fs = len(fs_performance)
-        fig, axes = plt.subplots(1, num_fs, figsize=(5*num_fs, 6))
+        fig, axes = plt.subplots(1, num_fs, figsize=(5 * num_fs, 6))
         if num_fs == 1:
             axes = [axes]
-        
+
         # Define common structure for consistency
         topk_order = ["topk_1", "topk_10", "topk_100"]
         batch_order = ["batch_1", "batch_10", "batch_100"]
-        
+
         for idx, (config_key, perf_data) in enumerate(fs_performance.items()):
             # Create matrix for this filesystem
             matrix = np.zeros((len(topk_order), len(batch_order)))
-            
+
             # Fill matrix with data
             query_dict = {}
             for item in perf_data["query_data"]:
                 query_dict[(item["topk"], item["batch"])] = item["qps"]
-                
+
             for i, topk in enumerate(topk_order):
                 for j, batch in enumerate(batch_order):
                     matrix[i, j] = query_dict.get((topk, batch), 0)
-            
+
             # Plot heatmap
-            im = axes[idx].imshow(matrix, cmap='viridis', aspect='auto')
+            im = axes[idx].imshow(matrix, cmap="viridis", aspect="auto")
             axes[idx].set_title(f"{config_key.upper()} Query Performance")
             axes[idx].set_xticks(range(len(batch_order)))
-            axes[idx].set_xticklabels([b.replace("batch_", "Batch ") for b in batch_order])
+            axes[idx].set_xticklabels(
+                [b.replace("batch_", "Batch ") for b in batch_order]
+            )
             axes[idx].set_yticks(range(len(topk_order)))
             axes[idx].set_yticklabels([t.replace("topk_", "Top-") for t in topk_order])
-            
+
             # Add text annotations
             for i in range(len(topk_order)):
                 for j in range(len(batch_order)):
-                    axes[idx].text(j, i, f'{matrix[i, j]:.0f}',
-                                 ha="center", va="center", color="white", fontweight="bold")
-            
+                    axes[idx].text(
+                        j,
+                        i,
+                        f"{matrix[i, j]:.0f}",
+                        ha="center",
+                        va="center",
+                        color="white",
+                        fontweight="bold",
+                    )
+
             # Add colorbar
             cbar = plt.colorbar(im, ax=axes[idx])
-            cbar.set_label('Queries Per Second (QPS)')
+            cbar.set_label("Queries Per Second (QPS)")
     else:
         # Single filesystem mode
         fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-        
+
         if fs_performance:
             config_key = list(fs_performance.keys())[0]
             perf_data = fs_performance[config_key]
-            
+
             # Create matrix
             topk_order = ["topk_1", "topk_10", "topk_100"]
             batch_order = ["batch_1", "batch_10", "batch_100"]
             matrix = np.zeros((len(topk_order), len(batch_order)))
-            
+
             # Fill matrix with data
             query_dict = {}
             for item in perf_data["query_data"]:
                 query_dict[(item["topk"], item["batch"])] = item["qps"]
-                
+
             for i, topk in enumerate(topk_order):
                 for j, batch in enumerate(batch_order):
                     matrix[i, j] = query_dict.get((topk, batch), 0)
-            
+
             # Plot heatmap
-            im = ax.imshow(matrix, cmap='viridis', aspect='auto')
+            im = ax.imshow(matrix, cmap="viridis", aspect="auto")
             ax.set_title("Milvus Query Performance Heatmap")
             ax.set_xticks(range(len(batch_order)))
             ax.set_xticklabels([b.replace("batch_", "Batch ") for b in batch_order])
             ax.set_yticks(range(len(topk_order)))
             ax.set_yticklabels([t.replace("topk_", "Top-") for t in topk_order])
-            
+
             # Add text annotations
             for i in range(len(topk_order)):
                 for j in range(len(batch_order)):
-                    ax.text(j, i, f'{matrix[i, j]:.0f}',
-                           ha="center", va="center", color="white", fontweight="bold")
-            
+                    ax.text(
+                        j,
+                        i,
+                        f"{matrix[i, j]:.0f}",
+                        ha="center",
+                        va="center",
+                        color="white",
+                        fontweight="bold",
+                    )
+
             # Add colorbar
             cbar = plt.colorbar(im, ax=ax)
-            cbar.set_label('Queries Per Second (QPS)')
-    
+            cbar.set_label("Queries Per Second (QPS)")
+
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "performance_heatmap.png"), dpi=150, bbox_inches="tight")
+    plt.savefig(
+        os.path.join(output_dir, "performance_heatmap.png"),
+        dpi=150,
+        bbox_inches="tight",
+    )
     plt.close()
 
 
