@@ -80,6 +80,8 @@
     - guestfs_has_custom_raw_image_url|bool
 
 - name: Create temporary file for partition-expanded image
+  become: true
+  become_method: ansible.builtin.sudo
   ansible.builtin.tempfile:
     state: file
     suffix: .raw
