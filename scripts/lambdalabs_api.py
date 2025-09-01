@@ -279,6 +279,22 @@ endchoice
 
             kconfig += f"config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_{kconfig_name}\n"
             kconfig += f'\tbool "{name} ({price_str}) - {description} [AVAILABLE]"\n'
+
+            # Add region dependencies when manual region selection is used
+            if regions:
+                # Convert region names to Kconfig symbols
+                region_configs = []
+                for region in regions:
+                    region_kconfig = region.upper().replace("-", "_")
+                    region_configs.append(
+                        f"TERRAFORM_LAMBDALABS_REGION_{region_kconfig}"
+                    )
+
+                # Add depends on clause for manual region selection
+                kconfig += "\tdepends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || ("
+                kconfig += " || ".join(region_configs)
+                kconfig += ")\n"
+
             kconfig += "\thelp\n"
             kconfig += f"\t  {description}\n"
             kconfig += f"\t  AVAILABLE in: {regions_str}\n"
@@ -301,6 +317,8 @@ endchoice
 
             kconfig += f"config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_{kconfig_name}\n"
             kconfig += f'\tbool "{name} ({price_str}) - [NO CAPACITY]"\n'
+            # Make unavailable types never show when manual region selection is used
+            kconfig += "\tdepends on !TERRAFORM_LAMBDALABS_REGION_MANUAL\n"
             kconfig += "\thelp\n"
             kconfig += f"\t  {description}\n"
             kconfig += f"\t  WARNING: Currently NO CAPACITY in any region!\n"
