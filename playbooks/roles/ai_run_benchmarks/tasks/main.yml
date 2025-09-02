@@ -152,7 +152,7 @@
         delay: 10
         timeout: 300
 
-    - name: Run Milvus benchmark for iteration {{ item }}
+    - name: Run Milvus benchmark iterations
       ansible.builtin.command: >
         {{ ai_benchmark_results_dir }}/venv/bin/python
         {{ ai_benchmark_results_dir }}/workdir/milvus_benchmark.py
