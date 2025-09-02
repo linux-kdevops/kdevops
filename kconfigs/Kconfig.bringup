@@ -16,7 +16,7 @@ config CLOUD_INITIALIZED
 choice
 	prompt "Node bring up method"
 	default TERRAFORM if CLOUD_INITIALIZED
-	default GUESTFS
+	default GUESTFS if !CLOUD_INITIALIZED
 
 config GUESTFS
 	bool "Use guestfs-tools for local virtualization via KVM and libvirt"
