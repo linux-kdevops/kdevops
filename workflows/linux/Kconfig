@@ -307,7 +307,7 @@ config BOOTLINUX_TEST_MESSAGE_ID_INSTALL_B4
 	help
 	  When enabled, b4 will be installed using pip
 
-config BOOTLINUX_TREE_REF
+config LATEST_BOOTLINUX_TREE_REF
 	string
 	default BOOTLINUX_TREE_LINUS_REF if BOOTLINUX_TREE_LINUS
 	default BOOTLINUX_TREE_STABLE_REF if BOOTLINUX_STABLE
@@ -323,6 +323,11 @@ config BOOTLINUX_TREE_REF
 	default BOOTLINUX_TREE_JLAYTON_LINUX_REF if BOOTLINUX_TREE_JLAYTON_LINUX
 	default BOOTLINUX_TREE_CEL_LINUX_REF if BOOTLINUX_TREE_CEL_LINUX
 	default BOOTLINUX_TREE_CUSTOM_REF if BOOTLINUX_CUSTOM
+
+config BOOTLINUX_TREE_REF
+	string
+	default LATEST_BOOTLINUX_TREE_REF if !BOOTLINUX_AB_DIFFERENT_REF
+	default $(shell, scripts/infer_last_stable_kernel.sh) if BOOTLINUX_AB_DIFFERENT_REF
 
 config BOOTLINUX_TREE_CUSTOM_KERNELRELEASE
 	bool "Do you want a full custom kernel release name?"
@@ -424,7 +429,7 @@ config BOOTLINUX_DEV_TREE
 config TARGET_LINUX_DEV_REF
 	string "Development kernel reference"
 	output yaml
-	default $(shell, scripts/infer_last_stable_kernel.sh)
+	default LATEST_BOOTLINUX_TREE_REF
 	help
 	  Git reference (branch, tag, or commit) for the development kernel.
 	  This should be different from the baseline reference to enable
