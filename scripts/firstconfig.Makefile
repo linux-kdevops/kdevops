@@ -2,7 +2,6 @@
 
 firstconfig:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
 		--extra-vars '{ kdevops_cli_install: True }' \
 		--tags vars_simple,firstconfig \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
