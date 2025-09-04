@@ -1,0 +1,184 @@
+menu "Multi-filesystem testing configuration"
+
+config BUILD_LINUX_ENABLE_MULTIFS_TESTING
+	bool "Enable multi-filesystem testing"
+	default n
+	output yaml
+	help
+	  Enable testing kernel builds across multiple filesystem
+	  configurations. This allows comparing build performance
+	  characteristics between different filesystems and their
+	  configurations.
+
+	  When enabled, the build workflow will run on multiple nodes,
+	  each with a different filesystem configuration, allowing for
+	  detailed performance analysis across different storage backends.
+
+if BUILD_LINUX_ENABLE_MULTIFS_TESTING
+
+config BUILD_LINUX_MULTIFS_TEST_XFS
+	bool "Test XFS configurations"
+	default y
+	output yaml
+	help
+	  Enable testing kernel builds on XFS filesystem with different
+	  block size configurations.
+
+if BUILD_LINUX_MULTIFS_TEST_XFS
+
+menu "XFS configuration profiles"
+
+config BUILD_LINUX_MULTIFS_XFS_4K_4KS
+	bool "XFS 4k block size - 4k sector size"
+	default y
+	output yaml
+	help
+	  Test kernel builds on XFS with 4k filesystem block size
+	  and 4k sector size. This is the most common configuration
+	  and provides good performance for most workloads.
+
+config BUILD_LINUX_MULTIFS_XFS_8K_4KS
+	bool "XFS 8k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test kernel builds on XFS with 8k filesystem block size
+	  and 4k sector size. Slightly larger block size for improved
+	  I/O efficiency.
+
+config BUILD_LINUX_MULTIFS_XFS_16K_4KS
+	bool "XFS 16k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test kernel builds on XFS with 16k filesystem block size
+	  and 4k sector size. Larger block sizes can improve performance
+	  for large file operations common in kernel builds.
+
+config BUILD_LINUX_MULTIFS_XFS_32K_4KS
+	bool "XFS 32k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test kernel builds on XFS with 32k filesystem block size
+	  and 4k sector size. Even larger block sizes can provide
+	  benefits for builds with many large object files.
+
+config BUILD_LINUX_MULTIFS_XFS_64K_4KS
+	bool "XFS 64k block size - 4k sector size"
+	default n
+	output yaml
+	help
+	  Test kernel builds on XFS with 64k filesystem block size
+	  and 4k sector size. Maximum supported block size for XFS,
+	  testing extreme configurations for kernel builds.
+
+endmenu
+
+endif # BUILD_LINUX_MULTIFS_TEST_XFS
+
+config BUILD_LINUX_MULTIFS_TEST_EXT4
+	bool "Test ext4 configurations"
+	default y
+	output yaml
+	help
+	  Enable testing kernel builds on ext4 filesystem with different
+	  configurations including bigalloc options.
+
+if BUILD_LINUX_MULTIFS_TEST_EXT4
+
+menu "ext4 configuration profiles"
+
+config BUILD_LINUX_MULTIFS_EXT4_4K
+	bool "ext4 4k block size"
+	default y
+	output yaml
+	help
+	  Test kernel builds on ext4 with standard 4k block size.
+	  This is the default ext4 configuration.
+
+config BUILD_LINUX_MULTIFS_EXT4_16K_BIGALLOC
+	bool "ext4 16k bigalloc"
+	default n
+	output yaml
+	help
+	  Test kernel builds on ext4 with 16k bigalloc enabled.
+	  Bigalloc reduces metadata overhead and can improve
+	  performance for large file workloads like kernel builds.
+
+endmenu
+
+endif # BUILD_LINUX_MULTIFS_TEST_EXT4
+
+config BUILD_LINUX_MULTIFS_TEST_BTRFS
+	bool "Test btrfs configurations"
+	default y
+	output yaml
+	help
+	  Enable testing kernel builds on btrfs filesystem with
+	  common default configuration profile.
+
+if BUILD_LINUX_MULTIFS_TEST_BTRFS
+
+menu "btrfs configuration profiles"
+
+config BUILD_LINUX_MULTIFS_BTRFS_DEFAULT
+	bool "btrfs default profile"
+	default y
+	output yaml
+	help
+	  Test kernel builds on btrfs with default configuration.
+	  This includes modern defaults with free-space-tree and
+	  no-holes features enabled.
+
+endmenu
+
+endif # BUILD_LINUX_MULTIFS_TEST_BTRFS
+
+config BUILD_LINUX_MULTIFS_TEST_TMPFS
+	bool "Test tmpfs (RAM filesystem)"
+	default n
+	output yaml
+	help
+	  Enable testing kernel builds on tmpfs (RAM-based filesystem).
+	  This provides the fastest possible build times but requires
+	  sufficient RAM to hold the entire kernel build.
+
+if BUILD_LINUX_MULTIFS_TEST_TMPFS
+
+menu "tmpfs configuration profiles"
+
+config BUILD_LINUX_MULTIFS_TMPFS_DEFAULT
+	bool "tmpfs default profile"
+	default y
+	output yaml
+	help
+	  Test kernel builds on tmpfs with default configuration.
+	  This will use RAM for the build directory, providing
+	  maximum performance if sufficient memory is available.
+
+endmenu
+
+endif # BUILD_LINUX_MULTIFS_TEST_TMPFS
+
+config BUILD_LINUX_MULTIFS_RESULTS_DIR
+	string "Multi-filesystem results directory"
+	output yaml
+	default "/data/build-linux-multifs-benchmark"
+	help
+	  Directory where multi-filesystem test results and logs will be stored.
+	  Each filesystem configuration will have its own subdirectory.
+
+config BUILD_LINUX_MULTIFS_USE_NODE_FS
+	bool "Automatically detect filesystem type from node name"
+	default y
+	output yaml
+	help
+	  When enabled, the filesystem type for build storage will be
+	  automatically determined based on the node's configuration name.
+	  For example, nodes named *-xfs-* will use XFS, *-ext4-* will
+	  use ext4, *-btrfs-* will use Btrfs, and *-tmpfs-* will use tmpfs.
+
+endif # BUILD_LINUX_ENABLE_MULTIFS_TESTING
+
+endmenu

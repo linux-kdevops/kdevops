@@ -1,0 +1,203 @@
+---
+- name: Build Linux Kernel Multiple Times
+  hosts: all
+  vars:
+    build_linux_repeat_count: "{{ build_linux_repeat_count | default(100) | int }}"
+    build_linux_make_jobs: "{{ build_linux_make_jobs | default(0) | int }}"
+    build_linux_target: "{{ build_linux_target | default('all') }}"
+    build_linux_clean_between: "{{ build_linux_clean_between | default(false) | bool }}"
+    build_linux_collect_stats: "{{ build_linux_collect_stats | default(true) | bool }}"
+    build_linux_results_dir: "{{ build_linux_results_dir | default('workflows/build-linux/results') }}"
+    build_linux_storage_enable: "{{ build_linux_storage_enable | default(false) | bool }}"
+    build_linux_device: "{{ build_linux_device | default('') }}"
+    build_linux_fstype: "{{ build_linux_fstype | default('xfs') }}"
+    build_linux_use_latest_tag: "{{ build_linux_use_latest_tag | default(true) | bool }}"
+    build_linux_custom_tag: "{{ build_linux_custom_tag | default('master') }}"
+    build_linux_allow_modifications: "{{ build_linux_allow_modifications | default(false) | bool }}"
+
+    # Build paths
+    linux_source_dir: "{{ data_path }}/linux"
+    linux_build_dir: "{{ data_path }}/build/linux"
+    linux_git_url: "{{ linux_mirror_git | default('git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git') }}"
+
+  pre_tasks:
+    # Start monitoring services before running builds
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_run.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_run"]
+
+  tasks:
+    - name: Install build dependencies
+      become: yes
+      ansible.builtin.package:
+        name:
+          - git
+          - gcc
+          - make
+          - bc
+          - bison
+          - flex
+          - libssl-dev
+          - libelf-dev
+          - time
+        state: present
+
+    - name: Detect filesystem configuration from node name
+      when:
+        - build_linux_enable_multifs_testing|default(false)|bool
+        - build_linux_multifs_use_node_fs|default(false)|bool
+      block:
+        - name: Set filesystem type based on node name
+          set_fact:
+            build_linux_fstype: >-
+              {% if 'xfs' in ansible_hostname %}xfs
+              {% elif 'ext4' in ansible_hostname %}ext4
+              {% elif 'btrfs' in ansible_hostname %}btrfs
+              {% elif 'tmpfs' in ansible_hostname %}tmpfs
+              {% else %}{{ build_linux_fstype|default('xfs') }}{% endif %}
+
+        - name: Set XFS block and sector sizes from node name
+          when: build_linux_fstype == 'xfs'
+          set_fact:
+            build_linux_xfs_blocksize: >-
+              {% if 'xfs-4k' in ansible_hostname %}4096
+              {% elif 'xfs-8k' in ansible_hostname %}8192
+              {% elif 'xfs-16k' in ansible_hostname %}16384
+              {% elif 'xfs-32k' in ansible_hostname %}32768
+              {% elif 'xfs-64k' in ansible_hostname %}65536
+              {% else %}{{ build_linux_xfs_blocksize|default(4096) }}{% endif %}
+            build_linux_xfs_sectorsize: "{{ build_linux_xfs_sectorsize|default(4096) }}"
+
+    - name: Setup dedicated build filesystem
+      when: build_linux_storage_enable
+      block:
+        - name: Create XFS filesystem with custom block and sector sizes
+          become: yes
+          ansible.builtin.command: |
+            mkfs.xfs -f -b size={{ build_linux_xfs_blocksize|default(4096) }} -s size={{ build_linux_xfs_sectorsize|default(4096) }} {{ build_linux_device }}
+          when: build_linux_fstype == 'xfs'
+
+        - name: Create non-XFS filesystem on device
+          become: yes
+          ansible.builtin.filesystem:
+            fstype: "{{ build_linux_fstype }}"
+            dev: "{{ build_linux_device }}"
+            force: yes
+          when:
+            - build_linux_fstype != 'tmpfs'
+            - build_linux_fstype != 'xfs'
+
+        - name: Mount build filesystem
+          become: yes
+          ansible.builtin.mount:
+            path: "{{ data_path }}/build"
+            src: "{{ build_linux_device if build_linux_fstype != 'tmpfs' else 'tmpfs' }}"
+            fstype: "{{ build_linux_fstype }}"
+            opts: "{{ 'size=32G' if build_linux_fstype == 'tmpfs' else 'defaults' }}"
+            state: mounted
+
+        - name: Set ownership of build directory
+          become: yes
+          ansible.builtin.file:
+            path: "{{ data_path }}/build"
+            owner: "{{ ansible_user }}"
+            group: "{{ ansible_user }}"
+            mode: '0755'
+
+    - name: Create build directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ linux_source_dir }}"
+        - "{{ linux_build_dir }}"
+        - "{{ data_path }}/build-results"
+
+    - name: Check if Linux source exists
+      ansible.builtin.stat:
+        path: "{{ linux_source_dir }}/.git"
+      register: linux_git_exists
+
+    - name: Clone Linux kernel source
+      ansible.builtin.git:
+        repo: "{{ linux_git_url }}"
+        dest: "{{ linux_source_dir }}"
+        depth: 1
+        single_branch: yes
+      when: not linux_git_exists.stat.exists
+      retries: 3
+      delay: 10
+      register: git_result
+      until: not git_result.failed
+
+    - name: Fetch all tags for latest tag detection
+      ansible.builtin.command: git fetch --tags
+      args:
+        chdir: "{{ linux_source_dir }}"
+      when: build_linux_use_latest_tag
+
+    - name: Copy build script
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../workflows/build-linux/scripts/build_linux.py"
+        dest: "{{ data_path }}/build_linux.py"
+        mode: '0755'
+
+    - name: Run Linux kernel builds
+      ansible.builtin.command: |
+        python3 {{ data_path }}/build_linux.py \
+          --source-dir {{ linux_source_dir }} \
+          --build-dir {{ linux_build_dir }} \
+          --results-dir {{ data_path }}/build-results \
+          --count {{ build_linux_repeat_count }} \
+          --jobs {{ build_linux_make_jobs }} \
+          --target {{ build_linux_target }} \
+          {% if build_linux_clean_between %}--clean-between{% endif %} \
+          {% if build_linux_collect_stats %}--collect-stats{% endif %} \
+          {% if build_linux_use_latest_tag %}--use-latest{% else %}--tag {{ build_linux_custom_tag }}{% endif %}
+      register: build_result
+      async: 36000  # 10 hours timeout
+      poll: 60  # Check every minute
+
+    - name: Display build output
+      ansible.builtin.debug:
+        msg: "{{ build_result.stdout_lines }}"
+      when: build_result is defined
+
+    - name: Check for build results
+      ansible.builtin.stat:
+        path: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+      register: summary_file
+
+    - name: Read and display summary
+      when: summary_file.stat.exists
+      block:
+        - name: Read summary file
+          ansible.builtin.slurp:
+            src: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+          register: summary_content
+
+        - name: Parse summary
+          ansible.builtin.set_fact:
+            build_summary: "{{ summary_content.content | b64decode | from_json }}"
+
+        - name: Display summary statistics
+          ansible.builtin.debug:
+            msg: |
+              Build Statistics Summary
+              ========================
+              Total builds: {{ build_summary.total_builds }}
+              Successful builds: {{ build_summary.successful_builds }}
+              Failed builds: {{ build_summary.failed_builds }}
+              Average build time: {{ build_summary.statistics.average | round(2) }} seconds
+              Median build time: {{ build_summary.statistics.median | round(2) }} seconds
+              Min/Max: {{ build_summary.statistics.min | round(2) }}/{{ build_summary.statistics.max | round(2) }} seconds
+              Total time: {{ build_summary.statistics.total_hours | round(2) }} hours
+
+  post_tasks:
+    # Collect monitoring data after builds complete
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_collect.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_collect"]

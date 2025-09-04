@@ -906,6 +906,128 @@
     - kdevops_baseline_and_dev
     - not minio_enable_multifs_testing|default(false)|bool
 
+# Build-linux workflow nodes
+
+# Multi-filesystem Build-linux configurations
+- name: Collect enabled Build-linux multi-filesystem configurations
+  vars:
+    xfs_configs: >-
+      {{
+        [] +
+        (['xfs-4k-4ks'] if build_linux_multifs_xfs_4k_4ks|default(false)|bool else []) +
+        (['xfs-8k-4ks'] if build_linux_multifs_xfs_8k_4ks|default(false)|bool else []) +
+        (['xfs-16k-4ks'] if build_linux_multifs_xfs_16k_4ks|default(false)|bool else []) +
+        (['xfs-32k-4ks'] if build_linux_multifs_xfs_32k_4ks|default(false)|bool else []) +
+        (['xfs-64k-4ks'] if build_linux_multifs_xfs_64k_4ks|default(false)|bool else [])
+      }}
+    ext4_configs: >-
+      {{
+        [] +
+        (['ext4-4k'] if build_linux_multifs_ext4_4k|default(false)|bool else []) +
+        (['ext4-16k-bigalloc'] if build_linux_multifs_ext4_16k_bigalloc|default(false)|bool else [])
+      }}
+    btrfs_configs: >-
+      {{
+        [] +
+        (['btrfs'] if build_linux_multifs_btrfs_default|default(false)|bool else [])
+      }}
+    tmpfs_configs: >-
+      {{
+        [] +
+        (['tmpfs'] if build_linux_multifs_tmpfs_default|default(false)|bool else [])
+      }}
+  set_fact:
+    build_linux_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs + tmpfs_configs) | unique }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - build_linux_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+
+- name: Create Build-linux nodes for each filesystem configuration (no dev)
+  vars:
+    filesystem_nodes: "{{ [kdevops_host_prefix + '-build-linux-'] | product(build_linux_multifs_enabled_configs | default([])) | map('join') | list }}"
+  set_fact:
+    build_linux_enabled_section_types: "{{ filesystem_nodes }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - build_linux_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+    - build_linux_multifs_enabled_configs is defined
+    - build_linux_multifs_enabled_configs | length > 0
+
+- name: Create Build-linux nodes for each filesystem configuration with dev hosts
+  vars:
+    filesystem_nodes: "{{ [kdevops_host_prefix + '-build-linux-'] | product(build_linux_multifs_enabled_configs | default([])) | map('join') | list }}"
+  set_fact:
+    build_linux_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - build_linux_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - build_linux_multifs_enabled_configs is defined
+    - build_linux_multifs_enabled_configs | length > 0
+
+- name: Generate the Build-linux multi-filesystem kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ build_linux_enabled_section_types | regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
+    all_generic_nodes: "{{ build_linux_enabled_section_types }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - build_linux_enable_multifs_testing|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - build_linux_enabled_section_types is defined
+    - build_linux_enabled_section_types | length > 0
+
+# Standard Build-linux single filesystem nodes
+- name: Generate the Build-linux kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-build-linux'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-build-linux'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+    - not build_linux_enable_multifs_testing|default(false)|bool
+
+- name: Generate the Build-linux kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-build-linux', kdevops_host_prefix + '-build-linux-dev'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-build-linux', kdevops_host_prefix + '-build-linux-dev'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: '0644'
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - not build_linux_enable_multifs_testing|default(false)|bool
+
 - name: Get the control host's timezone
   ansible.builtin.command: "timedatectl show -p Timezone --value"
   register: kdevops_host_timezone
