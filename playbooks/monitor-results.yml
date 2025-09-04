@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: baseline:dev
   become: true
   become_flags: "su - -c"
   become_method: sudo

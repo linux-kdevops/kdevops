@@ -1,0 +1,37 @@
+---
+# Install dependencies for monitoring on Fedora/RHEL
+
+- name: Install monitoring Python dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-matplotlib
+      - python3-packaging
+      - python3-numpy
+      - python3-bcc
+    state: present
+  when:
+    - enable_monitoring|default(false)|bool
+
+- name: Install folio migration monitoring dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-psutil
+    state: present
+  when:
+    - enable_monitoring|default(false)|bool
+    - monitor_folio_migration|default(false)|bool
+
+- name: Install memory fragmentation monitoring dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-scipy
+    state: present
+  when:
+    - enable_monitoring|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool

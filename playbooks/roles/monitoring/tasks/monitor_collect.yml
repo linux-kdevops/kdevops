@@ -11,3 +11,188 @@
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
+
+# Plot-fragmentation collection tasks
+- name: Check if fragmentation monitoring was started
+  become: true
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}/fragmentation_tracker.pid"
+  register: fragmentation_pid_file
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Stop fragmentation monitoring
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    output_dir="{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+    if [ -f "${output_dir}/fragmentation_tracker.pid" ]; then
+      pid=$(cat "${output_dir}/fragmentation_tracker.pid")
+      if ps -p $pid > /dev/null 2>&1; then
+        kill -INT $pid  # Use INT signal to allow graceful shutdown
+        echo "Sent INT signal to fragmentation tracker, waiting for it to save data..."
+
+        # Wait indefinitely for the process to save and exit
+        while ps -p $pid > /dev/null 2>&1; do
+          sleep 1
+        done
+        echo "Stopped fragmentation monitoring process $pid"
+      else
+        echo "Fragmentation monitoring process $pid was not running"
+      fi
+      rm -f "${output_dir}/fragmentation_tracker.pid"
+    fi
+
+    # Save the end time
+    date +"%Y-%m-%d %H:%M:%S" > "${output_dir}/end_time.txt"
+  register: stop_fragmentation_monitor
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_pid_file.stat.exists|default(false)
+
+- name: Display stop fragmentation monitoring status
+  ansible.builtin.debug:
+    msg: "{{ stop_fragmentation_monitor.stdout }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - stop_fragmentation_monitor is defined
+    - stop_fragmentation_monitor.changed|default(false)
+
+- name: Generate fragmentation visualization
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    cd /opt/fragmentation
+    output_dir="{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+
+    # Run the visualizer if data exists - it can handle corrupted JSON
+    if [ -f "${output_dir}/fragmentation_data.json" ]; then
+      python3 fragmentation_visualizer.py \
+        "${output_dir}/fragmentation_data.json" \
+        -o "${output_dir}/fragmentation_plot.png" 2>&1 | tee "${output_dir}/visualizer.log"
+
+      # Check if visualization was successful
+      if [ -f "${output_dir}/fragmentation_plot.png" ]; then
+        echo "Generated fragmentation visualization successfully"
+      else
+        echo "Visualization failed - check visualizer.log for details"
+      fi
+    else
+      echo "No fragmentation data found to visualize"
+    fi
+  register: generate_fragmentation_plot
+  ignore_errors: true
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Set monitoring results path
+  ansible.builtin.set_fact:
+    monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
+
+- name: List fragmentation monitoring output files
+  become: true
+  become_method: sudo
+  ansible.builtin.find:
+    paths: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+    patterns: "*"
+    file_type: file
+  register: fragmentation_output_files
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Create local fragmentation results directory
+  ansible.builtin.file:
+    path: "{{ monitoring_results_path }}/fragmentation"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_output_files.files is defined
+    - fragmentation_output_files.files | length > 0
+
+- name: Copy fragmentation monitoring data to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: "{{ item.path }}"
+    dest: "{{ monitoring_results_path }}/fragmentation/{{ ansible_hostname }}_{{ item.path | basename }}"
+    flat: true
+    validate_checksum: false
+  loop: "{{ fragmentation_output_files.files | default([]) }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_output_files.files is defined
+
+- name: Display fragmentation monitoring collection summary
+  ansible.builtin.debug:
+    msg: |
+      Fragmentation monitoring collection complete.
+      {% if fragmentation_output_files.files is defined and fragmentation_output_files.files | length > 0 %}
+      Collected {{ fragmentation_output_files.files | length }} files
+      Data saved to: {{ monitoring_results_path }}/fragmentation/
+      Files collected:
+      {% for file in fragmentation_output_files.files %}
+        - {{ ansible_hostname }}_{{ file.path | basename }}
+      {% endfor %}
+      {% else %}
+      No fragmentation data was collected.
+      {% endif %}
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+# Generate fragmentation comparison plots for multi-filesystem and XFS block size testing
+- name: Check if fragmentation JSON files exist for comparison
+  ansible.builtin.find:
+    paths: "{{ monitoring_results_path }}/fragmentation"
+    patterns: "*_fragmentation_data.json"
+    file_type: file
+  delegate_to: localhost
+  run_once: true
+  register: fragmentation_json_files
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Generate fragmentation comparison plots
+  ansible.builtin.command:
+    cmd: >
+      python3 {{ role_path }}/scripts/generate_fragmentation_comparisons.py
+      {{ monitoring_results_path }}/fragmentation
+      --visualizer {{ playbook_dir }}/roles/monitoring/files/fragmentation_visualizer.py
+  delegate_to: localhost
+  run_once: true
+  register: comparison_generation
+  ignore_errors: true
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_json_files.files is defined
+    - fragmentation_json_files.files | length > 1
+
+- name: Display comparison generation results
+  ansible.builtin.debug:
+    msg: "{{ comparison_generation.stdout }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - comparison_generation is defined
+    - comparison_generation.changed|default(false)
+
+# Generate comprehensive visualizations using monitoring role scripts
+- name: Generate monitoring visualizations
+  ansible.builtin.include_tasks: visualize.yml
+  vars:
+    monitoring_results_dir: "{{ monitoring_results_path }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - (monitor_folio_migration|default(false)|bool or monitor_memory_fragmentation|default(false)|bool)

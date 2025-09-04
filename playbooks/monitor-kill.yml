@@ -1,0 +1,118 @@
+---
+- name: Kill all monitoring processes and clean up monitoring data
+  hosts: baseline:dev
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  tasks:
+    - name: Import optional extra_args file
+      ansible.builtin.include_vars: "{{ item }}"
+      ignore_errors: true
+      with_first_found:
+        - files:
+            - "../extra_vars.yml"
+            - "../extra_vars.yaml"
+            - "../extra_vars.json"
+          skip: true
+      tags: vars
+
+    - name: Find all fragmentation monitoring processes
+      ansible.builtin.command: pgrep -f fragmentation_tracker.py
+      register: fragmentation_pids
+      changed_when: false
+      failed_when: false
+
+    - name: Kill fragmentation monitoring processes
+      ansible.builtin.command: pkill -f fragmentation_tracker.py
+      when: fragmentation_pids.rc == 0
+      register: kill_fragmentation
+      failed_when: false
+      changed_when: kill_fragmentation.rc == 0
+
+    - name: Find all folio migration monitoring processes
+      ansible.builtin.command: pgrep -f "while.*folio_migration"
+      register: folio_pids
+      changed_when: false
+      failed_when: false
+
+    - name: Kill folio migration monitoring processes
+      ansible.builtin.command: pkill -f "while.*folio_migration"
+      when: folio_pids.rc == 0
+      register: kill_folio
+      failed_when: false
+      changed_when: kill_folio.rc == 0
+
+    - name: Clean up monitoring PID files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /root/monitoring/fragmentation.pid
+        - /root/monitoring/folio_migration.pid
+      ignore_errors: true
+
+    - name: Check if monitoring directory exists
+      ansible.builtin.stat:
+        path: /root/monitoring
+      register: monitoring_dir
+
+    - name: List monitoring data files
+      ansible.builtin.find:
+        paths: /root/monitoring
+        recurse: yes
+        file_type: file
+      register: monitoring_files
+      when: monitoring_dir.stat.exists|default(false)
+
+    - name: Display monitoring files to be removed
+      ansible.builtin.debug:
+        msg: "Found {{ monitoring_files.files | length }} monitoring files to clean up"
+      when:
+        - monitoring_dir.stat.exists|default(false)
+        - monitoring_files.files is defined
+
+    - name: Remove monitoring data directory
+      ansible.builtin.file:
+        path: /root/monitoring
+        state: absent
+      when:
+        - monitoring_dir.stat.exists|default(false)
+        - enable_monitoring_cleanup|default(true)|bool
+
+    - name: Verify no monitoring processes remain
+      ansible.builtin.shell: ps aux | grep -E "fragmentation_tracker|folio_migration" | grep -v grep || true
+      register: remaining_processes
+      changed_when: false
+      failed_when: false
+
+    - name: Report monitoring cleanup status
+      ansible.builtin.debug:
+        msg: |
+          Monitoring cleanup complete on {{ inventory_hostname }}
+          {% if remaining_processes.stdout %}
+          WARNING: Some processes may still be running:
+          {{ remaining_processes.stdout }}
+          {% else %}
+          All monitoring processes successfully terminated
+          {% endif %}
+
+- name: Clean up local monitoring results
+  hosts: localhost
+  tasks:
+    - name: Check if local monitoring results exist
+      ansible.builtin.stat:
+        path: "{{ topdir_path }}/workflows/build-linux/results/monitoring"
+      register: local_monitoring_dir
+
+    - name: Remove local monitoring results
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/workflows/build-linux/results/monitoring"
+        state: absent
+      when:
+        - local_monitoring_dir.stat.exists|default(false)
+        - enable_monitoring_cleanup|default(true)|bool
+
+    - name: Report local cleanup status
+      ansible.builtin.debug:
+        msg: "Local monitoring results cleaned up"
+      when: local_monitoring_dir.stat.exists|default(false)

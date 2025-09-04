@@ -1,0 +1,71 @@
+---
+# Generate visualization plots for monitoring data
+# This can be used by any workflow that collects monitoring data
+
+- name: Check if monitoring data was collected
+  ansible.builtin.stat:
+    path: "{{ monitoring_results_dir }}"
+  register: monitoring_dir
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate monitoring visualizations
+  when: monitoring_dir.stat.exists
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Generate folio migration comparison plots
+      ansible.builtin.command:
+        cmd: "python3 {{ role_path }}/scripts/folio_migration_compare.py {{ monitoring_results_dir }}"
+      register: folio_result
+      failed_when: false
+      changed_when: false
+
+    - name: Display folio migration visualization results
+      ansible.builtin.debug:
+        msg: "{{ folio_result.stdout_lines }}"
+      when: folio_result.stdout_lines is defined and folio_result.stdout_lines | length > 0
+
+    - name: Generate fragmentation comparison plots
+      ansible.builtin.command:
+        cmd: "python3 {{ role_path }}/scripts/fragmentation_compare.py {{ monitoring_results_dir }}"
+      register: frag_result
+      failed_when: false
+      changed_when: false
+
+    - name: Display fragmentation visualization results
+      ansible.builtin.debug:
+        msg: "{{ frag_result.stdout_lines }}"
+      when: frag_result.stdout_lines is defined and frag_result.stdout_lines | length > 0
+
+    - name: Generate A/B fragmentation comparison plots
+      ansible.builtin.command:
+        cmd: "python3 {{ role_path }}/scripts/fragmentation_ab_compare.py {{ monitoring_results_dir }}"
+      register: frag_ab_result
+      failed_when: false
+      changed_when: false
+
+    - name: Display A/B fragmentation visualization results
+      ansible.builtin.debug:
+        msg: "{{ frag_ab_result.stdout_lines }}"
+      when: frag_ab_result.stdout_lines is defined and frag_ab_result.stdout_lines | length > 0
+
+    - name: List generated visualization files
+      ansible.builtin.find:
+        paths:
+          - "{{ monitoring_results_dir }}"
+          - "{{ monitoring_results_dir }}/fragmentation"
+        patterns:
+          - "*.png"
+          - "*.html"
+        recurse: yes
+      register: visualization_files
+
+    - name: Display generated visualization files
+      ansible.builtin.debug:
+        msg: |
+          Generated monitoring visualizations:
+          {% for file in visualization_files.files %}
+          - {{ file.path | basename }}
+          {% endfor %}
+      when: visualization_files.files | length > 0
