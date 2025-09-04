@@ -124,6 +124,7 @@
       - libcap-progs
       - fio
       - parted
+      - python3-bcc
     state: present
   when:
     - repos_present|bool

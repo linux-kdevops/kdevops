@@ -61,6 +61,59 @@ config MONITOR_FOLIO_MIGRATION_INTERVAL
 	  performance. Higher values reduce overhead but may miss
 	  short-lived migration events.
 
+config MONITOR_MEMORY_FRAGMENTATION
+	bool "Monitor memory fragmentation with eBPF"
+	output yaml
+	default n
+	help
+	  Enable monitoring of memory fragmentation using eBPF-based tracking.
+	  This provides advanced memory fragmentation visualization using
+	  eBPF tracepoints and matplotlib.
+
+	  This tool tracks memory allocation events and fragmentation indices
+	  in real-time, providing insights that traditional methods like
+	  /proc/pagetypeinfo cannot fully capture.
+
+	  Features:
+	  - eBPF-based tracepoint tracking
+	  - Real-time fragmentation index monitoring
+	  - Page mobility tracking
+	  - Matplotlib visualization of fragmentation data
+
+	  Requirements:
+	  - Python 3 with python3-bpfcc
+	  - Kernel with required tracepoint support
+	  - Root privileges for eBPF attachment
+
+	  The tool is particularly useful for investigating whether Large Block
+	  Size support in the kernel creates worse fragmentation.
+
+config MONITOR_FRAGMENTATION_DURATION
+	int "Fragmentation monitoring duration (seconds)"
+	output yaml
+	default 0
+	depends on MONITOR_MEMORY_FRAGMENTATION
+	help
+	  Duration to run fragmentation monitoring in seconds.
+	  Set to 0 for continuous monitoring until workflow completion.
+
+	  The monitoring will automatically stop when the workflow
+	  finishes or when this duration expires, whichever comes first.
+
+config MONITOR_FRAGMENTATION_OUTPUT_DIR
+	string "Fragmentation monitoring output directory"
+	output yaml
+	default "/root/monitoring/fragmentation"
+	depends on MONITOR_MEMORY_FRAGMENTATION
+	help
+	  Directory where fragmentation monitoring data and plots will be stored.
+	  This directory will be created if it doesn't exist.
+
+	  The collected data includes:
+	  - Raw eBPF trace data
+	  - Generated matplotlib plots
+	  - JSON formatted fragmentation metrics
+
 endif # MONITOR_DEVELOPMENTAL_STATS
 
 # Future monitoring options can be added here
