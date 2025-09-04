@@ -1,0 +1,69 @@
+---
+- name: Collect Build Linux Results
+  hosts: all
+  vars:
+    build_linux_results_dir: "{{ build_linux_results_dir | default('workflows/build-linux/results') }}"
+
+  tasks:
+    - name: Create local results directory
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/{{ build_linux_results_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Check for build results on target
+      ansible.builtin.stat:
+        path: "{{ data_path }}/build-results"
+      register: results_dir
+
+    - name: List build result files
+      ansible.builtin.find:
+        paths: "{{ data_path }}/build-results"
+        patterns: "*"
+        file_type: file
+      register: result_files
+      when: results_dir.stat.exists
+
+    - name: Fetch build results
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ topdir_path }}/{{ build_linux_results_dir }}/{{ ansible_hostname }}_{{ item.path | basename }}"
+        flat: true
+      loop: "{{ result_files.files }}"
+      when:
+        - results_dir.stat.exists
+        - result_files.files is defined
+
+    - name: Copy combine results script
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../workflows/build-linux/scripts/combine_results.py"
+        dest: "{{ topdir_path }}/combine_results.py"
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+      when: result_files.matched > 0
+
+    - name: Generate combined report
+      ansible.builtin.command: |
+        python3 {{ topdir_path }}/combine_results.py {{ topdir_path }}/{{ build_linux_results_dir }}
+      delegate_to: localhost
+      run_once: true
+      register: combined_report
+      when: result_files.matched > 0
+
+    - name: Clean up temporary script
+      ansible.builtin.file:
+        path: "{{ topdir_path }}/combine_results.py"
+        state: absent
+      delegate_to: localhost
+      run_once: true
+      when: result_files.matched > 0
+
+    - name: Display combined report
+      ansible.builtin.debug:
+        msg: "{{ combined_report.stdout_lines }}"
+      when:
+        - combined_report is defined
+        - combined_report.stdout_lines is defined

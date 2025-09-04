@@ -240,6 +240,14 @@ config KDEVOPS_WORKFLOW_DEDICATE_MINIO
 	  This will dedicate your configuration to running only the
 	  MinIO workflow for S3 storage benchmarking with Warp testing.
 
+config KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
+	bool "build-linux"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	select KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+	help
+	  This will dedicate your configuration to running only the
+	  build-linux workflow for repeated Linux kernel builds.
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -258,6 +266,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "fio-tests" if KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 	default "ai" if KDEVOPS_WORKFLOW_DEDICATE_AI
 	default "minio" if KDEVOPS_WORKFLOW_DEDICATE_MINIO
+	default "build-linux" if KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
 
 endif
 
@@ -531,6 +540,17 @@ menu "Configure and run MinIO S3 benchmarks"
 source "workflows/minio/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_MINIO
+
+config KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_BUILD_LINUX || KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
+
+if KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+menu "Configure Linux kernel build workflow"
+source "workflows/build-linux/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"
