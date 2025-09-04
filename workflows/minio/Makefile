@@ -4,6 +4,7 @@ MINIO_DATA_TARGET_UNINSTALL		:= minio-uninstall
 MINIO_DATA_TARGET_DESTROY		:= minio-destroy
 MINIO_DATA_TARGET_RUN			:= minio-warp
 MINIO_DATA_TARGET_RESULTS		:= minio-results
+MINIO_DATA_TARGET_MONITOR		:= monitor-results
 
 MINIO_PLAYBOOK		:= playbooks/minio.yml
 
@@ -49,6 +50,11 @@ $(MINIO_DATA_TARGET_RESULTS):
 		echo "No results directory found. Run 'make minio-warp' first."; \
 	fi
 
+$(MINIO_DATA_TARGET_MONITOR): $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/monitor-results.yml \
+		--extra-vars=@./extra_vars.yaml
+
 minio-help:
 	@echo "MinIO Warp S3 benchmarking targets:"
 	@echo ""
@@ -58,6 +64,7 @@ minio-help:
 	@echo "minio-destroy           - Remove MinIO containers and clean up data"
 	@echo "minio-warp              - Run MinIO Warp benchmarks"
 	@echo "minio-results           - Collect and analyze benchmark results"
+	@echo "monitor-results         - Collect monitoring data"
 	@echo ""
 	@echo "Example usage:"
 	@echo "  make defconfig-minio-warp    # Configure for Warp benchmarking"
@@ -73,4 +80,4 @@ minio-help:
 
 .PHONY: $(MINIO_DATA_TARGET) $(MINIO_DATA_TARGET_INSTALL) $(MINIO_DATA_TARGET_UNINSTALL)
 .PHONY: $(MINIO_DATA_TARGET_DESTROY) $(MINIO_DATA_TARGET_RUN) $(MINIO_DATA_TARGET_RESULTS)
-.PHONY: minio-help
+.PHONY: $(MINIO_DATA_TARGET_MONITOR) minio-help
