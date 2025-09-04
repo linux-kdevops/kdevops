@@ -6,13 +6,35 @@
     - "../extra_vars.yaml"
   tags: vars
 
-- name: Install Docker
+- name: Install Docker and monitoring dependencies
   package:
     name:
       - docker.io
       - python3-docker
+      - python3-bpfcc
     state: present
   become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker and monitoring dependencies (RedHat)
+  package:
+    name:
+      - docker
+      - python3-docker
+      - python3-bcc
+    state: present
+  become: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Install Docker and monitoring dependencies (SUSE)
+  package:
+    name:
+      - docker
+      - python3-docker
+      - python3-bcc
+    state: present
+  become: yes
+  when: ansible_os_family == "SUSE"
 
 - name: Ensure Docker service is running
   systemd:
