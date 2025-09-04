@@ -14,6 +14,7 @@
       - python3-pip
       - python3-setuptools
       - python3-packaging
+      - python3-bpfcc
     state: present
   become: true
   when:
@@ -35,6 +36,7 @@
       - docker-compose
       - python3-pip
       - python3-setuptools
+      - python3-bcc
     state: present
   become: true
   when:
