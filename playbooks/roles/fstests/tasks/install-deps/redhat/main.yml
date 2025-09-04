@@ -72,6 +72,7 @@
       - gettext
       - ncurses
       - ncurses-devel
+      - python3-bcc
 
 - name: Install xfsprogs-xfs_scrub
   become: true

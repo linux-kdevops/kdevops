@@ -12,6 +12,58 @@
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
+- name: Check if fragmentation tracker is running
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    output_dir="{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+    if [ -f "${output_dir}/fragmentation_tracker.pid" ]; then
+      pid=$(cat "${output_dir}/fragmentation_tracker.pid")
+      if ps -p $pid > /dev/null 2>&1; then
+        echo "running"
+      else
+        echo "not_running"
+      fi
+    else
+      echo "no_pid_file"
+    fi
+  register: fragmentation_tracker_status
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Copy fragmentation snapshot script to target
+  become: true
+  become_method: sudo
+  ansible.builtin.copy:
+    src: fragmentation_snapshot.py
+    dest: /opt/fragmentation/fragmentation_snapshot.py
+    mode: '0755'
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Create fragmentation data snapshot
+  become: true
+  become_method: sudo
+  ansible.builtin.command:
+    cmd: python3 /opt/fragmentation/fragmentation_snapshot.py {{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}
+  register: fragmentation_snapshot_creation
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_tracker_status is defined
+    - fragmentation_tracker_status.stdout is defined
+    - fragmentation_tracker_status.stdout == "running"
+
+- name: Display fragmentation snapshot status
+  ansible.builtin.debug:
+    msg: "Fragmentation snapshot: {{ fragmentation_snapshot_creation.stdout | default('No snapshot created') }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_snapshot_creation is defined
+
 # Note: We don't need matplotlib on target hosts - plots are generated on localhost
 
 - name: Create snapshot of monitoring data
@@ -45,6 +97,9 @@
 
 - name: Create local monitoring results directory
   ansible.builtin.file:
+    path: "{{ monitoring_results_path }}"
+    state: directory
+    mode: "0755"
   delegate_to: localhost
   become: false
   run_once: true
@@ -75,6 +130,29 @@
     - monitor_folio_migration|default(false)|bool
     - folio_migration_snapshot_file.stat.exists|default(false)
 
+- name: Check if fragmentation snapshot was created
+  become: true
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}/fragmentation_snapshot.json"
+  register: fragmentation_snapshot_file
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Copy fragmentation data snapshot to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}/fragmentation_snapshot.json"
+    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_fragmentation_data_interim.json"
+    flat: true
+    validate_checksum: false
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_snapshot_file.stat.exists|default(false)
+
 # Plots are generated on localhost, not fetched from targets
 
 - name: Display interim monitoring data collection summary
@@ -102,6 +180,9 @@
 
 - name: Collect all monitoring data files
   ansible.builtin.find:
+    paths: "{{ monitoring_results_path }}"
+    patterns: "*.txt"
+    recurse: yes
   delegate_to: localhost
   register: all_monitoring_files
   run_once: true
@@ -110,11 +191,24 @@
     - monitor_folio_migration|default(false)|bool
     - localhost_matplotlib_check.rc == 0
 
-- name: Generate A/B comparison plots for each configuration
-  ansible.builtin.command:
+- name: Copy plot generation script to localhost
+  ansible.builtin.copy:
+    src: plot_migration_stats.py
+    dest: "{{ monitoring_results_path }}/plot_migration_stats.py"
+    mode: '0755'
   delegate_to: localhost
-  with_items: "{{ all_monitoring_files.files | map(attribute='path') | map('basename') | list }}"
-  register: ab_plot_generation
+  run_once: true
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_folio_migration|default(false)|bool
+    - localhost_matplotlib_check.rc == 0
+
+- name: Generate plots for each configuration
+  ansible.builtin.command:
+    cmd: "python3 {{ monitoring_results_path }}/plot_migration_stats.py {{ monitoring_results_path }}/{{ item }} -o {{ monitoring_results_path }}/{{ item | regex_replace('\\.txt$', '.png') }}"
+  delegate_to: localhost
+  with_items: "{{ all_monitoring_files.files | map(attribute='path') | map('basename') | select('match', '.*folio_migration.*\\.txt$') | list }}"
+  register: plot_generation
   ignore_errors: true
   run_once: true
   when:
@@ -123,8 +217,9 @@
     - localhost_matplotlib_check.rc == 0
     - all_monitoring_files.files | length > 0
 
-- name: Generate comprehensive plot with all results
+- name: Generate comprehensive comparison plot
   ansible.builtin.command:
+    cmd: "python3 {{ monitoring_results_path }}/plot_migration_stats.py {{ monitoring_results_path }}/{{ all_monitoring_files.files | map(attribute='path') | map('basename') | select('match', '.*folio_migration.*\\.txt$') | list | first }} -o {{ monitoring_results_path }}/all_hosts_migration_summary.png"
   delegate_to: localhost
   register: comprehensive_plot_generation
   ignore_errors: true
@@ -133,6 +228,7 @@
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
     - localhost_matplotlib_check.rc == 0
+    - all_monitoring_files.files | select('match', '.*folio_migration.*') | list | length > 0
 
 - name: Log plot generation summary
   ansible.builtin.debug:
@@ -158,7 +254,8 @@
   loop:
     - /root/monitoring/folio_migration_stats_snapshot.txt
     - /root/monitoring/folio_migration_plot_snapshot.png
+    - "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}/fragmentation_snapshot.json"
   when:
     - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
+    - monitor_folio_migration|default(false)|bool or monitor_memory_fragmentation|default(false)|bool
   ignore_errors: true
