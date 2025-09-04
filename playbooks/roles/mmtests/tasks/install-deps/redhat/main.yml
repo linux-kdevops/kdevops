@@ -52,6 +52,7 @@
       - kernel-tools
       - trace-cmd
       - perf
+      - python3-bcc
     state: present
   tags: ["deps"]
   ignore_errors: true
