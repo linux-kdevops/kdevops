@@ -45,6 +45,7 @@ dynamic_aws_kconfig_touch:
 	$(Q)touch $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.generated
 	$(Q)touch $(AWS_KCONFIG_DIR)/Kconfig.compute.static
 	$(Q)touch $(AWS_KCONFIG_DIR)/Kconfig.location.static
+	$(Q)touch $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static
 	$(Q)for family in $(AWS_INSTANCE_TYPE_FAMILIES); do \
 		touch $(AWS_INSTANCE_TYPES_DIR)/Kconfig.$$family.generated; \
 		touch $(AWS_INSTANCE_TYPES_DIR)/Kconfig.$$family.static; \
@@ -116,6 +117,11 @@ cloud-update:
 		cp $(AWS_KCONFIG_LOCATION) $(AWS_KCONFIG_DIR)/Kconfig.location.static; \
 		sed -i 's/Kconfig\.\([^.]*\)\.generated/Kconfig.\1.static/g' $(AWS_KCONFIG_DIR)/Kconfig.location.static; \
 		echo "  Created $(AWS_KCONFIG_DIR)/Kconfig.location.static"; \
+	fi
+	$(Q)if [ -f $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.generated ]; then \
+		cp $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.generated $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static; \
+		sed -i 's/Kconfig\.\([^.]*\)\.generated/Kconfig.\1.static/g' $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static; \
+		echo "  Created $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static"; \
 	fi
 	# AWS instance type families
 	$(Q)for file in $(AWS_INSTANCE_TYPES_DIR)/Kconfig.*.generated; do \
