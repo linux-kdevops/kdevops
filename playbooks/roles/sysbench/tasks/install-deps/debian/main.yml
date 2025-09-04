@@ -25,6 +25,7 @@
       - docker.io
       - locales
       - rsync
+      - python3-bpfcc
     state: present
     update_cache: true
   tags: ["deps"]
@@ -72,6 +73,7 @@
     name:
       - locales
       - rsync
+      - python3-bpfcc
     state: present
     update_cache: true
   when: "sysbench_type_postgresql_native|bool"
