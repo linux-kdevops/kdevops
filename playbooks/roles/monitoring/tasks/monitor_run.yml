@@ -81,3 +81,126 @@
     - monitor_folio_migration|default(false)|bool
     - folio_migration_stats_file.stat.exists|default(false)
     - monitor_status is defined
+
+# Plot-fragmentation monitoring tasks
+- name: Install python3-bpfcc for fragmentation monitoring
+  become: true
+  become_method: sudo
+  ansible.builtin.package:
+    name: python3-bpfcc
+    state: present
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Install matplotlib for fragmentation visualization
+  become: true
+  become_method: sudo
+  ansible.builtin.pip:
+    name: matplotlib
+    state: present
+    executable: pip3
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Create fragmentation scripts directory
+  become: true
+  become_method: sudo
+  ansible.builtin.file:
+    path: /opt/fragmentation
+    state: directory
+    mode: "0755"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Copy fragmentation monitoring scripts to target
+  become: true
+  become_method: sudo
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/opt/fragmentation/{{ item | basename }}"
+    mode: "0755"
+  loop:
+    - "{{ playbook_dir }}/roles/monitoring/files/fragmentation_tracker.py"
+    - "{{ playbook_dir }}/roles/monitoring/files/fragmentation_visualizer.py"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Create fragmentation monitoring output directory
+  become: true
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+    state: directory
+    mode: "0755"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Start fragmentation monitoring in background
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    cd /opt/fragmentation
+    duration="{{ monitor_fragmentation_duration|default(0) }}"
+    output_dir="{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+
+    # Start the fragmentation tracker
+    if [ "$duration" -eq "0" ]; then
+      # Run continuously until killed
+      nohup python3 fragmentation_tracker.py > "${output_dir}/fragmentation_tracker.log" 2>&1 &
+    else
+      # Run for specified duration
+      nohup timeout ${duration} python3 fragmentation_tracker.py > "${output_dir}/fragmentation_tracker.log" 2>&1 &
+    fi
+    echo $! > "${output_dir}/fragmentation_tracker.pid"
+
+    # Also save the start time for reference
+    date +"%Y-%m-%d %H:%M:%S" > "${output_dir}/start_time.txt"
+  async: 86400 # Run for up to 24 hours
+  poll: 0
+  register: fragmentation_monitor
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Save fragmentation monitor async job ID
+  ansible.builtin.set_fact:
+    fragmentation_monitor_job: "{{ fragmentation_monitor.ansible_job_id }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_monitor is defined
+
+- name: Verify fragmentation monitoring started successfully
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    output_dir="{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}"
+    if [ -f "${output_dir}/fragmentation_tracker.pid" ]; then
+      pid=$(cat "${output_dir}/fragmentation_tracker.pid")
+      if ps -p $pid > /dev/null 2>&1; then
+        echo "Fragmentation monitoring process $pid is running"
+      else
+        echo "ERROR: Fragmentation monitoring process $pid is not running" >&2
+        exit 1
+      fi
+    else
+      echo "ERROR: PID file not found" >&2
+      exit 1
+    fi
+  register: fragmentation_monitor_status
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+
+- name: Display fragmentation monitoring status
+  ansible.builtin.debug:
+    msg: "{{ fragmentation_monitor_status.stdout }}"
+  when:
+    - monitor_developmental_stats|default(false)|bool
+    - monitor_memory_fragmentation|default(false)|bool
+    - fragmentation_monitor_status is defined

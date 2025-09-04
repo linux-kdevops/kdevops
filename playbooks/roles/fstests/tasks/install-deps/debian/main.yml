@@ -73,6 +73,7 @@
       - xfsdump
       - cifs-utils
       - duperemove
+      - python3-bpfcc
     state: present
     update_cache: true
   tags: ["fstests", "deps"]
