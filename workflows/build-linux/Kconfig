@@ -1,0 +1,255 @@
+if KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+
+config BUILD_LINUX_RESULTS_DIR
+	string "Results directory"
+	output yaml
+	default "workflows/build-linux/results"
+	help
+	  Directory where build results and statistics will be stored.
+
+config BUILD_LINUX_REPEAT_COUNT
+	int "Number of times to build Linux"
+	output yaml
+	default 100
+	help
+	  Specify how many times to build the Linux kernel. This is useful for
+	  performance testing and measuring build time variations. The default
+	  is 100 builds.
+
+config BUILD_LINUX_MAKE_JOBS
+	int "Number of parallel make jobs"
+	output yaml
+	default 0
+	help
+	  Number of parallel jobs for make. If set to 0, will use
+	  number of CPUs + 1.
+
+config BUILD_LINUX_TARGET
+	string "Kernel build target"
+	output yaml
+	default "all"
+	help
+	  The make target to build. Common options:
+	  - all: Build everything (default)
+	  - vmlinux: Build just the kernel image
+	  - modules: Build just the modules
+	  - bzImage: Build compressed kernel image (x86)
+
+config BUILD_LINUX_CLEAN_BETWEEN
+	bool "Clean build tree between builds"
+	output yaml
+	default y
+	help
+	  If enabled, clean the build directory between each build iteration.
+	  This ensures each build starts from scratch. For out-of-tree builds,
+	  this removes all build artifacts but preserves results. For in-tree
+	  builds, uses 'git clean -f -x -d'.
+
+config BUILD_LINUX_COLLECT_STATS
+	bool "Collect detailed build statistics"
+	output yaml
+	default y
+	help
+	  Collect detailed timing statistics for each build including
+	  CPU usage, memory usage, and build phase timings.
+
+config BUILD_LINUX_STORAGE_ENABLE
+	bool "Enable dedicated build filesystem"
+	output yaml
+	default n
+	help
+	  Configure a dedicated filesystem for build output.
+	  When enabled, the kernel will be built on a dedicated
+	  filesystem which can be on a different storage device
+	  for performance testing.
+
+if BUILD_LINUX_STORAGE_ENABLE
+
+config BUILD_LINUX_DEVICE
+	string "Device to use for build storage"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for build storage. This device will be
+	  formatted and mounted to store kernel build outputs.
+
+choice
+	prompt "Build storage filesystem"
+	default BUILD_LINUX_FSTYPE_XFS
+
+config BUILD_LINUX_FSTYPE_XFS
+	bool "XFS"
+	help
+	  Use XFS filesystem for build storage. XFS provides excellent
+	  performance for large files and supports various block sizes
+	  for testing large block size (LBS) configurations.
+
+config BUILD_LINUX_FSTYPE_BTRFS
+	bool "Btrfs"
+	help
+	  Use Btrfs filesystem for build storage.
+
+config BUILD_LINUX_FSTYPE_EXT4
+	bool "ext4"
+	help
+	  Use ext4 filesystem for build storage.
+
+config BUILD_LINUX_FSTYPE_TMPFS
+	bool "tmpfs (RAM)"
+	help
+	  Use tmpfs (RAM) for build storage. Fast but requires lots of RAM.
+
+endchoice
+
+config BUILD_LINUX_FSTYPE
+	string
+	output yaml
+	default "xfs" if BUILD_LINUX_FSTYPE_XFS
+	default "btrfs" if BUILD_LINUX_FSTYPE_BTRFS
+	default "ext4" if BUILD_LINUX_FSTYPE_EXT4
+	default "tmpfs" if BUILD_LINUX_FSTYPE_TMPFS
+
+if BUILD_LINUX_FSTYPE_XFS
+
+choice
+	prompt "XFS block size configuration"
+	default BUILD_LINUX_XFS_BLOCKSIZE_4K
+
+config BUILD_LINUX_XFS_BLOCKSIZE_4K
+	bool "4K block size (default)"
+	help
+	  Use 4K (4096 bytes) block size. This is the default and most
+	  compatible configuration.
+
+config BUILD_LINUX_XFS_BLOCKSIZE_8K
+	bool "8K block size"
+	help
+	  Use 8K (8192 bytes) block size for improved performance with
+	  larger I/O operations.
+
+config BUILD_LINUX_XFS_BLOCKSIZE_16K
+	bool "16K block size (LBS)"
+	help
+	  Use 16K (16384 bytes) block size. This is a large block size
+	  configuration that may require kernel LBS support.
+
+config BUILD_LINUX_XFS_BLOCKSIZE_32K
+	bool "32K block size (LBS)"
+	help
+	  Use 32K (32768 bytes) block size. This is a large block size
+	  configuration that requires kernel LBS support.
+
+config BUILD_LINUX_XFS_BLOCKSIZE_64K
+	bool "64K block size (LBS)"
+	help
+	  Use 64K (65536 bytes) block size. This is the maximum XFS block
+	  size and requires kernel LBS support.
+
+endchoice
+
+config BUILD_LINUX_XFS_BLOCKSIZE
+	int
+	output yaml
+	default 4096 if BUILD_LINUX_XFS_BLOCKSIZE_4K
+	default 8192 if BUILD_LINUX_XFS_BLOCKSIZE_8K
+	default 16384 if BUILD_LINUX_XFS_BLOCKSIZE_16K
+	default 32768 if BUILD_LINUX_XFS_BLOCKSIZE_32K
+	default 65536 if BUILD_LINUX_XFS_BLOCKSIZE_64K
+
+choice
+	prompt "XFS sector size"
+	default BUILD_LINUX_XFS_SECTORSIZE_4K
+
+config BUILD_LINUX_XFS_SECTORSIZE_4K
+	bool "4K sector size (default)"
+	help
+	  Use 4K (4096 bytes) sector size. This is the standard
+	  configuration for most modern drives.
+
+config BUILD_LINUX_XFS_SECTORSIZE_512
+	bool "512 byte sector size"
+	depends on BUILD_LINUX_XFS_BLOCKSIZE_4K
+	help
+	  Use legacy 512 byte sector size. Only available with 4K block size.
+
+config BUILD_LINUX_XFS_SECTORSIZE_8K
+	bool "8K sector size"
+	depends on BUILD_LINUX_XFS_BLOCKSIZE_8K || BUILD_LINUX_XFS_BLOCKSIZE_16K || BUILD_LINUX_XFS_BLOCKSIZE_32K || BUILD_LINUX_XFS_BLOCKSIZE_64K
+	help
+	  Use 8K (8192 bytes) sector size. Requires block size >= 8K.
+
+config BUILD_LINUX_XFS_SECTORSIZE_16K
+	bool "16K sector size (LBS)"
+	depends on BUILD_LINUX_XFS_BLOCKSIZE_16K || BUILD_LINUX_XFS_BLOCKSIZE_32K || BUILD_LINUX_XFS_BLOCKSIZE_64K
+	help
+	  Use 16K (16384 bytes) sector size. Requires block size >= 16K
+	  and kernel LBS support.
+
+config BUILD_LINUX_XFS_SECTORSIZE_32K
+	bool "32K sector size (LBS)"
+	depends on BUILD_LINUX_XFS_BLOCKSIZE_32K || BUILD_LINUX_XFS_BLOCKSIZE_64K
+	help
+	  Use 32K (32768 bytes) sector size. Requires block size >= 32K
+	  and kernel LBS support.
+
+config BUILD_LINUX_XFS_SECTORSIZE_64K
+	bool "64K sector size (LBS)"
+	depends on BUILD_LINUX_XFS_BLOCKSIZE_64K
+	help
+	  Use 64K (65536 bytes) sector size. Requires block size = 64K
+	  and kernel LBS support.
+
+endchoice
+
+config BUILD_LINUX_XFS_SECTORSIZE
+	int
+	output yaml
+	default 512 if BUILD_LINUX_XFS_SECTORSIZE_512
+	default 4096 if BUILD_LINUX_XFS_SECTORSIZE_4K
+	default 8192 if BUILD_LINUX_XFS_SECTORSIZE_8K
+	default 16384 if BUILD_LINUX_XFS_SECTORSIZE_16K
+	default 32768 if BUILD_LINUX_XFS_SECTORSIZE_32K
+	default 65536 if BUILD_LINUX_XFS_SECTORSIZE_64K
+
+endif # BUILD_LINUX_FSTYPE_XFS
+
+endif # BUILD_LINUX_STORAGE_ENABLE
+
+config BUILD_LINUX_USE_LATEST_TAG
+	bool "Build latest Linus tag"
+	output yaml
+	default y
+	help
+	  Automatically detect and build the latest tag from Linus' tree.
+	  This will find the most recent v6.x tag (excluding -rc tags).
+
+config BUILD_LINUX_CUSTOM_TAG
+	string "Custom tag or branch to build"
+	output yaml
+	depends on !BUILD_LINUX_USE_LATEST_TAG
+	default "master"
+	help
+	  Specify a custom git tag or branch to build instead of the
+	  latest Linus tag.
+
+config BUILD_LINUX_ALLOW_MODIFICATIONS
+	bool "Allow kernel source modifications"
+	output yaml
+	default n
+	help
+	  Enable this to allow modifications to the kernel source tree.
+	  When disabled, the kernel source is kept pristine.
+
+# Multi-filesystem configuration when not skipping bringup
+if !KDEVOPS_USE_DECLARED_HOSTS && BUILD_LINUX_STORAGE_ENABLE
+source "workflows/build-linux/Kconfig.multifs"
+endif
+
+endif # KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX

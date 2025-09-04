@@ -73,6 +73,7 @@ workflows/mmtests/results/
 tmp
 
 workflows/fio-tests/results/
+workflows/build-linux/results/
 
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.service
 playbooks/roles/linux-mirror/linux-mirror-systemd/*.timer

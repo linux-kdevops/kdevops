@@ -1,0 +1,30 @@
+---
+- name: Build Linux Kernel Multiple Times
+  hosts: baseline:dev
+
+  pre_tasks:
+    # Install bootlinux dependencies (for kernel building capabilities)
+    - ansible.builtin.import_tasks: roles/bootlinux/tasks/install-deps/main.yml
+      tags: ["install_deps"]
+
+    # Install monitoring dependencies if monitoring is enabled
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/install-deps/main.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "install_deps"]
+
+    # Start monitoring services right before running builds
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_run.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_run"]
+
+  roles:
+    - build_linux
+
+  post_tasks:
+    # Collect monitoring data after builds complete
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_collect.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_collect"]

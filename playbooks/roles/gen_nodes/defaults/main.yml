@@ -25,6 +25,7 @@ libvirt_provider: false
 libvirt_extra_drive_format: "qcow2"
 libvirt_vcpus_count: 8
 libvirt_mem_mb: 4096
+build_linux_tmpfs_mem_gb: 4096
 gdb_port_conflict: false
 libvirt_enable_gdb: false
 libvirt_gdb_baseport: 1234

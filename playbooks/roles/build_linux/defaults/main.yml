@@ -1,0 +1,25 @@
+---
+# Defaults for build_linux role
+
+build_linux_repeat_count: 100
+build_linux_make_jobs: 0
+build_linux_target: "all"
+build_linux_clean_between: false
+build_linux_collect_stats: true
+build_linux_results_dir: "workflows/build-linux/results"
+build_linux_storage_enable: false
+build_linux_device: ""
+build_linux_use_latest_tag: false
+build_linux_allow_modifications: false
+shallow_clone: true
+clone_depth: 1
+
+# Build paths - for build-linux workflow, both source and build are in build filesystem
+linux_source_dir: "{{ data_path }}/build/linux-source"
+linux_build_dir: "{{ data_path }}/build/linux-build"
+
+# We enable building Linux locally, it'll be easier instead of re-inventing
+# all the kconfig for us to leverage the URL parsing. If you do not want
+# to build and installing Linux on the target nodes, you just skip the
+# make linux target.
+linux_git_url: "{{ bootlinux_tree | default('git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git') }}"

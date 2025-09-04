@@ -1,0 +1,244 @@
+---
+# Main tasks for build_linux role
+
+- name: Install build-linux dependencies
+  ansible.builtin.import_tasks: install-deps/main.yml
+  tags: ["install_deps"]
+
+- name: Set initial filesystem type
+  set_fact:
+    node_fstype: "{{ build_linux_fstype | default('xfs') }}"
+
+- name: Detect filesystem configuration from node name
+  when:
+    - build_linux_enable_multifs_testing|default(false)|bool
+    - build_linux_multifs_use_node_fs|default(false)|bool
+  block:
+    - name: Set filesystem type based on node name
+      set_fact:
+        node_fstype: >-
+          {%- if 'xfs' in ansible_hostname -%}xfs
+          {%- elif 'ext4' in ansible_hostname -%}ext4
+          {%- elif 'btrfs' in ansible_hostname -%}btrfs
+          {%- elif 'tmpfs' in ansible_hostname -%}tmpfs
+          {%- else -%}{{ build_linux_fstype|default('xfs') }}{%- endif -%}
+
+    - name: Set XFS block and sector sizes from node name
+      when: node_fstype == 'xfs'
+      set_fact:
+        node_xfs_blocksize: >-
+          {%- if 'xfs-4k' in ansible_hostname -%}4096
+          {%- elif 'xfs-8k' in ansible_hostname -%}8192
+          {%- elif 'xfs-16k' in ansible_hostname -%}16384
+          {%- elif 'xfs-32k' in ansible_hostname -%}32768
+          {%- elif 'xfs-64k' in ansible_hostname -%}65536
+          {%- else -%}4096{%- endif -%}
+        node_xfs_sectorsize: "4096"
+
+- name: Setup dedicated build filesystem
+  when:
+    - build_linux_storage_enable
+  block:
+    - name: Check if device is already mounted
+      become: yes
+      ansible.builtin.shell: |
+        # Check both the symlink and the actual device
+        DEVICE="{{ build_linux_device }}"
+        REAL_DEVICE=$(readlink -f "$DEVICE" 2>/dev/null || echo "$DEVICE")
+        mount | grep -E "($DEVICE|$REAL_DEVICE)"
+      register: mount_check
+      failed_when: false
+      changed_when: false
+
+    - name: Unmount device if currently mounted
+      become: yes
+      ansible.builtin.mount:
+        path: "{{ data_path }}/build"
+        state: unmounted
+      when: mount_check.rc == 0
+
+    - name: Create XFS filesystem with custom block and sector sizes
+      become: yes
+      ansible.builtin.command:
+        argv:
+          - mkfs.xfs
+          - -f
+          - -b
+          - "size={{ node_xfs_blocksize|default(4096) }}"
+          - -s
+          - "size={{ node_xfs_sectorsize|default(4096) }}"
+          - "{{ build_linux_device }}"
+      when: node_fstype == 'xfs'
+
+    - name: Create non-XFS filesystem on device
+      become: yes
+      ansible.builtin.filesystem:
+        fstype: "{{ node_fstype }}"
+        dev: "{{ build_linux_device }}"
+        force: yes
+      when:
+        - node_fstype != 'tmpfs'
+        - node_fstype != 'xfs'
+
+    - name: Mount build filesystem
+      become: yes
+      ansible.builtin.mount:
+        path: "{{ data_path }}/build"
+        src: "{{ build_linux_device if node_fstype != 'tmpfs' else 'tmpfs' }}"
+        fstype: "{{ node_fstype }}"
+        opts: "{{ 'size=32G' if node_fstype == 'tmpfs' else 'defaults' }}"
+        state: mounted
+
+    - name: Set ownership of build directory
+      become: yes
+      ansible.builtin.file:
+        path: "{{ data_path }}/build"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+        mode: '0755'
+
+- name: Create build directories
+  become: yes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+  loop:
+    - "{{ linux_source_dir }}"
+    - "{{ linux_build_dir }}"
+    - "{{ data_path }}/build-results"
+
+- name: Check if Linux source exists
+  ansible.builtin.stat:
+    path: "{{ linux_source_dir }}/.git"
+  register: linux_git_exists
+
+- name: Check if Linux source is valid
+  ansible.builtin.command: git rev-parse --git-dir
+  args:
+    chdir: "{{ linux_source_dir }}"
+  register: git_repo_check
+  failed_when: false
+  changed_when: false
+  when: linux_git_exists.stat.exists
+
+- name: Report git repository status
+  ansible.builtin.debug:
+    msg: >-
+      Git repository:
+      {% if linux_git_exists.stat.exists and git_repo_check.rc == 0 %}Using existing valid repository
+      {% elif linux_git_exists.stat.exists and git_repo_check.rc != 0 %}Found corrupted repository, will remove and re-clone
+      {% else %}Repository missing, will clone
+      {% endif %}
+
+- name: Remove invalid git repository
+  ansible.builtin.file:
+    path: "{{ linux_source_dir }}"
+    state: absent
+  when:
+    - linux_git_exists.stat.exists
+    - git_repo_check.rc != 0
+
+- name: Clone Linux kernel source (shallow)
+  ansible.builtin.git:
+    repo: "{{ linux_git_url }}"
+    dest: "{{ linux_source_dir }}"
+    depth: "{{ clone_depth }}"
+    single_branch: yes
+  when:
+    - not linux_git_exists.stat.exists or git_repo_check.rc != 0
+    - shallow_clone
+
+- name: Clone Linux kernel source (full)
+  ansible.builtin.git:
+    repo: "{{ linux_git_url }}"
+    dest: "{{ linux_source_dir }}"
+  when:
+    - not linux_git_exists.stat.exists or git_repo_check.rc != 0
+    - not shallow_clone
+  retries: 3
+  delay: 10
+  register: git_result
+  until: not git_result.failed
+
+- name: Check if linux source directory is writable
+  ansible.builtin.stat:
+    path: "{{ linux_source_dir }}"
+  register: linux_source_stat
+
+- name: Fetch recent tags for latest tag detection
+  ansible.builtin.command: git fetch --depth=10 --tags
+  args:
+    chdir: "{{ linux_source_dir }}"
+  when:
+    - build_linux_use_latest_tag
+    - linux_source_stat.stat.writeable
+
+- name: Ensure /data directory is writable
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user | default('kdevops') }}"
+    group: "{{ ansible_user | default('kdevops') }}"
+  become: yes
+  become_user: root
+
+- name: Copy build script
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../workflows/build-linux/scripts/build_linux.py"
+    dest: "{{ data_path }}/build_linux.py"
+    mode: '0755'
+
+- name: Run Linux kernel builds
+  ansible.builtin.command: |
+    python3 {{ data_path }}/build_linux.py \
+      --source-dir {{ linux_source_dir }} \
+      --build-dir {{ linux_build_dir }} \
+      --results-dir {{ data_path }}/build-results \
+      --count {{ build_linux_repeat_count }} \
+      --jobs {{ build_linux_make_jobs }} \
+      --target {{ build_linux_target }} \
+      {% if build_linux_clean_between %}--clean-between{% endif %} \
+      {% if build_linux_collect_stats %}--collect-stats{% endif %} \
+      {% if build_linux_use_latest_tag and linux_source_stat.stat.writeable %}--use-latest{% else %}--tag {{ build_linux_custom_tag | default('master') }}{% endif %}
+  register: build_result
+  async: 36000  # 10 hours timeout
+  poll: 60  # Check every minute
+
+- name: Display build output
+  ansible.builtin.debug:
+    msg: "{{ build_result.stdout_lines }}"
+  when: build_result is defined
+
+- name: Check for build results
+  ansible.builtin.stat:
+    path: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+  register: summary_file
+
+- name: Read and display summary
+  when: summary_file.stat.exists
+  block:
+    - name: Read summary file
+      ansible.builtin.slurp:
+        src: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+      register: summary_content
+
+    - name: Parse summary
+      ansible.builtin.set_fact:
+        build_summary: "{{ summary_content.content | b64decode | from_json }}"
+
+    - name: Display summary statistics
+      ansible.builtin.debug:
+        msg: |
+          Build Statistics Summary
+          ========================
+          Total builds: {{ build_summary.total_builds }}
+          Successful builds: {{ build_summary.successful_builds }}
+          Failed builds: {{ build_summary.failed_builds }}
+          Average build time: {{ build_summary.statistics.average | round(2) }} seconds
+          Median build time: {{ build_summary.statistics.median | round(2) }} seconds
+          Min/Max: {{ build_summary.statistics.min | round(2) }}/{{ build_summary.statistics.max | round(2) }} seconds
+          Total time: {{ build_summary.statistics.total_hours | round(2) }} hours

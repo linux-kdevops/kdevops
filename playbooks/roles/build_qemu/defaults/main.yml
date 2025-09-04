@@ -12,3 +12,5 @@ qemu_git: "https://github.com/qemu/qemu.git"
 qemu_version: "v7.2.0-rc4"
 qemu_build_dir: "{{ qemu_data }}/build"
 qemu_target: "x86_64-softmmu"
+build_linux_shallow_clone: true
+build_linux_clone_depth: 1

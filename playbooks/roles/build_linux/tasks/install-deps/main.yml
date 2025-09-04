@@ -1,0 +1,12 @@
+---
+- name: Install dependencies to build and test Linux for Debian and Ubuntu systems
+  ansible.builtin.import_tasks: debian/main.yml
+  when: ansible_facts['os_family']|lower == 'debian'
+
+- name: Install dependencies to build and test Linux for Red Hat and Fedora systems
+  ansible.builtin.import_tasks: redhat/main.yml
+  when: ansible_facts['os_family']|lower == 'redhat'
+
+- name: Install dependencies to build and test Linux for SUSE systems
+  ansible.builtin.import_tasks: suse/main.yml
+  when: ansible_facts['os_family']|lower == 'suse'

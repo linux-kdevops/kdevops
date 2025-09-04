@@ -1,0 +1,23 @@
+---
+# Dependencies for build-linux workflow timing and statistics
+- name: Install build-linux timing dependencies
+  become: true
+  become_method: sudo
+  community.general.zypper:
+    name:
+      - time  # Required for timing statistics
+    state: present
+  when:
+    - kdevops_workflow_enable_build_linux|default(false)|bool
+
+# Dependencies for build-linux workflow visualization
+- name: Install build-linux visualization dependencies
+  become: true
+  become_method: sudo
+  community.general.zypper:
+    name:
+      - python3-matplotlib
+      - python3-numpy
+    state: present
+  when:
+    - kdevops_workflow_enable_build_linux|default(false)|bool
