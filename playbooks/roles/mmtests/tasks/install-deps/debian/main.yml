@@ -60,6 +60,7 @@
     name:
       - trace-cmd
       - perf-tools-unstable
+      - python3-bpfcc
     state: present
     update_cache: true
   tags: ["deps"]
