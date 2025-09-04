@@ -22,6 +22,8 @@
         {{ topdir_path }}/workflows/fstests/results/monitoring
       {%- elif kdevops_workflow_enable_mmtests|default(false)|bool -%}
         {{ topdir_path }}/workflows/mmtests/results/monitoring
+      {%- elif kdevops_workflow_enable_sysbench|default(false)|bool -%}
+        {{ topdir_path }}/workflows/sysbench/results/monitoring
       {%- else -%}
         {{ topdir_path }}/results/monitoring
       {%- endif -%}

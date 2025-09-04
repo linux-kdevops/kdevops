@@ -62,6 +62,7 @@
   ansible.builtin.package:
     name:
       - docker
+      - python3-bcc
     state: present
   when:
     - repos_present|bool

@@ -48,4 +48,4 @@
 - ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
   when:
     - enable_monitoring|default(false)|bool
-  tags: ["sysbench", "results", "monitoring", "monitor_collect"]
+  tags: ["sysbench", "results", "run_sysbench", "monitoring", "monitor_collect"]
