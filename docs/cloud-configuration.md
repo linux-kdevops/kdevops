@@ -1,0 +1,268 @@
+# Cloud Configuration Management in kdevops
+
+kdevops supports dynamic cloud provider configuration, allowing administrators to generate up-to-date instance types, locations, and AMI options directly from cloud provider APIs. Since generating these configurations can take several minutes (approximately 6 minutes for AWS), kdevops implements a two-tier system to optimize the user experience.
+
+## Overview
+
+The cloud configuration system follows a pattern similar to Linux kernel refs management (`make refs-default`), where administrators generate fresh configurations that are then committed to the repository as static files for regular users. This approach provides:
+
+- **Fast configuration loading** for regular users (using pre-generated static files)
+- **Fresh, up-to-date options** when administrators regenerate configurations
+- **No dependency on cloud CLI tools** for regular users
+- **Reduced API calls** to cloud providers
+
+## Configuration Generation Flow
+
+```
+Cloud Provider API → Generated Files → Static Files → Git Repository
+       ↑                    ↑              ↑
+  make cloud-config   (automatic)    make cloud-update
+```
+
+## Available Targets
+
+### `make cloud-config`
+
+Generates dynamic cloud configurations by querying cloud provider APIs.
+
+**Purpose**: Fetches current instance types, regions, availability zones, and AMI options from cloud providers.
+
+**Usage**:
+```bash
+make cloud-config
+```
+
+**What it does**:
+- Queries AWS EC2 API for all available instance types and their specifications
+- Fetches current regions and availability zones
+- Discovers available AMIs including GPU-optimized images
+- Generates Kconfig files with all discovered options
+- Creates `.generated` files in provider-specific directories
+- Sets a marker file (`.aws_cloud_config_generated`) to enable dynamic config
+
+**Time required**: Approximately 6 minutes for AWS (similar for other providers)
+
+**Generated files**:
+- `terraform/aws/kconfigs/Kconfig.compute.generated`
+- `terraform/aws/kconfigs/Kconfig.location.generated`
+- `terraform/aws/kconfigs/Kconfig.gpu-amis.generated`
+- `terraform/aws/kconfigs/instance-types/Kconfig.*.generated`
+- Similar files for other cloud providers
+
+### `make cloud-update`
+
+Converts dynamically generated configurations to static files for committing to git.
+
+**Purpose**: Creates static copies of generated configurations that load instantly without requiring cloud API access.
+
+**Usage**:
+```bash
+make cloud-update
+```
+
+**What it does**:
+- Copies all `.generated` files to `.static` equivalents
+- Updates internal references from `.generated` to `.static`
+- Prepares files for git commit
+- Allows regular users to benefit from pre-generated configurations
+
+**Static files created**:
+- All `.generated` files get `.static` counterparts
+- References within files are updated to use `.static` versions
+
+### `make clean-cloud-config`
+
+Removes all generated cloud configuration files.
+
+**Usage**:
+```bash
+make clean-cloud-config
+```
+
+**What it does**:
+- Removes all `.generated` files
+- Removes cloud initialization marker files
+- Forces regeneration on next `make cloud-config`
+
+## Usage Workflow
+
+### For Cloud Administrators/Maintainers
+
+Cloud administrators are responsible for keeping the static configurations up-to-date:
+
+1. **Generate fresh configurations**:
+   ```bash
+   make cloud-config    # Wait ~6 minutes for API queries
+   ```
+
+2. **Convert to static files**:
+   ```bash
+   make cloud-update    # Instant - just copies files
+   ```
+
+3. **Commit the static files**:
+   ```bash
+   git add terraform/*/kconfigs/*.static
+   git add terraform/*/kconfigs/instance-types/*.static
+   git commit -m "cloud: update static configurations for AWS/Azure/GCE
+
+   Update instance types, regions, and AMI options to current offerings.
+
+   Generated with AWS CLI version X.Y.Z on YYYY-MM-DD."
+   git push
+   ```
+
+### For Regular Users
+
+Regular users benefit from pre-generated static configurations:
+
+1. **Clone or pull the repository**:
+   ```bash
+   git clone https://github.com/linux-kdevops/kdevops
+   cd kdevops
+   ```
+
+2. **Use cloud configurations immediately**:
+   ```bash
+   make menuconfig     # Cloud options load instantly from static files
+   make defconfig-aws-large
+   make
+   ```
+
+No cloud CLI tools or API access required - everything loads from committed static files.
+
+## How It Works
+
+### Dynamic Configuration Detection
+
+kdevops automatically detects whether to use dynamic or static configurations:
+
+```kconfig
+config TERRAFORM_AWS_USE_DYNAMIC_CONFIG
+    bool "Use dynamically generated instance types"
+    default $(shell, test -f .aws_cloud_config_generated && echo y || echo n)
+```
+
+- If `.aws_cloud_config_generated` exists, dynamic configs are used
+- Otherwise, static configs are used (default for most users)
+
+### File Precedence
+
+The Kconfig system sources files in this order:
+
+1. **Static files** (`.static`) - Pre-generated by administrators
+2. **Generated files** (`.generated`) - Created by `make cloud-config`
+
+Static files take precedence and are preferred for faster loading.
+
+### Instance Type Organization
+
+Instance types are organized by family for better navigation:
+
+```
+terraform/aws/kconfigs/instance-types/
+├── Kconfig.m5.static       # M5 family instances
+├── Kconfig.m7a.static      # M7a family instances
+├── Kconfig.g6e.static      # G6E GPU instances
+└── ...                     # Other families
+```
+
+## Supported Cloud Providers
+
+### AWS
+- **Instance types**: All EC2 instance families and sizes
+- **Regions**: All AWS regions and availability zones
+- **AMIs**: Standard distributions and GPU-optimized Deep Learning AMIs
+- **Time to generate**: ~6 minutes
+
+### Azure
+- **Instance types**: All Azure VM sizes
+- **Regions**: All Azure regions
+- **Images**: Standard and specialized images
+- **Time to generate**: ~5-7 minutes
+
+### Google Cloud (GCE)
+- **Instance types**: All GCE machine types
+- **Regions**: All GCE regions and zones
+- **Images**: Public and custom images
+- **Time to generate**: ~5-7 minutes
+
+### Lambda Labs
+- **Instance types**: GPU-optimized instances
+- **Regions**: Available data centers
+- **Images**: ML-optimized images
+- **Time to generate**: ~1-2 minutes
+
+## Benefits
+
+### For Regular Users
+- **Instant configuration** - No waiting for API queries
+- **No cloud CLI required** - Works without AWS CLI, gcloud, or Azure CLI
+- **Consistent experience** - Same options for all users
+- **Offline capable** - Works without internet access
+
+### For Administrators
+- **Centralized updates** - Update once for all users
+- **Version control** - Track configuration changes over time
+- **Reduced API calls** - Query once, use many times
+- **Flexibility** - Can still generate fresh configs when needed
+
+## Best Practices
+
+1. **Update regularly**: Cloud administrators should regenerate configurations monthly or when significant changes occur
+
+2. **Document updates**: Include cloud CLI version and date in commit messages
+
+3. **Test before committing**: Verify generated configurations work correctly:
+   ```bash
+   make cloud-config
+   make cloud-update
+   make menuconfig    # Test that options appear correctly
+   ```
+
+4. **Use defconfigs**: Create defconfigs for common cloud configurations:
+   ```bash
+   make savedefconfig
+   cp defconfig defconfigs/aws-gpu-large
+   ```
+
+5. **Handle errors gracefully**: If cloud-config fails, static files still work
+
+## Troubleshooting
+
+### Configuration not appearing in menuconfig
+
+Check if dynamic config is enabled:
+```bash
+ls -la .aws_cloud_config_generated
+grep USE_DYNAMIC_CONFIG .config
+```
+
+### Generated files have wrong references
+
+Run `make cloud-update` to fix references from `.generated` to `.static`.
+
+### Old instance types appearing
+
+Regenerate configurations:
+```bash
+make clean-cloud-config
+make cloud-config
+make cloud-update
+```
+
+## Implementation Details
+
+The cloud configuration system is implemented in:
+
+- `scripts/dynamic-cloud-kconfig.Makefile` - Make targets and build rules
+- `scripts/aws_api.py` - AWS configuration generator
+- `scripts/generate_cloud_configs.py` - Main configuration generator
+- `terraform/*/kconfigs/` - Provider-specific Kconfig files
+
+## See Also
+
+- [AWS Instance Types](https://aws.amazon.com/ec2/instance-types/)
+- [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
+- [GCE Machine Types](https://cloud.google.com/compute/docs/machine-types)
+- [kdevops Terraform Documentation](terraform.md)

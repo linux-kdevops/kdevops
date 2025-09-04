@@ -1,0 +1,436 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""
+AWS CLI tool for kdevops
+
+A structured CLI tool that wraps AWS CLI commands and provides access to
+AWS cloud provider functionality for dynamic configuration generation
+and resource management.
+"""
+
+import argparse
+import json
+import sys
+import os
+from typing import Dict, List, Any, Optional, Tuple
+from pathlib import Path
+
+# Import the AWS API functions
+try:
+    from aws_api import (
+        check_aws_cli,
+        get_instance_types,
+        get_regions,
+        get_availability_zones,
+        get_pricing_info,
+        generate_instance_types_kconfig,
+        generate_regions_kconfig,
+        generate_instance_families_kconfig,
+        generate_gpu_amis_kconfig,
+    )
+except ImportError:
+    # Try to import from scripts directory if not in path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from aws_api import (
+        check_aws_cli,
+        get_instance_types,
+        get_regions,
+        get_availability_zones,
+        get_pricing_info,
+        generate_instance_types_kconfig,
+        generate_regions_kconfig,
+        generate_instance_families_kconfig,
+        generate_gpu_amis_kconfig,
+    )
+
+
+class AWSCLI:
+    """AWS CLI interface for kdevops"""
+
+    def __init__(self, output_format: str = "json"):
+        """
+        Initialize the CLI with specified output format
+
+        Args:
+            output_format: 'json' or 'text' for output formatting
+        """
+        self.output_format = output_format
+        self.aws_available = check_aws_cli()
+
+    def output(self, data: Any, headers: Optional[List[str]] = None):
+        """
+        Output data in the specified format
+
+        Args:
+            data: Data to output (dict, list, or primitive)
+            headers: Column headers for text format (optional)
+        """
+        if self.output_format == "json":
+            print(json.dumps(data, indent=2))
+        else:
+            # Human-readable text format
+            if isinstance(data, list):
+                if data and isinstance(data[0], dict):
+                    # Table format for list of dicts
+                    if not headers:
+                        headers = list(data[0].keys()) if data else []
+
+                    if headers:
+                        # Calculate column widths
+                        widths = {h: len(h) for h in headers}
+                        for item in data:
+                            for h in headers:
+                                val = str(item.get(h, ""))
+                                widths[h] = max(widths[h], len(val))
+
+                        # Print header
+                        header_line = " | ".join(h.ljust(widths[h]) for h in headers)
+                        print(header_line)
+                        print("-" * len(header_line))
+
+                        # Print rows
+                        for item in data:
+                            row = " | ".join(
+                                str(item.get(h, "")).ljust(widths[h]) for h in headers
+                            )
+                            print(row)
+                else:
+                    # Simple list
+                    for item in data:
+                        print(item)
+            elif isinstance(data, dict):
+                # Key-value format
+                max_key_len = max(len(k) for k in data.keys()) if data else 0
+                for key, value in data.items():
+                    print(f"{key.ljust(max_key_len)} : {value}")
+            else:
+                # Simple value
+                print(data)
+
+    def list_instance_types(
+        self,
+        family: Optional[str] = None,
+        region: Optional[str] = None,
+        max_results: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """
+        List instance types
+
+        Args:
+            family: Filter by instance family (e.g., 'm5', 't3')
+            region: AWS region to query
+            max_results: Maximum number of results to return
+
+        Returns:
+            List of instance type information
+        """
+        if not self.aws_available:
+            return [
+                {
+                    "error": "AWS CLI not found. Please install AWS CLI and configure credentials."
+                }
+            ]
+
+        instances = get_instance_types(
+            family=family, region=region, max_results=max_results
+        )
+
+        # Format the results
+        result = []
+        for instance in instances:
+            item = {
+                "name": instance.get("InstanceType", ""),
+                "vcpu": instance.get("VCpuInfo", {}).get("DefaultVCpus", 0),
+                "memory_gb": instance.get("MemoryInfo", {}).get("SizeInMiB", 0) / 1024,
+                "instance_storage": instance.get("InstanceStorageSupported", False),
+                "network_performance": instance.get("NetworkInfo", {}).get(
+                    "NetworkPerformance", ""
+                ),
+                "architecture": ", ".join(
+                    instance.get("ProcessorInfo", {}).get("SupportedArchitectures", [])
+                ),
+            }
+            result.append(item)
+
+        # Sort by name
+        result.sort(key=lambda x: x["name"])
+
+        return result
+
+    def list_regions(self, include_zones: bool = False) -> List[Dict[str, Any]]:
+        """
+        List regions
+
+        Args:
+            include_zones: Include availability zones for each region
+
+        Returns:
+            List of region information
+        """
+        if not self.aws_available:
+            return [
+                {
+                    "error": "AWS CLI not found. Please install AWS CLI and configure credentials."
+                }
+            ]
+
+        regions = get_regions()
+
+        result = []
+        for region in regions:
+            item = {
+                "name": region.get("RegionName", ""),
+                "endpoint": region.get("Endpoint", ""),
+                "opt_in_status": region.get("OptInStatus", ""),
+            }
+
+            if include_zones:
+                # Get availability zones for this region
+                zones = get_availability_zones(region["RegionName"])
+                item["zones"] = len(zones)
+                item["zone_names"] = ", ".join([z["ZoneName"] for z in zones])
+
+            result.append(item)
+
+        return result
+
+    def get_cheapest_instance(
+        self,
+        region: Optional[str] = None,
+        family: Optional[str] = None,
+        min_vcpus: int = 2,
+    ) -> Dict[str, Any]:
+        """
+        Get the cheapest instance meeting criteria
+
+        Args:
+            region: AWS region
+            family: Instance family filter
+            min_vcpus: Minimum number of vCPUs required
+
+        Returns:
+            Dictionary with instance information
+        """
+        if not self.aws_available:
+            return {"error": "AWS CLI not available"}
+
+        instances = get_instance_types(family=family, region=region)
+
+        # Filter by minimum vCPUs
+        eligible = []
+        for instance in instances:
+            vcpus = instance.get("VCpuInfo", {}).get("DefaultVCpus", 0)
+            if vcpus >= min_vcpus:
+                eligible.append(instance)
+
+        if not eligible:
+            return {"error": "No instances found matching criteria"}
+
+        # Get pricing for eligible instances
+        pricing = get_pricing_info(region=region or "us-east-1")
+
+        # Find cheapest
+        cheapest = None
+        cheapest_price = float("inf")
+
+        for instance in eligible:
+            instance_type = instance.get("InstanceType")
+            price = pricing.get(instance_type, {}).get("on_demand", float("inf"))
+            if price < cheapest_price:
+                cheapest_price = price
+                cheapest = instance
+
+        if cheapest:
+            return {
+                "instance_type": cheapest.get("InstanceType"),
+                "vcpus": cheapest.get("VCpuInfo", {}).get("DefaultVCpus", 0),
+                "memory_gb": cheapest.get("MemoryInfo", {}).get("SizeInMiB", 0) / 1024,
+                "price_per_hour": f"${cheapest_price:.3f}",
+            }
+
+        return {"error": "Could not determine cheapest instance"}
+
+    def generate_kconfig(self) -> bool:
+        """
+        Generate Kconfig files for AWS
+
+        Returns:
+            True on success, False on failure
+        """
+        if not self.aws_available:
+            print("AWS CLI not available, cannot generate Kconfig", file=sys.stderr)
+            return False
+
+        output_dir = Path("terraform/aws/kconfigs")
+
+        # Create directory if it doesn't exist
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
+            # Generate files in parallel
+            instance_types_dir = output_dir / "instance-types"
+            instance_types_dir.mkdir(exist_ok=True)
+
+            def generate_family_file(family):
+                """Generate Kconfig for a single family."""
+                types_kconfig = generate_instance_types_kconfig(family)
+                if types_kconfig:
+                    types_file = instance_types_dir / f"Kconfig.{family}.generated"
+                    types_file.write_text(types_kconfig)
+                    return f"Generated {types_file}"
+                return None
+
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                # Submit all generation tasks
+                futures = []
+
+                # Generate instance families Kconfig
+                futures.append(executor.submit(generate_instance_families_kconfig))
+
+                # Generate regions Kconfig
+                futures.append(executor.submit(generate_regions_kconfig))
+
+                # Generate GPU AMIs Kconfig
+                futures.append(executor.submit(generate_gpu_amis_kconfig))
+
+                # Generate instance types for each family
+                # Get all families dynamically from AWS
+                from aws_api import get_generated_instance_families
+
+                families = get_generated_instance_families()
+
+                family_futures = []
+                for family in sorted(families):
+                    family_futures.append(executor.submit(generate_family_file, family))
+
+                # Process main config results
+                families_kconfig = futures[0].result()
+                regions_kconfig = futures[1].result()
+                gpu_amis_kconfig = futures[2].result()
+
+                # Write main configs
+                families_file = output_dir / "Kconfig.compute.generated"
+                families_file.write_text(families_kconfig)
+                print(f"Generated {families_file}")
+
+                regions_file = output_dir / "Kconfig.location.generated"
+                regions_file.write_text(regions_kconfig)
+                print(f"Generated {regions_file}")
+
+                gpu_amis_file = output_dir / "Kconfig.gpu-amis.generated"
+                gpu_amis_file.write_text(gpu_amis_kconfig)
+                print(f"Generated {gpu_amis_file}")
+
+                # Process family results
+                for future in family_futures:
+                    result = future.result()
+                    if result:
+                        print(result)
+
+            return True
+
+        except Exception as e:
+            print(f"Error generating Kconfig: {e}", file=sys.stderr)
+            return False
+
+
+def main():
+    """Main entry point"""
+    parser = argparse.ArgumentParser(
+        description="AWS CLI tool for kdevops",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--output",
+        choices=["json", "text"],
+        default="json",
+        help="Output format (default: json)",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Generate Kconfig command
+    kconfig_parser = subparsers.add_parser(
+        "generate-kconfig", help="Generate Kconfig files for AWS"
+    )
+
+    # Instance types command
+    instances_parser = subparsers.add_parser(
+        "instance-types", help="Manage instance types"
+    )
+    instances_subparsers = instances_parser.add_subparsers(
+        dest="subcommand", help="Instance type operations"
+    )
+
+    # Instance types list
+    list_instances = instances_subparsers.add_parser("list", help="List instance types")
+    list_instances.add_argument("--family", help="Filter by instance family")
+    list_instances.add_argument("--region", help="AWS region")
+    list_instances.add_argument(
+        "--max-results", type=int, default=100, help="Maximum results (default: 100)"
+    )
+
+    # Regions command
+    regions_parser = subparsers.add_parser("regions", help="Manage regions")
+    regions_subparsers = regions_parser.add_subparsers(
+        dest="subcommand", help="Region operations"
+    )
+
+    # Regions list
+    list_regions = regions_subparsers.add_parser("list", help="List regions")
+    list_regions.add_argument(
+        "--include-zones",
+        action="store_true",
+        help="Include availability zones",
+    )
+
+    # Cheapest instance command
+    cheapest_parser = subparsers.add_parser(
+        "cheapest", help="Find cheapest instance meeting criteria"
+    )
+    cheapest_parser.add_argument("--region", help="AWS region")
+    cheapest_parser.add_argument("--family", help="Instance family")
+    cheapest_parser.add_argument(
+        "--min-vcpus", type=int, default=2, help="Minimum vCPUs (default: 2)"
+    )
+
+    args = parser.parse_args()
+
+    cli = AWSCLI(output_format=args.output)
+
+    if args.command == "generate-kconfig":
+        success = cli.generate_kconfig()
+        sys.exit(0 if success else 1)
+
+    elif args.command == "instance-types":
+        if args.subcommand == "list":
+            instances = cli.list_instance_types(
+                family=args.family,
+                region=args.region,
+                max_results=args.max_results,
+            )
+            cli.output(instances)
+
+    elif args.command == "regions":
+        if args.subcommand == "list":
+            regions = cli.list_regions(include_zones=args.include_zones)
+            cli.output(regions)
+
+    elif args.command == "cheapest":
+        result = cli.get_cheapest_instance(
+            region=args.region,
+            family=args.family,
+            min_vcpus=args.min_vcpus,
+        )
+        cli.output(result)
+
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
