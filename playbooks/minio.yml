@@ -25,8 +25,23 @@
   become: true
   become_user: root
   tags: ['minio_warp']
+
+  pre_tasks:
+    # Start monitoring services before running benchmarks
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_run.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_run"]
+
   roles:
     - role: minio_warp_run
+
+  post_tasks:
+    # Collect monitoring data after benchmarks complete
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_collect.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_collect"]
 
 - name: Uninstall MinIO
   hosts: baseline:dev
