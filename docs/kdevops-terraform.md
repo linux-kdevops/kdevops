@@ -33,6 +33,15 @@ That should let you start configuring your cloud provider options. You can
 use the same main menu to configure specific workflows supported by kdevops,
 by defaults no workflows are enabled, and so all you get is the bringup.
 
+### Dynamic Cloud Configuration
+
+kdevops supports dynamic cloud provider configuration that queries live cloud
+APIs for up-to-date instance types, regions, and AMI options. This feature
+ensures you always have access to the latest cloud resources without manual
+updates. For detailed information about dynamic cloud configuration, including
+setup, prerequisites, and advanced usage, see the
+[Cloud Configuration Management documentation](cloud-configuration.md).
+
 ## Installing dependencies
 
 To install the dependencies of everything which you just enabled just run:

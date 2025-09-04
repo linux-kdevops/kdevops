@@ -117,3 +117,6 @@ terraform/lambdalabs/.terraform_api_key
 .cloud.initialized
 
 scripts/__pycache__/
+.aws_cloud_config_generated
+terraform/aws/kconfigs/*.generated
+terraform/aws/kconfigs/instance-types/*.generated
