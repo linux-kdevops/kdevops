@@ -25,7 +25,7 @@ mmtests-dev:
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
-mmtests-tests: mmtests
+mmtests-tests:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
