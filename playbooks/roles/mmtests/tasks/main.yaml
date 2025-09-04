@@ -217,6 +217,12 @@
   ansible.builtin.debug:
     msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
 
+# Start monitoring services before running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - enable_monitoring|default(false)|bool
+  tags: ["run_tests", "monitoring", "monitor_run"]
+
 - name: Run mmtests in background
   tags: ["run_tests"]
   become: true
@@ -238,6 +244,12 @@
   until: mmtests_status.finished
   retries: 1440 # 12 hours
   delay: 60 # check every 60 seconds
+
+# Collect monitoring data after tests complete
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - enable_monitoring|default(false)|bool
+  tags: ["run_tests", "monitoring", "monitor_collect"]
 
 - name: Create local results directory
   delegate_to: localhost
