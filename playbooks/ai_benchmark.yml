@@ -3,6 +3,20 @@
   hosts: ai
   vars:
     ai_vector_db_milvus_benchmark_enable: true
+  tasks:
+    # Start monitoring services before running benchmarks
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_run.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_run"]
+
   roles:
     - role: milvus
       tags: ['ai', 'vector_db', 'milvus', 'benchmark']
+
+  post_tasks:
+    # Collect monitoring data after benchmarks complete
+    - ansible.builtin.import_tasks: roles/monitoring/tasks/monitor_collect.yml
+      when:
+        - enable_monitoring|default(false)|bool
+      tags: ["monitoring", "monitor_collect"]
