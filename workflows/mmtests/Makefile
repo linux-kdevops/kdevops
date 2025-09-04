@@ -43,6 +43,12 @@ mmtests-compare:
 		--tags deps,compare \
 		$(MMTESTS_ARGS)
 
+monitor-results: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/monitor-results.yml \
+		--extra-vars=@./extra_vars.yaml \
+		$(MMTESTS_ARGS)
+
 mmtests-clean:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		playbooks/mmtests.yml \
@@ -58,6 +64,7 @@ mmtests-help:
 	@echo "mmtests-tests                : Run mmtests tests"
 	@echo "mmtests-results              : Copy results from guests"
 	@echo "mmtests-compare              : Compare baseline and dev results (AB testing)"
+	@echo "monitor-results              : Collect interim monitoring data without stopping monitoring"
 	@echo "mmtests-clean                : Clean up mmtests installation"
 	@echo ""
 
@@ -69,6 +76,7 @@ PHONY +: mmtests-dev
 PHONY +: mmtests-tests
 PHONY +: mmtests-results
 PHONY +: mmtests-compare
+PHONY +: monitor-results
 PHONY +: mmtests-clean
 PHONY +: mmtests-help
 .PHONY: $(PHONY)
