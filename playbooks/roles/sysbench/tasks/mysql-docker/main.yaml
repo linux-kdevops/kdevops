@@ -7,7 +7,7 @@
     path: "{{ sysbench_telemetry_path }}"
     state: directory
     mode: "u=rwx,g=rx,o=rx"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
   tags: ["setup"]
 
 - name: Ensure MySQL root user directory exists
@@ -18,7 +18,7 @@
     path: "{{ sysbench_mysql_container_host_root_path }}"
     state: directory
     mode: "u=rwx,g=rx,o=rx"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
   tags: ["setup"]
 
 - name: Determine filesystem setting used and db page size
@@ -93,7 +93,7 @@
     name: "{{ sysbench_container_name }}"
     image: "{{ sysbench_container_image_name }}"
     state: absent
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Remove any old MySQL container
   tags: ["post_entrypoint", "clean"]
@@ -104,7 +104,7 @@
     name: "{{ sysbench_mysql_container_name }}"
     image: "{{ sysbench_mysql_container_image_string }}"
     state: absent
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Unmount {{ sysbench_mnt }}
   become: true
@@ -156,7 +156,7 @@
     src: "{{ sysbench_mysql_container_host_client_config_path | basename }}.j2"
     dest: "{{ sysbench_mysql_container_host_client_config_path }}"
     mode: "u=rw,g=r,o=r"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Generate MySQL server configuration file from template
   tags: ["setup"]
@@ -164,7 +164,7 @@
     src: "{{ sysbench_mysql_container_host_config_path | basename }}.j2"
     dest: "{{ sysbench_mysql_container_host_config_path }}"
     mode: "u=rw,g=r,o=r"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Create a few directories needed for telemetry inside the docker container
   tags: ["setup"]
@@ -189,7 +189,7 @@
     dest: "{{ sysbench_mysql_container_host_root_path }}/.mysqlsh/plugins/"
     update: true
     version: master
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Get used target kernel version
   tags: ["db_start"]
@@ -255,7 +255,7 @@
       MYSQL_DATABASE: "{{ sysbench_db_name }}"
       MYSQL_ROOT_PASSWORD: "{{ sysbench_root_db_password }}"
       PYTHONPATH: "{{ sysbench_mysql_container_python_path }}"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Wait for for it... (MySQL data port to be up)
   tags: ["db_start"]
@@ -275,7 +275,7 @@
   retries: 12 # Retry up to 12 times
   delay: 5 # Delay 5 seconds between retries
   until: result.rc == 0
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Verify MySQL client works inside Docker container using explicit socket
   tags: ["db_start"]
@@ -286,7 +286,7 @@
     command: mysql --socket=/var/lib/mysql/mysql.sock -e "SHOW DATABASES;"
   register: mysql_socket_output_explicit
   ignore_errors: true
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL client explicit socket test output to a file on the host
   tags: ["db_start"]
@@ -295,7 +295,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_socket_output_explicit.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-mysql-client-explicit-test.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Verify MySQL client works on server and capture output
   tags: ["db_start"]
@@ -305,7 +305,7 @@
     container: "{{ sysbench_mysql_container_name }}"
     command: mysql -h localhost -e "SHOW DATABASES;"
   register: mysql_socket_output
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL client socket test output to a file on the host
   tags: ["db_start"]
@@ -314,7 +314,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_socket_output.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-mysql-client-test.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Add sysbench test user using the MySQL container
   tags: ["post_entrypoint"]
@@ -325,7 +325,7 @@
     container: "{{ sysbench_mysql_container_name }}"
     command: mysql -e "CREATE USER {{ sysbench_db_username }}@'%' IDENTIFIED WITH 'mysql_native_password' BY '{{ sysbench_db_password }}';"
   register: mysql_add_sysbench_user
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL output of adding sysbench user
   tags: ["post_entrypoint"]
@@ -334,7 +334,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_add_sysbench_user.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0001-add-user.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Grant sysbench test user privileges using the MySQL container
   tags: ["post_entrypoint"]
@@ -345,7 +345,7 @@
     container: "{{ sysbench_mysql_container_name }}"
     command: mysql -e "GRANT ALL PRIVILEGES ON {{ sysbench_db_name }}.* to {{ sysbench_db_username }}@'%';"
   register: mysql_sysbench_privs
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL output of granting all privileges to sysbench user
   tags: ["post_entrypoint"]
@@ -354,7 +354,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_sysbench_privs.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0002-grant-privs-user.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Flush privileges
   tags: ["post_entrypoint"]
@@ -364,7 +364,7 @@
   community.docker.docker_container_exec:
     container: "{{ sysbench_mysql_container_name }}"
     command: mysql -e "FLUSH PRIVILEGES;"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Install pip using MySQL container
   tags: ["post_entrypoint"]
@@ -375,7 +375,7 @@
     container: "{{ sysbench_mysql_container_name }}"
     command: microdnf install -y python-pip
   register: mysql_pip
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL output of installing pip
   tags: ["post_entrypoint"]
@@ -384,7 +384,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_pip.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0003-install-python-pip.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Install Python packages we need for telemetry pip using the MySQL container
   tags: ["post_entrypoint"]
@@ -397,7 +397,7 @@
     env:
       PYTHONPATH: "{{ sysbench_mysql_container_python_path }}"
   register: mysql_pip_install_deps
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save MySQL output of installing telemetry reqs with pip
   tags: ["post_entrypoint"]
@@ -406,7 +406,7 @@
   ansible.builtin.copy:
     content: "{{ mysql_pip_install_deps.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/root-setup-0004-install-telemetry-reqs.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Ensure sysbench user is present on the mysql container
   tags: ["post_entrypoint"]
@@ -418,7 +418,7 @@
     command: mysql -e "SELECT user, host, plugin FROM mysql.user WHERE user = '{{ sysbench_db_username }}' AND plugin = 'mysql_native_password';"
   register: user_check_result
   failed_when: user_check_result.stdout.find(sysbench_db_username) == -1
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Remove the sysbench container
   tags: ["populate_sbtest"]
@@ -429,7 +429,7 @@
     name: "{{ sysbench_container_name }}"
     image: "{{ sysbench_container_image_name }}"
     state: absent
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Start a sysbench container we will re-use for population and running the test
   tags: ["populate_sbtest"]
@@ -446,7 +446,7 @@
     detach: true
     restart_policy: unless-stopped
     command: "tail -f /dev/null" # Keeps the container running
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Wait for the sysbench container to be in running state
   tags: ["populate_sbtest"]
@@ -459,7 +459,7 @@
   until: sysbench_container_status.container is defined and sysbench_container_status.container.State.Running
   retries: 5
   delay: 5
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 # Keep this at threads=1 as multiple threads don't work when building the
 # initial database.
@@ -485,7 +485,7 @@
       --mysql-password={{ sysbench_db_password }}
       run
   register: sysbench_init_pop
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save the output of popuating the initial sysench database
   tags: ["post_entrypoint"]
@@ -494,7 +494,7 @@
   ansible.builtin.copy:
     content: "{{ sysbench_init_pop.stdout }}"
     dest: "{{ sysbench_docker_telemetry_path }}/sysbench_populate.txt"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 # We use a shell here to be able to directly output to a file instad
 # of saving to an ansible variable with register because we expect this
@@ -526,7 +526,7 @@
   async: "{{ sysbench_test_duration | int + 10 }}" # Maximum allowed time to complete
   poll: 0 # Run in the background
   register: sysbench_job # Register the job ID
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Collect MySQL telemetry inside the Docker MySQL container at the same time
   tags: ["telemetry", "tel"]
@@ -542,7 +542,7 @@
     command: |
       mysqlsh --execute
       "support.collect(mysql=true, os=true, time={{ sysbench_test_duration | int // 60 }}, outputdir='{{ sysbench_telemetry_path }}')"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Wait for sysbench workload to complete
   tags: ["run_sysbench"]
@@ -570,7 +570,7 @@
   ansible.builtin.command:
     cmd: "docker logs {{ sysbench_container_name }}"
   register: sysbench_logs
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save sysbench logs to a file on the local machine
   become: true
@@ -580,7 +580,7 @@
   ansible.builtin.copy:
     content: "{{ sysbench_logs.stdout }}"
     dest: "{{ sysbench_telemetry_path }}/docker-sysbench-results-{{ ansible_date_time.iso8601 }}.log"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Collect sysbench docker logs for MySQL container
   tags: ["logs"]
@@ -591,7 +591,7 @@
     cmd: "docker logs {{ sysbench_mysql_container_name }}"
   register: sysbench_mysql_container_logs
   changed_when: false
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Save docker MySQL logs on node
   tags: ["logs"]
@@ -602,7 +602,7 @@
     content: "{{ sysbench_mysql_container_logs.stdout }}"
     dest: "{{ sysbench_telemetry_path }}/docker-mysql-results-{{ ansible_date_time.iso8601 }}.log"
     mode: "u=rw,g=r,o=r"
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Remove the sysbench container which ran the benchmark
   tags: ["run_sysbench"]
@@ -613,7 +613,7 @@
     name: "{{ sysbench_container_name }}"
     image: "{{ sysbench_container_image_name }}"
     state: absent
-  when: "sysbench_type_mysql_docker|bool"
+  when: "sysbench_type_mysql_docker | bool"
 
 - name: Copy telemetry data from each node to the localhost
   tags: ["results"]

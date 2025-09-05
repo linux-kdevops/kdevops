@@ -302,7 +302,7 @@
     regexp: "^DEFAULTDEBUG="
     line: DEFAULTDEBUG=yes
   tags: ["saved"]
-  when: ansible_facts['os_family']|lower == 'redhat'
+  when: ansible_facts['os_family'] | lower == 'redhat'
 
 - name: Install packages on each target node
   ansible.builtin.import_tasks:

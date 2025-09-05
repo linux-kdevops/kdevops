@@ -658,7 +658,7 @@
   ansible.builtin.set_fact:
     node_host_ip: "{{ ansible_ssh_host }} {{ ansible_default_ipv4.address }}"
   delegate_facts: true
-  when: devconfig_enable_systemd_journal_remote|bool
+  when: devconfig_enable_systemd_journal_remote | bool
 
 - name: Set up symlinks for journals
   tags: ["journal_ln"]
@@ -667,7 +667,7 @@
   become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.command: "{{ topdir_path }}/workflows/kdevops/scripts/jounal-ln.sh {{ devconfig_systemd_journal_remote_path }} {{ node_host_ip }}"
-  when: devconfig_enable_systemd_journal_remote|bool
+  when: devconfig_enable_systemd_journal_remote | bool
 
 - name: Enables systemd's watchdog
   ansible.builtin.stat:

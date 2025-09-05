@@ -7,7 +7,7 @@
   tags: vars
 
 - name: Milvus storage setup
-  when: ai_milvus_storage_enable|bool
+  when: ai_milvus_storage_enable | bool
   block:
     - name: Install filesystem utilities
       ansible.builtin.package:

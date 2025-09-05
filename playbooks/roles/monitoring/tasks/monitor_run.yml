@@ -31,7 +31,7 @@
       echo "$(date +"%Y-%m-%d %H:%M:%S")" >> /root/monitoring/folio_migration_stats.txt
       cat /sys/kernel/debug/mm/migrate/stats >> /root/monitoring/folio_migration_stats.txt
       echo "" >> /root/monitoring/folio_migration_stats.txt
-      sleep {{ monitor_folio_migration_interval|default(60) }}
+      sleep {{ monitor_folio_migration_interval | default(60) }}
     done' > /root/monitoring/folio_migration.log 2>&1 &
     echo $! > /root/monitoring/folio_migration.pid
   async: 86400 # Run for up to 24 hours

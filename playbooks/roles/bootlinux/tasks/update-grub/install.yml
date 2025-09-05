@@ -205,12 +205,12 @@
 - name: Obtain command to set default kernel to boot
   ansible.builtin.set_fact:
     grub_set_default_boot_kernel: grub-set-default
-  when: ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
+  when: ansible_facts['os_family'] | lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
 
 - name: Obtain command to set default kernel to boot for RHEL >= 8
   ansible.builtin.set_fact:
     grub_set_default_boot_kernel: grub2-set-default
-  when: ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
+  when: ansible_facts['os_family'] | lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
 
 - name: Set the target kernel to be booted by default moving forward if the above command worked
   become: true

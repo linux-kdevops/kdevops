@@ -34,13 +34,13 @@
 - name: Set bindir for debian systems
   ansible.builtin.set_fact:
     bindir: "/usr/bin"
-  when: ansible_facts['os_family']|lower == 'debian'
+  when: ansible_facts['os_family'] | lower == 'debian'
   tags: vars
 
 - name: Set bindir for non-debian systems
   ansible.builtin.set_fact:
     bindir: "/usr/sbin"
-  when: ansible_facts['os_family']|lower != 'debian'
+  when: ansible_facts['os_family'] | lower != 'debian'
   tags: vars
 
 - name: Git clone btrfs_progs

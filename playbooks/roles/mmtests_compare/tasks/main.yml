@@ -17,7 +17,7 @@
       - python3-numpy
     state: present
     update_cache: true
-  when: ansible_facts['os_family']|lower == 'debian'
+  when: ansible_facts['os_family'] | lower == 'debian'
   run_once: true
   tags: ["compare", "deps"]
 
@@ -29,7 +29,7 @@
     name: "{{ item }}"
   with_items:
     - File::Temp
-  when: ansible_facts['os_family']|lower == 'debian'
+  when: ansible_facts['os_family'] | lower == 'debian'
   run_once: true
   tags: ["compare", "deps"]
   ignore_errors: true
@@ -54,7 +54,7 @@
       - python3-matplotlib
       - python3-numpy
     state: present
-  when: ansible_facts['os_family']|lower == 'suse'
+  when: ansible_facts['os_family'] | lower == 'suse'
   run_once: true
   tags: ["compare", "deps"]
 
@@ -78,7 +78,7 @@
       - python3-matplotlib
       - python3-numpy
     state: present
-  when: ansible_facts['os_family']|lower == 'redhat'
+  when: ansible_facts['os_family'] | lower == 'redhat'
   run_once: true
   tags: ["compare", "deps"]
 
@@ -175,7 +175,7 @@
     - "{{ baseline_hostname }}-{{ baseline_kernel }}"
     - "{{ dev_hostname }}-{{ dev_kernel }}"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Archive baseline results on remote
@@ -194,7 +194,7 @@
     format: gz
   delegate_to: "{{ groups['dev'][0] }}"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Fetch baseline results to localhost
@@ -213,7 +213,7 @@
     flat: true
   delegate_to: "{{ groups['dev'][0] }}"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Extract baseline results locally
@@ -232,7 +232,7 @@
     dest: "{{ topdir_path }}/tmp/mmtests/work/log/"
     remote_src: true
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Run mmtests comparison
@@ -245,7 +245,7 @@
         --names {{ baseline_hostname }}-{{ baseline_kernel }},{{ dev_hostname }}-{{ dev_kernel }}
     chdir: "{{ topdir_path }}/tmp/mmtests"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   register: comparison_text_output
   tags: ["compare"]
 
@@ -260,7 +260,7 @@
         --format html
     chdir: "{{ topdir_path }}/tmp/mmtests"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   register: comparison_html_output
   tags: ["compare"]
 
@@ -269,13 +269,13 @@
   ansible.builtin.set_fact:
     comparison_metrics: []
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Generate performance graphs using gnuplot
   delegate_to: localhost
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare", "graphs"]
   block:
     - name: Check for available iterations data
@@ -406,7 +406,7 @@
     monitor_graphs: []
     summary_stats: []
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Save comparison outputs
@@ -421,7 +421,7 @@
     - content: "{{ comparison_html_output.stdout | default('<p>No comparison data</p>') }}"
       dest: "{{ topdir_path }}/workflows/mmtests/results/compare/comparison_raw.html"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Copy full results to final location
@@ -434,7 +434,7 @@
     - "{{ baseline_hostname }}-{{ baseline_kernel }}"
     - "{{ dev_hostname }}-{{ dev_kernel }}"
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Display comparison report location
@@ -456,7 +456,7 @@
 
       🚀 Open comparison_report.html for the best analysis experience!
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare"]
 
 - name: Clean up temporary archives on remote nodes
@@ -468,5 +468,5 @@
     - baseline
     - dev
   run_once: true
-  when: kdevops_baseline_and_dev|bool
+  when: kdevops_baseline_and_dev | bool
   tags: ["compare", "cleanup"]

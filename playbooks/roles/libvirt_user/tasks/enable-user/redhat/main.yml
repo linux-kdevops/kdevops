@@ -14,7 +14,7 @@
   ansible.builtin.stat:
     path: /usr/sbin/apparmor_status
   register: apparmor_file_stat_result
-  when: "only_verify_user|bool"
+  when: "only_verify_user | bool"
 
 - name: Verify if apparmor is disabled when applicable
   become: true

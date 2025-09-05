@@ -24,7 +24,7 @@
   ansible.builtin.file:
     path: "{{ reboot_limit_data }}/{{ ansible_ssh_host }}"
     state: directory
-  when: not reboot_limit_compare_both_enabled|default(false)|bool
+  when: not reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["install", "first_run"]
 
 - name: Create the regular reboot data collection directory for comparison mode
@@ -33,7 +33,7 @@
   ansible.builtin.file:
     path: "{{ reboot_limit_data_regular }}/{{ ansible_ssh_host }}"
     state: directory
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["install", "first_run"]
 
 - name: Create the kexec reboot data collection directory for comparison mode
@@ -42,7 +42,7 @@
   ansible.builtin.file:
     path: "{{ reboot_limit_data_kexec }}/{{ ansible_ssh_host }}"
     state: directory
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["install", "first_run"]
 
 - name: Set the file to collect systemctl-analyze results
@@ -70,7 +70,7 @@
     - "{{ reboot_limit_count_file }}"
   loop_control:
     label: "{{ item | regex_replace(reboot_limit_data | regex_escape()) | regex_replace('^/', '') }}"
-  when: not reboot_limit_compare_both_enabled|default(false)|bool
+  when: not reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["reset"]
 
 - name: Delete old results directory files if a reset was called (comparison mode - regular)
@@ -79,7 +79,7 @@
   ansible.builtin.file:
     path: "{{ reboot_limit_data_regular }}/{{ ansible_ssh_host }}"
     state: absent
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["reset"]
 
 - name: Delete old results directory files if a reset was called (comparison mode - kexec)
@@ -88,7 +88,7 @@
   ansible.builtin.file:
     path: "{{ reboot_limit_data_kexec }}/{{ ansible_ssh_host }}"
     state: absent
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["reset"]
 
 - name: Set the path where we collect our local reboot-limit results
@@ -117,7 +117,7 @@
   with_sequence: count={{ reboot_limit_max }}
   loop_control:
     loop_var: reboot_num
-  when: not reboot_limit_compare_both_enabled|default(false)|bool
+  when: not reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["run_tests"]
 
 - name: Run the reboot comparison loop (both regular and kexec)
@@ -125,7 +125,7 @@
   with_sequence: count={{ reboot_limit_max }}
   loop_control:
     loop_var: reboot_num
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
   tags: ["run_tests"]
 
 - name: Copy the latest results over when we're done (single mode)
@@ -142,7 +142,7 @@
     - "{{ reboot_limit_count_file }}"
   loop_control:
     label: "{{ item | regex_replace(reboot_limit_data | regex_escape()) | regex_replace('^/', '') }}"
-  when: not reboot_limit_compare_both_enabled|default(false)|bool
+  when: not reboot_limit_compare_both_enabled | default(false) | bool
 
 - name: Copy the regular reboot results in comparison mode
   tags: ["copy_results"]
@@ -156,7 +156,7 @@
   with_items:
     - "{{ reboot_limits_systemctl_analyze_log }}"
     - "{{ reboot_limits_count_log }}"
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
 
 - name: Copy the kexec reboot results in comparison mode
   tags: ["copy_results"]
@@ -170,4 +170,4 @@
   with_items:
     - "{{ reboot_limits_systemctl_analyze_log }}"
     - "{{ reboot_limits_count_log }}"
-  when: reboot_limit_compare_both_enabled|default(false)|bool
+  when: reboot_limit_compare_both_enabled | default(false) | bool
