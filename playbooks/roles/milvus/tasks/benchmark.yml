@@ -31,6 +31,7 @@
   when: not milvus_is_available
 
 - name: Run benchmark tasks only if Milvus is available
+  when: milvus_is_available
   block:
     - name: Create benchmark results directory
       ansible.builtin.file:
@@ -58,4 +59,3 @@
       when:
         - ai_vector_db_milvus_benchmark_enable|bool
         - benchmark_result is defined
-  when: milvus_is_available
