@@ -1,13 +1,13 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
 
 - name: Create Warp results directory on remote host
-  file:
+  ansible.builtin.file:
     path: "/tmp/warp-results"
     state: directory
     mode: "0755"
@@ -15,7 +15,7 @@
 - name: Ensure local results directory exists with proper permissions
   block:
     - name: Create local results directory
-      file:
+      ansible.builtin.file:
         path: "{{ playbook_dir }}/../workflows/minio/results"
         state: directory
         mode: "0755"
@@ -24,7 +24,7 @@
       become: false
   rescue:
     - name: Fix results directory permissions if needed
-      file:
+      ansible.builtin.file:
         path: "{{ playbook_dir }}/../workflows/minio/results"
         state: directory
         mode: "0755"
@@ -35,7 +35,7 @@
       become: true
 
 - name: Wait for MinIO to be fully ready
-  wait_for:
+  ansible.builtin.wait_for:
     host: localhost
     port: "{{ minio_api_port }}"
     timeout: 120
@@ -43,37 +43,37 @@
   delay: 10
 
 - name: Check if Warp is installed
-  command: which warp
+  ansible.builtin.command: which warp
   register: warp_check
   failed_when: false
   changed_when: false
 
 - name: Verify Warp installation
-  fail:
+  ansible.builtin.fail:
     msg: "MinIO Warp is not installed. Please run 'make minio-install' first."
   when: warp_check.rc != 0
 
 - name: Create Warp configuration file
-  template:
+  ansible.builtin.template:
     src: warp_config.json.j2
     dest: "/tmp/warp_config.json"
     mode: "0644"
 
 - name: Set MinIO endpoint URL
-  set_fact:
+  ansible.builtin.set_fact:
     minio_endpoint: "localhost:{{ minio_api_port }}"
 
 - name: Display Warp version
-  command: warp --version
+  ansible.builtin.command: warp --version
   register: warp_version
   changed_when: false
 
 - name: Show Warp version
-  debug:
+  ansible.builtin.debug:
     msg: "MinIO Warp version: {{ warp_version.stdout }}"
 
 - name: Calculate benchmark timeout
-  set_fact:
+  ansible.builtin.set_fact:
     # Parse duration and add 10 minutes buffer
     benchmark_timeout: >-
       {%- set duration_str = minio_warp_duration | string -%}
@@ -88,14 +88,14 @@
       {%- endif -%}
 
 - name: Copy comprehensive benchmark script
-  copy:
+  ansible.builtin.copy:
     src: "{{ playbook_dir }}/../workflows/minio/scripts/run_benchmark_suite.sh"
     dest: "/tmp/run_benchmark_suite.sh"
     mode: "0755"
   when: minio_warp_run_comprehensive_suite | default(false)
 
 - name: Display benchmark configuration
-  debug:
+  ansible.builtin.debug:
     msg: |
       Comprehensive suite: {{ minio_warp_run_comprehensive_suite | default(false) }}
       Duration: {{ minio_warp_duration }}
@@ -103,7 +103,7 @@
   when: minio_warp_run_comprehensive_suite | default(false)
 
 - name: Run comprehensive benchmark suite
-  shell: |
+  ansible.builtin.shell: |
     set -x  # Enable debug output
     echo "Starting comprehensive benchmark suite"
     echo "Duration parameter: {{ minio_warp_duration }}"
@@ -123,7 +123,7 @@
   poll: 30
 
 - name: Display comprehensive suite output
-  debug:
+  ansible.builtin.debug:
     msg: |
       Suite completed: {{ suite_output is defined }}
       Exit code: {{ suite_output.rc | default('N/A') }}
@@ -131,19 +131,19 @@
   when: minio_warp_run_comprehensive_suite | default(false)
 
 - name: Debug - Show which path we're taking
-  debug:
+  ansible.builtin.debug:
     msg: |
       Comprehensive suite enabled: {{ minio_warp_run_comprehensive_suite | default(false) }}
       Duration: {{ minio_warp_duration }}
       Benchmark timeout: {{ benchmark_timeout }} seconds
 
 - name: Set timestamp for consistent filename
-  set_fact:
+  ansible.builtin.set_fact:
     warp_timestamp: "{{ ansible_date_time.epoch }}"
   when: not (minio_warp_run_comprehensive_suite | default(false))
 
 - name: Run MinIO Warp single benchmark with JSON output
-  shell: |
+  ansible.builtin.shell: |
     echo "=== Starting single benchmark ==="
     echo "Duration: {{ minio_warp_duration }}"
     echo "Full command:"
@@ -189,23 +189,23 @@
   when: not (minio_warp_run_comprehensive_suite | default(false))
 
 - name: Display benchmark completion
-  debug:
+  ansible.builtin.debug:
     msg: "MinIO Warp benchmark completed on {{ ansible_hostname }}"
   when: (warp_output is defined and warp_output.rc | default(1) == 0) or (suite_output is defined and suite_output.rc | default(1) == 0)
 
 - name: Check if results file exists
-  stat:
+  ansible.builtin.stat:
     path: "/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
   register: results_file
   when: warp_timestamp is defined
 
 - name: Display results file status
-  debug:
+  ansible.builtin.debug:
     msg: "Results file exists: {{ results_file.stat.exists }}, Size: {{ results_file.stat.size | default(0) }} bytes"
   when: results_file is defined and not results_file.skipped | default(false)
 
 - name: Copy results to local system
-  fetch:
+  ansible.builtin.fetch:
     src: "/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
     flat: true
@@ -213,7 +213,7 @@
   when: results_file is defined and not results_file.skipped | default(false) and results_file.stat.exists | default(false)
 
 - name: Generate graphs and HTML report
-  command: "python3 {{ playbook_dir }}/../workflows/minio/scripts/generate_warp_report.py {{ playbook_dir }}/../workflows/minio/results/"
+  ansible.builtin.command: "python3 {{ playbook_dir }}/../workflows/minio/scripts/generate_warp_report.py {{ playbook_dir }}/../workflows/minio/results/"
   delegate_to: localhost
   run_once: true
   become: false
@@ -221,7 +221,7 @@
   ignore_errors: true
 
 - name: Save benchmark output as fallback
-  copy:
+  ansible.builtin.copy:
     content: |
       MinIO Warp Benchmark Results
       ============================
@@ -241,7 +241,7 @@
   when: warp_debug is defined
 
 - name: Copy fallback results
-  fetch:
+  ansible.builtin.fetch:
     src: "/tmp/warp-results/warp_fallback_{{ ansible_hostname }}_{{ warp_timestamp | default(ansible_date_time.epoch) }}.txt"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
     flat: true

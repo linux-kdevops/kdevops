@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
@@ -10,7 +10,7 @@
   when: ai_milvus_storage_enable|bool
   block:
     - name: Install filesystem utilities
-      package:
+      ansible.builtin.package:
         name:
           - xfsprogs
           - e2fsprogs
@@ -20,13 +20,13 @@
       become_method: sudo
 
     - name: Check if device exists
-      stat:
+      ansible.builtin.stat:
         path: "{{ ai_milvus_device }}"
       register: milvus_device_stat
       failed_when: not milvus_device_stat.stat.exists
 
     - name: Check if Milvus storage is already mounted
-      command: mountpoint -q {{ ai_milvus_mount_point }}
+      ansible.builtin.command: mountpoint -q {{ ai_milvus_mount_point }}
       register: milvus_mount_check
       changed_when: false
       failed_when: false
@@ -35,7 +35,7 @@
       when: milvus_mount_check.rc != 0
       block:
         - name: Create Milvus mount point directory
-          file:
+          ansible.builtin.file:
             path: "{{ ai_milvus_mount_point }}"
             state: directory
             mode: "0755"
@@ -43,7 +43,7 @@
           become_method: sudo
 
         - name: Detect filesystem type from node name
-          set_fact:
+          ansible.builtin.set_fact:
             detected_fstype: >-
               {%- if 'xfs' in inventory_hostname -%}
                 xfs
@@ -57,7 +57,7 @@
           when: ai_milvus_use_node_fs | default(false) | bool
 
         - name: Detect XFS parameters from node name
-          set_fact:
+          ansible.builtin.set_fact:
             milvus_xfs_blocksize: >-
               {%- if '64k' in inventory_hostname -%}
                 65536
@@ -81,7 +81,7 @@
             - detected_fstype | default(ai_milvus_fstype) == 'xfs'
 
         - name: Detect ext4 parameters from node name
-          set_fact:
+          ansible.builtin.set_fact:
             milvus_ext4_opts: >-
               {%- if '16k' in inventory_hostname and 'bigalloc' in inventory_hostname -%}
                 -F -b 4096 -C 16384 -O bigalloc
@@ -95,11 +95,11 @@
             - detected_fstype | default(ai_milvus_fstype) == 'ext4'
 
         - name: Set final filesystem type
-          set_fact:
+          ansible.builtin.set_fact:
             milvus_fstype: "{{ detected_fstype | default(ai_milvus_fstype | default('xfs')) }}"
 
         - name: Format device with XFS
-          command: >
+          ansible.builtin.command: >
             mkfs.xfs -f
             -b size={{ milvus_xfs_blocksize | default(ai_milvus_xfs_blocksize | default(4096)) }}
             -s size={{ milvus_xfs_sectorsize | default(ai_milvus_xfs_sectorsize | default(4096)) }}
@@ -110,19 +110,19 @@
           become_method: sudo
 
         - name: Format device with Btrfs
-          command: mkfs.btrfs {{ ai_milvus_btrfs_mkfs_opts | default('-f') }} {{ ai_milvus_device }}
+          ansible.builtin.command: mkfs.btrfs {{ ai_milvus_btrfs_mkfs_opts | default('-f') }} {{ ai_milvus_device }}
           when: milvus_fstype == "btrfs"
           become: true
           become_method: sudo
 
         - name: Format device with ext4
-          command: mkfs.ext4 {{ milvus_ext4_opts | default(ai_milvus_ext4_mkfs_opts | default('-F')) }} {{ ai_milvus_device }}
+          ansible.builtin.command: mkfs.ext4 {{ milvus_ext4_opts | default(ai_milvus_ext4_mkfs_opts | default('-F')) }} {{ ai_milvus_device }}
           when: milvus_fstype == "ext4"
           become: true
           become_method: sudo
 
         - name: Mount Milvus storage filesystem
-          mount:
+          ansible.posix.mount:
             path: "{{ ai_milvus_mount_point }}"
             src: "{{ ai_milvus_device }}"
             fstype: "{{ milvus_fstype }}"
@@ -132,7 +132,7 @@
           become_method: sudo
 
         - name: Add Milvus storage mount to fstab
-          mount:
+          ansible.posix.mount:
             path: "{{ ai_milvus_mount_point }}"
             src: "{{ ai_milvus_device }}"
             fstype: "{{ milvus_fstype }}"
@@ -142,7 +142,7 @@
           become_method: sudo
 
     - name: Ensure Milvus directories exist with proper permissions
-      file:
+      ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         mode: "0755"
@@ -157,5 +157,5 @@
         - "{{ ai_milvus_mount_point }}/minio"
 
     - name: Display Milvus storage setup complete
-      debug:
+      ansible.builtin.debug:
         msg: "Milvus storage has been prepared at: {{ ai_milvus_mount_point }} with filesystem: {{ milvus_fstype | default(ai_milvus_fstype | default('xfs')) }}"

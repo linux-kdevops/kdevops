@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
@@ -19,16 +19,16 @@
   ignore_errors: true
 
 - name: Clean up MinIO data directory
-  file:
+  ansible.builtin.file:
     path: "{{ minio_data_path }}"
     state: absent
   when: minio_warp_enable_cleanup | default(true) | bool
 
 - name: Clean up temporary Warp results
-  file:
+  ansible.builtin.file:
     path: "/tmp/warp-results"
     state: absent
 
 - name: Display MinIO destroy complete
-  debug:
+  ansible.builtin.debug:
     msg: "MinIO containers and data have been cleaned up"

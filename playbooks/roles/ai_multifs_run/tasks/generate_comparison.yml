@@ -1,6 +1,6 @@
 ---
 - name: Create multi-filesystem comparison script
-  copy:
+  ansible.builtin.copy:
     content: |
       #!/usr/bin/env python3
       """
@@ -268,11 +268,11 @@
     mode: "0755"
 
 - name: Run multi-filesystem comparison analysis
-  command: python3 {{ ai_multifs_results_dir }}/generate_comparison.py
+  ansible.builtin.command: python3 {{ ai_multifs_results_dir }}/generate_comparison.py
   register: comparison_result
 
 - name: Display comparison completion message
-  debug:
+  ansible.builtin.debug:
     msg: |
       Multi-filesystem comparison completed!
       Comparison report: {{ ai_multifs_results_dir }}/comparison/multi_filesystem_comparison.html

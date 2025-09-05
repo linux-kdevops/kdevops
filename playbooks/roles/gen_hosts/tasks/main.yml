@@ -11,7 +11,7 @@
   tags: vars
 
 - name: Parse declared hosts list when using declared hosts
-  set_fact:
+  ansible.builtin.set_fact:
     kdevops_declared_hosts: >-
       {%- if kdevops_declared_hosts is string -%}
         {{ (kdevops_declared_hosts | default('')) | regex_replace(',', ' ') | split() }}
@@ -174,7 +174,7 @@
     - not kdevops_use_declared_hosts
 
 - name: Load AI nodes configuration for multi-filesystem setup
-  include_vars:
+  ansible.builtin.include_vars:
     file: "{{ topdir_path }}/{{ kdevops_nodes }}"
     name: guestfs_nodes
   when:
@@ -184,7 +184,7 @@
     - ansible_hosts_template.stat.exists
 
 - name: Extract AI node names for multi-filesystem setup
-  set_fact:
+  ansible.builtin.set_fact:
     all_generic_nodes: "{{ guestfs_nodes.guestfs_nodes | map(attribute='name') | list }}"
   when:
     - kdevops_workflows_dedicated_workflow
