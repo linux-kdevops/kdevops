@@ -24,7 +24,7 @@
 - name: Add additional packages needed for krb5 to the nfsd packages list
   ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + ['gssproxy', 'libverto-libev1'] }}"
-  when: kdevops_krb5_enable|bool
+  when: kdevops_krb5_enable | bool
 
 - name: Install nfsd dependencies
   become: true

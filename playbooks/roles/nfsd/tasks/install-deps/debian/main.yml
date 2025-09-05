@@ -24,7 +24,7 @@
 - name: Add gssproxy to the nfsd packages list
   ansible.builtin.set_fact:
     nfsd_packages: "{{ nfsd_packages + ['gssproxy'] }}"
-  when: kdevops_krb5_enable|bool
+  when: kdevops_krb5_enable | bool
 
 - name: Install nfsd dependencies
   become: true

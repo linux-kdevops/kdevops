@@ -2,4 +2,4 @@
 - hosts: localhost
   roles:
     - role: mmtests_compare
-      when: kdevops_baseline_and_dev|bool
+      when: kdevops_baseline_and_dev | bool

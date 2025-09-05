@@ -25,7 +25,7 @@
     path: "{{ fstests_xfs_xfsprogs_data }}"
   register: xfsprogs_dir
   tags: ["oscheck", "git", "fstests"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Set up an iSCSI initiator on target nodes
   ansible.builtin.include_role:
@@ -80,21 +80,21 @@
   register: result
   until: not result.failed
   tags: ["oscheck", "git", "fstests"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Configure xfsprogs
   community.general.make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
     target: configure
   tags: ["oscheck", "fstests", "build"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Build xfsprogs
   community.general.make:
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
     jobs: "{{ nproc.stdout }}"
   tags: ["oscheck", "fstests", "build"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Install xfsprogs
   become: true
@@ -106,7 +106,7 @@
       DIST_ROOT: "{{ fstests_xfs_xfsprogs_install_path }}"
     chdir: "{{ fstests_xfs_xfsprogs_data }}"
   tags: ["oscheck", "fstests", "build"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Check if there's an existing xfsdump directory
   become: true
@@ -179,7 +179,7 @@
     line: "export PATH={{ fstests_xfs_xfsprogs_install_path }}/usr/sbin/:$PATH"
     state: present
   tags: ["oscheck", "fstests", "build"]
-  when: "fstests_xfs_build_custom_xfsprogs|bool"
+  when: "fstests_xfs_build_custom_xfsprogs | bool"
 
 - name: Create {{ truncated_path }} if needed
   ansible.builtin.include_role:

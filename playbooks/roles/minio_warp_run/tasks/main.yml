@@ -160,7 +160,7 @@
       --duration="{{ minio_warp_duration }}" \
       --concurrent="{{ minio_warp_concurrent_requests }}" \
       --obj.size="{{ minio_warp_object_size }}" \
-      {% if minio_warp_enable_web_ui|default(false) %}--warp-client="{{ ansible_default_ipv4.address }}:{{ minio_warp_web_ui_port|default(7762) }}"{% endif %} \
+      {% if minio_warp_enable_web_ui|default(false) %}--warp-client="{{ ansible_default_ipv4.address }}:{{ minio_warp_web_ui_port | default(7762) }}"{% endif %} \
       --noclear \
       --json > "$OUTPUT_FILE" 2>&1
     RESULT=$?

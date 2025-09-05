@@ -113,7 +113,7 @@
   ansible.builtin.command: /usr/sbin/blockdev --getsize64 {{ ssd_steady_state_device }}
   register: device_capacity_raw
   changed_when: false
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Set block device properties as facts
@@ -151,7 +151,7 @@
         {{ device_physical_block_size | trim | int }}
       {% endif %}
     effective_jobs: "{{ ssd_steady_state_numjobs | default(ansible_processor_vcpus, true) | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Fix syntax for effective_blocksize
@@ -190,7 +190,7 @@
   ansible.builtin.set_fact:
     aligned_pbs_blocks: "{{ (effective_max_size | int) // (effective_physical_bs | int) }}"
     aligned_bs_per_block: "{{ (effective_blocksize | int) // (effective_physical_bs | int) }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Calculate aligned blocks and job distribution
@@ -198,7 +198,7 @@
   become_method: sudo
   ansible.builtin.set_fact:
     aligned_blocks: "{{ aligned_pbs_blocks | int // aligned_bs_per_block | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Calculate job alignment
@@ -206,7 +206,7 @@
   become_method: sudo
   ansible.builtin.set_fact:
     blocks_per_job_remainder: "{{ aligned_blocks | int % effective_jobs | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Set aligned job distribution
@@ -215,7 +215,7 @@
   ansible.builtin.set_fact:
     aligned_jobs: "{{ effective_jobs if blocks_per_job_remainder == 0 else (effective_jobs | int - 1) }}"
     unaligned_jobs: "{{ 0 if blocks_per_job_remainder == 0 else 1 }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Set aligned blocks per job
@@ -223,7 +223,7 @@
   become_method: sudo
   ansible.builtin.set_fact:
     aligned_blocks_per_job: "{{ aligned_blocks | int // aligned_jobs | int if blocks_per_job_remainder != 0 else aligned_blocks | int // effective_jobs | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Calculate byte distribution for jobs
@@ -232,7 +232,7 @@
   ansible.builtin.set_fact:
     aligned_block_bytes: "{{ aligned_blocks_per_job | int * effective_blocksize | int }}"
     total_aligned_block_bytes: "{{ aligned_blocks_per_job | int * effective_blocksize | int * aligned_jobs | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Calculate remainder bytes for unaligned job
@@ -240,7 +240,7 @@
   become_method: sudo
   ansible.builtin.set_fact:
     remainder_block_bytes: "{{ effective_max_size | int - total_aligned_block_bytes | int }}"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["prefill"]
 
 - name: Validate job byte alignment to blocksize
@@ -324,7 +324,7 @@
     --warnings-fatal
     --output-format=json+
     --output={{ steady_state_data }}/ss_iops.json
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["steady_state"]
 
 - name: Run fio steady state for bw
@@ -336,7 +336,7 @@
     --warnings-fatal
     --output-format=json+
     --output={{ steady_state_data }}/ss_bw.json
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["steady_state"]
 
 - name: Create local results directory
@@ -357,5 +357,5 @@
     recursive: true
     rsync_opts:
       - "--ignore-existing"
-  when: kdevops_run_ssd_steady_state|bool
+  when: kdevops_run_ssd_steady_state | bool
   tags: ["results"]

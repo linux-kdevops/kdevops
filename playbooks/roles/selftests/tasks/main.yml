@@ -448,7 +448,7 @@
   become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.copy:
-    content: "{{ selftests_out.stdout_lines|join('\n') }}"
+    content: "{{ selftests_out.stdout_lines | join('\n') }}"
     dest: "{{ selftests_workdir }}/tap.log"
   when:
     - kdevops_run_selftests|bool
@@ -460,7 +460,7 @@
   become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.copy:
-    content: "{{ selftests_userspace_out.stdout_lines|join('\n') }}"
+    content: "{{ selftests_userspace_out.stdout_lines | join('\n') }}"
     dest: "{{ selftests_workdir }}/userspace.log"
   when:
     - selftest_userspace|bool
@@ -471,7 +471,7 @@
   become_flags: "su - -c"
   become_method: sudo
   ansible.builtin.copy:
-    content: "{{ selftests_module_out.stdout_lines|join('\n') }}"
+    content: "{{ selftests_module_out.stdout_lines | join('\n') }}"
     dest: "{{ selftests_workdir }}/module.log"
   when:
     - selftest_userspace|bool
