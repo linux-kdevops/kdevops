@@ -265,7 +265,7 @@
       if __name__ == "__main__":
           sys.exit(main())
     dest: "{{ ai_multifs_results_dir }}/generate_comparison.py"
-    mode: '0755'
+    mode: "0755"
 
 - name: Run multi-filesystem comparison analysis
   command: python3 {{ ai_multifs_results_dir }}/generate_comparison.py

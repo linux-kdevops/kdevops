@@ -222,14 +222,14 @@
     mode: "0755"
 
 - name: Generate the Ansible hosts file for a dedicated MinIO setup
-  tags: ['hosts']
+  tags: ["hosts"]
   ansible.builtin.template:
     src: "{{ kdevops_hosts_template }}"
     dest: "{{ ansible_cfg_inventory }}"
     force: true
-    trim_blocks: True
-    lstrip_blocks: True
-    mode: '0644'
+    trim_blocks: true
+    lstrip_blocks: true
+    mode: "0644"
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_minio|default(false)|bool

@@ -2,7 +2,7 @@
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -13,7 +13,7 @@
     state: absent
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Stop and remove MinIO container
   community.docker.docker_container:
@@ -21,7 +21,7 @@
     state: absent
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Stop and remove etcd container
   community.docker.docker_container:
@@ -29,7 +29,7 @@
     state: absent
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Remove Docker network
   community.docker.docker_network:
@@ -37,7 +37,7 @@
     state: absent
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Clean up Python packages (optional)
   ansible.builtin.pip:
@@ -49,7 +49,7 @@
     state: absent
   when: ai_benchmark_enable_graphing | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Display uninstall completion message
   ansible.builtin.debug:

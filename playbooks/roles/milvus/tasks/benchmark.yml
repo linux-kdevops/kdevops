@@ -8,7 +8,7 @@
     state: started
   register: milvus_running
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Set Milvus availability flag
   ansible.builtin.set_fact:
@@ -36,13 +36,13 @@
       ansible.builtin.file:
         path: "{{ ai_benchmark_results_dir }}/milvus"
         state: directory
-        mode: '0755'
+        mode: "0755"
 
     - name: Generate benchmark configuration
       ansible.builtin.template:
         src: benchmark_config.json.j2
         dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/benchmark_config.json"
-        mode: '0644'
+        mode: "0644"
 
     - name: Run Milvus benchmarks
       ansible.builtin.command: >

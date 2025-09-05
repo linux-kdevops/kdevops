@@ -6,7 +6,7 @@
   ansible.builtin.file:
     path: "{{ ai_benchmark_results_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Find all benchmark result files
   ansible.builtin.find:

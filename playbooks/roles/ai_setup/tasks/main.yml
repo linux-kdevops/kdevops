@@ -2,7 +2,7 @@
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -11,7 +11,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ ai_docker_data_path }}"
     - "{{ ai_docker_etcd_data_path }}"
@@ -62,7 +62,7 @@
     minio_data_path: "{{ ai_docker_minio_data_path }}"
     minio_memory_limit: "{{ ai_minio_memory_limit }}"
     minio_docker_network: "{{ ai_docker_network_name }}"
-    minio_create_network: false  # Network already created above
+    minio_create_network: false # Network already created above
   when: ai_milvus_docker | bool
 
 - name: Wait for etcd to be ready

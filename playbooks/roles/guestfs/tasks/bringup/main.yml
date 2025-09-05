@@ -9,7 +9,8 @@
 
 - name: Debug defined VMs
   debug:
-    msg: "Hostname: {{ inventory_hostname }}, Defined VMs: {{ hostvars['localhost']['defined_vms']['list_vms'] | default([]) }}, Check: {{ inventory_hostname not in (hostvars['localhost']['defined_vms']['list_vms'] | default([])) }}"
+    msg: "Hostname: {{ inventory_hostname }}, Defined VMs: {{ hostvars['localhost']['defined_vms']['list_vms'] | default([]) }}, Check: {{ inventory_hostname not
+      in (hostvars['localhost']['defined_vms']['list_vms'] | default([])) }}"
 
 - name: Provision each target node
   when:

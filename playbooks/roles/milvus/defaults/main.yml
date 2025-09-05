@@ -23,7 +23,7 @@ ai_vector_db_milvus_memory_limit: "8Gi"
 ai_vector_db_milvus_cpu_limit: "4"
 
 # Storage backend
-ai_vector_db_milvus_storage_type: "local"  # local, s3, minio
+ai_vector_db_milvus_storage_type: "local" # local, s3, minio
 ai_vector_db_milvus_storage_path: "{{ ai_vector_db_milvus_data_dir }}/storage"
 
 # Index configuration

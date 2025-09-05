@@ -2,7 +2,7 @@
 - name: Include role create_data_partition
   include_role:
     name: create_data_partition
-  tags: ['setup', 'data_partition']
+  tags: ["setup", "data_partition"]
 
 - name: Include role common
   include_role:
@@ -11,7 +11,7 @@
     - infer_uid_and_group|bool
 
 - name: Ensure data_dir has correct ownership
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   # become_method: sudo  # sudo is the default, not needed
   ansible.builtin.file:
@@ -20,10 +20,10 @@
     group: "{{ data_group }}"
     recurse: false
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Ensure Milvus-specific subdirectories have correct ownership
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   # become_method: sudo  # sudo is the default, not needed
   ansible.builtin.file:
@@ -32,7 +32,7 @@
     group: "{{ data_group }}"
     recurse: true
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ data_path }}/milvus"
     - "{{ ai_vector_db_milvus_docker_data_path | default(data_path + '/milvus/data') }}"
@@ -40,7 +40,7 @@
     - "{{ ai_vector_db_milvus_docker_minio_data_path | default(data_path + '/milvus/minio') }}"
     - "{{ data_path }}/ai-benchmark"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Include Docker installation tasks
   ansible.builtin.include_tasks: install_docker.yml

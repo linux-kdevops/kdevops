@@ -5,7 +5,7 @@
 - name: AI Workflow - Vector Database Setup
   ansible.builtin.import_playbook: ai_install.yml
   when: ai_workflow_vector_db | default(true) | bool
-  tags: ['ai', 'setup']
+  tags: ["ai", "setup"]
 
 # Benchmarks are run separately via make ai-tests targets
 # They should not run during the setup phase (make ai)

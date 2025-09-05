@@ -72,7 +72,7 @@
   ansible.builtin.file:
     path: "{{ ai_vector_db_milvus_data_dir }}/scripts"
     state: directory
-    mode: '0755'
+    mode: "0755"
   register: scripts_dir_result
 
 - name: Check if benchmark scripts exist
@@ -87,7 +87,7 @@
   ansible.builtin.copy:
     src: "{{ item.item }}"
     dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/"
-    mode: '0755'
+    mode: "0755"
   loop: "{{ benchmark_scripts_check.results }}"
   when: not item.stat.exists or scripts_dir_result is changed
 
@@ -95,7 +95,7 @@
   ansible.builtin.template:
     src: test_connection.py.j2
     dest: "{{ ai_vector_db_milvus_data_dir }}/scripts/test_connection.py"
-    mode: '0755'
+    mode: "0755"
 
 - name: Test Milvus connection
   ansible.builtin.command: "{{ data_path }}/ai-benchmark/venv/bin/python {{ ai_vector_db_milvus_data_dir }}/scripts/test_connection.py"

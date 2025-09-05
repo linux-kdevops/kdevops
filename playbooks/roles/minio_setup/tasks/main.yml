@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -15,7 +15,8 @@
       set_fact:
         minio_mkfs_opts: >-
           {%- if minio_fstype == "xfs" -%}
-            -L miniostorage -f -b size={{ minio_xfs_blocksize | default(4096) }} -s size={{ minio_xfs_sectorsize | default(4096) }} {{ minio_xfs_mkfs_opts | default('') }}
+            -L miniostorage -f -b size={{ minio_xfs_blocksize | default(4096) }} -s size={{ minio_xfs_sectorsize | default(4096) }} {{ minio_xfs_mkfs_opts | default('')
+          }}
           {%- elif minio_fstype == "btrfs" -%}
             -L miniostorage {{ minio_btrfs_mkfs_opts | default('-f') }}
           {%- elif minio_fstype == "ext4" -%}
@@ -42,7 +43,7 @@
   file:
     path: "{{ minio_data_path | default('/data/minio') }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   when:
     - not (minio_storage_enable | default(false) | bool)
   become: true

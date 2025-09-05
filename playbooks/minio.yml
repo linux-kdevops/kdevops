@@ -5,7 +5,7 @@
   hosts: minio
   become: true
   become_user: root
-  tags: ['minio_install']
+  tags: ["minio_install"]
   roles:
     - role: minio_install
     - role: minio_setup
@@ -24,7 +24,7 @@
   hosts: minio
   become: true
   become_user: root
-  tags: ['minio_warp']
+  tags: ["minio_warp"]
   roles:
     - role: minio_warp_run
 
@@ -32,7 +32,7 @@
   hosts: minio
   become: true
   become_user: root
-  tags: ['minio_uninstall']
+  tags: ["minio_uninstall"]
   roles:
     - role: minio_uninstall
 
@@ -40,7 +40,7 @@
   hosts: minio
   become: true
   become_user: root
-  tags: ['minio_destroy']
+  tags: ["minio_destroy"]
   roles:
     - role: minio_destroy
 
@@ -48,6 +48,6 @@
   hosts: minio
   become: true
   become_user: root
-  tags: ['minio_results']
+  tags: ["minio_results"]
   roles:
     - role: minio_results

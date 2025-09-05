@@ -3,4 +3,4 @@
   hosts: ai
   roles:
     - ai_uninstall
-  tags: ['ai', 'ai_uninstall']
+  tags: ["ai", "ai_uninstall"]

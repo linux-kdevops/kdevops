@@ -2,7 +2,7 @@
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -18,7 +18,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ local_results_dir }}"
     - "{{ local_scripts_dir }}"
@@ -29,15 +29,15 @@
   ansible.builtin.file:
     path: "{{ ai_benchmark_results_dir }}/analysis"
     state: directory
-    mode: '0755'
+    mode: "0755"
   become: true
 
 - name: Copy analysis scripts to scripts directory
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: "{{ local_scripts_dir }}/{{ item }}"
-    mode: '0755'
-    force: yes
+    mode: "0755"
+    force: true
   loop:
     - analyze_results.py
     - generate_graphs.py
@@ -50,7 +50,7 @@
   ansible.builtin.template:
     src: analysis_config.json.j2
     dest: "{{ local_scripts_dir }}/analysis_config.json"
-    mode: '0644'
+    mode: "0644"
   run_once: true
   delegate_to: localhost
   when: ai_benchmark_enable_graphing | bool
@@ -82,7 +82,7 @@
   ansible.builtin.file:
     path: "{{ local_results_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: true
   delegate_to: localhost
   become: false
@@ -95,7 +95,7 @@
     src: "{{ item.path }}"
     dest: "{{ local_results_dir }}/{{ item.path | basename }}"
     flat: true
-    mode: '0644'
+    mode: "0644"
   loop: "{{ remote_results.files | default([]) }}"
   when:
     - results_dir_check.stat.exists
@@ -123,12 +123,12 @@
     path: "{{ local_results_dir }}"
     owner: "{{ lookup('env', 'USER') }}"
     group: "{{ lookup('env', 'USER') }}"
-    mode: '0755'
+    mode: "0755"
     recurse: true
   run_once: true
   delegate_to: localhost
   become: true
-  tags: ['results', 'analysis']
+  tags: ["results", "analysis"]
 
 - name: Run results analysis
   ansible.builtin.command: >
@@ -140,7 +140,7 @@
   run_once: true
   delegate_to: localhost
   when: collected_results.files is defined and collected_results.files | length > 0
-  tags: ['results', 'analysis']
+  tags: ["results", "analysis"]
   failed_when: analysis_result.rc != 0
 
 - name: Display analysis script output
@@ -149,20 +149,20 @@
   run_once: true
   delegate_to: localhost
   when: collected_results.files is defined and collected_results.files | length > 0
-  tags: ['results', 'analysis']
+  tags: ["results", "analysis"]
 
 
 - name: Create graphs directory
   ansible.builtin.file:
     path: "{{ local_results_dir }}/graphs"
     state: directory
-    mode: '0755'
+    mode: "0755"
   run_once: true
   delegate_to: localhost
   when:
     - collected_results.files is defined
     - collected_results.files | length > 0
-  tags: ['results', 'graphs']
+  tags: ["results", "graphs"]
 
 # Graph generation is now handled by analyze_results.py above
 # No separate graph generation step needed

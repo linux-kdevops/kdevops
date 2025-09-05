@@ -5,4 +5,4 @@
     ai_vector_db_milvus_benchmark_enable: true
   roles:
     - role: milvus
-      tags: ['ai', 'vector_db', 'milvus', 'benchmark']
+      tags: ["ai", "vector_db", "milvus", "benchmark"]
