@@ -76,13 +76,12 @@
   ansible.builtin.set_fact:
     # Parse duration and add 10 minutes buffer
     benchmark_timeout: >-
-      {%- set duration_str = minio_warp_duration | string -%}
-      {%- if 's' in duration_str -%}
-        {{ (duration_str | replace('s','') | int) + 600 }}
+      {%- set duration_str = minio_warp_duration | string -%} {%- if 's' in duration_str -%}
+        {{ (duration_str | replace('s', '') | int) + 600 }}
       {%- elif 'm' in duration_str -%}
-        {{ (duration_str | replace('m','') | int * 60) + 600 }}
+        {{ (duration_str | replace('m', '') | int * 60) + 600 }}
       {%- elif 'h' in duration_str -%}
-        {{ (duration_str | replace('h','') | int * 3600) + 600 }}
+        {{ (duration_str | replace('h', '') | int * 3600) + 600 }}
       {%- else -%}
         {{ 2400 }}
       {%- endif -%}
