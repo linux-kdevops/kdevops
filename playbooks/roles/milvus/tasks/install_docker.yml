@@ -66,7 +66,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
     owner: "{{ data_user | default(ansible_user_id) }}"
   become: true
   loop:
@@ -93,5 +93,5 @@
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ ai_vector_db_milvus_config_dir }}/docker-compose.yml"
-    mode: '0644'
+    mode: "0644"
   become: true

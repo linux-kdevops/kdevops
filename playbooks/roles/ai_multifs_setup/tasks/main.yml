@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -10,19 +10,19 @@
   file:
     path: "{{ ai_multifs_results_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Create mount point directory
   file:
     path: "{{ ai_multifs_mount_point }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Unmount any existing filesystem on mount point
   mount:
     path: "{{ ai_multifs_mount_point }}"
     state: unmounted
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Install required filesystem utilities
   package:
@@ -67,4 +67,4 @@
           Mount options: {{ config.mount_opts }}
       {% endfor %}
     dest: "{{ ai_multifs_results_dir }}/test_configuration.txt"
-    mode: '0644'
+    mode: "0644"

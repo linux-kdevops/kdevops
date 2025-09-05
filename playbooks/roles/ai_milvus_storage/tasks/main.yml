@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -16,7 +16,7 @@
           - e2fsprogs
           - btrfs-progs
         state: present
-      become: yes
+      become: true
       become_method: sudo
 
     - name: Check if device exists
@@ -38,8 +38,8 @@
           file:
             path: "{{ ai_milvus_mount_point }}"
             state: directory
-            mode: '0755'
-          become: yes
+            mode: "0755"
+          become: true
           become_method: sudo
 
         - name: Detect filesystem type from node name
@@ -106,19 +106,19 @@
             {{ ai_milvus_xfs_mkfs_opts | default('') }}
             {{ ai_milvus_device }}
           when: milvus_fstype == "xfs"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Format device with Btrfs
           command: mkfs.btrfs {{ ai_milvus_btrfs_mkfs_opts | default('-f') }} {{ ai_milvus_device }}
           when: milvus_fstype == "btrfs"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Format device with ext4
           command: mkfs.ext4 {{ milvus_ext4_opts | default(ai_milvus_ext4_mkfs_opts | default('-F')) }} {{ ai_milvus_device }}
           when: milvus_fstype == "ext4"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Mount Milvus storage filesystem
@@ -128,7 +128,7 @@
             fstype: "{{ milvus_fstype }}"
             opts: defaults,noatime
             state: mounted
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Add Milvus storage mount to fstab
@@ -138,17 +138,17 @@
             fstype: "{{ milvus_fstype }}"
             opts: defaults,noatime
             state: present
-          become: yes
+          become: true
           become_method: sudo
 
     - name: Ensure Milvus directories exist with proper permissions
       file:
         path: "{{ item }}"
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: root
         group: root
-      become: yes
+      become: true
       become_method: sudo
       loop:
         - "{{ ai_milvus_mount_point }}"

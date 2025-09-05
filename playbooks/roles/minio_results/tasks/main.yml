@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -64,7 +64,7 @@
       if __name__ == "__main__":
           analyze_warp_results()
     dest: "/tmp/analyze_minio_results.py"
-    mode: '0755'
+    mode: "0755"
   delegate_to: localhost
   run_once: true
 

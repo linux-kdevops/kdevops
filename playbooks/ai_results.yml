@@ -3,4 +3,4 @@
   hosts: ai
   roles:
     - ai_collect_results
-  tags: ['ai', 'ai_results']
+  tags: ["ai", "ai_results"]

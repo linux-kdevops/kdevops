@@ -2,7 +2,7 @@
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -34,7 +34,7 @@
   ansible.builtin.file:
     path: "{{ ai_benchmark_results_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Check for benchmark lock file
   ansible.builtin.stat:
@@ -71,20 +71,20 @@
       ansible.builtin.file:
         path: "{{ ai_benchmark_results_dir }}/.benchmark.lock"
         state: touch
-        mode: '0644'
+        mode: "0644"
       register: lock_created
 
     - name: Create benchmark working directory
       ansible.builtin.file:
         path: "{{ ai_benchmark_results_dir }}/workdir"
         state: directory
-        mode: '0755'
+        mode: "0755"
 
     - name: Copy benchmark script
       ansible.builtin.copy:
         src: milvus_benchmark.py
         dest: "{{ ai_benchmark_results_dir }}/workdir/milvus_benchmark.py"
-        mode: '0755'
+        mode: "0755"
 
     - name: Ensure Python venv package is installed
       ansible.builtin.package:
@@ -143,7 +143,7 @@
       ansible.builtin.template:
         src: benchmark_config.json.j2
         dest: "{{ ai_benchmark_results_dir }}/workdir/benchmark_config.json"
-        mode: '0644'
+        mode: "0644"
 
     - name: Wait for Milvus to be ready
       ansible.builtin.wait_for:

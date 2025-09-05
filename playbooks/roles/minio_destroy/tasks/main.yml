@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -10,13 +10,13 @@
   community.docker.docker_container:
     name: "{{ minio_container_name }}"
     state: absent
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Remove Docker network
   community.docker.docker_network:
     name: "{{ minio_docker_network_name }}"
     state: absent
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Clean up MinIO data directory
   file:

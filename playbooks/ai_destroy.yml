@@ -9,7 +9,7 @@
         state: absent
       when: ai_vector_db_milvus_docker | bool
       # TODO: Review - was ignore_errors: true
-      failed_when: false  # Always succeed - review this condition
+      failed_when: false # Always succeed - review this condition
 
     - name: Remove Milvus data directories
       ansible.builtin.file:
@@ -21,4 +21,4 @@
         - "{{ ai_vector_db_milvus_log_dir }}"
       when: ai_vector_db_force_destroy | default(false) | bool
 
-  tags: ['ai', 'vector_db', 'milvus', 'destroy']
+  tags: ["ai", "vector_db", "milvus", "destroy"]

@@ -9,7 +9,7 @@
   roles:
     - role: milvus
       when: ai_vector_db_milvus | default(false) | bool
-      tags: ['ai', 'milvus', 'setup']
+      tags: ["ai", "milvus", "setup"]
 
 - name: AI Tests - Vector Database Benchmarks
   hosts: ai
@@ -20,7 +20,7 @@
   roles:
     - role: ai_run_benchmarks
       when: ai_vector_db_milvus | default(false) | bool
-      tags: ['ai', 'benchmark']
+      tags: ["ai", "benchmark"]
 
 - name: AI Tests - Results Collection
   hosts: ai
@@ -28,4 +28,4 @@
   roles:
     - role: ai_collect_results
       when: ai_collect_results | default(true) | bool
-      tags: ['ai', 'results']
+      tags: ["ai", "results"]

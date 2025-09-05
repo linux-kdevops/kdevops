@@ -2,7 +2,7 @@
 - name: Include role create_data_partition
   include_role:
     name: create_data_partition
-  tags: ['setup', 'data_partition']
+  tags: ["setup", "data_partition"]
 
 - name: Include role common
   include_role:
@@ -11,7 +11,7 @@
     - infer_uid_and_group|bool
 
 - name: Ensure data_dir has correct ownership
-  tags: ['setup']
+  tags: ["setup"]
   become: true
   # become_method: sudo  # sudo is the default, not needed
   ansible.builtin.file:
@@ -20,12 +20,12 @@
     group: "{{ data_group }}"
     recurse: true
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -86,5 +86,5 @@
   ansible.builtin.file:
     path: "{{ ai_benchmark_results_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   become: true

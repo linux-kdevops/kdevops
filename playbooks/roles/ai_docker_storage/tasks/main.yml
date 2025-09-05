@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -17,7 +17,7 @@
           - btrfs-progs
           - rsync
         state: present
-      become: yes
+      become: true
       become_method: sudo
 
     - name: Check if device exists
@@ -39,8 +39,8 @@
           file:
             path: "{{ ai_docker_mount_point }}"
             state: directory
-            mode: '0755'
-          become: yes
+            mode: "0755"
+          become: true
           become_method: sudo
 
         - name: Format device with XFS
@@ -51,19 +51,19 @@
             {{ ai_docker_xfs_mkfs_opts | default('') }}
             {{ ai_docker_device }}
           when: ai_docker_fstype == "xfs"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Format device with Btrfs
           command: mkfs.btrfs {{ ai_docker_btrfs_mkfs_opts }} {{ ai_docker_device }}
           when: ai_docker_fstype == "btrfs"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Format device with ext4
           command: mkfs.ext4 {{ ai_docker_ext4_mkfs_opts }} {{ ai_docker_device }}
           when: ai_docker_fstype == "ext4"
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Mount Docker storage filesystem
@@ -73,7 +73,7 @@
             fstype: "{{ ai_docker_fstype }}"
             opts: defaults,noatime
             state: mounted
-          become: yes
+          become: true
           become_method: sudo
 
         - name: Add Docker storage mount to fstab
@@ -83,7 +83,7 @@
             fstype: "{{ ai_docker_fstype }}"
             opts: defaults,noatime
             state: present
-          become: yes
+          become: true
           become_method: sudo
 
     - name: Check if Docker service exists
@@ -97,10 +97,10 @@
       systemd:
         name: docker
         state: stopped
-      become: yes
+      become: true
       become_method: sudo
       when: docker_service_status.status is defined and docker_service_status.status.ActiveState == 'active'
-      ignore_errors: yes
+      ignore_errors: true
 
     # Note: When ai_docker_storage_enable is true, we mount directly to /var/lib/docker
     # No need to move data or create symlinks as the storage is already in the right place
@@ -109,10 +109,10 @@
       file:
         path: "{{ ai_docker_mount_point }}"
         state: directory
-        mode: '0711'
+        mode: "0711"
         owner: root
         group: root
-      become: yes
+      become: true
       become_method: sudo
       when: ai_docker_mount_point == '/var/lib/docker'
 

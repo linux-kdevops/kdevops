@@ -133,7 +133,6 @@
   when:
     - not sentinel_stat.stat.exists
   block:
-
     - name: Get the UID of the kdevops user on the control host
       ansible.builtin.command:
         cmd: "id -u kdevops"

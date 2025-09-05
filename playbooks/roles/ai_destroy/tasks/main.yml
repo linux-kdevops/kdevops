@@ -2,7 +2,7 @@
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -17,7 +17,7 @@
     - "{{ ai_etcd_container_name }}"
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Remove Docker network
   community.docker.docker_network:
@@ -25,7 +25,7 @@
     state: absent
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Remove Docker storage directories
   ansible.builtin.file:
@@ -54,7 +54,7 @@
     - "{{ ai_minio_container_image_string }}"
   when: ai_milvus_docker | bool
   # TODO: Review - was ignore_errors: true
-  failed_when: false  # Always succeed - review this condition
+  failed_when: false # Always succeed - review this condition
 
 - name: Display destroy completion message
   ansible.builtin.debug:

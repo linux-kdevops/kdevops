@@ -3,4 +3,4 @@
   hosts: ai
   roles:
     - ai_setup
-  tags: ['ai', 'ai_setup']
+  tags: ["ai", "ai_setup"]

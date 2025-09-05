@@ -1,7 +1,7 @@
 ---
 - name: Import optional extra_args file
   include_vars: "{{ item }}"
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
@@ -10,7 +10,7 @@
   file:
     path: "/tmp/warp-results"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Ensure local results directory exists with proper permissions
   block:
@@ -18,22 +18,21 @@
       file:
         path: "{{ playbook_dir }}/../workflows/minio/results"
         state: directory
-        mode: '0755'
+        mode: "0755"
       delegate_to: localhost
       run_once: true
-      become: no
+      become: false
   rescue:
     - name: Fix results directory permissions if needed
       file:
         path: "{{ playbook_dir }}/../workflows/minio/results"
         state: directory
-        mode: '0755'
+        mode: "0755"
         owner: "{{ lookup('env', 'USER') }}"
         group: "{{ lookup('env', 'USER') }}"
       delegate_to: localhost
       run_once: true
-      become: yes
-
+      become: true
 
 - name: Wait for MinIO to be fully ready
   wait_for:
@@ -58,7 +57,7 @@
   template:
     src: warp_config.json.j2
     dest: "/tmp/warp_config.json"
-    mode: '0644'
+    mode: "0644"
 
 - name: Set MinIO endpoint URL
   set_fact:
@@ -92,7 +91,7 @@
   copy:
     src: "{{ playbook_dir }}/../workflows/minio/scripts/run_benchmark_suite.sh"
     dest: "/tmp/run_benchmark_suite.sh"
-    mode: '0755'
+    mode: "0755"
   when: minio_warp_run_comprehensive_suite | default(false)
 
 - name: Display benchmark configuration
@@ -120,7 +119,7 @@
     executable: /bin/bash
   register: suite_output
   when: minio_warp_run_comprehensive_suite | default(false)
-  async: "{{ benchmark_timeout | default(3600) | int }}"  # Use calculated timeout or 1 hour default
+  async: "{{ benchmark_timeout | default(3600) | int }}" # Use calculated timeout or 1 hour default
   poll: 30
 
 - name: Display comprehensive suite output
@@ -209,17 +208,17 @@
   fetch:
     src: "/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
-    flat: yes
-  become: no
+    flat: true
+  become: false
   when: results_file is defined and not results_file.skipped | default(false) and results_file.stat.exists | default(false)
 
 - name: Generate graphs and HTML report
   command: "python3 {{ playbook_dir }}/../workflows/minio/scripts/generate_warp_report.py {{ playbook_dir }}/../workflows/minio/results/"
   delegate_to: localhost
   run_once: true
-  become: no
+  become: false
   when: results_file is defined and not results_file.skipped | default(false) and results_file.stat.exists | default(false)
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Save benchmark output as fallback
   copy:
@@ -245,5 +244,5 @@
   fetch:
     src: "/tmp/warp-results/warp_fallback_{{ ansible_hostname }}_{{ warp_timestamp | default(ansible_date_time.epoch) }}.txt"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
-    flat: yes
+    flat: true
   when: warp_debug is defined and not (results_file is defined and not results_file.skipped | default(false) and results_file.stat.exists | default(false))

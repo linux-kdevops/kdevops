@@ -10,7 +10,7 @@
       ansible.builtin.command: which nix
       register: nix_check
       # TODO: Review - was ignore_errors: true
-      failed_when: false  # Always succeed - review this condition
+      failed_when: false # Always succeed - review this condition
       changed_when: false
 
     - name: Install nix package manager
@@ -21,7 +21,7 @@
           ansible.builtin.get_url:
             url: https://nixos.org/nix/install
             dest: /tmp/install-nix.sh
-            mode: '0755'
+            mode: "0755"
 
         - name: Install nix
           ansible.builtin.shell: |
@@ -61,7 +61,7 @@
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
-        mode: '0755'
+        mode: "0755"
       loop:
         - "{{ nixos_config_dir }}"
         - "{{ nixos_generation_dir }}"
@@ -114,19 +114,19 @@
       ansible.builtin.template:
         src: nixos/configuration.nix.j2
         dest: "{{ nixos_generation_dir }}/configuration.nix"
-        mode: '0644'
+        mode: "0644"
 
     - name: Template hardware configuration
       ansible.builtin.template:
         src: nixos/hardware-configuration.nix.j2
         dest: "{{ nixos_generation_dir }}/hardware-configuration.nix"
-        mode: '0644'
+        mode: "0644"
 
     - name: Generate workflow dependencies configuration
       ansible.builtin.template:
         src: nixos/workflow-deps.nix.j2
         dest: "{{ nixos_generation_dir }}/workflow-deps.nix"
-        mode: '0644'
+        mode: "0644"
       when: nixos_enable_workflow_deps | bool
 
     - name: Debug SSH key path
@@ -137,13 +137,13 @@
       ansible.builtin.template:
         src: nixos/vms.nix.j2
         dest: "{{ nixos_generation_dir }}/vms.nix"
-        mode: '0644'
+        mode: "0644"
 
     - name: Generate flake.nix if enabled
       ansible.builtin.template:
         src: nixos/flake.nix.j2
         dest: "{{ nixos_config_dir }}/flake.nix"
-        mode: '0644'
+        mode: "0644"
       when: nixos_use_flakes | bool
 
 # The setup phase is integrated into generate-configs to ensure SSH keys are available
@@ -303,7 +303,7 @@
       ansible.builtin.template:
         src: nixos/run-vm-wrapper.sh.j2
         dest: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
-        mode: '0755'
+        mode: "0755"
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
       loop_control:
         index_var: vm_idx
@@ -475,7 +475,7 @@
       ansible.builtin.command: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh stop"
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
       # TODO: Review - was ignore_errors: true
-      failed_when: false  # Always succeed - review this condition
+      failed_when: false # Always succeed - review this condition
 
     - name: Remove SSH config entries for NixOS VMs
       ansible.builtin.command: |
@@ -490,7 +490,7 @@
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
       when: nixos_update_ssh_config | default(true) | bool
       # TODO: Review - was ignore_errors: true
-      failed_when: false  # Always succeed - review this condition
+      failed_when: false # Always succeed - review this condition
 
     - name: Remove VM disk images
       ansible.builtin.file:

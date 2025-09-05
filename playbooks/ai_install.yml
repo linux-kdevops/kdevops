@@ -6,9 +6,9 @@
   roles:
     - role: ai_docker_storage
       when: ai_docker_storage_enable | default(true)
-      tags: ['ai', 'docker', 'storage']
+      tags: ["ai", "docker", "storage"]
     - role: ai_milvus_storage
       when: ai_milvus_storage_enable | default(false)
-      tags: ['ai', 'milvus', 'storage']
+      tags: ["ai", "milvus", "storage"]
     - role: milvus
-      tags: ['ai', 'vector_db', 'milvus', 'install']
+      tags: ["ai", "vector_db", "milvus", "install"]

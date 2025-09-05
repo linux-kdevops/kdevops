@@ -7,7 +7,7 @@
   mount:
     path: "{{ ai_multifs_mount_point }}"
     state: unmounted
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Create filesystem with specific configuration
   shell: "{{ fs_config.mkfs_cmd }} {{ ai_multifs_device }}"
@@ -30,7 +30,7 @@
   file:
     path: "{{ ai_multifs_results_dir }}/{{ fs_config.name }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Update AI benchmark configuration for current filesystem
   set_fact:
@@ -41,13 +41,13 @@
   file:
     path: "{{ current_fs_benchmark_dir }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Generate AI benchmark configuration for current filesystem
   template:
     src: milvus_config.json.j2
     dest: "{{ current_fs_results_dir }}/milvus_config.json"
-    mode: '0644'
+    mode: "0644"
 
 - name: Run AI benchmark on current filesystem
   shell: |
@@ -56,7 +56,7 @@
       --config {{ current_fs_results_dir }}/milvus_config.json \
       --output {{ current_fs_results_dir }}/results_{{ fs_config.name }}_$(date +%Y%m%d_%H%M%S).json
   register: benchmark_result
-  async: 7200  # 2 hour timeout
+  async: 7200 # 2 hour timeout
   poll: 30
 
 - name: Display benchmark completion
@@ -80,7 +80,7 @@
       {{ mkfs_result.stdout }}
       {{ mkfs_result.stderr }}
     dest: "{{ current_fs_results_dir }}/filesystem_config.txt"
-    mode: '0644'
+    mode: "0644"
 
 - name: Capture filesystem statistics after benchmark
   shell: |
@@ -96,7 +96,7 @@
     btrfs filesystem show {{ ai_multifs_mount_point }} >> {{ current_fs_results_dir }}/filesystem_stats.txt 2>&1 || true
     btrfs filesystem usage {{ ai_multifs_mount_point }} >> {{ current_fs_results_dir }}/filesystem_stats.txt 2>&1 || true
     {% endif %}
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Unmount filesystem after benchmark
   mount:
