@@ -33,6 +33,11 @@ variable "azure_managed_disks_tier" {
   type        = string
 }
 
+variable "azure_resource_group_name" {
+  description = "Name of the set of resources for this run"
+  type        = string
+}
+
 variable "azure_subscription_id" {
   description = "Your Azure subscription ID"
   type        = string

@@ -9,6 +9,7 @@ PHONY := kdevops_all
 
 kdevops_terraform_deps:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml
 PHONY += kdevops_terraform_deps
 

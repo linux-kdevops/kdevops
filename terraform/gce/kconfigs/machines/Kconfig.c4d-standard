@@ -1,0 +1,51 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_C4D_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	help
+	  C4D VMs are powered by the fifth generation AMD EPYC Turin
+	  processor and Titanium.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_2
+	bool "c4d-standard-2"
+	help
+	  2 vCPUs (1 core) and 7GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	bool "c4d-standard-4"
+	help
+	  4 vCPUs (2 core) and 15GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_8
+	bool "c4d-standard-8"
+	help
+	  8 vCPUs (4 cores) and 31GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_16
+	bool "c4d-standard-16"
+	help
+	  16 vCPUs (8 cores) and 62GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_24
+	bool "c4d-standard-24"
+	help
+	  32 vCPUs (16 cores) and 124GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c4d-standard-2" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_2
+	default "c4d-standard-4" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	default "c4d-standard-8" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_8
+	default "c4d-standard-16" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_16
+	default "c4d-standard-32" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C4D_STANDARD

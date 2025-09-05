@@ -9,8 +9,6 @@ resource "google_compute_instance" "kdevops_instance" {
   machine_type = var.gce_machine_type
   zone         = var.gce_zone
 
-  tags = ["kdevops"]
-
   boot_disk {
     initialize_params {
       image = data.google_compute_image.kdevops_image.self_link

@@ -118,6 +118,7 @@
     path: "{{ sshconfig }}"
     insertbefore: BOF
     append_newline: true
+    create: true
     marker: "# {mark} Managed by kdevops"
     mode: "u=rw,g=r,o=r"
     block: "Include {{ kdevops_ssh_config_prefix }}*"

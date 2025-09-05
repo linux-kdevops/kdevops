@@ -27,3 +27,8 @@ variable "vol_volume_size" {
   description = "Size of each volume, in gibibytes"
   type        = number
 }
+
+variable "vol_vpus_per_gb" {
+  description = "Volume performance units"
+  type        = number
+}

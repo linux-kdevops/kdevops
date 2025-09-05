@@ -85,14 +85,9 @@ def main():
     with open(f'{topdir}/{extra_vars["kdevops_nodes"]}') as stream:
         nodes = yaml.safe_load(stream)
 
-    if extra_vars.get("topdir_path_has_sha256sum", False):
-        ssh_config = (
-            f'{Path.home()}/.ssh/config_kdevops_{extra_vars["topdir_path_sha256sum"]}'
-        )
-    else:
-        ssh_config = (
-            f'{Path.home()}/.ssh/config_kdevops_{extra_vars["kdevops_host_prefix"]}'
-        )
+    ssh_config = (
+        f'{Path.home()}/.ssh/config_kdevops_{extra_vars["topdir_path_sha256sum"]}'
+    )
 
     # make a stanza for each node
     sshconf = open(ssh_config, "w")

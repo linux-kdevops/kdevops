@@ -1,12 +1,8 @@
 # Azure terraform provider main
 
 resource "azurerm_resource_group" "kdevops_group" {
-  name     = "kdevops_resource_group"
+  name     = var.azure_resource_group_name
   location = var.azure_location
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 locals {
@@ -18,10 +14,6 @@ resource "azurerm_virtual_network" "kdevops_network" {
   address_space       = [local.kdevops_private_net]
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 resource "azurerm_subnet" "kdevops_subnet" {
@@ -37,10 +29,6 @@ resource "azurerm_public_ip" "kdevops_publicip" {
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.kdevops_group.name
   allocation_method   = "Static"
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 resource "azurerm_network_security_group" "kdevops_sg" {
@@ -59,10 +47,6 @@ resource "azurerm_network_security_group" "kdevops_sg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-
-  tags = {
-    environment = "kdevops tests"
-  }
 }
 
 resource "azurerm_network_interface_security_group_association" "kdevops_sg_assoc" {
@@ -72,20 +56,17 @@ resource "azurerm_network_interface_security_group_association" "kdevops_sg_asso
 }
 
 resource "azurerm_network_interface" "kdevops_nic" {
-  count               = local.kdevops_num_boxes
-  name                = format("kdevops_nic_%02d", count.index + 1)
-  location            = var.azure_location
-  resource_group_name = azurerm_resource_group.kdevops_group.name
+  count                          = local.kdevops_num_boxes
+  accelerated_networking_enabled = true
+  name                           = format("kdevops_nic_%02d", count.index + 1)
+  location                       = var.azure_location
+  resource_group_name            = azurerm_resource_group.kdevops_group.name
 
   ip_configuration {
     name                          = "kdevops_nic_configuration"
     subnet_id                     = azurerm_subnet.kdevops_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = element(azurerm_public_ip.kdevops_publicip.*.id, count.index)
-  }
-
-  tags = {
-    environment = "kdevops tests"
   }
 }
 
@@ -131,10 +112,6 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   admin_ssh_key {
     username   = var.ssh_config_user
     public_key = var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
-  }
-
-  tags = {
-    environment = "kdevops tests"
   }
 }
 

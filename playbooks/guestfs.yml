@@ -1,5 +1,5 @@
 ---
-- name: Provision target nodes with libvirt/guestfs
+- name: Manage infrastructure lifecycle and SSH access with libvirt/guestfs
   gather_facts: true
   connection: local
   hosts: all

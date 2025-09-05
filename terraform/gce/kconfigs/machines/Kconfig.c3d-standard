@@ -1,0 +1,46 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_C3D_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	help
+	  C3D VMs are powered by the 4th-gen AMD EPYC (Genoa)
+	  processor. C3D uses Titanium, enabling higher levels
+	  of networking performance, isolation and security.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	bool "c3d-standard-4"
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_8
+	bool "c3d-standard-8"
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_16
+	bool "c3d-standard-16"
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_30
+	bool "c3d-standard-30"
+	help
+	  30 vCPUs (15 cores) and 120GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c3d-standard-4" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	default "c3d-standard-8" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_8
+	default "c3d-standard-16" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_16
+	default "c3d-standard-30" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_30
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C3D_STANDARD

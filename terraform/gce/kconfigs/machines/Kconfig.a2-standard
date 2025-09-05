@@ -1,0 +1,56 @@
+if TERRAFORM_GCE_MACHINE_FAMILY_A2_HIGHGPU
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	help
+	  A2 High GPU machine types have a fixed number of A100
+	  40GB GPUs.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	bool "a2-highgpu-1g"
+	help
+	  12 vCPUs, 85GB of memory, and 1 GPU with 40GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_2G
+	bool "a2-highgpu-2g"
+	help
+	  24 vCPUs, 170GB of memory, and 2 GPUs with 80GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_4G
+	bool "a2-highgpu-4g"
+	help
+	  48 vCPUs, 340GB of memory, and 4 GPUs with 160GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_8G
+	bool "a2-highgpu-8g"
+	help
+	  96 vCPUs, 680GB of memory, and 8 GPUs with 320GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_16G
+	bool "a2-highgpu-16g"
+	help
+	  96 vCPUs, 1360GB of memory, and 16 GPUs with 640GB of GPU
+	  memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "a2-highgpu-1g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	default "a2-highgpu-2g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_2G
+	default "a2-highgpu-4g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_4G
+	default "a2-highgpu-8g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_8G
+	default "a2-highgpu-16g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_16G
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_A2_HIGHGPU

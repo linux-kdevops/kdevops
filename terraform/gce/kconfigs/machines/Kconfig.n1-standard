@@ -4,12 +4,10 @@ choice
 	prompt "GCE Machine type"
 	default TERRAFORM_GCE_MACHINE_N1_STANDARD_8
 	help
-	  This option sets the GCE machine type. For other machine types,
-	  refer to this page:
-
-	  https://cloud.google.com/compute/docs/machine-types
-
-	  Documentation: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#machine_type
+	  The N1 machine series is Compute Engine's first generation
+	  general-purpose machine series available on Intel Skylake,
+	  Broadwell, Haswell, Sandy Bridge, and Ivy Bridge CPU
+	  platforms.
 
 config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
 	bool "n1-standard-1"
@@ -19,23 +17,30 @@ config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
 config TERRAFORM_GCE_MACHINE_N1_STANDARD_2
 	bool "n1-standard-2"
 	help
-	  2 vCPU (1 core) and 7.5GB of memory.
+	  2 vCPUs (1 core) and 7.5GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N1_STANDARD_4
 	bool "n1-standard-4"
 	help
-	  4 vCPU (2 cores) and 15GB of memory.
+	  4 vCPUs (2 cores) and 15GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N1_STANDARD_8
 	bool "n1-standard-8"
 	help
-	  8 vCPU (4 cores) and 30GB of memory.
+	  8 vCPUs (4 cores) and 30GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N1_STANDARD_16
 	bool "n1-standard-16"
 	depends on TARGET_ARCH_X86_64
 	help
-	  16 vCPU (8 cores) and 60GB of memory.
+	  16 vCPUs (8 cores) and 60GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_32
+	bool "n1-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 120GB of memory.
+
 endchoice
 
 config TERRAFORM_GCE_MACHINE_TYPE
@@ -46,6 +51,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 	default "n1-standard-4" if TERRAFORM_GCE_MACHINE_N1_STANDARD_4
 	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
 	default "n1-standard-16" if TERRAFORM_GCE_MACHINE_N1_STANDARD_16
+	default "n1-standard-32" if TERRAFORM_GCE_MACHINE_N1_STANDARD_32
 
 config TERRAFORM_GCE_IMAGE_TYPE
 	string

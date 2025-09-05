@@ -19,6 +19,7 @@ export KDEVOPS_NODES :=
 export PYTHONUNBUFFERED=1
 export TOPDIR=./
 export TOPDIR_PATH = $(shell readlink -f $(TOPDIR))
+export TOPDIR_PATH_SHA256SUM = $(shell ./scripts/compute_sha256sum.sh $(TOPDIR_PATH))
 
 # Export CLI override variables for Kconfig to detect them
 # Note: We accept DECLARE_HOSTS but export as DECLARED_HOSTS for consistency
@@ -32,11 +33,21 @@ KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/tem
 export KDEVOPS_NODES_TEMPLATE :=
 export KDEVOPS_MRPROPER :=
 
+ifeq (y,$(CONFIG_ANSIBLE_CFG_FILE_CUSTOM))
 ifneq ($(strip $(CONFIG_ANSIBLE_CFG_FILE)),)
 ANSIBLE_CFG_FILE := $(shell echo $(CONFIG_ANSIBLE_CFG_FILE) | tr --delete '"')
 export ANSIBLE_CONFIG := $(ANSIBLE_CFG_FILE)
 endif
+else
+ANSIBLE_CFG_FILE := $(TOPDIR_PATH)/ansible.cfg
+export ANSIBLE_CONFIG := $(ANSIBLE_CFG_FILE)
+endif
+
+ifeq (y,$(CONFIG_ANSIBLE_CFG_INVENTORY_CUSTOM))
 ANSIBLE_INVENTORY_FILE := $(shell echo $(CONFIG_ANSIBLE_CFG_INVENTORY) | tr --delete '"')
+else
+ANSIBLE_INVENTORY_FILE := $(TOPDIR_PATH)/hosts
+endif
 
 KDEVOPS_INSTALL_TARGETS :=
 
@@ -89,6 +100,13 @@ INCLUDES = -I include/
 CFLAGS += $(INCLUDES)
 
 ANSIBLE_EXTRA_ARGS += kdevops_version='$(PROJECTRELEASE)'
+ANSIBLE_EXTRA_ARGS += topdir_path_sha256sum='$(TOPDIR_PATH_SHA256SUM)'
+ifneq (y,$(CONFIG_ANSIBLE_CFG_FILE_CUSTOM))
+ANSIBLE_EXTRA_ARGS += ansible_cfg_file='$(ANSIBLE_CFG_FILE)'
+endif
+ifneq (y,$(CONFIG_ANSIBLE_CFG_INVENTORY_CUSTOM))
+ANSIBLE_EXTRA_ARGS += ansible_cfg_inventory='$(ANSIBLE_INVENTORY_FILE)'
+endif
 
 export KDEVOPS_HOSTS_TEMPLATE := hosts.j2
 

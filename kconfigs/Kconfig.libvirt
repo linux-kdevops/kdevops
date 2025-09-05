@@ -557,6 +557,51 @@ config LIBVIRT_HOST_PASSTHROUGH
 	    \-- make -s -j$(nproc) bzImage
 
 choice
+	prompt "Libvirt extra storage drive count"
+	default LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_4
+	help
+	  This option selects the number of extra storage drives to
+	  provision for each libvirt guest. Reduce this number to
+	  conserve local host storage capacity, if your workflows do
+	  not use all the extra drives.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_0
+	bool "0"
+	help
+	  Provision no extra storage drives per guest.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_1
+	bool "1"
+	help
+	  Provision one extra storage drive per guest.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_2
+	bool "2"
+	help
+	  Provision two extra storage drives per guest.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_3
+	bool "3"
+	help
+	  Provision three extra storage drives per guest.
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_4
+	bool "4"
+	help
+	  Provision four extra storages drive per guest.
+
+endchoice
+
+config LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT
+	int
+	output yaml
+	default 0 if LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_0
+	default 1 if LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_1
+	default 2 if LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_2
+	default 3 if LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_3
+	default 4 if LIBVIRT_EXTRA_STORAGE_DRIVE_COUNT_4
+
+choice
 	prompt "Libvirt extra storage driver to use"
 	default LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 

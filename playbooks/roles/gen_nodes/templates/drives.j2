@@ -8,7 +8,7 @@ the drives can vary by type, so we have one macro by type of drive.
 			libvirt_extra_drive_format,
 			libvirt_extra_storage_aio_mode,
 			libvirt_extra_storage_aio_cache_mode) -%}
-<!-- We generated {{ num_drives }} ide dives -->
+<!-- We generated {{ num_drives }} ide drives -->
 {% for n in range(0,num_drives) %}
     <!-- This is IDE drive # {{ n + 1 }} -->
     <qemu:arg value='-drive'/>
@@ -26,7 +26,7 @@ the drives can vary by type, so we have one macro by type of drive.
 			   libvirt_extra_storage_aio_cache_mode,
 			   libvirt_extra_storage_virtio_logical_block_size,
 			   libvirt_extra_storage_virtio_physical_block_size) -%}
-<!-- We generated {{ num_drives }} virtio dives -->
+<!-- We generated {{ num_drives }} virtio drives -->
 {% for n in range(0,num_drives) %}
     <!-- This is virtio drive # {{ n + 1 }} -->
     <qemu:arg value='-device'/>
@@ -46,7 +46,7 @@ the drives can vary by type, so we have one macro by type of drive.
                          libvirt_extra_drive_format,
                          libvirt_extra_storage_aio_mode,
                          libvirt_extra_storage_aio_cache_mode) -%}
-<!-- We generated {{ num_drives }} scsi dives -->
+<!-- We generated {{ num_drives }} scsi drives -->
 {% for n in range(0,num_drives) %}
     <!-- This is scsi drive # {{ n + 1 }} -->
     <qemu:arg value='-device'/>
@@ -103,7 +103,7 @@ the drives can vary by type, so we have one macro by type of drive.
 			 libvirt_extra_storage_aio_mode,
 			 libvirt_extra_storage_aio_cache_mode,
 			 libvirt_extra_storage_nvme_logical_block_size) -%}
-<!-- We generated {{ num_drives }} NVMe dives -->
+<!-- We generated {{ num_drives }} NVMe drives -->
 {% for n in range(0,num_drives) %}
     <!-- This is NVMe drive # {{ n + 1 }} -->
     <qemu:arg value='-device'/>

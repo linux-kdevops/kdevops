@@ -573,11 +573,11 @@ endchoice
 
 endif # TERRAFORM_AWS_REGION_US_EAST_2
 
-if TERRAFORM_AWS_REGION_US_WEST_2
+if TERRAFORM_AWS_REGION_US_WEST_1
 
 choice
 	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_US_WEST_2B
+	default TERRAFORM_AWS_AV_ZONE_US_WEST_1B
 	help
 	  This option sets the AWS availablity zone to the specified value.
 	  If you wish to expand on this list send a patch after reading this
@@ -590,6 +590,23 @@ config TERRAFORM_AWS_AV_ZONE_US_WEST_1B
 	bool "us-west-1b"
 	help
 	  This option selects the us-west-1b availability zone.
+
+endchoice
+
+endif # TERRAFORM_AWS_REGION_US_WEST_1
+
+if TERRAFORM_AWS_REGION_US_WEST_2
+
+choice
+	prompt "AWS availability zone"
+	default TERRAFORM_AWS_AV_ZONE_US_WEST_2B
+	help
+	  This option sets the AWS availablity zone to the specified value.
+	  If you wish to expand on this list send a patch after reading this
+	  list:
+
+	  https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
+	  https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
 
 config TERRAFORM_AWS_AV_ZONE_US_WEST_2B
 	bool "us-west-2b"

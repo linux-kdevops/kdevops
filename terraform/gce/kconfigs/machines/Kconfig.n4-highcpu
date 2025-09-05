@@ -4,35 +4,33 @@ choice
 	prompt "GCE Machine Type"
 	default TERRAFORM_GCE_MACHINE_N4_HIGHCPU_4
 	help
-	  This option sets the GCE machine type. For other machine
-	  types, refer to this page:
-
-	  https://cloud.google.com/compute/docs/machine-types
+	  N4 VMs are powered by the 5th generation Intel Xeon Scalable
+	  processors (code-named Emerald Rapids) and Titanium.
 
 config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_2
 	bool "n4-highcpu-2"
 	help
-	  2 vCPU (1 core) and 4GB of memory.
+	  2 vCPUs (1 core) and 4GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_4
 	bool "n4-highcpu-4"
 	help
-	  4 vCPU (2 core) and 8GB of memory.
+	  4 vCPUs (2 cores) and 8GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_8
 	bool "n4-highcpu-8"
 	help
-	  8 vCPU (4 cores) and 16GB of memory.
+	  8 vCPUs (4 cores) and 16GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_16
 	bool "n4-highcpu-16"
 	help
-	  16 vCPU (8 cores) and 32GB of memory.
+	  16 vCPUs (8 cores) and 32GB of memory.
 
 config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_32
 	bool "n4-highcpu-32"
 	help
-	  32 vCPU (16 cores) and 64GB of memory.
+	  32 vCPUs (16 cores) and 64GB of memory.
 
 endchoice
 

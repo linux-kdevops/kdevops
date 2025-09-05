@@ -37,6 +37,13 @@ resource "oci_core_instance" "kdevops_instance" {
     ssh_authorized_keys = file(var.ssh_config_pubkey_file)
   }
 
+  preemptible_instance_config {
+    preemption_action {
+      type                 = "TERMINATE"
+      preserve_boot_volume = false
+    }
+  }
+
   preserve_boot_volume = false
 }
 
@@ -50,6 +57,7 @@ module "volumes" {
   vol_instance_name       = element(var.kdevops_nodes, count.index)
   vol_volume_count        = var.oci_volumes_per_instance
   vol_volume_size         = var.oci_volumes_size
+  vol_vpus_per_gb         = var.oci_vpus_per_gb
 }
 
 resource "oci_core_vcn" "kdevops_vcn" {
@@ -95,10 +103,12 @@ resource "oci_core_route_table" "kdevops_route_table" {
   compartment_id = data.oci_identity_compartments.kdevops_compartment.compartments[0].id
   display_name   = "kdevops route table"
   vcn_id         = one(oci_core_vcn.kdevops_vcn[*].id)
+
   route_rules {
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = one(oci_core_internet_gateway.kdevops_internet_gateway[*].id)
+    route_type        = "STATIC"
   }
 }
 

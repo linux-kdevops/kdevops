@@ -4,35 +4,39 @@ choice
 	prompt "GCE Machine Type"
 	default TERRAFORM_GCE_MACHINE_C4_STANDARD_4
 	help
-	  This option sets the GCE machine type. For other machine
-	  types, refer to this page:
-
-	  https://cloud.google.com/compute/docs/machine-types
+	  C4 VMs are powered by 6th generation (code-named Granite
+	  Rapids) or 5th generation (code-named Emerald Rapids)
+	  Intel Xeon Scalable processors and Titanium.
 
 config TERRAFORM_GCE_MACHINE_C4_STANDARD_2
 	bool "c4-standard-2"
 	help
-	  2 vCPU (1 core) and 7GB of memory.
+	  2 vCPUs (1 core) and 7GB of memory.
 
 config TERRAFORM_GCE_MACHINE_C4_STANDARD_4
 	bool "c4-standard-4"
 	help
-	  4 vCPU (2 core) and 15GB of memory.
+	  4 vCPUs (2 core) and 15GB of memory.
 
 config TERRAFORM_GCE_MACHINE_C4_STANDARD_8
 	bool "c4-standard-8"
 	help
-	  8 vCPU (4 cores) and 30GB of memory.
+	  8 vCPUs (4 cores) and 30GB of memory.
 
 config TERRAFORM_GCE_MACHINE_C4_STANDARD_16
 	bool "c4-standard-16"
 	help
-	  16 vCPU (8 cores) and 60GB of memory.
+	  16 vCPUs (8 cores) and 60GB of memory.
 
 config TERRAFORM_GCE_MACHINE_C4_STANDARD_24
 	bool "c4-standard-24"
 	help
-	  24 vCPU (12 cores) and 90GB of memory.
+	  24 vCPUs (12 cores) and 90GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_32
+	bool "c4-standard-32"
+	help
+	  32 vCPUs (16 cores) and 120 of memory.
 
 endchoice
 
@@ -44,6 +48,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 	default "c4-standard-8" if TERRAFORM_GCE_MACHINE_C4_STANDARD_8
 	default "c4-standard-16" if TERRAFORM_GCE_MACHINE_C4_STANDARD_16
 	default "c4-standard-24" if TERRAFORM_GCE_MACHINE_C4_STANDARD_24
+	default "c4-standard-32" if TERRAFORM_GCE_MACHINE_C4_STANDARD_32
 
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
