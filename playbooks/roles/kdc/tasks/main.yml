@@ -86,7 +86,7 @@
   become: true
   become_method: sudo
   ansible.posix.firewalld:
-    service: kerberos
+    ansible.builtin.service: kerberos
     permanent: true
     immediate: true
     state: enabled
@@ -96,7 +96,7 @@
   become: true
   become_method: sudo
   ansible.posix.firewalld:
-    service: kadmin
+    ansible.builtin.service: kadmin
     permanent: true
     immediate: true
     state: enabled

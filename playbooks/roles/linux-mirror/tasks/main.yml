@@ -312,7 +312,7 @@
 - name: Ensure NFS firewall rules are set (for root user and if NFS is enabled)
   become: true
   ansible.posix.firewalld:
-    service: "{{ item }}"
+    ansible.builtin.service: "{{ item }}"
     permanent: true
     state: enabled
     immediate: true

@@ -61,7 +61,7 @@
   become_flags: "su - -c"
   become_method: sudo
   ansible.posix.firewalld:
-    service: samba
+    ansible.builtin.service: samba
     permanent: true
     immediate: true
     state: enabled
