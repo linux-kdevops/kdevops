@@ -152,19 +152,19 @@
 
 - name: Check if the developer has a git config
   delegate_to: localhost
-  ansible.builtin.stat: path={{ dev_gitconfig_src }}
+  ansible.builtin.stat: path={{ dev_gitconfig_src }} # noqa: no-free-form
   run_once: true
   register: dev_git_config_file
 
 - name: Copy the developer's gitconfig *if* it exists
-  ansible.builtin.copy: src={{ dev_gitconfig_src }} dest={{ dev_gitconfig_dest }}
+  ansible.builtin.copy: src={{ dev_gitconfig_src }} dest={{ dev_gitconfig_dest }} # noqa: no-free-form
   when: dev_git_config_file.stat.exists
 
 - name: Copy the developer's gitconfig *if* it exists to root
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.copy: src={{ dev_gitconfig_dest }} dest=/root/ remote_src=yes
+  ansible.builtin.copy: src={{ dev_gitconfig_dest }} dest=/root/ remote_src=yes # noqa: no-free-form
   when: dev_git_config_file.stat.exists
 
 - name: Check if the system has a user vimrc file
@@ -201,11 +201,11 @@
 
 - name: Check if the developer has a configuration file with favorite bash hacks
   delegate_to: localhost
-  ansible.builtin.stat: path={{ dev_bash_config_hacks_src }}
+  ansible.builtin.stat: path={{ dev_bash_config_hacks_src }} # noqa: no-free-form
   register: dev_bash_config_file
 
 - name: Copy the developer's favorite bash hacks over *if* it exists
-  ansible.builtin.copy: src={{ dev_bash_config_hacks_src }} dest={{ dev_bash_config_hacks_dest }}
+  ansible.builtin.copy: src={{ dev_bash_config_hacks_src }} dest={{ dev_bash_config_hacks_dest }} # noqa: no-free-form
   when: dev_bash_config_file.stat.exists
   register: dev_bash_config_file_copied
 
@@ -229,7 +229,7 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.copy: src={{ dev_bash_config_hacks_src }} dest=/root/
+  ansible.builtin.copy: src={{ dev_bash_config_hacks_src }} dest=/root/ # noqa: no-free-form
   when: dev_bash_config_file.stat.exists
   register: dev_bash_config_file_copied_root
 
