@@ -14,7 +14,6 @@
 
 - name: Check if pymilvus is installed
   ansible.builtin.command: python3 -c "import pymilvus; print(pymilvus.__version__)"
-    changed_when: false
   register: pymilvus_check
   changed_when: false
   failed_when: false
