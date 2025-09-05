@@ -1,17 +1,17 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
 
 - name: Filter enabled filesystem configurations
-  set_fact:
+  ansible.builtin.set_fact:
     enabled_fs_configs: "{{ ai_multifs_configurations | selectattr('enabled', 'equalto', true) | list }}"
 
 - name: Run AI benchmarks on each filesystem configuration
-  include_tasks: run_single_filesystem.yml
+  ansible.builtin.include_tasks: run_single_filesystem.yml
   loop: "{{ enabled_fs_configs }}"
   loop_control:
     loop_var: fs_config
@@ -19,5 +19,5 @@
   when: enabled_fs_configs | length > 0
 
 - name: Generate multi-filesystem comparison report
-  include_tasks: generate_comparison.yml
+  ansible.builtin.include_tasks: generate_comparison.yml
   when: enabled_fs_configs | length > 1

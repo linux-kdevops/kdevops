@@ -1,31 +1,31 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
 
 - name: Create multi-filesystem results directory
-  file:
+  ansible.builtin.file:
     path: "{{ ai_multifs_results_dir }}"
     state: directory
     mode: "0755"
 
 - name: Create mount point directory
-  file:
+  ansible.builtin.file:
     path: "{{ ai_multifs_mount_point }}"
     state: directory
     mode: "0755"
 
 - name: Unmount any existing filesystem on mount point
-  mount:
+  ansible.posix.mount:
     path: "{{ ai_multifs_mount_point }}"
     state: unmounted
   ignore_errors: true
 
 - name: Install required filesystem utilities
-  package:
+  ansible.builtin.package:
     name:
       - xfsprogs
       - e2fsprogs
@@ -33,25 +33,25 @@
     state: present
 
 - name: Filter enabled filesystem configurations
-  set_fact:
+  ansible.builtin.set_fact:
     enabled_fs_configs: "{{ ai_multifs_configurations | selectattr('enabled', 'equalto', true) | list }}"
 
 - name: Display enabled filesystem configurations
-  debug:
+  ansible.builtin.debug:
     msg: "Will test {{ enabled_fs_configs | length }} filesystem configurations: {{ enabled_fs_configs | map(attribute='name') | list }}"
 
 - name: Validate that device exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ ai_multifs_device }}"
   register: device_stat
   failed_when: not device_stat.stat.exists
 
 - name: Display device information
-  debug:
+  ansible.builtin.debug:
     msg: "Using device {{ ai_multifs_device }} for multi-filesystem testing"
 
 - name: Create filesystem configuration summary
-  copy:
+  ansible.builtin.copy:
     content: |
       # AI Multi-Filesystem Testing Configuration
       Generated: {{ ansible_date_time.iso8601 }}

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
@@ -10,7 +10,7 @@
   when: ai_docker_storage_enable|bool
   block:
     - name: Install filesystem utilities
-      package:
+      ansible.builtin.package:
         name:
           - xfsprogs
           - e2fsprogs
@@ -21,13 +21,13 @@
       become_method: sudo
 
     - name: Check if device exists
-      stat:
+      ansible.builtin.stat:
         path: "{{ ai_docker_device }}"
       register: docker_device_stat
       failed_when: not docker_device_stat.stat.exists
 
     - name: Check if Docker storage is already mounted
-      command: mountpoint -q {{ ai_docker_mount_point }}
+      ansible.builtin.command: mountpoint -q {{ ai_docker_mount_point }}
       register: docker_mount_check
       changed_when: false
       failed_when: false
@@ -36,7 +36,7 @@
       when: docker_mount_check.rc != 0
       block:
         - name: Create Docker mount point directory
-          file:
+          ansible.builtin.file:
             path: "{{ ai_docker_mount_point }}"
             state: directory
             mode: "0755"
@@ -44,7 +44,7 @@
           become_method: sudo
 
         - name: Format device with XFS
-          command: >
+          ansible.builtin.command: >
             mkfs.xfs -f
             -b size={{ ai_docker_xfs_blocksize | default(4096) }}
             -s size={{ ai_docker_xfs_sectorsize | default(4096) }}
@@ -55,19 +55,19 @@
           become_method: sudo
 
         - name: Format device with Btrfs
-          command: mkfs.btrfs {{ ai_docker_btrfs_mkfs_opts }} {{ ai_docker_device }}
+          ansible.builtin.command: mkfs.btrfs {{ ai_docker_btrfs_mkfs_opts }} {{ ai_docker_device }}
           when: ai_docker_fstype == "btrfs"
           become: true
           become_method: sudo
 
         - name: Format device with ext4
-          command: mkfs.ext4 {{ ai_docker_ext4_mkfs_opts }} {{ ai_docker_device }}
+          ansible.builtin.command: mkfs.ext4 {{ ai_docker_ext4_mkfs_opts }} {{ ai_docker_device }}
           when: ai_docker_fstype == "ext4"
           become: true
           become_method: sudo
 
         - name: Mount Docker storage filesystem
-          mount:
+          ansible.posix.mount:
             path: "{{ ai_docker_mount_point }}"
             src: "{{ ai_docker_device }}"
             fstype: "{{ ai_docker_fstype }}"
@@ -77,7 +77,7 @@
           become_method: sudo
 
         - name: Add Docker storage mount to fstab
-          mount:
+          ansible.posix.mount:
             path: "{{ ai_docker_mount_point }}"
             src: "{{ ai_docker_device }}"
             fstype: "{{ ai_docker_fstype }}"
@@ -87,14 +87,14 @@
           become_method: sudo
 
     - name: Check if Docker service exists
-      systemd:
+      ansible.builtin.systemd:
         name: docker
       register: docker_service_status
       failed_when: false
       changed_when: false
 
     - name: Stop Docker service if running
-      systemd:
+      ansible.builtin.systemd:
         name: docker
         state: stopped
       become: true
@@ -106,7 +106,7 @@
     # No need to move data or create symlinks as the storage is already in the right place
 
     - name: Ensure Docker directory has proper permissions
-      file:
+      ansible.builtin.file:
         path: "{{ ai_docker_mount_point }}"
         state: directory
         mode: "0711"
@@ -119,5 +119,5 @@
     # Docker will be installed and started later by the ai role
     # We only prepare the storage here
     - name: Display Docker storage setup complete
-      debug:
+      ansible.builtin.debug:
         msg: "Docker storage has been prepared at: {{ ai_docker_mount_point }}"

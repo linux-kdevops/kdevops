@@ -50,7 +50,7 @@
   when: ai_milvus_docker | bool
 
 - name: Setup MinIO using shared role
-  include_role:
+  ansible.builtin.include_role:
     name: minio_setup
   vars:
     minio_container_image: "{{ ai_minio_container_image_string }}"

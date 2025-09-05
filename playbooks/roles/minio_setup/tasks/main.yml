@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
@@ -12,7 +12,7 @@
     - minio_device is defined
   block:
     - name: Prepare filesystem mkfs options
-      set_fact:
+      ansible.builtin.set_fact:
         minio_mkfs_opts: >-
           {%- if minio_fstype == "xfs" -%}
             -L miniostorage -f -b size={{ minio_xfs_blocksize | default(4096) }} -s size={{ minio_xfs_sectorsize | default(4096) }} {{ minio_xfs_mkfs_opts | default('')
@@ -28,7 +28,7 @@
           {%- endif -%}
 
     - name: Create MinIO storage filesystem
-      include_role:
+      ansible.builtin.include_role:
         name: create_partition
       vars:
         disk_setup_device: "{{ minio_device }}"
@@ -40,7 +40,7 @@
         disk_setup_group: "root"
 
 - name: Create MinIO data directory
-  file:
+  ansible.builtin.file:
     path: "{{ minio_data_path | default('/data/minio') }}"
     state: directory
     mode: "0755"
@@ -49,18 +49,18 @@
   become: true
 
 - name: Check filesystem type for MinIO data path
-  shell: df -T "{{ minio_data_path }}" | tail -1 | awk '{print $2}'
+  ansible.builtin.shell: df -T "{{ minio_data_path }}" | tail -1 | awk '{print $2}'
   register: minio_fs_type
   changed_when: false
 
 - name: Get filesystem details
-  shell: |
+  ansible.builtin.shell: |
     df -h "{{ minio_data_path }}" | tail -1
   register: minio_fs_details
   changed_when: false
 
 - name: Display filesystem information
-  debug:
+  ansible.builtin.debug:
     msg: |
       MinIO Storage Configuration:
         Data Path: {{ minio_data_path }}
@@ -94,7 +94,7 @@
   when: minio_enable | bool
 
 - name: Wait for MinIO to be ready
-  wait_for:
+  ansible.builtin.wait_for:
     host: localhost
     port: "{{ minio_api_port }}"
     timeout: 60

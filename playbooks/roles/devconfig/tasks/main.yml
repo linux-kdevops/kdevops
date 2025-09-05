@@ -35,7 +35,7 @@
   changed_when: false
 
 - name: Set inferred user and group for declared hosts
-  set_fact:
+  ansible.builtin.set_fact:
     data_user: "{{ declared_host_user.stdout | default(data_user) }}"
     data_group: "{{ declared_host_group.stdout | default(data_group) }}"
   when:

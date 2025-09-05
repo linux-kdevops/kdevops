@@ -56,14 +56,14 @@
     - infer_uid_and_group|bool
 
 - name: Get primary group ID from user entry
-  set_fact:
+  ansible.builtin.set_fact:
     user_primary_gid: "{{ getent_running_user.ansible_facts.getent_passwd[target_user][2] }}"
   when:
     - infer_uid_and_group|bool
     - getent_on_group.rc | default(1) != 0
 
 - name: Run getent against the primary group ID
-  getent:
+  ansible.builtin.getent:
     database: group
     key: "{{ user_primary_gid }}"
   register: getent_primary_group
@@ -72,7 +72,7 @@
     - getent_on_group.rc | default(1) != 0
 
 - name: Override user and group with inferred settings if feature is enabled (group found by name)
-  set_fact:
+  ansible.builtin.set_fact:
     data_user: "{{ target_user }}"
     data_group: "{{ ((getent_on_group.values() | first).values() | first).keys() | first }}"
   when:
@@ -80,7 +80,7 @@
     - getent_on_group.rc | default(1) == 0
 
 - name: Override user and group with inferred settings if feature is enabled (group found by GID)
-  set_fact:
+  ansible.builtin.set_fact:
     data_user: "{{ target_user }}"
     data_group: "{{ getent_primary_group.ansible_facts.getent_group.keys() | first }}"
   when:

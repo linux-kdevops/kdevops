@@ -9,7 +9,7 @@
     - role: ai_multifs_run
   tasks:
     - name: Final multi-filesystem testing summary
-      debug:
+      ansible.builtin.debug:
         msg: |
           Multi-filesystem AI benchmark testing completed!
 

@@ -1,6 +1,6 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
@@ -13,5 +13,5 @@
   ignore_errors: true
 
 - name: Display MinIO uninstallation complete
-  debug:
+  ansible.builtin.debug:
     msg: "MinIO container stopped"

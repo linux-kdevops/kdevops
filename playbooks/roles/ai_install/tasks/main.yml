@@ -1,11 +1,11 @@
 ---
 - name: Include role create_data_partition
-  include_role:
+  ansible.builtin.include_role:
     name: create_data_partition
   tags: ["setup", "data_partition"]
 
 - name: Include role common
-  include_role:
+  ansible.builtin.include_role:
     name: common
   when:
     - infer_uid_and_group|bool

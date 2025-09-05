@@ -1,13 +1,13 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
 
 - name: Create results analysis script
-  copy:
+  ansible.builtin.copy:
     content: |
       #!/usr/bin/env python3
       import json
@@ -69,17 +69,17 @@
   run_once: true
 
 - name: Run results analysis
-  command: python3 /tmp/analyze_minio_results.py
+  ansible.builtin.command: python3 /tmp/analyze_minio_results.py
   register: analysis_output
   delegate_to: localhost
   run_once: true
 
 - name: Display analysis results
-  debug:
+  ansible.builtin.debug:
     var: analysis_output.stdout_lines
 
 - name: Create results summary file
-  copy:
+  ansible.builtin.copy:
     content: "{{ analysis_output.stdout }}"
     dest: "{{ playbook_dir }}/../workflows/minio/results/benchmark_summary.txt"
   delegate_to: localhost

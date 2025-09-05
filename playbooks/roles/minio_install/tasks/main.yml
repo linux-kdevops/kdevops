@@ -1,13 +1,13 @@
 ---
 - name: Import optional extra_args file
-  include_vars: "{{ item }}"
+  ansible.builtin.include_vars: "{{ item }}"
   ignore_errors: true
   with_items:
     - "../extra_vars.yaml"
   tags: vars
 
 - name: Install Docker
-  package:
+  ansible.builtin.package:
     name:
       - docker.io
       - python3-docker
@@ -15,14 +15,14 @@
   become: true
 
 - name: Ensure Docker service is running
-  systemd:
+  ansible.builtin.systemd:
     name: docker
     state: started
     enabled: true
   become: true
 
 - name: Add current user to docker group
-  user:
+  ansible.builtin.user:
     name: "{{ ansible_user | default('kdevops') }}"
     groups: docker
     append: true
@@ -31,19 +31,19 @@
 - name: Install MinIO Warp
   block:
     - name: Download MinIO Warp binary
-      get_url:
+      ansible.builtin.get_url:
         url: "https://github.com/minio/warp/releases/latest/download/warp_Linux_x86_64.tar.gz"
         dest: "/tmp/warp_Linux_x86_64.tar.gz"
         mode: "0644"
 
     - name: Extract MinIO Warp
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/warp_Linux_x86_64.tar.gz"
         dest: "/tmp"
         remote_src: true
 
     - name: Install Warp binary
-      copy:
+      ansible.builtin.copy:
         src: "/tmp/warp"
         dest: "/usr/local/bin/warp"
         mode: "0755"
@@ -53,7 +53,7 @@
       become: true
 
     - name: Clean up downloaded files
-      file:
+      ansible.builtin.file:
         path: "{{ item }}"
         state: absent
       loop:

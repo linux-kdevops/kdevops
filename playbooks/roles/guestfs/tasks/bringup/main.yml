@@ -8,7 +8,7 @@
   register: defined_vms
 
 - name: Debug defined VMs
-  debug:
+  ansible.builtin.debug:
     msg: "Hostname: {{ inventory_hostname }}, Defined VMs: {{ hostvars['localhost']['defined_vms']['list_vms'] | default([]) }}, Check: {{ inventory_hostname not
       in (hostvars['localhost']['defined_vms']['list_vms'] | default([])) }}"
 

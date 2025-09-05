@@ -1,10 +1,10 @@
 ---
 - name: Display current filesystem configuration
-  debug:
+  ansible.builtin.debug:
     msg: "Testing filesystem configuration {{ fs_index + 1 }}/{{ enabled_fs_configs | length }}: {{ fs_config.name }}"
 
 - name: Unmount filesystem if mounted
-  mount:
+  ansible.posix.mount:
     path: "{{ ai_multifs_mount_point }}"
     state: unmounted
   ignore_errors: true
@@ -14,12 +14,12 @@
   register: mkfs_result
 
 - name: Display mkfs output
-  debug:
+  ansible.builtin.debug:
     msg: "mkfs output: {{ mkfs_result.stdout }}"
   when: mkfs_result.stdout != ""
 
 - name: Mount filesystem with specific options
-  mount:
+  ansible.posix.mount:
     path: "{{ ai_multifs_mount_point }}"
     src: "{{ ai_multifs_device }}"
     fstype: "{{ fs_config.filesystem }}"
@@ -27,30 +27,30 @@
     state: mounted
 
 - name: Create filesystem-specific results directory
-  file:
+  ansible.builtin.file:
     path: "{{ ai_multifs_results_dir }}/{{ fs_config.name }}"
     state: directory
     mode: "0755"
 
 - name: Update AI benchmark configuration for current filesystem
-  set_fact:
+  ansible.builtin.set_fact:
     current_fs_benchmark_dir: "{{ ai_multifs_mount_point }}/ai-benchmark-data"
     current_fs_results_dir: "{{ ai_multifs_results_dir }}/{{ fs_config.name }}"
 
 - name: Create AI benchmark data directory on current filesystem
-  file:
+  ansible.builtin.file:
     path: "{{ current_fs_benchmark_dir }}"
     state: directory
     mode: "0755"
 
 - name: Generate AI benchmark configuration for current filesystem
-  template:
+  ansible.builtin.template:
     src: milvus_config.json.j2
     dest: "{{ current_fs_results_dir }}/milvus_config.json"
     mode: "0644"
 
 - name: Run AI benchmark on current filesystem
-  shell: |
+  ansible.builtin.shell: |
     cd {{ current_fs_benchmark_dir }}
     python3 {{ playbook_dir }}/roles/ai_run_benchmarks/files/milvus_benchmark.py \
       --config {{ current_fs_results_dir }}/milvus_config.json \
@@ -60,11 +60,11 @@
   poll: 30
 
 - name: Display benchmark completion
-  debug:
+  ansible.builtin.debug:
     msg: "Benchmark completed for {{ fs_config.name }}: {{ benchmark_result.stdout_lines[-5:] | default(['No output']) }}"
 
 - name: Record filesystem configuration metadata
-  copy:
+  ansible.builtin.copy:
     content: |
       # Filesystem Configuration: {{ fs_config.name }}
       Filesystem Type: {{ fs_config.filesystem }}
@@ -83,7 +83,7 @@
     mode: "0644"
 
 - name: Capture filesystem statistics after benchmark
-  shell: |
+  ansible.builtin.shell: |
     echo "=== Filesystem Usage ===" > {{ current_fs_results_dir }}/filesystem_stats.txt
     df -h {{ ai_multifs_mount_point }} >> {{ current_fs_results_dir }}/filesystem_stats.txt
     echo "" >> {{ current_fs_results_dir }}/filesystem_stats.txt
@@ -99,6 +99,6 @@
   ignore_errors: true
 
 - name: Unmount filesystem after benchmark
-  mount:
+  ansible.posix.mount:
     path: "{{ ai_multifs_mount_point }}"
     state: unmounted

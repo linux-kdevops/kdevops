@@ -79,7 +79,7 @@
             nixos_ssh_key_path: "{{ ssh_key_path_result.stdout | trim }}"
 
         - name: Generate SSH key for NixOS VMs if not exists
-          openssh_keypair:
+          community.crypto.openssh_keypair:
             path: "{{ nixos_ssh_key_path }}"
             type: rsa
             size: 2048
