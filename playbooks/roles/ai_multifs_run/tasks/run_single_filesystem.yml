@@ -10,7 +10,7 @@
   ignore_errors: true
 
 - name: Create filesystem with specific configuration
-  shell: "{{ fs_config.mkfs_cmd }} {{ ai_multifs_device }}"
+  ansible.builtin.command: "{{ fs_config.mkfs_cmd }} {{ ai_multifs_device }}"
   register: mkfs_result
 
 - name: Display mkfs output

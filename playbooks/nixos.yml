@@ -321,14 +321,14 @@
   tags: bringup
   tasks:
     - name: Check if default network exists and is active
-      ansible.builtin.shell: virsh net-info default
+      ansible.builtin.command: virsh net-info default
       register: default_network_info
       failed_when: false
       environment:
         LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
 
     - name: Start default network if not active
-      ansible.builtin.shell: virsh net-start default
+      ansible.builtin.command: virsh net-start default
       when: default_network_info.rc != 0 or 'Active:' not in default_network_info.stdout or 'yes' not in default_network_info.stdout.split('Active:')[1].split('\n')[0]
       failed_when: false
       environment:
@@ -342,7 +342,7 @@
   tags: bringup
   tasks:
     - name: Check if VM already exists
-      ansible.builtin.shell: virsh domstate "{{ inventory_hostname }}"
+      ansible.builtin.command: virsh domstate "{{ inventory_hostname }}"
       register: vm_status
       failed_when: false
       delegate_to: localhost
@@ -366,15 +366,15 @@
             vm_disk: "{{ nixos_storage_dir }}/{{ inventory_hostname }}.qcow2"
 
         - name: Define VM in libvirt
-          ansible.builtin.shell: virsh define "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
+          ansible.builtin.command: virsh define "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
           failed_when: false
 
         - name: Start VM
-          ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+          ansible.builtin.command: virsh start "{{ inventory_hostname }}"
           failed_when: false
 
     - name: Ensure VM is running
-      ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+      ansible.builtin.command: virsh start "{{ inventory_hostname }}"
       register: start_result
       failed_when:
         - start_result.rc != 0
