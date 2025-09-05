@@ -176,6 +176,6 @@
       when: lock_created is defined and lock_created.changed
 
     - name: Ensure lock file is removed (fallback)
-      ansible.builtin.shell: rm -f {{ ai_benchmark_results_dir }}/.benchmark.lock
+      ansible.builtin.command: rm -f {{ ai_benchmark_results_dir }}/.benchmark.lock
       failed_when: false
       when: lock_created is defined
