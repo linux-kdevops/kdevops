@@ -1,0 +1,95 @@
+# AWS R6G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R6G family"
+	default TERRAFORM_AWS_INSTANCE_R6G_MEDIUM
+	help
+	  Select the specific instance size within the R6G family.
+
+config TERRAFORM_AWS_INSTANCE_R6G_MEDIUM
+	bool "r6g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_LARGE
+	bool "r6g.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_XLARGE
+	bool "r6g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_2XLARGE
+	bool "r6g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_4XLARGE
+	bool "r6g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_8XLARGE
+	bool "r6g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_12XLARGE
+	bool "r6g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_16XLARGE
+	bool "r6g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6G_METAL
+	bool "r6g.metal"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R6G_SIZE
+	string
+	default "r6g.medium" if TERRAFORM_AWS_INSTANCE_R6G_MEDIUM
+	default "r6g.large" if TERRAFORM_AWS_INSTANCE_R6G_LARGE
+	default "r6g.xlarge" if TERRAFORM_AWS_INSTANCE_R6G_XLARGE
+	default "r6g.2xlarge" if TERRAFORM_AWS_INSTANCE_R6G_2XLARGE
+	default "r6g.4xlarge" if TERRAFORM_AWS_INSTANCE_R6G_4XLARGE
+	default "r6g.8xlarge" if TERRAFORM_AWS_INSTANCE_R6G_8XLARGE
+	default "r6g.12xlarge" if TERRAFORM_AWS_INSTANCE_R6G_12XLARGE
+	default "r6g.16xlarge" if TERRAFORM_AWS_INSTANCE_R6G_16XLARGE
+	default "r6g.metal" if TERRAFORM_AWS_INSTANCE_R6G_METAL
+	default "r6g.medium"
+

@@ -1,0 +1,44 @@
+# AWS F2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for F2 family"
+	default TERRAFORM_AWS_INSTANCE_F2_6XLARGE
+	help
+	  Select the specific instance size within the F2 family.
+
+config TERRAFORM_AWS_INSTANCE_F2_6XLARGE
+	bool "f2.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 256.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 940 GB
+
+config TERRAFORM_AWS_INSTANCE_F2_12XLARGE
+	bool "f2.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1880 GB
+
+config TERRAFORM_AWS_INSTANCE_F2_48XLARGE
+	bool "f2.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 2048.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7520 GB
+
+endchoice
+
+config TERRAFORM_AWS_F2_SIZE
+	string
+	default "f2.6xlarge" if TERRAFORM_AWS_INSTANCE_F2_6XLARGE
+	default "f2.12xlarge" if TERRAFORM_AWS_INSTANCE_F2_12XLARGE
+	default "f2.48xlarge" if TERRAFORM_AWS_INSTANCE_F2_48XLARGE
+	default "f2.6xlarge"
+

@@ -1,0 +1,34 @@
+# AWS P5 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P5 family"
+	default TERRAFORM_AWS_INSTANCE_P5_4XLARGE
+	help
+	  Select the specific instance size within the P5 family.
+
+config TERRAFORM_AWS_INSTANCE_P5_4XLARGE
+	bool "p5.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 256.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_P5_48XLARGE
+	bool "p5.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 2048.0 GB
+	  Network: 3200 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30400 GB
+
+endchoice
+
+config TERRAFORM_AWS_P5_SIZE
+	string
+	default "p5.4xlarge" if TERRAFORM_AWS_INSTANCE_P5_4XLARGE
+	default "p5.48xlarge" if TERRAFORM_AWS_INSTANCE_P5_48XLARGE
+	default "p5.4xlarge"
+

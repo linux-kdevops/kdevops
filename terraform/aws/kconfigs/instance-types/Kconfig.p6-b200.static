@@ -1,0 +1,24 @@
+# AWS P6-B200 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P6-B200 family"
+	default TERRAFORM_AWS_INSTANCE_P6_B200_48XLARGE
+	help
+	  Select the specific instance size within the P6-B200 family.
+
+config TERRAFORM_AWS_INSTANCE_P6_B200_48XLARGE
+	bool "p6-b200.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 2048.0 GB
+	  Network: 3200 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30400 GB
+
+endchoice
+
+config TERRAFORM_AWS_P6_B200_SIZE
+	string
+	default "p6-b200.48xlarge" if TERRAFORM_AWS_INSTANCE_P6_B200_48XLARGE
+	default "p6-b200.48xlarge"
+

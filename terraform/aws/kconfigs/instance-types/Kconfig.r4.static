@@ -1,0 +1,68 @@
+# AWS R4 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R4 family"
+	default TERRAFORM_AWS_INSTANCE_R4_LARGE
+	help
+	  Select the specific instance size within the R4 family.
+
+config TERRAFORM_AWS_INSTANCE_R4_LARGE
+	bool "r4.large"
+	help
+	  vCPUs: 2
+	  Memory: 15.2 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R4_XLARGE
+	bool "r4.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 30.5 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R4_2XLARGE
+	bool "r4.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R4_4XLARGE
+	bool "r4.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 122.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R4_8XLARGE
+	bool "r4.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R4_16XLARGE
+	bool "r4.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 488.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R4_SIZE
+	string
+	default "r4.large" if TERRAFORM_AWS_INSTANCE_R4_LARGE
+	default "r4.xlarge" if TERRAFORM_AWS_INSTANCE_R4_XLARGE
+	default "r4.2xlarge" if TERRAFORM_AWS_INSTANCE_R4_2XLARGE
+	default "r4.4xlarge" if TERRAFORM_AWS_INSTANCE_R4_4XLARGE
+	default "r4.8xlarge" if TERRAFORM_AWS_INSTANCE_R4_8XLARGE
+	default "r4.16xlarge" if TERRAFORM_AWS_INSTANCE_R4_16XLARGE
+	default "r4.large"
+

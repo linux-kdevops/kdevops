@@ -1,0 +1,104 @@
+# AWS C5D instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C5D family"
+	default TERRAFORM_AWS_INSTANCE_C5D_LARGE
+	help
+	  Select the specific instance size within the C5D family.
+
+config TERRAFORM_AWS_INSTANCE_C5D_LARGE
+	bool "c5d.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 50 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_XLARGE
+	bool "c5d.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 100 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_2XLARGE
+	bool "c5d.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 200 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_4XLARGE
+	bool "c5d.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 400 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_9XLARGE
+	bool "c5d.9xlarge"
+	help
+	  vCPUs: 36
+	  Memory: 72.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_12XLARGE
+	bool "c5d.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_18XLARGE
+	bool "c5d.18xlarge"
+	help
+	  vCPUs: 72
+	  Memory: 144.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_24XLARGE
+	bool "c5d.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3600 GB
+
+config TERRAFORM_AWS_INSTANCE_C5D_METAL
+	bool "c5d.metal"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3600 GB
+
+endchoice
+
+config TERRAFORM_AWS_C5D_SIZE
+	string
+	default "c5d.large" if TERRAFORM_AWS_INSTANCE_C5D_LARGE
+	default "c5d.xlarge" if TERRAFORM_AWS_INSTANCE_C5D_XLARGE
+	default "c5d.2xlarge" if TERRAFORM_AWS_INSTANCE_C5D_2XLARGE
+	default "c5d.4xlarge" if TERRAFORM_AWS_INSTANCE_C5D_4XLARGE
+	default "c5d.9xlarge" if TERRAFORM_AWS_INSTANCE_C5D_9XLARGE
+	default "c5d.12xlarge" if TERRAFORM_AWS_INSTANCE_C5D_12XLARGE
+	default "c5d.18xlarge" if TERRAFORM_AWS_INSTANCE_C5D_18XLARGE
+	default "c5d.24xlarge" if TERRAFORM_AWS_INSTANCE_C5D_24XLARGE
+	default "c5d.metal" if TERRAFORM_AWS_INSTANCE_C5D_METAL
+	default "c5d.large"
+

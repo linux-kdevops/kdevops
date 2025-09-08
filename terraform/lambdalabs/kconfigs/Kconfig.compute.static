@@ -1,0 +1,195 @@
+# Lambda Labs instance types (dynamically generated with capacity info)
+
+choice
+	prompt "Lambda Labs instance type"
+	default TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_GH200
+	help
+	  Select the Lambda Labs instance type for your deployment.
+	  These options are dynamically generated from the Lambda Labs API.
+	  [Available] = Has capacity in at least one region
+	  [No Capacity] = Currently no capacity available
+	  Prices shown are on-demand hourly rates in USD.
+
+# Instance types WITH available capacity:
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_GH200
+	bool "gpu_1x_gh200 ($1.49/hr) - 1x GH200 (96 GB) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_EAST_3)
+	help
+	  1x GH200 (96 GB)
+	  AVAILABLE in: us-east-3
+	  Price: $1.49/hr (on-demand)
+	  vCPUs: 64, Memory: 432 GiB, Storage: 4096 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_H100_PCIE
+	bool "gpu_1x_h100_pcie ($2.49/hr) - 1x H100 (80 GB PCIe) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_WEST_3)
+	help
+	  1x H100 (80 GB PCIe)
+	  AVAILABLE in: us-west-3
+	  Price: $2.49/hr (on-demand)
+	  vCPUs: 26, Memory: 200 GiB, Storage: 1024 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_H100_SXM5
+	bool "gpu_1x_h100_sxm5 (Price N/A) - 1x H100 (80 GB SXM5) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2)
+	help
+	  1x H100 (80 GB SXM5)
+	  AVAILABLE in: us-south-2
+	  Price: Price N/A (on-demand)
+	  vCPUs: 26, Memory: 225 GiB, Storage: 2816 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_H100_SXM5
+	bool "gpu_2x_h100_sxm5 (Price N/A) - 2x H100 (80 GB SXM5) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2 || TERRAFORM_LAMBDALABS_REGION_US_SOUTH_3)
+	help
+	  2x H100 (80 GB SXM5)
+	  AVAILABLE in: us-south-2, us-south-3
+	  Price: Price N/A (on-demand)
+	  vCPUs: 52, Memory: 450 GiB, Storage: 5632 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_H100_SXM5
+	bool "gpu_4x_h100_sxm5 (Price N/A) - 4x H100 (80 GB SXM5) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2)
+	help
+	  4x H100 (80 GB SXM5)
+	  AVAILABLE in: us-south-2
+	  Price: Price N/A (on-demand)
+	  vCPUs: 104, Memory: 900 GiB, Storage: 11264 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_A100_80GB_SXM4
+	bool "gpu_8x_a100_80gb_sxm4 (Price N/A) - 8x A100 (80 GB SXM4) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1 || TERRAFORM_LAMBDALABS_REGION_AUSTRALIA_EAST_1)
+	help
+	  8x A100 (80 GB SXM4)
+	  AVAILABLE in: us-midwest-1, australia-east-1
+	  Price: Price N/A (on-demand)
+	  vCPUs: 240, Memory: 1800 GiB, Storage: 20480 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_B200_SXM6
+	bool "gpu_8x_b200_sxm6 (Price N/A) - 8x B200 (180 GB SXM6) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_EAST_1)
+	help
+	  8x B200 (180 GB SXM6)
+	  AVAILABLE in: us-east-1
+	  Price: Price N/A (on-demand)
+	  vCPUs: 208, Memory: 2900 GiB, Storage: 22528 GiB
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_V100
+	bool "gpu_8x_v100 ($4.40/hr) - 8x Tesla V100 (16 GB) [AVAILABLE]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL || (TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1)
+	help
+	  8x Tesla V100 (16 GB)
+	  AVAILABLE in: us-south-1
+	  Price: $4.40/hr (on-demand)
+	  vCPUs: 92, Memory: 448 GiB, Storage: 6041 GiB
+
+# Instance types WITHOUT capacity (not recommended):
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_CPU_4X_GENERAL
+	bool "cpu_4x_general (Price N/A) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  4x CPU General (16 GiB)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: Price N/A (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10
+	bool "gpu_1x_a10 ($0.75/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  1x A10 (24 GB PCIe)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $0.75/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A100
+	bool "gpu_1x_a100 ($1.29/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  1x A100 (40 GB PCIe)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $1.29/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A100_SXM4
+	bool "gpu_1x_a100_sxm4 (Price N/A) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  1x A100 (40 GB SXM4)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: Price N/A (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A6000
+	bool "gpu_1x_a6000 ($0.80/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  1x A6000 (48 GB)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $0.80/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_RTX6000
+	bool "gpu_1x_rtx6000 ($0.50/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  1x RTX 6000 (24 GB)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $0.50/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_A100
+	bool "gpu_2x_a100 ($2.58/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  2x A100 (40 GB PCIe)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $2.58/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_2X_A6000
+	bool "gpu_2x_a6000 ($1.60/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  2x A6000 (48 GB)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $1.60/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_A100
+	bool "gpu_4x_a100 ($5.16/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  4x A100 (40 GB PCIe)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $5.16/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_4X_A6000
+	bool "gpu_4x_a6000 ($3.20/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  4x A6000 (48 GB)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $3.20/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_A100
+	bool "gpu_8x_a100 ($10.32/hr) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  8x A100 (40 GB SXM4)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: $10.32/hr (on-demand) when available
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_H100_SXM5
+	bool "gpu_8x_h100_sxm5 (Price N/A) - [NO CAPACITY]"
+	depends on !TERRAFORM_LAMBDALABS_REGION_MANUAL
+	help
+	  8x H100 (80 GB SXM5)
+	  WARNING: Currently NO CAPACITY in any region!
+	  This option will fail during provisioning.
+	  Price: Price N/A (on-demand) when available
+
+endchoice

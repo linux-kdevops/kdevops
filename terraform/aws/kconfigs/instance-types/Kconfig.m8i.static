@@ -1,0 +1,131 @@
+# AWS M8I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M8I family"
+	default TERRAFORM_AWS_INSTANCE_M8I_LARGE
+	help
+	  Select the specific instance size within the M8I family.
+
+config TERRAFORM_AWS_INSTANCE_M8I_LARGE
+	bool "m8i.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_XLARGE
+	bool "m8i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_2XLARGE
+	bool "m8i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_4XLARGE
+	bool "m8i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_8XLARGE
+	bool "m8i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_12XLARGE
+	bool "m8i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_16XLARGE
+	bool "m8i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_24XLARGE
+	bool "m8i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_32XLARGE
+	bool "m8i.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 512.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_48XLARGE
+	bool "m8i.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 768.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_METAL_48XL
+	bool "m8i.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 768.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_METAL_96XL
+	bool "m8i.metal-96xl"
+	help
+	  vCPUs: 384
+	  Memory: 1536.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8I_96XLARGE
+	bool "m8i.96xlarge"
+	help
+	  vCPUs: 384
+	  Memory: 1536.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M8I_SIZE
+	string
+	default "m8i.large" if TERRAFORM_AWS_INSTANCE_M8I_LARGE
+	default "m8i.xlarge" if TERRAFORM_AWS_INSTANCE_M8I_XLARGE
+	default "m8i.2xlarge" if TERRAFORM_AWS_INSTANCE_M8I_2XLARGE
+	default "m8i.4xlarge" if TERRAFORM_AWS_INSTANCE_M8I_4XLARGE
+	default "m8i.8xlarge" if TERRAFORM_AWS_INSTANCE_M8I_8XLARGE
+	default "m8i.12xlarge" if TERRAFORM_AWS_INSTANCE_M8I_12XLARGE
+	default "m8i.16xlarge" if TERRAFORM_AWS_INSTANCE_M8I_16XLARGE
+	default "m8i.24xlarge" if TERRAFORM_AWS_INSTANCE_M8I_24XLARGE
+	default "m8i.32xlarge" if TERRAFORM_AWS_INSTANCE_M8I_32XLARGE
+	default "m8i.48xlarge" if TERRAFORM_AWS_INSTANCE_M8I_48XLARGE
+	default "m8i.metal-48xl" if TERRAFORM_AWS_INSTANCE_M8I_METAL_48XL
+	default "m8i.metal-96xl" if TERRAFORM_AWS_INSTANCE_M8I_METAL_96XL
+	default "m8i.96xlarge" if TERRAFORM_AWS_INSTANCE_M8I_96XLARGE
+	default "m8i.large"
+

@@ -1,0 +1,134 @@
+# AWS R8GD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R8GD family"
+	default TERRAFORM_AWS_INSTANCE_R8GD_MEDIUM
+	help
+	  Select the specific instance size within the R8GD family.
+
+config TERRAFORM_AWS_INSTANCE_R8GD_MEDIUM
+	bool "r8gd.medium"
+	help
+	  vCPUs: 1
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 59 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_LARGE
+	bool "r8gd.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_XLARGE
+	bool "r8gd.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_2XLARGE
+	bool "r8gd.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 474 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_4XLARGE
+	bool "r8gd.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_8XLARGE
+	bool "r8gd.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_12XLARGE
+	bool "r8gd.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_16XLARGE
+	bool "r8gd.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_24XLARGE
+	bool "r8gd.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5700 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_METAL_24XL
+	bool "r8gd.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5700 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_METAL_48XL
+	bool "r8gd.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 11400 GB
+
+config TERRAFORM_AWS_INSTANCE_R8GD_48XLARGE
+	bool "r8gd.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 11400 GB
+
+endchoice
+
+config TERRAFORM_AWS_R8GD_SIZE
+	string
+	default "r8gd.medium" if TERRAFORM_AWS_INSTANCE_R8GD_MEDIUM
+	default "r8gd.large" if TERRAFORM_AWS_INSTANCE_R8GD_LARGE
+	default "r8gd.xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_XLARGE
+	default "r8gd.2xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_2XLARGE
+	default "r8gd.4xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_4XLARGE
+	default "r8gd.8xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_8XLARGE
+	default "r8gd.12xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_12XLARGE
+	default "r8gd.16xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_16XLARGE
+	default "r8gd.24xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_24XLARGE
+	default "r8gd.metal-24xl" if TERRAFORM_AWS_INSTANCE_R8GD_METAL_24XL
+	default "r8gd.metal-48xl" if TERRAFORM_AWS_INSTANCE_R8GD_METAL_48XL
+	default "r8gd.48xlarge" if TERRAFORM_AWS_INSTANCE_R8GD_48XLARGE
+	default "r8gd.medium"
+

@@ -1,0 +1,122 @@
+# AWS X8G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X8G family"
+	default TERRAFORM_AWS_INSTANCE_X8G_MEDIUM
+	help
+	  Select the specific instance size within the X8G family.
+
+config TERRAFORM_AWS_INSTANCE_X8G_MEDIUM
+	bool "x8g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_LARGE
+	bool "x8g.large"
+	help
+	  vCPUs: 2
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_XLARGE
+	bool "x8g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_2XLARGE
+	bool "x8g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 128.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_4XLARGE
+	bool "x8g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 256.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_8XLARGE
+	bool "x8g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 512.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_12XLARGE
+	bool "x8g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 768.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_16XLARGE
+	bool "x8g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 1024.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_24XLARGE
+	bool "x8g.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 1536.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_METAL_24XL
+	bool "x8g.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 1536.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_48XLARGE
+	bool "x8g.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 3072.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X8G_METAL_48XL
+	bool "x8g.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 3072.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_X8G_SIZE
+	string
+	default "x8g.medium" if TERRAFORM_AWS_INSTANCE_X8G_MEDIUM
+	default "x8g.large" if TERRAFORM_AWS_INSTANCE_X8G_LARGE
+	default "x8g.xlarge" if TERRAFORM_AWS_INSTANCE_X8G_XLARGE
+	default "x8g.2xlarge" if TERRAFORM_AWS_INSTANCE_X8G_2XLARGE
+	default "x8g.4xlarge" if TERRAFORM_AWS_INSTANCE_X8G_4XLARGE
+	default "x8g.8xlarge" if TERRAFORM_AWS_INSTANCE_X8G_8XLARGE
+	default "x8g.12xlarge" if TERRAFORM_AWS_INSTANCE_X8G_12XLARGE
+	default "x8g.16xlarge" if TERRAFORM_AWS_INSTANCE_X8G_16XLARGE
+	default "x8g.24xlarge" if TERRAFORM_AWS_INSTANCE_X8G_24XLARGE
+	default "x8g.metal-24xl" if TERRAFORM_AWS_INSTANCE_X8G_METAL_24XL
+	default "x8g.48xlarge" if TERRAFORM_AWS_INSTANCE_X8G_48XLARGE
+	default "x8g.metal-48xl" if TERRAFORM_AWS_INSTANCE_X8G_METAL_48XL
+	default "x8g.medium"
+

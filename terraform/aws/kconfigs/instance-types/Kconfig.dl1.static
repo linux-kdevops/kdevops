@@ -1,0 +1,24 @@
+# AWS DL1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for DL1 family"
+	default TERRAFORM_AWS_INSTANCE_DL1_24XLARGE
+	help
+	  Select the specific instance size within the DL1 family.
+
+config TERRAFORM_AWS_INSTANCE_DL1_24XLARGE
+	bool "dl1.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 4x 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 4000 GB
+
+endchoice
+
+config TERRAFORM_AWS_DL1_SIZE
+	string
+	default "dl1.24xlarge" if TERRAFORM_AWS_INSTANCE_DL1_24XLARGE
+	default "dl1.24xlarge"
+

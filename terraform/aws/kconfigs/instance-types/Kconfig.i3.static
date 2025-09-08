@@ -1,0 +1,74 @@
+# AWS I3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I3 family"
+	default TERRAFORM_AWS_INSTANCE_I3_LARGE
+	help
+	  Select the specific instance size within the I3 family.
+
+config TERRAFORM_AWS_INSTANCE_I3_LARGE
+	bool "i3.large"
+	help
+	  vCPUs: 2
+	  Memory: 15.2 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 475 GB
+
+config TERRAFORM_AWS_INSTANCE_I3_XLARGE
+	bool "i3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 30.5 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_I3_2XLARGE
+	bool "i3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_I3_4XLARGE
+	bool "i3.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 122.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_I3_8XLARGE
+	bool "i3.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7600 GB
+
+config TERRAFORM_AWS_INSTANCE_I3_16XLARGE
+	bool "i3.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 488.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15200 GB
+
+endchoice
+
+config TERRAFORM_AWS_I3_SIZE
+	string
+	default "i3.large" if TERRAFORM_AWS_INSTANCE_I3_LARGE
+	default "i3.xlarge" if TERRAFORM_AWS_INSTANCE_I3_XLARGE
+	default "i3.2xlarge" if TERRAFORM_AWS_INSTANCE_I3_2XLARGE
+	default "i3.4xlarge" if TERRAFORM_AWS_INSTANCE_I3_4XLARGE
+	default "i3.8xlarge" if TERRAFORM_AWS_INSTANCE_I3_8XLARGE
+	default "i3.16xlarge" if TERRAFORM_AWS_INSTANCE_I3_16XLARGE
+	default "i3.large"
+

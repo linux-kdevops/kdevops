@@ -1,0 +1,24 @@
+# AWS P4D instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P4D family"
+	default TERRAFORM_AWS_INSTANCE_P4D_24XLARGE
+	help
+	  Select the specific instance size within the P4D family.
+
+config TERRAFORM_AWS_INSTANCE_P4D_24XLARGE
+	bool "p4d.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 1152.0 GB
+	  Network: 4x 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 8000 GB
+
+endchoice
+
+config TERRAFORM_AWS_P4D_SIZE
+	string
+	default "p4d.24xlarge" if TERRAFORM_AWS_INSTANCE_P4D_24XLARGE
+	default "p4d.24xlarge"
+

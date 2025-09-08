@@ -1,0 +1,54 @@
+# AWS D3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for D3 family"
+	default TERRAFORM_AWS_INSTANCE_D3_XLARGE
+	help
+	  Select the specific instance size within the D3 family.
+
+config TERRAFORM_AWS_INSTANCE_D3_XLARGE
+	bool "d3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5940 GB
+
+config TERRAFORM_AWS_INSTANCE_D3_2XLARGE
+	bool "d3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 11880 GB
+
+config TERRAFORM_AWS_INSTANCE_D3_4XLARGE
+	bool "d3.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 23760 GB
+
+config TERRAFORM_AWS_INSTANCE_D3_8XLARGE
+	bool "d3.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 47520 GB
+
+endchoice
+
+config TERRAFORM_AWS_D3_SIZE
+	string
+	default "d3.xlarge" if TERRAFORM_AWS_INSTANCE_D3_XLARGE
+	default "d3.2xlarge" if TERRAFORM_AWS_INSTANCE_D3_2XLARGE
+	default "d3.4xlarge" if TERRAFORM_AWS_INSTANCE_D3_4XLARGE
+	default "d3.8xlarge" if TERRAFORM_AWS_INSTANCE_D3_8XLARGE
+	default "d3.xlarge"
+

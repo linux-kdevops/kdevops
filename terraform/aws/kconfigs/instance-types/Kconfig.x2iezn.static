@@ -1,0 +1,68 @@
+# AWS X2IEZN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X2IEZN family"
+	default TERRAFORM_AWS_INSTANCE_X2IEZN_2XLARGE
+	help
+	  Select the specific instance size within the X2IEZN family.
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_2XLARGE
+	bool "x2iezn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 256.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_4XLARGE
+	bool "x2iezn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 512.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_6XLARGE
+	bool "x2iezn.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 768.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_8XLARGE
+	bool "x2iezn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 1024.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_12XLARGE
+	bool "x2iezn.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 1536.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_X2IEZN_METAL
+	bool "x2iezn.metal"
+	help
+	  vCPUs: 48
+	  Memory: 1536.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_X2IEZN_SIZE
+	string
+	default "x2iezn.2xlarge" if TERRAFORM_AWS_INSTANCE_X2IEZN_2XLARGE
+	default "x2iezn.4xlarge" if TERRAFORM_AWS_INSTANCE_X2IEZN_4XLARGE
+	default "x2iezn.6xlarge" if TERRAFORM_AWS_INSTANCE_X2IEZN_6XLARGE
+	default "x2iezn.8xlarge" if TERRAFORM_AWS_INSTANCE_X2IEZN_8XLARGE
+	default "x2iezn.12xlarge" if TERRAFORM_AWS_INSTANCE_X2IEZN_12XLARGE
+	default "x2iezn.metal" if TERRAFORM_AWS_INSTANCE_X2IEZN_METAL
+	default "x2iezn.2xlarge"
+

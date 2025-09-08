@@ -1,0 +1,77 @@
+# AWS C5N instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C5N family"
+	default TERRAFORM_AWS_INSTANCE_C5N_LARGE
+	help
+	  Select the specific instance size within the C5N family.
+
+config TERRAFORM_AWS_INSTANCE_C5N_LARGE
+	bool "c5n.large"
+	help
+	  vCPUs: 2
+	  Memory: 5.2 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_XLARGE
+	bool "c5n.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 10.5 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_2XLARGE
+	bool "c5n.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 21.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_4XLARGE
+	bool "c5n.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 42.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_9XLARGE
+	bool "c5n.9xlarge"
+	help
+	  vCPUs: 36
+	  Memory: 96.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_18XLARGE
+	bool "c5n.18xlarge"
+	help
+	  vCPUs: 72
+	  Memory: 192.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C5N_METAL
+	bool "c5n.metal"
+	help
+	  vCPUs: 72
+	  Memory: 192.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C5N_SIZE
+	string
+	default "c5n.large" if TERRAFORM_AWS_INSTANCE_C5N_LARGE
+	default "c5n.xlarge" if TERRAFORM_AWS_INSTANCE_C5N_XLARGE
+	default "c5n.2xlarge" if TERRAFORM_AWS_INSTANCE_C5N_2XLARGE
+	default "c5n.4xlarge" if TERRAFORM_AWS_INSTANCE_C5N_4XLARGE
+	default "c5n.9xlarge" if TERRAFORM_AWS_INSTANCE_C5N_9XLARGE
+	default "c5n.18xlarge" if TERRAFORM_AWS_INSTANCE_C5N_18XLARGE
+	default "c5n.metal" if TERRAFORM_AWS_INSTANCE_C5N_METAL
+	default "c5n.large"
+

@@ -1,0 +1,34 @@
+# AWS X1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X1 family"
+	default TERRAFORM_AWS_INSTANCE_X1_16XLARGE
+	help
+	  Select the specific instance size within the X1 family.
+
+config TERRAFORM_AWS_INSTANCE_X1_16XLARGE
+	bool "x1.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 976.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1920 GB
+
+config TERRAFORM_AWS_INSTANCE_X1_32XLARGE
+	bool "x1.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 1952.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3840 GB
+
+endchoice
+
+config TERRAFORM_AWS_X1_SIZE
+	string
+	default "x1.16xlarge" if TERRAFORM_AWS_INSTANCE_X1_16XLARGE
+	default "x1.32xlarge" if TERRAFORM_AWS_INSTANCE_X1_32XLARGE
+	default "x1.16xlarge"
+

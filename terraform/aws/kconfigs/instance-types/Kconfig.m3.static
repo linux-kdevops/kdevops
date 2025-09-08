@@ -1,0 +1,54 @@
+# AWS M3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M3 family"
+	default TERRAFORM_AWS_INSTANCE_M3_MEDIUM
+	help
+	  Select the specific instance size within the M3 family.
+
+config TERRAFORM_AWS_INSTANCE_M3_MEDIUM
+	bool "m3.medium"
+	help
+	  vCPUs: 1
+	  Memory: 3.8 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 4 GB
+
+config TERRAFORM_AWS_INSTANCE_M3_LARGE
+	bool "m3.large"
+	help
+	  vCPUs: 2
+	  Memory: 7.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 32 GB
+
+config TERRAFORM_AWS_INSTANCE_M3_XLARGE
+	bool "m3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 15.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 80 GB
+
+config TERRAFORM_AWS_INSTANCE_M3_2XLARGE
+	bool "m3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 30.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 160 GB
+
+endchoice
+
+config TERRAFORM_AWS_M3_SIZE
+	string
+	default "m3.medium" if TERRAFORM_AWS_INSTANCE_M3_MEDIUM
+	default "m3.large" if TERRAFORM_AWS_INSTANCE_M3_LARGE
+	default "m3.xlarge" if TERRAFORM_AWS_INSTANCE_M3_XLARGE
+	default "m3.2xlarge" if TERRAFORM_AWS_INSTANCE_M3_2XLARGE
+	default "m3.medium"
+

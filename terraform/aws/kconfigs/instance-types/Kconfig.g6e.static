@@ -1,0 +1,94 @@
+# AWS G6E instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for G6E family"
+	default TERRAFORM_AWS_INSTANCE_G6E_XLARGE
+	help
+	  Select the specific instance size within the G6E family.
+
+config TERRAFORM_AWS_INSTANCE_G6E_XLARGE
+	bool "g6e.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 250 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_2XLARGE
+	bool "g6e.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 450 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_4XLARGE
+	bool "g6e.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 600 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_8XLARGE
+	bool "g6e.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_12XLARGE
+	bool "g6e.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_16XLARGE
+	bool "g6e.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 35 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_24XLARGE
+	bool "g6e.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_G6E_48XLARGE
+	bool "g6e.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 400 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7600 GB
+
+endchoice
+
+config TERRAFORM_AWS_G6E_SIZE
+	string
+	default "g6e.xlarge" if TERRAFORM_AWS_INSTANCE_G6E_XLARGE
+	default "g6e.2xlarge" if TERRAFORM_AWS_INSTANCE_G6E_2XLARGE
+	default "g6e.4xlarge" if TERRAFORM_AWS_INSTANCE_G6E_4XLARGE
+	default "g6e.8xlarge" if TERRAFORM_AWS_INSTANCE_G6E_8XLARGE
+	default "g6e.12xlarge" if TERRAFORM_AWS_INSTANCE_G6E_12XLARGE
+	default "g6e.16xlarge" if TERRAFORM_AWS_INSTANCE_G6E_16XLARGE
+	default "g6e.24xlarge" if TERRAFORM_AWS_INSTANCE_G6E_24XLARGE
+	default "g6e.48xlarge" if TERRAFORM_AWS_INSTANCE_G6E_48XLARGE
+	default "g6e.xlarge"
+

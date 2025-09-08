@@ -1,0 +1,79 @@
+# GPU-optimized AMIs (default - AWS CLI not available)
+
+# GPU AMI Override - only shown for GPU instances
+config TERRAFORM_AWS_USE_GPU_AMI
+    bool "Use GPU-optimized AMI instead of standard distribution"
+    depends on TERRAFORM_AWS_IS_GPU_INSTANCE
+    output yaml
+    default n
+    help
+      Enable this to use a GPU-optimized AMI with pre-installed NVIDIA drivers,
+      CUDA, and ML frameworks instead of the standard distribution AMI.
+      Note: AWS CLI is not available, showing default options.
+
+if TERRAFORM_AWS_USE_GPU_AMI
+
+choice
+    prompt "GPU-optimized AMI selection"
+    default TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
+    depends on TERRAFORM_AWS_IS_GPU_INSTANCE
+    help
+      Select which GPU-optimized AMI to use for your GPU instance.
+
+config TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
+    bool "AWS Deep Learning AMI (Ubuntu 22.04)"
+    help
+      Pre-configured with NVIDIA drivers, CUDA, and ML frameworks.
+
+config TERRAFORM_AWS_GPU_AMI_CUSTOM
+    bool "Custom GPU AMI"
+
+endchoice
+
+if TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
+
+config TERRAFORM_AWS_GPU_AMI_NAME
+    string
+    output yaml
+    default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*"
+
+config TERRAFORM_AWS_GPU_AMI_OWNER
+    string
+    output yaml
+    default "amazon"
+
+endif # TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
+
+if TERRAFORM_AWS_GPU_AMI_CUSTOM
+
+config TERRAFORM_AWS_GPU_AMI_ID
+    string "Custom GPU AMI ID"
+    output yaml
+    help
+      Specify the AMI ID for your custom GPU image.
+
+endif # TERRAFORM_AWS_GPU_AMI_CUSTOM
+
+endif # TERRAFORM_AWS_USE_GPU_AMI
+
+# GPU instance detection (static)
+config TERRAFORM_AWS_IS_GPU_INSTANCE
+    bool
+    output yaml
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G6E
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G6
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G5
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G5G
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G4DN
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_G4AD
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P5
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P5EN
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P4D
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P4DE
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P3
+    default y if TERRAFORM_AWS_INSTANCE_TYPE_P3DN
+    default n
+    help
+      Automatically detected based on selected instance type.
+      This indicates whether the selected instance has GPU support.
+

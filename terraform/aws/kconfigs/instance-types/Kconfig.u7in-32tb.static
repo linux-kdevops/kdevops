@@ -1,0 +1,23 @@
+# AWS U7IN-32TB instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for U7IN-32TB family"
+	default TERRAFORM_AWS_INSTANCE_U7IN_32TB_224XLARGE
+	help
+	  Select the specific instance size within the U7IN-32TB family.
+
+config TERRAFORM_AWS_INSTANCE_U7IN_32TB_224XLARGE
+	bool "u7in-32tb.224xlarge"
+	help
+	  vCPUs: 896
+	  Memory: 32768.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_U7IN_32TB_SIZE
+	string
+	default "u7in-32tb.224xlarge" if TERRAFORM_AWS_INSTANCE_U7IN_32TB_224XLARGE
+	default "u7in-32tb.224xlarge"
+

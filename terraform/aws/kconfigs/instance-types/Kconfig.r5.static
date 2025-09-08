@@ -1,0 +1,95 @@
+# AWS R5 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R5 family"
+	default TERRAFORM_AWS_INSTANCE_R5_LARGE
+	help
+	  Select the specific instance size within the R5 family.
+
+config TERRAFORM_AWS_INSTANCE_R5_LARGE
+	bool "r5.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_XLARGE
+	bool "r5.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_2XLARGE
+	bool "r5.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_4XLARGE
+	bool "r5.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_8XLARGE
+	bool "r5.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_12XLARGE
+	bool "r5.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_16XLARGE
+	bool "r5.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_24XLARGE
+	bool "r5.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5_METAL
+	bool "r5.metal"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R5_SIZE
+	string
+	default "r5.large" if TERRAFORM_AWS_INSTANCE_R5_LARGE
+	default "r5.xlarge" if TERRAFORM_AWS_INSTANCE_R5_XLARGE
+	default "r5.2xlarge" if TERRAFORM_AWS_INSTANCE_R5_2XLARGE
+	default "r5.4xlarge" if TERRAFORM_AWS_INSTANCE_R5_4XLARGE
+	default "r5.8xlarge" if TERRAFORM_AWS_INSTANCE_R5_8XLARGE
+	default "r5.12xlarge" if TERRAFORM_AWS_INSTANCE_R5_12XLARGE
+	default "r5.16xlarge" if TERRAFORM_AWS_INSTANCE_R5_16XLARGE
+	default "r5.24xlarge" if TERRAFORM_AWS_INSTANCE_R5_24XLARGE
+	default "r5.metal" if TERRAFORM_AWS_INSTANCE_R5_METAL
+	default "r5.large"
+

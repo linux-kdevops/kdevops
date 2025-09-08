@@ -1,0 +1,23 @@
+# AWS T1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for T1 family"
+	default TERRAFORM_AWS_INSTANCE_T1_MICRO
+	help
+	  Select the specific instance size within the T1 family.
+
+config TERRAFORM_AWS_INSTANCE_T1_MICRO
+	bool "t1.micro"
+	help
+	  vCPUs: 1
+	  Memory: 0.6 GB
+	  Network: Very Low
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_T1_SIZE
+	string
+	default "t1.micro" if TERRAFORM_AWS_INSTANCE_T1_MICRO
+	default "t1.micro"
+

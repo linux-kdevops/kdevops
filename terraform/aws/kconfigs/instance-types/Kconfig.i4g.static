@@ -1,0 +1,74 @@
+# AWS I4G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I4G family"
+	default TERRAFORM_AWS_INSTANCE_I4G_LARGE
+	help
+	  Select the specific instance size within the I4G family.
+
+config TERRAFORM_AWS_INSTANCE_I4G_LARGE
+	bool "i4g.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 468 GB
+
+config TERRAFORM_AWS_INSTANCE_I4G_XLARGE
+	bool "i4g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 937 GB
+
+config TERRAFORM_AWS_INSTANCE_I4G_2XLARGE
+	bool "i4g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1875 GB
+
+config TERRAFORM_AWS_INSTANCE_I4G_4XLARGE
+	bool "i4g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3750 GB
+
+config TERRAFORM_AWS_INSTANCE_I4G_8XLARGE
+	bool "i4g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_I4G_16XLARGE
+	bool "i4g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+endchoice
+
+config TERRAFORM_AWS_I4G_SIZE
+	string
+	default "i4g.large" if TERRAFORM_AWS_INSTANCE_I4G_LARGE
+	default "i4g.xlarge" if TERRAFORM_AWS_INSTANCE_I4G_XLARGE
+	default "i4g.2xlarge" if TERRAFORM_AWS_INSTANCE_I4G_2XLARGE
+	default "i4g.4xlarge" if TERRAFORM_AWS_INSTANCE_I4G_4XLARGE
+	default "i4g.8xlarge" if TERRAFORM_AWS_INSTANCE_I4G_8XLARGE
+	default "i4g.16xlarge" if TERRAFORM_AWS_INSTANCE_I4G_16XLARGE
+	default "i4g.large"
+

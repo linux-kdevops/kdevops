@@ -1,0 +1,84 @@
+# AWS G4DN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for G4DN family"
+	default TERRAFORM_AWS_INSTANCE_G4DN_XLARGE
+	help
+	  Select the specific instance size within the G4DN family.
+
+config TERRAFORM_AWS_INSTANCE_G4DN_XLARGE
+	bool "g4dn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 125 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_2XLARGE
+	bool "g4dn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 225 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_4XLARGE
+	bool "g4dn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 225 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_8XLARGE
+	bool "g4dn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_12XLARGE
+	bool "g4dn.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_16XLARGE
+	bool "g4dn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_G4DN_METAL
+	bool "g4dn.metal"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+endchoice
+
+config TERRAFORM_AWS_G4DN_SIZE
+	string
+	default "g4dn.xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_XLARGE
+	default "g4dn.2xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_2XLARGE
+	default "g4dn.4xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_4XLARGE
+	default "g4dn.8xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_8XLARGE
+	default "g4dn.12xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_12XLARGE
+	default "g4dn.16xlarge" if TERRAFORM_AWS_INSTANCE_G4DN_16XLARGE
+	default "g4dn.metal" if TERRAFORM_AWS_INSTANCE_G4DN_METAL
+	default "g4dn.xlarge"
+

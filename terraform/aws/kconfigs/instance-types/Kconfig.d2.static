@@ -1,0 +1,54 @@
+# AWS D2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for D2 family"
+	default TERRAFORM_AWS_INSTANCE_D2_XLARGE
+	help
+	  Select the specific instance size within the D2 family.
+
+config TERRAFORM_AWS_INSTANCE_D2_XLARGE
+	bool "d2.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 30.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 6144 GB
+
+config TERRAFORM_AWS_INSTANCE_D2_2XLARGE
+	bool "d2.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 12288 GB
+
+config TERRAFORM_AWS_INSTANCE_D2_4XLARGE
+	bool "d2.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 122.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 24576 GB
+
+config TERRAFORM_AWS_INSTANCE_D2_8XLARGE
+	bool "d2.8xlarge"
+	help
+	  vCPUs: 36
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 49152 GB
+
+endchoice
+
+config TERRAFORM_AWS_D2_SIZE
+	string
+	default "d2.xlarge" if TERRAFORM_AWS_INSTANCE_D2_XLARGE
+	default "d2.2xlarge" if TERRAFORM_AWS_INSTANCE_D2_2XLARGE
+	default "d2.4xlarge" if TERRAFORM_AWS_INSTANCE_D2_4XLARGE
+	default "d2.8xlarge" if TERRAFORM_AWS_INSTANCE_D2_8XLARGE
+	default "d2.xlarge"
+

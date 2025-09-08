@@ -1,0 +1,77 @@
+# AWS T3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for T3 family"
+	default TERRAFORM_AWS_INSTANCE_T3_NANO
+	help
+	  Select the specific instance size within the T3 family.
+
+config TERRAFORM_AWS_INSTANCE_T3_NANO
+	bool "t3.nano"
+	help
+	  vCPUs: 2
+	  Memory: 0.5 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.005/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_MICRO
+	bool "t3.micro"
+	help
+	  vCPUs: 2
+	  Memory: 1.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.010/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_SMALL
+	bool "t3.small"
+	help
+	  vCPUs: 2
+	  Memory: 2.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.021/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_MEDIUM
+	bool "t3.medium"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.042/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_LARGE
+	bool "t3.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.083/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_XLARGE
+	bool "t3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.166/hour
+
+config TERRAFORM_AWS_INSTANCE_T3_2XLARGE
+	bool "t3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: $0.333/hour
+
+endchoice
+
+config TERRAFORM_AWS_T3_SIZE
+	string
+	default "t3.nano" if TERRAFORM_AWS_INSTANCE_T3_NANO
+	default "t3.micro" if TERRAFORM_AWS_INSTANCE_T3_MICRO
+	default "t3.small" if TERRAFORM_AWS_INSTANCE_T3_SMALL
+	default "t3.medium" if TERRAFORM_AWS_INSTANCE_T3_MEDIUM
+	default "t3.large" if TERRAFORM_AWS_INSTANCE_T3_LARGE
+	default "t3.xlarge" if TERRAFORM_AWS_INSTANCE_T3_XLARGE
+	default "t3.2xlarge" if TERRAFORM_AWS_INSTANCE_T3_2XLARGE
+	default "t3.nano"
+

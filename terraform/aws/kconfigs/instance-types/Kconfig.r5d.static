@@ -1,0 +1,104 @@
+# AWS R5D instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R5D family"
+	default TERRAFORM_AWS_INSTANCE_R5D_LARGE
+	help
+	  Select the specific instance size within the R5D family.
+
+config TERRAFORM_AWS_INSTANCE_R5D_LARGE
+	bool "r5d.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 75 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_XLARGE
+	bool "r5d.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 150 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_2XLARGE
+	bool "r5d.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 300 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_4XLARGE
+	bool "r5d.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 600 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_8XLARGE
+	bool "r5d.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1200 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_12XLARGE
+	bool "r5d.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_16XLARGE
+	bool "r5d.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2400 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_24XLARGE
+	bool "r5d.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3600 GB
+
+config TERRAFORM_AWS_INSTANCE_R5D_METAL
+	bool "r5d.metal"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3600 GB
+
+endchoice
+
+config TERRAFORM_AWS_R5D_SIZE
+	string
+	default "r5d.large" if TERRAFORM_AWS_INSTANCE_R5D_LARGE
+	default "r5d.xlarge" if TERRAFORM_AWS_INSTANCE_R5D_XLARGE
+	default "r5d.2xlarge" if TERRAFORM_AWS_INSTANCE_R5D_2XLARGE
+	default "r5d.4xlarge" if TERRAFORM_AWS_INSTANCE_R5D_4XLARGE
+	default "r5d.8xlarge" if TERRAFORM_AWS_INSTANCE_R5D_8XLARGE
+	default "r5d.12xlarge" if TERRAFORM_AWS_INSTANCE_R5D_12XLARGE
+	default "r5d.16xlarge" if TERRAFORM_AWS_INSTANCE_R5D_16XLARGE
+	default "r5d.24xlarge" if TERRAFORM_AWS_INSTANCE_R5D_24XLARGE
+	default "r5d.metal" if TERRAFORM_AWS_INSTANCE_R5D_METAL
+	default "r5d.large"
+

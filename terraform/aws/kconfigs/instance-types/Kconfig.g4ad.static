@@ -1,0 +1,64 @@
+# AWS G4AD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for G4AD family"
+	default TERRAFORM_AWS_INSTANCE_G4AD_XLARGE
+	help
+	  Select the specific instance size within the G4AD family.
+
+config TERRAFORM_AWS_INSTANCE_G4AD_XLARGE
+	bool "g4ad.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 150 GB
+
+config TERRAFORM_AWS_INSTANCE_G4AD_2XLARGE
+	bool "g4ad.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 300 GB
+
+config TERRAFORM_AWS_INSTANCE_G4AD_4XLARGE
+	bool "g4ad.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 600 GB
+
+config TERRAFORM_AWS_INSTANCE_G4AD_8XLARGE
+	bool "g4ad.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1200 GB
+
+config TERRAFORM_AWS_INSTANCE_G4AD_16XLARGE
+	bool "g4ad.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2400 GB
+
+endchoice
+
+config TERRAFORM_AWS_G4AD_SIZE
+	string
+	default "g4ad.xlarge" if TERRAFORM_AWS_INSTANCE_G4AD_XLARGE
+	default "g4ad.2xlarge" if TERRAFORM_AWS_INSTANCE_G4AD_2XLARGE
+	default "g4ad.4xlarge" if TERRAFORM_AWS_INSTANCE_G4AD_4XLARGE
+	default "g4ad.8xlarge" if TERRAFORM_AWS_INSTANCE_G4AD_8XLARGE
+	default "g4ad.16xlarge" if TERRAFORM_AWS_INSTANCE_G4AD_16XLARGE
+	default "g4ad.xlarge"
+

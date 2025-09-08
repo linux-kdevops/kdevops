@@ -1,0 +1,54 @@
+# AWS G6F instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for G6F family"
+	default TERRAFORM_AWS_INSTANCE_G6F_LARGE
+	help
+	  Select the specific instance size within the G6F family.
+
+config TERRAFORM_AWS_INSTANCE_G6F_LARGE
+	bool "g6f.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 100 GB
+
+config TERRAFORM_AWS_INSTANCE_G6F_XLARGE
+	bool "g6f.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 100 GB
+
+config TERRAFORM_AWS_INSTANCE_G6F_2XLARGE
+	bool "g6f.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 200 GB
+
+config TERRAFORM_AWS_INSTANCE_G6F_4XLARGE
+	bool "g6f.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 450 GB
+
+endchoice
+
+config TERRAFORM_AWS_G6F_SIZE
+	string
+	default "g6f.large" if TERRAFORM_AWS_INSTANCE_G6F_LARGE
+	default "g6f.xlarge" if TERRAFORM_AWS_INSTANCE_G6F_XLARGE
+	default "g6f.2xlarge" if TERRAFORM_AWS_INSTANCE_G6F_2XLARGE
+	default "g6f.4xlarge" if TERRAFORM_AWS_INSTANCE_G6F_4XLARGE
+	default "g6f.large"
+

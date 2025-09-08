@@ -1,0 +1,24 @@
+# AWS P3DN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P3DN family"
+	default TERRAFORM_AWS_INSTANCE_P3DN_24XLARGE
+	help
+	  Select the specific instance size within the P3DN family.
+
+config TERRAFORM_AWS_INSTANCE_P3DN_24XLARGE
+	bool "p3dn.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+endchoice
+
+config TERRAFORM_AWS_P3DN_SIZE
+	string
+	default "p3dn.24xlarge" if TERRAFORM_AWS_INSTANCE_P3DN_24XLARGE
+	default "p3dn.24xlarge"
+

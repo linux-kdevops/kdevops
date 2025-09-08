@@ -1,0 +1,64 @@
+# AWS R3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R3 family"
+	default TERRAFORM_AWS_INSTANCE_R3_LARGE
+	help
+	  Select the specific instance size within the R3 family.
+
+config TERRAFORM_AWS_INSTANCE_R3_LARGE
+	bool "r3.large"
+	help
+	  vCPUs: 2
+	  Memory: 15.0 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 32 GB
+
+config TERRAFORM_AWS_INSTANCE_R3_XLARGE
+	bool "r3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 30.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 80 GB
+
+config TERRAFORM_AWS_INSTANCE_R3_2XLARGE
+	bool "r3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 160 GB
+
+config TERRAFORM_AWS_INSTANCE_R3_4XLARGE
+	bool "r3.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 122.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 320 GB
+
+config TERRAFORM_AWS_INSTANCE_R3_8XLARGE
+	bool "r3.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 640 GB
+
+endchoice
+
+config TERRAFORM_AWS_R3_SIZE
+	string
+	default "r3.large" if TERRAFORM_AWS_INSTANCE_R3_LARGE
+	default "r3.xlarge" if TERRAFORM_AWS_INSTANCE_R3_XLARGE
+	default "r3.2xlarge" if TERRAFORM_AWS_INSTANCE_R3_2XLARGE
+	default "r3.4xlarge" if TERRAFORM_AWS_INSTANCE_R3_4XLARGE
+	default "r3.8xlarge" if TERRAFORM_AWS_INSTANCE_R3_8XLARGE
+	default "r3.large"
+

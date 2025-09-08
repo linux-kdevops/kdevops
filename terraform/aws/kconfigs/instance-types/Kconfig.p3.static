@@ -1,0 +1,41 @@
+# AWS P3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P3 family"
+	default TERRAFORM_AWS_INSTANCE_P3_2XLARGE
+	help
+	  Select the specific instance size within the P3 family.
+
+config TERRAFORM_AWS_INSTANCE_P3_2XLARGE
+	bool "p3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_P3_8XLARGE
+	bool "p3.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_P3_16XLARGE
+	bool "p3.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 488.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_P3_SIZE
+	string
+	default "p3.2xlarge" if TERRAFORM_AWS_INSTANCE_P3_2XLARGE
+	default "p3.8xlarge" if TERRAFORM_AWS_INSTANCE_P3_8XLARGE
+	default "p3.16xlarge" if TERRAFORM_AWS_INSTANCE_P3_16XLARGE
+	default "p3.2xlarge"
+

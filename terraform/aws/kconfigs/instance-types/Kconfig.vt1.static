@@ -1,0 +1,41 @@
+# AWS VT1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for VT1 family"
+	default TERRAFORM_AWS_INSTANCE_VT1_3XLARGE
+	help
+	  Select the specific instance size within the VT1 family.
+
+config TERRAFORM_AWS_INSTANCE_VT1_3XLARGE
+	bool "vt1.3xlarge"
+	help
+	  vCPUs: 12
+	  Memory: 24.0 GB
+	  Network: 3.12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_VT1_6XLARGE
+	bool "vt1.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 48.0 GB
+	  Network: 6.25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_VT1_24XLARGE
+	bool "vt1.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_VT1_SIZE
+	string
+	default "vt1.3xlarge" if TERRAFORM_AWS_INSTANCE_VT1_3XLARGE
+	default "vt1.6xlarge" if TERRAFORM_AWS_INSTANCE_VT1_6XLARGE
+	default "vt1.24xlarge" if TERRAFORM_AWS_INSTANCE_VT1_24XLARGE
+	default "vt1.3xlarge"
+

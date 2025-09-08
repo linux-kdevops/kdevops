@@ -1,0 +1,23 @@
+# AWS U7I-6TB instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for U7I-6TB family"
+	default TERRAFORM_AWS_INSTANCE_U7I_6TB_112XLARGE
+	help
+	  Select the specific instance size within the U7I-6TB family.
+
+config TERRAFORM_AWS_INSTANCE_U7I_6TB_112XLARGE
+	bool "u7i-6tb.112xlarge"
+	help
+	  vCPUs: 448
+	  Memory: 6144.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_U7I_6TB_SIZE
+	string
+	default "u7i-6tb.112xlarge" if TERRAFORM_AWS_INSTANCE_U7I_6TB_112XLARGE
+	default "u7i-6tb.112xlarge"
+

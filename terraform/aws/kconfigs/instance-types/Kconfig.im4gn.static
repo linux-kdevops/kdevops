@@ -1,0 +1,74 @@
+# AWS IM4GN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for IM4GN family"
+	default TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
+	help
+	  Select the specific instance size within the IM4GN family.
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
+	bool "im4gn.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 937 GB
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_XLARGE
+	bool "im4gn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1875 GB
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_2XLARGE
+	bool "im4gn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3750 GB
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	bool "im4gn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_8XLARGE
+	bool "im4gn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+config TERRAFORM_AWS_INSTANCE_IM4GN_16XLARGE
+	bool "im4gn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30000 GB
+
+endchoice
+
+config TERRAFORM_AWS_IM4GN_SIZE
+	string
+	default "im4gn.large" if TERRAFORM_AWS_INSTANCE_IM4GN_LARGE
+	default "im4gn.xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_XLARGE
+	default "im4gn.2xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_2XLARGE
+	default "im4gn.4xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_4XLARGE
+	default "im4gn.8xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_8XLARGE
+	default "im4gn.16xlarge" if TERRAFORM_AWS_INSTANCE_IM4GN_16XLARGE
+	default "im4gn.large"
+

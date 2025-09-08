@@ -1,0 +1,104 @@
+# AWS M6I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M6I family"
+	default TERRAFORM_AWS_INSTANCE_M6I_LARGE
+	help
+	  Select the specific instance size within the M6I family.
+
+config TERRAFORM_AWS_INSTANCE_M6I_LARGE
+	bool "m6i.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_XLARGE
+	bool "m6i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_2XLARGE
+	bool "m6i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_4XLARGE
+	bool "m6i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_8XLARGE
+	bool "m6i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_12XLARGE
+	bool "m6i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_16XLARGE
+	bool "m6i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_24XLARGE
+	bool "m6i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_METAL
+	bool "m6i.metal"
+	help
+	  vCPUs: 128
+	  Memory: 512.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6I_32XLARGE
+	bool "m6i.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 512.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M6I_SIZE
+	string
+	default "m6i.large" if TERRAFORM_AWS_INSTANCE_M6I_LARGE
+	default "m6i.xlarge" if TERRAFORM_AWS_INSTANCE_M6I_XLARGE
+	default "m6i.2xlarge" if TERRAFORM_AWS_INSTANCE_M6I_2XLARGE
+	default "m6i.4xlarge" if TERRAFORM_AWS_INSTANCE_M6I_4XLARGE
+	default "m6i.8xlarge" if TERRAFORM_AWS_INSTANCE_M6I_8XLARGE
+	default "m6i.12xlarge" if TERRAFORM_AWS_INSTANCE_M6I_12XLARGE
+	default "m6i.16xlarge" if TERRAFORM_AWS_INSTANCE_M6I_16XLARGE
+	default "m6i.24xlarge" if TERRAFORM_AWS_INSTANCE_M6I_24XLARGE
+	default "m6i.metal" if TERRAFORM_AWS_INSTANCE_M6I_METAL
+	default "m6i.32xlarge" if TERRAFORM_AWS_INSTANCE_M6I_32XLARGE
+	default "m6i.large"
+

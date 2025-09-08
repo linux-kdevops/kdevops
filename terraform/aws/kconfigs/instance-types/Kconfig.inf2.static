@@ -1,0 +1,50 @@
+# AWS INF2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for INF2 family"
+	default TERRAFORM_AWS_INSTANCE_INF2_XLARGE
+	help
+	  Select the specific instance size within the INF2 family.
+
+config TERRAFORM_AWS_INSTANCE_INF2_XLARGE
+	bool "inf2.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF2_8XLARGE
+	bool "inf2.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF2_24XLARGE
+	bool "inf2.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF2_48XLARGE
+	bool "inf2.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_INF2_SIZE
+	string
+	default "inf2.xlarge" if TERRAFORM_AWS_INSTANCE_INF2_XLARGE
+	default "inf2.8xlarge" if TERRAFORM_AWS_INSTANCE_INF2_8XLARGE
+	default "inf2.24xlarge" if TERRAFORM_AWS_INSTANCE_INF2_24XLARGE
+	default "inf2.48xlarge" if TERRAFORM_AWS_INSTANCE_INF2_48XLARGE
+	default "inf2.xlarge"
+

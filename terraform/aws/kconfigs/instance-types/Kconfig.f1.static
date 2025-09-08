@@ -1,0 +1,44 @@
+# AWS F1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for F1 family"
+	default TERRAFORM_AWS_INSTANCE_F1_2XLARGE
+	help
+	  Select the specific instance size within the F1 family.
+
+config TERRAFORM_AWS_INSTANCE_F1_2XLARGE
+	bool "f1.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 122.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 470 GB
+
+config TERRAFORM_AWS_INSTANCE_F1_4XLARGE
+	bool "f1.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 244.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 940 GB
+
+config TERRAFORM_AWS_INSTANCE_F1_16XLARGE
+	bool "f1.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 976.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3760 GB
+
+endchoice
+
+config TERRAFORM_AWS_F1_SIZE
+	string
+	default "f1.2xlarge" if TERRAFORM_AWS_INSTANCE_F1_2XLARGE
+	default "f1.4xlarge" if TERRAFORM_AWS_INSTANCE_F1_4XLARGE
+	default "f1.16xlarge" if TERRAFORM_AWS_INSTANCE_F1_16XLARGE
+	default "f1.2xlarge"
+

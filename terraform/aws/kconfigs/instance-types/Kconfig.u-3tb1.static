@@ -1,0 +1,23 @@
+# AWS U-3TB1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for U-3TB1 family"
+	default TERRAFORM_AWS_INSTANCE_U_3TB1_56XLARGE
+	help
+	  Select the specific instance size within the U-3TB1 family.
+
+config TERRAFORM_AWS_INSTANCE_U_3TB1_56XLARGE
+	bool "u-3tb1.56xlarge"
+	help
+	  vCPUs: 224
+	  Memory: 3072.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_U_3TB1_SIZE
+	string
+	default "u-3tb1.56xlarge" if TERRAFORM_AWS_INSTANCE_U_3TB1_56XLARGE
+	default "u-3tb1.56xlarge"
+

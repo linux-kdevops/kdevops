@@ -1,0 +1,24 @@
+# AWS P4DE instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P4DE family"
+	default TERRAFORM_AWS_INSTANCE_P4DE_24XLARGE
+	help
+	  Select the specific instance size within the P4DE family.
+
+config TERRAFORM_AWS_INSTANCE_P4DE_24XLARGE
+	bool "p4de.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 1152.0 GB
+	  Network: 4x 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 8000 GB
+
+endchoice
+
+config TERRAFORM_AWS_P4DE_SIZE
+	string
+	default "p4de.24xlarge" if TERRAFORM_AWS_INSTANCE_P4DE_24XLARGE
+	default "p4de.24xlarge"
+
