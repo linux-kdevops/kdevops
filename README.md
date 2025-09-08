@@ -274,6 +274,15 @@ A/B testing capabilities, and advanced graphing and visualization support. For
 detailed configuration and usage information, refer to the
 [kdevops fio-tests documentation](docs/fio-tests.md).
 
+### MinIO Warp S3 benchmarking
+
+kdevops supports S3 storage performance testing through MinIO Warp benchmarking.
+This workflow provides automated MinIO deployment and S3 API performance testing
+with support for different filesystems and block sizes.
+
+For detailed documentation and demo results, see the
+[MinIO Warp documentation](docs/minio-warp/).
+
 ### AI workflow
 
 kdevops now supports AI/ML system benchmarking, starting with vector databases
