@@ -1,0 +1,95 @@
+# AWS C5 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C5 family"
+	default TERRAFORM_AWS_INSTANCE_C5_LARGE
+	help
+	  Select the specific instance size within the C5 family.
+
+config TERRAFORM_AWS_INSTANCE_C5_LARGE
+	bool "c5.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: $0.085/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_XLARGE
+	bool "c5.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: $0.170/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_2XLARGE
+	bool "c5.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: $0.340/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_4XLARGE
+	bool "c5.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: $0.680/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_9XLARGE
+	bool "c5.9xlarge"
+	help
+	  vCPUs: 36
+	  Memory: 72.0 GB
+	  Network: 12 Gigabit
+	  Price: $1.530/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_12XLARGE
+	bool "c5.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 12 Gigabit
+	  Price: $2.040/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_18XLARGE
+	bool "c5.18xlarge"
+	help
+	  vCPUs: 72
+	  Memory: 144.0 GB
+	  Network: 25 Gigabit
+	  Price: $3.060/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_24XLARGE
+	bool "c5.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: $4.080/hour
+
+config TERRAFORM_AWS_INSTANCE_C5_METAL
+	bool "c5.metal"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C5_SIZE
+	string
+	default "c5.large" if TERRAFORM_AWS_INSTANCE_C5_LARGE
+	default "c5.xlarge" if TERRAFORM_AWS_INSTANCE_C5_XLARGE
+	default "c5.2xlarge" if TERRAFORM_AWS_INSTANCE_C5_2XLARGE
+	default "c5.4xlarge" if TERRAFORM_AWS_INSTANCE_C5_4XLARGE
+	default "c5.9xlarge" if TERRAFORM_AWS_INSTANCE_C5_9XLARGE
+	default "c5.12xlarge" if TERRAFORM_AWS_INSTANCE_C5_12XLARGE
+	default "c5.18xlarge" if TERRAFORM_AWS_INSTANCE_C5_18XLARGE
+	default "c5.24xlarge" if TERRAFORM_AWS_INSTANCE_C5_24XLARGE
+	default "c5.metal" if TERRAFORM_AWS_INSTANCE_C5_METAL
+	default "c5.large"
+

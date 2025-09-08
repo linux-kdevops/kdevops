@@ -1,0 +1,41 @@
+# AWS HPC7G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for HPC7G family"
+	default TERRAFORM_AWS_INSTANCE_HPC7G_4XLARGE
+	help
+	  Select the specific instance size within the HPC7G family.
+
+config TERRAFORM_AWS_INSTANCE_HPC7G_4XLARGE
+	bool "hpc7g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_HPC7G_8XLARGE
+	bool "hpc7g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_HPC7G_16XLARGE
+	bool "hpc7g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_HPC7G_SIZE
+	string
+	default "hpc7g.4xlarge" if TERRAFORM_AWS_INSTANCE_HPC7G_4XLARGE
+	default "hpc7g.8xlarge" if TERRAFORM_AWS_INSTANCE_HPC7G_8XLARGE
+	default "hpc7g.16xlarge" if TERRAFORM_AWS_INSTANCE_HPC7G_16XLARGE
+	default "hpc7g.4xlarge"
+

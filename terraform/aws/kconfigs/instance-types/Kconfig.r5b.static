@@ -1,0 +1,95 @@
+# AWS R5B instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R5B family"
+	default TERRAFORM_AWS_INSTANCE_R5B_LARGE
+	help
+	  Select the specific instance size within the R5B family.
+
+config TERRAFORM_AWS_INSTANCE_R5B_LARGE
+	bool "r5b.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_XLARGE
+	bool "r5b.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_2XLARGE
+	bool "r5b.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_4XLARGE
+	bool "r5b.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_8XLARGE
+	bool "r5b.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_12XLARGE
+	bool "r5b.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_16XLARGE
+	bool "r5b.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_METAL
+	bool "r5b.metal"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5B_24XLARGE
+	bool "r5b.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R5B_SIZE
+	string
+	default "r5b.large" if TERRAFORM_AWS_INSTANCE_R5B_LARGE
+	default "r5b.xlarge" if TERRAFORM_AWS_INSTANCE_R5B_XLARGE
+	default "r5b.2xlarge" if TERRAFORM_AWS_INSTANCE_R5B_2XLARGE
+	default "r5b.4xlarge" if TERRAFORM_AWS_INSTANCE_R5B_4XLARGE
+	default "r5b.8xlarge" if TERRAFORM_AWS_INSTANCE_R5B_8XLARGE
+	default "r5b.12xlarge" if TERRAFORM_AWS_INSTANCE_R5B_12XLARGE
+	default "r5b.16xlarge" if TERRAFORM_AWS_INSTANCE_R5B_16XLARGE
+	default "r5b.metal" if TERRAFORM_AWS_INSTANCE_R5B_METAL
+	default "r5b.24xlarge" if TERRAFORM_AWS_INSTANCE_R5B_24XLARGE
+	default "r5b.large"
+

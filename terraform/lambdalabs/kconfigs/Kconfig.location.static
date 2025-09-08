@@ -1,0 +1,59 @@
+# Lambda Labs regions (dynamically generated with capacity info)
+
+choice
+	prompt "Lambda Labs region"
+	default TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2
+	help
+	  Select the Lambda Labs region for deployment.
+	  Number shows how many instance types have capacity in that region.
+	  Choose regions with higher numbers for better availability.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2
+	bool "us-south-2 - Us South 2 [3 types available]"
+	help
+	  Region: Us South 2
+	  3 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_AUSTRALIA_EAST_1
+	bool "australia-east-1 - Australia East 1 [1 types available]"
+	help
+	  Region: Australia East 1
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_EAST_1
+	bool "us-east-1 - US East (Virginia) [1 types available]"
+	help
+	  Region: US East (Virginia)
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_EAST_3
+	bool "us-east-3 - Us East 3 [1 types available]"
+	help
+	  Region: Us East 3
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1
+	bool "us-midwest-1 - US Midwest [1 types available]"
+	help
+	  Region: US Midwest
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1
+	bool "us-south-1 - US South [1 types available]"
+	help
+	  Region: US South
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_3
+	bool "us-south-3 - Us South 3 [1 types available]"
+	help
+	  Region: Us South 3
+	  1 instance types have capacity in this region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_3
+	bool "us-west-3 - US West 3 [1 types available]"
+	help
+	  Region: US West 3
+	  1 instance types have capacity in this region.
+
+endchoice

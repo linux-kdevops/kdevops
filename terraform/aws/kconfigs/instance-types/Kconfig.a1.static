@@ -1,0 +1,68 @@
+# AWS A1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for A1 family"
+	default TERRAFORM_AWS_INSTANCE_A1_MEDIUM
+	help
+	  Select the specific instance size within the A1 family.
+
+config TERRAFORM_AWS_INSTANCE_A1_MEDIUM
+	bool "a1.medium"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_A1_LARGE
+	bool "a1.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_A1_XLARGE
+	bool "a1.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_A1_2XLARGE
+	bool "a1.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_A1_METAL
+	bool "a1.metal"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_A1_4XLARGE
+	bool "a1.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_A1_SIZE
+	string
+	default "a1.medium" if TERRAFORM_AWS_INSTANCE_A1_MEDIUM
+	default "a1.large" if TERRAFORM_AWS_INSTANCE_A1_LARGE
+	default "a1.xlarge" if TERRAFORM_AWS_INSTANCE_A1_XLARGE
+	default "a1.2xlarge" if TERRAFORM_AWS_INSTANCE_A1_2XLARGE
+	default "a1.metal" if TERRAFORM_AWS_INSTANCE_A1_METAL
+	default "a1.4xlarge" if TERRAFORM_AWS_INSTANCE_A1_4XLARGE
+	default "a1.medium"
+

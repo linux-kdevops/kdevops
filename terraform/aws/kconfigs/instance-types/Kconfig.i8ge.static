@@ -1,0 +1,124 @@
+# AWS I8GE instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I8GE family"
+	default TERRAFORM_AWS_INSTANCE_I8GE_LARGE
+	help
+	  Select the specific instance size within the I8GE family.
+
+config TERRAFORM_AWS_INSTANCE_I8GE_LARGE
+	bool "i8ge.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1250 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_XLARGE
+	bool "i8ge.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2500 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_2XLARGE
+	bool "i8ge.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_3XLARGE
+	bool "i8ge.3xlarge"
+	help
+	  vCPUs: 12
+	  Memory: 96.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_6XLARGE
+	bool "i8ge.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 192.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_12XLARGE
+	bool "i8ge.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_18XLARGE
+	bool "i8ge.18xlarge"
+	help
+	  vCPUs: 72
+	  Memory: 576.0 GB
+	  Network: 112.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 45000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_24XLARGE
+	bool "i8ge.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 150 Gigabit
+	  Price: pricing varies
+	  Instance storage: 60000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_METAL_24XL
+	bool "i8ge.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 150 Gigabit
+	  Price: pricing varies
+	  Instance storage: 60000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_48XLARGE
+	bool "i8ge.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 300 Gigabit
+	  Price: pricing varies
+	  Instance storage: 120000 GB
+
+config TERRAFORM_AWS_INSTANCE_I8GE_METAL_48XL
+	bool "i8ge.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 300 Gigabit
+	  Price: pricing varies
+	  Instance storage: 120000 GB
+
+endchoice
+
+config TERRAFORM_AWS_I8GE_SIZE
+	string
+	default "i8ge.large" if TERRAFORM_AWS_INSTANCE_I8GE_LARGE
+	default "i8ge.xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_XLARGE
+	default "i8ge.2xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_2XLARGE
+	default "i8ge.3xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_3XLARGE
+	default "i8ge.6xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_6XLARGE
+	default "i8ge.12xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_12XLARGE
+	default "i8ge.18xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_18XLARGE
+	default "i8ge.24xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_24XLARGE
+	default "i8ge.metal-24xl" if TERRAFORM_AWS_INSTANCE_I8GE_METAL_24XL
+	default "i8ge.48xlarge" if TERRAFORM_AWS_INSTANCE_I8GE_48XLARGE
+	default "i8ge.metal-48xl" if TERRAFORM_AWS_INSTANCE_I8GE_METAL_48XL
+	default "i8ge.large"
+

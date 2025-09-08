@@ -1,0 +1,24 @@
+# AWS P5EN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for P5EN family"
+	default TERRAFORM_AWS_INSTANCE_P5EN_48XLARGE
+	help
+	  Select the specific instance size within the P5EN family.
+
+config TERRAFORM_AWS_INSTANCE_P5EN_48XLARGE
+	bool "p5en.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 2048.0 GB
+	  Network: 3200 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30400 GB
+
+endchoice
+
+config TERRAFORM_AWS_P5EN_SIZE
+	string
+	default "p5en.48xlarge" if TERRAFORM_AWS_INSTANCE_P5EN_48XLARGE
+	default "p5en.48xlarge"
+

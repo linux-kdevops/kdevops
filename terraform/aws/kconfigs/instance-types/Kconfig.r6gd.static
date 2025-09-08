@@ -1,0 +1,104 @@
+# AWS R6GD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R6GD family"
+	default TERRAFORM_AWS_INSTANCE_R6GD_MEDIUM
+	help
+	  Select the specific instance size within the R6GD family.
+
+config TERRAFORM_AWS_INSTANCE_R6GD_MEDIUM
+	bool "r6gd.medium"
+	help
+	  vCPUs: 1
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 59 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_LARGE
+	bool "r6gd.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_XLARGE
+	bool "r6gd.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_2XLARGE
+	bool "r6gd.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 474 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_4XLARGE
+	bool "r6gd.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_8XLARGE
+	bool "r6gd.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_12XLARGE
+	bool "r6gd.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_METAL
+	bool "r6gd.metal"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_R6GD_16XLARGE
+	bool "r6gd.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_R6GD_SIZE
+	string
+	default "r6gd.medium" if TERRAFORM_AWS_INSTANCE_R6GD_MEDIUM
+	default "r6gd.large" if TERRAFORM_AWS_INSTANCE_R6GD_LARGE
+	default "r6gd.xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_XLARGE
+	default "r6gd.2xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_2XLARGE
+	default "r6gd.4xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_4XLARGE
+	default "r6gd.8xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_8XLARGE
+	default "r6gd.12xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_12XLARGE
+	default "r6gd.metal" if TERRAFORM_AWS_INSTANCE_R6GD_METAL
+	default "r6gd.16xlarge" if TERRAFORM_AWS_INSTANCE_R6GD_16XLARGE
+	default "r6gd.medium"
+

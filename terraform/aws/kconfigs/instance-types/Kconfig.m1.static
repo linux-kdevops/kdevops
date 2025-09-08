@@ -1,0 +1,54 @@
+# AWS M1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M1 family"
+	default TERRAFORM_AWS_INSTANCE_M1_SMALL
+	help
+	  Select the specific instance size within the M1 family.
+
+config TERRAFORM_AWS_INSTANCE_M1_SMALL
+	bool "m1.small"
+	help
+	  vCPUs: 1
+	  Memory: 1.7 GB
+	  Network: Low
+	  Price: pricing varies
+	  Instance storage: 160 GB
+
+config TERRAFORM_AWS_INSTANCE_M1_MEDIUM
+	bool "m1.medium"
+	help
+	  vCPUs: 1
+	  Memory: 3.7 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 410 GB
+
+config TERRAFORM_AWS_INSTANCE_M1_LARGE
+	bool "m1.large"
+	help
+	  vCPUs: 2
+	  Memory: 7.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 840 GB
+
+config TERRAFORM_AWS_INSTANCE_M1_XLARGE
+	bool "m1.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 15.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 1680 GB
+
+endchoice
+
+config TERRAFORM_AWS_M1_SIZE
+	string
+	default "m1.small" if TERRAFORM_AWS_INSTANCE_M1_SMALL
+	default "m1.medium" if TERRAFORM_AWS_INSTANCE_M1_MEDIUM
+	default "m1.large" if TERRAFORM_AWS_INSTANCE_M1_LARGE
+	default "m1.xlarge" if TERRAFORM_AWS_INSTANCE_M1_XLARGE
+	default "m1.small"
+

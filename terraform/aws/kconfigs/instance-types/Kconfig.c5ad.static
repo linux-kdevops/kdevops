@@ -1,0 +1,94 @@
+# AWS C5AD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C5AD family"
+	default TERRAFORM_AWS_INSTANCE_C5AD_LARGE
+	help
+	  Select the specific instance size within the C5AD family.
+
+config TERRAFORM_AWS_INSTANCE_C5AD_LARGE
+	bool "c5ad.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 75 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_XLARGE
+	bool "c5ad.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 150 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_2XLARGE
+	bool "c5ad.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 300 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_4XLARGE
+	bool "c5ad.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 600 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_8XLARGE
+	bool "c5ad.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1200 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_12XLARGE
+	bool "c5ad.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_16XLARGE
+	bool "c5ad.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2400 GB
+
+config TERRAFORM_AWS_INSTANCE_C5AD_24XLARGE
+	bool "c5ad.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_C5AD_SIZE
+	string
+	default "c5ad.large" if TERRAFORM_AWS_INSTANCE_C5AD_LARGE
+	default "c5ad.xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_XLARGE
+	default "c5ad.2xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_2XLARGE
+	default "c5ad.4xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_4XLARGE
+	default "c5ad.8xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_8XLARGE
+	default "c5ad.12xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_12XLARGE
+	default "c5ad.16xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_16XLARGE
+	default "c5ad.24xlarge" if TERRAFORM_AWS_INSTANCE_C5AD_24XLARGE
+	default "c5ad.large"
+

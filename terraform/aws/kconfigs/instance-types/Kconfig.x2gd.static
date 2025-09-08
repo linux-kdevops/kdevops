@@ -1,0 +1,104 @@
+# AWS X2GD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X2GD family"
+	default TERRAFORM_AWS_INSTANCE_X2GD_MEDIUM
+	help
+	  Select the specific instance size within the X2GD family.
+
+config TERRAFORM_AWS_INSTANCE_X2GD_MEDIUM
+	bool "x2gd.medium"
+	help
+	  vCPUs: 1
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 59 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_LARGE
+	bool "x2gd.large"
+	help
+	  vCPUs: 2
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_XLARGE
+	bool "x2gd.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_2XLARGE
+	bool "x2gd.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 128.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 475 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_4XLARGE
+	bool "x2gd.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 256.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_8XLARGE
+	bool "x2gd.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 512.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_12XLARGE
+	bool "x2gd.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 768.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_METAL
+	bool "x2gd.metal"
+	help
+	  vCPUs: 64
+	  Memory: 1024.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_X2GD_16XLARGE
+	bool "x2gd.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 1024.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_X2GD_SIZE
+	string
+	default "x2gd.medium" if TERRAFORM_AWS_INSTANCE_X2GD_MEDIUM
+	default "x2gd.large" if TERRAFORM_AWS_INSTANCE_X2GD_LARGE
+	default "x2gd.xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_XLARGE
+	default "x2gd.2xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_2XLARGE
+	default "x2gd.4xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_4XLARGE
+	default "x2gd.8xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_8XLARGE
+	default "x2gd.12xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_12XLARGE
+	default "x2gd.metal" if TERRAFORM_AWS_INSTANCE_X2GD_METAL
+	default "x2gd.16xlarge" if TERRAFORM_AWS_INSTANCE_X2GD_16XLARGE
+	default "x2gd.medium"
+

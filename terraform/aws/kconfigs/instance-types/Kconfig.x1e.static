@@ -1,0 +1,74 @@
+# AWS X1E instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X1E family"
+	default TERRAFORM_AWS_INSTANCE_X1E_XLARGE
+	help
+	  Select the specific instance size within the X1E family.
+
+config TERRAFORM_AWS_INSTANCE_X1E_XLARGE
+	bool "x1e.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 122.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 120 GB
+
+config TERRAFORM_AWS_INSTANCE_X1E_2XLARGE
+	bool "x1e.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 244.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 240 GB
+
+config TERRAFORM_AWS_INSTANCE_X1E_4XLARGE
+	bool "x1e.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 488.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 480 GB
+
+config TERRAFORM_AWS_INSTANCE_X1E_8XLARGE
+	bool "x1e.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 976.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 960 GB
+
+config TERRAFORM_AWS_INSTANCE_X1E_16XLARGE
+	bool "x1e.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 1952.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1920 GB
+
+config TERRAFORM_AWS_INSTANCE_X1E_32XLARGE
+	bool "x1e.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 3904.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3840 GB
+
+endchoice
+
+config TERRAFORM_AWS_X1E_SIZE
+	string
+	default "x1e.xlarge" if TERRAFORM_AWS_INSTANCE_X1E_XLARGE
+	default "x1e.2xlarge" if TERRAFORM_AWS_INSTANCE_X1E_2XLARGE
+	default "x1e.4xlarge" if TERRAFORM_AWS_INSTANCE_X1E_4XLARGE
+	default "x1e.8xlarge" if TERRAFORM_AWS_INSTANCE_X1E_8XLARGE
+	default "x1e.16xlarge" if TERRAFORM_AWS_INSTANCE_X1E_16XLARGE
+	default "x1e.32xlarge" if TERRAFORM_AWS_INSTANCE_X1E_32XLARGE
+	default "x1e.xlarge"
+

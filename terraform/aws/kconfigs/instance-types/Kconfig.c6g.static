@@ -1,0 +1,95 @@
+# AWS C6G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C6G family"
+	default TERRAFORM_AWS_INSTANCE_C6G_MEDIUM
+	help
+	  Select the specific instance size within the C6G family.
+
+config TERRAFORM_AWS_INSTANCE_C6G_MEDIUM
+	bool "c6g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_LARGE
+	bool "c6g.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_XLARGE
+	bool "c6g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_2XLARGE
+	bool "c6g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_4XLARGE
+	bool "c6g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_8XLARGE
+	bool "c6g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_12XLARGE
+	bool "c6g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_16XLARGE
+	bool "c6g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6G_METAL
+	bool "c6g.metal"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C6G_SIZE
+	string
+	default "c6g.medium" if TERRAFORM_AWS_INSTANCE_C6G_MEDIUM
+	default "c6g.large" if TERRAFORM_AWS_INSTANCE_C6G_LARGE
+	default "c6g.xlarge" if TERRAFORM_AWS_INSTANCE_C6G_XLARGE
+	default "c6g.2xlarge" if TERRAFORM_AWS_INSTANCE_C6G_2XLARGE
+	default "c6g.4xlarge" if TERRAFORM_AWS_INSTANCE_C6G_4XLARGE
+	default "c6g.8xlarge" if TERRAFORM_AWS_INSTANCE_C6G_8XLARGE
+	default "c6g.12xlarge" if TERRAFORM_AWS_INSTANCE_C6G_12XLARGE
+	default "c6g.16xlarge" if TERRAFORM_AWS_INSTANCE_C6G_16XLARGE
+	default "c6g.metal" if TERRAFORM_AWS_INSTANCE_C6G_METAL
+	default "c6g.medium"
+

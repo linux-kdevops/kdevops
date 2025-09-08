@@ -1,0 +1,95 @@
+# AWS M5N instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M5N family"
+	default TERRAFORM_AWS_INSTANCE_M5N_LARGE
+	help
+	  Select the specific instance size within the M5N family.
+
+config TERRAFORM_AWS_INSTANCE_M5N_LARGE
+	bool "m5n.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_XLARGE
+	bool "m5n.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_2XLARGE
+	bool "m5n.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_4XLARGE
+	bool "m5n.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_8XLARGE
+	bool "m5n.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_12XLARGE
+	bool "m5n.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_16XLARGE
+	bool "m5n.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_METAL
+	bool "m5n.metal"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5N_24XLARGE
+	bool "m5n.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M5N_SIZE
+	string
+	default "m5n.large" if TERRAFORM_AWS_INSTANCE_M5N_LARGE
+	default "m5n.xlarge" if TERRAFORM_AWS_INSTANCE_M5N_XLARGE
+	default "m5n.2xlarge" if TERRAFORM_AWS_INSTANCE_M5N_2XLARGE
+	default "m5n.4xlarge" if TERRAFORM_AWS_INSTANCE_M5N_4XLARGE
+	default "m5n.8xlarge" if TERRAFORM_AWS_INSTANCE_M5N_8XLARGE
+	default "m5n.12xlarge" if TERRAFORM_AWS_INSTANCE_M5N_12XLARGE
+	default "m5n.16xlarge" if TERRAFORM_AWS_INSTANCE_M5N_16XLARGE
+	default "m5n.metal" if TERRAFORM_AWS_INSTANCE_M5N_METAL
+	default "m5n.24xlarge" if TERRAFORM_AWS_INSTANCE_M5N_24XLARGE
+	default "m5n.large"
+

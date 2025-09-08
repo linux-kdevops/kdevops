@@ -1,0 +1,50 @@
+# AWS INF1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for INF1 family"
+	default TERRAFORM_AWS_INSTANCE_INF1_XLARGE
+	help
+	  Select the specific instance size within the INF1 family.
+
+config TERRAFORM_AWS_INSTANCE_INF1_XLARGE
+	bool "inf1.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF1_2XLARGE
+	bool "inf1.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF1_6XLARGE
+	bool "inf1.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 48.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_INF1_24XLARGE
+	bool "inf1.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_INF1_SIZE
+	string
+	default "inf1.xlarge" if TERRAFORM_AWS_INSTANCE_INF1_XLARGE
+	default "inf1.2xlarge" if TERRAFORM_AWS_INSTANCE_INF1_2XLARGE
+	default "inf1.6xlarge" if TERRAFORM_AWS_INSTANCE_INF1_6XLARGE
+	default "inf1.24xlarge" if TERRAFORM_AWS_INSTANCE_INF1_24XLARGE
+	default "inf1.xlarge"
+

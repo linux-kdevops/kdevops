@@ -1,0 +1,122 @@
+# AWS C8G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C8G family"
+	default TERRAFORM_AWS_INSTANCE_C8G_MEDIUM
+	help
+	  Select the specific instance size within the C8G family.
+
+config TERRAFORM_AWS_INSTANCE_C8G_MEDIUM
+	bool "c8g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_LARGE
+	bool "c8g.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_XLARGE
+	bool "c8g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_2XLARGE
+	bool "c8g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_4XLARGE
+	bool "c8g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_8XLARGE
+	bool "c8g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_12XLARGE
+	bool "c8g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_16XLARGE
+	bool "c8g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_24XLARGE
+	bool "c8g.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_METAL_24XL
+	bool "c8g.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_48XLARGE
+	bool "c8g.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C8G_METAL_48XL
+	bool "c8g.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C8G_SIZE
+	string
+	default "c8g.medium" if TERRAFORM_AWS_INSTANCE_C8G_MEDIUM
+	default "c8g.large" if TERRAFORM_AWS_INSTANCE_C8G_LARGE
+	default "c8g.xlarge" if TERRAFORM_AWS_INSTANCE_C8G_XLARGE
+	default "c8g.2xlarge" if TERRAFORM_AWS_INSTANCE_C8G_2XLARGE
+	default "c8g.4xlarge" if TERRAFORM_AWS_INSTANCE_C8G_4XLARGE
+	default "c8g.8xlarge" if TERRAFORM_AWS_INSTANCE_C8G_8XLARGE
+	default "c8g.12xlarge" if TERRAFORM_AWS_INSTANCE_C8G_12XLARGE
+	default "c8g.16xlarge" if TERRAFORM_AWS_INSTANCE_C8G_16XLARGE
+	default "c8g.24xlarge" if TERRAFORM_AWS_INSTANCE_C8G_24XLARGE
+	default "c8g.metal-24xl" if TERRAFORM_AWS_INSTANCE_C8G_METAL_24XL
+	default "c8g.48xlarge" if TERRAFORM_AWS_INSTANCE_C8G_48XLARGE
+	default "c8g.metal-48xl" if TERRAFORM_AWS_INSTANCE_C8G_METAL_48XL
+	default "c8g.medium"
+

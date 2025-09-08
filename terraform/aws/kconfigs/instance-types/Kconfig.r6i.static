@@ -1,0 +1,104 @@
+# AWS R6I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R6I family"
+	default TERRAFORM_AWS_INSTANCE_R6I_LARGE
+	help
+	  Select the specific instance size within the R6I family.
+
+config TERRAFORM_AWS_INSTANCE_R6I_LARGE
+	bool "r6i.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_XLARGE
+	bool "r6i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_2XLARGE
+	bool "r6i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_4XLARGE
+	bool "r6i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_8XLARGE
+	bool "r6i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_12XLARGE
+	bool "r6i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_16XLARGE
+	bool "r6i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_24XLARGE
+	bool "r6i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_METAL
+	bool "r6i.metal"
+	help
+	  vCPUs: 128
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R6I_32XLARGE
+	bool "r6i.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R6I_SIZE
+	string
+	default "r6i.large" if TERRAFORM_AWS_INSTANCE_R6I_LARGE
+	default "r6i.xlarge" if TERRAFORM_AWS_INSTANCE_R6I_XLARGE
+	default "r6i.2xlarge" if TERRAFORM_AWS_INSTANCE_R6I_2XLARGE
+	default "r6i.4xlarge" if TERRAFORM_AWS_INSTANCE_R6I_4XLARGE
+	default "r6i.8xlarge" if TERRAFORM_AWS_INSTANCE_R6I_8XLARGE
+	default "r6i.12xlarge" if TERRAFORM_AWS_INSTANCE_R6I_12XLARGE
+	default "r6i.16xlarge" if TERRAFORM_AWS_INSTANCE_R6I_16XLARGE
+	default "r6i.24xlarge" if TERRAFORM_AWS_INSTANCE_R6I_24XLARGE
+	default "r6i.metal" if TERRAFORM_AWS_INSTANCE_R6I_METAL
+	default "r6i.32xlarge" if TERRAFORM_AWS_INSTANCE_R6I_32XLARGE
+	default "r6i.large"
+

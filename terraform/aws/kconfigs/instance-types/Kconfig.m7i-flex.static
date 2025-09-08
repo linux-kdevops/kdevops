@@ -1,0 +1,77 @@
+# AWS M7I-FLEX instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M7I-FLEX family"
+	default TERRAFORM_AWS_INSTANCE_M7I_FLEX_LARGE
+	help
+	  Select the specific instance size within the M7I-FLEX family.
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_LARGE
+	bool "m7i-flex.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_XLARGE
+	bool "m7i-flex.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_2XLARGE
+	bool "m7i-flex.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_4XLARGE
+	bool "m7i-flex.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_8XLARGE
+	bool "m7i-flex.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_12XLARGE
+	bool "m7i-flex.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: Up to 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M7I_FLEX_16XLARGE
+	bool "m7i-flex.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M7I_FLEX_SIZE
+	string
+	default "m7i-flex.large" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_LARGE
+	default "m7i-flex.xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_XLARGE
+	default "m7i-flex.2xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_2XLARGE
+	default "m7i-flex.4xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_4XLARGE
+	default "m7i-flex.8xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_8XLARGE
+	default "m7i-flex.12xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_12XLARGE
+	default "m7i-flex.16xlarge" if TERRAFORM_AWS_INSTANCE_M7I_FLEX_16XLARGE
+	default "m7i-flex.large"
+

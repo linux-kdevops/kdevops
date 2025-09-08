@@ -1,0 +1,34 @@
+# AWS C1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C1 family"
+	default TERRAFORM_AWS_INSTANCE_C1_MEDIUM
+	help
+	  Select the specific instance size within the C1 family.
+
+config TERRAFORM_AWS_INSTANCE_C1_MEDIUM
+	bool "c1.medium"
+	help
+	  vCPUs: 2
+	  Memory: 1.7 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 350 GB
+
+config TERRAFORM_AWS_INSTANCE_C1_XLARGE
+	bool "c1.xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 7.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 1680 GB
+
+endchoice
+
+config TERRAFORM_AWS_C1_SIZE
+	string
+	default "c1.medium" if TERRAFORM_AWS_INSTANCE_C1_MEDIUM
+	default "c1.xlarge" if TERRAFORM_AWS_INSTANCE_C1_XLARGE
+	default "c1.medium"
+

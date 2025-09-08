@@ -1,0 +1,95 @@
+# AWS M6G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M6G family"
+	default TERRAFORM_AWS_INSTANCE_M6G_MEDIUM
+	help
+	  Select the specific instance size within the M6G family.
+
+config TERRAFORM_AWS_INSTANCE_M6G_MEDIUM
+	bool "m6g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 4.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_LARGE
+	bool "m6g.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_XLARGE
+	bool "m6g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_2XLARGE
+	bool "m6g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_4XLARGE
+	bool "m6g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_8XLARGE
+	bool "m6g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_12XLARGE
+	bool "m6g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 20 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_METAL
+	bool "m6g.metal"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M6G_16XLARGE
+	bool "m6g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M6G_SIZE
+	string
+	default "m6g.medium" if TERRAFORM_AWS_INSTANCE_M6G_MEDIUM
+	default "m6g.large" if TERRAFORM_AWS_INSTANCE_M6G_LARGE
+	default "m6g.xlarge" if TERRAFORM_AWS_INSTANCE_M6G_XLARGE
+	default "m6g.2xlarge" if TERRAFORM_AWS_INSTANCE_M6G_2XLARGE
+	default "m6g.4xlarge" if TERRAFORM_AWS_INSTANCE_M6G_4XLARGE
+	default "m6g.8xlarge" if TERRAFORM_AWS_INSTANCE_M6G_8XLARGE
+	default "m6g.12xlarge" if TERRAFORM_AWS_INSTANCE_M6G_12XLARGE
+	default "m6g.metal" if TERRAFORM_AWS_INSTANCE_M6G_METAL
+	default "m6g.16xlarge" if TERRAFORM_AWS_INSTANCE_M6G_16XLARGE
+	default "m6g.medium"
+

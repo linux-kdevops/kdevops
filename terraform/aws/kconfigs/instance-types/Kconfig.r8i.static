@@ -1,0 +1,131 @@
+# AWS R8I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R8I family"
+	default TERRAFORM_AWS_INSTANCE_R8I_LARGE
+	help
+	  Select the specific instance size within the R8I family.
+
+config TERRAFORM_AWS_INSTANCE_R8I_LARGE
+	bool "r8i.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_XLARGE
+	bool "r8i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_2XLARGE
+	bool "r8i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_4XLARGE
+	bool "r8i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_8XLARGE
+	bool "r8i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_12XLARGE
+	bool "r8i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_16XLARGE
+	bool "r8i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_24XLARGE
+	bool "r8i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_32XLARGE
+	bool "r8i.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_48XLARGE
+	bool "r8i.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_METAL_48XL
+	bool "r8i.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_96XLARGE
+	bool "r8i.96xlarge"
+	help
+	  vCPUs: 384
+	  Memory: 3072.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R8I_METAL_96XL
+	bool "r8i.metal-96xl"
+	help
+	  vCPUs: 384
+	  Memory: 3072.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R8I_SIZE
+	string
+	default "r8i.large" if TERRAFORM_AWS_INSTANCE_R8I_LARGE
+	default "r8i.xlarge" if TERRAFORM_AWS_INSTANCE_R8I_XLARGE
+	default "r8i.2xlarge" if TERRAFORM_AWS_INSTANCE_R8I_2XLARGE
+	default "r8i.4xlarge" if TERRAFORM_AWS_INSTANCE_R8I_4XLARGE
+	default "r8i.8xlarge" if TERRAFORM_AWS_INSTANCE_R8I_8XLARGE
+	default "r8i.12xlarge" if TERRAFORM_AWS_INSTANCE_R8I_12XLARGE
+	default "r8i.16xlarge" if TERRAFORM_AWS_INSTANCE_R8I_16XLARGE
+	default "r8i.24xlarge" if TERRAFORM_AWS_INSTANCE_R8I_24XLARGE
+	default "r8i.32xlarge" if TERRAFORM_AWS_INSTANCE_R8I_32XLARGE
+	default "r8i.48xlarge" if TERRAFORM_AWS_INSTANCE_R8I_48XLARGE
+	default "r8i.metal-48xl" if TERRAFORM_AWS_INSTANCE_R8I_METAL_48XL
+	default "r8i.96xlarge" if TERRAFORM_AWS_INSTANCE_R8I_96XLARGE
+	default "r8i.metal-96xl" if TERRAFORM_AWS_INSTANCE_R8I_METAL_96XL
+	default "r8i.large"
+

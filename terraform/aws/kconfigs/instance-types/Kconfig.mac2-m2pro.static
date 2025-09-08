@@ -1,0 +1,23 @@
+# AWS MAC2-M2PRO instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for MAC2-M2PRO family"
+	default TERRAFORM_AWS_INSTANCE_MAC2_M2PRO_METAL
+	help
+	  Select the specific instance size within the MAC2-M2PRO family.
+
+config TERRAFORM_AWS_INSTANCE_MAC2_M2PRO_METAL
+	bool "mac2-m2pro.metal"
+	help
+	  vCPUs: 12
+	  Memory: 32.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_MAC2_M2PRO_SIZE
+	string
+	default "mac2-m2pro.metal" if TERRAFORM_AWS_INSTANCE_MAC2_M2PRO_METAL
+	default "mac2-m2pro.metal"
+

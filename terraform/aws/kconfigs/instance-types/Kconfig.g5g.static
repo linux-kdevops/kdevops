@@ -1,0 +1,68 @@
+# AWS G5G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for G5G family"
+	default TERRAFORM_AWS_INSTANCE_G5G_XLARGE
+	help
+	  Select the specific instance size within the G5G family.
+
+config TERRAFORM_AWS_INSTANCE_G5G_XLARGE
+	bool "g5g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_G5G_2XLARGE
+	bool "g5g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_G5G_4XLARGE
+	bool "g5g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_G5G_8XLARGE
+	bool "g5g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_G5G_16XLARGE
+	bool "g5g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_G5G_METAL
+	bool "g5g.metal"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_G5G_SIZE
+	string
+	default "g5g.xlarge" if TERRAFORM_AWS_INSTANCE_G5G_XLARGE
+	default "g5g.2xlarge" if TERRAFORM_AWS_INSTANCE_G5G_2XLARGE
+	default "g5g.4xlarge" if TERRAFORM_AWS_INSTANCE_G5G_4XLARGE
+	default "g5g.8xlarge" if TERRAFORM_AWS_INSTANCE_G5G_8XLARGE
+	default "g5g.16xlarge" if TERRAFORM_AWS_INSTANCE_G5G_16XLARGE
+	default "g5g.metal" if TERRAFORM_AWS_INSTANCE_G5G_METAL
+	default "g5g.xlarge"
+

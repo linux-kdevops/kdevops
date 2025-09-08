@@ -1,0 +1,74 @@
+# AWS IS4GEN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for IS4GEN family"
+	default TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
+	help
+	  Select the specific instance size within the IS4GEN family.
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
+	bool "is4gen.medium"
+	help
+	  vCPUs: 1
+	  Memory: 6.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 937 GB
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_LARGE
+	bool "is4gen.large"
+	help
+	  vCPUs: 2
+	  Memory: 12.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1875 GB
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_XLARGE
+	bool "is4gen.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 24.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3750 GB
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_2XLARGE
+	bool "is4gen.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 48.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_4XLARGE
+	bool "is4gen.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 96.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+config TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
+	bool "is4gen.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 192.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30000 GB
+
+endchoice
+
+config TERRAFORM_AWS_IS4GEN_SIZE
+	string
+	default "is4gen.medium" if TERRAFORM_AWS_INSTANCE_IS4GEN_MEDIUM
+	default "is4gen.large" if TERRAFORM_AWS_INSTANCE_IS4GEN_LARGE
+	default "is4gen.xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_XLARGE
+	default "is4gen.2xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_2XLARGE
+	default "is4gen.4xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_4XLARGE
+	default "is4gen.8xlarge" if TERRAFORM_AWS_INSTANCE_IS4GEN_8XLARGE
+	default "is4gen.medium"
+

@@ -1,0 +1,32 @@
+# AWS U-6TB1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for U-6TB1 family"
+	default TERRAFORM_AWS_INSTANCE_U_6TB1_56XLARGE
+	help
+	  Select the specific instance size within the U-6TB1 family.
+
+config TERRAFORM_AWS_INSTANCE_U_6TB1_56XLARGE
+	bool "u-6tb1.56xlarge"
+	help
+	  vCPUs: 224
+	  Memory: 6144.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_U_6TB1_112XLARGE
+	bool "u-6tb1.112xlarge"
+	help
+	  vCPUs: 448
+	  Memory: 6144.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_U_6TB1_SIZE
+	string
+	default "u-6tb1.56xlarge" if TERRAFORM_AWS_INSTANCE_U_6TB1_56XLARGE
+	default "u-6tb1.112xlarge" if TERRAFORM_AWS_INSTANCE_U_6TB1_112XLARGE
+	default "u-6tb1.56xlarge"
+

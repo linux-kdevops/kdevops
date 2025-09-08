@@ -1,0 +1,114 @@
+# AWS R6ID instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R6ID family"
+	default TERRAFORM_AWS_INSTANCE_R6ID_LARGE
+	help
+	  Select the specific instance size within the R6ID family.
+
+config TERRAFORM_AWS_INSTANCE_R6ID_LARGE
+	bool "r6id.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_XLARGE
+	bool "r6id.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_2XLARGE
+	bool "r6id.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 474 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_4XLARGE
+	bool "r6id.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_8XLARGE
+	bool "r6id.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_12XLARGE
+	bool "r6id.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_16XLARGE
+	bool "r6id.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_24XLARGE
+	bool "r6id.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5700 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_32XLARGE
+	bool "r6id.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7600 GB
+
+config TERRAFORM_AWS_INSTANCE_R6ID_METAL
+	bool "r6id.metal"
+	help
+	  vCPUs: 128
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7600 GB
+
+endchoice
+
+config TERRAFORM_AWS_R6ID_SIZE
+	string
+	default "r6id.large" if TERRAFORM_AWS_INSTANCE_R6ID_LARGE
+	default "r6id.xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_XLARGE
+	default "r6id.2xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_2XLARGE
+	default "r6id.4xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_4XLARGE
+	default "r6id.8xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_8XLARGE
+	default "r6id.12xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_12XLARGE
+	default "r6id.16xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_16XLARGE
+	default "r6id.24xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_24XLARGE
+	default "r6id.32xlarge" if TERRAFORM_AWS_INSTANCE_R6ID_32XLARGE
+	default "r6id.metal" if TERRAFORM_AWS_INSTANCE_R6ID_METAL
+	default "r6id.large"
+

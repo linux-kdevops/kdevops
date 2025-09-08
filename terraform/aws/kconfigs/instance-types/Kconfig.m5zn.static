@@ -1,0 +1,77 @@
+# AWS M5ZN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M5ZN family"
+	default TERRAFORM_AWS_INSTANCE_M5ZN_LARGE
+	help
+	  Select the specific instance size within the M5ZN family.
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_LARGE
+	bool "m5zn.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_XLARGE
+	bool "m5zn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_2XLARGE
+	bool "m5zn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_3XLARGE
+	bool "m5zn.3xlarge"
+	help
+	  vCPUs: 12
+	  Memory: 48.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_6XLARGE
+	bool "m5zn.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 96.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_12XLARGE
+	bool "m5zn.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M5ZN_METAL
+	bool "m5zn.metal"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M5ZN_SIZE
+	string
+	default "m5zn.large" if TERRAFORM_AWS_INSTANCE_M5ZN_LARGE
+	default "m5zn.xlarge" if TERRAFORM_AWS_INSTANCE_M5ZN_XLARGE
+	default "m5zn.2xlarge" if TERRAFORM_AWS_INSTANCE_M5ZN_2XLARGE
+	default "m5zn.3xlarge" if TERRAFORM_AWS_INSTANCE_M5ZN_3XLARGE
+	default "m5zn.6xlarge" if TERRAFORM_AWS_INSTANCE_M5ZN_6XLARGE
+	default "m5zn.12xlarge" if TERRAFORM_AWS_INSTANCE_M5ZN_12XLARGE
+	default "m5zn.metal" if TERRAFORM_AWS_INSTANCE_M5ZN_METAL
+	default "m5zn.large"
+

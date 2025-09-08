@@ -1,0 +1,95 @@
+# AWS C7GN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C7GN family"
+	default TERRAFORM_AWS_INSTANCE_C7GN_MEDIUM
+	help
+	  Select the specific instance size within the C7GN family.
+
+config TERRAFORM_AWS_INSTANCE_C7GN_MEDIUM
+	bool "c7gn.medium"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_LARGE
+	bool "c7gn.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_XLARGE
+	bool "c7gn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_2XLARGE
+	bool "c7gn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_4XLARGE
+	bool "c7gn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_8XLARGE
+	bool "c7gn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_12XLARGE
+	bool "c7gn.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 150 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_16XLARGE
+	bool "c7gn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7GN_METAL
+	bool "c7gn.metal"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C7GN_SIZE
+	string
+	default "c7gn.medium" if TERRAFORM_AWS_INSTANCE_C7GN_MEDIUM
+	default "c7gn.large" if TERRAFORM_AWS_INSTANCE_C7GN_LARGE
+	default "c7gn.xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_XLARGE
+	default "c7gn.2xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_2XLARGE
+	default "c7gn.4xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_4XLARGE
+	default "c7gn.8xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_8XLARGE
+	default "c7gn.12xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_12XLARGE
+	default "c7gn.16xlarge" if TERRAFORM_AWS_INSTANCE_C7GN_16XLARGE
+	default "c7gn.metal" if TERRAFORM_AWS_INSTANCE_C7GN_METAL
+	default "c7gn.medium"
+

@@ -1,0 +1,44 @@
+# AWS M2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M2 family"
+	default TERRAFORM_AWS_INSTANCE_M2_XLARGE
+	help
+	  Select the specific instance size within the M2 family.
+
+config TERRAFORM_AWS_INSTANCE_M2_XLARGE
+	bool "m2.xlarge"
+	help
+	  vCPUs: 2
+	  Memory: 17.1 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 420 GB
+
+config TERRAFORM_AWS_INSTANCE_M2_2XLARGE
+	bool "m2.2xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 34.2 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 850 GB
+
+config TERRAFORM_AWS_INSTANCE_M2_4XLARGE
+	bool "m2.4xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 68.4 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 1680 GB
+
+endchoice
+
+config TERRAFORM_AWS_M2_SIZE
+	string
+	default "m2.xlarge" if TERRAFORM_AWS_INSTANCE_M2_XLARGE
+	default "m2.2xlarge" if TERRAFORM_AWS_INSTANCE_M2_2XLARGE
+	default "m2.4xlarge" if TERRAFORM_AWS_INSTANCE_M2_4XLARGE
+	default "m2.xlarge"
+

@@ -1,0 +1,104 @@
+# AWS M7GD instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M7GD family"
+	default TERRAFORM_AWS_INSTANCE_M7GD_MEDIUM
+	help
+	  Select the specific instance size within the M7GD family.
+
+config TERRAFORM_AWS_INSTANCE_M7GD_MEDIUM
+	bool "m7gd.medium"
+	help
+	  vCPUs: 1
+	  Memory: 4.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 59 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_LARGE
+	bool "m7gd.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_XLARGE
+	bool "m7gd.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_2XLARGE
+	bool "m7gd.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 474 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_4XLARGE
+	bool "m7gd.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_8XLARGE
+	bool "m7gd.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_12XLARGE
+	bool "m7gd.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_16XLARGE
+	bool "m7gd.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_M7GD_METAL
+	bool "m7gd.metal"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_M7GD_SIZE
+	string
+	default "m7gd.medium" if TERRAFORM_AWS_INSTANCE_M7GD_MEDIUM
+	default "m7gd.large" if TERRAFORM_AWS_INSTANCE_M7GD_LARGE
+	default "m7gd.xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_XLARGE
+	default "m7gd.2xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_2XLARGE
+	default "m7gd.4xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_4XLARGE
+	default "m7gd.8xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_8XLARGE
+	default "m7gd.12xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_12XLARGE
+	default "m7gd.16xlarge" if TERRAFORM_AWS_INSTANCE_M7GD_16XLARGE
+	default "m7gd.metal" if TERRAFORM_AWS_INSTANCE_M7GD_METAL
+	default "m7gd.medium"
+

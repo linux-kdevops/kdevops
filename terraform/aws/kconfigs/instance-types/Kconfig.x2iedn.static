@@ -1,0 +1,94 @@
+# AWS X2IEDN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X2IEDN family"
+	default TERRAFORM_AWS_INSTANCE_X2IEDN_XLARGE
+	help
+	  Select the specific instance size within the X2IEDN family.
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_XLARGE
+	bool "x2iedn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 118 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_2XLARGE
+	bool "x2iedn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 256.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 237 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_4XLARGE
+	bool "x2iedn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 512.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 475 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_8XLARGE
+	bool "x2iedn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 1024.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 950 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_16XLARGE
+	bool "x2iedn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 2048.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_24XLARGE
+	bool "x2iedn.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 3072.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_METAL
+	bool "x2iedn.metal"
+	help
+	  vCPUs: 128
+	  Memory: 4096.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IEDN_32XLARGE
+	bool "x2iedn.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 4096.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_X2IEDN_SIZE
+	string
+	default "x2iedn.xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_XLARGE
+	default "x2iedn.2xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_2XLARGE
+	default "x2iedn.4xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_4XLARGE
+	default "x2iedn.8xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_8XLARGE
+	default "x2iedn.16xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_16XLARGE
+	default "x2iedn.24xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_24XLARGE
+	default "x2iedn.metal" if TERRAFORM_AWS_INSTANCE_X2IEDN_METAL
+	default "x2iedn.32xlarge" if TERRAFORM_AWS_INSTANCE_X2IEDN_32XLARGE
+	default "x2iedn.xlarge"
+

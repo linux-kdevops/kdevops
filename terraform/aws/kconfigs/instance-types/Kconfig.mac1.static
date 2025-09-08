@@ -1,0 +1,23 @@
+# AWS MAC1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for MAC1 family"
+	default TERRAFORM_AWS_INSTANCE_MAC1_METAL
+	help
+	  Select the specific instance size within the MAC1 family.
+
+config TERRAFORM_AWS_INSTANCE_MAC1_METAL
+	bool "mac1.metal"
+	help
+	  vCPUs: 12
+	  Memory: 32.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_MAC1_SIZE
+	string
+	default "mac1.metal" if TERRAFORM_AWS_INSTANCE_MAC1_METAL
+	default "mac1.metal"
+

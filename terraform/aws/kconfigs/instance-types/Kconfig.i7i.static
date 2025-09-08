@@ -1,0 +1,124 @@
+# AWS I7I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I7I family"
+	default TERRAFORM_AWS_INSTANCE_I7I_LARGE
+	help
+	  Select the specific instance size within the I7I family.
+
+config TERRAFORM_AWS_INSTANCE_I7I_LARGE
+	bool "i7i.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 468 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_XLARGE
+	bool "i7i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 937 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_2XLARGE
+	bool "i7i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1875 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_4XLARGE
+	bool "i7i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3750 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_8XLARGE
+	bool "i7i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_12XLARGE
+	bool "i7i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: Up to 28 Gigabit
+	  Price: pricing varies
+	  Instance storage: 11250 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_16XLARGE
+	bool "i7i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: Up to 37.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_METAL_24XL
+	bool "i7i.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: Up to 56.25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 22500 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_24XLARGE
+	bool "i7i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: Up to 56.25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 22500 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_METAL_48XL
+	bool "i7i.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: Up to 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 45000 GB
+
+config TERRAFORM_AWS_INSTANCE_I7I_48XLARGE
+	bool "i7i.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: Up to 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 45000 GB
+
+endchoice
+
+config TERRAFORM_AWS_I7I_SIZE
+	string
+	default "i7i.large" if TERRAFORM_AWS_INSTANCE_I7I_LARGE
+	default "i7i.xlarge" if TERRAFORM_AWS_INSTANCE_I7I_XLARGE
+	default "i7i.2xlarge" if TERRAFORM_AWS_INSTANCE_I7I_2XLARGE
+	default "i7i.4xlarge" if TERRAFORM_AWS_INSTANCE_I7I_4XLARGE
+	default "i7i.8xlarge" if TERRAFORM_AWS_INSTANCE_I7I_8XLARGE
+	default "i7i.12xlarge" if TERRAFORM_AWS_INSTANCE_I7I_12XLARGE
+	default "i7i.16xlarge" if TERRAFORM_AWS_INSTANCE_I7I_16XLARGE
+	default "i7i.metal-24xl" if TERRAFORM_AWS_INSTANCE_I7I_METAL_24XL
+	default "i7i.24xlarge" if TERRAFORM_AWS_INSTANCE_I7I_24XLARGE
+	default "i7i.metal-48xl" if TERRAFORM_AWS_INSTANCE_I7I_METAL_48XL
+	default "i7i.48xlarge" if TERRAFORM_AWS_INSTANCE_I7I_48XLARGE
+	default "i7i.large"
+

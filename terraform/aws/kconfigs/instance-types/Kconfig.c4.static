@@ -1,0 +1,59 @@
+# AWS C4 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C4 family"
+	default TERRAFORM_AWS_INSTANCE_C4_LARGE
+	help
+	  Select the specific instance size within the C4 family.
+
+config TERRAFORM_AWS_INSTANCE_C4_LARGE
+	bool "c4.large"
+	help
+	  vCPUs: 2
+	  Memory: 3.8 GB
+	  Network: Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C4_XLARGE
+	bool "c4.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 7.5 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C4_2XLARGE
+	bool "c4.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 15.0 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C4_4XLARGE
+	bool "c4.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 30.0 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C4_8XLARGE
+	bool "c4.8xlarge"
+	help
+	  vCPUs: 36
+	  Memory: 60.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C4_SIZE
+	string
+	default "c4.large" if TERRAFORM_AWS_INSTANCE_C4_LARGE
+	default "c4.xlarge" if TERRAFORM_AWS_INSTANCE_C4_XLARGE
+	default "c4.2xlarge" if TERRAFORM_AWS_INSTANCE_C4_2XLARGE
+	default "c4.4xlarge" if TERRAFORM_AWS_INSTANCE_C4_4XLARGE
+	default "c4.8xlarge" if TERRAFORM_AWS_INSTANCE_C4_8XLARGE
+	default "c4.large"
+

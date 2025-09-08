@@ -1,0 +1,54 @@
+# AWS H1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for H1 family"
+	default TERRAFORM_AWS_INSTANCE_H1_2XLARGE
+	help
+	  Select the specific instance size within the H1 family.
+
+config TERRAFORM_AWS_INSTANCE_H1_2XLARGE
+	bool "h1.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2000 GB
+
+config TERRAFORM_AWS_INSTANCE_H1_4XLARGE
+	bool "h1.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 4000 GB
+
+config TERRAFORM_AWS_INSTANCE_H1_8XLARGE
+	bool "h1.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 8000 GB
+
+config TERRAFORM_AWS_INSTANCE_H1_16XLARGE
+	bool "h1.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 16000 GB
+
+endchoice
+
+config TERRAFORM_AWS_H1_SIZE
+	string
+	default "h1.2xlarge" if TERRAFORM_AWS_INSTANCE_H1_2XLARGE
+	default "h1.4xlarge" if TERRAFORM_AWS_INSTANCE_H1_4XLARGE
+	default "h1.8xlarge" if TERRAFORM_AWS_INSTANCE_H1_8XLARGE
+	default "h1.16xlarge" if TERRAFORM_AWS_INSTANCE_H1_16XLARGE
+	default "h1.2xlarge"
+

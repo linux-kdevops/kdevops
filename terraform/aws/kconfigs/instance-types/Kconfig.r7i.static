@@ -1,0 +1,113 @@
+# AWS R7I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R7I family"
+	default TERRAFORM_AWS_INSTANCE_R7I_LARGE
+	help
+	  Select the specific instance size within the R7I family.
+
+config TERRAFORM_AWS_INSTANCE_R7I_LARGE
+	bool "r7i.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_XLARGE
+	bool "r7i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_2XLARGE
+	bool "r7i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_4XLARGE
+	bool "r7i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_8XLARGE
+	bool "r7i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_12XLARGE
+	bool "r7i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_16XLARGE
+	bool "r7i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_METAL_24XL
+	bool "r7i.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_24XLARGE
+	bool "r7i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_METAL_48XL
+	bool "r7i.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7I_48XLARGE
+	bool "r7i.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 1536.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R7I_SIZE
+	string
+	default "r7i.large" if TERRAFORM_AWS_INSTANCE_R7I_LARGE
+	default "r7i.xlarge" if TERRAFORM_AWS_INSTANCE_R7I_XLARGE
+	default "r7i.2xlarge" if TERRAFORM_AWS_INSTANCE_R7I_2XLARGE
+	default "r7i.4xlarge" if TERRAFORM_AWS_INSTANCE_R7I_4XLARGE
+	default "r7i.8xlarge" if TERRAFORM_AWS_INSTANCE_R7I_8XLARGE
+	default "r7i.12xlarge" if TERRAFORM_AWS_INSTANCE_R7I_12XLARGE
+	default "r7i.16xlarge" if TERRAFORM_AWS_INSTANCE_R7I_16XLARGE
+	default "r7i.metal-24xl" if TERRAFORM_AWS_INSTANCE_R7I_METAL_24XL
+	default "r7i.24xlarge" if TERRAFORM_AWS_INSTANCE_R7I_24XLARGE
+	default "r7i.metal-48xl" if TERRAFORM_AWS_INSTANCE_R7I_METAL_48XL
+	default "r7i.48xlarge" if TERRAFORM_AWS_INSTANCE_R7I_48XLARGE
+	default "r7i.large"
+

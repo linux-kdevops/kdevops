@@ -1,0 +1,104 @@
+# AWS C6I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C6I family"
+	default TERRAFORM_AWS_INSTANCE_C6I_LARGE
+	help
+	  Select the specific instance size within the C6I family.
+
+config TERRAFORM_AWS_INSTANCE_C6I_LARGE
+	bool "c6i.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_XLARGE
+	bool "c6i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_2XLARGE
+	bool "c6i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_4XLARGE
+	bool "c6i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_8XLARGE
+	bool "c6i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_12XLARGE
+	bool "c6i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_16XLARGE
+	bool "c6i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_24XLARGE
+	bool "c6i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_32XLARGE
+	bool "c6i.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 256.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6I_METAL
+	bool "c6i.metal"
+	help
+	  vCPUs: 128
+	  Memory: 256.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C6I_SIZE
+	string
+	default "c6i.large" if TERRAFORM_AWS_INSTANCE_C6I_LARGE
+	default "c6i.xlarge" if TERRAFORM_AWS_INSTANCE_C6I_XLARGE
+	default "c6i.2xlarge" if TERRAFORM_AWS_INSTANCE_C6I_2XLARGE
+	default "c6i.4xlarge" if TERRAFORM_AWS_INSTANCE_C6I_4XLARGE
+	default "c6i.8xlarge" if TERRAFORM_AWS_INSTANCE_C6I_8XLARGE
+	default "c6i.12xlarge" if TERRAFORM_AWS_INSTANCE_C6I_12XLARGE
+	default "c6i.16xlarge" if TERRAFORM_AWS_INSTANCE_C6I_16XLARGE
+	default "c6i.24xlarge" if TERRAFORM_AWS_INSTANCE_C6I_24XLARGE
+	default "c6i.32xlarge" if TERRAFORM_AWS_INSTANCE_C6I_32XLARGE
+	default "c6i.metal" if TERRAFORM_AWS_INSTANCE_C6I_METAL
+	default "c6i.large"
+

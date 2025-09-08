@@ -1,0 +1,24 @@
+# AWS GR6F instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for GR6F family"
+	default TERRAFORM_AWS_INSTANCE_GR6F_4XLARGE
+	help
+	  Select the specific instance size within the GR6F family.
+
+config TERRAFORM_AWS_INSTANCE_GR6F_4XLARGE
+	bool "gr6f.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 450 GB
+
+endchoice
+
+config TERRAFORM_AWS_GR6F_SIZE
+	string
+	default "gr6f.4xlarge" if TERRAFORM_AWS_INSTANCE_GR6F_4XLARGE
+	default "gr6f.4xlarge"
+

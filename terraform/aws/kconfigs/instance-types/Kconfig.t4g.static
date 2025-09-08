@@ -1,0 +1,77 @@
+# AWS T4G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for T4G family"
+	default TERRAFORM_AWS_INSTANCE_T4G_NANO
+	help
+	  Select the specific instance size within the T4G family.
+
+config TERRAFORM_AWS_INSTANCE_T4G_NANO
+	bool "t4g.nano"
+	help
+	  vCPUs: 2
+	  Memory: 0.5 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_MICRO
+	bool "t4g.micro"
+	help
+	  vCPUs: 2
+	  Memory: 1.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_SMALL
+	bool "t4g.small"
+	help
+	  vCPUs: 2
+	  Memory: 2.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_MEDIUM
+	bool "t4g.medium"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_LARGE
+	bool "t4g.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_XLARGE
+	bool "t4g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T4G_2XLARGE
+	bool "t4g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 5 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_T4G_SIZE
+	string
+	default "t4g.nano" if TERRAFORM_AWS_INSTANCE_T4G_NANO
+	default "t4g.micro" if TERRAFORM_AWS_INSTANCE_T4G_MICRO
+	default "t4g.small" if TERRAFORM_AWS_INSTANCE_T4G_SMALL
+	default "t4g.medium" if TERRAFORM_AWS_INSTANCE_T4G_MEDIUM
+	default "t4g.large" if TERRAFORM_AWS_INSTANCE_T4G_LARGE
+	default "t4g.xlarge" if TERRAFORM_AWS_INSTANCE_T4G_XLARGE
+	default "t4g.2xlarge" if TERRAFORM_AWS_INSTANCE_T4G_2XLARGE
+	default "t4g.nano"
+

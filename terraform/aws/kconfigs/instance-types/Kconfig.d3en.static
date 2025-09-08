@@ -1,0 +1,74 @@
+# AWS D3EN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for D3EN family"
+	default TERRAFORM_AWS_INSTANCE_D3EN_XLARGE
+	help
+	  Select the specific instance size within the D3EN family.
+
+config TERRAFORM_AWS_INSTANCE_D3EN_XLARGE
+	bool "d3en.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 27960 GB
+
+config TERRAFORM_AWS_INSTANCE_D3EN_2XLARGE
+	bool "d3en.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 55920 GB
+
+config TERRAFORM_AWS_INSTANCE_D3EN_4XLARGE
+	bool "d3en.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 111840 GB
+
+config TERRAFORM_AWS_INSTANCE_D3EN_6XLARGE
+	bool "d3en.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 96.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+	  Instance storage: 167760 GB
+
+config TERRAFORM_AWS_INSTANCE_D3EN_8XLARGE
+	bool "d3en.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 223680 GB
+
+config TERRAFORM_AWS_INSTANCE_D3EN_12XLARGE
+	bool "d3en.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 335520 GB
+
+endchoice
+
+config TERRAFORM_AWS_D3EN_SIZE
+	string
+	default "d3en.xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_XLARGE
+	default "d3en.2xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_2XLARGE
+	default "d3en.4xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_4XLARGE
+	default "d3en.6xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_6XLARGE
+	default "d3en.8xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_8XLARGE
+	default "d3en.12xlarge" if TERRAFORM_AWS_INSTANCE_D3EN_12XLARGE
+	default "d3en.xlarge"
+

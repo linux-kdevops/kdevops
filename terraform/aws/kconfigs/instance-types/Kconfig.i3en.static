@@ -1,0 +1,94 @@
+# AWS I3EN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I3EN family"
+	default TERRAFORM_AWS_INSTANCE_I3EN_LARGE
+	help
+	  Select the specific instance size within the I3EN family.
+
+config TERRAFORM_AWS_INSTANCE_I3EN_LARGE
+	bool "i3en.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1250 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_XLARGE
+	bool "i3en.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2500 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_2XLARGE
+	bool "i3en.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 5000 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_3XLARGE
+	bool "i3en.3xlarge"
+	help
+	  vCPUs: 12
+	  Memory: 96.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7500 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_6XLARGE
+	bool "i3en.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 192.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 15000 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_12XLARGE
+	bool "i3en.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 30000 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_24XLARGE
+	bool "i3en.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 60000 GB
+
+config TERRAFORM_AWS_INSTANCE_I3EN_METAL
+	bool "i3en.metal"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 60000 GB
+
+endchoice
+
+config TERRAFORM_AWS_I3EN_SIZE
+	string
+	default "i3en.large" if TERRAFORM_AWS_INSTANCE_I3EN_LARGE
+	default "i3en.xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_XLARGE
+	default "i3en.2xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_2XLARGE
+	default "i3en.3xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_3XLARGE
+	default "i3en.6xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_6XLARGE
+	default "i3en.12xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_12XLARGE
+	default "i3en.24xlarge" if TERRAFORM_AWS_INSTANCE_I3EN_24XLARGE
+	default "i3en.metal" if TERRAFORM_AWS_INSTANCE_I3EN_METAL
+	default "i3en.large"
+

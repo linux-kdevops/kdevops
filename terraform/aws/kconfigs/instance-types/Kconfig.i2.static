@@ -1,0 +1,54 @@
+# AWS I2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for I2 family"
+	default TERRAFORM_AWS_INSTANCE_I2_XLARGE
+	help
+	  Select the specific instance size within the I2 family.
+
+config TERRAFORM_AWS_INSTANCE_I2_XLARGE
+	bool "i2.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 30.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 800 GB
+
+config TERRAFORM_AWS_INSTANCE_I2_2XLARGE
+	bool "i2.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 61.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 1600 GB
+
+config TERRAFORM_AWS_INSTANCE_I2_4XLARGE
+	bool "i2.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 122.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 3200 GB
+
+config TERRAFORM_AWS_INSTANCE_I2_8XLARGE
+	bool "i2.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 244.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 6400 GB
+
+endchoice
+
+config TERRAFORM_AWS_I2_SIZE
+	string
+	default "i2.xlarge" if TERRAFORM_AWS_INSTANCE_I2_XLARGE
+	default "i2.2xlarge" if TERRAFORM_AWS_INSTANCE_I2_2XLARGE
+	default "i2.4xlarge" if TERRAFORM_AWS_INSTANCE_I2_4XLARGE
+	default "i2.8xlarge" if TERRAFORM_AWS_INSTANCE_I2_8XLARGE
+	default "i2.xlarge"
+

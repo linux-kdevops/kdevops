@@ -1,0 +1,124 @@
+# AWS regions (dynamically generated)
+
+choice
+    prompt "AWS region"
+    default TERRAFORM_AWS_REGION_USEAST1
+    help
+      Select the AWS region for your deployment.
+      Note: Not all instance types are available in all regions.
+
+# US Regions
+config TERRAFORM_AWS_REGION_US_EAST_1
+	bool "US East (N. Virginia)"
+	help
+	  Region: US East (N. Virginia)
+
+config TERRAFORM_AWS_REGION_US_EAST_2
+	bool "US East (Ohio)"
+	help
+	  Region: US East (Ohio)
+
+config TERRAFORM_AWS_REGION_US_WEST_1
+	bool "US West (N. California)"
+	help
+	  Region: US West (N. California)
+
+config TERRAFORM_AWS_REGION_US_WEST_2
+	bool "US West (Oregon)"
+	help
+	  Region: US West (Oregon)
+
+
+# Europe Regions
+config TERRAFORM_AWS_REGION_EU_CENTRAL_1
+	bool "Europe (Frankfurt)"
+	help
+	  Region: Europe (Frankfurt)
+
+config TERRAFORM_AWS_REGION_EU_NORTH_1
+	bool "Europe (Stockholm)"
+	help
+	  Region: Europe (Stockholm)
+
+config TERRAFORM_AWS_REGION_EU_WEST_1
+	bool "Europe (Ireland)"
+	help
+	  Region: Europe (Ireland)
+
+config TERRAFORM_AWS_REGION_EU_WEST_2
+	bool "Europe (London)"
+	help
+	  Region: Europe (London)
+
+config TERRAFORM_AWS_REGION_EU_WEST_3
+	bool "Europe (Paris)"
+	help
+	  Region: Europe (Paris)
+
+
+# Asia Pacific Regions
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+	bool "Asia Pacific (Tokyo)"
+	help
+	  Region: Asia Pacific (Tokyo)
+
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+	bool "Asia Pacific (Seoul)"
+	help
+	  Region: Asia Pacific (Seoul)
+
+config TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+	bool "Ap Northeast 3"
+	help
+	  Region: Ap Northeast 3
+
+config TERRAFORM_AWS_REGION_AP_SOUTH_1
+	bool "Asia Pacific (Mumbai)"
+	help
+	  Region: Asia Pacific (Mumbai)
+
+config TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+	bool "Asia Pacific (Singapore)"
+	help
+	  Region: Asia Pacific (Singapore)
+
+config TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+	bool "Asia Pacific (Sydney)"
+	help
+	  Region: Asia Pacific (Sydney)
+
+
+# Other Regions
+config TERRAFORM_AWS_REGION_CA_CENTRAL_1
+	bool "Canada (Central)"
+	help
+	  Region: Canada (Central)
+
+config TERRAFORM_AWS_REGION_SA_EAST_1
+	bool "South America (São Paulo)"
+	help
+	  Region: South America (São Paulo)
+
+
+endchoice
+
+config TERRAFORM_AWS_REGION
+    string
+	default "ap-south-1" if TERRAFORM_AWS_REGION_AP_SOUTH_1
+	default "eu-north-1" if TERRAFORM_AWS_REGION_EU_NORTH_1
+	default "eu-west-3" if TERRAFORM_AWS_REGION_EU_WEST_3
+	default "eu-west-2" if TERRAFORM_AWS_REGION_EU_WEST_2
+	default "eu-west-1" if TERRAFORM_AWS_REGION_EU_WEST_1
+	default "ap-northeast-3" if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+	default "ap-northeast-2" if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+	default "ap-northeast-1" if TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+	default "ca-central-1" if TERRAFORM_AWS_REGION_CA_CENTRAL_1
+	default "sa-east-1" if TERRAFORM_AWS_REGION_SA_EAST_1
+	default "ap-southeast-1" if TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+	default "ap-southeast-2" if TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+	default "eu-central-1" if TERRAFORM_AWS_REGION_EU_CENTRAL_1
+	default "us-east-1" if TERRAFORM_AWS_REGION_US_EAST_1
+	default "us-east-2" if TERRAFORM_AWS_REGION_US_EAST_2
+	default "us-west-1" if TERRAFORM_AWS_REGION_US_WEST_1
+	default "us-west-2" if TERRAFORM_AWS_REGION_US_WEST_2
+	default "us-east-1"

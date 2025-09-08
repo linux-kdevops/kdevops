@@ -1,0 +1,84 @@
+# AWS Z1D instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for Z1D family"
+	default TERRAFORM_AWS_INSTANCE_Z1D_LARGE
+	help
+	  Select the specific instance size within the Z1D family.
+
+config TERRAFORM_AWS_INSTANCE_Z1D_LARGE
+	bool "z1d.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 75 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_XLARGE
+	bool "z1d.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 150 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_2XLARGE
+	bool "z1d.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 300 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_3XLARGE
+	bool "z1d.3xlarge"
+	help
+	  vCPUs: 12
+	  Memory: 96.0 GB
+	  Network: Up to 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 450 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_6XLARGE
+	bool "z1d.6xlarge"
+	help
+	  vCPUs: 24
+	  Memory: 192.0 GB
+	  Network: 12 Gigabit
+	  Price: pricing varies
+	  Instance storage: 900 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_12XLARGE
+	bool "z1d.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+config TERRAFORM_AWS_INSTANCE_Z1D_METAL
+	bool "z1d.metal"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1800 GB
+
+endchoice
+
+config TERRAFORM_AWS_Z1D_SIZE
+	string
+	default "z1d.large" if TERRAFORM_AWS_INSTANCE_Z1D_LARGE
+	default "z1d.xlarge" if TERRAFORM_AWS_INSTANCE_Z1D_XLARGE
+	default "z1d.2xlarge" if TERRAFORM_AWS_INSTANCE_Z1D_2XLARGE
+	default "z1d.3xlarge" if TERRAFORM_AWS_INSTANCE_Z1D_3XLARGE
+	default "z1d.6xlarge" if TERRAFORM_AWS_INSTANCE_Z1D_6XLARGE
+	default "z1d.12xlarge" if TERRAFORM_AWS_INSTANCE_Z1D_12XLARGE
+	default "z1d.metal" if TERRAFORM_AWS_INSTANCE_Z1D_METAL
+	default "z1d.large"
+

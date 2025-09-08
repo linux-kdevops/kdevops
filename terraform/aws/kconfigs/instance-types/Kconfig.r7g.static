@@ -1,0 +1,95 @@
+# AWS R7G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R7G family"
+	default TERRAFORM_AWS_INSTANCE_R7G_MEDIUM
+	help
+	  Select the specific instance size within the R7G family.
+
+config TERRAFORM_AWS_INSTANCE_R7G_MEDIUM
+	bool "r7g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_LARGE
+	bool "r7g.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_XLARGE
+	bool "r7g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_2XLARGE
+	bool "r7g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_4XLARGE
+	bool "r7g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_8XLARGE
+	bool "r7g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_12XLARGE
+	bool "r7g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_METAL
+	bool "r7g.metal"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R7G_16XLARGE
+	bool "r7g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R7G_SIZE
+	string
+	default "r7g.medium" if TERRAFORM_AWS_INSTANCE_R7G_MEDIUM
+	default "r7g.large" if TERRAFORM_AWS_INSTANCE_R7G_LARGE
+	default "r7g.xlarge" if TERRAFORM_AWS_INSTANCE_R7G_XLARGE
+	default "r7g.2xlarge" if TERRAFORM_AWS_INSTANCE_R7G_2XLARGE
+	default "r7g.4xlarge" if TERRAFORM_AWS_INSTANCE_R7G_4XLARGE
+	default "r7g.8xlarge" if TERRAFORM_AWS_INSTANCE_R7G_8XLARGE
+	default "r7g.12xlarge" if TERRAFORM_AWS_INSTANCE_R7G_12XLARGE
+	default "r7g.metal" if TERRAFORM_AWS_INSTANCE_R7G_METAL
+	default "r7g.16xlarge" if TERRAFORM_AWS_INSTANCE_R7G_16XLARGE
+	default "r7g.medium"
+

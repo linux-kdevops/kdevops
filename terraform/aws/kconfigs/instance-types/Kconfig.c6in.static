@@ -1,0 +1,104 @@
+# AWS C6IN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C6IN family"
+	default TERRAFORM_AWS_INSTANCE_C6IN_LARGE
+	help
+	  Select the specific instance size within the C6IN family.
+
+config TERRAFORM_AWS_INSTANCE_C6IN_LARGE
+	bool "c6in.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_XLARGE
+	bool "c6in.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_2XLARGE
+	bool "c6in.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_4XLARGE
+	bool "c6in.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_8XLARGE
+	bool "c6in.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_12XLARGE
+	bool "c6in.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_16XLARGE
+	bool "c6in.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_24XLARGE
+	bool "c6in.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 150 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_32XLARGE
+	bool "c6in.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 256.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6IN_METAL
+	bool "c6in.metal"
+	help
+	  vCPUs: 128
+	  Memory: 256.0 GB
+	  Network: 200 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C6IN_SIZE
+	string
+	default "c6in.large" if TERRAFORM_AWS_INSTANCE_C6IN_LARGE
+	default "c6in.xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_XLARGE
+	default "c6in.2xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_2XLARGE
+	default "c6in.4xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_4XLARGE
+	default "c6in.8xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_8XLARGE
+	default "c6in.12xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_12XLARGE
+	default "c6in.16xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_16XLARGE
+	default "c6in.24xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_24XLARGE
+	default "c6in.32xlarge" if TERRAFORM_AWS_INSTANCE_C6IN_32XLARGE
+	default "c6in.metal" if TERRAFORM_AWS_INSTANCE_C6IN_METAL
+	default "c6in.large"
+

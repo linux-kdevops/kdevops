@@ -1,0 +1,77 @@
+# AWS T2 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for T2 family"
+	default TERRAFORM_AWS_INSTANCE_T2_NANO
+	help
+	  Select the specific instance size within the T2 family.
+
+config TERRAFORM_AWS_INSTANCE_T2_NANO
+	bool "t2.nano"
+	help
+	  vCPUs: 1
+	  Memory: 0.5 GB
+	  Network: Low to Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_MICRO
+	bool "t2.micro"
+	help
+	  vCPUs: 1
+	  Memory: 1.0 GB
+	  Network: Low to Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_SMALL
+	bool "t2.small"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Low to Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_MEDIUM
+	bool "t2.medium"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Low to Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_LARGE
+	bool "t2.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Low to Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_XLARGE
+	bool "t2.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_T2_2XLARGE
+	bool "t2.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Moderate
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_T2_SIZE
+	string
+	default "t2.nano" if TERRAFORM_AWS_INSTANCE_T2_NANO
+	default "t2.micro" if TERRAFORM_AWS_INSTANCE_T2_MICRO
+	default "t2.small" if TERRAFORM_AWS_INSTANCE_T2_SMALL
+	default "t2.medium" if TERRAFORM_AWS_INSTANCE_T2_MEDIUM
+	default "t2.large" if TERRAFORM_AWS_INSTANCE_T2_LARGE
+	default "t2.xlarge" if TERRAFORM_AWS_INSTANCE_T2_XLARGE
+	default "t2.2xlarge" if TERRAFORM_AWS_INSTANCE_T2_2XLARGE
+	default "t2.nano"
+

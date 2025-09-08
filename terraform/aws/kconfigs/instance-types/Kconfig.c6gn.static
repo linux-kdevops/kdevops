@@ -1,0 +1,86 @@
+# AWS C6GN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C6GN family"
+	default TERRAFORM_AWS_INSTANCE_C6GN_MEDIUM
+	help
+	  Select the specific instance size within the C6GN family.
+
+config TERRAFORM_AWS_INSTANCE_C6GN_MEDIUM
+	bool "c6gn.medium"
+	help
+	  vCPUs: 1
+	  Memory: 2.0 GB
+	  Network: Up to 16 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_LARGE
+	bool "c6gn.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_XLARGE
+	bool "c6gn.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_2XLARGE
+	bool "c6gn.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_4XLARGE
+	bool "c6gn.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_8XLARGE
+	bool "c6gn.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_12XLARGE
+	bool "c6gn.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C6GN_16XLARGE
+	bool "c6gn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C6GN_SIZE
+	string
+	default "c6gn.medium" if TERRAFORM_AWS_INSTANCE_C6GN_MEDIUM
+	default "c6gn.large" if TERRAFORM_AWS_INSTANCE_C6GN_LARGE
+	default "c6gn.xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_XLARGE
+	default "c6gn.2xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_2XLARGE
+	default "c6gn.4xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_4XLARGE
+	default "c6gn.8xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_8XLARGE
+	default "c6gn.12xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_12XLARGE
+	default "c6gn.16xlarge" if TERRAFORM_AWS_INSTANCE_C6GN_16XLARGE
+	default "c6gn.medium"
+

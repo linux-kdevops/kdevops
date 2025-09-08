@@ -1,0 +1,54 @@
+# AWS X2IDN instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for X2IDN family"
+	default TERRAFORM_AWS_INSTANCE_X2IDN_16XLARGE
+	help
+	  Select the specific instance size within the X2IDN family.
+
+config TERRAFORM_AWS_INSTANCE_X2IDN_16XLARGE
+	bool "x2idn.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 1024.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+	  Instance storage: 1900 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IDN_24XLARGE
+	bool "x2idn.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 1536.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+	  Instance storage: 2850 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IDN_METAL
+	bool "x2idn.metal"
+	help
+	  vCPUs: 128
+	  Memory: 2048.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+config TERRAFORM_AWS_INSTANCE_X2IDN_32XLARGE
+	bool "x2idn.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 2048.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 3800 GB
+
+endchoice
+
+config TERRAFORM_AWS_X2IDN_SIZE
+	string
+	default "x2idn.16xlarge" if TERRAFORM_AWS_INSTANCE_X2IDN_16XLARGE
+	default "x2idn.24xlarge" if TERRAFORM_AWS_INSTANCE_X2IDN_24XLARGE
+	default "x2idn.metal" if TERRAFORM_AWS_INSTANCE_X2IDN_METAL
+	default "x2idn.32xlarge" if TERRAFORM_AWS_INSTANCE_X2IDN_32XLARGE
+	default "x2idn.16xlarge"
+

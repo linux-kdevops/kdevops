@@ -1,0 +1,68 @@
+# AWS M4 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M4 family"
+	default TERRAFORM_AWS_INSTANCE_M4_LARGE
+	help
+	  Select the specific instance size within the M4 family.
+
+config TERRAFORM_AWS_INSTANCE_M4_LARGE
+	bool "m4.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Moderate
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M4_XLARGE
+	bool "m4.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M4_2XLARGE
+	bool "m4.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M4_4XLARGE
+	bool "m4.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: High
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M4_10XLARGE
+	bool "m4.10xlarge"
+	help
+	  vCPUs: 40
+	  Memory: 160.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M4_16XLARGE
+	bool "m4.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M4_SIZE
+	string
+	default "m4.large" if TERRAFORM_AWS_INSTANCE_M4_LARGE
+	default "m4.xlarge" if TERRAFORM_AWS_INSTANCE_M4_XLARGE
+	default "m4.2xlarge" if TERRAFORM_AWS_INSTANCE_M4_2XLARGE
+	default "m4.4xlarge" if TERRAFORM_AWS_INSTANCE_M4_4XLARGE
+	default "m4.10xlarge" if TERRAFORM_AWS_INSTANCE_M4_10XLARGE
+	default "m4.16xlarge" if TERRAFORM_AWS_INSTANCE_M4_16XLARGE
+	default "m4.large"
+

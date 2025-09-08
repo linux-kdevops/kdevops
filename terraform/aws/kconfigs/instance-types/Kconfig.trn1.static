@@ -1,0 +1,34 @@
+# AWS TRN1 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for TRN1 family"
+	default TERRAFORM_AWS_INSTANCE_TRN1_2XLARGE
+	help
+	  Select the specific instance size within the TRN1 family.
+
+config TERRAFORM_AWS_INSTANCE_TRN1_2XLARGE
+	bool "trn1.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+	  Instance storage: 474 GB
+
+config TERRAFORM_AWS_INSTANCE_TRN1_32XLARGE
+	bool "trn1.32xlarge"
+	help
+	  vCPUs: 128
+	  Memory: 512.0 GB
+	  Network: 8x 100 Gigabit
+	  Price: pricing varies
+	  Instance storage: 7600 GB
+
+endchoice
+
+config TERRAFORM_AWS_TRN1_SIZE
+	string
+	default "trn1.2xlarge" if TERRAFORM_AWS_INSTANCE_TRN1_2XLARGE
+	default "trn1.32xlarge" if TERRAFORM_AWS_INSTANCE_TRN1_32XLARGE
+	default "trn1.2xlarge"
+

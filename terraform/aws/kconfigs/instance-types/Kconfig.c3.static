@@ -1,0 +1,64 @@
+# AWS C3 instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C3 family"
+	default TERRAFORM_AWS_INSTANCE_C3_LARGE
+	help
+	  Select the specific instance size within the C3 family.
+
+config TERRAFORM_AWS_INSTANCE_C3_LARGE
+	bool "c3.large"
+	help
+	  vCPUs: 2
+	  Memory: 3.8 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 32 GB
+
+config TERRAFORM_AWS_INSTANCE_C3_XLARGE
+	bool "c3.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 7.5 GB
+	  Network: Moderate
+	  Price: pricing varies
+	  Instance storage: 80 GB
+
+config TERRAFORM_AWS_INSTANCE_C3_2XLARGE
+	bool "c3.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 15.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 160 GB
+
+config TERRAFORM_AWS_INSTANCE_C3_4XLARGE
+	bool "c3.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 30.0 GB
+	  Network: High
+	  Price: pricing varies
+	  Instance storage: 320 GB
+
+config TERRAFORM_AWS_INSTANCE_C3_8XLARGE
+	bool "c3.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 60.0 GB
+	  Network: 10 Gigabit
+	  Price: pricing varies
+	  Instance storage: 640 GB
+
+endchoice
+
+config TERRAFORM_AWS_C3_SIZE
+	string
+	default "c3.large" if TERRAFORM_AWS_INSTANCE_C3_LARGE
+	default "c3.xlarge" if TERRAFORM_AWS_INSTANCE_C3_XLARGE
+	default "c3.2xlarge" if TERRAFORM_AWS_INSTANCE_C3_2XLARGE
+	default "c3.4xlarge" if TERRAFORM_AWS_INSTANCE_C3_4XLARGE
+	default "c3.8xlarge" if TERRAFORM_AWS_INSTANCE_C3_8XLARGE
+	default "c3.large"
+

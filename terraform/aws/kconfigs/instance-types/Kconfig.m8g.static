@@ -1,0 +1,122 @@
+# AWS M8G instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for M8G family"
+	default TERRAFORM_AWS_INSTANCE_M8G_MEDIUM
+	help
+	  Select the specific instance size within the M8G family.
+
+config TERRAFORM_AWS_INSTANCE_M8G_MEDIUM
+	bool "m8g.medium"
+	help
+	  vCPUs: 1
+	  Memory: 4.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_LARGE
+	bool "m8g.large"
+	help
+	  vCPUs: 2
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_XLARGE
+	bool "m8g.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_2XLARGE
+	bool "m8g.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 32.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_4XLARGE
+	bool "m8g.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 64.0 GB
+	  Network: Up to 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_8XLARGE
+	bool "m8g.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 128.0 GB
+	  Network: 15 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_12XLARGE
+	bool "m8g.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 192.0 GB
+	  Network: 22.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_16XLARGE
+	bool "m8g.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 256.0 GB
+	  Network: 30 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_24XLARGE
+	bool "m8g.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_METAL_24XL
+	bool "m8g.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 384.0 GB
+	  Network: 40 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_METAL_48XL
+	bool "m8g.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 768.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_M8G_48XLARGE
+	bool "m8g.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 768.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_M8G_SIZE
+	string
+	default "m8g.medium" if TERRAFORM_AWS_INSTANCE_M8G_MEDIUM
+	default "m8g.large" if TERRAFORM_AWS_INSTANCE_M8G_LARGE
+	default "m8g.xlarge" if TERRAFORM_AWS_INSTANCE_M8G_XLARGE
+	default "m8g.2xlarge" if TERRAFORM_AWS_INSTANCE_M8G_2XLARGE
+	default "m8g.4xlarge" if TERRAFORM_AWS_INSTANCE_M8G_4XLARGE
+	default "m8g.8xlarge" if TERRAFORM_AWS_INSTANCE_M8G_8XLARGE
+	default "m8g.12xlarge" if TERRAFORM_AWS_INSTANCE_M8G_12XLARGE
+	default "m8g.16xlarge" if TERRAFORM_AWS_INSTANCE_M8G_16XLARGE
+	default "m8g.24xlarge" if TERRAFORM_AWS_INSTANCE_M8G_24XLARGE
+	default "m8g.metal-24xl" if TERRAFORM_AWS_INSTANCE_M8G_METAL_24XL
+	default "m8g.metal-48xl" if TERRAFORM_AWS_INSTANCE_M8G_METAL_48XL
+	default "m8g.48xlarge" if TERRAFORM_AWS_INSTANCE_M8G_48XLARGE
+	default "m8g.medium"
+

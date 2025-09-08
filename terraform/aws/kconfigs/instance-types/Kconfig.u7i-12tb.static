@@ -1,0 +1,23 @@
+# AWS U7I-12TB instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for U7I-12TB family"
+	default TERRAFORM_AWS_INSTANCE_U7I_12TB_224XLARGE
+	help
+	  Select the specific instance size within the U7I-12TB family.
+
+config TERRAFORM_AWS_INSTANCE_U7I_12TB_224XLARGE
+	bool "u7i-12tb.224xlarge"
+	help
+	  vCPUs: 896
+	  Memory: 12288.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_U7I_12TB_SIZE
+	string
+	default "u7i-12tb.224xlarge" if TERRAFORM_AWS_INSTANCE_U7I_12TB_224XLARGE
+	default "u7i-12tb.224xlarge"
+

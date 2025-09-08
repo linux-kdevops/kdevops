@@ -1,0 +1,95 @@
+# AWS R5N instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for R5N family"
+	default TERRAFORM_AWS_INSTANCE_R5N_LARGE
+	help
+	  Select the specific instance size within the R5N family.
+
+config TERRAFORM_AWS_INSTANCE_R5N_LARGE
+	bool "r5n.large"
+	help
+	  vCPUs: 2
+	  Memory: 16.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_XLARGE
+	bool "r5n.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 32.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_2XLARGE
+	bool "r5n.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 64.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_4XLARGE
+	bool "r5n.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 128.0 GB
+	  Network: Up to 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_8XLARGE
+	bool "r5n.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 256.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_12XLARGE
+	bool "r5n.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_16XLARGE
+	bool "r5n.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 512.0 GB
+	  Network: 75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_24XLARGE
+	bool "r5n.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_R5N_METAL
+	bool "r5n.metal"
+	help
+	  vCPUs: 96
+	  Memory: 768.0 GB
+	  Network: 100 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_R5N_SIZE
+	string
+	default "r5n.large" if TERRAFORM_AWS_INSTANCE_R5N_LARGE
+	default "r5n.xlarge" if TERRAFORM_AWS_INSTANCE_R5N_XLARGE
+	default "r5n.2xlarge" if TERRAFORM_AWS_INSTANCE_R5N_2XLARGE
+	default "r5n.4xlarge" if TERRAFORM_AWS_INSTANCE_R5N_4XLARGE
+	default "r5n.8xlarge" if TERRAFORM_AWS_INSTANCE_R5N_8XLARGE
+	default "r5n.12xlarge" if TERRAFORM_AWS_INSTANCE_R5N_12XLARGE
+	default "r5n.16xlarge" if TERRAFORM_AWS_INSTANCE_R5N_16XLARGE
+	default "r5n.24xlarge" if TERRAFORM_AWS_INSTANCE_R5N_24XLARGE
+	default "r5n.metal" if TERRAFORM_AWS_INSTANCE_R5N_METAL
+	default "r5n.large"
+

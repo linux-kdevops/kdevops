@@ -1,0 +1,113 @@
+# AWS C7I instance sizes (dynamically generated)
+
+choice
+	prompt "Instance size for C7I family"
+	default TERRAFORM_AWS_INSTANCE_C7I_LARGE
+	help
+	  Select the specific instance size within the C7I family.
+
+config TERRAFORM_AWS_INSTANCE_C7I_LARGE
+	bool "c7i.large"
+	help
+	  vCPUs: 2
+	  Memory: 4.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_XLARGE
+	bool "c7i.xlarge"
+	help
+	  vCPUs: 4
+	  Memory: 8.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_2XLARGE
+	bool "c7i.2xlarge"
+	help
+	  vCPUs: 8
+	  Memory: 16.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_4XLARGE
+	bool "c7i.4xlarge"
+	help
+	  vCPUs: 16
+	  Memory: 32.0 GB
+	  Network: Up to 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_8XLARGE
+	bool "c7i.8xlarge"
+	help
+	  vCPUs: 32
+	  Memory: 64.0 GB
+	  Network: 12.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_12XLARGE
+	bool "c7i.12xlarge"
+	help
+	  vCPUs: 48
+	  Memory: 96.0 GB
+	  Network: 18.75 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_16XLARGE
+	bool "c7i.16xlarge"
+	help
+	  vCPUs: 64
+	  Memory: 128.0 GB
+	  Network: 25 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_METAL_24XL
+	bool "c7i.metal-24xl"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_24XLARGE
+	bool "c7i.24xlarge"
+	help
+	  vCPUs: 96
+	  Memory: 192.0 GB
+	  Network: 37.5 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_METAL_48XL
+	bool "c7i.metal-48xl"
+	help
+	  vCPUs: 192
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+config TERRAFORM_AWS_INSTANCE_C7I_48XLARGE
+	bool "c7i.48xlarge"
+	help
+	  vCPUs: 192
+	  Memory: 384.0 GB
+	  Network: 50 Gigabit
+	  Price: pricing varies
+
+endchoice
+
+config TERRAFORM_AWS_C7I_SIZE
+	string
+	default "c7i.large" if TERRAFORM_AWS_INSTANCE_C7I_LARGE
+	default "c7i.xlarge" if TERRAFORM_AWS_INSTANCE_C7I_XLARGE
+	default "c7i.2xlarge" if TERRAFORM_AWS_INSTANCE_C7I_2XLARGE
+	default "c7i.4xlarge" if TERRAFORM_AWS_INSTANCE_C7I_4XLARGE
+	default "c7i.8xlarge" if TERRAFORM_AWS_INSTANCE_C7I_8XLARGE
+	default "c7i.12xlarge" if TERRAFORM_AWS_INSTANCE_C7I_12XLARGE
+	default "c7i.16xlarge" if TERRAFORM_AWS_INSTANCE_C7I_16XLARGE
+	default "c7i.metal-24xl" if TERRAFORM_AWS_INSTANCE_C7I_METAL_24XL
+	default "c7i.24xlarge" if TERRAFORM_AWS_INSTANCE_C7I_24XLARGE
+	default "c7i.metal-48xl" if TERRAFORM_AWS_INSTANCE_C7I_METAL_48XL
+	default "c7i.48xlarge" if TERRAFORM_AWS_INSTANCE_C7I_48XLARGE
+	default "c7i.large"
+
