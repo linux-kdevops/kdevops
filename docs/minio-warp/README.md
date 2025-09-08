@@ -196,7 +196,13 @@ After running benchmarks, you'll find:
 
 ### Demo Results
 
-Example benchmark results demonstrating MinIO Warp capabilities are available in [demo-results/](demo-results/). These show real-world performance measurements across different configurations and workloads.
+Example benchmark results are available in [demo-results/](demo-results/README.md) showing:
+- Performance graphs from 6 different benchmark scenarios
+- Throughput measurements ranging from 380-520 MB/s
+- Latency statistics and IOPS performance metrics
+- Tests ranging from 2 minutes to over 1 hour duration
+
+View the [demo results analysis](demo-results/README.md) for detailed performance metrics and graphs.
 
 ## Performance Analysis Tools
 
