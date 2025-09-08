@@ -1,0 +1,40 @@
+# AWS G6e.2xlarge GPU instance with Deep Learning AMI for AI/ML workloads
+# This configuration sets up an AWS G6e.2xlarge instance with NVIDIA L40S GPU
+# optimized for machine learning, AI inference, and GPU-accelerated workloads
+
+# Cloud provider configuration
+CONFIG_KDEVOPS_ENABLE_TERRAFORM=y
+CONFIG_TERRAFORM=y
+CONFIG_TERRAFORM_AWS=y
+
+
+# AWS Instance configuration - G6E family with NVIDIA L40S GPU
+# G6E.2XLARGE specifications:
+# - 8 vCPUs (3rd Gen AMD EPYC processors)
+# - 32 GB system RAM
+# - 1x NVIDIA L40S Tensor Core GPU
+# - 48 GB GPU memory
+# - Up to 15 Gbps network performance
+# - Up to 10 Gbps EBS bandwidth
+CONFIG_TERRAFORM_AWS_INSTANCE_TYPE_G6E=y
+CONFIG_TERRAFORM_AWS_INSTANCE_G6E_2XLARGE=y
+
+# AWS Region - US East (N. Virginia) - primary availability for G6E
+CONFIG_TERRAFORM_AWS_REGION_US_EAST_1=y
+
+# GPU-optimized Deep Learning AMI
+# Includes: NVIDIA drivers 535+, CUDA 12.x, cuDNN, TensorFlow, PyTorch, MXNet
+CONFIG_TERRAFORM_AWS_USE_GPU_AMI=y
+CONFIG_TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING=y
+CONFIG_TERRAFORM_AWS_GPU_AMI_NAME="Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*"
+CONFIG_TERRAFORM_AWS_GPU_AMI_OWNER="amazon"
+
+# Storage configuration optimized for ML workloads
+# 200 GB for datasets, models, and experiment artifacts
+CONFIG_TERRAFORM_AWS_DATA_VOLUME_SIZE=200
+
+# Note: After provisioning, the instance will have:
+# - Jupyter notebook server ready for ML experiments
+# - Pre-installed deep learning frameworks
+# - NVIDIA GPU drivers and CUDA toolkit
+# - Docker with NVIDIA Container Toolkit for containerized ML workloads

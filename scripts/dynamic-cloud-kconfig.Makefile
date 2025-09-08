@@ -110,6 +110,11 @@ cloud-update:
 		sed -i 's/Kconfig\.\([^.]*\)\.generated/Kconfig.\1.static/g' $(AWS_KCONFIG_DIR)/Kconfig.location.static; \
 		echo "  Created $(AWS_KCONFIG_DIR)/Kconfig.location.static"; \
 	fi
+	$(Q)if [ -f $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.generated ]; then \
+		cp $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.generated $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static; \
+		sed -i 's/Kconfig\.\([^.]*\)\.generated/Kconfig.\1.static/g' $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static; \
+		echo "  Created $(AWS_KCONFIG_DIR)/Kconfig.gpu-amis.static"; \
+	fi
 	# AWS instance type families
 	$(Q)for file in $(AWS_INSTANCE_TYPES_DIR)/Kconfig.*.generated; do \
 		if [ -f "$$file" ]; then \
