@@ -1,7 +1,19 @@
 {# Workflow template for CXL #}
 [all]
 localhost ansible_connection=local
-write-your-own-template-for-cxl-workflow
+{{ kdevops_host_prefix }}-cxl
 
 [all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-cxl
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[cxl]
+{{ kdevops_host_prefix }}-cxl
+
+[cxl:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
