@@ -1,8 +1,13 @@
 aws_profile = "{{ terraform_aws_profile }}"
 aws_region = "{{ terraform_aws_region }}"
 aws_availability_zone = "{{ terraform_aws_av_zone }}"
+{% if terraform_aws_use_gpu_ami is defined and terraform_aws_use_gpu_ami %}
+aws_name_search = "{{ terraform_aws_gpu_ami_name }}"
+aws_ami_owner = "{{ terraform_aws_gpu_ami_owner }}"
+{% else %}
 aws_name_search = "{{ terraform_aws_ns }}"
 aws_ami_owner = "{{ terraform_aws_ami_owner }}"
+{% endif %}
 aws_instance_type = "{{ terraform_aws_instance_type }}"
 aws_ebs_volumes_per_instance = "{{ terraform_aws_ebs_volumes_per_instance }}"
 aws_ebs_volume_size = {{ terraform_aws_ebs_volume_size }}

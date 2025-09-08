@@ -956,7 +956,7 @@ if TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
 config TERRAFORM_AWS_GPU_AMI_NAME
     string
     output yaml
-    default "Deep Learning AMI GPU TensorFlow*"
+    default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*"
     help
       AMI name pattern for AWS Deep Learning AMI.
 
@@ -1061,7 +1061,7 @@ if TERRAFORM_AWS_GPU_AMI_DEEP_LEARNING
 config TERRAFORM_AWS_GPU_AMI_NAME
     string
     output yaml
-    default "Deep Learning AMI GPU TensorFlow*"
+    default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*"
 
 config TERRAFORM_AWS_GPU_AMI_OWNER
     string
