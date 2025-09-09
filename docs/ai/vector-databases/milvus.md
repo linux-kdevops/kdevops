@@ -259,7 +259,7 @@ Example GitHub Actions workflow:
 We've conducted comprehensive Milvus performance tests using kdevops infrastructure. View actual benchmark results:
 
 #### Multi-Filesystem Performance Comparison
-- **[Interactive HTML Report](milvus-demo-results/results-multifs/benchmark_report.html)** - Complete performance analysis across XFS, ext4, and btrfs
+- **[View Interactive HTML Report](https://htmlpreview.github.io/?https://github.com/linux-kdevops/kdevops/blob/main/docs/ai/vector-databases/milvus-demo-results/results-multifs/benchmark_report.html)** - Complete performance analysis across XFS, ext4, and btrfs
 - **[Summary](milvus-demo-results/results-multifs/benchmark_summary.txt)** - Quick performance overview
 - **Performance Visualizations**:
   - [Filesystem Comparison](milvus-demo-results/results-multifs/filesystem_comparison.png) - Side-by-side filesystem performance
@@ -269,7 +269,7 @@ We've conducted comprehensive Milvus performance tests using kdevops infrastruct
   - [Performance Matrix](milvus-demo-results/results-multifs/performance_matrix.png) - Complete performance heatmap
 
 #### Simple Benchmark Results
-- **[Interactive HTML Report](milvus-demo-results/results-simple/benchmark_report.html)** - Standard benchmark results
+- **[View Interactive HTML Report](https://htmlpreview.github.io/?https://github.com/linux-kdevops/kdevops/blob/main/docs/ai/vector-databases/milvus-demo-results/results-simple/benchmark_report.html)** - Standard benchmark results
 - **[Summary](milvus-demo-results/results-simple/benchmark_summary.txt)** - Performance metrics overview
 
 These results demonstrate:
