@@ -79,6 +79,11 @@ The AI workflow generates comprehensive performance metrics:
 
 Results are stored in the configured results directory (default: `/data/ai-results/`).
 
+### Demo Results
+
+View actual benchmark results from our testing:
+- [Milvus Performance Demo](vector-databases/milvus.md#demo-results) - Real-world performance across different filesystems
+
 ## Integration with CI/CD
 
 The workflow includes CI-optimized configurations that use:

@@ -72,4 +72,10 @@ make ai # Run benchmarks
 make ai-results # Check results
 ```
 
+## Demo Results
+
+View actual benchmark results from our comprehensive testing:
+- **[Milvus Multi-Filesystem Performance](milvus.md#demo-results)** - XFS vs ext4 vs btrfs comparison with interactive HTML reports
+- **[Performance Visualizations](milvus-demo-results/)** - Graphs and analysis showing real-world throughput and latency
+
 See individual database guides for detailed configuration and usage instructions.

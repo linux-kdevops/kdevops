@@ -1,0 +1,4488 @@
+{
+  "summary": [
+    "================================================================================",
+    "AI BENCHMARK RESULTS SUMMARY",
+    "================================================================================",
+    "Generated: 2025-08-27 01:43:05",
+    "Total result sets: 42",
+    "",
+    "CONFIGURATION:",
+    "  Vector dataset size: 1,000",
+    "  Vector dimensions: 768",
+    "  Index type: HNSW",
+    "  Benchmark iterations: 42",
+    "",
+    "INSERT PERFORMANCE:",
+    "  Average insert time: 0.14 seconds",
+    "  Average insert rate: 7478.21 vectors/sec",
+    "  Insert rate range: 6122.15 - 9996.79 vectors/sec",
+    "",
+    "INDEX PERFORMANCE:",
+    "  Average index creation time: 0.53 seconds",
+    "  Index time range: 0.52 - 0.54 seconds",
+    "",
+    "QUERY PERFORMANCE:",
+    "  TOPK_1:",
+    "    batch_1: 160.36 QPS, 6.24ms avg",
+    "    batch_10: 1299.89 QPS, 7.69ms avg",
+    "    batch_100: 4959.68 QPS, 20.16ms avg",
+    "  TOPK_10:",
+    "    batch_1: 205.82 QPS, 4.86ms avg",
+    "    batch_10: 1368.82 QPS, 7.31ms avg",
+    "    batch_100: 2549.68 QPS, 39.22ms avg",
+    "  TOPK_100:",
+    "    batch_1: 218.20 QPS, 4.58ms avg",
+    "    batch_10: 1094.08 QPS, 9.14ms avg",
+    "    batch_100: 1793.00 QPS, 55.77ms avg"
+  ],
+  "raw_results": [
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.874080",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14067625999450684,
+        "flush_time_seconds": 2.6451337337493896,
+        "average_batch_time_seconds": 0.14067625999450684,
+        "vectors_per_second": 7108.519945291752,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5236756801605225
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.006235921382904052,
+            "queries_per_second": 160.36122628831197,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007692980766296387,
+            "queries_per_second": 1299.886260448078,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020162582397460938,
+            "queries_per_second": 4959.682149276322,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004858555793762207,
+            "queries_per_second": 205.82247944623342,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007305550575256348,
+            "queries_per_second": 1368.8222259208856,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.039220571517944336,
+            "queries_per_second": 2549.6823766131924,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004583053588867188,
+            "queries_per_second": 218.19513575602204,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00914013385772705,
+            "queries_per_second": 1094.075880688117,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05577230453491211,
+            "queries_per_second": 1793.0046253943556,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:35.055161",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1576220989227295,
+        "flush_time_seconds": 3.1527204513549805,
+        "average_batch_time_seconds": 0.1576220989227295,
+        "vectors_per_second": 6344.288058809738,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5240583419799805
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.004945023059844971,
+            "queries_per_second": 202.2235261388954,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006359624862670899,
+            "queries_per_second": 1572.419791408927,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.016479015350341797,
+            "queries_per_second": 6068.323736219219,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.0039622259140014646,
+            "queries_per_second": 252.3833879502587,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005911564826965332,
+            "queries_per_second": 1691.5994821515715,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04032707214355469,
+            "queries_per_second": 2479.723785650097,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004969377517700196,
+            "queries_per_second": 201.23244741180284,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01266341209411621,
+            "queries_per_second": 789.6765836631259,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06494808197021484,
+            "queries_per_second": 1539.691349867113,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.994382",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1266465187072754,
+        "flush_time_seconds": 3.148104667663574,
+        "average_batch_time_seconds": 0.1266465187072754,
+        "vectors_per_second": 7895.992801123507,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.524345874786377
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00462568998336792,
+            "queries_per_second": 216.18396468323408,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005782175064086914,
+            "queries_per_second": 1729.4529980785248,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.017407655715942383,
+            "queries_per_second": 5744.598907043951,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004323732852935791,
+            "queries_per_second": 231.28163418352858,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0059158563613891605,
+            "queries_per_second": 1690.3723466422707,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03705167770385742,
+            "queries_per_second": 2698.933117125465,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004639203548431396,
+            "queries_per_second": 215.55424105892467,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.009835577011108399,
+            "queries_per_second": 1016.7171675546742,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05669569969177246,
+            "queries_per_second": 1763.8022027006,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.941489",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.11191749572753906,
+        "flush_time_seconds": 3.546304225921631,
+        "average_batch_time_seconds": 0.11191749572753906,
+        "vectors_per_second": 8935.153467287011,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5248904228210449
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.006771645545959473,
+            "queries_per_second": 147.6745930088859,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005747747421264648,
+            "queries_per_second": 1739.8120110503655,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.018791913986206055,
+            "queries_per_second": 5321.437724406552,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.0038963603973388673,
+            "queries_per_second": 256.6497700477038,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005563569068908691,
+            "queries_per_second": 1797.4073613795408,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.033286333084106445,
+            "queries_per_second": 3004.235995215345,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.0045016884803771974,
+            "queries_per_second": 222.13887174978615,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01475989818572998,
+            "queries_per_second": 677.5114485320842,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0785675048828125,
+            "queries_per_second": 1272.7908331714896,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:35.074428",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12197017669677734,
+        "flush_time_seconds": 2.945809841156006,
+        "average_batch_time_seconds": 0.12197017669677734,
+        "vectors_per_second": 8198.725517025685,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5259826183319092
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005461130142211914,
+            "queries_per_second": 183.11228151669195,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.004822325706481933,
+            "queries_per_second": 2073.6882178154187,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.015638113021850586,
+            "queries_per_second": 6394.633410071504,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.003732936382293701,
+            "queries_per_second": 267.8856261101215,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005121827125549316,
+            "queries_per_second": 1952.4282555568486,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.036260128021240234,
+            "queries_per_second": 2757.8501637231566,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004138326644897461,
+            "queries_per_second": 241.64356412826803,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.011943840980529785,
+            "queries_per_second": 837.2516024201485,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07547807693481445,
+            "queries_per_second": 1324.8880212775366,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.958436",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13107514381408691,
+        "flush_time_seconds": 3.0436148643493652,
+        "average_batch_time_seconds": 0.13107514381408691,
+        "vectors_per_second": 7629.211541574734,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5264816284179688
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.006689152717590332,
+            "queries_per_second": 149.49576459367117,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0062827587127685545,
+            "queries_per_second": 1591.6574958826343,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.01813030242919922,
+            "queries_per_second": 5515.627794434801,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.0038558411598205566,
+            "queries_per_second": 259.34678285516776,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005887031555175781,
+            "queries_per_second": 1698.6489551271668,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03590202331542969,
+            "queries_per_second": 2785.358338203262,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004707109928131103,
+            "queries_per_second": 212.44458176421577,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01060183048248291,
+            "queries_per_second": 943.233342253746,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07122015953063965,
+            "queries_per_second": 1404.0968267836997,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.736939",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13732409477233887,
+        "flush_time_seconds": 3.0399422645568848,
+        "average_batch_time_seconds": 0.13732409477233887,
+        "vectors_per_second": 7282.043268938624,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5226104259490967
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005537426471710205,
+            "queries_per_second": 180.58930535851525,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006867361068725586,
+            "queries_per_second": 1456.1634228817031,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0237886905670166,
+            "queries_per_second": 4203.678202391333,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.00499669075012207,
+            "queries_per_second": 200.1324576622177,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006563639640808106,
+            "queries_per_second": 1523.5449456772453,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03898215293884277,
+            "queries_per_second": 2565.276478107435,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005986335277557373,
+            "queries_per_second": 167.04710872927149,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.010254287719726562,
+            "queries_per_second": 975.201815408653,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05289936065673828,
+            "queries_per_second": 1890.38201517965,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:42.961680",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1322319507598877,
+        "flush_time_seconds": 3.142333745956421,
+        "average_batch_time_seconds": 0.1322319507598877,
+        "vectors_per_second": 7562.46878499011,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5289425849914551
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007649307250976563,
+            "queries_per_second": 130.73079263123248,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006693220138549805,
+            "queries_per_second": 1494.0491711014697,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.021692514419555664,
+            "queries_per_second": 4609.885145903171,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005557637214660644,
+            "queries_per_second": 179.93257950736196,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007747006416320801,
+            "queries_per_second": 1290.8211846749946,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04011869430541992,
+            "queries_per_second": 2492.6035538123256,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006008749008178711,
+            "queries_per_second": 166.4239925213828,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.012735366821289062,
+            "queries_per_second": 785.2149168788378,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06839871406555176,
+            "queries_per_second": 1462.015790299249,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.385860",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14869260787963867,
+        "flush_time_seconds": 2.642341136932373,
+        "average_batch_time_seconds": 0.14869260787963867,
+        "vectors_per_second": 6725.2838877468885,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5286307334899902
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005039651393890381,
+            "queries_per_second": 198.42642314750378,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0069704771041870115,
+            "queries_per_second": 1434.6220280952105,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020849227905273438,
+            "queries_per_second": 4796.340682462721,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005141308307647705,
+            "queries_per_second": 194.50302144154597,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007702469825744629,
+            "queries_per_second": 1298.2848652747898,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.048039913177490234,
+            "queries_per_second": 2081.602429849028,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006272237300872802,
+            "queries_per_second": 159.43274337864204,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014494609832763673,
+            "queries_per_second": 689.9116371794955,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06845283508300781,
+            "queries_per_second": 1460.8598734988436,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.463842",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.16334128379821777,
+        "flush_time_seconds": 3.2449538707733154,
+        "average_batch_time_seconds": 0.16334128379821777,
+        "vectors_per_second": 6122.150975838669,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5247049331665039
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.004773898124694824,
+            "queries_per_second": 209.47242146352377,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005319046974182129,
+            "queries_per_second": 1880.036038135878,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.018462657928466797,
+            "queries_per_second": 5416.338231875823,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004137692451477051,
+            "queries_per_second": 241.68060138037214,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007202363014221192,
+            "queries_per_second": 1388.433210080473,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04369378089904785,
+            "queries_per_second": 2288.655226038796,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.00635049819946289,
+            "queries_per_second": 157.467960558524,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.011249208450317382,
+            "queries_per_second": 888.9514354868109,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05606222152709961,
+            "queries_per_second": 1783.7323829856002,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:52.255584",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12082576751708984,
+        "flush_time_seconds": 2.63992977142334,
+        "average_batch_time_seconds": 0.12082576751708984,
+        "vectors_per_second": 8276.38028335767,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5248563289642334
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005143256187438965,
+            "queries_per_second": 194.42935828128375,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00661318302154541,
+            "queries_per_second": 1512.1311428128504,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.024135589599609375,
+            "queries_per_second": 4143.259048522206,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005753965377807617,
+            "queries_per_second": 173.79319031999827,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006995558738708496,
+            "queries_per_second": 1429.4783838590392,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03867983818054199,
+            "queries_per_second": 2585.32622430425,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005551037788391114,
+            "queries_per_second": 180.14649478540755,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.011850428581237794,
+            "queries_per_second": 843.8513368058699,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06321382522583008,
+            "queries_per_second": 1581.9324276414548,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:52.338323",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13116955757141113,
+        "flush_time_seconds": 2.6456198692321777,
+        "average_batch_time_seconds": 0.13116955757141113,
+        "vectors_per_second": 7623.720156680269,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5251495838165283
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005156097412109375,
+            "queries_per_second": 193.94513331952294,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006920409202575683,
+            "queries_per_second": 1445.0012574802852,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0210573673248291,
+            "queries_per_second": 4748.93173763884,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005608100891113282,
+            "queries_per_second": 178.3134824811411,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007302021980285645,
+            "queries_per_second": 1369.483689175202,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04676222801208496,
+            "queries_per_second": 2138.4780890713027,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.0060395002365112305,
+            "queries_per_second": 165.57661409707282,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.012639045715332031,
+            "queries_per_second": 791.1989738172489,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07627606391906738,
+            "queries_per_second": 1311.027272016879,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:51.667489",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.121246337890625,
+        "flush_time_seconds": 3.144592761993408,
+        "average_batch_time_seconds": 0.121246337890625,
+        "vectors_per_second": 8247.671784545684,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5255405902862549
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005326094627380371,
+            "queries_per_second": 187.75483162826345,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00654134750366211,
+            "queries_per_second": 1528.7370063127814,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020198345184326172,
+            "queries_per_second": 4950.900635048041,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005070919990539551,
+            "queries_per_second": 197.20287479700485,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00702977180480957,
+            "queries_per_second": 1422.5212820078007,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04727053642272949,
+            "queries_per_second": 2115.4826572248535,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005958933830261231,
+            "queries_per_second": 167.81525495747306,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.012276649475097656,
+            "queries_per_second": 814.5544939019653,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.060541391372680664,
+            "queries_per_second": 1651.76250054149,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:51.731590",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12783312797546387,
+        "flush_time_seconds": 3.2454111576080322,
+        "average_batch_time_seconds": 0.12783312797546387,
+        "vectors_per_second": 7822.698355561938,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5233793258666992
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.004962067604064941,
+            "queries_per_second": 201.52889476572165,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007827830314636231,
+            "queries_per_second": 1277.4932002936132,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022668123245239258,
+            "queries_per_second": 4411.481220484449,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.00513749361038208,
+            "queries_per_second": 194.64744403363434,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0067131280899047855,
+            "queries_per_second": 1489.6185304490195,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03884124755859375,
+            "queries_per_second": 2574.582596739344,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006055591106414795,
+            "queries_per_second": 165.136645197309,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01346290111541748,
+            "queries_per_second": 742.7819542214548,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06369471549987793,
+            "queries_per_second": 1569.9889577211732,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.935615",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1312706470489502,
+        "flush_time_seconds": 3.2596983909606934,
+        "average_batch_time_seconds": 0.1312706470489502,
+        "vectors_per_second": 7617.84924871365,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5280163288116455
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005308899879455566,
+            "queries_per_second": 188.36294198536498,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0060931921005249025,
+            "queries_per_second": 1641.1758951664337,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.015367746353149414,
+            "queries_per_second": 6507.134989217618,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.0040331149101257326,
+            "queries_per_second": 247.94731176375655,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005224275588989258,
+            "queries_per_second": 1914.1409808234682,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03832364082336426,
+            "queries_per_second": 2609.355422698627,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.003937447071075439,
+            "queries_per_second": 253.97166792311165,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.009848546981811524,
+            "queries_per_second": 1015.3782094422844,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05880594253540039,
+            "queries_per_second": 1700.50841273059,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.983064",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1512315273284912,
+        "flush_time_seconds": 3.2615766525268555,
+        "average_batch_time_seconds": 0.1512315273284912,
+        "vectors_per_second": 6612.377839892419,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5260281562805176
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.004608833789825439,
+            "queries_per_second": 216.974628637644,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005546283721923828,
+            "queries_per_second": 1803.0090960675413,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.017295122146606445,
+            "queries_per_second": 5781.977088818737,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004305148124694824,
+            "queries_per_second": 232.28004496846117,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0049605131149291996,
+            "queries_per_second": 2015.9204840934542,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03423738479614258,
+            "queries_per_second": 2920.783833094247,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004689407348632812,
+            "queries_per_second": 213.24656308468235,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01144115924835205,
+            "queries_per_second": 874.0373053928403,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.059043169021606445,
+            "queries_per_second": 1693.6760281855074,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.985293",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12419867515563965,
+        "flush_time_seconds": 2.6405768394470215,
+        "average_batch_time_seconds": 0.12419867515563965,
+        "vectors_per_second": 8051.61567743657,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5260801315307617
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005428915023803711,
+            "queries_per_second": 184.1988676587096,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005935549736022949,
+            "queries_per_second": 1684.7639131569963,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.01949167251586914,
+            "queries_per_second": 5130.396066247523,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004444785118103027,
+            "queries_per_second": 224.98275471791226,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005561661720275879,
+            "queries_per_second": 1798.0237747188917,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.045822858810424805,
+            "queries_per_second": 2182.31691771378,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004385888576507568,
+            "queries_per_second": 228.0039683078972,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.009590721130371094,
+            "queries_per_second": 1042.6744625420122,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05280733108520508,
+            "queries_per_second": 1893.676463948711,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:34.964022",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1589357852935791,
+        "flush_time_seconds": 3.252742290496826,
+        "average_batch_time_seconds": 0.1589357852935791,
+        "vectors_per_second": 6291.849240577536,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5249230861663818
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.004747288227081299,
+            "queries_per_second": 210.6465738261724,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005420708656311035,
+            "queries_per_second": 1844.7772485166763,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.01773214340209961,
+            "queries_per_second": 5639.476161024014,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.0036405301094055175,
+            "queries_per_second": 274.6852710863297,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005257034301757812,
+            "queries_per_second": 1902.2131920760469,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.037525177001953125,
+            "queries_per_second": 2664.877503303853,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.004316363334655762,
+            "queries_per_second": 231.67651156033924,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014447546005249024,
+            "queries_per_second": 692.1590695310359,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.08057236671447754,
+            "queries_per_second": 1241.1203006406367,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:00.104724",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13988852500915527,
+        "flush_time_seconds": 3.255413770675659,
+        "average_batch_time_seconds": 0.13988852500915527,
+        "vectors_per_second": 7148.549174669995,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5339009761810303
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.008184020519256591,
+            "queries_per_second": 122.18933196062376,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008190679550170898,
+            "queries_per_second": 1220.899919078308,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.024004459381103516,
+            "queries_per_second": 4165.8926123835445,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005775713920593261,
+            "queries_per_second": 173.13876929300602,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00804307460784912,
+            "queries_per_second": 1243.3056371553664,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05329442024230957,
+            "queries_per_second": 1876.369037233876,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005849535465240478,
+            "queries_per_second": 170.95374597560274,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01357862949371338,
+            "queries_per_second": 736.4513483949017,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05971026420593262,
+            "queries_per_second": 1674.7539360253631,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:00.337831",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.11789655685424805,
+        "flush_time_seconds": 3.0506670475006104,
+        "average_batch_time_seconds": 0.11789655685424805,
+        "vectors_per_second": 8482.011915210296,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5320408344268799
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00831411123275757,
+            "queries_per_second": 120.27743820169299,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007507824897766113,
+            "queries_per_second": 1331.9436902391546,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022800207138061523,
+            "queries_per_second": 4385.925066139641,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.00576030969619751,
+            "queries_per_second": 173.60177711627537,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008510732650756836,
+            "queries_per_second": 1174.9869735493016,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05207204818725586,
+            "queries_per_second": 1920.4161057846395,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.0060949063301086424,
+            "queries_per_second": 164.07143044348885,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01220266819000244,
+            "queries_per_second": 819.4929046905437,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06429743766784668,
+            "queries_per_second": 1555.2719303775173,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:42.944972",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12096357345581055,
+        "flush_time_seconds": 2.63934326171875,
+        "average_batch_time_seconds": 0.12096357345581055,
+        "vectors_per_second": 8266.951541120865,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5249760150909424
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00772892713546753,
+            "queries_per_second": 129.38406359287137,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007225584983825683,
+            "queries_per_second": 1383.9709895302296,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.02218008041381836,
+            "queries_per_second": 4508.549930130065,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005144362449645996,
+            "queries_per_second": 194.38754749265652,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008002948760986329,
+            "queries_per_second": 1249.5394258612675,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04623866081237793,
+            "queries_per_second": 2162.6923929689233,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006015574932098389,
+            "queries_per_second": 166.23514980490384,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.010614252090454102,
+            "queries_per_second": 942.1294986006101,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07518196105957031,
+            "queries_per_second": 1330.1062993124795,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.378860",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14702200889587402,
+        "flush_time_seconds": 2.938291549682617,
+        "average_batch_time_seconds": 0.14702200889587402,
+        "vectors_per_second": 6801.7027349166065,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5240507125854492
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005259246826171875,
+            "queries_per_second": 190.14129457161923,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007013893127441407,
+            "queries_per_second": 1425.7417126696216,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.01991581916809082,
+            "queries_per_second": 5021.134162546538,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004946656227111816,
+            "queries_per_second": 202.15676086790972,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005950331687927246,
+            "queries_per_second": 1680.5785835921065,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03943371772766113,
+            "queries_per_second": 2535.9008930028963,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005707845687866211,
+            "queries_per_second": 175.1974483342829,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014097785949707032,
+            "queries_per_second": 709.3312407830828,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06865644454956055,
+            "queries_per_second": 1456.5275067195432,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.720181",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14204716682434082,
+        "flush_time_seconds": 3.245887041091919,
+        "average_batch_time_seconds": 0.14204716682434082,
+        "vectors_per_second": 7039.915137741717,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5265517234802246
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.0058910751342773435,
+            "queries_per_second": 169.748301830591,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00899960994720459,
+            "queries_per_second": 1111.1592678642862,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.026307106018066406,
+            "queries_per_second": 3801.2543048758384,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.00598243236541748,
+            "queries_per_second": 167.15608951647806,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00866539478302002,
+            "queries_per_second": 1154.0155123220884,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.035721540451049805,
+            "queries_per_second": 2799.431344150253,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005269145965576172,
+            "queries_per_second": 189.7840763063112,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.009811329841613769,
+            "queries_per_second": 1019.2298252563078,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05757498741149902,
+            "queries_per_second": 1736.8653385068346,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.415453",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1340923309326172,
+        "flush_time_seconds": 2.9349515438079834,
+        "average_batch_time_seconds": 0.1340923309326172,
+        "vectors_per_second": 7457.54804204657,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5231122970581055
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005271484851837158,
+            "queries_per_second": 189.69987168823815,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006437873840332032,
+            "queries_per_second": 1553.307854116671,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.02055215835571289,
+            "queries_per_second": 4865.669009999768,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005240600109100341,
+            "queries_per_second": 190.8178413123895,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00869286060333252,
+            "queries_per_second": 1150.3693037670905,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04692411422729492,
+            "queries_per_second": 2131.1004298474704,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006085357666015625,
+            "queries_per_second": 164.3288784132795,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014002585411071777,
+            "queries_per_second": 714.1538299129422,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.08558535575866699,
+            "queries_per_second": 1168.4241902549231,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.530444",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1318514347076416,
+        "flush_time_seconds": 2.6427361965179443,
+        "average_batch_time_seconds": 0.1318514347076416,
+        "vectors_per_second": 7584.293657610416,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5224380493164062
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007716171741485596,
+            "queries_per_second": 129.59794487511883,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007135319709777832,
+            "queries_per_second": 1401.4788974762512,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022938966751098633,
+            "queries_per_second": 4359.394260650847,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005021378993988037,
+            "queries_per_second": 199.14848116369495,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007359695434570312,
+            "queries_per_second": 1358.7518789198155,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04293632507324219,
+            "queries_per_second": 2329.0302518768603,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005719730854034424,
+            "queries_per_second": 174.8334013469616,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.009081649780273437,
+            "queries_per_second": 1101.1215188810015,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0499575138092041,
+            "queries_per_second": 2001.7008929210592,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:09.045828",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.15053176879882812,
+        "flush_time_seconds": 3.2412657737731934,
+        "average_batch_time_seconds": 0.15053176879882812,
+        "vectors_per_second": 6643.115987937457,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5210802555084229
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.006034038066864014,
+            "queries_per_second": 165.72649839441866,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007088661193847656,
+            "queries_per_second": 1410.7036189963676,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.021273374557495117,
+            "queries_per_second": 4700.711667992872,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005444772243499756,
+            "queries_per_second": 183.66241144316928,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00829751491546631,
+            "queries_per_second": 1205.1801174060333,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04649543762207031,
+            "queries_per_second": 2150.748656520491,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006285309791564941,
+            "queries_per_second": 159.10114746325272,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01516861915588379,
+            "queries_per_second": 659.2557896821529,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07936763763427734,
+            "queries_per_second": 1259.959386227365,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:09.367891",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.12336111068725586,
+        "flush_time_seconds": 3.0328121185302734,
+        "average_batch_time_seconds": 0.12336111068725586,
+        "vectors_per_second": 8106.282396688145,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5211691856384277
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007821531295776367,
+            "queries_per_second": 127.85220210523237,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006986498832702637,
+            "queries_per_second": 1431.3320934359376,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020841598510742188,
+            "queries_per_second": 4798.096458314268,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005791199207305908,
+            "queries_per_second": 172.6758075837637,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008378195762634277,
+            "queries_per_second": 1193.5744023312002,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04248642921447754,
+            "queries_per_second": 2353.692740220313,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006263411045074463,
+            "queries_per_second": 159.6574123594201,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01468508243560791,
+            "queries_per_second": 680.9631504520755,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06123542785644531,
+            "queries_per_second": 1633.0415823080516,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:52.042562",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13096356391906738,
+        "flush_time_seconds": 3.2422051429748535,
+        "average_batch_time_seconds": 0.13096356391906738,
+        "vectors_per_second": 7635.711567974571,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5252678394317627
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005523307323455811,
+            "queries_per_second": 181.05094311035407,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0068450927734375,
+            "queries_per_second": 1460.9005795809182,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020750999450683594,
+            "queries_per_second": 4819.044992876511,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005900285243988037,
+            "queries_per_second": 169.4833315082398,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008367681503295898,
+            "queries_per_second": 1195.074166728401,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.049883127212524414,
+            "queries_per_second": 2004.6858644999402,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006040019989013672,
+            "queries_per_second": 165.56236598867594,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014301180839538574,
+            "queries_per_second": 699.2429584802487,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07279658317565918,
+            "queries_per_second": 1373.690846982455,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-4k-4ks-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:51.364090",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1256999969482422,
+        "flush_time_seconds": 2.743292808532715,
+        "average_batch_time_seconds": 0.1256999969482422,
+        "vectors_per_second": 7955.4496760390275,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5267651081085205
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00587080717086792,
+            "queries_per_second": 170.33432897646398,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007093000411987305,
+            "queries_per_second": 1409.8406061135722,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022639036178588867,
+            "queries_per_second": 4417.149175925439,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.006045634746551514,
+            "queries_per_second": 165.40860338451796,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007465243339538574,
+            "queries_per_second": 1339.5410631876466,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.044606685638427734,
+            "queries_per_second": 2241.816413139919,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.00643873929977417,
+            "queries_per_second": 155.3099067134266,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.015381765365600587,
+            "queries_per_second": 650.1204356142216,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0644235610961914,
+            "queries_per_second": 1552.227140171421,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:52.130828",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.15265369415283203,
+        "flush_time_seconds": 3.0458295345306396,
+        "average_batch_time_seconds": 0.15265369415283203,
+        "vectors_per_second": 6550.774978290612,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5299575328826904
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007072663307189942,
+            "queries_per_second": 141.3894535292551,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006750726699829101,
+            "queries_per_second": 1481.322003489366,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.019526243209838867,
+            "queries_per_second": 5121.312836542571,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005520937442779541,
+            "queries_per_second": 181.1286598271154,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007172894477844238,
+            "queries_per_second": 1394.1373361741448,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05213570594787598,
+            "queries_per_second": 1918.0712753746461,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005253932476043701,
+            "queries_per_second": 190.33362239802074,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.012072443962097168,
+            "queries_per_second": 828.3326914911476,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06600737571716309,
+            "queries_per_second": 1514.9822109046252,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-16k-4ks_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:51.695699",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.10003209114074707,
+        "flush_time_seconds": 3.143449068069458,
+        "average_batch_time_seconds": 0.10003209114074707,
+        "vectors_per_second": 9996.791915436226,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5240738391876221
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007587273120880127,
+            "queries_per_second": 131.79965767253142,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.005880832672119141,
+            "queries_per_second": 1700.4394713370632,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.021054744720458984,
+            "queries_per_second": 4749.523270297815,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.004925823211669922,
+            "queries_per_second": 203.01175195059145,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007168889045715332,
+            "queries_per_second": 1394.9162745065435,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03853607177734375,
+            "queries_per_second": 2594.9712928133044,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005750205516815186,
+            "queries_per_second": 173.90682769089287,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.010519838333129883,
+            "queries_per_second": 950.5849503891359,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06349778175354004,
+            "queries_per_second": 1574.8581641503554,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-64k-4ks-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:18.330088",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14098429679870605,
+        "flush_time_seconds": 3.0451438426971436,
+        "average_batch_time_seconds": 0.14098429679870605,
+        "vectors_per_second": 7092.988529267026,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5384111404418945
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007601332664489746,
+            "queries_per_second": 131.5558789673267,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007352066040039062,
+            "queries_per_second": 1360.1618845016344,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.02179861068725586,
+            "queries_per_second": 4587.448321119982,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005907859802246094,
+            "queries_per_second": 169.26603431242776,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008129692077636719,
+            "queries_per_second": 1230.0588883935902,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04473257064819336,
+            "queries_per_second": 2235.5075630789565,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006508145332336426,
+            "queries_per_second": 153.65360620196842,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.01523153781890869,
+            "queries_per_second": 656.5325260582572,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07729029655456543,
+            "queries_per_second": 1293.8234740683388,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:18.136034",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1620805263519287,
+        "flush_time_seconds": 2.752650737762451,
+        "average_batch_time_seconds": 0.1620805263519287,
+        "vectors_per_second": 6169.772658738039,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5281217098236084
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005839085578918457,
+            "queries_per_second": 171.2596923755354,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006885886192321777,
+            "queries_per_second": 1452.245901355539,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020203351974487305,
+            "queries_per_second": 4949.673703961576,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005776548385620117,
+            "queries_per_second": 173.11375812056826,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007942938804626464,
+            "queries_per_second": 1258.9798619845055,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05007290840148926,
+            "queries_per_second": 1997.0879102565934,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006419374942779541,
+            "queries_per_second": 155.7784066071404,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014080643653869629,
+            "queries_per_second": 710.1948068440614,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0717160701751709,
+            "queries_per_second": 1394.3876143205264,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-btrfs-default-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:59.893563",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13335514068603516,
+        "flush_time_seconds": 2.7435624599456787,
+        "average_batch_time_seconds": 0.13335514068603516,
+        "vectors_per_second": 7498.773537004856,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5272316932678223
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00795889377593994,
+            "queries_per_second": 125.64560203366963,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007164812088012696,
+            "queries_per_second": 1395.7100168378179,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.020472288131713867,
+            "queries_per_second": 4884.651845295632,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005373482704162598,
+            "queries_per_second": 186.0990450802688,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008029866218566894,
+            "queries_per_second": 1245.3507602502398,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04726123809814453,
+            "queries_per_second": 2115.8988639344593,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006349616050720215,
+            "queries_per_second": 157.4898374975875,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.015344953536987305,
+            "queries_per_second": 651.6800442501251,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.08860492706298828,
+            "queries_per_second": 1128.6054095943343,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:59.976505",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13221526145935059,
+        "flush_time_seconds": 3.052243232727051,
+        "average_batch_time_seconds": 0.13221526145935059,
+        "vectors_per_second": 7563.423382159621,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5258705615997314
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.006266849040985107,
+            "queries_per_second": 159.56982423862672,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007637429237365723,
+            "queries_per_second": 1309.3411001539005,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022049427032470703,
+            "queries_per_second": 4535.265240803616,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005883376598358154,
+            "queries_per_second": 169.9704214547587,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008481240272521973,
+            "queries_per_second": 1179.072833533392,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.05075335502624512,
+            "queries_per_second": 1970.3130945390487,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.0061427831649780275,
+            "queries_per_second": 162.79265817183975,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014666175842285157,
+            "queries_per_second": 681.8409998309339,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06962943077087402,
+            "queries_per_second": 1436.1743144082973,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc-dev_1.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:43.660446",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14003705978393555,
+        "flush_time_seconds": 2.642194986343384,
+        "average_batch_time_seconds": 0.14003705978393555,
+        "vectors_per_second": 7140.966837942107,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5218451023101807
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005488567352294922,
+            "queries_per_second": 182.19690782912087,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00680694580078125,
+            "queries_per_second": 1469.0876485093029,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.02377152442932129,
+            "queries_per_second": 4206.713805726894,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005093438625335693,
+            "queries_per_second": 196.3310198783622,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007549786567687988,
+            "queries_per_second": 1324.5407549398253,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.03845667839050293,
+            "queries_per_second": 2600.328582322271,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005017428398132324,
+            "queries_per_second": 199.30528562644514,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.011978960037231446,
+            "queries_per_second": 834.7970081642563,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07173776626586914,
+            "queries_per_second": 1393.9659011598924,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:52.833451",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1287519931793213,
+        "flush_time_seconds": 3.0467119216918945,
+        "average_batch_time_seconds": 0.1287519931793213,
+        "vectors_per_second": 7766.8700523123925,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5310847759246826
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.008062832355499268,
+            "queries_per_second": 124.02589510842904,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007579588890075683,
+            "queries_per_second": 1319.3327692341568,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022532939910888672,
+            "queries_per_second": 4437.947307163263,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005153837203979492,
+            "queries_per_second": 194.03018768770158,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007715344429016113,
+            "queries_per_second": 1296.118415970087,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04355311393737793,
+            "queries_per_second": 2296.0470781442455,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005734086036682129,
+            "queries_per_second": 174.3957090289183,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.015099930763244628,
+            "queries_per_second": 662.2546922096767,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0728156566619873,
+            "queries_per_second": 1373.3310195114125,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-xfs-32k-4ks_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:09.009366",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.14084172248840332,
+        "flush_time_seconds": 3.0316758155822754,
+        "average_batch_time_seconds": 0.14084172248840332,
+        "vectors_per_second": 7100.168773371388,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5188734531402588
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005766520500183106,
+            "queries_per_second": 173.41480013263575,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007575106620788574,
+            "queries_per_second": 1320.1134321405752,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.023878812789916992,
+            "queries_per_second": 4187.812890020468,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.006058754920959472,
+            "queries_per_second": 165.05041267482704,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.008008837699890137,
+            "queries_per_second": 1248.6206331958979,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04778122901916504,
+            "queries_per_second": 2092.872076603346,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006585793495178223,
+            "queries_per_second": 151.84199151281442,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.010602855682373047,
+            "queries_per_second": 943.1421401523669,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.06371736526489258,
+            "queries_per_second": 1569.4308699719363,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc-dev_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:53:51.768036",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13288187980651855,
+        "flush_time_seconds": 2.6430976390838623,
+        "average_batch_time_seconds": 0.13288187980651855,
+        "vectors_per_second": 7525.480535465338,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5250141620635986
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007765548229217529,
+            "queries_per_second": 128.77390887066343,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.006335592269897461,
+            "queries_per_second": 1578.3843994370309,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.018194198608398438,
+            "queries_per_second": 5496.257469336409,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005068244934082031,
+            "queries_per_second": 197.30695990546513,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007698750495910645,
+            "queries_per_second": 1298.9120773964182,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.04828476905822754,
+            "queries_per_second": 2071.046459379521,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005674209594726563,
+            "queries_per_second": 176.2359996235193,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.013888335227966309,
+            "queries_per_second": 720.0287029264281,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07333159446716309,
+            "queries_per_second": 1363.668698691376,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-4k_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:17.830603",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1363227367401123,
+        "flush_time_seconds": 3.2433130741119385,
+        "average_batch_time_seconds": 0.1363227367401123,
+        "vectors_per_second": 7335.533484090881,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5242550373077393
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.007976140975952149,
+            "queries_per_second": 125.3739123988622,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0075860261917114254,
+            "queries_per_second": 1318.2132182625612,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022368431091308594,
+            "queries_per_second": 4470.5862289490515,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.006462690830230713,
+            "queries_per_second": 154.73430901603268,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.00856637954711914,
+            "queries_per_second": 1167.3543000278319,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.051343441009521484,
+            "queries_per_second": 1947.6684467146506,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.005896067619323731,
+            "queries_per_second": 169.60456774997067,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014795303344726562,
+            "queries_per_second": 675.8901637230888,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0639963150024414,
+            "queries_per_second": 1562.5899709410626,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc-dev_3.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:08.527181",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.1385946273803711,
+        "flush_time_seconds": 3.1418583393096924,
+        "average_batch_time_seconds": 0.1385946273803711,
+        "vectors_per_second": 7215.286904704562,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5189332962036133
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.00782763957977295,
+            "queries_per_second": 127.75243287696267,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0077068090438842775,
+            "queries_per_second": 1297.5538829440025,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.021539926528930664,
+            "queries_per_second": 4642.54136919586,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.005732553005218506,
+            "queries_per_second": 174.4423469071584,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007823371887207031,
+            "queries_per_second": 1278.2212253455884,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.0494537353515625,
+            "queries_per_second": 2022.09194692996,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.0063051176071167,
+            "queries_per_second": 158.6013239263423,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.014485645294189452,
+            "queries_per_second": 690.3385936152423,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.07822632789611816,
+            "queries_per_second": 1278.3419941786929,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc_2.json"
+    },
+    {
+      "config": {
+        "host": "localhost",
+        "port": 19530,
+        "database_name": "default",
+        "collection_name": "benchmark_collection",
+        "vector_dataset_size": 1000,
+        "vector_dimensions": 768,
+        "benchmark_runtime": 60,
+        "benchmark_warmup_time": 10,
+        "benchmark_query_topk_1": true,
+        "benchmark_query_topk_10": true,
+        "benchmark_query_topk_100": true,
+        "benchmark_batch_1": true,
+        "benchmark_batch_10": true,
+        "benchmark_batch_100": true,
+        "batch_size": 100,
+        "num_queries": 100,
+        "index_type": "HNSW",
+        "index_hnsw_m": 16,
+        "index_hnsw_ef_construction": 200,
+        "index_hnsw_ef": 64
+      },
+      "timestamp": "2025-08-26T20:54:17.666573",
+      "insert_performance": {
+        "total_vectors": 1000,
+        "total_time_seconds": 0.13057446479797363,
+        "flush_time_seconds": 2.6392345428466797,
+        "average_batch_time_seconds": 0.13057446479797363,
+        "vectors_per_second": 7658.46524086629,
+        "batch_size": 1000
+      },
+      "index_performance": {
+        "index_type": "HNSW",
+        "index_params": {
+          "metric_type": "L2",
+          "index_type": "HNSW",
+          "params": {
+            "M": 16,
+            "efConstruction": 200
+          }
+        },
+        "creation_time_seconds": 0.5224895477294922
+      },
+      "query_performance": {
+        "topk_1": {
+          "batch_1": {
+            "average_time_seconds": 0.005189192295074463,
+            "queries_per_second": 192.7082179916885,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007559466361999512,
+            "queries_per_second": 1322.8446984391312,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.022359371185302734,
+            "queries_per_second": 4472.397688255742,
+            "total_queries": 100
+          }
+        },
+        "topk_10": {
+          "batch_1": {
+            "average_time_seconds": 0.006025385856628418,
+            "queries_per_second": 165.9644749389648,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.007847213745117187,
+            "queries_per_second": 1274.3376598123573,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.046445369720458984,
+            "queries_per_second": 2153.067153989097,
+            "total_queries": 100
+          }
+        },
+        "topk_100": {
+          "batch_1": {
+            "average_time_seconds": 0.006367177963256836,
+            "queries_per_second": 157.0554499608326,
+            "total_queries": 100
+          },
+          "batch_10": {
+            "average_time_seconds": 0.0160111665725708,
+            "queries_per_second": 624.5641099713055,
+            "total_queries": 100
+          },
+          "batch_100": {
+            "average_time_seconds": 0.08150386810302734,
+            "queries_per_second": 1226.9356329639727,
+            "total_queries": 100
+          }
+        }
+      },
+      "system_info": {
+        "filesystem": "btrfs",
+        "mount_point": "/data",
+        "data_path": "/data"
+      },
+      "filesystem": "btrfs",
+      "_file": "results_prod-ai-ext4-16k-bigalloc_3.json"
+    }
+  ],
+  "analysis_timestamp": "2025-08-27T01:43:13.004570",
+  "system_info": {
+    "hostname": "eqbm-smc114",
+    "platform": "Linux-6.11.4-amd64-x86_64-with-glibc2.41",
+    "architecture": "64bit",
+    "processor": "",
+    "total_memory": "1056509564 kB",
+    "cpu_count": 128,
+    "cpu_model": "Intel(R) Xeon(R) Gold 6438Y+",
+    "storage_devices": [
+      {
+        "name": "sda",
+        "size": "894.3G",
+        "type": "disk"
+      },
+      {
+        "name": "sdb",
+        "size": "894.3G",
+        "type": "disk"
+      },
+      {
+        "name": "nvme0n1",
+        "size": "3.5T",
+        "type": "disk"
+      },
+      {
+        "name": "nvme1n1",
+        "size": "3.5T",
+        "type": "disk"
+      }
+    ],
+    "is_vm": "Unknown",
+    "filesystem_info": {
+      "filesystem_type": "xfs",
+      "mount_point": "/xfs1",
+      "mount_options": "rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,sunit=256,swidth=256,noquota"
+    }
+  }
+}

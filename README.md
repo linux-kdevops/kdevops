@@ -293,11 +293,18 @@ infrastructure with just a few commands:
 make defconfig-ai-milvus-docker
 make bringup
 make ai
+make ai-results
 ```
 
-The AI workflow supports A/B testing, filesystem performance impact analysis,
-and comprehensive benchmarking of vector similarity search workloads. For
-details, see the [kdevops AI workflow documentation](docs/ai/README.md).
+The AI workflow supports:
+- **Vector Database Benchmarking**: Milvus performance testing with real-world workloads
+- **A/B Testing**: Compare baseline vs development configurations
+- **Filesystem Impact Analysis**: Performance across XFS, ext4, btrfs
+- **Demo Results**: View actual benchmark HTML reports and performance visualizations
+
+For details and demo results, see:
+- [kdevops AI workflow documentation](docs/ai/README.md)
+- [Milvus performance demo results](docs/ai/vector-databases/milvus.md#demo-results)
 
 ## kdevops chats
 

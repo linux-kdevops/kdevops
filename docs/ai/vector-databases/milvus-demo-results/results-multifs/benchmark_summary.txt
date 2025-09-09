@@ -1,0 +1,34 @@
+================================================================================
+AI BENCHMARK RESULTS SUMMARY
+================================================================================
+Generated: 2025-08-27 01:43:05
+Total result sets: 42
+
+CONFIGURATION:
+  Vector dataset size: 1,000
+  Vector dimensions: 768
+  Index type: HNSW
+  Benchmark iterations: 42
+
+INSERT PERFORMANCE:
+  Average insert time: 0.14 seconds
+  Average insert rate: 7478.21 vectors/sec
+  Insert rate range: 6122.15 - 9996.79 vectors/sec
+
+INDEX PERFORMANCE:
+  Average index creation time: 0.53 seconds
+  Index time range: 0.52 - 0.54 seconds
+
+QUERY PERFORMANCE:
+  TOPK_1:
+    batch_1: 160.36 QPS, 6.24ms avg
+    batch_10: 1299.89 QPS, 7.69ms avg
+    batch_100: 4959.68 QPS, 20.16ms avg
+  TOPK_10:
+    batch_1: 205.82 QPS, 4.86ms avg
+    batch_10: 1368.82 QPS, 7.31ms avg
+    batch_100: 2549.68 QPS, 39.22ms avg
+  TOPK_100:
+    batch_1: 218.20 QPS, 4.58ms avg
+    batch_10: 1094.08 QPS, 9.14ms avg
+    batch_100: 1793.00 QPS, 55.77ms avg

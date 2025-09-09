@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>AI Benchmark Results Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { background-color: #f4f4f4; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #333; border-bottom: 2px solid #007acc; padding-bottom: 5px; }
+        .section h3 { color: #555; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .metric-table td:first-child { font-weight: bold; width: 30%; }
+        .config-table td:first-child { font-weight: bold; width: 40%; }
+        .performance-good { color: #27ae60; }
+        .performance-warning { color: #f39c12; }
+        .performance-poor { color: #e74c3c; }
+        .highlight { background-color: #fff3cd; padding: 10px; border-radius: 3px; }
+        .baseline-row { background-color: #e8f5e9; }
+        .dev-row { background-color: #e3f2fd; }
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>AI Benchmark Results Report</h1>
+        <p><strong>Generated:</strong> 2025-08-27 01:43:05</p>
+        <p><strong>Test Results:</strong> 42 benchmark iterations</p>
+        <div class='highlight'>
+            <h3>🤖 AI Workflow Test Type</h3>
+            <p><strong>Vector Database Performance Testing</strong> using <strong>Milvus Vector Database</strong></p>
+            <p>This test evaluates AI workload performance including vector insertion, indexing, and similarity search operations.</p>
+        </div>
+    </div>
+    <div class='section'>
+        <h2>📋 Device Under Test (DUT) Details</h2>
+        <table class='config-table'>
+            <tr><td>Hostname</td><td>eqbm-smc114</td></tr>
+            <tr><td>System Type</td><td>Unknown</td></tr>
+            <tr><td>Platform</td><td>Linux-6.11.4-amd64-x86_64-with-glibc2.41</td></tr>
+            <tr><td>Architecture</td><td>64bit</td></tr>
+            <tr><td>CPU Model</td><td>Intel(R) Xeon(R) Gold 6438Y+</td></tr>
+            <tr><td>CPU Count</td><td>128 cores</td></tr>
+            <tr><td>Total Memory</td><td>1056509564 kB</td></tr>
+        </table>
+        <h3>💾 Storage Configuration</h3>
+        <table>
+            <tr><th>Device</th><th>Size</th><th>Type</th><th>Model</th><th>Firmware</th></tr>
+            <tr>
+                <td>sda</td>
+                <td>894.3G</td>
+                <td>disk</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            </tr>
+            <tr>
+                <td>sdb</td>
+                <td>894.3G</td>
+                <td>disk</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            </tr>
+            <tr>
+                <td>nvme0n1</td>
+                <td>3.5T</td>
+                <td>disk</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            </tr>
+            <tr>
+                <td>nvme1n1</td>
+                <td>3.5T</td>
+                <td>disk</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            </tr>
+        </table>
+        <h3>🗂️ Node Configuration</h3>
+        <table class='config-table'>
+            <tr><th>Node</th><th>Type</th><th>Filesystem</th><th>Block Size</th><th>Data Path</th><th>Mount Point</th><th>Kernel</th><th>Tests</th></tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-btrfs-default</strong></td>
+                <td>Baseline</td>
+                <td>btrfs</td>
+                <td>default</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-ext4-16k-bigalloc</strong></td>
+                <td>Baseline</td>
+                <td>ext4</td>
+                <td>16k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-ext4-4k</strong></td>
+                <td>Baseline</td>
+                <td>ext4</td>
+                <td>4k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-xfs-16k-4ks</strong></td>
+                <td>Baseline</td>
+                <td>xfs</td>
+                <td>16k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-xfs-32k-4ks</strong></td>
+                <td>Baseline</td>
+                <td>xfs</td>
+                <td>32k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-xfs-4k-4ks</strong></td>
+                <td>Baseline</td>
+                <td>xfs</td>
+                <td>4k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='baseline-row'>
+                <td><strong>prod-ai-xfs-64k-4ks</strong></td>
+                <td>Baseline</td>
+                <td>xfs</td>
+                <td>64k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-btrfs-default-dev</strong></td>
+                <td>Development</td>
+                <td>btrfs</td>
+                <td>default</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-ext4-16k-bigalloc-dev</strong></td>
+                <td>Development</td>
+                <td>ext4</td>
+                <td>16k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-ext4-4k-dev</strong></td>
+                <td>Development</td>
+                <td>ext4</td>
+                <td>4k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-xfs-16k-4ks-dev</strong></td>
+                <td>Development</td>
+                <td>xfs</td>
+                <td>16k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-xfs-32k-4ks-dev</strong></td>
+                <td>Development</td>
+                <td>xfs</td>
+                <td>32k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-xfs-4k-4ks-dev</strong></td>
+                <td>Development</td>
+                <td>xfs</td>
+                <td>4k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+            <tr class='dev-row'>
+                <td><strong>prod-ai-xfs-64k-4ks-dev</strong></td>
+                <td>Development</td>
+                <td>xfs</td>
+                <td>64k</td>
+                <td>/data</td>
+                <td>/data</td>
+                <td>unknown</td>
+                <td>3</td>
+            </tr>
+        </table>
+    </div>
+    <div class='section'>
+        <h2>⚙️ AI Test Configuration</h2>
+        <table class='config-table'>
+            <tr><td>Vector Dataset Size</td><td>1,000 vectors</td></tr>
+            <tr><td>Vector Dimensions</td><td>768</td></tr>
+            <tr><td>Index Type</td><td>HNSW</td></tr>
+            <tr><td>Benchmark Iterations</td><td>42</td></tr>
+            <tr><td>HNSW M Parameter</td><td>N/A</td></tr>
+            <tr><td>HNSW ef Construction</td><td>N/A</td></tr>
+            <tr><td>HNSW ef Search</td><td>N/A</td></tr>
+        </table>
+    </div>
+    <div class='section'>
+        <h2>📊 Performance Results by Node</h2>
+        <h3>🟢 prod-ai-btrfs-default (Baseline)</h3>
+        <p>Filesystem: btrfs, Block Size: default</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>6961.55 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6643.12 - 7148.55 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.531 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.521 - 0.538 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>122.19</td>
+                <td>8.18</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1220.90</td>
+                <td>8.19</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>4165.89</td>
+                <td>24.00</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>173.14</td>
+                <td>5.78</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1243.31</td>
+                <td>8.04</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1876.37</td>
+                <td>53.29</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>170.95</td>
+                <td>5.85</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>736.45</td>
+                <td>13.58</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1674.75</td>
+                <td>59.71</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-ext4-16k-bigalloc (Baseline)</h3>
+        <p>Filesystem: ext4, Block Size: 16k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7457.51 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7215.29 - 7658.47 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.523 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.519 - 0.527 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>125.65</td>
+                <td>7.96</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1395.71</td>
+                <td>7.16</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>4884.65</td>
+                <td>20.47</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>186.10</td>
+                <td>5.37</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1245.35</td>
+                <td>8.03</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2115.90</td>
+                <td>47.26</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>157.49</td>
+                <td>6.35</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>651.68</td>
+                <td>15.34</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1128.61</td>
+                <td>88.60</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-ext4-4k (Baseline)</h3>
+        <p>Filesystem: ext4, Block Size: 4k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>6986.10 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6291.85 - 7525.48 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.524 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.522 - 0.525 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>210.65</td>
+                <td>4.75</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1844.78</td>
+                <td>5.42</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5639.48</td>
+                <td>17.73</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>274.69</td>
+                <td>3.64</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1902.21</td>
+                <td>5.26</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2664.88</td>
+                <td>37.53</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>231.68</td>
+                <td>4.32</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>692.16</td>
+                <td>14.45</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1241.12</td>
+                <td>80.57</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-xfs-16k-4ks (Baseline)</h3>
+        <p>Filesystem: xfs, Block Size: 16k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>6873.57 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6550.77 - 7457.55 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.526 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.523 - 0.530 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>216.97</td>
+                <td>4.61</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1803.01</td>
+                <td>5.55</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5781.98</td>
+                <td>17.30</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>232.28</td>
+                <td>4.31</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>2015.92</td>
+                <td>4.96</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2920.78</td>
+                <td>34.24</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>213.25</td>
+                <td>4.69</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>874.04</td>
+                <td>11.44</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1693.68</td>
+                <td>59.04</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-xfs-32k-4ks (Baseline)</h3>
+        <p>Filesystem: xfs, Block Size: 32k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7913.98 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7039.92 - 8935.15 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.528 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.525 - 0.531 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>147.67</td>
+                <td>6.77</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1739.81</td>
+                <td>5.75</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5321.44</td>
+                <td>18.79</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>256.65</td>
+                <td>3.90</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1797.41</td>
+                <td>5.56</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>3004.24</td>
+                <td>33.29</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>222.14</td>
+                <td>4.50</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>677.51</td>
+                <td>14.76</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1272.79</td>
+                <td>78.57</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-xfs-4k-4ks (Baseline)</h3>
+        <p>Filesystem: xfs, Block Size: 4k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7639.55 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7108.52 - 8247.67 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.526 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.524 - 0.529 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>160.36</td>
+                <td>6.24</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1299.89</td>
+                <td>7.69</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>4959.68</td>
+                <td>20.16</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>205.82</td>
+                <td>4.86</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1368.82</td>
+                <td>7.31</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2549.68</td>
+                <td>39.22</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>218.20</td>
+                <td>4.58</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1094.08</td>
+                <td>9.14</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1793.00</td>
+                <td>55.77</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🟢 prod-ai-xfs-64k-4ks (Baseline)</h3>
+        <p>Filesystem: xfs, Block Size: 64k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>8091.34 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7955.45 - 8266.95 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.526 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.525 - 0.527 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>184.20</td>
+                <td>5.43</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1684.76</td>
+                <td>5.94</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5130.40</td>
+                <td>19.49</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>224.98</td>
+                <td>4.44</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1798.02</td>
+                <td>5.56</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2182.32</td>
+                <td>45.82</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>228.00</td>
+                <td>4.39</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1042.67</td>
+                <td>9.59</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1893.68</td>
+                <td>52.81</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-btrfs-default-dev (Development)</h3>
+        <p>Filesystem: btrfs, Block Size: default</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7586.02 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6169.77 - 8482.01 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.527 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.521 - 0.532 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>120.28</td>
+                <td>8.31</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1331.94</td>
+                <td>7.51</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>4385.93</td>
+                <td>22.80</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>173.60</td>
+                <td>5.76</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1174.99</td>
+                <td>8.51</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1920.42</td>
+                <td>52.07</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>164.07</td>
+                <td>6.09</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>819.49</td>
+                <td>12.20</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1555.27</td>
+                <td>64.30</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-ext4-16k-bigalloc-dev (Development)</h3>
+        <p>Filesystem: ext4, Block Size: 16k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7333.04 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7100.17 - 7563.42 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.523 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.519 - 0.526 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>159.57</td>
+                <td>6.27</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1309.34</td>
+                <td>7.64</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>4535.27</td>
+                <td>22.05</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>169.97</td>
+                <td>5.88</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1179.07</td>
+                <td>8.48</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1970.31</td>
+                <td>50.75</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>162.79</td>
+                <td>6.14</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>681.84</td>
+                <td>14.67</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1436.17</td>
+                <td>69.63</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-ext4-4k-dev (Development)</h3>
+        <p>Filesystem: ext4, Block Size: 4k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7582.24 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6725.28 - 8198.73 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.526 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.523 - 0.529 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>183.11</td>
+                <td>5.46</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>2073.69</td>
+                <td>4.82</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>6394.63</td>
+                <td>15.64</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>267.89</td>
+                <td>3.73</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1952.43</td>
+                <td>5.12</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2757.85</td>
+                <td>36.26</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>241.64</td>
+                <td>4.14</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>837.25</td>
+                <td>11.94</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1324.89</td>
+                <td>75.48</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-xfs-16k-4ks-dev (Development)</h3>
+        <p>Filesystem: xfs, Block Size: 16k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7431.51 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6122.15 - 8276.38 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.525 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.524 - 0.525 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>216.18</td>
+                <td>4.63</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1729.45</td>
+                <td>5.78</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5744.60</td>
+                <td>17.41</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>231.28</td>
+                <td>4.32</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1690.37</td>
+                <td>5.92</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2698.93</td>
+                <td>37.05</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>215.55</td>
+                <td>4.64</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1016.72</td>
+                <td>9.84</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1763.80</td>
+                <td>56.70</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-xfs-32k-4ks-dev (Development)</h3>
+        <p>Filesystem: xfs, Block Size: 32k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7083.35 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6344.29 - 7623.72 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.524 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.523 - 0.525 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>202.22</td>
+                <td>4.95</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1572.42</td>
+                <td>6.36</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>6068.32</td>
+                <td>16.48</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>252.38</td>
+                <td>3.96</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1691.60</td>
+                <td>5.91</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2479.72</td>
+                <td>40.33</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>201.23</td>
+                <td>4.97</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>789.68</td>
+                <td>12.66</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1539.69</td>
+                <td>64.95</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-xfs-4k-4ks-dev (Development)</h3>
+        <p>Filesystem: xfs, Block Size: 4k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>7351.75 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>6801.70 - 7635.71 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.526 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.524 - 0.528 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>188.36</td>
+                <td>5.31</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1641.18</td>
+                <td>6.09</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>6507.13</td>
+                <td>15.37</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>247.95</td>
+                <td>4.03</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1914.14</td>
+                <td>5.22</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2609.36</td>
+                <td>38.32</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>253.97</td>
+                <td>3.94</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1015.38</td>
+                <td>9.85</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1700.51</td>
+                <td>58.81</td>
+            </tr>
+        </table>
+        <br>
+        <h3>🔵 prod-ai-xfs-64k-4ks-dev (Development)</h3>
+        <p>Filesystem: xfs, Block Size: 64k</p>
+        <h4>📈 Vector Insert Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Insert Rate</td><td>8403.43 vectors/sec</td></tr>
+            <tr><td>Insert Rate Range</td><td>7584.29 - 9996.79 vectors/sec</td></tr>
+            <tr><td>Test Iterations</td><td>3</td></tr>
+        </table>
+        <h4>🔗 Index Creation Performance</h4>
+        <table class='metric-table'>
+            <tr><td>Average Index Creation Time</td><td>0.524 seconds</td></tr>
+            <tr><td>Index Time Range</td><td>0.522 - 0.526 seconds</td></tr>
+        </table>
+        <h4>🔍 Query Performance</h4>
+        <table>
+            <tr><th>Query Type</th><th>Batch Size</th><th>QPS</th><th>Avg Latency (ms)</th></tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>149.50</td>
+                <td>6.69</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1591.66</td>
+                <td>6.28</td>
+            </tr>
+            <tr>
+                <td>Top-1</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>5515.63</td>
+                <td>18.13</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>259.35</td>
+                <td>3.86</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 10</td>
+                <td class='performance-good'>1698.65</td>
+                <td>5.89</td>
+            </tr>
+            <tr>
+                <td>Top-10</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>2785.36</td>
+                <td>35.90</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 1</td>
+                <td class='performance-warning'>212.44</td>
+                <td>4.71</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 10</td>
+                <td class='performance-warning'>943.23</td>
+                <td>10.60</td>
+            </tr>
+            <tr>
+                <td>Top-100</td>
+                <td>Batch 100</td>
+                <td class='performance-good'>1404.10</td>
+                <td>71.22</td>
+            </tr>
+        </table>
+        <br>
+    </div>
+    <div class='section'>
+        <h2>📈 Performance Visualizations</h2>
+        <p>The following graphs provide visual analysis of the benchmark results across all tested filesystem configurations:</p>
+        <ul>
+            <li><strong>Insert Performance:</strong> Shows vector insertion rates and times for each filesystem configuration</li>
+            <li><strong>Query Performance:</strong> Displays query performance heatmaps for different Top-K and batch sizes</li>
+            <li><strong>Index Performance:</strong> Compares index creation times across filesystems</li>
+            <li><strong>Performance Matrix:</strong> Comprehensive comparison matrix of all metrics</li>
+            <li><strong>Filesystem Comparison:</strong> Side-by-side comparison of filesystem performance</li>
+        </ul>
+        <p><em>Note: Graphs are generated as separate PNG files in the same directory as this report.</em></p>
+        <div style='margin-top: 20px;'>
+            <img src='insert_performance.png' alt='Insert Performance' style='max-width: 100%; height: auto; margin-bottom: 20px;'>
+            <img src='query_performance.png' alt='Query Performance' style='max-width: 100%; height: auto; margin-bottom: 20px;'>
+            <img src='index_performance.png' alt='Index Performance' style='max-width: 100%; height: auto; margin-bottom: 20px;'>
+            <img src='performance_matrix.png' alt='Performance Matrix' style='max-width: 100%; height: auto; margin-bottom: 20px;'>
+            <img src='filesystem_comparison.png' alt='Filesystem Comparison' style='max-width: 100%; height: auto; margin-bottom: 20px;'>
+        </div>
+    </div>
+    <div class='section'>
+        <h2>📝 Notes</h2>
+        <ul>
+            <li>This report was generated automatically by the AI benchmark analysis tool</li>
+            <li>Performance metrics are averaged across all benchmark iterations</li>
+            <li>QPS (Queries Per Second) values are color-coded: <span class='performance-good'>Green (>1000)</span>, <span class='performance-warning'>Orange (100-1000)</span>, <span class='performance-poor'>Red (<100)</span></li>
+            <li>Storage device information may require root privileges to display NVMe details</li>
+        </ul>
+    </div>
+</body>
+</html>

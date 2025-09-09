@@ -1,0 +1,30 @@
+{
+  "total_tests": 80,
+  "filesystems_tested": [
+    "btrfs"
+  ],
+  "configurations": {
+    "btrfs-default-baseline": {
+      "insert_qps": 46300.258218379066,
+      "query_qps": 728.8320782995602,
+      "host": "unknown"
+    },
+    "btrfs-default-dev": {
+      "insert_qps": 51139.40118297077,
+      "query_qps": 843.7852794282338,
+      "host": "unknown"
+    }
+  },
+  "performance_summary": {
+    "best_insert_qps": {
+      "value": 64494.85452474651,
+      "config": "btrfs-default-baseline"
+    },
+    "best_query_qps": {
+      "value": 1093.65497803999,
+      "config": "btrfs-default-baseline"
+    },
+    "average_insert_qps": 52354.436683848704,
+    "average_query_qps": 850.6242065449729
+  }
+}
