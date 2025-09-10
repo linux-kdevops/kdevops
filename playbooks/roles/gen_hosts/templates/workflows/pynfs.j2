@@ -1,7 +1,41 @@
 {# Workflow template for pynfs #}
 [all]
 localhost ansible_connection=local
-write-your-own-template-for-pynfs-workflow
+{% for host in pynfs_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endif %}
+{% endfor %}
 
 [all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{% for host in pynfs_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% endfor %}
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[dev]
+{% if kdevops_baseline_and_dev %}
+{% for host in pynfs_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endfor %}
+{% endif %}
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[pynfs]
+{% for host in pynfs_enabled_hosts %}
+{{ kdevops_host_prefix }}-{{ host }}
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-{{ host }}-dev
+{% endif %}
+{% endfor %}
+
+[pynfs:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
