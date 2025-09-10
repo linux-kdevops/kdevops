@@ -1,5 +1,5 @@
 ---
-- name: Generate guests node configuration (libvirt domain XML)
+- name: Generate target node configuration
   hosts: localhost
   roles:
     - role: gen_nodes
