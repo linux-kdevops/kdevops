@@ -19,16 +19,16 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 [baseline:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
-{% if kdevops_baseline_and_dev %}
 [dev]
+{% if kdevops_baseline_and_dev %}
 {% for node_section in fstests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ node_section }}-dev
 {% endfor %}
+{% endif %}
 
 [dev:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
-{% endif %}
 [fstests]
 {% for node_section in fstests_enabled_test_types %}
 {{ kdevops_host_prefix }}-{{ node_section }}
