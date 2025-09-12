@@ -32,8 +32,13 @@
     dest: "{{ sysbench_postgresql_repo_path }}"
     update: true
     version: "{{ _sysbench_postgresql_ref.stdout }}"
+    depth: 1
   environment:
     GIT_SSL_NO_VERIFY: "true"
+  retries: 3
+  delay: 5
+  register: git_result
+  until: git_result is succeeded
 
 - name: Get number of processing units available
   tags: ["always"]
