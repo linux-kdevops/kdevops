@@ -1,0 +1,28 @@
+choice
+	prompt "Instance family"
+	help
+	  Instance families comprise varying combinations of
+	  hardware platform, CPU count, memory size, storage, and
+	  networking capacity. Select the type that provides an
+	  appropriate mix of resources for your preferred workflows.
+
+	  Some instance types are region- and capacity-limited.
+
+	  See https://aws.amazon.com/ec2/instance-types/ for
+	  details.
+
+{% for family in sorted_families %}
+config TERRAFORM_AWS_INSTANCE_FAMILY_{{ family['family_name'].upper().replace('-', '_') }}
+	bool "{{ family['family_name'] }}"
+{% if 'x86_64' in family['architectures'] %}
+	depends on TARGET_ARCH_X86_64
+{% endif %}
+{% if 'arm64' in family['architectures'] %}
+	depends on TARGET_ARCH_ARM64
+{% endif %}
+	help
+	  See https://aws.amazon.com/ec2/instance-types/{{ family['family_name'] }}/ for
+	  details.
+
+{% endfor %}
+endchoice
