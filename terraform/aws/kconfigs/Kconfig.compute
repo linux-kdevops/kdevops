@@ -26,6 +26,12 @@ config TERRAFORM_AWS_DISTRO_CUSTOM
 
 endchoice
 
+config TERRAFORM_AWS_AMI_ARCH
+	string
+	output yaml
+	default "x86_64" if TARGET_ARCH_X86_64
+	default "arm64" if TARGET_ARCH_ARM64
+
 source "terraform/aws/kconfigs/distros/Kconfig.amazon"
 source "terraform/aws/kconfigs/distros/Kconfig.debian"
 source "terraform/aws/kconfigs/distros/Kconfig.fedora"

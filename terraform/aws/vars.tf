@@ -1,3 +1,8 @@
+variable "aws_ami_arch" {
+  description = "An AWS AMI image instruction set architecture"
+  type        = string
+}
+
 variable "aws_ami_owner" {
   description = "An AWS AMI image owner or owner alias"
   type        = string

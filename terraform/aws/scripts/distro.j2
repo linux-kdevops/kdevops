@@ -1,0 +1,28 @@
+if TERRAFORM_AWS_DISTRO_{{ owner_name }}
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the {{ owner_description }}
+	  distribution.
+
+{% for name, info in discovered %}
+config TERRAFORM_AWS_AMI_{{ name.upper().replace(' ', '_').replace('.', '_') }}
+	bool "{{ name }}"
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "{{ owner_id }}"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+{% for name, info in discovered %}
+	default "{{ info['terraform_filter'] }}" if TERRAFORM_AWS_AMI_{{ name.upper().replace(' ', '_').replace('.', '_') }}
+{% endfor %}
+
+endif # TERRAFORM_AWS_DISTRO_{{ owner_name }}
