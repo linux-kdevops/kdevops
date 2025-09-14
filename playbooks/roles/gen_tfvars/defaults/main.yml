@@ -27,6 +27,8 @@ terraform_aws_instance_type: "t2.micro"
 terraform_aws_ebs_volumes_per_instance: "0"
 terraform_aws_ebs_volume_size: 0
 terraform_aws_ebs_volume_type: "gp3"
+terraform_aws_ssh_key_name: "kdevops-aws-fallback"
+terraform_aws_ssh_pubkey_file: "~/.ssh/kdevops_terraform.pub"
 
 terraform_oci_assign_public_ip: false
 terraform_oci_use_existing_vcn: false

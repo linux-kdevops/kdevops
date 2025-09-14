@@ -11,6 +11,7 @@ source "terraform/aws/kconfigs/Kconfig.storage"
 endmenu
 menu "Identity & Access"
 source "terraform/aws/kconfigs/Kconfig.identity"
+source "terraform/aws/kconfigs/Kconfig.ssh"
 endmenu
 
 endif # TERRAFORM_AWS

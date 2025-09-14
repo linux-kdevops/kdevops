@@ -1,0 +1,79 @@
+# AWS SSH Key Management Configuration
+
+choice
+	prompt "AWS SSH key management strategy"
+	default TERRAFORM_AWS_SSH_KEY_UNIQUE
+	help
+	  Choose how SSH keys are managed for AWS instances.
+
+	  Unique key (recommended): Each kdevops project directory gets its own
+	  SSH key, preventing conflicts when using multiple kdevops instances.
+
+	  Shared key: Use the same key name across all projects (less secure,
+	  risk of overwriting keys and locking out existing instances).
+
+config TERRAFORM_AWS_SSH_KEY_UNIQUE
+	bool "Use unique SSH key per project directory (recommended)"
+	help
+	  Generate a unique SSH key name for each kdevops project directory.
+	  The key name will be based on the directory path, ensuring no conflicts
+	  between different kdevops deployments.
+
+	  Example: kdevops-aws-projectname-a1b2c3d4
+
+	  This prevents accidentally overwriting SSH keys in AWS when using
+	  kdevops in multiple directories, which would lock you out of
+	  existing instances.
+
+config TERRAFORM_AWS_SSH_KEY_SHARED
+	bool "Use shared SSH key name (legacy/risky)"
+	help
+	  Use a fixed SSH key name that you specify. This is less secure
+	  and can lead to accidental key overwrites if you use kdevops in
+	  multiple directories with different keys.
+
+	  WARNING: Using the same key name with different public keys will
+	  replace the key in AWS and lock you out of existing instances!
+
+endchoice
+
+config TERRAFORM_AWS_SSH_KEY_NAME_CUSTOM
+	string "Custom SSH key name (only for shared mode)"
+	default "kdevops_aws_key"
+	depends on TERRAFORM_AWS_SSH_KEY_SHARED
+	help
+	  Specify the custom SSH key name to use when in shared mode.
+
+	  WARNING: If this key already exists in AWS with a different
+	  public key, it will be replaced, potentially locking you out
+	  of existing instances!
+
+config TERRAFORM_AWS_SSH_KEY_NAME
+	string
+	output yaml
+	default $(shell, python3 scripts/aws_ssh_key_name.py 2>/dev/null || echo "kdevops-aws-fallback") if TERRAFORM_AWS_SSH_KEY_UNIQUE
+	default TERRAFORM_AWS_SSH_KEY_NAME_CUSTOM if TERRAFORM_AWS_SSH_KEY_SHARED
+	help
+	  The actual SSH key name that will be used in AWS.
+	  When using unique mode, this is automatically generated based on
+	  the current directory path.
+
+config TERRAFORM_AWS_SSH_PUBKEY_FILE
+	string
+	output yaml
+	default $(shell, python3 scripts/aws_ssh_key_name.py --pubkey-path 2>/dev/null || echo "~/.ssh/kdevops_terraform.pub") if TERRAFORM_AWS_SSH_KEY_UNIQUE
+	default "~/.ssh/kdevops_terraform.pub" if TERRAFORM_AWS_SSH_KEY_SHARED
+	help
+	  Path to the SSH public key file.
+	  When using unique mode, this path includes the directory-specific
+	  key name to avoid conflicts.
+
+config TERRAFORM_AWS_SSH_PRIVKEY_FILE
+	string
+	output yaml
+	default $(shell, python3 scripts/aws_ssh_key_name.py --path 2>/dev/null || echo "~/.ssh/kdevops_terraform") if TERRAFORM_AWS_SSH_KEY_UNIQUE
+	default "~/.ssh/kdevops_terraform" if TERRAFORM_AWS_SSH_KEY_SHARED
+	help
+	  Path to the SSH private key file.
+	  When using unique mode, this path includes the directory-specific
+	  key name to avoid conflicts.
