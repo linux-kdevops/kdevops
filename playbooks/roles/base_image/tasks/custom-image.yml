@@ -270,7 +270,7 @@
       Running guests always use their own copy. To rebuild your custom
       base image from the custom image, also remove the base image:
 
-      rm -f  ${BASE_IMAGE}
+      rm -f  {{ base_image_pathname }}
 
       This can always be done safely without affecting running guests.
       ------------------------------------------------------------------
