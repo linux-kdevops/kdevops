@@ -274,6 +274,8 @@
 
       This can always be done safely without affecting running guests.
       ------------------------------------------------------------------
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
   when:
     - guestfs_has_custom_raw_image_rolling|bool
 
