@@ -25,6 +25,10 @@
     - target_linux_git is string and target_linux_git.startswith('/')
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Check if target directory exists when using 9p and Linux CLI was set
   ansible.builtin.stat:
@@ -79,6 +83,10 @@
     - target_linux_extra_patch is defined
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Variable values
   ansible.builtin.debug:
@@ -96,6 +104,10 @@
     - bootlinux_b4_am_this_host|bool
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Copy configuration for Linux {{ target_linux_tree }} on the control node
   ansible.builtin.template:
@@ -111,6 +123,10 @@
     - (active_linux_localversion is defined and active_linux_localversion != "") or (target_linux_localversion is defined and target_linux_localversion != "")
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Configure Linux {{ target_linux_tree }} on the control node
   ansible.builtin.shell: |
@@ -124,6 +140,10 @@
     executable: /bin/bash
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Get nproc on the control node
   ansible.builtin.command: "{{ num_jobs }}"
@@ -131,6 +151,10 @@
   register: nproc_9p
   run_once: true
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Get kernelversion
   community.general.make:
