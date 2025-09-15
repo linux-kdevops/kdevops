@@ -60,6 +60,7 @@ config GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST
 config GUESTFS_DISTRO_SOURCE_AND_DEST_FILE
 	string
 	depends on GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST
+	output yaml
 	default "/etc/apt/sources.list" if GUESTFS_DEBIAN
 
 endif

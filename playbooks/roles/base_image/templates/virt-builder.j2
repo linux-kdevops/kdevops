@@ -7,6 +7,7 @@ copy-in {{ kdevops_custom_yum_repofile }}:/etc/yum.repos.d
 {% endif %}
 
 {% if guestfs_copy_sources_from_host_to_guest %}
+{% set target_dir = guestfs_distro_source_and_dest_file | dirname %}
 mkdir {{ target_dir }}
 copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
 {% endif %}
