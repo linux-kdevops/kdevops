@@ -123,6 +123,69 @@
       when:
         - kernel_release_file.stat.exists
 
+    # GRUB detection logic - must be inside the block where kernel_release_file is available
+    - name: Construct the command line to determine the default boot entry (source tree)
+      tags:
+        - saved
+      ansible.builtin.set_fact:
+        determine_default_kernel_id: >-
+          awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg |
+          awk '{print NR-1" ... "$0}' |
+          grep {{ kernelrelease }} |
+          head -1 |
+          awk '{print $1}'
+      when:
+        - kernel_release_file.stat.exists
+        - kernelrelease is defined
+        - kernelrelease != "unknown"
+        - ansible_facts['os_family']|lower == 'debian'
+
+    - name: Determine the target kernel's GRUB boot entry number (source tree)
+      tags:
+        - saved
+      become: true
+      become_flags: "su - -c"
+      become_method: ansible.builtin.sudo
+      ansible.builtin.shell:
+        cmd: "{{ determine_default_kernel_id }}"
+      register: grub_boot_number_cmd
+      changed_when: false
+      when:
+        - kernel_release_file.stat.exists
+        - kernelrelease is defined
+        - kernelrelease != "unknown"
+        - determine_default_kernel_id is defined
+
+    - name: Set the target kernel to be booted by default (source tree)
+      become: true
+      become_flags: "su - -c"
+      become_method: sudo
+      ansible.builtin.command:
+        cmd: "/usr/sbin/grub-set-default \"{{ grub_boot_number_cmd.stdout_lines.0 }}\""
+      tags: ["saved"]
+      when:
+        - grub_boot_number_cmd is defined
+        - grub_boot_number_cmd.rc is defined
+        - grub_boot_number_cmd.rc == 0
+        - grub_boot_number_cmd.stdout is defined
+        - grub_boot_number_cmd.stdout != ""
+
+    - name: Itemize kernel and GRUB entry selected (source tree)
+      ansible.builtin.debug:
+        msg: >-
+          {{ target_kernel }} determined to be {{ grub_boot_number_cmd.stdout_lines.0 }}
+          on the GRUB2 flat menu.
+          Ran: grub-set-default {{ grub_boot_number_cmd.stdout_lines.0 }}
+      vars:
+        target_kernel: "{{ target_linux_ref | replace('v', '') }}"
+      tags: ["saved"]
+      when:
+        - grub_boot_number_cmd is defined
+        - grub_boot_number_cmd.rc is defined
+        - grub_boot_number_cmd.rc == 0
+        - grub_boot_number_cmd.stdout is defined
+        - grub_boot_number_cmd.stdout != ""
+
 - name: Set default kernelrelease if not determined
   ansible.builtin.set_fact:
     kernelrelease: "unknown"
@@ -149,94 +212,3 @@
       when:
         - kernel_release_file.stat.exists
 
-- name: Construct the command line to determine the default boot entry
-  tags:
-    - saved
-  ansible.builtin.set_fact:
-    determine_default_kernel_id: >-
-      awk -F\' '/menuentry / {print $2}'
-      /boot/grub/grub.cfg | awk '{print NR-1" ... "$0}' |
-      grep {{ kernelrelease }} | head -1 | awk '{print $1}'
-  when:
-    - kernel_release_file is defined
-    - kernel_release_file.stat is defined
-    - kernel_release_file.stat.exists
-    - kernelrelease is defined
-    - kernelrelease != "unknown"
-    - ansible_os_family != "RedHat" or ansible_distribution_major_version | int < 8
-
-- name: Construct the command line to determine default boot entry for RHEL >= 8
-  tags:
-    - saved
-  ansible.builtin.set_fact:
-    determine_default_kernel_id: >-
-      for f in $(ls -1 /boot/loader/entries/*.conf); do
-      cat $f;
-      done | grep title | awk '{ gsub("title ", "", $0); print }' | grep '{{ kernelrelease }}';
-  when:
-    - kernel_release_file is defined
-    - kernel_release_file.stat is defined
-    - kernel_release_file.stat.exists
-    - kernelrelease is defined
-    - kernelrelease != "unknown"
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version | int >= 8
-
-# If this fails then grub-set-default won't be run, and the assumption here
-# is either you do the work to enhance the heuristic or live happy with the
-# assumption that grub2's default of picking the latest kernel is the best
-# option.
-- name: Determine the target kernel's GRUB boot entry number
-  # noqa: command-instead-of-shell
-  tags:
-    - saved
-  become: true
-  become_flags: "su - -c"
-  become_method: ansible.builtin.sudo
-  ansible.builtin.shell:
-    cmd: "{{ determine_default_kernel_id }}"
-  register: grub_boot_number_cmd
-  changed_when: false
-  when:
-    - kernel_release_file is defined
-    - kernel_release_file.stat is defined
-    - kernel_release_file.stat.exists
-
-- name: Obtain command to set default kernel to boot
-  ansible.builtin.set_fact:
-    grub_set_default_boot_kernel: grub-set-default
-  when: ansible_facts['os_family']|lower != 'redhat' or ansible_facts['distribution_major_version'] | int < 8
-
-- name: Obtain command to set default kernel to boot for RHEL >= 8
-  ansible.builtin.set_fact:
-    grub_set_default_boot_kernel: grub2-set-default
-  when: ansible_facts['os_family']|lower == 'redhat' and ansible_facts['distribution_major_version'] | int >= 8
-
-- name: Set the target kernel to be booted by default moving forward if the above command worked
-  become: true
-  become_flags: "su - -c"
-  become_method: sudo
-  ansible.builtin.command: "{{ grub_set_default_boot_kernel }} \"{{ target_boot_entry }}\""
-  vars:
-    target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 if (grub_boot_number_cmd is defined and grub_boot_number_cmd.stdout_lines is defined) else '' }}"
-  tags: ["saved"]
-  when:
-    - grub_boot_number_cmd is defined
-    - grub_boot_number_cmd.rc is defined
-    - grub_boot_number_cmd.rc == 0
-    - grub_boot_number_cmd.stdout is defined
-    - grub_boot_number_cmd.stdout != ""
-
-- name: Itemize kernel and GRUB entry we just selected
-  ansible.builtin.debug:
-    msg: "{{ target_kernel }} determined to be {{ target_boot_entry }} on the GRUB2 flat menu. Ran: grub-set-default {{ target_boot_entry }}"
-  vars:
-    target_kernel: "{{ target_linux_ref | replace('v', '') }}"
-    target_boot_entry: "{{ grub_boot_number_cmd.stdout_lines.0 }}"
-  tags: ["saved"]
-  when:
-    - grub_boot_number_cmd is defined
-    - grub_boot_number_cmd.rc is defined
-    - grub_boot_number_cmd.rc == 0
-    - grub_boot_number_cmd.stdout is defined
-    - grub_boot_number_cmd.stdout != ""
