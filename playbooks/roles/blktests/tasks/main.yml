@@ -346,6 +346,8 @@
     - all_limit_tests is defined
     - all_limit_tests != None
     - all_limit_tests | length > 0
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Stop blktests if we're debbugging limit_tests
   ansible.builtin.meta: end_play
@@ -356,6 +358,9 @@
 - name: Run blktests using oscheck.sh
   vars:
     group: "{{ ansible_host | regex_replace('blktests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
   tags: ["blktests", "run_tests"]
   become: true
   become_flags: "su - -c"
@@ -455,6 +460,8 @@
     msg: "New expunge files found: {{ new_expunges.stdout_lines }}"
   when:
     - new_expunges.stdout != 0
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Check if results directory is empty
   ansible.builtin.find:
@@ -472,6 +479,8 @@
   run_once: true
   tags: ["blktests", "copy_results", "augment_expunge_list"]
   delegate_to: localhost
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 # You are encouraged to commit the compressed results of failed tests
 # so we keep an archive
