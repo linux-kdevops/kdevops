@@ -10,6 +10,8 @@
 - name: Debug defined VMs
   debug:
     msg: "Hostname: {{ inventory_hostname }}, Defined VMs: {{ hostvars['localhost']['defined_vms']['list_vms'] | default([]) }}, Check: {{ inventory_hostname not in (hostvars['localhost']['defined_vms']['list_vms'] | default([])) }}"
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Provision each target node
   when:
