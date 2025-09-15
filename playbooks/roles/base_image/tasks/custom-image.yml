@@ -185,6 +185,10 @@
       when:
         - libvirt_uri_system|bool
         - not sentinel_stat.stat.exists
+      vars:
+        ansible_callback_diy_runner_on_ok_msg: |
+          $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+          {{ ansible_callback_diy.result.output.stdout | default('') }}
 
     - name: Customize the downloaded image with kdevops user and settings (non-root)
       ansible.builtin.command:
@@ -197,6 +201,10 @@
       when:
         - not libvirt_uri_system|bool
         - not sentinel_stat.stat.exists
+      vars:
+        ansible_callback_diy_runner_on_ok_msg: |
+          $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+          {{ ansible_callback_diy.result.output.stdout | default('') }}
 
     - name: Clean up the virt-customize command file
       ansible.builtin.file:
