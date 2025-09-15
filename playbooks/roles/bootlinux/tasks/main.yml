@@ -215,6 +215,10 @@
   ansible.builtin.command: "uname -r"
   register: uname_cmd_before
   tags: ["uninstall-linux"]
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Check kernel uname for uninstall
   ansible.builtin.debug:
@@ -322,6 +326,10 @@
   tags: ["install-linux"]
   when:
     - not workflow_linux_packaged|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Install {{ target_linux_tree }} cxl_test on the target nodes
   become: true
@@ -336,6 +344,10 @@
   when:
     - kdevops_workflow_enable_cxl|bool
     - not workflow_linux_packaged|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Set the default kernel if necessary
   tags: ["saved"]
@@ -350,6 +362,10 @@
   ansible.builtin.command: "uname -r"
   register: uname_cmd
   tags: ["uname"]
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: |
+      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Check kernel uname
   ansible.builtin.debug:
