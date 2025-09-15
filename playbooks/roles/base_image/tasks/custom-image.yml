@@ -275,6 +275,8 @@
       Custom virt-builder source: {{ custom_source }}
       Custom virt-builder index: {{ custom_index }}
       Custom virt-builder image: {{ custom_image }}
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Generating the index for {{ base_image_os_version }}
   become: true
