@@ -69,6 +69,11 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
 	help
 	  Dense: https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html
 
+config ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
+	bool "Ansible DIY Callback Plugin"
+	help
+	  DIY: https://docs.ansible.com/ansible/latest/collections/community/general/diy_callback.html
+
 config ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
 	bool "Custom Ansible Callback Plugin"
 	help
@@ -90,6 +95,7 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_STRING
 	output yaml
 	default "debug" if ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	default "dense" if ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
+	default "community.general.diy" if ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
 	default ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM_NAME if ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
 
 config ANSIBLE_CFG_CALLBACK_PLUGIN_CHECK_MODE_MARKERS
@@ -111,7 +117,8 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_DISPLAY_FAILED_STDERR
 config ANSIBLE_CFG_CALLBACK_PLUGIN_DISPLAY_OK_HOSTS
 	bool "display_ok_hosts"
 	output yaml
-	default y
+	default y if !ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
+	default n if ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
 	help
 	  Toggle to control displaying ‘ok’ task/host results in a task.
 	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-display_ok_hosts
@@ -154,7 +161,8 @@ endmenu
 config ANSIBLE_CFG_DEPRECATION_WARNINGS
 	bool "deprecation_warnings"
 	output yaml
-	default y
+	default y if !ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
+	default n if ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
 	help
 	  Toggle to control the showing of deprecation warnings
 	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#deprecation-warnings
