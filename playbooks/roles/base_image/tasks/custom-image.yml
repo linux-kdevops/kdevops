@@ -34,7 +34,7 @@
     get_mime: false
   register: custom_image_stat
 
-- name: Fetch the custom image
+- name: Fetch the custom image {{ guestfs_custom_raw_image_url }}
   become: true
   become_method: ansible.builtin.sudo
   ansible.builtin.get_url:
