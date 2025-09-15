@@ -13,6 +13,10 @@ ifeq (y,$(CONFIG_QEMU_BUILD))
   GEN_NODES_EXTRA_ARGS += qemu_bin_path='$(subst ",,$(CONFIG_QEMU_INSTALL_DIR_LIBVIRT))/qemu-system-x86_64'
   endif
 
+  ifeq (y,$(CONFIG_TARGET_ARCH_ARM64))
+  GEN_NODES_EXTRA_ARGS += qemu_bin_path='$(subst ",,$(CONFIG_QEMU_INSTALL_DIR_LIBVIRT))/qemu-system-aarch64'
+  endif
+
   ifeq (y,$(CONFIG_TARGET_ARCH_PPC64LE))
   GEN_NODES_EXTRA_ARGS += qemu_bin_path='$(subst ",,$(CONFIG_QEMU_INSTALL_DIR_LIBVIRT))/qemu-system-ppc64'
   endif

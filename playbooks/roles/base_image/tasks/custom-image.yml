@@ -172,7 +172,7 @@
       when:
         - not sentinel_stat.stat.exists
 
-    - name: Customize the downloaded image with kdevops user and settings
+    - name: Customize the downloaded image with kdevops user and settings (same architecture)
       become: true
       become_method: ansible.builtin.sudo
       ansible.builtin.command:
@@ -185,12 +185,33 @@
       when:
         - libvirt_uri_system|bool
         - not sentinel_stat.stat.exists
+        - not (target_arch_arm64|default(false) and ansible_facts['architecture'] != 'aarch64')
+        - not (target_arch_x86_64|default(false) and ansible_facts['architecture'] == 'aarch64')
+
+    - name: Customize the downloaded image with kdevops user and settings (cross-architecture using firstboot only)
+      become: true
+      become_method: ansible.builtin.sudo
+      ansible.builtin.command:
+        argv:
+          - "virt-customize"
+          - "-a"
+          - "{{ custom_image }}"
+          - "--firstboot-command"
+          - "systemctl stop ssh && systemctl start ssh"
+          - "--firstboot-command"
+          - "apt update && apt upgrade --yes || yum update -y || true"
+      when:
+        - libvirt_uri_system|bool
+        - not sentinel_stat.stat.exists
+        - >-
+          (target_arch_arm64|default(false) and ansible_facts['architecture'] != 'aarch64') or
+          (target_arch_x86_64|default(false) and ansible_facts['architecture'] == 'aarch64')
       vars:
         ansible_callback_diy_runner_on_ok_msg: |
           $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
           {{ ansible_callback_diy.result.output.stdout | default('') }}
 
-    - name: Customize the downloaded image with kdevops user and settings (non-root)
+    - name: Customize the downloaded image with kdevops user and settings (non-root, same architecture)
       ansible.builtin.command:
         argv:
           - "virt-customize"
@@ -201,6 +222,25 @@
       when:
         - not libvirt_uri_system|bool
         - not sentinel_stat.stat.exists
+        - not (target_arch_arm64|default(false) and ansible_facts['architecture'] != 'aarch64')
+        - not (target_arch_x86_64|default(false) and ansible_facts['architecture'] == 'aarch64')
+
+    - name: Customize the downloaded image with kdevops user and settings (non-root, cross-architecture)
+      ansible.builtin.command:
+        argv:
+          - "virt-customize"
+          - "-a"
+          - "{{ custom_image }}"
+          - "--firstboot-command"
+          - "systemctl stop ssh && systemctl start ssh"
+          - "--firstboot-command"
+          - "apt update && apt upgrade --yes || yum update -y || true"
+      when:
+        - not libvirt_uri_system|bool
+        - not sentinel_stat.stat.exists
+        - >-
+          (target_arch_arm64|default(false) and ansible_facts['architecture'] != 'aarch64') or
+          (target_arch_x86_64|default(false) and ansible_facts['architecture'] == 'aarch64')
       vars:
         ansible_callback_diy_runner_on_ok_msg: |
           $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}

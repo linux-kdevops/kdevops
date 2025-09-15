@@ -4,12 +4,12 @@
   <currentMemory unit='MiB'>{{ libvirt_mem_mb }}</currentMemory>
   <vcpu placement='static'>{{ libvirt_vcpus_count }}</vcpu>
   <os firmware='efi'>
-    <type arch='aarch64' machine='virt-8.1'>hvm</type>
+    <type arch='aarch64' machine='virt'>hvm</type>
     <firmware>
       <feature enabled='no' name='enrolled-keys'/>
       <feature enabled='no' name='secure-boot'/>
     </firmware>
-    <loader readonly='yes' type='pflash' format='qcow2'>/usr/share/edk2/aarch64/QEMU_EFI-silent-pflash.qcow2</loader>
+    <loader readonly='yes' type='pflash'>/usr/share/AAVMF/AAVMF_CODE.fd</loader>
     <boot dev='hd'/>
   </os>
   <features>

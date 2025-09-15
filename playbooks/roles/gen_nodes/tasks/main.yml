@@ -993,7 +993,7 @@
     hostname: "{{ item.name }}"
     guestidx: "{{ idx }}"
   ansible.builtin.template:
-    src: "guestfs_{{ libvirt_machine_type }}.j2.xml"
+    src: "guestfs_{{ libvirt_machine_type_string }}.j2.xml"
     dest: "{{ topdir_path }}/guestfs/{{ hostname }}/{{ hostname }}.xml"
     force: true
     mode: "0644"

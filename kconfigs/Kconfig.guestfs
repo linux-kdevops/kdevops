@@ -30,9 +30,12 @@ config GUESTFS_CUSTOM_RAW_IMAGE_URL
 	depends on GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
 	string
 	output yaml
-	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-generic-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
-	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
-	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-nocloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-generic-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64 && TARGET_ARCH_X86_64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-generic-arm64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64 && TARGET_ARCH_ARM64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64 && TARGET_ARCH_X86_64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-arm64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64 && TARGET_ARCH_ARM64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-nocloud-amd64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64 && TARGET_ARCH_X86_64
+	default "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-nocloud-arm64-daily.raw" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64 && TARGET_ARCH_ARM64
 
 config GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
 	bool
@@ -177,9 +180,12 @@ config GUESTFS_DEBIAN_HOST_GUEST_MATCH
 
 config GUESTFS_DEBIAN_IMAGE_NAME
 	string
-	default "debian-13-generic-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
-	default "debian-13-genericcloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64
-	default "debian-13-nocloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64
+	default "debian-13-generic-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64 && TARGET_ARCH_X86_64
+	default "debian-13-generic-arm64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64 && TARGET_ARCH_ARM64
+	default "debian-13-genericcloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64 && TARGET_ARCH_X86_64
+	default "debian-13-genericcloud-arm64-daily" if GUESTFS_DEBIAN_TRIXIE_GENERIC_CLOUD_AMD64 && TARGET_ARCH_ARM64
+	default "debian-13-nocloud-amd64-daily" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64 && TARGET_ARCH_X86_64
+	default "debian-13-nocloud-arm64-daily" if GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64 && TARGET_ARCH_ARM64
 	default "debian-12" if GUESTFS_DEBIAN_BUSTER
 
 config GUESTFS_DEBIAN_BOX_SHORT
