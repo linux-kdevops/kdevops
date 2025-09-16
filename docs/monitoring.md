@@ -50,6 +50,7 @@ make menuconfig
 
 - **fstests**: Filesystem testing framework
 - **blktests**: Block layer testing framework
+- **sysbench**: Database performance testing framework
 
 ### How Workflows Integrate Monitoring
 

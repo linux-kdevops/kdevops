@@ -30,6 +30,12 @@
     name: create_data_partition
   tags: ["mkfs"]
 
+# Start monitoring services before running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - enable_monitoring|default(false)|bool
+  tags: ["sysbench", "run_sysbench", "monitoring", "monitor_run"]
+
 - name: MySQL Docker
   ansible.builtin.import_tasks: mysql-docker/main.yaml
   when: sysbench_type_mysql_docker | bool
@@ -37,3 +43,9 @@
 - name: PostgreSQL Native
   ansible.builtin.import_tasks: postgresql-native/main.yaml
   when: sysbench_type_postgresql_native | bool
+
+# Stop monitoring services and collect data after running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - enable_monitoring|default(false)|bool
+  tags: ["sysbench", "results", "monitoring", "monitor_collect"]

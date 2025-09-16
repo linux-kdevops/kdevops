@@ -10,6 +10,7 @@
       enable_monitoring: {{ enable_monitoring | default(false) }}
       kdevops_run_fstests: {{ kdevops_run_fstests | default(false) }}
       kdevops_run_blktests: {{ kdevops_run_blktests | default(false) }}
+      kdevops_workflow_enable_sysbench: {{ kdevops_workflow_enable_sysbench | default(false) }}
 
 - name: Set workflow-appropriate monitoring results path
   ansible.builtin.set_fact:
