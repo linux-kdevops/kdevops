@@ -1,4 +1,15 @@
 ---
+- name: Resolve sysbench device for A/B testing
+  tags: ["vars"]
+  ansible.builtin.set_fact:
+    sysbench_device: >-
+      {{
+        sysbench_device_dev if (kdevops_baseline_and_dev|bool and 'dev' in group_names)
+        else sysbench_device_baseline if (kdevops_baseline_and_dev|bool and 'baseline' in group_names)
+        else sysbench_device
+      }}
+  when: kdevops_baseline_and_dev|default(false)|bool
+
 - name: Get the latest PostgreSQL ref
   tags: ["setup"]
   ansible.builtin.shell: |

@@ -171,6 +171,44 @@ config SYSBENCH_TEST_ATOMICS_EXT4_4K_4KS_BIGALLOC_64K
 
 endif # SYSBENCH_TEST_ATOMICS
 
+if KDEVOPS_BASELINE_AND_DEV
+
+config SYSBENCH_DEVICE_BASELINE
+	string "Device for baseline node in A/B testing"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for the baseline node when running A/B testing.
+	  This device will be used for the baseline configuration without
+	  database optimizations (e.g., with full_page_writes enabled).
+
+config SYSBENCH_DEVICE_DEV
+	string "Device for dev node in A/B testing"
+	output yaml
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme1n1" if TERRAFORM_GCE
+	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	help
+	  The device to use for the dev node when running A/B testing.
+	  This device will be used for the development configuration with
+	  database optimizations (e.g., with full_page_writes disabled).
+
+endif # KDEVOPS_BASELINE_AND_DEV
+
+if !KDEVOPS_BASELINE_AND_DEV
+
 config SYSBENCH_DEVICE
 	string "Device to use to create a filesystem for sysbench tests"
 	output yaml
@@ -184,7 +222,9 @@ config SYSBENCH_DEVICE
 	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
 	help
 	  The device to use to create a filesystem where we will place the
-	  database.
+	  database. This setting is used when A/B testing is not enabled.
+
+endif # !KDEVOPS_BASELINE_AND_DEV
 
 config SYSBENCH_LABEL
 	string "The label to use"
