@@ -113,6 +113,12 @@ blktests-dev-results:
 		--extra-vars '{ kdevops_run_blktests: True }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
+monitor-results: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/monitor-results.yml \
+		--extra-vars=@./extra_vars.yaml \
+		$(LIMIT_HOSTS)
+
 blktests-help-menu:
 	@echo "blktests options:"
 	@echo "blktests                                 - Git clones blktests, builds and install it"
@@ -122,6 +128,7 @@ blktests-help-menu:
 	@echo "blktests-dev-results                     - Only collect results for dev hosts"
 	@echo "blktests-baseline-skip-kdevops-update    - Run blktests but skip updating kdevops"
 	@echo "blktests-baseline-run-oscheck-only       - Only run oscheck"
+	@echo "monitor-results                          - Collect interim monitoring data without stopping monitoring"
 	@echo ""
 
 HELP_TARGETS += blktests-help-menu
