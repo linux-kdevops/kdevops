@@ -1,164 +1,35 @@
 ---
-# Tasks to collect monitoring data WITHOUT stopping the monitoring services
+# Collect monitoring data WITHOUT stopping monitoring services
 # This allows peeking at intermediate results during long-running tests
 
-- name: Check if monitoring data exists (without stopping monitoring)
-  become: true
-  become_method: sudo
-  ansible.builtin.stat:
-    path: /root/monitoring/folio_migration_stats.txt
-  register: folio_migration_data_file
+# Import common monitoring setup tasks
+- ansible.builtin.import_tasks: common/setup.yml
+  when:
+    - enable_monitoring|default(false)|bool
+
+# Import folio migration interim collection tasks
+- ansible.builtin.import_tasks: monitors/folio_migration/collect_only.yml
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
-# Note: We don't need matplotlib on target hosts - plots are generated on localhost
-
-- name: Create snapshot of monitoring data
-  become: true
-  become_method: sudo
-  ansible.builtin.shell: |
-    # Create a snapshot copy to avoid interfering with ongoing monitoring
-    cp /root/monitoring/folio_migration_stats.txt /root/monitoring/folio_migration_stats_snapshot.txt
-  args:
-    chdir: /root/monitoring
-  register: snapshot_creation
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - folio_migration_data_file.stat.exists|default(false)
-
-# Plot generation happens on localhost, not on target hosts
-
-- name: Debug monitoring collection status
+# Display comprehensive interim monitoring collection summary
+- name: Display interim monitoring collection summary
   ansible.builtin.debug:
     msg: |
-      Collecting monitoring data (without stopping monitoring)
-      monitor_developmental_stats: {{ monitor_developmental_stats | default(false) }}
-      monitor_folio_migration: {{ monitor_folio_migration | default(false) }}
-      enable_monitoring: {{ enable_monitoring | default(false) }}
-      Data file exists: {{ folio_migration_data_file.stat.exists | default(false) }}
-
-- name: Set monitoring results path
-  ansible.builtin.set_fact:
-    monitoring_results_path: "{{ monitoring_results_base_path | default(topdir_path + '/workflows/fstests/results/monitoring') }}"
-
-- name: Create local monitoring results directory
-  ansible.builtin.file:
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-
-- name: Check if snapshot was created
-  become: true
-  become_method: sudo
-  ansible.builtin.stat:
-    path: /root/monitoring/folio_migration_stats_snapshot.txt
-  register: folio_migration_snapshot_file
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-
-- name: Copy folio migration stats snapshot to localhost
-  become: true
-  become_method: sudo
-  ansible.builtin.fetch:
-    src: /root/monitoring/folio_migration_stats_snapshot.txt
-    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt"
-    flat: true
-    validate_checksum: false
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - folio_migration_snapshot_file.stat.exists|default(false)
-
-# Plots are generated on localhost, not fetched from targets
-
-- name: Display interim monitoring data collection summary
-  ansible.builtin.debug:
-    msg: |
-      Interim folio migration monitoring data collected (monitoring still running).
-      Data saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - folio_migration_snapshot_file.stat.exists|default(false)
-
-# Generate plots on localhost from the collected data
-- name: Check if matplotlib is available on localhost
-  ansible.builtin.command: python3 -c "import matplotlib.pyplot"
-  delegate_to: localhost
-  register: localhost_matplotlib_check
-  ignore_errors: true
-  changed_when: false
-  failed_when: false
-  run_once: true
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-
-- name: Collect all monitoring data files
-  ansible.builtin.find:
-  delegate_to: localhost
-  register: all_monitoring_files
-  run_once: true
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - localhost_matplotlib_check.rc == 0
-
-- name: Generate A/B comparison plots for each configuration
-  ansible.builtin.command:
-  delegate_to: localhost
-  with_items: "{{ all_monitoring_files.files | map(attribute='path') | map('basename') | list }}"
-  register: ab_plot_generation
-  ignore_errors: true
-  run_once: true
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - localhost_matplotlib_check.rc == 0
-    - all_monitoring_files.files | length > 0
-
-- name: Generate comprehensive plot with all results
-  ansible.builtin.command:
-  delegate_to: localhost
-  register: comprehensive_plot_generation
-  ignore_errors: true
-  run_once: true
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-    - localhost_matplotlib_check.rc == 0
-
-- name: Log plot generation summary
-  ansible.builtin.debug:
-    msg: |
-      {% if localhost_matplotlib_check.rc != 0 %}
-      Skipping plot generation - matplotlib not available on localhost
+      Interim monitoring data collection complete (monitoring still running).
+      Results available in: {{ monitoring_results_path }}
+      {% if monitor_developmental_stats|default(false)|bool and monitor_folio_migration|default(false)|bool %}
+      - Folio migration interim data collected
+      {% endif %}
+      {% if localhost_matplotlib_check is defined and localhost_matplotlib_check.rc is defined and localhost_matplotlib_check.rc == 0 %}
+      Plot generation status:
+      {% if folio_interim_plot_generation is defined and folio_interim_plot_generation.rc is defined and folio_interim_plot_generation.rc == 0 %}
+      - Folio migration interim plots generated
+      {% endif %}
       {% else %}
-      Plot generation complete:
-      - A/B comparison plots generated for each configuration pair
-      - Comprehensive plot generated: all_hosts_comprehensive.png
+      Plot generation skipped - matplotlib not available on localhost
       {% endif %}
   run_once: true
   when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-
-- name: Clean up snapshot files on target
-  become: true
-  become_method: sudo
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - /root/monitoring/folio_migration_stats_snapshot.txt
-    - /root/monitoring/folio_migration_plot_snapshot.png
-  when:
-    - monitor_developmental_stats|default(false)|bool
-    - monitor_folio_migration|default(false)|bool
-  ignore_errors: true
+    - enable_monitoring|default(false)|bool
