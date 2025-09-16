@@ -1,0 +1,22 @@
+{# Generic hosts template for when no specific workflow is configured #}
+{% if all_generic_nodes is defined %}
+{% set nodes = all_generic_nodes %}
+{% else %}
+{# Default to using the host prefix as the node name #}
+{% set nodes = [kdevops_host_prefix] %}
+{% endif %}
+[all]
+{% for node in nodes %}
+{{ node }}
+{% endfor %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[{{ kdevops_host_prefix | regex_replace('-$', '') }}]
+{% for node in nodes %}
+{{ node }}
+{% endfor %}
+
+[{{ kdevops_host_prefix | regex_replace('-$', '') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"

@@ -8,7 +8,10 @@ its own jinja2 template file and define its own ansible task for its generation.
 {% if kdevops_declared_hosts is defined and kdevops_declared_hosts %}
 {# Use declared hosts that skip bringup process - for bare metal or pre-existing infrastructure #}
 {% include 'workflows/declared-hosts.j2' %}
-{% else %}
+{% elif kdevops_workflow_name is defined and kdevops_workflow_name %}
 {# Include workflow-specific template dynamically based on workflow name #}
 {% include 'workflows/' + kdevops_workflow_name + '.j2' %}
+{% else %}
+{# No workflow defined - use generic template #}
+{% include 'workflows/generic.j2' %}
 {% endif %}
