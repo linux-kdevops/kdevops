@@ -265,6 +265,13 @@
     - kdevops_run_blktests|bool
   run_once: true
 
+# Start monitoring services before running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - kdevops_run_blktests|bool
+    - enable_monitoring|default(false)|bool
+  tags: ["blktests", "run_tests", "monitoring", "monitor_run"]
+
 - name: Enable low-level messages on console
   become: true
   become_flags: "su - -c"
@@ -385,6 +392,13 @@
   when:
     - kdevops_run_blktests|bool
   run_once: true
+
+# Stop monitoring services and collect data after running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - kdevops_run_blktests|bool
+    - enable_monitoring|default(false)|bool
+  tags: ["blktests", "run_tests", "monitoring", "monitor_collect"]
 
 - name: Clean up our localhost results/last-run directory
   ansible.builtin.file:

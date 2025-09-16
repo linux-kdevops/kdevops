@@ -65,7 +65,7 @@ blktests-baseline:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
-		--tags run_tests,copy_results \
+		--tags vars,run_tests,copy_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
@@ -74,7 +74,7 @@ blktests-baseline-skip-kdevops-update:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
-		--tags run_tests,copy_results --skip-tags git_update \
+		--tags vars,run_tests,copy_results --skip-tags git_update \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
@@ -82,7 +82,7 @@ blktests-baseline-run-oscheck-only:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
-		--tags run_tests,copy_results \
+		--tags vars,run_tests,copy_results \
 		--skip-tags git_update,reboot,clean_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
@@ -91,7 +91,7 @@ blktests-dev:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'dev' \
 		playbooks/blktests.yml \
-		--tags run_tests,copy_results \
+		--tags vars,run_tests,copy_results \
 		--extra-vars '{ $(BLKTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 

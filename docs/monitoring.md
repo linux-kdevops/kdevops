@@ -49,6 +49,7 @@ make menuconfig
 ### Currently Supported Workflows
 
 - **fstests**: Filesystem testing framework
+- **blktests**: Block layer testing framework
 
 ### How Workflows Integrate Monitoring
 
