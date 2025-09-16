@@ -1,0 +1,29 @@
+---
+# Common monitoring setup tasks
+
+- name: Debug monitoring collection start
+  ansible.builtin.debug:
+    msg: |
+      Starting monitoring collection
+      monitor_developmental_stats: {{ monitor_developmental_stats | default(false) }}
+      monitor_folio_migration: {{ monitor_folio_migration | default(false) }}
+      enable_monitoring: {{ enable_monitoring | default(false) }}
+      kdevops_run_fstests: {{ kdevops_run_fstests | default(false) }}
+
+- name: Set workflow-appropriate monitoring results path
+  ansible.builtin.set_fact:
+    monitoring_results_path: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring"
+  when:
+    - enable_monitoring|default(false)|bool
+    - monitoring_results_path is not defined
+
+- name: Create local monitoring results directory
+  ansible.builtin.file:
+    path: "{{ monitoring_results_path }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+  become: false
+  when:
+    - monitoring_results_path is defined

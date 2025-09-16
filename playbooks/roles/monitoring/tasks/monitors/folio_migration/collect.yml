@@ -1,0 +1,147 @@
+---
+# Folio migration monitoring data collection tasks
+# Conditions are checked at import level in monitor_collect.yml
+
+- name: Check if folio migration monitoring was started
+  become: true
+  become_method: sudo
+  ansible.builtin.stat:
+    path: /root/monitoring/folio_migration.pid
+  register: folio_migration_pid_file
+
+- name: Stop folio migration monitoring
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    if [ -f /root/monitoring/folio_migration.pid ]; then
+      pid=$(cat /root/monitoring/folio_migration.pid)
+      if ps -p $pid > /dev/null 2>&1; then
+        kill $pid
+        echo "Stopped monitoring process $pid"
+      else
+        echo "Monitoring process $pid was not running"
+      fi
+      rm -f /root/monitoring/folio_migration.pid
+    fi
+  register: stop_monitor
+  when: folio_migration_pid_file.stat.exists|default(false)
+
+- name: Display stop monitoring status
+  ansible.builtin.debug:
+    msg: "{{ stop_monitor.stdout }}"
+  when:
+    - stop_monitor is defined
+    - stop_monitor.changed|default(false)
+
+- name: Check if monitoring data was collected
+  become: true
+  become_method: sudo
+  ansible.builtin.stat:
+    path: /root/monitoring/folio_migration_stats.txt
+  register: folio_migration_data_file
+
+- name: Copy plot_migration_stats.py to target
+  become: true
+  become_method: sudo
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py"
+    dest: /root/monitoring/plot_migration_stats.py
+    mode: "0755"
+  when: folio_migration_data_file.stat.exists|default(false)
+
+- name: Check if matplotlib is available for plotting
+  become: true
+  become_method: sudo
+  ansible.builtin.command: python3 -c "import matplotlib.pyplot"
+  register: matplotlib_check
+  ignore_errors: true
+  when: folio_migration_data_file.stat.exists|default(false)
+
+- name: Generate folio migration plots
+  become: true
+  become_method: sudo
+  ansible.builtin.command: |
+    python3 /root/monitoring/plot_migration_stats.py
+      /root/monitoring/folio_migration_stats.txt
+      /root/monitoring/folio_migration_plot.png
+  args:
+    chdir: /root/monitoring
+  register: plot_generation
+  ignore_errors: true
+  when:
+    - folio_migration_data_file.stat.exists|default(false)
+    - matplotlib_check.rc == 0
+
+- name: Log plot generation skip if matplotlib not available
+  ansible.builtin.debug:
+    msg: "Skipping plot generation - matplotlib not available on target system"
+  when:
+    - folio_migration_data_file.stat.exists|default(false)
+    - matplotlib_check.rc != 0
+
+- name: Copy folio migration stats data to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: /root/monitoring/folio_migration_stats.txt
+    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt"
+    flat: true
+    validate_checksum: false
+  when: folio_migration_data_file.stat.exists|default(false)
+
+- name: Check if plot was generated
+  become: true
+  become_method: sudo
+  ansible.builtin.stat:
+    path: /root/monitoring/folio_migration_plot.png
+  register: folio_migration_plot_file
+
+- name: Copy folio migration plot to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: /root/monitoring/folio_migration_plot.png
+    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png"
+    flat: true
+    validate_checksum: false
+  when: folio_migration_plot_file.stat.exists|default(false)
+
+- name: Display monitoring data collection summary
+  ansible.builtin.debug:
+    msg: |
+      Folio migration monitoring collection complete.
+      Data saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt
+      {% if folio_migration_plot_file.stat.exists | default(false) %}
+      Plot saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
+      {% endif %}
+  when: folio_migration_data_file.stat.exists|default(false)
+
+- name: Check if matplotlib is available on localhost for folio migration
+  ansible.builtin.command: python3 -c "import matplotlib.pyplot"
+  delegate_to: localhost
+  register: folio_localhost_matplotlib_check
+  ignore_errors: true
+  run_once: true
+  when: folio_migration_data_file.stat.exists|default(false)
+
+- name: Generate folio migration plots on localhost
+  ansible.builtin.command: |
+    python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py
+      -o {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
+      {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt
+  delegate_to: localhost
+  register: localhost_plot_generation
+  ignore_errors: true
+  when:
+    - folio_migration_data_file.stat.exists|default(false)
+    - folio_localhost_matplotlib_check.rc == 0
+
+- name: Log localhost plot generation status
+  ansible.builtin.debug:
+    msg: |
+      {% if folio_localhost_matplotlib_check.rc != 0 %}
+      Skipping plot generation - matplotlib not available on localhost
+      {% else %}
+      Plot generated: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
+      {% endif %}
+  when: folio_migration_data_file.stat.exists|default(false)
