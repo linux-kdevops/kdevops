@@ -1,6 +1,6 @@
 ---
 - name: Run Milvus Vector Database Benchmarks
-  hosts: ai
+  hosts: baseline:dev
   vars:
     ai_vector_db_milvus_benchmark_enable: true
   roles:

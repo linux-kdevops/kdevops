@@ -2,7 +2,7 @@
 # MinIO S3 Storage Benchmarking Playbook
 
 - name: Install MinIO and setup
-  hosts: minio
+  hosts: baseline:dev
   become: true
   become_user: root
   tags: ['minio_install']
@@ -21,7 +21,7 @@
         minio_docker_network: "{{ minio_docker_network_name }}"
 
 - name: Run MinIO Warp benchmarks
-  hosts: minio
+  hosts: baseline:dev
   become: true
   become_user: root
   tags: ['minio_warp']
@@ -29,7 +29,7 @@
     - role: minio_warp_run
 
 - name: Uninstall MinIO
-  hosts: minio
+  hosts: baseline:dev
   become: true
   become_user: root
   tags: ['minio_uninstall']
@@ -37,7 +37,7 @@
     - role: minio_uninstall
 
 - name: Destroy MinIO and cleanup
-  hosts: minio
+  hosts: baseline:dev
   become: true
   become_user: root
   tags: ['minio_destroy']
@@ -45,7 +45,7 @@
     - role: minio_destroy
 
 - name: Analyze MinIO results
-  hosts: minio
+  hosts: baseline:dev
   become: true
   become_user: root
   tags: ['minio_results']

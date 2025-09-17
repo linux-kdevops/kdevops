@@ -14,25 +14,25 @@ $(MINIO_DATA_TARGET): $(ANSIBLE_INVENTORY_FILE)
 
 $(MINIO_DATA_TARGET_INSTALL): $(ANSIBLE_INVENTORY_FILE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts $(MINIO_PLAYBOOK) \
+		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_install
 
 $(MINIO_DATA_TARGET_UNINSTALL): $(ANSIBLE_INVENTORY_FILE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts $(MINIO_PLAYBOOK) \
+		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_uninstall
 
 $(MINIO_DATA_TARGET_DESTROY): $(ANSIBLE_INVENTORY_FILE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts $(MINIO_PLAYBOOK) \
+		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_destroy
 
 $(MINIO_DATA_TARGET_RUN): $(ANSIBLE_INVENTORY_FILE)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		-f 30 -i hosts $(MINIO_PLAYBOOK) \
+		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_warp
 

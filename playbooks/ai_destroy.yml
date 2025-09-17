@@ -1,6 +1,6 @@
 ---
 - name: Destroy Milvus Vector Database
-  hosts: ai
+  hosts: baseline:dev
   become: true
   tasks:
     - name: Stop Milvus containers

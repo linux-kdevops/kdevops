@@ -1,6 +1,6 @@
 ---
 - name: Collect and analyze AI benchmark results
-  hosts: ai
+  hosts: baseline:dev
   roles:
     - ai_collect_results
   tags: ['ai', 'ai_results']

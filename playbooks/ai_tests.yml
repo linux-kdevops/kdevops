@@ -3,7 +3,7 @@
 # This ensures AI infrastructure is setup before running benchmarks
 
 - name: AI Tests - Ensure Milvus is installed
-  hosts: ai
+  hosts: baseline:dev
   become: true
   become_user: root
   roles:
@@ -12,7 +12,7 @@
       tags: ['ai', 'milvus', 'setup']
 
 - name: AI Tests - Vector Database Benchmarks
-  hosts: ai
+  hosts: baseline:dev
   become: true
   vars:
     # Skip infrastructure setup when running tests
@@ -23,7 +23,7 @@
       tags: ['ai', 'benchmark']
 
 - name: AI Tests - Results Collection
-  hosts: ai
+  hosts: baseline:dev
   become: true
   roles:
     - role: ai_collect_results

@@ -1,6 +1,6 @@
 ---
 - name: Setup AI benchmark environment
-  hosts: ai
+  hosts: baseline:dev
   roles:
     - ai_setup
   tags: ['ai', 'ai_setup']

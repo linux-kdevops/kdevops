@@ -1,6 +1,6 @@
 ---
 - name: Install Milvus Vector Database
-  hosts: ai
+  hosts: baseline:dev
   become: true
   become_user: root
   roles:

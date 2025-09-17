@@ -1,6 +1,6 @@
 ---
 - name: Uninstall AI benchmark components
-  hosts: ai
+  hosts: baseline:dev
   roles:
     - ai_uninstall
   tags: ['ai', 'ai_uninstall']
