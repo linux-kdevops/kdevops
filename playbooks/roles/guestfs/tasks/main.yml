@@ -77,3 +77,10 @@
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/destroy.yml"
   delegate_to: localhost
+
+- name: Status VM tasks
+  tags:
+    - status
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/status/main.yml"
+  delegate_to: localhost

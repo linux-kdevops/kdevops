@@ -1,0 +1,9 @@
+---
+- name: Display VM status
+  ansible.builtin.shell: |
+    LIBVIRT_DEFAULT_URI="{{ libvirt_uri }}" virsh list --all
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.stdout }}"

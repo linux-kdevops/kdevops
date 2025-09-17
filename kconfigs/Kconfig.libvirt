@@ -118,6 +118,7 @@ endchoice
 
 config LIBVIRT_URI_PATH
 	string "Libvirt QEMU URI to use"
+	output yaml
 	default "qemu:///system" if LIBVIRT_URI_SYSTEM || LIBVIRT_URI_CUSTOM
 	default "qemu:///session" if LIBVIRT_URI_SESSION
 	help

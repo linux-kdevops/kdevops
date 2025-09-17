@@ -91,7 +91,10 @@ bringup_guestfs: $(GUESTFS_BRINGUP_DEPS)
 PHONY += bringup_guestfs
 
 status_guestfs:
-	$(Q)scripts/status_guestfs.sh
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		playbooks/guestfs.yml \
+		--extra-vars=@./extra_vars.yaml \
+		--tags status
 PHONY += status_guestfs
 
 destroy_guestfs:
