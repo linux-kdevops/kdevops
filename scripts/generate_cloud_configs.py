@@ -100,6 +100,68 @@ def get_lambdalabs_summary() -> tuple[bool, str]:
         return False, "Lambda Labs: Error querying API - using defaults"
 
 
+def generate_aws_kconfig() -> bool:
+    """
+    Generate AWS Kconfig files using Chuck's scripts.
+    Returns True on success, False on failure.
+    """
+    script_path = "terraform/aws/scripts/generate_aws_kconfig.py"
+
+    result = subprocess.run(
+        [sys.executable, script_path],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    return result.returncode == 0
+
+
+def get_aws_summary() -> tuple[bool, str]:
+    """
+    Get a summary of AWS configurations.
+    Returns (success, summary_string)
+    """
+    try:
+        # Check if AWS credentials are configured
+        result = subprocess.run(
+            ["aws", "sts", "get-caller-identity"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            return False, "AWS: Credentials not configured - using defaults"
+
+        # Get basic stats from cached data if available
+        cache_dir = os.path.expanduser("~/.cache/kdevops/aws")
+        families_cache = os.path.join(cache_dir, "aws_families.json")
+
+        if os.path.exists(families_cache):
+            with open(families_cache, 'r') as f:
+                families = json.load(f)
+                family_count = len(families)
+        else:
+            family_count = "72+"  # Known minimum
+
+        regions_cache = os.path.join(cache_dir, "aws_regions.json")
+        if os.path.exists(regions_cache):
+            with open(regions_cache, 'r') as f:
+                regions = json.load(f)
+                region_count = len(regions)
+        else:
+            region_count = "30+"  # Known minimum
+
+        return (
+            True,
+            f"AWS: {family_count} instance families, {region_count} regions, "
+            f"900+ instance types available"
+        )
+    except Exception:
+        return False, "AWS: Error checking configuration"
+
+
 def main():
     """Main function to generate cloud configurations."""
     print("Cloud Provider Configuration Summary")
@@ -121,8 +183,20 @@ def main():
         print(f"⚠ {summary}")
     print()
 
-    # AWS (placeholder - not implemented)
-    print("⚠ AWS: Dynamic configuration not yet implemented")
+    # AWS - Generate Kconfig files
+    aws_generated = generate_aws_kconfig()
+
+    # AWS - Get summary
+    success, summary = get_aws_summary()
+    if success:
+        print(f"✓ {summary}")
+        if aws_generated:
+            print("  Kconfig files generated successfully")
+        else:
+            print("  Warning: Failed to generate Kconfig files")
+    else:
+        print(f"⚠ {summary}")
+    print()
 
     # Azure (placeholder - not implemented)
     print("⚠ Azure: Dynamic configuration not yet implemented")
