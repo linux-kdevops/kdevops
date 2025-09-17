@@ -72,6 +72,8 @@ cloud-config-help:
 	@echo "cloud-update-aws        - refreshes AWS data (clears cache and regenerates)"
 	@echo "clean-cloud-config      - removes all generated cloud kconfig files"
 	@echo "cloud-list-all          - list all cloud instances for configured provider"
+	@echo "cloud-bill              - show current month's cloud provider costs"
+	@echo "cloud-bill-aws          - show AWS costs for current month"
 
 HELP_TARGETS += cloud-config-help
 
@@ -88,6 +90,15 @@ cloud-list-all:
 	$(Q)chmod +x scripts/cloud_list_all.sh
 	$(Q)scripts/cloud_list_all.sh
 
+# Cloud billing targets
+cloud-bill-aws:
+	$(Q)chmod +x scripts/aws-costs.sh
+	$(Q)scripts/aws-costs.sh
+
+cloud-bill: cloud-bill-aws
+	$(Q)echo ""
+	$(Q)echo "Note: Only AWS billing is currently supported"
+
 PHONY += cloud-config cloud-config-lambdalabs cloud-config-aws cloud-update cloud-update-aws
 PHONY += clean-cloud-config clean-cloud-config-lambdalabs clean-cloud-config-aws
-PHONY += cloud-config-help cloud-list-all
+PHONY += cloud-config-help cloud-list-all cloud-bill cloud-bill-aws
