@@ -101,8 +101,9 @@ ifeq (y,$(CONFIG_BOOTLINUX_AB_DIFFERENT_REF))
 linux: linux-baseline linux-dev
 else
 linux: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 endif
 else
@@ -116,9 +117,10 @@ endif
 PHONY += linux-baseline
 ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 linux-baseline: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--extra-vars="$(BOOTLINUX_ARGS)" --limit baseline
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit baseline \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)"
 else
 linux-baseline:
 	@echo "linux-baseline requires KDEVOPS_BASELINE_AND_DEV=y"
@@ -128,9 +130,10 @@ endif
 PHONY += linux-dev
 ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 linux-dev: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) -i \
-		hosts $(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--extra-vars="$(BOOTLINUX_ARGS)" --limit dev
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit dev \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--extra-vars="$(BOOTLINUX_ARGS)"
 else
 linux-dev:
 	@echo "linux-dev requires KDEVOPS_BASELINE_AND_DEV=y"
