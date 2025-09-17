@@ -1,10 +1,10 @@
 if TERRAFORM_AWS
 
 menu "Resource Location"
-source "terraform/aws/kconfigs/Kconfig.location"
+source "terraform/aws/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
-source "terraform/aws/kconfigs/Kconfig.compute"
+source "terraform/aws/kconfigs/Kconfig.compute.generated"
 endmenu
 menu "Storage"
 source "terraform/aws/kconfigs/Kconfig.storage"

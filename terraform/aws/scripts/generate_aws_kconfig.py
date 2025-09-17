@@ -221,8 +221,19 @@ def generate_family_kconfig(family: str, instances: List[Dict]) -> str:
     """Generate Kconfig content for a single family."""
     content = [f"# AWS {family.upper()} instance sizes (dynamically generated)", ""]
 
+    # Filter instances to only include the exact family (not related families)
+    # e.g., for "r8g" family, exclude "r8gd" and "r8gn" instances
+    filtered_instances = [
+        inst for inst in instances
+        if inst['instance_type'].split('.')[0] == family
+    ]
+
+    if not filtered_instances:
+        # If no exact matches, use all instances (backward compatibility)
+        filtered_instances = instances
+
     # Sort instances by a logical order
-    sorted_instances = sorted(instances, key=lambda x: (
+    sorted_instances = sorted(filtered_instances, key=lambda x: (
         'metal' not in x['instance_type'],  # metal instances last
         x.get('vcpus', 0),  # then by vCPUs
         x.get('memory_gb', 0)  # then by memory
@@ -238,14 +249,15 @@ def generate_family_kconfig(family: str, instances: List[Dict]) -> str:
     # Generate choice block
     content.append("choice")
     content.append(f'\tprompt "Instance size for {family.upper()} family"')
-    content.append(f'\tdefault TERRAFORM_AWS_INSTANCE_{default.replace(".", "_").upper()}')
+    content.append(f'\tdefault TERRAFORM_AWS_INSTANCE_{default.replace(".", "_").replace("-", "_").upper()}')
     content.append("\thelp")
     content.append(f"\t  Select the specific instance size within the {family.upper()} family.")
     content.append("")
 
     # Generate config entries
     for inst in sorted_instances:
-        type_upper = inst['instance_type'].replace('.', '_').upper()
+        # Replace both dots and dashes with underscores for valid Kconfig symbols
+        type_upper = inst['instance_type'].replace('.', '_').replace('-', '_').upper()
         content.append(f"config TERRAFORM_AWS_INSTANCE_{type_upper}")
         content.append(f'\tbool "{inst["instance_type"]}"')
         content.append("\thelp")
@@ -262,7 +274,7 @@ def generate_family_kconfig(family: str, instances: List[Dict]) -> str:
     content.append("\tstring")
 
     for inst in sorted_instances:
-        type_upper = inst['instance_type'].replace('.', '_').upper()
+        type_upper = inst['instance_type'].replace('.', '_').replace('-', '_').upper()
         content.append(f'\tdefault "{inst["instance_type"]}" if TERRAFORM_AWS_INSTANCE_{type_upper}')
 
     content.append(f'\tdefault "{default}"')
