@@ -176,7 +176,7 @@ Enable verbose output for troubleshooting:
 make reboot-limit-baseline AV=3
 
 # Check individual node status
-ansible -i hosts all -m shell -a "cat /data/reboot-limit/*/reboot-count.txt"
+ansible baseline:dev:service -m shell -a "cat /data/reboot-limit/*/reboot-count.txt"
 ```
 
 ## Interpreting Performance Data

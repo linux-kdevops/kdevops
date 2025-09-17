@@ -30,7 +30,7 @@ Device Under Test (DUT) systems.
 - **ALWAYS** verify that test systems are running and accessible before analysis
 
 ### Valid approaches:
-- ✅ Execute real tests: `ansible -i hosts all -m shell -a "fio --output-format=json ..."`
+- ✅ Execute real tests: `ansible all -m shell -a "fio --output-format=json ..."`
 - ✅ Collect actual JSON output from running VMs
 - ✅ Parse and analyze real performance data from live systems
 - ✅ Generate graphs and reports from actual test execution results
