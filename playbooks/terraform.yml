@@ -1,6 +1,5 @@
 ---
 - name: Manage infrastructure lifecycle and SSH access with Terraform
-  connection: local
   hosts: localhost
   gather_facts: false
   roles:

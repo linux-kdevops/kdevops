@@ -203,23 +203,20 @@ endif
 
 bringup_terraform: lambdalabs-ssh-check
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
 		playbooks/terraform.yml --tags bringup \
 		--extra-vars=@./extra_vars.yaml
 
 $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
 		playbooks/terraform.yml --tags ssh \
 		--extra-vars=@./extra_vars.yaml
 	$(Q)ansible $(ANSIBLE_VERBOSE) \
-		-i hosts baseline:dev:service \
+		baseline:dev:service \
 		-m wait_for_connection
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 status_terraform:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
 		playbooks/terraform.yml --tags status \
 		--extra-vars=@./extra_vars.yaml
 
@@ -227,13 +224,11 @@ destroy_terraform: destroy_terraform_base lambdalabs-ssh-clean-after
 
 destroy_terraform_base:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
 		playbooks/terraform.yml --tags destroy \
 		--extra-vars=@./extra_vars.yaml
 	$(Q)rm -f $(KDEVOPS_PROVISIONED_SSH) $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
 $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_tfvars.yml \
 		--extra-vars=@./extra_vars.yaml

@@ -1,6 +1,5 @@
 ---
 - name: Generate Terraform variables file (terraform/terraform.tfvars)
-  connection: local
   hosts: localhost
   roles:
     - role: gen_tfvars
