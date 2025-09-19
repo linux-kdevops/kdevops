@@ -38,7 +38,8 @@ fi
 if [[ "$IS_DEB822" == "true" ]]; then
 	# DEB822 format: URIs: https://deb.debian.org/debian
 	HOST_URL_LINE=$(grep -E "^URIs:" $SOURCES_FILE | head -1 | awk '{print $2}')
-	HOST=$(echo $HOST_URL_LINE | sed -E 's|https?://||' | cut -d'/' -f1)
+	# Strip protocol and port, extract just hostname
+	HOST=$(echo $HOST_URL_LINE | sed -E 's|https?://||' | cut -d'/' -f1 | cut -d':' -f1)
 else
 	# Legacy format: deb http://deb.debian.org/debian ...
 	LINE=$(grep -v "^#" $SOURCES_FILE | head -1)
