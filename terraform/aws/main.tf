@@ -138,6 +138,7 @@ resource "aws_instance" "kdevops_instance" {
   count         = local.kdevops_num_boxes
   ami           = data.aws_ami.kdevops_ami.id
   instance_type = var.aws_instance_type
+  associate_public_ip_address = true  # Required for SSH access when using default VPC
   vpc_security_group_ids = [
     aws_security_group.kdevops_sec_group.id,
     aws_security_group.kdevops_internal_group.id
