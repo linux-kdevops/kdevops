@@ -30,17 +30,31 @@ locals {
   vpc_id = data.aws_vpc.default.id
 }
 
-# Get all subnets in the default VPC
+# Get all subnets in the default VPC that have auto-assign public IP enabled
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
     values = [local.vpc_id]
   }
+
+  filter {
+    name   = "map-public-ip-on-launch"
+    values = ["true"]
+  }
 }
 
-# Use the first available subnet
+# Use the first available subnet with public IP mapping
+# If no subnets have public IP mapping, fall back to any subnet
 data "aws_subnet" "default" {
-  id = tolist(data.aws_subnets.default.ids)[0]
+  id = length(data.aws_subnets.default.ids) > 0 ? tolist(data.aws_subnets.default.ids)[0] : data.aws_subnets.fallback.ids[0]
+}
+
+# Fallback to get any subnet if none have public IP mapping
+data "aws_subnets" "fallback" {
+  filter {
+    name   = "vpc-id"
+    values = [local.vpc_id]
+  }
 }
 
 resource "aws_security_group" "kdevops_sec_group" {
