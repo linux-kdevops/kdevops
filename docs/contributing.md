@@ -42,7 +42,7 @@ typo, why not fix a few?
 # Patch requirements
 
 Please use the Signed-off-by tag, the meaning of which is defined in
-[CONTRIBUTING](./CONTRIBUTING) file.
+[CONTRIBUTING](./../CONTRIBUTING) file.
 
 # kdevops developers
 
