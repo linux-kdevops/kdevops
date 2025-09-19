@@ -39,6 +39,22 @@
   when:
     - kdevops_tfvars_dest.stat.exists
 
+# Map GPU instance configurations to actual instance types
+- name: Set AWS instance type based on configuration
+  ansible.builtin.set_fact:
+    terraform_aws_instance_type: "{{ 'g5.xlarge' if terraform_aws_instance_g5_xlarge | default(false) | bool else
+                                       'g5.2xlarge' if terraform_aws_instance_g5_2xlarge | default(false) | bool else
+                                       'g5.4xlarge' if terraform_aws_instance_g5_4xlarge | default(false) | bool else
+                                       'g5.8xlarge' if terraform_aws_instance_g5_8xlarge | default(false) | bool else
+                                       'g5.12xlarge' if terraform_aws_instance_g5_12xlarge | default(false) | bool else
+                                       'g5.16xlarge' if terraform_aws_instance_g5_16xlarge | default(false) | bool else
+                                       'g5.24xlarge' if terraform_aws_instance_g5_24xlarge | default(false) | bool else
+                                       'g5.48xlarge' if terraform_aws_instance_g5_48xlarge | default(false) | bool else
+                                       'p4d.24xlarge' if terraform_aws_instance_p4d_24xlarge | default(false) | bool else
+                                       'p5.48xlarge' if terraform_aws_instance_p5_48xlarge | default(false) | bool else
+                                       terraform_aws_instance_type | default('t2.micro') }}"
+  when: kdevops_terraform_provider == "aws"
+
 - name: Generate the terraform variables file file using {{ kdevops_terraform_tfvars }} as jinja2 source template
   tags: ["nodes"]
   vars:
