@@ -153,7 +153,8 @@ resource "aws_instance" "kdevops_instance" {
 module "kdevops_ebs_volumes" {
   count                 = var.aws_ebs_volumes_per_instance > 0 ? local.kdevops_num_boxes : 0
   source                = "./kdevops_ebs_volumes"
-  vol_availability_zone = var.aws_availability_zone
+  # Use the same AZ as the instance (from default subnet)
+  vol_availability_zone = data.aws_subnet.default.availability_zone
   vol_count             = var.aws_ebs_volumes_per_instance
   vol_instance_id       = element(aws_instance.kdevops_instance.*.id, count.index)
   vol_iops              = var.aws_ebs_volume_iops
