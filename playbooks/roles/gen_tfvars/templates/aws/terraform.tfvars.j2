@@ -1,9 +1,14 @@
 aws_profile = "{{ terraform_aws_profile }}"
 aws_region = "{{ terraform_aws_region }}"
 aws_availability_zone = "{{ terraform_aws_av_zone }}"
+{% if terraform_aws_use_gpu_ami | default(false) | bool %}
+aws_name_search = "{{ terraform_aws_gpu_ami_name | default('Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*') }}"
+aws_ami_owner = "{{ terraform_aws_gpu_ami_owner | default('amazon') }}"
+{% else %}
 aws_name_search = "{{ terraform_aws_ns }}"
 aws_ami_owner = "{{ terraform_aws_ami_owner }}"
 aws_ami_arch = "{{ terraform_aws_ami_arch }}"
+{% endif %}
 aws_instance_type = "{{ terraform_aws_instance_type }}"
 aws_ebs_volumes_per_instance = "{{ terraform_aws_ebs_volumes_per_instance }}"
 aws_ebs_volume_size = {{ terraform_aws_ebs_volume_size }}
