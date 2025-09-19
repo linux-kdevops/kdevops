@@ -1,0 +1,116 @@
+if TERRAFORM_AWS_INSTANCE_TYPE_G5
+
+choice
+	prompt "G5 instance size"
+	default TERRAFORM_AWS_INSTANCE_G5_XLARGE_CHOICE
+	help
+	  Select the size of the G5 instance. All G5 instances
+	  include NVIDIA A10G GPUs for graphics and ML workloads.
+
+config TERRAFORM_AWS_INSTANCE_G5_XLARGE_CHOICE
+	bool "g5.xlarge (1 GPU, 4 vCPUs, 16 GiB)"
+	help
+	  1x NVIDIA A10G GPU, 4 vCPUs, 16 GiB memory
+	  Up to 10 Gbps network, 3.8 Gbps EBS
+	  ~$1.00/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_2XLARGE_CHOICE
+	bool "g5.2xlarge (1 GPU, 8 vCPUs, 32 GiB)"
+	help
+	  1x NVIDIA A10G GPU, 8 vCPUs, 32 GiB memory
+	  Up to 10 Gbps network, 3.8 Gbps EBS
+	  ~$1.21/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_4XLARGE_CHOICE
+	bool "g5.4xlarge (1 GPU, 16 vCPUs, 64 GiB)"
+	help
+	  1x NVIDIA A10G GPU, 16 vCPUs, 64 GiB memory
+	  Up to 25 Gbps network, 8 Gbps EBS
+	  ~$1.62/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_8XLARGE_CHOICE
+	bool "g5.8xlarge (1 GPU, 32 vCPUs, 128 GiB)"
+	help
+	  1x NVIDIA A10G GPU, 32 vCPUs, 128 GiB memory
+	  25 Gbps network, 16 Gbps EBS
+	  ~$2.45/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_12XLARGE_CHOICE
+	bool "g5.12xlarge (4 GPUs, 48 vCPUs, 192 GiB)"
+	help
+	  4x NVIDIA A10G GPUs, 48 vCPUs, 192 GiB memory
+	  40 Gbps network, 20 Gbps EBS
+	  3.8 TB local NVMe SSD storage
+	  ~$5.67/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_16XLARGE_CHOICE
+	bool "g5.16xlarge (1 GPU, 64 vCPUs, 256 GiB)"
+	help
+	  1x NVIDIA A10G GPU, 64 vCPUs, 256 GiB memory
+	  25 Gbps network, 20 Gbps EBS
+	  ~$4.10/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_24XLARGE_CHOICE
+	bool "g5.24xlarge (4 GPUs, 96 vCPUs, 384 GiB)"
+	help
+	  4x NVIDIA A10G GPUs, 96 vCPUs, 384 GiB memory
+	  50 Gbps network, 30 Gbps EBS
+	  7.6 TB local NVMe SSD storage
+	  ~$8.14/hour on-demand
+
+config TERRAFORM_AWS_INSTANCE_G5_48XLARGE_CHOICE
+	bool "g5.48xlarge (8 GPUs, 192 vCPUs, 768 GiB)"
+	help
+	  8x NVIDIA A10G GPUs, 192 vCPUs, 768 GiB memory
+	  100 Gbps network, 60 Gbps EBS
+	  15.2 TB local NVMe SSD storage
+	  ~$16.29/hour on-demand
+
+endchoice
+
+endif # TERRAFORM_AWS_INSTANCE_TYPE_G5
+
+config TERRAFORM_AWS_INSTANCE_FAMILY_G5
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_2XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_2XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_4XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_4XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_8XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_8XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_12XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_12XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_16XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_16XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_24XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_24XLARGE_CHOICE
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_G5_48XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_G5 && TERRAFORM_AWS_INSTANCE_G5_48XLARGE_CHOICE
+	output yaml

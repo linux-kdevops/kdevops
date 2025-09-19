@@ -1,0 +1,31 @@
+if TERRAFORM_AWS_INSTANCE_TYPE_P4D
+
+choice
+	prompt "P4d instance size"
+	default TERRAFORM_AWS_INSTANCE_P4D_24XLARGE_CHOICE
+	help
+	  Select the size of the P4d instance. P4d instances
+	  include NVIDIA A100 GPUs for ML training workloads.
+
+config TERRAFORM_AWS_INSTANCE_P4D_24XLARGE_CHOICE
+	bool "p4d.24xlarge (8 GPUs, 96 vCPUs, 1152 GiB)"
+	help
+	  8x NVIDIA A100 40GB GPUs, 96 vCPUs, 1152 GiB memory
+	  400 Gbps network with EFA support
+	  8x 1 TB local NVMe SSD storage
+	  GPUDirect RDMA support
+	  ~$32.77/hour on-demand
+
+endchoice
+
+endif # TERRAFORM_AWS_INSTANCE_TYPE_P4D
+
+config TERRAFORM_AWS_INSTANCE_FAMILY_P4D
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_P4D
+	output yaml
+
+config TERRAFORM_AWS_INSTANCE_P4D_24XLARGE
+	bool
+	default y if TERRAFORM_AWS_INSTANCE_TYPE_P4D && TERRAFORM_AWS_INSTANCE_P4D_24XLARGE_CHOICE
+	output yaml
