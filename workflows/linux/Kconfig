@@ -188,6 +188,28 @@ config BOOTLINUX_REPRODUCIBLE_BUILDS
 	  Recommended for CI/CD environments and when build reproducibility
 	  is required. Compatible with both GCC and Clang toolchains.
 
+config BOOTLINUX_CLEAN_BEFORE_BUILD
+	bool "Clean kernel source before building (make mrproper)"
+	output yaml
+	default n
+	help
+	  If enabled, run 'make mrproper' before kernel configuration and
+	  building. This ensures a completely clean build from pristine
+	  source code by removing all configuration files, build artifacts,
+	  and generated files.
+
+	  Enable this for:
+	  - Deterministic, reproducible builds
+	  - Debugging configuration issues
+	  - Ensuring no stale artifacts interfere
+
+	  Disable this for:
+	  - Faster incremental builds during development
+	  - Preserving existing .config when not using fragments
+
+	  Note: This adds significant build time as all objects must be
+	  rebuilt from scratch.
+
 menu "ccache configuration"
 
 config BOOTLINUX_CCACHE

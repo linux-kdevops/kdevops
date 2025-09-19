@@ -31,6 +31,14 @@
   when:
     - linux_next_configs.matched > 0
 
+- name: Clean kernel source before configuration (make mrproper) for non-9P builds
+  community.general.make:
+    chdir: "{{ target_linux_dir_path }}"
+    target: "mrproper"
+  when:
+    - bootlinux_clean_before_build|default(false)|bool
+    - not bootlinux_9p|bool
+
 - name: Set the .config file for building the test kernel
   ansible.builtin.set_fact:
     linux_config: "{{ item | basename }}"

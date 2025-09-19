@@ -109,6 +109,15 @@
       $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
       {{ ansible_callback_diy.result.output.stdout | default('') }}
 
+- name: Clean kernel source before configuration (make mrproper) on the control node
+  community.general.make:
+    chdir: "{{ bootlinux_9p_host_path }}"
+    target: "mrproper"
+  when: bootlinux_clean_before_build|default(false)|bool
+  run_once: true
+  delegate_to: localhost
+  tags: ["build-linux"]
+
 - name: Copy configuration for Linux {{ target_linux_tree }} on the control node
   ansible.builtin.template:
     src: "{{ linux_config }}"
