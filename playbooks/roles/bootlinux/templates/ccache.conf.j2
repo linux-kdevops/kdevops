@@ -1,0 +1,27 @@
+# kdevops-managed ccache configuration
+# Generated automatically - do not edit manually
+
+# Cache settings
+cache_dir = {{ bootlinux_ccache_dir }}
+max_size = {{ bootlinux_ccache_max_size }}.0 GiB
+
+# Performance settings
+compression = {{ bootlinux_ccache_compression | lower }}
+stats = true
+
+# Build reproducibility - ensure deterministic compilation
+compiler_check = mtime
+direct_mode = true
+hash_dir = true
+
+# Debugging (disabled by default for performance)
+debug = false
+
+# File handling
+file_clone = false
+hard_link = false
+inode_cache = true
+
+# Security
+umask =
+read_only = false

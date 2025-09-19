@@ -10,6 +10,7 @@
       - make
       - gcc
       - kmod
+      - ccache
     state: present
   when:
     - ansible_facts['distribution_major_version']|int < 8
@@ -22,6 +23,7 @@
       - make
       - gcc
       - kmod
+      - ccache
     state: present
   when:
     - ansible_facts['distribution_major_version']|int >= 8

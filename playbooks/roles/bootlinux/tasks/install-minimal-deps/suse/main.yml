@@ -10,4 +10,5 @@
       - make
       - gcc
       - kmod-compat
+      - ccache
     state: present

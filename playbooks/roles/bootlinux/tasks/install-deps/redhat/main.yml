@@ -52,6 +52,7 @@
       - dwarves
       - userspace-rcu
       - zstd
+      - ccache
 
 - name: Install btrfs-progs
   become: true

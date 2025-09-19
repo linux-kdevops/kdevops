@@ -32,6 +32,15 @@
     - bootlinux_9p|bool
     - not workflow_linux_packaged|bool
 
+# Setup ccache configuration
+- name: Setup ccache configuration
+  ansible.builtin.import_tasks:
+    file: ccache.yml
+  when:
+    - bootlinux_ccache|default(false)|bool
+    - not workflow_linux_packaged|bool
+  tags: ['ccache']
+
 # We do this regardless of what distro you use
 - name: Install b4
   become: true

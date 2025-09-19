@@ -164,8 +164,10 @@
       build_jobs: {{ nproc_9p.stdout }}
       bootlinux_make_params: {{ bootlinux_make_params }}
       bootlinux_build_environment: {{ bootlinux_build_environment }}
+      bootlinux_ccache: {{ bootlinux_ccache|default(false) }}
       bootlinux_compiler_clang: {{ bootlinux_compiler_clang|default(false) }}
       bootlinux_reproducible_builds: {{ bootlinux_reproducible_builds|default(false) }}
+      bootlinux_ccache_kdevops_managed: {{ bootlinux_ccache_kdevops_managed|default(false) }}
   run_once: true
   delegate_to: localhost
   vars:
@@ -178,7 +180,8 @@
     echo "CC=${CC:-'not set'}"
     echo "PATH=${PATH}"
     which gcc || echo "gcc not found"
-    env | grep -E '^(CC|PATH)' | sort
+    which ccache || echo "ccache not found"
+    env | grep -E '^(CC|CCACHE|PATH)' | sort
   environment: "{{ bootlinux_build_environment }}"
   register: cc_test_result
   run_once: true

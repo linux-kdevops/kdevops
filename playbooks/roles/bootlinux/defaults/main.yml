@@ -37,6 +37,8 @@ target_linux_make_cmd: "{{ make }} -j{{ ansible_processor_vcpus }}"
 bootlinux_make_params: >-
   {{
     ({} | combine(
+      {'CC': 'ccache clang' if bootlinux_compiler_clang|default(false)|bool else 'ccache gcc'} if bootlinux_ccache|default(false)|bool else {}
+    ) | combine(
       {
         'KBUILD_BUILD_TIMESTAMP': '',
         'KBUILD_BUILD_USER': 'kdevops',
@@ -49,6 +51,10 @@ bootlinux_make_params: >-
 bootlinux_build_environment: >-
   {{
     ({} | combine(
+      {'CCACHE_CONFIGPATH': topdir_path + '/.ccache/ccache.conf'} if (bootlinux_ccache|default(false)|bool and bootlinux_ccache_kdevops_managed|default(false)|bool) else {}
+    ) | combine(
+      {'CC': 'ccache clang' if bootlinux_compiler_clang|default(false)|bool else 'ccache gcc'} if bootlinux_ccache|default(false)|bool else {}
+    ) | combine(
       {
         'KBUILD_BUILD_TIMESTAMP': '',
         'KBUILD_BUILD_USER': 'kdevops',

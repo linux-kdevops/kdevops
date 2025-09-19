@@ -39,4 +39,5 @@
       - zstd
       - libncurses-dev
       - b4
+      - ccache
     state: present

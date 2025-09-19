@@ -188,6 +188,84 @@ config BOOTLINUX_REPRODUCIBLE_BUILDS
 	  Recommended for CI/CD environments and when build reproducibility
 	  is required. Compatible with both GCC and Clang toolchains.
 
+menu "ccache configuration"
+
+config BOOTLINUX_CCACHE
+	bool "Enable ccache for faster kernel builds"
+	output yaml
+	default n
+	help
+	  Enable ccache (compiler cache) to accelerate repeated kernel
+	  builds by caching compilation results. Particularly effective
+	  for incremental builds and CI/CD environments.
+
+	  When enabled with Clang (LLVM=1), uses CC="ccache clang".
+	  When enabled with GCC, uses CC="ccache gcc".
+
+	  Requires ccache package to be installed on build nodes.
+
+choice
+	prompt "ccache configuration mode"
+	depends on BOOTLINUX_CCACHE
+	default BOOTLINUX_CCACHE_SYSTEM_WIDE
+	help
+	  Choose how ccache configuration is managed.
+
+config BOOTLINUX_CCACHE_SYSTEM_WIDE
+	bool "Use system-wide ccache configuration"
+	output yaml
+	help
+	  Use the system's existing ccache configuration
+	  (~/.cache/ccache or system defaults). Allows manual
+	  tuning via "ccache --set-config" commands.
+
+config BOOTLINUX_CCACHE_KDEVOPS_MANAGED
+	bool "kdevops-managed ccache configuration"
+	output yaml
+	help
+	  kdevops generates and manages a project-specific ccache
+	  configuration file using TOPDIR_PATH. This ensures
+	  isolation from system-wide ccache settings and allows
+	  project-specific tuning.
+
+	  Configuration location: $(TOPDIR_PATH)/.ccache/ccache.conf
+
+endchoice
+
+if BOOTLINUX_CCACHE_KDEVOPS_MANAGED
+
+config BOOTLINUX_CCACHE_MAX_SIZE
+	int "Maximum cache size (GiB)"
+	output yaml
+	default 10
+	help
+	  Maximum size for the ccache in GiB. Common values:
+	  - 5 (default ccache setting)
+	  - 10 (recommended for kernel development)
+	  - 20 (large projects/multiple kernels)
+	  - 50 (high-performance development environments)
+
+config BOOTLINUX_CCACHE_DIR
+	string "Cache directory"
+	output yaml
+	default "$(TOPDIR_PATH)/.ccache/cache"
+	help
+	  Directory where ccache stores cached compilation results.
+	  Using TOPDIR_PATH ensures project isolation.
+
+config BOOTLINUX_CCACHE_COMPRESSION
+	bool "Enable compression"
+	output yaml
+	default y
+	help
+	  Enable compression of cached files to save disk space.
+	  Slightly increases CPU usage but significantly reduces
+	  storage requirements.
+
+endif # BOOTLINUX_CCACHE_KDEVOPS_MANAGED
+
+endmenu
+
 choice
 	prompt "Type of development version of Linux to use"
 	default BOOTLINUX_LINUS if !BOOTLINUX_TREE_SET_BY_CLI && !BOOTLINUX_TREE_REF_SET_BY_CLI

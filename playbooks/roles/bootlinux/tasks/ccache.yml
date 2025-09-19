@@ -1,0 +1,37 @@
+---
+# ccache configuration and setup
+
+- name: Create kdevops ccache directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ topdir_path }}/.ccache"
+    - "{{ bootlinux_ccache_dir }}"
+  when:
+    - bootlinux_ccache|default(false)|bool
+    - bootlinux_ccache_kdevops_managed|default(false)|bool
+
+- name: Generate kdevops-managed ccache configuration
+  ansible.builtin.template:
+    src: ccache.conf.j2
+    dest: "{{ topdir_path }}/.ccache/ccache.conf"
+    mode: '0644'
+  when:
+    - bootlinux_ccache|default(false)|bool
+    - bootlinux_ccache_kdevops_managed|default(false)|bool
+
+- name: Display ccache configuration info
+  ansible.builtin.debug:
+    msg: |
+      ccache enabled: {{ bootlinux_ccache|default(false)|bool }}
+      ccache mode: {{ 'kdevops-managed' if bootlinux_ccache_kdevops_managed|default(false)|bool else 'system-wide' }}
+      {% if bootlinux_ccache_kdevops_managed|default(false)|bool %}
+      Config file: {{ topdir_path }}/.ccache/ccache.conf
+      Cache directory: {{ bootlinux_ccache_dir }}
+      Max size: {{ bootlinux_ccache_max_size }} GiB
+      {% endif %}
+  when: bootlinux_ccache|default(false)|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"

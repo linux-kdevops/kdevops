@@ -28,4 +28,5 @@
       - portmap
       - hwinfo
       - open-iscsi
+      - ccache
     disable_recommends: false
