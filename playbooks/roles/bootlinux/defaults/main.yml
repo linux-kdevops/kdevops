@@ -30,7 +30,32 @@ make: "make"
 # The commit is 34db57a47f875d11c4068567b9ec7ace174ec4cf
 # introduce fact "ansible_processor_nproc": number of usable vcpus #66569
 # https://github.com/ansible/ansible/pull/66569
+# Build command without environment variables (added via environment dict)
 target_linux_make_cmd: "{{ make }} -j{{ ansible_processor_vcpus }}"
+
+# Make parameters dictionary for community.general.make module
+bootlinux_make_params: >-
+  {{
+    ({} | combine(
+      {
+        'KBUILD_BUILD_TIMESTAMP': '',
+        'KBUILD_BUILD_USER': 'kdevops',
+        'KBUILD_BUILD_HOST': 'kdevops'
+      } if bootlinux_reproducible_builds|default(false)|bool else {}
+    ))
+  }}
+
+# Environment variables for remaining shell tasks (non-make)
+bootlinux_build_environment: >-
+  {{
+    ({} | combine(
+      {
+        'KBUILD_BUILD_TIMESTAMP': '',
+        'KBUILD_BUILD_USER': 'kdevops',
+        'KBUILD_BUILD_HOST': 'kdevops'
+      } if bootlinux_reproducible_builds|default(false)|bool else {}
+    ))
+  }}
 target_linux_make_install_cmd: "{{ target_linux_make_cmd }} modules_install install"
 
 uninstall_kernel_enable: false
@@ -66,3 +91,4 @@ bootlinux_tree_custom_kernelrelease: false
 bootlinux_tree_custom_localversion: false
 bootlinux_is_dev_node: false
 bootlinux_debug_ref: "{{ lookup('env', 'DEBUG_REF') | default(false, true) | bool }}"
+

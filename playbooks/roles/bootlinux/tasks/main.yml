@@ -193,6 +193,22 @@
   when:
     - bootlinux_9p|bool
 
+- name: Debug kernel build command configuration
+  ansible.builtin.debug:
+    msg: |
+      === KERNEL BUILD COMMAND DEBUG ===
+      build_jobs: {{ ansible_processor_vcpus }}
+      bootlinux_make_params: {{ bootlinux_make_params }}
+      bootlinux_build_environment: {{ bootlinux_build_environment }}
+      bootlinux_compiler_clang: {{ bootlinux_compiler_clang|default(false) }}
+      bootlinux_reproducible_builds: {{ bootlinux_reproducible_builds|default(false) }}
+  when:
+    - not workflow_linux_packaged|bool
+    - not bootlinux_9p|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
+  tags: ["install-linux", "debug"]
+
 - name: Build the Linux kernel on the controller host
   ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/build/9p.yml"
@@ -318,11 +334,12 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.command: "{{ target_linux_make_install_cmd }}"
+  ansible.builtin.shell: "{{ target_linux_make_install_cmd }}"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
+  environment: "{{ bootlinux_build_environment }}"
   tags: ["install-linux"]
   when:
     - not workflow_linux_packaged|bool
@@ -335,11 +352,12 @@
   become: true
   become_flags: "su - -c"
   become_method: sudo
-  ansible.builtin.command: "{{ target_linux_make_install_cmd }} M=tools/testing/cxl INSTALL_MOD_DIR=updates"
+  ansible.builtin.shell: "{{ target_linux_make_install_cmd }} M=tools/testing/cxl INSTALL_MOD_DIR=updates"
   register: install_done
   changed_when: "install_done.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
+  environment: "{{ bootlinux_build_environment }}"
   tags: ["install-linux", "cxl-install"]
   when:
     - kdevops_workflow_enable_cxl|bool

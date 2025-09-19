@@ -171,6 +171,23 @@ config BOOTLINUX_COMPILER_CLANG
 
 endchoice
 
+config BOOTLINUX_REPRODUCIBLE_BUILDS
+	bool "Enable reproducible builds"
+	output yaml
+	default n
+	help
+	  Enable reproducible builds by setting deterministic environment
+	  variables during kernel compilation. This ensures identical
+	  binaries are produced from the same source code.
+
+	  When enabled, sets:
+	  - KBUILD_BUILD_TIMESTAMP='' (empty for deterministic timestamps)
+	  - KBUILD_BUILD_USER='kdevops'
+	  - KBUILD_BUILD_HOST='kdevops'
+
+	  Recommended for CI/CD environments and when build reproducibility
+	  is required. Compatible with both GCC and Clang toolchains.
+
 choice
 	prompt "Type of development version of Linux to use"
 	default BOOTLINUX_LINUS if !BOOTLINUX_TREE_SET_BY_CLI && !BOOTLINUX_TREE_REF_SET_BY_CLI

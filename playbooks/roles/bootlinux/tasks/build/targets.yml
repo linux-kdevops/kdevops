@@ -93,19 +93,21 @@
     executable: /bin/bash
 
 - name: Build {{ target_linux_tree }} on the target nodes
-  ansible.builtin.command: "{{ target_linux_make_cmd }}"
+  ansible.builtin.shell: "{{ target_linux_make_cmd }}"
   register: build
   changed_when: "build.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
+  environment: "{{ bootlinux_build_environment }}"
   tags: ["build-linux"]
 
 - name: Build {{ target_linux_tree }} cxl_test on the target nodes
-  ansible.builtin.command: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
+  ansible.builtin.shell: "{{ target_linux_make_cmd }} M=tools/testing/cxl"
   register: build_cxl_test
   changed_when: "build_cxl_test.rc == 0"
   args:
     chdir: "{{ target_linux_dir_path }}"
+  environment: "{{ bootlinux_build_environment }}"
   tags: ["build-linux", "cxl-build"]
   when:
     - bootlinux_cxl_test|bool
