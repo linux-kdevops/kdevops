@@ -1,0 +1,37 @@
+# pNFS configuration with git regression testing
+
+# Use libvirt/QEMU for virtualization
+CONFIG_GUESTFS=y
+CONFIG_LIBVIRT=y
+
+# Enable workflows
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+# Linux kernel building with 9P for development
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_9P=y
+CONFIG_BOOTLINUX_LINUS=y
+CONFIG_BOOTLINUX_TREE_LINUS=y
+
+# Enable testing workflows
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+
+# Enable gitr workflow with pNFS testing
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_GITR=y
+CONFIG_KDEVOPS_WORKFLOW_ENABLE_GITR=y
+
+# Enable pNFS section for gitr workflow
+CONFIG_GITR_NFS_SECTION_PNFS=y
+CONFIG_GITR_NFS_SECTION_V42=y
+
+# Use kdevops NFS server
+CONFIG_GITR_USE_KDEVOPS_NFSD=y
+
+# Enable kdevops NFS server setup
+CONFIG_KDEVOPS_SETUP_NFSD=y
+
+# Enable systemd journal remote for debugging
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y
