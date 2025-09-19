@@ -10,6 +10,9 @@ endmenu
 menu "Storage"
 source "terraform/aws/kconfigs/Kconfig.storage"
 endmenu
+menu "Network"
+source "terraform/aws/kconfigs/Kconfig.network"
+endmenu
 menu "Identity & Access"
 source "terraform/aws/kconfigs/Kconfig.identity"
 source "terraform/aws/kconfigs/Kconfig.ssh"

@@ -1,0 +1,21 @@
+# Network and VPC configuration
+
+config TERRAFORM_AWS_CREATE_VPC
+	bool "Create new VPC"
+	default n
+	output yaml
+	help
+	  Create a new VPC for the kdevops instances. If disabled, instances
+	  will be created in the default VPC for the region.
+
+	  Disable this if you've reached your VPC limit or want to use an
+	  existing VPC. When disabled, ensure your default VPC has appropriate
+	  subnets and internet gateway configured.
+
+config TERRAFORM_AWS_ASSIGN_PUBLIC_IP
+	bool "Assign public IP to instances"
+	default y
+	output yaml
+	help
+	  Assign a public IP address to instances. This is required for
+	  SSH access from outside the VPC.

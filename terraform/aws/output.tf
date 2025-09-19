@@ -6,7 +6,8 @@
 # address.
 output "controller_ip_map" {
   description = "The IP addresses assigned to each instance"
-  value       = zipmap(var.kdevops_nodes[*], aws_eip.kdevops_eip[*].public_ip)
+  # Use public_ip directly from instances when using default VPC
+  value       = zipmap(var.kdevops_nodes[*], aws_instance.kdevops_instance[*].public_ip)
 }
 
 output "block_device_map" {

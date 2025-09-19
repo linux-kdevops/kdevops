@@ -20,21 +20,32 @@ data "aws_ami" "kdevops_ami" {
   }
 }
 
-resource "aws_vpc" "kdevops_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+# Use the default VPC instead of creating a new one
+data "aws_vpc" "default" {
+  default = true
 }
 
-resource "aws_subnet" "kdevops_subnet" {
-  cidr_block        = cidrsubnet(aws_vpc.kdevops_vpc.cidr_block, 3, 1)
-  vpc_id            = aws_vpc.kdevops_vpc.id
-  availability_zone = var.aws_availability_zone
+# Create a locals block for VPC reference
+locals {
+  vpc_id = data.aws_vpc.default.id
+}
+
+# Get all subnets in the default VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [local.vpc_id]
+  }
+}
+
+# Use the first available subnet
+data "aws_subnet" "default" {
+  id = tolist(data.aws_subnets.default.ids)[0]
 }
 
 resource "aws_security_group" "kdevops_sec_group" {
-  name   = "kdevops_sg"
-  vpc_id = aws_vpc.kdevops_vpc.id
+  name   = "kdevops_sg_${var.ssh_keyname}"
+  vpc_id = local.vpc_id
   ingress {
     cidr_blocks = [
       "0.0.0.0/0",
@@ -54,14 +65,12 @@ resource "aws_security_group" "kdevops_sec_group" {
 }
 
 resource "aws_security_group" "kdevops_internal_group" {
-  name   = "kdevops_isg"
-  vpc_id = aws_vpc.kdevops_vpc.id
+  name   = "kdevops_isg_${var.ssh_keyname}"
+  vpc_id = local.vpc_id
 
   # Allow all traffic between hosts in the security group
   ingress {
-    cidr_blocks = [
-      "10.0.0.0/16",
-    ]
+    self      = true
     from_port = 0
     to_port   = 0
     protocol  = "-1"
@@ -134,7 +143,7 @@ resource "aws_instance" "kdevops_instance" {
     aws_security_group.kdevops_internal_group.id
   ]
   key_name        = var.ssh_keyname
-  subnet_id       = aws_subnet.kdevops_subnet.id
+  subnet_id       = data.aws_subnet.default.id
   user_data_base64 = element(
     data.template_cloudinit_config.kdevops_config.*.rendered,
     count.index,
@@ -153,26 +162,30 @@ module "kdevops_ebs_volumes" {
   vol_type              = var.aws_ebs_volume_type
 }
 
-resource "aws_eip" "kdevops_eip" {
-  count    = local.kdevops_num_boxes
-  instance = element(aws_instance.kdevops_instance.*.id, count.index)
-  domain   = "vpc"
-}
+# Elastic IPs are optional when using default VPC with public IPs
+# resource "aws_eip" "kdevops_eip" {
+#   count    = local.kdevops_num_boxes
+#   instance = element(aws_instance.kdevops_instance.*.id, count.index)
+#   domain   = "vpc"
+# }
 
-resource "aws_internet_gateway" "kdevops_gw" {
-  vpc_id = aws_vpc.kdevops_vpc.id
-}
-
-resource "aws_route_table" "kdevops_rt" {
-  vpc_id = aws_vpc.kdevops_vpc.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.kdevops_gw.id
-  }
-}
-
-resource "aws_route_table_association" "kdevops_rt_assoc" {
-  subnet_id      = aws_subnet.kdevops_subnet.id
-  route_table_id = aws_route_table.kdevops_rt.id
-}
+# These resources are not needed when using default VPC
+# as it already has internet gateway and route tables configured
+#
+# resource "aws_internet_gateway" "kdevops_gw" {
+#   vpc_id = local.vpc_id
+# }
+#
+# resource "aws_route_table" "kdevops_rt" {
+#   vpc_id = local.vpc_id
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = aws_internet_gateway.kdevops_gw.id
+#   }
+# }
+#
+# resource "aws_route_table_association" "kdevops_rt_assoc" {
+#   subnet_id      = data.aws_subnet.default.id
+#   route_table_id = aws_route_table.kdevops_rt.id
+# }
 
