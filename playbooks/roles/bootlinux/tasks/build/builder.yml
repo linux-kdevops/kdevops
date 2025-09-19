@@ -112,6 +112,7 @@
     target: "olddefconfig"
   when:
     - bootlinux_compiler_gcc|bool
+    - not bootlinux_use_config_fragments|default(false)|bool
 
 - name: Build {{ target_linux_tree }}
   community.general.make:
@@ -129,6 +130,7 @@
     target: "olddefconfig"
   when:
     - bootlinux_compiler_clang|bool
+    - not bootlinux_use_config_fragments|default(false)|bool
 
 - name: Build {{ target_linux_tree }}
   community.general.make:

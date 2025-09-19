@@ -1,0 +1,23 @@
+menu "Specialized kernel variants"
+
+config BOOTLINUX_FRAGMENT_TINY
+	bool "Tiny kernel configuration (upstream: tiny.config)"
+	output yaml
+	help
+	  Use the upstream tiny.config fragment from the kernel sources.
+	  This enables CONFIG_EMBEDDED and other options for minimal kernels.
+
+config BOOTLINUX_FRAGMENT_NOPM
+	bool "Disable power management (upstream: nopm.config)"
+	output yaml
+	help
+	  Use the upstream nopm.config fragment to disable power management features.
+
+config BOOTLINUX_FRAGMENT_RUST
+	bool "Rust language support (upstream: rust.config)"
+	output yaml
+	help
+	  Use the upstream rust.config fragment to enable Rust programming language
+	  support in the kernel.
+
+endmenu

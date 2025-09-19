@@ -1,0 +1,15 @@
+menu "Container and virtualization"
+
+config BOOTLINUX_FRAGMENT_XEN
+	bool "Xen guest support (upstream: xen.config)"
+	output yaml
+	help
+	  Use the upstream xen.config fragment to enable Xen hypervisor support.
+
+config BOOTLINUX_FRAGMENT_MOBY
+	bool "Container/Moby support (kdevops: moby.config)"
+	output yaml
+	help
+	  Enable kernel features required for container runtimes like Moby/Docker.
+
+endmenu

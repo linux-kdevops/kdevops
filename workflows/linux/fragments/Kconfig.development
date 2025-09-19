@@ -1,0 +1,28 @@
+menu "Development and debugging"
+
+config BOOTLINUX_FRAGMENT_DEBUG
+	bool "Kernel debugging features (upstream: debug.config)"
+	output yaml
+	help
+	  Use the upstream debug.config fragment to enable various kernel debugging
+	  and diagnostic features.
+
+config BOOTLINUX_FRAGMENT_GDB
+	bool "Kernel GDB support (kdevops: gdb.config)"
+	output yaml
+	help
+	  Enable kernel debugging via GDB.
+
+config BOOTLINUX_FRAGMENT_VM_DEBUG
+	bool "Virtual memory debugging (kdevops: vm_debug.config)"
+	output yaml
+	help
+	  Enable virtual memory debugging features.
+
+config BOOTLINUX_FRAGMENT_BLKTRACE
+	bool "Block I/O tracing support (kdevops: blktrace.config)"
+	output yaml
+	help
+	  Enable block layer tracing and debugging capabilities.
+
+endmenu

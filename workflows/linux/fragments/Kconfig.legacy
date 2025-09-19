@@ -1,0 +1,9 @@
+menu "Legacy and compatibility"
+
+config BOOTLINUX_FRAGMENT_BUFFER_HEAD
+	bool "Buffer head support (kdevops: buffer_head.config)"
+	output yaml
+	help
+	  Enable buffer head infrastructure for filesystem operations.
+
+endmenu

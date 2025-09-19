@@ -75,6 +75,13 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: "0644"
+  when: not bootlinux_use_config_fragments|default(false)|bool
+
+- name: Use configuration fragments for Linux {{ target_linux_tree }} on target nodes
+  ansible.builtin.import_tasks: ../config-fragments.yml
+  when:
+    - bootlinux_use_config_fragments|default(false)|bool
+    - target_arch_arm64|default(false)|bool
 
 - name: Set kernel localversion if requested on the target nodes
   ansible.builtin.shell: "echo {{ target_linux_localversion }} > {{ target_linux_dir_path }}/localversion"
@@ -91,6 +98,7 @@
   args:
     chdir: "{{ target_linux_dir_path }}"
     executable: /bin/bash
+  when: not bootlinux_use_config_fragments|default(false)|bool
 
 - name: Build {{ target_linux_tree }} on the target nodes
   ansible.builtin.shell: "{{ target_linux_make_cmd }}"

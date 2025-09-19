@@ -1,0 +1,15 @@
+menu "Memory management"
+
+config BOOTLINUX_FRAGMENT_NUMA
+	bool "NUMA support (kdevops: numa.config)"
+	output yaml
+	help
+	  Enable Non-Uniform Memory Access support.
+
+config BOOTLINUX_FRAGMENT_KSM
+	bool "Kernel Samepage Merging (kdevops: ksm.config)"
+	output yaml
+	help
+	  Enable KSM for memory deduplication in virtualized environments.
+
+endmenu

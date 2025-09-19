@@ -98,3 +98,46 @@ bootlinux_tree_custom_localversion: false
 bootlinux_is_dev_node: false
 bootlinux_debug_ref: "{{ lookup('env', 'DEBUG_REF') | default(false, true) | bool }}"
 
+# Kernel configuration fragments support
+bootlinux_use_config_fragments: false
+
+# Upstream kernel fragments
+bootlinux_fragment_tiny: false
+bootlinux_fragment_nopm: false
+bootlinux_fragment_debug: false
+bootlinux_fragment_hardening: false
+bootlinux_fragment_kvm_guest: true
+bootlinux_fragment_xen: false
+bootlinux_fragment_rust: false
+
+# kdevops fragments
+bootlinux_fragment_64bit: true
+bootlinux_fragment_systemd: true
+bootlinux_fragment_distro: true
+bootlinux_fragment_storage: true
+bootlinux_fragment_virtio_fs: true
+bootlinux_fragment_numa: false
+bootlinux_fragment_modules: false
+bootlinux_fragment_initramfs: true
+bootlinux_fragment_ebpf: false
+bootlinux_fragment_gdb: false
+bootlinux_fragment_vm_debug: false
+bootlinux_fragment_localversion: false
+bootlinux_fragment_blktrace: false
+bootlinux_fragment_ksm: false
+
+# ARM64 page size (mutually exclusive choice)
+bootlinux_fragment_arm64_4k_pages: false
+bootlinux_fragment_arm64_16k_pages: false
+bootlinux_fragment_arm64_64k_pages: false
+
+# Additional kdevops fragments
+bootlinux_fragment_buffer_head: false
+bootlinux_fragment_ebpf_errorinj: false
+bootlinux_fragment_localauto: true
+bootlinux_fragment_moby: false
+bootlinux_fragment_modules_blk: false
+bootlinux_fragment_x86: false
+bootlinux_fragment_xarray: false
+bootlinux_fragment_xarray_no_multi: false
+

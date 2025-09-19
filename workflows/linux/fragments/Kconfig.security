@@ -1,0 +1,10 @@
+menu "Security and hardening"
+
+config BOOTLINUX_FRAGMENT_HARDENING
+	bool "Security hardening options (upstream: hardening.config)"
+	output yaml
+	help
+	  Use the upstream hardening.config fragment to enable kernel security
+	  hardening features.
+
+endmenu

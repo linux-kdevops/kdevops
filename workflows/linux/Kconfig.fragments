@@ -1,0 +1,26 @@
+config BOOTLINUX_USE_CONFIG_FRAGMENTS
+	bool "Use kernel configuration fragments"
+	output yaml
+	help
+	  Enable this to build the kernel using configuration fragments
+	  instead of a monolithic configuration file. This allows you to
+	  compose kernel configurations from smaller, focused fragments.
+
+	  When enabled, the kernel configuration will be built using
+	  merge_config.sh with selected fragments from both upstream
+	  kernel sources and kdevops templates.
+
+if BOOTLINUX_USE_CONFIG_FRAGMENTS
+
+source "workflows/linux/fragments/Kconfig.essential"
+source "workflows/linux/fragments/Kconfig.security"
+source "workflows/linux/fragments/Kconfig.arch"
+source "workflows/linux/fragments/Kconfig.development"
+source "workflows/linux/fragments/Kconfig.memory"
+source "workflows/linux/fragments/Kconfig.modules"
+source "workflows/linux/fragments/Kconfig.advanced"
+source "workflows/linux/fragments/Kconfig.container"
+source "workflows/linux/fragments/Kconfig.specialized"
+source "workflows/linux/fragments/Kconfig.legacy"
+
+endif # BOOTLINUX_USE_CONFIG_FRAGMENTS

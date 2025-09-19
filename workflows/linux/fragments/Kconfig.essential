@@ -1,0 +1,63 @@
+menu "Essential kernel configuration"
+
+config BOOTLINUX_FRAGMENT_64BIT
+	bool "64-bit architecture optimizations (kdevops: 64bit.config)"
+	default y
+	output yaml
+	help
+	  Enable 64-bit specific optimizations and features.
+
+config BOOTLINUX_FRAGMENT_KVM_GUEST
+	bool "KVM guest optimizations (upstream: kvm_guest.config)"
+	default y
+	output yaml
+	help
+	  Use the upstream kvm_guest.config fragment to enable optimizations for
+	  running the kernel as a KVM guest.
+
+config BOOTLINUX_FRAGMENT_VIRTIO_FS
+	bool "VirtIO filesystem support (kdevops: virtio-fs.config)"
+	default y
+	output yaml
+	help
+	  Enable VirtIO filesystem support for virtualized environments.
+
+config BOOTLINUX_FRAGMENT_SYSTEMD
+	bool "systemd support (kdevops: systemd.config)"
+	default y
+	output yaml
+	help
+	  Enable kernel features required by systemd init system.
+
+config BOOTLINUX_FRAGMENT_DISTRO
+	bool "Distribution kernel features (kdevops: distro.config)"
+	default y
+	output yaml
+	help
+	  Enable features commonly needed by Linux distributions.
+
+config BOOTLINUX_FRAGMENT_STORAGE
+	bool "Storage and filesystem features (kdevops: storage.config)"
+	default y
+	output yaml
+	help
+	  Enable advanced storage and filesystem features.
+
+config BOOTLINUX_FRAGMENT_INITRAMFS
+	bool "Initial RAM disk support (kdevops: initramfs.config)"
+	default y
+	output yaml
+	help
+	  Enable initramfs (initial RAM disk) support with compression
+	  algorithms. This is essential for most Linux distributions
+	  and is needed for generating initrd images during kernel
+	  installation.
+
+config BOOTLINUX_FRAGMENT_LOCALAUTO
+	bool "Local version auto generation (kdevops: localauto.config)"
+	default y
+	output yaml
+	help
+	  Automatically generate local version strings with git information.
+
+endmenu

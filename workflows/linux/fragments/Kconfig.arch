@@ -1,0 +1,30 @@
+menu "Architecture-specific configuration"
+
+choice
+	prompt "ARM64 page size configuration"
+	depends on TARGET_ARCH_ARM64
+	default BOOTLINUX_FRAGMENT_ARM64_4K_PAGES
+	help
+	  Choose the page size configuration for ARM64.
+
+config BOOTLINUX_FRAGMENT_ARM64_4K_PAGES
+	bool "4KB pages (kdevops: arm64_4k_pages.config)"
+	output yaml
+	help
+	  Use 4KB page size (default for most systems).
+
+config BOOTLINUX_FRAGMENT_ARM64_16K_PAGES
+	bool "16KB pages (kdevops: arm64_16k_pages.config)"
+	output yaml
+	help
+	  Use 16KB page size for better performance in some workloads.
+
+config BOOTLINUX_FRAGMENT_ARM64_64K_PAGES
+	bool "64KB pages (kdevops: arm64_64k_pages.config)"
+	output yaml
+	help
+	  Use 64KB page size for high-performance computing workloads.
+
+endchoice
+
+endmenu

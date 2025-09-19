@@ -1,0 +1,27 @@
+menu "Advanced features"
+
+config BOOTLINUX_FRAGMENT_EBPF
+	bool "eBPF support (kdevops: ebpf.config)"
+	output yaml
+	help
+	  Enable extended Berkeley Packet Filter support.
+
+config BOOTLINUX_FRAGMENT_EBPF_ERRORINJ
+	bool "eBPF error injection (kdevops: ebpf-errorinj.config)"
+	output yaml
+	help
+	  Enable eBPF-based error injection capabilities for testing.
+
+config BOOTLINUX_FRAGMENT_XARRAY
+	bool "XArray data structure support (kdevops: xarray.config)"
+	output yaml
+	help
+	  Enable XArray data structure support in the kernel.
+
+config BOOTLINUX_FRAGMENT_XARRAY_NO_MULTI
+	bool "XArray without multi-index (kdevops: xarray_no_multi.config)"
+	output yaml
+	help
+	  Enable XArray support but disable multi-index functionality.
+
+endmenu

@@ -562,4 +562,6 @@ endif # BOOTLINUX_AB_DIFFERENT_REF
 
 endif # KDEVOPS_BASELINE_AND_DEV
 
+source "workflows/linux/Kconfig.fragments"
+
 endif # BOOTLINUX

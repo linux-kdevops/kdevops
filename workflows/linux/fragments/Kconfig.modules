@@ -1,0 +1,46 @@
+menu "Module and extensibility"
+
+config BOOTLINUX_FRAGMENT_MODULES
+	bool "Enhanced module support (kdevops: modules.config)"
+	output yaml
+	help
+	  Enable advanced kernel module features.
+
+config BOOTLINUX_FRAGMENT_MODULES_BLK
+	bool "Block layer module support (kdevops: modules-blk.config)"
+	depends on BOOTLINUX_FRAGMENT_MODULES
+	output yaml
+	help
+	  Enhanced block layer module support and debugging.
+
+config BOOTLINUX_FRAGMENT_MODULES_MODVERSIONS
+	bool "Standard module versioning (kdevops: modules-modversions.config)"
+	depends on BOOTLINUX_FRAGMENT_MODULES
+	output yaml
+	help
+	  Enable standard module versioning support for module compatibility checking.
+
+config BOOTLINUX_FRAGMENT_MODULES_EXTENDED_MODVERSIONS
+	bool "Extended module versioning (kdevops: modules-extended-modversions.config)"
+	depends on BOOTLINUX_FRAGMENT_MODULES
+	output yaml
+	help
+	  Enable extended module versioning support for long symbol names.
+	  Required for Rust support and advanced module versioning.
+
+config BOOTLINUX_FRAGMENT_MODULES_TESTING
+	bool "Module testing support (kdevops: modules-testing.config)"
+	depends on BOOTLINUX_FRAGMENT_MODULES
+	output yaml
+	help
+	  Enable kernel module testing features including kallsyms and kmod tests.
+
+config BOOTLINUX_FRAGMENT_KMEMLEAK
+	bool "Kernel memory leak detection (kdevops: kmemleak.config)"
+	depends on BOOTLINUX_FRAGMENT_MODULES
+	output yaml
+	help
+	  Enable kernel memory leak detection and sample module for debugging
+	  memory leaks in kernel code.
+
+endmenu
