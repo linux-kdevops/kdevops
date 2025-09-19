@@ -22,11 +22,15 @@ status: $(KDEVOPS_STATUS_DEPS)
 
 destroy: $(KDEVOPS_DESTROY_DEPS)
 
+cloud-bill:
+	$(Q)$(MAKE) -f scripts/terraform.Makefile cloud-bill
+
 bringup-help-menu:
 	@echo "Bringup targets:"
 	@echo "bringup            - Brings up target hosts"
 	@echo "status             - Reports the status of target hosts"
 	@echo "destroy            - Destroy all target hosts"
+	@echo "cloud-bill         - Check cloud provider costs (AWS only)"
 	@echo "cleancache	  - Remove all cached images"
 	@echo ""
 

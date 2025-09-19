@@ -232,3 +232,25 @@ $(KDEVOPS_TFVARS): $(KDEVOPS_TFVARS_TEMPLATE) .config
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_tfvars.yml \
 		--extra-vars=@./extra_vars.yaml
+
+# AWS-specific targets
+ifeq (y,$(CONFIG_TERRAFORM_AWS))
+
+cloud-bill: aws-costs
+
+aws-costs:
+	$(Q)@if ! command -v aws &> /dev/null; then \
+		echo "Error: AWS CLI is not installed. Please install it to check costs."; \
+		exit 1; \
+	fi
+	$(Q)@if ! aws sts get-caller-identity &> /dev/null 2>&1; then \
+		echo "Error: AWS CLI is not configured. Please run 'aws configure' first."; \
+		exit 1; \
+	fi
+	$(Q)bash scripts/aws-costs.sh
+
+else
+cloud-bill:
+	@echo "cloud-bill target is only available for AWS provider"
+	@echo "Current provider: $(KDEVOPS_CLOUD_PROVIDER)"
+endif
