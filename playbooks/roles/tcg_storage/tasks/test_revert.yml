@@ -1,0 +1,80 @@
+---
+# Test device revert operations
+
+- name: Check device exists
+  ansible.builtin.stat:
+    path: "{{ tcg_storage_test_device }}"
+  register: device_stat
+
+- name: Fail if device doesn't exist
+  ansible.builtin.fail:
+    msg: "Device {{ tcg_storage_test_device }} does not exist"
+  when: not device_stat.stat.exists
+
+- name: Test revert operations
+  block:
+    - name: Get initial device status
+      ansible.builtin.command: >
+        sedlockctl status {{ tcg_storage_test_device }}
+      register: initial_status
+      become: yes
+
+    - name: Perform PSID revert (factory reset)
+      ansible.builtin.command: >
+        sedlockctl psid-revert
+        --psid {{ tcg_storage_psid|default('DEFAULT-PSID') }}
+        {{ tcg_storage_test_device }}
+      register: revert_result
+      become: yes
+      when: tcg_storage_psid is defined
+
+    - name: Perform Admin SP revert
+      ansible.builtin.command: >
+        sedlockctl revert
+        --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }}
+      register: admin_revert_result
+      become: yes
+      when: tcg_storage_psid is not defined
+
+    - name: Get device status after revert
+      ansible.builtin.command: >
+        sedlockctl status {{ tcg_storage_test_device }}
+      register: final_status
+      become: yes
+
+    - name: Save revert test results
+      ansible.builtin.copy:
+        content: |
+          Revert Test Results
+          ===================
+          Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          Device: {{ tcg_storage_test_device }}
+
+          Initial Status:
+          {{ initial_status.stdout }}
+
+          {% if tcg_storage_psid is defined %}
+          PSID Revert Output:
+          {{ revert_result.stdout }}
+          {% else %}
+          Admin SP Revert Output:
+          {{ admin_revert_result.stdout }}
+          {% endif %}
+
+          Final Status:
+          {{ final_status.stdout }}
+        dest: "{{ tcg_storage_results_dir }}/revert_test_{{ inventory_hostname }}.txt"
+      delegate_to: localhost
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: |
+          Revert test completed.
+          {% if tcg_storage_psid is defined %}
+          PSID Revert: {{ 'SUCCESS' if revert_result.rc == 0 else 'FAILED' }}
+          {% else %}
+          Admin SP Revert: {{ 'SUCCESS' if admin_revert_result.rc == 0 else 'FAILED' }}
+          {% endif %}
+  when: test_revert|bool

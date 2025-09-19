@@ -1,0 +1,65 @@
+---
+# Get TCG device information
+
+- name: Check if test device exists
+  ansible.builtin.stat:
+    path: "{{ tcg_storage_test_device }}"
+  register: device_stat
+
+- name: Warn if device doesn't exist
+  ansible.builtin.debug:
+    msg: |
+      WARNING: Device {{ tcg_storage_test_device }} does not exist.
+      This is expected in virtual environments without NVMe passthrough.
+      Only unit tests will work. Integration tests require real TCG/Opal hardware.
+  when: not device_stat.stat.exists
+
+- name: Get device TCG/OPAL information
+  ansible.builtin.command: tcgsdiag info {{ tcg_storage_test_device }}
+  register: tcg_info
+  become: yes
+  failed_when: false
+  when: device_stat.stat.exists
+
+- name: Get device disk statistics
+  ansible.builtin.command: tcgdiskstat {{ tcg_storage_test_device }}
+  register: disk_stats
+  become: yes
+  failed_when: false
+  when: device_stat.stat.exists
+
+- name: Display device information
+  ansible.builtin.debug:
+    msg: |
+      TCG Device Information for {{ tcg_storage_test_device }}:
+      =========================================
+      {% if device_stat.stat.exists %}
+      TCG/OPAL Support:
+      {{ tcg_info.stdout|default('Unable to get TCG information') }}
+
+      Disk Statistics:
+      {{ disk_stats.stdout|default('Unable to get disk statistics') }}
+      {% else %}
+      Device does not exist - running in virtual environment.
+      Only unit tests are available.
+      {% endif %}
+
+- name: Save device information to results
+  ansible.builtin.copy:
+    content: |
+      Device: {{ tcg_storage_test_device }}
+      Date: {{ ansible_date_time.iso8601 }}
+      Host: {{ inventory_hostname }}
+
+      {% if device_stat.stat.exists %}
+      TCG/OPAL Information:
+      {{ tcg_info.stdout|default('Unable to get TCG information') }}
+
+      Disk Statistics:
+      {{ disk_stats.stdout|default('Unable to get disk statistics') }}
+      {% else %}
+      Device Status: Not found - virtual environment detected
+      Note: Only unit tests available, integration tests require real hardware
+      {% endif %}
+    dest: "{{ tcg_storage_results_dir }}/device_report_{{ inventory_hostname }}.txt"
+  delegate_to: localhost

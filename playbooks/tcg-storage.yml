@@ -1,0 +1,16 @@
+---
+# TCG Storage testing playbook
+# This playbook manages TCG/OPAL self-encrypting drive testing using the tcg_storage role
+
+- name: TCG Storage testing workflow
+  hosts: baseline:dev
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  vars:
+    data_path: /data
+    topdir_path: "{{ topdir_path | default(playbook_dir + '/..') }}"
+  roles:
+    - role: tcg_storage
+      tags: ['deps', 'build', 'run_tests', 'baseline', 'tools_info',
+             'device_info', 'take_ownership', 'locking_ranges', 'revert']

@@ -1,0 +1,87 @@
+---
+# Run TCG Storage tests
+
+- name: Create results directory
+  ansible.builtin.file:
+    path: "{{ tcg_storage_results_dir }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: Generate test configuration
+  ansible.builtin.template:
+    src: test_config.yaml.j2
+    dest: "{{ tcg_test_config_file }}"
+    mode: '0644'
+
+- name: Run unit tests
+  block:
+    - name: Execute unit tests
+      ansible.builtin.shell: |
+        # Run all unit tests (without integration tag)
+        go test -v ./... 2>&1 || true
+      args:
+        chdir: "{{ tcg_storage_dir }}"
+      register: unit_test_results
+      ignore_errors: yes
+
+    - name: Save unit test results
+      ansible.builtin.copy:
+        content: "{{ unit_test_results.stdout | default('No unit test output') }}"
+        dest: "{{ tcg_storage_results_dir }}/unit_tests_{{ inventory_hostname }}.txt"
+      delegate_to: localhost
+  when: run_unit_tests|bool
+
+- name: Run integration tests
+  block:
+    - name: Check if test device exists
+      ansible.builtin.stat:
+        path: "{{ tcg_storage_test_device }}"
+      register: test_device_stat
+
+    - name: Fail if test device doesn't exist
+      ansible.builtin.fail:
+        msg: "Test device {{ tcg_storage_test_device }} does not exist"
+      when: not test_device_stat.stat.exists
+
+    - name: Get device TCG/OPAL support info
+      ansible.builtin.command: tcgsdiag {{ tcg_storage_test_device }}
+      register: device_info
+      become: yes
+      ignore_errors: yes
+
+    - name: Try alternative tcgdiskstat for device info if tcgsdiag fails
+      ansible.builtin.command: tcgdiskstat {{ tcg_storage_test_device }}
+      register: device_info_alt
+      become: yes
+      ignore_errors: yes
+      when: device_info.rc != 0
+
+    - name: Save device info
+      ansible.builtin.copy:
+        content: "{{ device_info.stdout if device_info.rc == 0 else device_info_alt.stdout | default('Device info not available') }}"
+        dest: "{{ tcg_storage_results_dir }}/device_info_{{ inventory_hostname }}.txt"
+      delegate_to: localhost
+
+    - name: Run integration test suite
+      ansible.builtin.shell: |
+        # Find and run all test files with integration build tag
+        go test -v -tags integration ./... 2>&1 || true
+      args:
+        chdir: "{{ tcg_storage_dir }}"
+      environment:
+        TCG_TEST_DEVICE: "{{ tcg_storage_test_device }}"
+        TCG_TEST_PASSWORD: "{{ tcg_storage_test_password }}"
+        TCG_DEVICE: "{{ tcg_storage_test_device }}"
+        TCG_PASSWORD: "{{ tcg_storage_test_password }}"
+      register: integration_test_results
+      become: yes
+      ignore_errors: yes
+
+    - name: Save integration test results
+      ansible.builtin.copy:
+        content: "{{ integration_test_results.stdout }}"
+        dest: "{{ tcg_storage_results_dir }}/integration_tests_{{ inventory_hostname }}.txt"
+      delegate_to: localhost
+  when: run_integration_tests|bool

@@ -1,0 +1,14 @@
+---
+# Establish baseline for TCG Storage tests
+
+- name: Include test running tasks
+  ansible.builtin.include_tasks: run_tests.yml
+
+- name: Mark results as baseline
+  ansible.builtin.copy:
+    content: |
+      Baseline established at: {{ ansible_date_time.iso8601 }}
+      Host: {{ inventory_hostname }}
+      Kernel: {{ ansible_kernel }}
+    dest: "{{ tcg_storage_results_dir }}/baseline_info_{{ inventory_hostname }}.txt"
+  delegate_to: localhost

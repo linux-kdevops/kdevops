@@ -1,0 +1,9 @@
+Device: /dev/nvme0n1
+Date: 2025-09-12T02:12:14Z
+Host: debian13-tcg-storage
+
+TCG/OPAL Information:
+
+
+Disk Statistics:
+DEVICE   MODEL   SERIAL   FIRMWARE   PROTOCOL   SSC   STATE

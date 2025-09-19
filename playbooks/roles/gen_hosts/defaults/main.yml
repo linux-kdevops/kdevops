@@ -1,5 +1,6 @@
 # SPDX-License-Identifier GPL-2.0+
 ---
+ansible_cfg_inventory: "{{ topdir_path | default(playbook_dir | dirname) }}/hosts"
 topdir_path: "/dev/null"
 
 hosts_type_generic: true
@@ -30,6 +31,8 @@ kdevops_workflow_enable_sysbench: false
 kdevops_workflow_enable_fio_tests: false
 kdevops_workflow_enable_mmtests: false
 kdevops_workflow_enable_ai: false
+kdevops_workflow_enable_minio: false
+kdevops_workflow_enable_tcg_storage: false
 workflows_reboot_limit: false
 kdevops_use_declared_hosts: false
 

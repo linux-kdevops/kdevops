@@ -1,4 +1,7 @@
 ---
+ansible_cfg_file: "{{ topdir_path | default(playbook_dir | dirname) }}/ansible.cfg"
+topdir_path: "{{ playbook_dir | dirname }}"
+ansible_cfg_inventory: "{{ topdir_path | default(playbook_dir | dirname) }}/hosts"
 ansible_cfg_deprecation_warnings: true
 ansible_cfg_callback_plugin_string: dense
 ansible_cfg_callback_plugin_check_mode_markers: false

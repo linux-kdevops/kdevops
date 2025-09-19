@@ -1,0 +1,38 @@
+{#
+TCG Storage workflow hosts template
+
+This template generates the Ansible hosts file for the TCG Storage testing workflow.
+It supports both single node and baseline/dev (A/B testing) configurations.
+#}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-tcg-storage
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-tcg-storage-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-tcg-storage
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-tcg-storage-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[tcg-storage]
+{{ kdevops_host_prefix }}-tcg-storage
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-tcg-storage-dev
+{% endif %}
+
+[tcg-storage:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"

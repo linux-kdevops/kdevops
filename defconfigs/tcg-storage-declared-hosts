@@ -1,0 +1,39 @@
+#
+# TCG Storage testing with declared hosts (bare metal or pre-existing infrastructure)
+#
+# Usage:
+#   make defconfig-tcg-storage-declared-hosts DECLARE_HOSTS=foo TCG_DEVICE=/dev/nvme0n1
+#   make
+#   make tcg-storage
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_TCG_STORAGE=y
+CONFIG_KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE=y
+
+# Skip bringup for declared hosts - we're using existing systems
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+# TCG Storage testing options
+CONFIG_TCG_STORAGE_GITHUB_URL="https://github.com/open-source-firmware/go-tcg-storage"
+CONFIG_TCG_STORAGE_BRANCH="main"
+
+# Device configuration - will be overridden by TCG_DEVICE variable
+CONFIG_TCG_STORAGE_TEST_DEVICE="/dev/nvme0n1"
+CONFIG_TCG_STORAGE_TEST_DEVICE_TYPE="nvme"
+CONFIG_TCG_STORAGE_TEST_PASSWORD="testpassword123"
+
+# Enable both unit and integration tests for real hardware
+CONFIG_TCG_STORAGE_RUN_UNIT_TESTS=y
+CONFIG_TCG_STORAGE_RUN_INTEGRATION_TESTS=y
+
+# Enable all TCG test types for real hardware
+CONFIG_TCG_STORAGE_TEST_TAKE_OWNERSHIP=y
+CONFIG_TCG_STORAGE_TEST_LOCKING_RANGES=y
+# Be careful with revert on real hardware
+CONFIG_TCG_STORAGE_TEST_REVERT=n
+
+CONFIG_TCG_STORAGE_RESULTS_DIR="workflows/tcg-storage/results"

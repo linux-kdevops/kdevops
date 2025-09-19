@@ -1,0 +1,71 @@
+---
+# Build TCG Storage tools
+
+- name: Create TCG storage directory
+  ansible.builtin.file:
+    path: "{{ tcg_storage_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Clone or update go-tcg-storage repository
+  block:
+    - name: Check if using local repository
+      ansible.builtin.stat:
+        path: "{{ tcg_storage_local_path }}"
+      register: local_repo
+      when: tcg_storage_use_local|bool
+
+    - name: Copy local repository
+      ansible.builtin.copy:
+        src: "{{ tcg_storage_local_path }}/"
+        dest: "{{ tcg_storage_dir }}/"
+        mode: preserve
+      when:
+        - tcg_storage_use_local|bool
+        - local_repo.stat.exists
+
+    - name: Clone repository from GitHub
+      ansible.builtin.git:
+        repo: "{{ tcg_storage_github_url }}"
+        dest: "{{ tcg_storage_dir }}"
+        version: "{{ tcg_storage_branch }}"
+        force: yes
+      when: not tcg_storage_use_local|bool
+
+- name: Build TCG storage tools
+  ansible.builtin.command: "go build -o {{ item.binary }} ./cmd/{{ item.cmd }}"
+  args:
+    chdir: "{{ tcg_storage_dir }}"
+    creates: "{{ tcg_storage_dir }}/{{ item.binary }}"
+  loop:
+    - { cmd: "sedlockctl", binary: "sedlockctl" }
+    - { cmd: "tcgsdiag", binary: "tcgsdiag" }
+    - { cmd: "tcgdiskstat", binary: "tcgdiskstat" }
+  register: build_result
+
+- name: Install TCG storage tools
+  ansible.builtin.copy:
+    src: "{{ tcg_storage_dir }}/{{ item }}"
+    dest: "{{ tcg_storage_bin_dir }}/{{ item }}"
+    mode: '0755'
+    remote_src: yes
+  become: yes
+  loop:
+    - sedlockctl
+    - tcgsdiag
+    - tcgdiskstat
+
+- name: Verify tool installation
+  ansible.builtin.command: "{{ item }} --version"
+  loop:
+    - sedlockctl
+    - tcgsdiag
+    - tcgdiskstat
+  changed_when: false
+  failed_when: false
+  register: tool_verification
+
+- name: Display tool verification results
+  ansible.builtin.debug:
+    msg: "{{ item.item }}: {{ 'OK' if item.rc == 0 else 'FAILED' }}"
+  loop: "{{ tool_verification.results }}"

@@ -13,6 +13,8 @@ kdevops_workflow_enable_selftests: false
 kdevops_workflow_enable_mmtests: false
 kdevops_workflow_enable_fio_tests: false
 kdevops_workflow_enable_ai: false
+kdevops_workflow_enable_minio: false
+kdevops_workflow_enable_tcg_storage: false
 kdevops_nfsd_enable: false
 kdevops_smbd_enable: false
 kdevops_krb5_enable: false

@@ -1,0 +1,28 @@
+---
+# TCG Storage testing defaults
+
+# Test configuration
+tcg_storage_test_device: "/dev/nvme0n1"
+tcg_storage_test_device_type: "nvme"
+tcg_storage_test_password: "debug"
+
+# Repository configuration
+tcg_storage_use_local: false
+tcg_storage_local_path: "{{ topdir_path }}/go-tcg-storage"
+tcg_storage_github_url: "https://github.com/open-source-firmware/go-tcg-storage.git"
+tcg_storage_branch: "main"
+
+# Test options
+run_unit_tests: false
+run_integration_tests: false
+test_take_ownership: false
+test_locking_ranges: false
+test_revert: false
+
+# Paths
+tcg_storage_dir: "{{ data_path | default('/tmp') }}/go-tcg-storage"
+tcg_storage_results_dir: "{{ topdir_path }}/workflows/tcg-storage/results"
+tcg_storage_bin_dir: "/usr/local/bin"
+
+# Test configuration template variables
+tcg_test_config_file: "{{ tcg_storage_dir }}/test-config.yaml"

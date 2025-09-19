@@ -1,0 +1,89 @@
+---
+# Test locking range operations
+
+- name: Check device exists
+  ansible.builtin.stat:
+    path: "{{ tcg_storage_test_device }}"
+  register: device_stat
+
+- name: Fail if device doesn't exist
+  ansible.builtin.fail:
+    msg: "Device {{ tcg_storage_test_device }} does not exist"
+  when: not device_stat.stat.exists
+
+- name: Test locking range operations
+  block:
+    - name: List current ranges
+      ansible.builtin.command: >
+        sedlockctl --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }} list
+      register: list_ranges_result
+      become: yes
+      ignore_errors: yes
+
+    - name: Lock all ranges
+      ansible.builtin.command: >
+        sedlockctl --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }} lock-all
+      register: lock_result
+      become: yes
+      ignore_errors: yes
+
+    - name: Get status after lock
+      ansible.builtin.command: >
+        sedlockctl --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }} list
+      register: lock_status
+      become: yes
+      ignore_errors: yes
+
+    - name: Unlock all ranges
+      ansible.builtin.command: >
+        sedlockctl --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }} unlock-all
+      register: unlock_result
+      become: yes
+      ignore_errors: yes
+
+    - name: Get final status
+      ansible.builtin.command: >
+        sedlockctl --password {{ tcg_storage_test_password }}
+        {{ tcg_storage_test_device }} list
+      register: final_status
+      become: yes
+      ignore_errors: yes
+
+    - name: Save locking range test results
+      ansible.builtin.copy:
+        content: |
+          Locking Range Test Results
+          ==========================
+          Date: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          Device: {{ tcg_storage_test_device }}
+
+          List Ranges Output:
+          {{ list_ranges_result.stdout | default('No output') }}
+
+          Lock Operation:
+          {{ lock_result.stdout | default('No output') }}
+
+          Status After Lock:
+          {{ lock_status.stdout | default('No output') }}
+
+          Unlock Operation:
+          {{ unlock_result.stdout | default('No output') }}
+
+          Final Status:
+          {{ final_status.stdout | default('No output') }}
+        dest: "{{ tcg_storage_results_dir }}/locking_range_test_{{ inventory_hostname }}.txt"
+      delegate_to: localhost
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: |
+          Locking range test completed.
+          List: {{ 'SUCCESS' if list_ranges_result.rc == 0 else 'FAILED' }}
+          Lock: {{ 'SUCCESS' if lock_result.rc == 0 else 'FAILED' }}
+          Unlock: {{ 'SUCCESS' if unlock_result.rc == 0 else 'FAILED' }}
+  when: test_locking_ranges|bool

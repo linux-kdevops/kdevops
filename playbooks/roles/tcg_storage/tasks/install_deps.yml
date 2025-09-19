@@ -1,0 +1,21 @@
+---
+# Install dependencies for TCG Storage testing
+
+- name: Install system dependencies including Go
+  ansible.builtin.package:
+    name:
+      - golang
+      - git
+      - gcc
+      - make
+    state: present
+  become: yes
+
+- name: Install TCG/OPAL specific dependencies
+  ansible.builtin.package:
+    name:
+      - sed-opal-unlocker
+      - libblockdev-crypto
+    state: present
+  become: yes
+  failed_when: false  # These packages might not be available on all distros

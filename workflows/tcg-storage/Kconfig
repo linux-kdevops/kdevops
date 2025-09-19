@@ -1,0 +1,186 @@
+if KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
+
+config HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG
+	bool
+	default n
+
+config HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_KILL
+	bool
+	default n
+
+config HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_RESET
+	bool
+	default n
+
+config TCG_STORAGE_TOOLS
+	bool "Install TCG storage tools"
+	default y
+	help
+	  This will install the go-tcg-storage tools:
+	  - sedlockctl: Tool to manage SED/TCG drives
+	  - tcgsdiag: Diagnostic tool for TCG drives
+	  - tcgdiskstat: Display TCG drive statistics
+	  - gosedctl: Alternative SED control tool
+
+config TCG_STORAGE_GITHUB_URL
+	string "GitHub URL for go-tcg-storage"
+	default "https://github.com/open-source-firmware/go-tcg-storage"
+	help
+	  GitHub repository URL for the go-tcg-storage project.
+	  You can override this to use a fork or mirror.
+
+config TCG_STORAGE_BRANCH
+	string "Branch to use for go-tcg-storage"
+	default "main"
+	help
+	  Branch or tag to checkout from the go-tcg-storage repository.
+
+config TCG_STORAGE_USE_LOCAL
+	bool "Use local go-tcg-storage directory"
+	default n
+	help
+	  If enabled, use the local go-tcg-storage directory at
+	  ../go-tcg-storage instead of cloning from GitHub.
+	  This is useful for development and testing.
+
+config TCG_STORAGE_LOCAL_PATH
+	string "Local path to go-tcg-storage"
+	default "../go-tcg-storage"
+	depends on TCG_STORAGE_USE_LOCAL
+	help
+	  Path to the local go-tcg-storage directory.
+	  This path is relative to the kdevops root directory.
+
+config TCG_STORAGE_TEST_DEVICE
+	string "Device to use for TCG storage testing"
+	default "/dev/nvme0n1"
+	help
+	  The block device to use for TCG storage testing.
+	  WARNING: This device should be a test device as tests may
+	  modify TCG/OPAL settings on the device.
+
+	  For declared hosts (bare metal), you can override this at
+	  make time with: TCG_DEVICE=/dev/nvme0n1
+	  Common values:
+	  - /dev/nvme0n1 for NVMe devices
+	  - /dev/sda for SATA devices
+	  - /dev/sg0 for SAS devices
+
+config TCG_STORAGE_TEST_DEVICE_TYPE
+	string "Type of storage device"
+	default "nvme"
+	help
+	  Type of the storage device being tested.
+	  Valid options: nvme, sata, sas
+
+config TCG_STORAGE_TEST_PASSWORD
+	string "Password for TCG operations"
+	default "testpassword123"
+	help
+	  Password to use for TCG/OPAL operations during testing.
+	  This password will be used for taking ownership and
+	  authentication during tests.
+
+config TCG_STORAGE_RUN_UNIT_TESTS
+	bool "Run go-tcg-storage unit tests"
+	default y
+	help
+	  Run the unit tests included with go-tcg-storage.
+	  These tests verify the library functionality.
+
+config TCG_STORAGE_RUN_INTEGRATION_TESTS
+	bool "Run integration tests on test device"
+	default n
+	help
+	  Run integration tests that interact with actual TCG/OPAL devices.
+	  WARNING: These tests will modify the TCG state of the test device.
+	  Only enable this if you have a dedicated test device.
+
+config TCG_STORAGE_TEST_TAKE_OWNERSHIP
+	bool "Test taking ownership of device"
+	default n
+	depends on TCG_STORAGE_RUN_INTEGRATION_TESTS
+	help
+	  Test taking ownership of the TCG device.
+	  This will set the Admin1 password on the device.
+
+config TCG_STORAGE_TEST_LOCKING_RANGES
+	bool "Test locking range operations"
+	default n
+	depends on TCG_STORAGE_RUN_INTEGRATION_TESTS
+	help
+	  Test creating, modifying, and deleting locking ranges.
+	  This will test the locking functionality of the device.
+
+config TCG_STORAGE_TEST_REVERT
+	bool "Test device revert operations"
+	default n
+	depends on TCG_STORAGE_RUN_INTEGRATION_TESTS
+	help
+	  Test reverting the device to factory defaults.
+	  WARNING: This will erase all TCG configuration on the device.
+
+
+config TCG_STORAGE_WATCHDOG
+	bool "Enable kdevops tcg-storage watchdog"
+	default y if HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG
+	default n if !HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG
+	depends on KERNEL_CI
+	help
+	  Enable the TCG storage watchdog which monitors test progress
+	  and can detect hung tests.
+
+if TCG_STORAGE_WATCHDOG
+
+config TCG_STORAGE_WATCHDOG_CHECK_TIME
+	int "How often to check test status in seconds"
+	default 5
+	help
+	  How often to trigger the TCG storage watchdog check, in seconds.
+
+config TCG_STORAGE_WATCHDOG_MAX_TEST_TIME
+	int "Max minutes to wait for a test before assuming a hang"
+	default 30
+	help
+	  Maximum time in minutes to wait for a test to complete
+	  before assuming it is hung.
+
+config TCG_STORAGE_WATCHDOG_KILL_HUNG_TEST
+	bool "Kill hung tests"
+	default y if HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_KILL
+	default n if !HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_KILL
+	help
+	  If enabled, the watchdog will kill tests that appear to be hung.
+
+config TCG_STORAGE_WATCHDOG_RESET_HUNG_TEST_SYSTEM
+	bool "Reset system with hung tests"
+	default y if HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_RESET
+	default n if !HAVE_DISTRO_PREFERS_TCG_STORAGE_WATCHDOG_RESET
+	help
+	  If enabled, the watchdog will reset systems that have hung tests.
+	  This is useful for automated testing but should be used with caution.
+
+endif # TCG_STORAGE_WATCHDOG
+
+config TCG_STORAGE_RESULTS_DIR
+	string "Directory for test results"
+	default "workflows/tcg-storage/results"
+	help
+	  Directory where test results will be stored.
+	  Results include test output, logs, and device information.
+
+config TCG_STORAGE_BASELINE
+	bool "Establish baseline for TCG storage tests"
+	default n
+	help
+	  Run tests to establish a baseline for TCG storage functionality.
+	  This baseline can be used to compare against future test runs.
+
+config TCG_STORAGE_BASELINE_AND_DEV
+	bool "Enable A/B testing for TCG storage"
+	default n
+	help
+	  Enable A/B testing mode where tests are run on both baseline
+	  and development systems to compare results.
+
+endif # KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE

@@ -1,0 +1,38 @@
+---
+# Main tasks for TCG Storage testing
+
+- name: Install dependencies
+  ansible.builtin.include_tasks: install_deps.yml
+  tags: [deps]
+
+- name: Build TCG storage tools
+  ansible.builtin.include_tasks: build_tools.yml
+  tags: [build]
+
+- name: Run TCG storage tests
+  ansible.builtin.include_tasks: run_tests.yml
+  tags: [run_tests]
+
+- name: Establish baseline
+  ansible.builtin.include_tasks: baseline.yml
+  tags: [baseline]
+
+- name: Show tools information
+  ansible.builtin.include_tasks: tools_info.yml
+  tags: [tools_info]
+
+- name: Show device information
+  ansible.builtin.include_tasks: device_info.yml
+  tags: [device_info]
+
+- name: Test take ownership
+  ansible.builtin.include_tasks: test_take_ownership.yml
+  tags: [take_ownership]
+
+- name: Test locking ranges
+  ansible.builtin.include_tasks: test_locking_ranges.yml
+  tags: [locking_ranges]
+
+- name: Test device revert
+  ansible.builtin.include_tasks: test_revert.yml
+  tags: [revert]

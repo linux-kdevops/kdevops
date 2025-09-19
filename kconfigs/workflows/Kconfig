@@ -248,6 +248,15 @@ config KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
 	  This will dedicate your configuration to running only the
 	  build-linux workflow for repeated Linux kernel builds.
 
+config KDEVOPS_WORKFLOW_DEDICATE_TCG_STORAGE
+	bool "tcg-storage"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	select KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
+	help
+	  This will dedicate your configuration to running only the
+	  TCG storage workflow for testing TCG/OPAL functionality on
+	  self-encrypting drives.
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -267,6 +276,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "ai" if KDEVOPS_WORKFLOW_DEDICATE_AI
 	default "minio" if KDEVOPS_WORKFLOW_DEDICATE_MINIO
 	default "build-linux" if KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
+	default "tcg-storage" if KDEVOPS_WORKFLOW_DEDICATE_TCG_STORAGE
 
 endif
 
@@ -394,6 +404,16 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_AI
 	help
 	  Select this option if you want to provision AI benchmarks on a
 	  single target node for by-hand testing.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_TCG_STORAGE
+	bool "tcg-storage"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	select KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
+	depends on LIBVIRT || TERRAFORM_PRIVATE_NET
+	help
+	  Select this option if you want to provision TCG storage testing on a
+	  single target node for testing TCG/OPAL functionality on
+	  self-encrypting drives.
 
 endif # !WORKFLOWS_DEDICATED_WORKFLOW
 
@@ -551,6 +571,17 @@ menu "Configure Linux kernel build workflow"
 source "workflows/build-linux/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+
+config KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_TCG_STORAGE || KDEVOPS_WORKFLOW_DEDICATE_TCG_STORAGE
+
+if KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
+menu "Configure and run TCG storage tests"
+source "workflows/tcg-storage/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_TCG_STORAGE
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"

@@ -1,0 +1,46 @@
+---
+# Display information about TCG storage tools
+
+- name: Check for sedlockctl
+  ansible.builtin.command: which sedlockctl
+  register: sedlockctl_path
+  failed_when: false
+  changed_when: false
+
+- name: Check for tcgsdiag
+  ansible.builtin.command: which tcgsdiag
+  register: tcgsdiag_path
+  failed_when: false
+  changed_when: false
+
+- name: Check for tcgdiskstat
+  ansible.builtin.command: which tcgdiskstat
+  register: tcgdiskstat_path
+  failed_when: false
+  changed_when: false
+
+- name: Get tool versions
+  ansible.builtin.command: "{{ item }} --version"
+  loop:
+    - sedlockctl
+    - tcgsdiag
+    - tcgdiskstat
+  register: tool_versions
+  failed_when: false
+  changed_when: false
+  when: item in [sedlockctl_path.stdout, tcgsdiag_path.stdout, tcgdiskstat_path.stdout]
+
+- name: Display tools information
+  ansible.builtin.debug:
+    msg: |
+      TCG Storage Tools Status:
+      ========================
+      sedlockctl: {{ 'Installed at ' + sedlockctl_path.stdout if sedlockctl_path.rc == 0 else 'Not found' }}
+      tcgsdiag: {{ 'Installed at ' + tcgsdiag_path.stdout if tcgsdiag_path.rc == 0 else 'Not found' }}
+      tcgdiskstat: {{ 'Installed at ' + tcgdiskstat_path.stdout if tcgdiskstat_path.rc == 0 else 'Not found' }}
+
+      {% for result in tool_versions.results %}
+      {% if not result.skipped|default(false) %}
+      {{ result.item }} version: {{ result.stdout|default('Unknown') }}
+      {% endif %}
+      {% endfor %}
