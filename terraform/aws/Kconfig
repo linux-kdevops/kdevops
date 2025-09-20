@@ -4,6 +4,7 @@ menu "Resource Location"
 source "terraform/aws/kconfigs/Kconfig.location"
 endmenu
 menu "Compute"
+source "terraform/aws/kconfigs/Kconfig.instance"
 source "terraform/aws/kconfigs/Kconfig.compute"
 endmenu
 menu "Storage"
