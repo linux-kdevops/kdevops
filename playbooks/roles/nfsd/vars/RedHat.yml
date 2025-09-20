@@ -5,6 +5,7 @@ nfsd_packages:
   - nfs-utils
   - policycoreutils
   - python3-policycoreutils
+  - xfsprogs
 
 fstype_userspace_progs:
   btrfs: btrfs-progs
