@@ -27,14 +27,6 @@
   tags: ["oscheck", "git", "fstests"]
   when: "fstests_xfs_build_custom_xfsprogs|bool"
 
-- name: Set up iSCSI target on NFS server for pNFS block layout
-  ansible.builtin.include_role:
-    name: iscsi
-  delegate_to: "{{ fstests_nfs_server_host }}"
-  when:
-    - fstests_nfs_section_pnfs|bool
-    - fstests_nfs_use_kdevops_nfsd|bool
-
 - name: Set up an iSCSI initiator on target nodes
   ansible.builtin.include_role:
     name: iscsi
