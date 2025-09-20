@@ -8,7 +8,7 @@
   hosts: nfsd
   roles:
     - role: iscsi
-      when: fstests_nfs_section_pnfs|default(false)|bool
+  when: fstests_nfs_section_pnfs|default(false)|bool
 
 - name: Configure and run the filesystem testing suite workflow
   hosts: baseline:dev
