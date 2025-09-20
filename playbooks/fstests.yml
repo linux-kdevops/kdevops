@@ -4,11 +4,12 @@
   roles:
     - role: fstests_prep_localhost
 
-- name: Set up NFS server with iSCSI target for pNFS
-  hosts: nfsd
-  roles:
-    - role: iscsi
-  when: fstests_nfs_section_pnfs|default(false)|bool
+# iSCSI target setup disabled for now - pNFS block layout might not require it
+#- name: Set up NFS server with iSCSI target for pNFS
+#  hosts: nfsd
+#  roles:
+#    - role: iscsi
+#  when: fstests_nfs_section_pnfs|default(false)|bool
 
 - name: Configure and run the filesystem testing suite workflow
   hosts: baseline:dev
