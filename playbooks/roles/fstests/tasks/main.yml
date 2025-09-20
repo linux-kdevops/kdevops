@@ -27,14 +27,15 @@
   tags: ["oscheck", "git", "fstests"]
   when: "fstests_xfs_build_custom_xfsprogs|bool"
 
-- name: Set up an iSCSI initiator on target nodes
-  ansible.builtin.include_role:
-    name: iscsi
-    tasks_from: add_initiator
-  vars:
-    iscsi_target_hostname: "{{ fstests_nfs_server_host }}"
-  when:
-    - fstests_nfs_section_pnfs|bool
+# iSCSI initiator setup disabled for now - pNFS block layout might not require it
+#- name: Set up an iSCSI initiator on target nodes
+#  ansible.builtin.include_role:
+#    name: iscsi
+#    tasks_from: add_initiator
+#  vars:
+#    iscsi_target_hostname: "{{ fstests_nfs_server_host }}"
+#  when:
+#    - fstests_nfs_section_pnfs|bool
 
 - ansible.builtin.include_role:
     name: common
