@@ -117,6 +117,12 @@ def get_fstest_host(use_remote, use_ssh, host, basedir, kernel, section, config)
         current_time_str = systemd_remote.get_current_time(host).rstrip()
 
     fstests_date_str_format = "%Y-%m-%d %H:%M:%S"
+    # Strip timezone suffix if present (e.g., "-07:00" or "+00:00")
+    import re
+
+    last_test_time = re.sub(r"[+-]\d{2}:\d{2}$", "", last_test_time)
+    current_time_str = re.sub(r"[+-]\d{2}:\d{2}$", "", current_time_str)
+
     d1 = datetime.strptime(last_test_time, fstests_date_str_format)
     d2 = datetime.strptime(current_time_str, fstests_date_str_format)
 
