@@ -1,0 +1,449 @@
+choice
+	prompt "Linux distribution"
+	default TERRAFORM_AWS_DISTRO_DEBIAN
+	help
+	  Select a popular Linux distribution to install on your
+	  instances, or use the "Custom AMI image" selection to
+	  choose an image that is off the beaten path.
+
+config TERRAFORM_AWS_DISTRO_ALMALINUX
+	bool "AlmaLinux"
+
+config TERRAFORM_AWS_DISTRO_AMAZON
+	bool "Amazon Linux"
+
+config TERRAFORM_AWS_DISTRO_CENTOS
+	bool "CentOS Linux (Legacy)"
+
+config TERRAFORM_AWS_DISTRO_DEBIAN
+	bool "Debian GNU/Linux"
+
+config TERRAFORM_AWS_DISTRO_FEDORA
+	bool "Fedora Linux Cloud"
+
+config TERRAFORM_AWS_DISTRO_ORACLE
+	bool "Oracle Linux"
+
+config TERRAFORM_AWS_DISTRO_REDHAT
+	bool "Red Hat Enterprise Linux"
+
+config TERRAFORM_AWS_DISTRO_ROCKY
+	bool "Rocky Linux"
+
+config TERRAFORM_AWS_DISTRO_SUSE
+	bool "Suse Linux Enterprise Server"
+
+config TERRAFORM_AWS_DISTRO_UBUNTU
+	bool "Ubuntu"
+
+config TERRAFORM_AWS_DISTRO_CUSTOM
+	bool "Custom AMI image"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_ARCH
+	string
+	output yaml
+	default "x86_64" if TARGET_ARCH_X86_64
+	default "arm64" if TARGET_ARCH_ARM64
+
+if TERRAFORM_AWS_DISTRO_CUSTOM
+
+config TERRAFORM_AWS_AMI_OWNER
+	string "AWS AMI owner or owner alias"
+	output yaml
+	help
+	  The owner is a string of digits that represents a
+	  collection of published images to search, such as
+	  "137112412989". Sometimes the publisher also provides
+	  an alias, which is a human-readable name of that
+	  collection, such as "aws-marketplace".
+
+config TERRAFORM_AWS_NS
+	string "AWS AMI name search expression"
+	output yaml
+	help
+	  This option sets a custom aws image search expression to
+	  use. Using this filter glob lets us get the latest AMI for
+	  your preferred OS release.
+
+	  To get filter values you can first setup aws cli:
+
+	  https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration
+
+	  Get your image ami id. For debian 9 amd64 on the us-west-1,
+	  this is ami-0adbaf2e0ce044437. You can then run:
+
+	  aws ec2 describe-images --image-ids ami-0adbaf2e0ce044437 | grep Name
+
+	  For details:
+
+	  https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+
+endif # TERRAFORM_AWS_DISTRO_CUSTOM
+
+if TERRAFORM_AWS_DISTRO_ALMALINUX
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the AlmaLinux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_ALMALINUX_10
+	bool "AlmaLinux 10"
+
+config TERRAFORM_AWS_AMI_ALMALINUX_8
+	bool "AlmaLinux 8"
+
+config TERRAFORM_AWS_AMI_ALMALINUX_9
+	bool "AlmaLinux 9"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "764336703387"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "AlmaLinux OS *" if TERRAFORM_AWS_AMI_ALMALINUX_10
+	default "AlmaLinux OS 8.*" if TERRAFORM_AWS_AMI_ALMALINUX_8
+	default "almalinux9-x86_64-community-vmware-bundle" if TERRAFORM_AWS_AMI_ALMALINUX_9
+
+endif # TERRAFORM_AWS_DISTRO_ALMALINUX
+
+if TERRAFORM_AWS_DISTRO_AMAZON
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Amazon Linux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_AMAZON_LINUX_2
+	bool "Amazon Linux 2"
+
+config TERRAFORM_AWS_AMI_AMAZON_LINUX_2023
+	bool "Amazon Linux 2023"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "137112412989"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "amzn2-ami-*" if TERRAFORM_AWS_AMI_AMAZON_LINUX_2
+	default "al2023-ami-*" if TERRAFORM_AWS_AMI_AMAZON_LINUX_2023
+
+endif # TERRAFORM_AWS_DISTRO_AMAZON
+
+if TERRAFORM_AWS_DISTRO_CENTOS
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the CentOS Linux (Legacy)
+	  distribution.
+
+config TERRAFORM_AWS_AMI_CENTOS_10
+	bool "CentOS 10"
+
+config TERRAFORM_AWS_AMI_CENTOS_9
+	bool "CentOS 9"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "125523088429"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "CentOS Stream 10 *" if TERRAFORM_AWS_AMI_CENTOS_10
+	default "CentOS Stream 9 *" if TERRAFORM_AWS_AMI_CENTOS_9
+
+endif # TERRAFORM_AWS_DISTRO_CENTOS
+
+if TERRAFORM_AWS_DISTRO_DEBIAN
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Debian GNU/Linux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_DEBIAN_10
+	bool "Debian 10"
+
+config TERRAFORM_AWS_AMI_DEBIAN_11
+	bool "Debian 11"
+
+config TERRAFORM_AWS_AMI_DEBIAN_12
+	bool "Debian 12"
+
+config TERRAFORM_AWS_AMI_DEBIAN_13
+	bool "Debian 13"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "136693071363"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "debian-10-*" if TERRAFORM_AWS_AMI_DEBIAN_10
+	default "debian-11-*" if TERRAFORM_AWS_AMI_DEBIAN_11
+	default "debian-12-*" if TERRAFORM_AWS_AMI_DEBIAN_12
+	default "debian-13-a*" if TERRAFORM_AWS_AMI_DEBIAN_13
+
+endif # TERRAFORM_AWS_DISTRO_DEBIAN
+
+if TERRAFORM_AWS_DISTRO_FEDORA
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Fedora Linux Cloud
+	  distribution.
+
+config TERRAFORM_AWS_AMI_FEDORA_2
+	bool "Fedora 2"
+
+config TERRAFORM_AWS_AMI_FEDORA_38
+	bool "Fedora 38"
+
+config TERRAFORM_AWS_AMI_FEDORA_39
+	bool "Fedora 39"
+
+config TERRAFORM_AWS_AMI_FEDORA_40
+	bool "Fedora 40"
+
+config TERRAFORM_AWS_AMI_FEDORA_41
+	bool "Fedora 41"
+
+config TERRAFORM_AWS_AMI_FEDORA_42
+	bool "Fedora 42"
+
+config TERRAFORM_AWS_AMI_FEDORA_43
+	bool "Fedora 43"
+
+config TERRAFORM_AWS_AMI_FEDORA_44
+	bool "Fedora 44"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "125523088429"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "Fedora-Cloud-Base-AmazonEC2.*" if TERRAFORM_AWS_AMI_FEDORA_2
+	default "fedora-coreos-38.202310*" if TERRAFORM_AWS_AMI_FEDORA_38
+	default "fedora-coreos-39.20240*" if TERRAFORM_AWS_AMI_FEDORA_39
+	default "fedora-coreos-40.202410*" if TERRAFORM_AWS_AMI_FEDORA_40
+	default "fedora-coreos-41.20250*" if TERRAFORM_AWS_AMI_FEDORA_41
+	default "fedora-coreos-42.202509*" if TERRAFORM_AWS_AMI_FEDORA_42
+	default "fedora-coreos-43.20250917.1*" if TERRAFORM_AWS_AMI_FEDORA_43
+	default "fedora-coreos-44.202509*" if TERRAFORM_AWS_AMI_FEDORA_44
+
+endif # TERRAFORM_AWS_DISTRO_FEDORA
+
+if TERRAFORM_AWS_DISTRO_ORACLE
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Oracle Linux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_ORACLE_LINUX_8
+	bool "Oracle Linux 8"
+
+config TERRAFORM_AWS_AMI_ORACLE_LINUX_9
+	bool "Oracle Linux 9"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "131827586825"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "OL8.9-*" if TERRAFORM_AWS_AMI_ORACLE_LINUX_8
+	default "OL9.3-*" if TERRAFORM_AWS_AMI_ORACLE_LINUX_9
+
+endif # TERRAFORM_AWS_DISTRO_ORACLE
+
+if TERRAFORM_AWS_DISTRO_REDHAT
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Red Hat Enterprise Linux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_RHEL_10
+	bool "RHEL 10"
+
+config TERRAFORM_AWS_AMI_RHEL_7
+	bool "RHEL 7"
+
+config TERRAFORM_AWS_AMI_RHEL_8
+	bool "RHEL 8"
+
+config TERRAFORM_AWS_AMI_RHEL_9
+	bool "RHEL 9"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "309956199498"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "RHEL-10.0.0_HVM*" if TERRAFORM_AWS_AMI_RHEL_10
+	default "RHEL-7.9_HVM-20240930-x86_64-0-Hourly2-GP3" if TERRAFORM_AWS_AMI_RHEL_7
+	default "RHEL-8.10.0_HVM-20250*" if TERRAFORM_AWS_AMI_RHEL_8
+	default "RHEL-9.*" if TERRAFORM_AWS_AMI_RHEL_9
+
+endif # TERRAFORM_AWS_DISTRO_REDHAT
+
+if TERRAFORM_AWS_DISTRO_ROCKY_LINUX
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Rocky Linux
+	  distribution.
+
+config TERRAFORM_AWS_AMI_ROCKY_LINUX_10
+	bool "Rocky Linux 10"
+
+config TERRAFORM_AWS_AMI_ROCKY_LINUX_8
+	bool "Rocky Linux 8"
+
+config TERRAFORM_AWS_AMI_ROCKY_LINUX_9
+	bool "Rocky Linux 9"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "792107900819"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "Rocky-10-EC2-*" if TERRAFORM_AWS_AMI_ROCKY_LINUX_10
+	default "Rocky-8-EC2-*" if TERRAFORM_AWS_AMI_ROCKY_LINUX_8
+	default "Rocky-9-EC2-*" if TERRAFORM_AWS_AMI_ROCKY_LINUX_9
+
+endif # TERRAFORM_AWS_DISTRO_ROCKY_LINUX
+
+if TERRAFORM_AWS_DISTRO_SUSE
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Suse Linux Enterprise Server
+	  distribution.
+
+config TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_12
+	bool "SUSE Linux Enterprise 12"
+
+config TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_15
+	bool "SUSE Linux Enterprise 15"
+
+config TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_5
+	bool "SUSE Linux Enterprise 5"
+
+config TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_6
+	bool "SUSE Linux Enterprise 6"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "013907871322"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "suse-sles-12-sp5-v20250*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_12
+	default "suse-sles-15-sp*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_15
+	default "suse-sle-micro-5-*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_5
+	default "suse-sle-micro-6-*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_6
+
+endif # TERRAFORM_AWS_DISTRO_SUSE
+
+if TERRAFORM_AWS_DISTRO_CANONICAL
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the Ubuntu
+	  distribution.
+
+config TERRAFORM_AWS_AMI_UBUNTU_20_04_LTS
+	bool "Ubuntu 20.04 LTS"
+
+config TERRAFORM_AWS_AMI_UBUNTU_22_04_LTS
+	bool "Ubuntu 22.04 LTS"
+
+config TERRAFORM_AWS_AMI_UBUNTU_23_04
+	bool "Ubuntu 23.04"
+
+config TERRAFORM_AWS_AMI_UBUNTU_23_10
+	bool "Ubuntu 23.10"
+
+config TERRAFORM_AWS_AMI_UBUNTU_24_04_LTS
+	bool "Ubuntu 24.04 LTS"
+
+config TERRAFORM_AWS_AMI_UBUNTU_24_10
+	bool "Ubuntu 24.10"
+
+config TERRAFORM_AWS_AMI_UBUNTU_25_04
+	bool "Ubuntu 25.04"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "099720109477"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_20_04_LTS
+	default "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_22_04_LTS
+	default "ubuntu/images/hvm-ssd/ubuntu-lunar-23.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_23_04
+	default "ubuntu/images/hvm-ssd-gp3/ubuntu-mantic-23.10-a*" if TERRAFORM_AWS_AMI_UBUNTU_23_10
+	default "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_24_04_LTS
+	default "ubuntu/images/hvm-ssd-gp3/ubuntu-oracular-24.10-a*" if TERRAFORM_AWS_AMI_UBUNTU_24_10
+	default "ubuntu/images/hvm-ssd-gp3/ubuntu-plucky-25.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_25_04
+
+endif # TERRAFORM_AWS_DISTRO_CANONICAL
