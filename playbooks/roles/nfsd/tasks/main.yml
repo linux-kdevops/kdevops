@@ -22,6 +22,12 @@
     group: root
     mode: "0644"
 
+- name: Set up iSCSI target on NFS server for pNFS block layout
+  ansible.builtin.include_role:
+    name: iscsi
+  when:
+    - fstests_nfs_section_pnfs|default(false)|bool
+
 - name: Set up an iSCSI initiator
   ansible.builtin.include_role:
     name: iscsi
