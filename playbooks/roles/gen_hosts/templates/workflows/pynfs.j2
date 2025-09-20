@@ -1,41 +1,37 @@
-{# Workflow template for pynfs #}
 [all]
 localhost ansible_connection=local
-{% for host in pynfs_enabled_hosts %}
-{{ kdevops_host_prefix }}-{{ host }}
-{% if kdevops_baseline_and_dev %}
-{{ kdevops_host_prefix }}-{{ host }}-dev
-{% endif %}
-{% endfor %}
-
+{{ kdevops_hosts_prefix }}-nfsd
 [all:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
 [baseline]
-{% for host in pynfs_enabled_hosts %}
-{{ kdevops_host_prefix }}-{{ host }}
-{% endfor %}
-
+{{ kdevops_hosts_prefix }}-nfsd
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
 [dev]
 {% if kdevops_baseline_and_dev %}
-{% for host in pynfs_enabled_hosts %}
-{{ kdevops_host_prefix }}-{{ host }}-dev
-{% endfor %}
+{{ kdevops_host_prefix }}-nfsd-dev
 {% endif %}
-
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
-[pynfs]
-{% for host in pynfs_enabled_hosts %}
-{{ kdevops_host_prefix }}-{{ host }}
-{% if kdevops_baseline_and_dev %}
-{{ kdevops_host_prefix }}-{{ host }}-dev
+[iscsi]
+{% if kdevops_enable_iscsi %}
+{{ kdevops_hosts_prefix }}-iscsi
 {% endif %}
-{% endfor %}
+[iscsi:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
-[pynfs:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+[nfsd]
+{{ kdevops_hosts_prefix }}-nfsd
+[nfsd:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+
+[service]
+{% if kdevops_enable_iscsi %}
+{{ kdevops_hosts_prefix }}-iscsi
+{% endif %}
+{{ kdevops_hosts_prefix }}-nfsd
+[service:vars]
+ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
