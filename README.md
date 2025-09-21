@@ -413,6 +413,29 @@ See [viewing kdevops archived results](docs/viewing-fstests-results.md) to see
 more details about how to see results. We should add simple wrappers for this
 in the future.
 
+# kdevops contribution analysis
+
+kdevops includes built-in tools for analyzing project contribution patterns
+and development activity. These visualizations provide insights into contributor
+activity, development patterns, and project health over time.
+
+Generate comprehensive contribution analysis dashboards:
+
+```bash
+# Generate graphs for a specific year
+make contrib-graph YEAR=2025
+
+# Generate graphs for all project history
+make contrib-graph
+```
+
+The generated visualizations include contributor rankings, activity patterns,
+monthly trends, and project statistics. All graphs automatically respect
+temporal boundaries (no future commits shown) and handle contributor name
+overlapping for better readability.
+
+For detailed documentation, see [docs/contrib/README.md](docs/contrib/README.md).
+
 # Video presentations on kdevops or related
 
   * [March 24, 2025 kdevops: Automating Linux kernel testing](https://www.youtube.com/watch?v=VF-jr_ZE-9Y&list=PLjaT52x3HVboZtdwZnONSHQHM8217ELcc) and [slides](https://docs.google.com/presentation/d/e/2PACX-1vSyM8ol_ZFwmJ6YCI2sYU9xH8MPCLPZT1PfsDHId__xbUq2aSh7mAeMLTGZFGfvjogY6ccxww2GqOTe/pub?start=false&loop=false&delayms=3000)
