@@ -147,7 +147,7 @@ to help test things we can simply add a basic test so that
 target block device for just one simple workflow.
 
 **AI:** Claude Code
-**Commit:** TDB
+**Commit:** [`6d23d4bfbd2b`](https://github.com/linux-kdevops/kdevops/commit/6d23d4bfbd2b05e6ac122b059c9f6c9d9dac7161)
 **Result:** Excellent implementation with comprehensive workflow structure.
 **Grading:** 90%
 
@@ -179,7 +179,7 @@ SPDX for my top header files with the copyleft-next license as is done with
 tons of code on kdevops.
 
 **AI:** Claude Code
-**Commit:** TDB
+**Commit:** [`6d23d4bfbd2b`](https://github.com/linux-kdevops/kdevops/commit/6d23d4bfbd2b05e6ac122b059c9f6c9d9dac7161)
 **Result:** Comprehensive graphing implementation with proper licensing.
 **Grading:** 95%
 
@@ -212,7 +212,7 @@ origin story. Also extend PROMPTS.md with the few prompts I've given you to
 help add support for fio-tests and graphing support.
 
 **AI:** Claude Code
-**Commit:** TDB
+**Commit:** [`6d23d4bfbd2b`](https://github.com/linux-kdevops/kdevops/commit/6d23d4bfbd2b05e6ac122b059c9f6c9d9dac7161)
 **Result:** Comprehensive documentation with examples and troubleshooting.
 **Grading:** 90%
 
@@ -255,7 +255,7 @@ diffs and hurt my eyes. Extend CLAUDE.md to understand styling for these rules
 about not wanting lines ending in white space for styling.
 
 **AI:** Claude Code
-**Commit:** [To be determined]
+**Commit:** [`7f25db722a2b`](https://github.com/linux-kdevops/kdevops/commit/7f25db722a2ba80b052a463db7415fad6c0bf63f)
 **Result:** Complete A/B kernel testing implementation with comprehensive configuration options.
 **Grading:** 70%
 
@@ -298,7 +298,7 @@ cloud-config as a new target which is dynamic which is a subset of make
 dynconfig ;  OK! good luck
 
 **AI:** Claude Code (Opus 4.1)
-**Commit:** [To be determined]
+**Commit:** [`3c4ba3293ba4`](https://github.com/linux-kdevops/kdevops/commit/3c4ba3293ba4316aaec7ad37f6fd7eda4b1d1720), [`535726de9d71`](https://github.com/linux-kdevops/kdevops/commit/535726de9d7114a4c3c348331dc638b91ff543a8)
 **Result:** Complete Lambda Labs integration with dynamic Kconfig generation.
 **Grading:** 75%
 
