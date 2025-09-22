@@ -258,8 +258,8 @@ include scripts/bringup.Makefile
 endif
 
 $(ANSIBLE_INVENTORY_FILE): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_HOSTS_TEMPLATE) $(KDEVOPS_EXTRA_VARS)
-	$(Q)ANSIBLE_LOCALHOST_WARNING=False ANSIBLE_INVENTORY_UNPARSED_WARNING=False \
-		ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
+		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_hosts.yml \
 		--extra-vars=@./extra_vars.yaml
 
