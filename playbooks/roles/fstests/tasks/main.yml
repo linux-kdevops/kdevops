@@ -1137,6 +1137,7 @@
     state: started
   when:
     - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
 
 - name: Hint to watchdog tests are about to kick off
   ansible.builtin.file:

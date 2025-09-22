@@ -565,6 +565,7 @@
     lstrip_blocks: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
 
 - name: Enable and restart systemd-journal-upload.service on the client
   tags: ["journal", "journal-upload-restart"]
@@ -578,6 +579,7 @@
     daemon_reload: true
   when:
     - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
 
 - name: Ensure systemd-journal-remote.service is running on the server
   tags: ["journal-status"]
@@ -602,6 +604,7 @@
     state: started
   when:
     - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
 
 - name: Set up the client /etc/systemd/timesyncd.conf
   tags: ["timesyncd"]
