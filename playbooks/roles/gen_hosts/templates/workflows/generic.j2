@@ -6,6 +6,7 @@
 {% set nodes = [kdevops_host_prefix] %}
 {% endif %}
 [all]
+localhost ansible_connection=local
 {% for node in nodes %}
 {{ node }}
 {% endfor %}
