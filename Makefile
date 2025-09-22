@@ -124,6 +124,23 @@ LOCALHOST_SETUP_WORK :=
 
 ANSIBLE_EXTRA_ARGS += $(LOCAL_DEVELOPMENT_ARGS)
 
+# We may not need the extra_args.yaml file all the time.  If this file is empty
+# you don't need it. All of our ansible kdevops roles check for this file
+# without you having to specify it as an extra_args=@extra_args.yaml file. This
+# helps us with allowing users call ansible on the command line themselves,
+# instead of using the make constructs we have built here.
+# Core dependencies now added before provision.Makefile include
+ifneq (,$(ANSIBLE_EXTRA_ARGS))
+DEFAULT_DEPS += $(KDEVOPS_EXTRA_VARS)
+endif
+
+DEFAULT_DEPS += $(ANSIBLE_CFG_FILE)
+DEFAULT_DEPS += $(ANSIBLE_INVENTORY_FILE)
+
+ifneq (,$(KDEVOPS_NODES))
+DEFAULT_DEPS += $(KDEVOPS_NODES)
+endif
+
 include scripts/provision.Makefile
 include scripts/firstconfig.Makefile
 include scripts/systemd-timesync.Makefile
@@ -151,15 +168,6 @@ ANSIBLE_CMD_KOTD_ENABLE := echo KOTD disabled so not running:
 ifeq (y,$(CONFIG_WORKFLOW_KOTD_ENABLE))
 include scripts/kotd.Makefile
 endif # WORKFLOW_KOTD_ENABLE
-
-# We may not need the extra_args.yaml file all the time.  If this file is empty
-# you don't need it. All of our ansible kdevops roles check for this file
-# without you having to specify it as an extra_args=@extra_args.yaml file. This
-# helps us with allowing users call ansible on the command line themselves,
-# instead of using the make constructs we have built here.
-ifneq (,$(ANSIBLE_EXTRA_ARGS))
-DEFAULT_DEPS += $(KDEVOPS_EXTRA_VARS)
-endif
 
 DEFAULT_DEPS += $(DEFAULT_DEPS_REQS_EXTRA_VARS)
 
@@ -250,14 +258,12 @@ ifneq (,$(KDEVOPS_BRING_UP_DEPS))
 include scripts/bringup.Makefile
 endif
 
-DEFAULT_DEPS += $(ANSIBLE_INVENTORY_FILE)
-$(ANSIBLE_INVENTORY_FILE): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_HOSTS_TEMPLATE) $(KDEVOPS_NODES) $(KDEVOPS_EXTRA_VARS)
+$(ANSIBLE_INVENTORY_FILE): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_HOSTS_TEMPLATE) $(KDEVOPS_EXTRA_VARS)
 	$(Q)ANSIBLE_LOCALHOST_WARNING=False ANSIBLE_INVENTORY_UNPARSED_WARNING=False \
 		ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/gen_hosts.yml \
 		--extra-vars=@./extra_vars.yaml
 
-DEFAULT_DEPS += $(KDEVOPS_NODES)
 $(KDEVOPS_NODES): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_NODES_TEMPLATE) $(KDEVOPS_EXTRA_VARS)
 	$(Q)ANSIBLE_LOCALHOST_WARNING=False ANSIBLE_INVENTORY_UNPARSED_WARNING=False \
 		ansible-playbook $(ANSIBLE_VERBOSE) --connection=local \
