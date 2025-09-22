@@ -50,6 +50,10 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST))
 include workflows/nfstest/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_NFSTEST == y
 
+# Always available nfstest visualization target
+nfstests-results-visualize:
+	$(Q)bash $(shell pwd)/workflows/nfstest/scripts/visualize_nfstest_results.sh
+
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH))
 include workflows/sysbench/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_SYSBENCH == y
