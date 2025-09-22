@@ -1,5 +1,13 @@
 # pNFS configuration for Linux Test Project (LTP)
-# Note: LTP doesn't specifically test pNFS, but can run on pNFS mounts
+#
+# This defconfig sets up LTP to run tests over pNFS (parallel NFS) mounts.
+# It configures:
+# 1. An NFS server node with exports (via CONFIG_KDEVOPS_SETUP_NFSD)
+# 2. LTP with NFS test group enabled (CONFIG_LTP_TESTS_NFS)
+# 3. Automatic NFS mount setup to run tests on NFS (CONFIG_LTP_RUN_TESTS_ON_NFS)
+#
+# The LTP tests will execute on NFS v4.2 mounts, providing comprehensive
+# testing of NFS client functionality including pNFS capabilities.
 
 # Use libvirt/QEMU for virtualization
 CONFIG_GUESTFS=y
@@ -24,8 +32,14 @@ CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
 CONFIG_KDEVOPS_WORKFLOW_DEDICATE_LTP=y
 CONFIG_KDEVOPS_WORKFLOW_ENABLE_LTP=y
 
-# Use kdevops-provided NFS server for pNFS mount
+# Enable NFS test group for pNFS testing
+CONFIG_LTP_TESTS_NFS=y
+
+# NFS server setup for pNFS testing
 CONFIG_KDEVOPS_SETUP_NFSD=y
+
+# Run LTP tests on NFS mounts (enables actual pNFS testing)
+CONFIG_LTP_RUN_TESTS_ON_NFS=y
 
 # Enable systemd journal remote for debugging
 CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y

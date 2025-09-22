@@ -61,6 +61,18 @@ config LTP_TESTS_TIRPC
 
 endmenu
 
+config LTP_RUN_TESTS_ON_NFS
+	bool "Run LTP tests on NFS mounts"
+	depends on LTP_TESTS_NFS && KDEVOPS_SETUP_NFSD
+	default y
+	help
+	  When enabled, LTP tests will be run on NFS mounts instead of
+	  local filesystems. This requires both NFS test group to be enabled
+	  and kdevops NFS server to be configured.
+
+	  The tests will mount NFS exports from the kdevops NFS server
+	  and run the LTP test suite on those mounts.
+
 endif # WORKFLOWS_DEDICATED_WORKFLOW
 
 config HAVE_MIRROR_LTP

@@ -82,6 +82,12 @@ else
 LTP_ARGS += ltp_tests_tirpc='False'
 endif # CONFIG_LTP_TESTS_TIRPC
 
+ifeq (y,$(CONFIG_LTP_RUN_TESTS_ON_NFS))
+LTP_ARGS += ltp_run_tests_on_nfs='True'
+else
+LTP_ARGS += ltp_run_tests_on_nfs='False'
+endif # CONFIG_LTP_RUN_TESTS_ON_NFS
+
 WORKFLOW_ARGS += $(LTP_ARGS)
 WORKFLOW_ARGS_SEPARATED += ltp_enabled_test_groups='$(subst $(space),+,$(LTP_ENABLED_TEST_GROUPS))'
 

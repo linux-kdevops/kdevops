@@ -248,7 +248,64 @@
     state: reloaded
     enabled: true
 
-- name: Run ltp
+# NFS mount support for running LTP tests on NFS
+- name: Set NFS server address
+  tags: ["ltp", "run_tests"]
+  ansible.builtin.set_fact:
+    nfs_server_host: "{{ kdevops_host_prefix }}-nfs"
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Create NFS mount point for LTP tests
+  tags: ["ltp", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "/mnt/nfs-ltp"
+    state: directory
+    mode: "0755"
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Mount NFS export for LTP testing
+  tags: ["ltp", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.mount:
+    path: "/mnt/nfs-ltp"
+    src: "{{ nfs_server_host }}:{{ nfsd_export_path }}/0"
+    fstype: "nfs"
+    opts: "vers=4.2"
+    state: mounted
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Create LTP test directory on NFS mount
+  tags: ["ltp", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "/mnt/nfs-ltp/ltp-test"
+    state: directory
+    mode: "0777"
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Change to NFS mount directory for LTP tests
+  tags: ["run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.shell: |
+    cd /mnt/nfs-ltp/ltp-test
+    pwd
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Run ltp on local filesystem
   tags: ["run_tests"]
   become: true
   become_flags: "su - -c"
@@ -259,6 +316,24 @@
     cmd: "/opt/ltp/runltp {{ ltp_runltp_arg_dict[ltp_test_group] }}"
   changed_when: true
   failed_when: false
+  when:
+    - not ltp_run_tests_on_nfs|default(false)|bool
+
+- name: Run ltp on NFS mount
+  tags: ["run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  environment:
+    CREATE_ENTRIES: 1
+    TMPDIR: "/mnt/nfs-ltp/ltp-test"
+  ansible.builtin.command:
+    cmd: "/opt/ltp/runltp -d /mnt/nfs-ltp/ltp-test {{ ltp_runltp_arg_dict[ltp_test_group] }}"
+    chdir: "/mnt/nfs-ltp/ltp-test"
+  changed_when: true
+  failed_when: false
+  when:
+    - ltp_run_tests_on_nfs|default(false)|bool
 
 - name: Look for test results in target node's /opt/ltp/results
   tags: ["copy_results"]
