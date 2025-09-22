@@ -25,7 +25,7 @@ make contrib-graph
 
 ## Generated Files
 
-The visualization tool creates comprehensive 6-panel dashboards saved as:
+The visualization tool creates comprehensive 7-panel dashboards saved as:
 
 ### For Specific Year
 - `kdevops_contributions_YYYY.png` - High-resolution image (300 DPI)
@@ -37,7 +37,7 @@ The visualization tool creates comprehensive 6-panel dashboards saved as:
 
 ## Visualization Components
 
-Each generated dashboard includes six analytical panels:
+Each generated dashboard includes seven analytical panels:
 
 ### 1. Total Commits Bar Chart
 Shows the overall contribution ranking by commit count. Names are automatically shortened for contributors with fewer commits to prevent overlapping labels.
@@ -61,6 +61,10 @@ Key metrics including:
 - Most active month
 - Top contributor
 - Analysis period and generation timestamp
+- Generated-by tag usage share
+
+### 7. Generated-by Tag Adoption Trend
+Shows how often commits include the `Generated-by:` trailer each month. This timeline highlights adoption of automated contribution tags and makes it easy to spot growth in AI-assisted commit generation.
 
 ## Technical Details
 
@@ -141,6 +145,7 @@ The contribution analysis is integrated into the kdevops build system:
 - **Growing Contributor Base**: More contributors over time
 - **Sustained Activity**: Regular commits throughout periods
 - **Balanced Contributions**: Activity from multiple contributors
+- **Generated-by Adoption**: Visibility into automated tag usage trends
 
 ## Files in This Directory
 

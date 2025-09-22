@@ -13,6 +13,7 @@ import os
 import calendar
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -143,6 +144,24 @@ def get_contribution_data(year=None, month=None):
                 except (ValueError, IndexError):
                     continue
 
+    # Track Generated-by usage over time
+    cmd = (
+        f'git log {date_filter} --grep="Generated-by:" '
+        '--pretty=format:"%cd" --date=format:"%Y-%m"'
+    )
+    output = run_git_command(cmd)
+
+    generated_by_monthly = defaultdict(int)
+
+    for line in output.split("\n"):
+        entry = line.strip()
+        if entry:
+            try:
+                month_date = datetime.strptime(f"{entry}-01", "%Y-%m-%d").date()
+                generated_by_monthly[month_date] += 1
+            except ValueError:
+                continue
+
     # Get total commits for period calculation
     cmd = f"git log {date_filter} --oneline | wc -l"
     total_commits = int(run_git_command(cmd))
@@ -170,6 +189,7 @@ def get_contribution_data(year=None, month=None):
         total_commits,
         period_desc,
         ai_boom_marker,
+        dict(generated_by_monthly),
     )
 
 
@@ -179,10 +199,14 @@ def create_contribution_graphs(
     total_commits,
     period_desc,
     ai_boom_marker=None,
+    generated_by_monthly=None,
     year=None,
     month=None,
 ):
     """Create comprehensive visualization graphs"""
+
+    if generated_by_monthly is None:
+        generated_by_monthly = {}
 
     # Determine output filename
     if year:
@@ -222,12 +246,19 @@ def create_contribution_graphs(
         title_suffix = " (All Time)"
 
     # Create figure with multiple subplots and better styling
-    fig = plt.figure(figsize=(22, 14), facecolor='#f8f9fa')
+    fig = plt.figure(figsize=(24, 16), facecolor='#f8f9fa')
+    gs = fig.add_gridspec(
+        3,
+        3,
+        height_ratios=[1, 1, 1.1],
+        hspace=0.35,
+        wspace=0.3,
+    )
     fig.suptitle(
         f"kdevops Contribution Analysis{title_suffix}",
         fontsize=24,
         fontweight="bold",
-        y=0.98,
+        y=0.985,
         color='#2c3e50'
     )
 
@@ -236,7 +267,7 @@ def create_contribution_graphs(
         return None
 
     # 1. Total Contributions Bar Chart
-    ax1 = plt.subplot(2, 3, 1)
+    ax1 = fig.add_subplot(gs[0, 0])
     contributors = list(contributors_total.keys())
     commits = list(contributors_total.values())
 
@@ -296,7 +327,7 @@ def create_contribution_graphs(
         )
 
     # 2. Pie Chart of Contributions (top contributors only)
-    ax2 = plt.subplot(2, 3, 2)
+    ax2 = fig.add_subplot(gs[0, 1])
     # Group smaller contributors together
     main_contributors = dict(list(contributors_total.items())[:8])  # Top 8
     others_count = (
@@ -344,7 +375,7 @@ def create_contribution_graphs(
         )
 
     # 3. Monthly Activity Heatmap
-    ax3 = plt.subplot(2, 3, 3)
+    ax3 = fig.add_subplot(gs[0, 2])
 
     # Get months that have activity
     active_months = set()
@@ -427,7 +458,7 @@ def create_contribution_graphs(
         ax3.set_title("Monthly Activity Heatmap", fontweight="bold", fontsize=14)
 
     # 4. Monthly Timeline
-    ax4 = plt.subplot(2, 3, 4)
+    ax4 = fig.add_subplot(gs[1, 0])
 
     if active_months:
         # Calculate total commits per month
@@ -562,7 +593,7 @@ def create_contribution_graphs(
         ax4.set_title("Monthly Commit Activity", fontweight="bold", fontsize=14)
 
     # 5. Top Contributors Timeline
-    ax5 = plt.subplot(2, 3, 5)
+    ax5 = fig.add_subplot(gs[1, 1])
 
 
     if active_months:
@@ -720,7 +751,7 @@ def create_contribution_graphs(
         )
 
     # 6. Statistics Summary
-    ax6 = plt.subplot(2, 3, 6)
+    ax6 = fig.add_subplot(gs[1, 2])
     ax6.axis("off")
 
     # Calculate stats
@@ -774,6 +805,11 @@ def create_contribution_graphs(
         else ("N/A", 0)
     )
 
+    generated_by_total = sum(generated_by_monthly.values())
+    generated_by_percentage = (
+        (generated_by_total / total_commits) * 100 if total_commits else 0
+    )
+
     # Add note about date anomaly if we detect future dates
     current_year = datetime.now().year
     date_note = ""
@@ -793,6 +829,8 @@ Top Contributor: {top_contributor[0]}
 ({top_contributor[1]} commits)
 
 Active Months: {active_months_count}
+
+Generated-by Tag Commits: {generated_by_total} ({generated_by_percentage:.1f}% of total)
 
 Project: Linux Kernel DevOps Framework
 Analysis Period: {period_desc}
@@ -816,7 +854,112 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
         color='#2c3e50'
     )
 
-    plt.tight_layout(pad=2.0)
+    # 7. Generated-by Tag Adoption Trend
+    ax7 = fig.add_subplot(gs[2, :])
+    if generated_by_monthly:
+        timeline_map = {k: v for k, v in generated_by_monthly.items()}
+        sorted_dates = sorted(timeline_map.keys())
+        min_date = sorted_dates[0]
+        max_date = sorted_dates[-1]
+        date_range = pd.date_range(start=min_date, end=max_date, freq="MS")
+        timeline_dates = [d.to_pydatetime() for d in date_range]
+        timeline_counts = [timeline_map.get(d.date(), 0) for d in date_range]
+
+        ax7.plot(
+            timeline_dates,
+            timeline_counts,
+            marker="o",
+            linewidth=3,
+            markersize=8,
+            color="#8e44ad",
+            markerfacecolor="#f39c12",
+            markeredgecolor="#2c3e50",
+            markeredgewidth=1.2,
+        )
+        if len(timeline_dates) > 1:
+            ax7.fill_between(
+                timeline_dates,
+                timeline_counts,
+                alpha=0.15,
+                color="#8e44ad",
+            )
+
+        locator = mdates.AutoDateLocator()
+        formatter = mdates.ConciseDateFormatter(locator)
+        ax7.xaxis.set_major_locator(locator)
+        ax7.xaxis.set_major_formatter(formatter)
+
+        ax7.set_title(
+            "Generated-by Tag Adoption Over Time",
+            fontweight="bold",
+            fontsize=16,
+            color='#2c3e50',
+            pad=20,
+        )
+        ax7.set_ylabel("Commits with Generated-by", fontsize=12, color='#34495e')
+        ax7.set_xlabel("Month", fontsize=12, color='#34495e')
+        ax7.spines['top'].set_visible(False)
+        ax7.spines['right'].set_visible(False)
+        ax7.grid(True, alpha=0.3)
+        ax7.set_ylim(bottom=0)
+        ax7.tick_params(axis="x", labelrotation=45)
+
+        ax7.text(
+            0.01,
+            0.95,
+            f"Total commits tagged: {generated_by_total} ({generated_by_percentage:.1f}% of commits)",
+            transform=ax7.transAxes,
+            fontsize=10,
+            fontweight="bold",
+            color="#2c3e50",
+            bbox=dict(
+                boxstyle="round,pad=0.4",
+                facecolor="#f4ecf7",
+                edgecolor="#8e44ad",
+                linewidth=1.2,
+                alpha=0.6,
+            ),
+            verticalalignment="top",
+        )
+
+        if (year is None) or (int(year) == datetime.now().year):
+            current_marker = datetime.now()
+            if timeline_dates and timeline_dates[0] <= current_marker <= timeline_dates[-1]:
+                ax7.axvline(
+                    current_marker,
+                    color="#7f8c8d",
+                    linestyle=":",
+                    linewidth=1.2,
+                    alpha=0.7,
+                )
+    else:
+        ax7.set_title(
+            "Generated-by Tag Adoption Over Time",
+            fontweight="bold",
+            fontsize=16,
+            color="#2c3e50",
+            pad=20,
+        )
+        ax7.spines['top'].set_visible(False)
+        ax7.spines['right'].set_visible(False)
+        ax7.set_ylabel("Commits with Generated-by", fontsize=12, color="#34495e")
+        ax7.set_xlabel("Month", fontsize=12, color="#34495e")
+        ax7.tick_params(axis="x", labelbottom=False)
+        ax7.tick_params(axis="y", labelleft=False)
+        ax7.set_ylim(0, 1)
+        ax7.text(
+            0.5,
+            0.5,
+            "No Generated-by tag usage detected",
+            ha="center",
+            va="center",
+            transform=ax7.transAxes,
+            fontsize=12,
+            fontweight="bold",
+            color="#7f8c8d",
+        )
+
+    fig.tight_layout(rect=[0, 0, 1, 0.97], pad=2.5)
 
     # Ensure output directory exists and save the plots
     os.makedirs("docs/contrib", exist_ok=True)
@@ -897,9 +1040,14 @@ def main():
 
     # Get contribution data
     month_int = int(args.month) if args.month else None
-    contributors_total, monthly_data, total_commits, period_desc, ai_boom_marker = (
-        get_contribution_data(args.year, month_int)
-    )
+    (
+        contributors_total,
+        monthly_data,
+        total_commits,
+        period_desc,
+        ai_boom_marker,
+        generated_by_monthly,
+    ) = get_contribution_data(args.year, month_int)
 
     # Create visualization
     fig = create_contribution_graphs(
@@ -908,6 +1056,7 @@ def main():
         total_commits,
         period_desc,
         ai_boom_marker,
+        generated_by_monthly,
         args.year,
         month_int,
     )
