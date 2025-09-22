@@ -11,7 +11,6 @@
 
 - name: Format new volume for {{ export_fstype }}
   become: true
-  become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   delegate_to: "{{ server_host }}"
   community.general.filesystem:
