@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops Destroyer - Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_workflow:
+        description: "CI Workflow"
+        required: true
+        default: 'blktests_nvme'
+        type: choice
+        options:
+          - blktests
+          - blktests_block
+          - blktests_loop
+          - blktests_meta
+          - blktests_nbd
+          - blktests_nvme
+          - blktests_nvmemp
+          - blktests_scsi
+          - blktests_srp
+          - blktests_zbd
+          - tmpfs
+          - tmpfs_default
+          - tmpfs_huge
+          - tmpfs_noswap
+          - linux-btrfs-kpd
+          - linux-ext4-kpd
+          - linux-firmware-kpd
+          - linux-mm-kpd
+          - linux-modules-kpd
+          - linux-xfs-kpd
+          - selftests
+      host_prefix:
+        description: "Host prefix"
+        required: true
+        default: 'debian13'
+        type: string
+
+jobs:
+  destroyer:
+    name: Destroy guests
+    runs-on: [self-hosted]
+    steps:
+      - name: Create workdir
+        run: |
+          rm --recursive --force --verbose ${{ inputs.ci_workflow }}
+          mkdir --parent --verbose ${{ inputs.ci_workflow }}
+
+      - name: Checkout kdevops
+        run: |
+          cd ${{ inputs.ci_workflow }}
+          git clone https://github.com/dkruces/kdevops.git --branch ci-workflow kdevops
+
+      - name: Run kdevops make defconfig-repo
+        run: |
+          set -euxo pipefail
+
+          sudo virsh list --all
+
+          cd ${{ inputs.ci_workflow }}/kdevops
+          make \
+            KDEVOPS_HOSTS_PREFIX="${{ inputs.host_prefix }}" \
+            defconfig-${{ inputs.ci_workflow }}
+
+          make AV=1 V=1 destroy
+
+          sudo virsh list --all

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Archive results
+description: Archive kdevops results in https://github.com/linux-kdevops/kdevops-results-archive.git
+inputs:
+  ci_workflow:
+    required: false
+    type: string
+    default: 'demo'
+  dir:
+    description: 'Directory'
+    required: true
+    default: 'workdir'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get systemd journal files
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        make V=1 journal-dump
+
+    - name: Build our kdevops archive results
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        make V=1 ci-archive CI_WORKFLOW="${{ inputs.ci_workflow }}"
