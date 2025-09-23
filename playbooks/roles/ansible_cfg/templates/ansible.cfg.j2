@@ -17,17 +17,17 @@ inventory = {{ ansible_cfg_inventory }}
 [callback_diy]
 playbook_on_play_start_msg = PLAY: {{ '{{' }} ansible_callback_diy.play.name | default('') | upper {{ '}}' }}
 playbook_on_play_start_msg_color = bright blue
-playbook_on_task_start_msg = TASK: {{ '{{' }} ansible_callback_diy.task.name | default('') {{ '}}' }}
+playbook_on_task_start_msg = TASK: {{ '{{' }} ansible_callback_diy.task.name | default('') {{ '}}' }} [{{ '{{' }} ansible_play_hosts | join(',') {{ '}}' }}]
 playbook_on_task_start_msg_color = yellow
-runner_on_start_msg = start: [{{ '{{' }} ansible_callback_diy.host.name | default('host') {{ '}}' }}]
+runner_on_start_msg =
 runner_on_start_msg_color = yellow
-runner_on_ok_msg = ok: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
+runner_on_ok_msg = ⠀⠀✓ [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
 runner_on_ok_msg_color = green
-runner_on_changed_msg = changed: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
+runner_on_changed_msg = ⠀⠀(changed) [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
 runner_on_changed_msg_color = bright yellow
-runner_on_failed_msg = FAILED: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}] => {{ '{{' }} msg | default('') {{ '}}' }}{{ '{%' }} if stderr is defined and stderr | length > 0 {{ '%}' }} STDERR: {{ '{{' }} stderr {{ '}}' }}{{ '{%' }} endif {{ '%}' }}{{ '{%' }} if stdout is defined and stdout | length > 0 {{ '%}' }} STDOUT: {{ '{{' }} stdout {{ '}}' }}{{ '{%' }} endif {{ '%}' }}
+runner_on_failed_msg = ⠀⠀FAILED: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}] => {{ '{{' }} msg | default('') {{ '}}' }}{{ '{%' }} if stderr is defined and stderr | length > 0 {{ '%}' }} STDERR: {{ '{{' }} stderr {{ '}}' }}{{ '{%' }} endif {{ '%}' }}{{ '{%' }} if stdout is defined and stdout | length > 0 {{ '%}' }} STDOUT: {{ '{{' }} stdout {{ '}}' }}{{ '{%' }} endif {{ '%}' }}
 runner_on_failed_msg_color = bright red
-runner_on_skipped_msg = skipped: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
+runner_on_skipped_msg = ⠀⠀⊘ [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
 runner_on_skipped_msg_color = cyan
 runner_on_unreachable_msg = UNREACHABLE: [{{ '{{' }} ansible_callback_diy.result.host | default('host') {{ '}}' }}]
 runner_on_unreachable_msg_color = bright magenta
