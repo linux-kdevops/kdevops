@@ -156,6 +156,20 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_SHOW_TASK_PATH_ON_FAILURE
 	  the line number. This information is displayed automatically for every task when
 	  running with -vv or greater verbosity.
 	  https://docs.ansible.com/ansible/latest/collections/community/general/dense_callback.html#parameter-show_task_path_on_failure
+
+config ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS
+	bool "Enable profile_tasks callback for timing analysis"
+	output yaml
+	default n
+	help
+	  Enable the profile_tasks callback plugin to provide timing analysis
+	  similar to systemd-analyze blame. This shows how long each task takes
+	  to execute and provides a summary of the slowest tasks at the end.
+
+	  When enabled, this adds timing information to playbook execution
+	  and generates a "TASKS RECAP" section showing execution times.
+
+	  https://docs.ansible.com/ansible/latest/collections/ansible/posix/profile_tasks_callback.html
 endmenu
 
 config ANSIBLE_CFG_DEPRECATION_WARNINGS

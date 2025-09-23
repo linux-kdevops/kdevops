@@ -1,4 +1,7 @@
 [defaults]
+{% if ansible_cfg_callback_plugin_profile_tasks %}
+callbacks_enabled = ansible.posix.profile_tasks, {{ ansible_cfg_callback_plugin_string }}
+{% endif %}
 deprecation_warnings = {{ ansible_cfg_deprecation_warnings }}
 stdout_callback = {{ ansible_cfg_callback_plugin_string }}
 check_mode_markers = {{ ansible_cfg_callback_plugin_check_mode_markers }}
@@ -38,6 +41,11 @@ playbook_on_stats_msg = PLAYBOOK SUMMARY
  {{ '{%' }} set status = "UNREACHABLE" if host in ansible_callback_diy.stats.dark | default({}) else "FAILED" if host in ansible_callback_diy.stats.failures | default({}) else "OK" {{ '%}' }}{{ '{{' }} "%-12s" | format(status) {{ '}}' }} {{ '{{' }} "%3d" | format(ansible_callback_diy.stats.ok.get(host, 0)) {{ '}}' }}      {{ '{{' }} "%3d" | format(ansible_callback_diy.stats.changed.get(host, 0)) {{ '}}' }}     {{ '{{' }} "%3d" | format(ansible_callback_diy.stats.failures.get(host, 0)) {{ '}}' }}  {{ '{{' }} host {{ '}}' }}
  {{ '{%' }} endfor {{ '%}' }}
 playbook_on_stats_msg_color = bright green
+{% endif %}
+{% if ansible_cfg_callback_plugin_profile_tasks %}
+
+[callback_profile_tasks]
+summary_only = true
 {% endif %}
 {% if ansible_facts['distribution'] == 'openSUSE' %}
 [connection]
