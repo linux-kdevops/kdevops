@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops CI Workflow - Push/PR
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  push-pr:
+    name: Push/PR kdevops CI
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    strategy:
+      fail-fast: false  # Don't cancel other jobs if one fails
+      matrix:
+        ci_workflow:
+          - blktests_nvme
+          - xfs_reflink_4k
+    with:
+      ci_workflow: ${{ matrix.ci_workflow }}
+      kernel_ref: 'v6.15'
+      kernel_tree: 'linux'
+      test_mode: 'kdevops-validation'
+      tests: ''

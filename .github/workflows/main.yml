@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops CI Workflow - Reusable
+
+on:
+  workflow_call:
+    inputs:
+      ci_workflow:
+        description: "CI Workflow"
+        required: true
+        default: 'blktests_nvme'
+        type: string
+      kernel_ref:
+        description: "Linux tree git reference (branch/tag/commit-id)"
+        required: true
+        default: 'master'
+        type: string
+      kernel_tree:
+        description: "Linux kernel tree to use"
+        required: true
+        default: 'linux'
+        type: string
+      test_mode:
+        description: 'Testing mode'
+        required: false
+        default: 'full-testing'
+        type: string
+      tests:
+        description: 'Custom test to run (for kdevops-validation mode only)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  setup:
+    name: Setup kdevops workspace
+    runs-on: ${{ contains(inputs.ci_workflow, 'blktests') && fromJSON('["self-hosted", "Linux", "X64", "blktests"]') || contains(inputs.ci_workflow, 'tmpfs') && fromJSON('["self-hosted", "Linux", "X64", "tmpfs"]') || contains(inputs.ci_workflow, 'xfs') && fromJSON('["self-hosted", "Linux", "X64", "xfs"]') || contains(inputs.ci_workflow, 'btrfs') && fromJSON('["self-hosted", "Linux", "X64", "btrfs"]') || contains(inputs.ci_workflow, 'ext4') && fromJSON('["self-hosted", "Linux", "X64", "ext4"]') || contains(inputs.ci_workflow, 'selftests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'seltests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'modules') && fromJSON('["self-hosted", "Linux", "X64", "modules"]') || contains(inputs.ci_workflow, 'firmware') && fromJSON('["self-hosted", "Linux", "X64", "firmware"]') || contains(inputs.ci_workflow, 'mm') && fromJSON('["self-hosted", "Linux", "X64", "mm"]') || fromJSON('["self-hosted"]') }}
+    steps:
+      - name: Checkout dkruces/kdevops
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: kdevops setup
+        uses: ./.github/actions/setup
+        with:
+          ci_workflow: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}
+          kernel_ref: ${{ inputs.kernel_ref }}
+          kernel_tree: ${{ inputs.kernel_tree }}
+
+  test:
+    name: Run kdevops ci-test
+    runs-on: ${{ contains(inputs.ci_workflow, 'blktests') && fromJSON('["self-hosted", "Linux", "X64", "blktests"]') || contains(inputs.ci_workflow, 'tmpfs') && fromJSON('["self-hosted", "Linux", "X64", "tmpfs"]') || contains(inputs.ci_workflow, 'xfs') && fromJSON('["self-hosted", "Linux", "X64", "xfs"]') || contains(inputs.ci_workflow, 'btrfs') && fromJSON('["self-hosted", "Linux", "X64", "btrfs"]') || contains(inputs.ci_workflow, 'ext4') && fromJSON('["self-hosted", "Linux", "X64", "ext4"]') || contains(inputs.ci_workflow, 'selftests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'seltests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'modules') && fromJSON('["self-hosted", "Linux", "X64", "modules"]') || contains(inputs.ci_workflow, 'firmware') && fromJSON('["self-hosted", "Linux", "X64", "firmware"]') || contains(inputs.ci_workflow, 'mm') && fromJSON('["self-hosted", "Linux", "X64", "mm"]') || fromJSON('["self-hosted"]') }}
+    needs: [setup]
+    timeout-minutes: 120
+    steps:
+      - name: kdevops ci-test
+        uses: ./.github/actions/test
+        with:
+          ci_workflow: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}
+          test_mode: ${{ inputs.test_mode }}
+          tests: ${{ inputs.tests }}
+
+  archive:
+    name: Archive kdevops
+    runs-on: ${{ contains(inputs.ci_workflow, 'blktests') && fromJSON('["self-hosted", "Linux", "X64", "blktests"]') || contains(inputs.ci_workflow, 'tmpfs') && fromJSON('["self-hosted", "Linux", "X64", "tmpfs"]') || contains(inputs.ci_workflow, 'xfs') && fromJSON('["self-hosted", "Linux", "X64", "xfs"]') || contains(inputs.ci_workflow, 'btrfs') && fromJSON('["self-hosted", "Linux", "X64", "btrfs"]') || contains(inputs.ci_workflow, 'ext4') && fromJSON('["self-hosted", "Linux", "X64", "ext4"]') || contains(inputs.ci_workflow, 'selftests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'seltests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'modules') && fromJSON('["self-hosted", "Linux", "X64", "modules"]') || contains(inputs.ci_workflow, 'firmware') && fromJSON('["self-hosted", "Linux", "X64", "firmware"]') || contains(inputs.ci_workflow, 'mm') && fromJSON('["self-hosted", "Linux", "X64", "mm"]') || fromJSON('["self-hosted"]') }}
+    needs: [setup, test]
+    steps:
+      - name: Start SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Archive ci-test results
+        uses: ./.github/actions/archive
+        with:
+          ci_workflow: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}
+
+      - name: Upload our kdevops results archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: kdevops-ci-results
+          path: ${{ inputs.ci_workflow }}/kdevops/archive/*.zip
+
+  cleanup:
+    name: Cleanup kdevops workspace
+    runs-on: ${{ contains(inputs.ci_workflow, 'blktests') && fromJSON('["self-hosted", "Linux", "X64", "blktests"]') || contains(inputs.ci_workflow, 'tmpfs') && fromJSON('["self-hosted", "Linux", "X64", "tmpfs"]') || contains(inputs.ci_workflow, 'xfs') && fromJSON('["self-hosted", "Linux", "X64", "xfs"]') || contains(inputs.ci_workflow, 'btrfs') && fromJSON('["self-hosted", "Linux", "X64", "btrfs"]') || contains(inputs.ci_workflow, 'ext4') && fromJSON('["self-hosted", "Linux", "X64", "ext4"]') || contains(inputs.ci_workflow, 'selftests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'seltests') && fromJSON('["self-hosted", "Linux", "X64", "selftests"]') || contains(inputs.ci_workflow, 'modules') && fromJSON('["self-hosted", "Linux", "X64", "modules"]') || contains(inputs.ci_workflow, 'firmware') && fromJSON('["self-hosted", "Linux", "X64", "firmware"]') || contains(inputs.ci_workflow, 'mm') && fromJSON('["self-hosted", "Linux", "X64", "mm"]') || fromJSON('["self-hosted"]') }}
+    needs: [setup, test, archive]
+    if: always()
+    steps:
+      - name: kdevops cleanup
+        uses: ./.github/actions/cleanup
+        with:
+          dir: ${{ inputs.ci_workflow }}

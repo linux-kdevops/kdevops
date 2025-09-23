@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops CI Workflow - Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_workflow:
+        description: "CI Workflow"
+        required: true
+        default: 'blktests_nvme'
+        type: choice
+        options:
+          - blktests
+          - blktests_block
+          - blktests_loop
+          - blktests_meta
+          - blktests_nbd
+          - blktests_nvme
+          - blktests_nvmemp
+          - blktests_scsi
+          - blktests_srp
+          - blktests_zbd
+          - lbs-xfs
+          - lbs-xfs-bdev-large-nvme
+          - lbs-xfs-bdev-nvme
+          - lbs-xfs-small
+          - xfs
+          - xfs_crc
+          - xfs_crc_logdev
+          - xfs_crc_rtdev
+          - xfs_crc_rtdev_extsize_28k
+          - xfs_crc_rtdev_extsize_64k
+          - xfs_nocrc
+          - xfs_nocrc_16k_4ks
+          - xfs_nocrc_1k
+          - xfs_nocrc_2k
+          - xfs_nocrc_32_4ks
+          - xfs_nocrc_4k
+          - xfs_nocrc_512
+          - xfs_nocrc_64_4ks
+          - xfs_nocrc_8k_4ks
+          - xfs_nocrc_lbs
+          - xfs_reflink
+          - xfs_reflink_1024
+          - xfs_reflink_16k_4ks
+          - xfs_reflink_2k
+          - xfs_reflink_32k_4ks
+          - xfs_reflink_4k
+          - xfs_reflink_4k_8ks
+          - xfs_reflink_64k_4ks
+          - xfs_reflink_dir_bsize_8k
+          - xfs_reflink_lbs
+          - xfs_reflink_logdev
+          - xfs_reflink_normapbt
+          - xfs_reflink_nrext64
+          - xfs_reflink_stripe_len
+          - xfs-soak
+      kernel_tree:
+        description: "Linux kernel tree to use"
+        required: true
+        default: 'linux'
+        type: choice
+        options:
+          - linux
+          - linux-next
+          - linux-stable
+      kernel_ref:
+        description: "Linux tree git reference (branch/tag/commit-id)"
+        required: true
+        default: 'master'
+        type: string
+      test_mode:
+        description: 'Testing mode'
+        required: false
+        default: 'full-testing'
+        type: choice
+        options:
+          - 'full-testing'        # Complete test suite
+          - 'kdevops-validation'  # Single test for framework validation
+      tests:
+        description: 'Custom test to run (for kdevops-validation mode only)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  check_ref:
+    name: Check Linux kernel Git Reference
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Check kernel_ref exists
+        id: check_kernel_ref
+        run: |
+          set -euxo pipefail
+
+          ref="${{ github.event.inputs.kernel_ref }}"
+          tree="${{ github.event.inputs.kernel_tree }}"
+          mirror="/mirror/${tree}.git"
+          ls_remote="$(git ls-remote "$mirror" "refs/*/${ref}" || true)"
+          contains_branch="$(git -C "$mirror" branch --contains "${ref}" || true)"
+          contains_tag="$(git -C "$mirror" branch --contains "${ref}" || true)"
+
+          if [ -z "$ls_remote" ] && [ -z "$contains_branch" ] && [ -z "$contains_tag" ]; then
+            echo "Linux kernel ${ref} does not exist."
+            exit 1
+          fi
+
+  manual:
+    name: Manual kdevops CI
+    needs: [check_ref]
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    with:
+      ci_workflow: ${{ inputs.ci_workflow }}
+      kernel_ref: ${{ inputs.kernel_ref }}
+      kernel_tree: ${{ inputs.kernel_tree }}
+      test_mode: ${{ inputs.test_mode }}
+      tests: ${{ inputs.tests }}

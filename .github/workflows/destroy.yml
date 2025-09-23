@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops Destroyer - Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_workflow:
+        description: "CI Workflow"
+        required: true
+        default: 'blktests_nvme'
+        type: choice
+        options:
+          - blktests
+          - blktests_block
+          - blktests_loop
+          - blktests_meta
+          - blktests_nbd
+          - blktests_nvme
+          - blktests_nvmemp
+          - blktests_scsi
+          - blktests_srp
+          - blktests_zbd
+          - lbs-xfs
+          - lbs-xfs-bdev-large-nvme
+          - lbs-xfs-bdev-nvme
+          - lbs-xfs-small
+          - xfs
+          - xfs_crc
+          - xfs_crc_logdev
+          - xfs_crc_rtdev
+          - xfs_crc_rtdev_extsize_28k
+          - xfs_crc_rtdev_extsize_64k
+          - xfs_nocrc
+          - xfs_nocrc_16k_4ks
+          - xfs_nocrc_1k
+          - xfs_nocrc_2k
+          - xfs_nocrc_32_4ks
+          - xfs_nocrc_4k
+          - xfs_nocrc_512
+          - xfs_nocrc_64_4ks
+          - xfs_nocrc_8k_4ks
+          - xfs_nocrc_lbs
+          - xfs_reflink
+          - xfs_reflink_1024
+          - xfs_reflink_16k_4ks
+          - xfs_reflink_2k
+          - xfs_reflink_32k_4ks
+          - xfs_reflink_4k
+          - xfs_reflink_4k_8ks
+          - xfs_reflink_64k_4ks
+          - xfs_reflink_dir_bsize_8k
+          - xfs_reflink_lbs
+          - xfs_reflink_logdev
+          - xfs_reflink_normapbt
+          - xfs_reflink_nrext64
+          - xfs_reflink_stripe_len
+          - xfs-soak
+      host_prefix:
+        description: "Host prefix"
+        required: true
+        default: 'debian13'
+        type: string
+
+jobs:
+  destroyer:
+    name: Destroy guests
+    runs-on: [self-hosted]
+    steps:
+      - name: Create workdir
+        run: |
+          rm --recursive --force --verbose ${{ inputs.ci_workflow }}
+          mkdir --parent --verbose ${{ inputs.ci_workflow }}
+
+      - name: Checkout kdevops
+        run: |
+          cd ${{ inputs.ci_workflow }}
+          git clone https://github.com/dkruces/kdevops.git --branch ci-workflow kdevops
+
+      - name: Run kdevops make defconfig-repo
+        run: |
+          set -euxo pipefail
+
+          sudo virsh list --all
+
+          cd ${{ inputs.ci_workflow }}/kdevops
+          make \
+            KDEVOPS_HOSTS_PREFIX="${{ inputs.host_prefix }}" \
+            defconfig-${{ inputs.ci_workflow }}
+
+          make destroy
+
+          sudo virsh list --all

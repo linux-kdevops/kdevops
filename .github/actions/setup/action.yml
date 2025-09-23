@@ -1,0 +1,187 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Setup kdevops
+description: Setup kdevops workspace
+
+inputs:
+  ci_workflow:
+    required: false
+    type: string
+    default: 'demo'
+  dir:
+    description: 'Directory'
+    required: true
+    default: 'workdir'
+  kernel_tree:
+    required: false
+    type: string
+    default: 'linux'
+  kernel_ref:
+    required: false
+    type: string
+    default: 'master'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create workspace directory
+      shell: bash
+      run: |
+        set -euxo pipefail
+        rm --recursive --force --verbose ${{ inputs.dir }}
+        mkdir --parent --verbose ${{ inputs.dir }}
+
+    - name: Configure git
+      shell: bash
+      run: |
+        set -euxo pipefail
+        git config --global --add safe.directory '*'
+        git config --global user.name "kdevops"
+        git config --global user.email "kdevops@lists.linux.dev"
+
+    - name: Checkout kdevops
+      working-directory: ${{ inputs.dir }}
+      shell: bash
+      run: |
+        set -euxo pipefail
+        git clone https://github.com/dkruces/kdevops.git --branch main kdevops
+
+    - name: Checkout custom branch with delta on kdevops/linux
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        LINUX_TREE="/mirror/${{ inputs.kernel_tree }}.git"
+        LINUX_TREE_REF="${{ inputs.kernel_ref }}"
+        git clone $LINUX_TREE linux
+        cd linux
+        git checkout $LINUX_TREE_REF
+        git log -1
+
+    - name: Make sure our repo kdevops defconfig exists
+      id: defconfig
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        KDEVOPS_DEFCONFIG=${{ inputs.ci_workflow }}
+
+        if [[ ! -f defconfigs/$KDEVOPS_DEFCONFIG ]]; then
+          echo "Missing defconfig: defconfigs/$KDEVOPS_DEFCONFIG"
+          exit 1
+        fi
+
+        "${{ github.workspace }}/scripts/github_output.sh" \
+          KDEVOPS_DEFCONFIG "$KDEVOPS_DEFCONFIG"
+
+    - name: Initialize CI metadata for kdevops-results-archive for linux
+      id: metadata
+      working-directory: ${{ inputs.dir }}/kdevops/linux
+      shell: bash
+      run: |
+        set -euxo pipefail
+        echo "${{ inputs.kernel_tree }}" > ../ci.trigger
+        # Get the kdevops commit subject, not kernel commit
+        cd "${{ github.workspace }}" && git log -1 --pretty=format:"%s" > "${{ inputs.dir }}/kdevops/ci.subject"
+        cd - > /dev/null
+        echo "${{ inputs.kernel_ref }}" > ../ci.ref
+
+        RELEVANT_GIT_TAG=$(cat ../ci.ref)
+        RELEVANT_GIT_REF=$(git rev-parse --short=12 $RELEVANT_GIT_TAG)
+
+        "${{ github.workspace }}/scripts/github_output.sh" \
+          LINUX_GIT_REF "$RELEVANT_GIT_REF"
+        "${{ github.workspace }}/scripts/github_output.sh" \
+          LINUX_GIT_TAG "$RELEVANT_GIT_TAG"
+
+        # Start out pessimistic
+        echo "unknown" > ../ci.result
+        echo "Nothing to write home about." > ../ci.commit_extra
+
+    - name: Run kdevops make defconfig-repo
+      working-directory: ${{ inputs.dir }}/kdevops
+      env:
+        LINUX_GIT_TAG: ${{ steps.metadata.outputs.LINUX_GIT_TAG }}
+        LINUX_GIT_REF: ${{ steps.metadata.outputs.LINUX_GIT_REF }}
+        KDEVOPS_DEFCONFIG: ${{ steps.defconfig.outputs.KDEVOPS_DEFCONFIG }}
+      shell: bash
+      run: |
+        set -euxo pipefail
+        LINUX_TREE="/mirror/${{ inputs.kernel_tree }}.git"
+        LINUX_TREE_REF="$LINUX_GIT_TAG"
+
+        # We make the compromise here to use a relevant git tag for the
+        # host prefix so that folks can easily tell what exact kernel tree
+        # is being tested by using the relevant git ref. That is, if you
+        # pushed a tree with the .github/ directory as the top of the tree,
+        # that commit will not be used, we'll use the last one as that is
+        # the relevant git ref we want to annotate a test for.
+        #
+        # The compromise here is that we expect no two same identical tests
+        # on the same self-hosted server. We could extend this with something
+        # like github.run_id but its not yet clear if we can have kdevops
+        # hosts with a bundled prefix ID like that ref-runid-testname. Tests
+        # have been done with the full lenght sha1sum though and we know that
+        # does work.
+        KDEVOPS_HOSTS_PREFIX="kci-$LINUX_GIT_REF"
+
+        echo "Going to use defconfig-$KDEVOPS_DEFCONFIG"
+
+        echo "Linux tree:          $LINUX_TREE"
+        echo "Linux trigger ref:   $LINUX_TREE_REF"
+        echo "Linux tag:           $LINUX_GIT_TAG"
+        echo "Runner ID:           ${{ github.run_id }}"
+        echo "kdevops host prefix: $KDEVOPS_HOSTS_PREFIX"
+        echo "kdevops defconfig:   defconfig-$KDEVOPS_DEFCONFIG"
+
+        # Customize KMOD_TIMEOUT when required
+        KMOD_TIMEOUT_ARG=
+        if [[ "$(hostname)" == *smc111* && \
+              "$KDEVOPS_DEFCONFIG" == "linux-modules-kpd" ]]; then
+          KMOD_TIMEOUT_ARG="KMOD_TIMEOUT=222"
+        fi
+
+        KDEVOPS_ARGS="\
+        KDEVOPS_HOSTS_PREFIX=$KDEVOPS_HOSTS_PREFIX \
+        LINUX_TREE=$LINUX_TREE \
+        LINUX_TREE_REF=$LINUX_TREE_REF \
+        ${KMOD_TIMEOUT_ARG} \
+        defconfig-$KDEVOPS_DEFCONFIG"
+        echo "Going to run:"
+        echo "make $KDEVOPS_ARGS"
+
+        make $KDEVOPS_ARGS
+        ./scripts/kconfig/merge_config.sh \
+        -n .config \
+        defconfigs/configs/diy.config \
+        defconfigs/configs/ci.config
+
+    - name: Run kdevops make
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        make -j$(nproc)
+
+    - name: Run kdevops make bringup
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        ls -ld linux
+        make destroy
+        make bringup
+
+    - name: Build linux and boot test nodes on test kernel
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        make linux
+
+    - name: Build required ci tests
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        make ci-build-test CI_WORKFLOW=${{ inputs.ci_workflow }}

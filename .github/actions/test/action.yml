@@ -1,0 +1,213 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Setup kdevops
+description: Setup kdevops workspace
+
+inputs:
+  dir:
+    description: 'Directory'
+    required: true
+    default: 'workdir'
+  ci_workflow:
+    required: false
+    type: string
+    default: 'demo'
+  test_mode:
+    description: 'Testing mode'
+    required: false
+    default: 'full-testing'
+  tests:
+    description: 'Custom test to run (for kdevops-validation mode only)'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run CI tests
+      id: ci_test
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        # Create start time for duration calculation
+        echo "$(date +%s)" > ci.start_time
+
+        # Handle test mode and tests parameters
+        if [[ -n "${{ inputs.tests }}" ]]; then
+          # Custom test specified for kdevops-validation mode
+          TESTS="${{ inputs.tests }}"
+        elif [[ "${{ inputs.test_mode }}" == "kdevops-validation" ]]; then
+          # Auto-assign appropriate test based on workflow
+          case "${{ inputs.ci_workflow }}" in
+            *fstests*|*xfs*|*btrfs*|*ext4*|*tmpfs*)
+              TESTS="generic/003"
+              ;;
+            blktests*)
+              TESTS="block/003"
+              ;;
+            selftests*|*modules*|*kmod*|*firmware*|*mm*)
+              TESTS="kmod/test_001"
+              ;;
+            *)
+              TESTS="generic/003"
+              ;;
+          esac
+        else
+          # Full testing mode - no TESTS variable
+          TESTS=""
+        fi
+
+        # Export TESTS for current step and save to GitHub output for later steps
+        export TESTS="$TESTS"
+        "${{ github.workspace }}/scripts/github_output.sh" TESTS "$TESTS"
+
+        make ci-test CI_WORKFLOW="${{ inputs.ci_workflow }}"
+
+    - name: Generate workflow results path
+      id: setpath
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        case "${{ inputs.ci_workflow }}" in
+          blktests*) wpath="workflows/blktests" ;;
+          *btrfs*) wpath="workflows/fstests" ;;
+          *ext4*) wpath="workflows/fstests" ;;
+          tmpfs*) wpath="workflows/fstests" ;;
+          *xfs*) wpath="workflows/fstests" ;;
+          *) wpath="workflows/selftests" ;;
+        esac
+
+        "${{ github.workspace }}/scripts/github_output.sh" wpath "$wpath"
+
+    - name: Generate CI commit info with workflow-specific logic
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        wpath="${{ steps.setpath.outputs.wpath }}"
+
+        # Workflow-specific result collection
+        case "${{ inputs.ci_workflow }}" in
+          *xfs*|*btrfs*|*ext4*|tmpfs*|*fstests*)
+            # fstests workflows: Use xunit_results.txt for rich summary
+            echo "Collecting fstests results..."
+            if find "$wpath/results/last-run" -name "xunit_results.txt" -type f -exec cat {} \; > ci.commit_extra 2>/dev/null; then
+              echo "Found xunit_results.txt"
+            else
+              echo "No xunit_results.txt found, using fallback..."
+              echo "Kernel tests results:" > ci.commit_extra
+              find "$wpath/results/last-run/" -name '*.dmesg.log' -exec tail -n 1 {} + >> ci.commit_extra 2>/dev/null || true
+            fi
+
+            # fstests success detection
+            if ! grep -E "failures, [1-9]|errors, [1-9]" ci.commit_extra >/dev/null 2>&1; then
+              echo "ok" > ci.result
+            else
+              echo "not ok" > ci.result
+            fi
+            ;;
+          blktests*)
+            # blktests workflows: Collect individual test results
+
+            echo "Kernel tests results:" > ci.commit_extra
+
+            # Collect test results from last-run directory
+            if [ -d "$wpath/results/last-run" ]; then
+              echo -e "\nBlktests summary:" >> ci.commit_extra
+
+              # Count total tests by unique test names (not file extensions)
+              # Get base test names by removing extensions and extracting just the test name
+              test_names=$(find "$wpath/results/last-run" -type f -name "*" | \
+                grep -E '/[^/]*$' | \
+                sed 's|.*/||' | \
+                sed 's/\.\(full\|out\|runtime\|dmesg\)$//' | \
+                sort -u)
+              total_tests=$(echo "$test_names" | grep -v '^$' | wc -l)
+
+              bad_files=$(find "$wpath/results/last-run" -name "*.out.bad" -type f)
+              if [[ -n "$bad_files" ]]; then
+                failed_tests=$(echo "$bad_files" | wc -l)
+              else
+                failed_tests=0
+              fi
+
+              passed_tests=$((total_tests - failed_tests))
+
+              echo "Tests run: $total_tests, Passed: $passed_tests, Failed: $failed_tests" >> ci.commit_extra
+
+              # List failed tests if any
+              if [ $failed_tests -gt 0 ]; then
+                echo -e "\nFailed tests:" >> ci.commit_extra
+                find "$wpath/results/last-run" -name "*.out.bad" -type f | sed 's|.*/\([^/]*\)\.out\.bad$|\1|' | sort >> ci.commit_extra 2>/dev/null || true
+              fi
+
+              # Show sample test status files for passed tests
+              if [ $passed_tests -gt 0 ]; then
+                echo -e "\nSample passed test:" >> ci.commit_extra
+                sample_files=$(find "$wpath/results/last-run" -type f -name "*" ! -name "*.out.bad" ! -name "*.dmesg")
+                sample_file=$(echo "$sample_files" | head -1)
+                if [ -n "$sample_file" ] && [ -f "$sample_file" ]; then
+                  cat "$sample_file" >> ci.commit_extra || echo "Failed to read sample file" >> ci.commit_extra
+                else
+                  echo "No valid sample file found" >> ci.commit_extra
+                fi
+              fi
+            else
+              echo -e "\nNo blktests results found in $wpath/results/last-run" >> ci.commit_extra
+            fi
+
+            # blktests success detection - look for .out.bad files (failures)
+            bad_check=$(find "$wpath/results/last-run" -name "*.out.bad" -type f | head -1)
+
+            if [ -n "$bad_check" ]; then
+              echo "not ok" > ci.result
+            else
+              echo "ok" > ci.result
+            fi
+            ;;
+          *selftests*|*modules*|*mm*|*firmware*)
+            # selftests workflows: Use userspace.log
+            echo "Kernel tests results:" > ci.commit_extra
+            find "$wpath/results/last-run/" -name '*.userspace.log' -exec cat {} \; >> ci.commit_extra 2>/dev/null || true
+
+            # selftests success detection
+            if grep -q "passed\|PASS" ci.commit_extra && ! grep -q "FAIL\|failed\|ERROR" ci.commit_extra; then
+              echo "ok" > ci.result
+            else
+              echo "not ok" > ci.result
+            fi
+            ;;
+          *)
+            # Default/unknown workflows: Generic approach
+            echo "Kernel tests results:" > ci.commit_extra
+            find "$wpath/results/last-run/" -name '*.dmesg.log' -exec tail -n 1 {} + >> ci.commit_extra 2>/dev/null || true
+            echo -e "\n\nUserspace test results:" >> ci.commit_extra
+            find "$wpath/results/last-run/" -name '*.userspace.log' -exec tail -n 1 {} + >> ci.commit_extra 2>/dev/null || true
+
+            if grep -i -q "fail" ci.commit_extra; then
+              echo "not ok" > ci.result
+            else
+              echo "ok" > ci.result
+            fi
+            ;;
+        esac
+
+        # Set environment variables for the commit message script
+        export CI_WORKFLOW="${{ inputs.ci_workflow }}"
+        export KERNEL_TREE="${{ inputs.kernel_tree || 'linux' }}"
+
+        # Get TESTS from GitHub output (determines kdevops validation vs full testing)
+        TESTS="${{ steps.ci_test.outputs.TESTS }}"
+        if [[ -n "${TESTS:-}" ]]; then
+          export TESTS="$TESTS"
+        fi
+
+        # Generate enhanced commit message using our script
+        ./scripts/generate_ci_commit_message.sh > ci.commit_message_enhanced
+
+        # Keep the original ci.commit_extra for backward compatibility
+        # The archive action will use ci.commit_message_enhanced if available

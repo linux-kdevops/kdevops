@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Run kdevops CI Workflow - Schedule
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  check_ref:
+    name: Check Linux kernel Git Reference
+    outputs:
+      kernel_ref: ${{ steps.check_kernel_ref.outputs.kernel_ref }}
+      kernel_tree: ${{ steps.check_kernel_ref.outputs.kernel_tree }}
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Generate kernel_ref
+        id: check_kernel_ref
+        run: |
+          set -euxo pipefail
+          day_of_week=$(date +%u)
+
+          kernel_ref=$(./scripts/korg-releases.py --moniker linux-next)
+          kernel_tree=linux-next
+          if [ "$day_of_week" -eq 1 ]; then
+            kernel_ref=$(./scripts/korg-releases.py --moniker mainline)
+            kernel_tree=linux
+          fi
+
+          "${{ github.workspace }}/scripts/github_output.sh" kernel_ref "$kernel_ref"
+          "${{ github.workspace }}/scripts/github_output.sh" kernel_tree "$kernel_tree"
+
+  schedule:
+    name: Scheduled kdevops CI
+    needs: [check_ref]
+    uses: ./.github/workflows/main.yml
+    secrets: inherit
+    strategy:
+      fail-fast: false  # Don't cancel other jobs if one fails
+      matrix:
+        ci_workflow:
+          - blktests
+          - linux-mm-kpd
+          - linux-modules-kpd
+          - tmpfs
+    with:
+      ci_workflow: ${{ matrix.ci_workflow }}
+      kernel_ref: ${{ needs.check_ref.outputs.kernel_ref }}
+      kernel_tree: ${{ needs.check_ref.outputs.kernel_tree }}
