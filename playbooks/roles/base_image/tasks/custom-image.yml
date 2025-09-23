@@ -338,13 +338,21 @@
       - "{{ custom_image_dir }}"
   changed_when: true
 
-- name: Copy custom image to base image location
+- name: Copy custom image to base image location (with automatic reflink optimization)
   become: true
   become_method: ansible.builtin.sudo
-  ansible.builtin.copy:
-    src: "{{ custom_image }}"
-    dest: "{{ base_image_pathname }}"
-    remote_src: true
+  ansible.builtin.command:
+    cmd: "cp --reflink=auto '{{ custom_image }}' '{{ base_image_pathname }}'"
+  when:
+    - custom_image_stat.stat.exists or custom_image_download is changed
+    - custom_image != base_image_pathname
+
+- name: Set proper permissions on base image
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ base_image_pathname }}"
     mode: "u=rw,g=r,o=r"
   when:
     - custom_image_stat.stat.exists or custom_image_download is changed
+    - custom_image != base_image_pathname
