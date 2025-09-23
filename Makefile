@@ -274,6 +274,10 @@ include scripts/archive.Makefile
 include scripts/defconfig.Makefile
 include scripts/style.Makefile
 
+PHONY += contrib-graph
+contrib-graph:
+	$(Q)python3 scripts/contrib_graph.py $(if $(YEAR),--year $(YEAR)) $(if $(MONTH),--month $(MONTH))
+
 PHONY += clean
 clean:
 	$(Q)$(MAKE) -f scripts/build.Makefile $@

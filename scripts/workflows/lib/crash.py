@@ -345,6 +345,29 @@ class KernelCrashWatchdog:
 
         return buffer.getvalue()
 
+    def clean_old_crash_files(self, host_boot_time):
+        """Remove crash files that are older than the host's last boot time."""
+        if not os.path.exists(self.output_dir) or not host_boot_time:
+            return
+
+        file_patterns = [
+            "journal-*.crash",
+            "journal-*.corruption",
+            "journal-*.crash_and_corruption",
+            "journal-*.warning",
+            "journal-*.decoded.*",
+        ]
+
+        for pattern in file_patterns:
+            for file_path in glob.glob(os.path.join(self.output_dir, pattern)):
+                try:
+                    mtime = os.path.getmtime(file_path)
+                    if mtime < host_boot_time:
+                        os.remove(file_path)
+                        logger.info(f"Removed old crash file: {file_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to remove old crash file {file_path}: {e}")
+
     def load_known_crashes(self):
         """Load previously detected log hashes from the output directory."""
         if not os.path.exists(self.output_dir):
@@ -868,6 +891,37 @@ class KernelCrashWatchdog:
         crash_file = None
         warnings_file = None
         journal_logs = None
+
+        # Check if host is up and get its boot time to filter old crashes
+        host_boot_time = None
+        if self.check_host_reachable():
+            try:
+                result = subprocess.run(
+                    ["ssh", self.host_name, "awk '/^btime/ {print $2}' /proc/stat"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    host_boot_time = int(result.stdout.strip())
+                    logger.debug(f"Host {self.host_name} boot time: {host_boot_time}")
+
+                    # Check if latest crash file is older than boot time
+                    if self.latest_file_with_issue and os.path.exists(
+                        self.latest_file_with_issue
+                    ):
+                        crash_mtime = os.path.getmtime(self.latest_file_with_issue)
+                        if crash_mtime < host_boot_time:
+                            logger.info(
+                                f"Latest crash file for {self.host_name} is from before last boot "
+                                f"(crash: {datetime.fromtimestamp(crash_mtime)}, "
+                                f"boot: {datetime.fromtimestamp(host_boot_time)}), skipping"
+                            )
+                            # Clean up old crash files from before the boot
+                            self.clean_old_crash_files(host_boot_time)
+                            return None, None
+            except Exception as e:
+                logger.debug(f"Could not get boot time for {self.host_name}: {e}")
 
         # 1. Try console log first if guestfs is enabled
         if method == "console" or (method == "auto" and self.kdevops_enable_guestfs):

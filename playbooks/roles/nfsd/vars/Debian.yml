@@ -4,6 +4,7 @@ nfsd_packages:
   - nfs-common
   - nfs-kernel-server
   - policycoreutils
+  - xfsprogs
 
 fstype_userspace_progs:
   btrfs: btrfs-progs

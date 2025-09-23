@@ -118,3 +118,4 @@ terraform/lambdalabs/.terraform_api_key
 .cloud.initialized
 
 scripts/__pycache__/
+docs/contrib/kdevops_contributions*
