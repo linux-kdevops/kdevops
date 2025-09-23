@@ -1,0 +1,309 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve region and availability zone information from AWS. Use
+it to construct the "locations" Kconfig menu.
+"""
+
+import sys
+import argparse
+import os
+
+from configparser import ConfigParser
+from jinja2 import Environment, FileSystemLoader
+
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError
+
+
+def get_default_region():
+    """
+    Get the default AWS region from the ~/.aws/config file.
+
+    Returns:
+        str: Default region, or 'us-east-1' if no default
+        is found.
+    """
+    config_path = os.path.expanduser('~/.aws/config')
+    if os.path.exists(config_path):
+        try:
+            config = ConfigParser()
+            config.read(config_path)
+            if 'default' in config:
+                return config['default'].get('region', 'us-east-1')
+            if 'profile default' in config:
+                return config['profile default'].get('region', 'us-east-1')
+        except Exception as e:
+            print(f"Warning: Error reading AWS config file: {e}", file=sys.stderr)
+    return 'us-east-1'
+
+
+def get_all_regions():
+    """
+    Retrieve the list of all AWS regions. Convert it to a dictionary
+    keyed on region name
+
+    Returns:
+        list: sort list of dictionaries each containing a region
+    """
+    try:
+        ec2 = boto3.client('ec2')
+        response = ec2.describe_regions(AllRegions=True)
+
+        regions = {}
+        for region in response['Regions']:
+            region_name = region['RegionName']
+            regions[region_name] = {
+                'region_name': region_name,
+                'opt_in_status': region.get('OptInStatus', 'Unknown'),
+                'end_point': region.get('Endpoint')
+            }
+        return sorted(regions.values(), key=lambda x: x['region_name'])
+    except Exception as e:
+        print(f"Error retrieving AWS regions: {e}", file=sys.stderr)
+        return {}
+
+
+def get_region_info(regions, region_name, quiet=False):
+    """
+    Get detailed information about a specific region including availability zones.
+
+    Args:
+        region_name (str): AWS region name (e.g., 'us-east-1', 'eu-west-1')
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary containing region information and availability zones
+    """
+    try:
+        if not quiet:
+            print(f"Querying information for region {region_name}...", file=sys.stderr)
+
+        region_info = next(filter(lambda x: x['region_name'] == region_name, regions), None)
+        if not region_info:
+            if not quiet:
+                print(f"Region {region_name} was not found", file=sys.stderr)
+            return None
+        if region_info['opt_in_status'] == "not-opted-in":
+            if not quiet:
+                print(f"Region {region_name} is not accessible.", file=sys.stderr)
+            return None
+
+        ec2 = boto3.client('ec2', region_name=region_name)
+        response = ec2.describe_availability_zones(
+            AllAvailabilityZones=True,
+            Filters=[
+                {'Name': 'region-name', 'Values': [region_name]},
+                {'Name': 'zone-type', 'Values': ['availability-zone']},
+            ]
+        )
+        availability_zones = []
+        for zone in response['AvailabilityZones']:
+            zone_info = {
+                'zone_id': zone['ZoneId'],
+                'zone_name': zone['ZoneName'],
+                'zone_type': zone.get('ZoneType', 'availability-zone'),
+                'state': zone['State'],
+            }
+            availability_zones.append(zone_info)
+
+        result = {
+            'region_name': region_info['region_name'],
+            'endpoint': region_info.get('end_point', f'ec2.{region_name}.amazonaws.com'),
+            'opt_in_status': region_info.get('opt_in_status', 'opt-in-not-required'),
+            'availability_zone_count': len(availability_zones),
+            'availability_zones': sorted(availability_zones, key=lambda x: x['zone_name'])
+        }
+
+        if not quiet:
+            print(f"Found {len(availability_zones)} availability zones in {region_name}",
+                file=sys.stderr)
+
+        return result
+
+    except NoCredentialsError:
+        print("Error: AWS credentials not found. Please configure your credentials.",
+            file=sys.stderr)
+        return None
+    except ClientError as e:
+        error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+        if error_code in ['UnauthorizedOperation', 'InvalidRegion']:
+            print(f"Error: Cannot access region {region_name}. Check region name and permissions.",
+                file=sys.stderr)
+        else:
+            print(f"AWS API Error: {e}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        return None
+
+
+def output_region_kconfig(region_info):
+    """Output region information in Kconfig format."""
+    environment = Environment(
+        loader=FileSystemLoader(sys.path[0]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = environment.get_template("zone.j2")
+    print(
+        template.render(
+            region_name=region_info['region_name'].upper().replace('-', '_'),
+            zones=region_info['availability_zones'],
+        )
+    )
+
+
+def output_region_raw(region_info, quiet=False):
+    """Output region information in table format."""
+    if not quiet:
+        print(f"Region:             {region_info['region_name']}")
+        print(f"Endpoint:           {region_info['endpoint']}")
+        print(f"Opt-in status:      {region_info['opt_in_status']}")
+        print(f"Availability Zones: {region_info['availability_zone_count']}")
+
+    print(f"{'Zone Name':<15} {'Zone ID':<15} {'Zone Type':<18} {'State':<12} {'Parent Zone':<15}")
+    print("-" * 80)
+
+    for zone in region_info['availability_zones']:
+        parent_zone = zone.get('parent_zone_name', '') or zone.get('parent_zone_id', '')
+        zone_type = zone.get('zone_type', 'availability_zone')
+        print(f"{zone['zone_name']:<15} "
+              f"{zone['zone_id']:<15} "
+              f"{zone_type:<18} "
+              f"{zone['state']:<12} "
+              f"{parent_zone:<15}")
+
+
+def output_regions_kconfig(regions):
+    """Output available regions in kconfig format."""
+    environment = Environment(
+        loader=FileSystemLoader(sys.path[0]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = environment.get_template("regions.j2")
+    print(
+        template.render(
+            default_region=get_default_region().upper().replace('-', '_'),
+            regions=regions,
+        )
+    )
+
+
+def output_regions_raw(regions, quiet=False):
+    """Output available regions in table format."""
+    if not quiet:
+        print(f"Available AWS regions ({len(regions)}):\n")
+        print(f"{'Region Name':<20} {'Opt-in Status':<20}")
+        print("-" * 42)
+
+    for region in regions:
+        opt_in_status = region.get('opt_in_status', 'Unknown')
+        print(f"{region['region_name']:<20} {opt_in_status:<20}")
+
+
+def output_locations_kconfig(regions):
+    """Output the locations menu in Kconfg format."""
+    environment = Environment(
+        loader=FileSystemLoader(sys.path[0]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = environment.get_template("regions.j2")
+    print(
+        template.render(
+            default_region=get_default_region().upper().replace('-', '_'),
+            regions=regions,
+        )
+    )
+
+    template = environment.get_template("zone.j2")
+    for region in regions:
+        region_info = get_region_info(regions, region['region_name'], True)
+        if region_info:
+            print()
+            print(
+                template.render(
+                    region_name=region_info['region_name'].upper().replace('-', '_'),
+                    zones=region_info['availability_zones'],
+                )
+            )
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description='Get AWS region and availability zone information',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python %(prog)s --regions
+  python %(prog)s us-east-1
+  python %(prog)s ap-southeast-1 --quiet
+        """
+    )
+    parser.add_argument(
+        'region_name',
+        nargs='?',
+        help='AWS region name (e.g., us-east-1, eu-west-1, ap-southeast-1)'
+    )
+
+    parser.add_argument(
+        '--format', '-f',
+        choices=['raw', 'kconfig'],
+        default='kconfig',
+        help='Output format (default: kconfig)'
+    )
+    parser.add_argument(
+        '--quiet', '-q',
+        action='store_true',
+        help='Suppress informational messages'
+    )
+    parser.add_argument(
+        '--regions',
+        action='store_true',
+        help='List all available AWS regions'
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    if not args.quiet:
+        print("Fetching list of all AWS regions...", file=sys.stderr)
+    regions = get_all_regions()
+    if not regions:
+        sys.exit(1)
+
+    if args.regions:
+        if args.format == 'kconfig':
+            output_regions_kconfig(regions)
+        else:
+            output_regions_raw(regions, args.quiet)
+        return
+
+    if args.region_name:
+        if not args.quiet:
+            print(f"Fetching information for region {args.region_name}...", file=sys.stderr)
+
+        region_info = get_region_info(regions, args.region_name, args.quiet)
+        if region_info:
+            if args.format == 'kconfig':
+                output_region_kconfig(region_info)
+            else:
+                output_region_raw(region_info, args.quiet)
+        else:
+            print(f"Could not retrieve information for region '{args.region_name}'.", file=sys.stderr)
+            print("Try running with --regions to see available regions.", file=sys.stderr)
+            sys.exit(1)
+        return
+
+    output_locations_kconfig(regions)
+
+
+if __name__ == "__main__":
+    main()

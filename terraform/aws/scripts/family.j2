@@ -1,0 +1,45 @@
+if TERRAFORM_AWS_INSTANCE_FAMILY_{{ family_name }}
+
+choice
+	prompt "Instance type"
+	default TERRAFORM_AWS_INSTANCE_SIZE_{{ instances[0]['instance_type'].upper().replace('-', '_').replace('.', '_') }}
+	help
+	  Add storage by increasing the number of EBS volumes per
+	  instance.
+
+{% for instance in instances %}
+config TERRAFORM_AWS_INSTANCE_SIZE_{{ instance['instance_type'].upper().replace('-', '_').replace('.', '_') }}
+	bool "{{ instance['instance_type'] }}"
+{% if 'x86_64' in instance['cpu_isa'] %}
+	depends on TARGET_ARCH_X86_64
+{% elif 'arm64' in instance['cpu_isa'] %}
+	depends on TARGET_ARCH_ARM64
+{% endif %}
+	help
+	  vCPU count: {{ instance['vcpus'] }}
+	  RAM: {{ instance['memory_gb'] }} GiB
+	  Network speed: {{ instance['network_performance'] }}
+{% if instance['storage'] != 'EBS-only' %}
+	  Additional storage: {{ instance['storage'] }}
+{% endif %}
+{% if instance['gpu'] != 'None' %}
+	  GPU: {{ instance['gpu'] }}
+{% endif %}
+{% if instance['bare_metal'] %}
+	  Bare metal instance.
+{% endif %}
+{% if instance['free_tier'] %}
+	  Free tier eligible.
+{% endif %}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AWS_INSTANCE_TYPE
+	string
+	output yaml
+{% for instance in instances %}
+	default "{{ instance['instance_type'] }}" if TERRAFORM_AWS_INSTANCE_SIZE_{{ instance['instance_type'].upper().replace('-', '_').replace('.', '_') }}
+{% endfor %}
+
+endif # TERRAFORM_AWS_INSTANCE_FAMILY_{{ family_name }}

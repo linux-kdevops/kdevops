@@ -1,14 +1,23 @@
 data "aws_ami" "kdevops_ami" {
   most_recent = true
+  owners      = [var.aws_ami_owner]
+
+  filter {
+    name   = "architecture"
+    values = [var.aws_ami_arch]
+  }
   filter {
     name   = "name"
     values = [var.aws_name_search]
   }
   filter {
+    name   = "state"
+    values = ["available"]
+  }
+  filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  owners = [var.aws_ami_owner]
 }
 
 resource "aws_vpc" "kdevops_vpc" {

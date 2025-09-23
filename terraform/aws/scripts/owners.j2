@@ -1,9 +1,32 @@
+choice
+	prompt "Linux distribution"
+	default TERRAFORM_AWS_DISTRO_DEBIAN
+	help
+	  Select a popular Linux distribution to install on your
+	  instances, or use the "Custom AMI image" selection to
+	  choose an image that is off the beaten path.
+
+{% for owner_key in sorted_keys %}
+config TERRAFORM_AWS_DISTRO_{{ owner_key.upper() }}
+	bool "{{ owners[owner_key]['description'] }}"
+
+{% endfor %}
+config TERRAFORM_AWS_DISTRO_CUSTOM
+	bool "Custom AMI image"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_ARCH
+	string
+	output yaml
+	default "x86_64" if TARGET_ARCH_X86_64
+	default "arm64" if TARGET_ARCH_ARM64
+
 if TERRAFORM_AWS_DISTRO_CUSTOM
 
 config TERRAFORM_AWS_AMI_OWNER
 	string "AWS AMI owner or owner alias"
 	output yaml
-	default "amazon"
 	help
 	  The owner is a string of digits that represents a
 	  collection of published images to search, such as
@@ -23,8 +46,8 @@ config TERRAFORM_AWS_NS
 
 	  https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration
 
-	  Get your image ami id, for debian 9 amd64 on the us-west1 this is
-	  ami-0adbaf2e0ce044437 so you can run:
+	  Get your image ami id. For debian 9 amd64 on the us-west-1,
+	  this is ami-0adbaf2e0ce044437. You can then run:
 
 	  aws ec2 describe-images --image-ids ami-0adbaf2e0ce044437 | grep Name
 

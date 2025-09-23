@@ -1,0 +1,71 @@
+choice
+	prompt "AWS region"
+	default TERRAFORM_AWS_REGION_{{ default_region }}
+	help
+	  Use this option to select the AWS region that hosts your
+	  compute and storage resources. If you do not explicitly
+	  specify a region, the US West (Oregon) region is the
+	  default.
+
+	  Once selected, you can stick with the default AV zone
+	  chosen by kdevops, or use:
+
+	    aws ec2 describe-availability-zones --region <region-name>
+
+	  to list the Availability Zones that are enabled for your
+	  AWS account. Enter your selection from this list using the
+	  TERRAFORM_AWS_AV_ZONE menu.
+
+	  If you wish to expand on the region list, send a patch after
+	  reading this list:
+
+	  https://docs.aws.amazon.com/general/latest/gr/rande.html
+
+	  Note that if you change region the AMI may change as well even
+	  for the same distribution. At least that applies to Amazon EC2
+	  optimized images. Use the AWS console, to set that up it will
+	  ask you for your credentials and then a region. Before adding
+	  an entry for ami image be sure you are on the region and then
+	  query with something like:
+
+	  aws ec2 describe-images --image-ids ami-0efa651876de2a5ce
+
+	  For instance, this AMI belongs to us-west-2 only. us-east* have
+	  other AMIs for the same Amazon 2023 EC2 image. The output from
+	  here tells me:
+
+	  "OwnerId": "137112412989"
+
+	  And that is what value to use for ami-0efa651876de2a5ce
+	  for the TERRAFORM_AWS_AMI_OWNER. To get the ami-* for your regions
+	  just go to your EC2 console, that console will be associated with
+	  a region already. You have to change regions if you want to look
+	  for AMIs in other regions. There are for example two different
+	  ami-* values for Amazon Linux 2023 for different regions. However
+	  they values can be same. For example below are the us-west-2 queries
+	  for Amazon Linux 2023 for x86_64 and then for ARM64.
+
+	  aws ec2 describe-images --image-ids ami-0efa651876de2a5ce | grep OwnerId
+	    "OwnerId": "137112412989",
+	  aws ec2 describe-images --image-ids ami-0699f753302dd8b00 | grep OwnerId
+	    "OwnerId": "137112412989",
+
+{% for region in regions %}
+{% if region['opt_in_status'] != 'not-opted-in' %}
+config TERRAFORM_AWS_REGION_{{ region['region_name'].upper().replace('-', '_') }}
+	bool "{{ region['region_name'] }}"
+	help
+	  Use the {{ region['region_name'] }} region.
+
+{% endif %}
+{% endfor %}
+endchoice
+
+config TERRAFORM_AWS_REGION
+	string
+	output yaml
+{% for region in regions %}
+{% if region['opt_in_status'] != 'not-opted-in' %}
+	default "{{ region['region_name'] }}" if TERRAFORM_AWS_REGION_{{ region['region_name'].upper().replace('-', '_') }}
+{% endif %}
+{% endfor %}

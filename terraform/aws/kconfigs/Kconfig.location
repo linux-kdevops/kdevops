@@ -1,6 +1,6 @@
 choice
 	prompt "AWS region"
-	default TERRAFORM_AWS_REGION_US_WEST_2
+	default TERRAFORM_AWS_REGION_US_EAST_1
 	help
 	  Use this option to select the AWS region that hosts your
 	  compute and storage resources. If you do not explicitly
@@ -51,109 +51,89 @@ choice
 	    "OwnerId": "137112412989",
 
 config TERRAFORM_AWS_REGION_AP_NORTHEAST_1
-	bool "ap-northeast-1 - Tokyo"
+	bool "ap-northeast-1"
 	help
-	  This option specifies the Asia-Pacific northeast-1 region.
-	  The data center is located in Tokyo, Japan.
+	  Use the ap-northeast-1 region.
 
 config TERRAFORM_AWS_REGION_AP_NORTHEAST_2
-	bool "ap-northeast-2 - Seoul"
+	bool "ap-northeast-2"
 	help
-	  This option specifies the Asia-Pacific northeast-2 region.
-	  The data center is located in Seoul, South Korea.
+	  Use the ap-northeast-2 region.
 
 config TERRAFORM_AWS_REGION_AP_NORTHEAST_3
-	bool "ap-northeast-3 - Osaka"
+	bool "ap-northeast-3"
 	help
-	  This option specifies the Asia-Pacific northeast-3 region.
-	  The data center is located in Osaka, Japan.
+	  Use the ap-northeast-3 region.
 
 config TERRAFORM_AWS_REGION_AP_SOUTH_1
-	bool "ap-south-1 - Mumbai"
+	bool "ap-south-1"
 	help
-	  This option specifies the Asia-Pacific south-1 region.
-	  The data center is located in Mumbai, India.
+	  Use the ap-south-1 region.
 
 config TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
-	bool "ap-southeast-1 - Singapore"
+	bool "ap-southeast-1"
 	help
-	  This option specifies the Asia-Pacific southeast-1 region.
-	  The data center is located in the Republic of Singapore.
+	  Use the ap-southeast-1 region.
 
 config TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
-	bool "ap-southeast-1 - Sydney"
+	bool "ap-southeast-2"
 	help
-	  This option specifies the Asia-Pacific southeast-2 region.
-	  The data center is located in Sydney, Australia.
+	  Use the ap-southeast-2 region.
 
 config TERRAFORM_AWS_REGION_CA_CENTRAL_1
-	bool "ca-central-1 - Central"
+	bool "ca-central-1"
 	help
-	  This option specifies the Canada central-1 region.
-	  The data center is located in Montreal, Quebec.
+	  Use the ca-central-1 region.
 
 config TERRAFORM_AWS_REGION_EU_CENTRAL_1
-	bool "eu-central-1 - Frankfurt"
+	bool "eu-central-1"
 	help
-	  This option specifies the European Union central-1 region.
-	  The data center is located in Frankfurt, Germany.
+	  Use the eu-central-1 region.
 
 config TERRAFORM_AWS_REGION_EU_NORTH_1
-	bool "eu-north-1 - Stockholm"
+	bool "eu-north-1"
 	help
-	  This option specifies the European Union north-1 region.
-	  The data center is located in Stockholm, Sweden.
+	  Use the eu-north-1 region.
 
 config TERRAFORM_AWS_REGION_EU_WEST_1
-	bool "eu-west-1 - Ireland"
+	bool "eu-west-1"
 	help
-	  This option specifies the European Union west-1 region.
-	  The data center is located in Dublin, Republic of Ireland.
+	  Use the eu-west-1 region.
 
 config TERRAFORM_AWS_REGION_EU_WEST_2
-	bool "eu-west-2 - London"
+	bool "eu-west-2"
 	help
-	  This option specifies the European Union west-2 region.
-	  The data center is located in London, United Kingdom.
+	  Use the eu-west-2 region.
 
 config TERRAFORM_AWS_REGION_EU_WEST_3
-	bool "eu-west-3 - Paris"
+	bool "eu-west-3"
 	help
-	  This option specifies the European Union west-3 region.
-	  The data center is located in Paris, France.
+	  Use the eu-west-3 region.
 
 config TERRAFORM_AWS_REGION_SA_EAST_1
-	bool "sa-east-1 - Sao Paulo"
+	bool "sa-east-1"
 	help
-	  This option specifies the South America east-1 region.
-	  The data center is located in São Paulo, Brazil.
+	  Use the sa-east-1 region.
 
 config TERRAFORM_AWS_REGION_US_EAST_1
-	bool "us-east-1 - N. Virginia"
+	bool "us-east-1"
 	help
-	  This option specifies the United States east-1 region.
-	  Multiple data centers are located in the US state of
-	  Virginia.
+	  Use the us-east-1 region.
 
 config TERRAFORM_AWS_REGION_US_EAST_2
-	bool "us-east-2 - Ohio"
+	bool "us-east-2"
 	help
-	  This option specifies the United States east-2 region.
-	  The data center is located in Columbus, Ohio, US.
+	  Use the us-east-2 region.
 
 config TERRAFORM_AWS_REGION_US_WEST_1
-	bool "us-west-1 - North California"
+	bool "us-west-1"
 	help
-	  This option specifies the United States west-1 region.
-	  The data center is located in San Francisco, California,
-	  US.
+	  Use the us-west-1 region.
 
 config TERRAFORM_AWS_REGION_US_WEST_2
-	bool "us-west-2 - Oregon"
+	bool "us-west-2"
 	help
-	  This option specifies the United States west-2 region.
-	  Multiple data centers are located in the US state of
-	  Oregon.
+	  Use the us-west-2 region.
 
 endchoice
 
@@ -178,449 +158,28 @@ config TERRAFORM_AWS_REGION
 	default "us-west-1" if TERRAFORM_AWS_REGION_US_WEST_1
 	default "us-west-2" if TERRAFORM_AWS_REGION_US_WEST_2
 
+
 if TERRAFORM_AWS_REGION_AP_NORTHEAST_1
 
 choice
 	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
 
 config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
 	bool "ap-northeast-1a"
 	help
-	  This option selects the ap-northeast-1a availability zone.
+	  Use the ap-northeast-1a availability zone.
 
 config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1C
 	bool "ap-northeast-1c"
 	help
-	  This option selects the ap-northeast-1c availability zone.
+	  Use the ap-northeast-1c availability zone.
 
 config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1D
 	bool "ap-northeast-1d"
 	help
-	  This option selects the ap-northeast-1d availability zone.
+	  Use the ap-northeast-1d availability zone.
 
 endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_1
-
-if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
-	bool "ap-northeast-2a"
-	help
-	  This option selects the ap-northeast-2a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2B
-	bool "ap-northeast-2b"
-	help
-	  This option selects the ap-northeast-2b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2C
-	bool "ap-northeast-2c"
-	help
-	  This option selects the ap-northeast-2c availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2D
-	bool "ap-northeast-2d"
-	help
-	  This option selects the ap-northeast-2d availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_2
-
-if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
-	bool "ap-northeast-3a"
-	help
-	  This option selects the ap-northeast-3a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
-	bool "ap-northeast-3b"
-	help
-	  This option selects the ap-northeast-3b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
-	bool "ap-northeast-3c"
-	help
-	  This option selects the ap-northeast-3c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_3
-
-if TERRAFORM_AWS_REGION_AP_SOUTH_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
-	bool "ap-south-1a"
-	help
-	  This option selects the ap-south-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1B
-	bool "ap-south-1b"
-	help
-	  This option selects the ap-south-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1C
-	bool "ap-south-1c"
-	help
-	  This option selects the ap-south-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_SOUTH_1
-
-if TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
-	bool "ap-southeast-1a"
-	help
-	  This option selects the ap-southeast-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1B
-	bool "ap-southeast-1b"
-	help
-	  This option selects the ap-southeast-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1C
-	bool "ap-southeast-1c"
-	help
-	  This option selects the ap-southeast-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
-
-if TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
-	bool "ap-southeast-2a"
-	help
-	  This option selects the ap-southeast-2a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2B
-	bool "ap-southeast-2b"
-	help
-	  This option selects the ap-southeast-2b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2C
-	bool "ap-southeast-2c"
-	help
-	  This option selects the ap-southeast-2c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
-
-if TERRAFORM_AWS_REGION_CA_CENTRAL_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
-
-config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
-	bool "ca-central-1a"
-	help
-	  This option selects the ca-central-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
-	bool "ca-central-1b"
-	help
-	  This option selects the ca-central-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
-	bool "ca-central-1d"
-	help
-	  This option selects the ca-central-1d availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_CA_CENTRAL_1
-
-if TERRAFORM_AWS_REGION_EU_CENTRAL_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
-
-config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
-	bool "eu-central-1a"
-	help
-	  This option selects the eu-central-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1B
-	bool "eu-central-1b"
-	help
-	  This option selects the eu-central-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1C
-	bool "eu-central-1c"
-	help
-	  This option selects the eu-central-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_EU_CENTRAL_1
-
-if TERRAFORM_AWS_REGION_EU_NORTH_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
-
-config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
-	bool "eu-north-1a"
-	help
-	  This option selects the eu-north-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1B
-	bool "eu-north-1b"
-	help
-	  This option selects the eu-north-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1C
-	bool "eu-north-1c"
-	help
-	  This option selects the eu-north-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_EU_NORTH_1
-
-if TERRAFORM_AWS_REGION_EU_WEST_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
-	bool "eu-west-1a"
-	help
-	  This option selects the eu-west-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_1B
-	bool "eu-west-1b"
-	help
-	  This option selects the eu-west-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_1C
-	bool "eu-west-1c"
-	help
-	  This option selects the eu-west-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_EU_WEST_1
-
-if TERRAFORM_AWS_REGION_EU_WEST_2
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
-	bool "eu-west-2a"
-	help
-	  This option selects the eu-west-2a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_2B
-	bool "eu-west-2b"
-	help
-	  This option selects the eu-west-2b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_2C
-	bool "eu-west-2c"
-	help
-	  This option selects the eu-west-2c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_EU_WEST_2
-
-if TERRAFORM_AWS_REGION_EU_WEST_3
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
-	bool "eu-west-3a"
-	help
-	  This option selects the eu-west-3a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_3B
-	bool "eu-west-3b"
-	help
-	  This option selects the eu-west-3b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_EU_WEST_3C
-	bool "eu-west-3c"
-	help
-	  This option selects the eu-west-3c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_EU_WEST_3
-
-if TERRAFORM_AWS_REGION_SA_EAST_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
-
-config TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
-	bool "sa-east-1a"
-	help
-	  This option selects the sa-east-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
-	bool "sa-east-1b"
-	help
-	  This option selects the sa-east-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
-	bool "sa-east-1c"
-	help
-	  This option selects the sa-east-1c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_SA_EAST_1
-
-if TERRAFORM_AWS_REGION_US_EAST_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_US_EAST_1A
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1A
-	bool "us-east-1a"
-	help
-	  This option selects the us-east-1a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1B
-	bool "us-east-1b"
-	help
-	  This option selects the us-east-1b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1C
-	bool "us-east-1c"
-	help
-	  This option selects the us-east-1c availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1D
-	bool "us-east-1d"
-	help
-	  This option selects the us-east-1d availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1E
-	bool "us-east-1e"
-	help
-	  This option selects the us-east-1e availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_1F
-	bool "us-east-1f"
-	help
-	  This option selects the us-east-1f availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_US_EAST_1
-
-if TERRAFORM_AWS_REGION_US_EAST_2
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_US_EAST_2A
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_2A
-	bool "us-east-2a"
-	help
-	  This option selects the us-east-2a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_2B
-	bool "us-east-2b"
-	help
-	  This option selects the us-east-2a availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_EAST_2C
-	bool "us-east-2c"
-	help
-	  This option selects the us-east-2c availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_US_EAST_2
-
-if TERRAFORM_AWS_REGION_US_WEST_1
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_US_WEST_1B
-	help
-	  This option sets the AWS availablity zone to the specified value.
-	  If you wish to expand on this list send a patch after reading this
-	  list:
-
-	  https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
-	  https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
-
-config TERRAFORM_AWS_AV_ZONE_US_WEST_1B
-	bool "us-west-1b"
-	help
-	  This option selects the us-west-1b availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_US_WEST_1
-
-if TERRAFORM_AWS_REGION_US_WEST_2
-
-choice
-	prompt "AWS availability zone"
-	default TERRAFORM_AWS_AV_ZONE_US_WEST_2B
-	help
-	  This option sets the AWS availablity zone to the specified value.
-	  If you wish to expand on this list send a patch after reading this
-	  list:
-
-	  https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
-	  https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240
-
-config TERRAFORM_AWS_AV_ZONE_US_WEST_2B
-	bool "us-west-2b"
-	help
-	  This option selects the us-west-2b availability zone.
-
-config TERRAFORM_AWS_AV_ZONE_US_WEST_2D
-	bool "us-west-2d"
-	help
-	  This option selects the us-west-2d availability zone.
-
-endchoice
-
-endif # TERRAFORM_AWS_REGION_US_WEST_2
 
 config TERRAFORM_AWS_AV_ZONE
 	string
@@ -628,52 +187,525 @@ config TERRAFORM_AWS_AV_ZONE
 	default "ap-northeast-1a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1A
 	default "ap-northeast-1c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1C
 	default "ap-northeast-1d" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_1D
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_1
+
+if TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
+	bool "ap-northeast-2a"
+	help
+	  Use the ap-northeast-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2B
+	bool "ap-northeast-2b"
+	help
+	  Use the ap-northeast-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2C
+	bool "ap-northeast-2c"
+	help
+	  Use the ap-northeast-2c availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2D
+	bool "ap-northeast-2d"
+	help
+	  Use the ap-northeast-2d availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ap-northeast-2a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2A
 	default "ap-northeast-2b" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2B
 	default "ap-northeast-2c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2C
 	default "ap-northeast-2d" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_2D
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_2
+
+if TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
+	bool "ap-northeast-3a"
+	help
+	  Use the ap-northeast-3a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
+	bool "ap-northeast-3b"
+	help
+	  Use the ap-northeast-3b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
+	bool "ap-northeast-3c"
+	help
+	  Use the ap-northeast-3c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ap-northeast-3a" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3A
 	default "ap-northeast-3b" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3B
 	default "ap-northeast-3c" if TERRAFORM_AWS_AV_ZONE_AP_NORTHEAST_3C
+
+endif # TERRAFORM_AWS_REGION_AP_NORTHEAST_3
+
+if TERRAFORM_AWS_REGION_AP_SOUTH_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
+	bool "ap-south-1a"
+	help
+	  Use the ap-south-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1B
+	bool "ap-south-1b"
+	help
+	  Use the ap-south-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1C
+	bool "ap-south-1c"
+	help
+	  Use the ap-south-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ap-south-1a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1A
 	default "ap-south-1b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1B
 	default "ap-south-1c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTH_1C
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTH_1
+
+if TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
+	bool "ap-southeast-1a"
+	help
+	  Use the ap-southeast-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1B
+	bool "ap-southeast-1b"
+	help
+	  Use the ap-southeast-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1C
+	bool "ap-southeast-1c"
+	help
+	  Use the ap-southeast-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ap-southeast-1a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1A
 	default "ap-southeast-1b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1B
 	default "ap-southeast-1c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_1C
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_1
+
+if TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
+	bool "ap-southeast-2a"
+	help
+	  Use the ap-southeast-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2B
+	bool "ap-southeast-2b"
+	help
+	  Use the ap-southeast-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2C
+	bool "ap-southeast-2c"
+	help
+	  Use the ap-southeast-2c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ap-southeast-2a" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2A
 	default "ap-southeast-2b" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2B
 	default "ap-southeast-2c" if TERRAFORM_AWS_AV_ZONE_AP_SOUTHEAST_2C
+
+endif # TERRAFORM_AWS_REGION_AP_SOUTHEAST_2
+
+if TERRAFORM_AWS_REGION_CA_CENTRAL_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
+	bool "ca-central-1a"
+	help
+	  Use the ca-central-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
+	bool "ca-central-1b"
+	help
+	  Use the ca-central-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
+	bool "ca-central-1d"
+	help
+	  Use the ca-central-1d availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "ca-central-1a" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1A
 	default "ca-central-1b" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1B
 	default "ca-central-1d" if TERRAFORM_AWS_AV_ZONE_CA_CENTRAL_1D
+
+endif # TERRAFORM_AWS_REGION_CA_CENTRAL_1
+
+if TERRAFORM_AWS_REGION_EU_CENTRAL_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
+	bool "eu-central-1a"
+	help
+	  Use the eu-central-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1B
+	bool "eu-central-1b"
+	help
+	  Use the eu-central-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1C
+	bool "eu-central-1c"
+	help
+	  Use the eu-central-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "eu-central-1a" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1A
 	default "eu-central-1b" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1B
 	default "eu-central-1c" if TERRAFORM_AWS_AV_ZONE_EU_CENTRAL_1C
+
+endif # TERRAFORM_AWS_REGION_EU_CENTRAL_1
+
+if TERRAFORM_AWS_REGION_EU_NORTH_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
+	bool "eu-north-1a"
+	help
+	  Use the eu-north-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1B
+	bool "eu-north-1b"
+	help
+	  Use the eu-north-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_NORTH_1C
+	bool "eu-north-1c"
+	help
+	  Use the eu-north-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "eu-north-1a" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1A
 	default "eu-north-1b" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1B
 	default "eu-north-1c" if TERRAFORM_AWS_AV_ZONE_EU_NORTH_1C
+
+endif # TERRAFORM_AWS_REGION_EU_NORTH_1
+
+if TERRAFORM_AWS_REGION_EU_WEST_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
+	bool "eu-west-1a"
+	help
+	  Use the eu-west-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1B
+	bool "eu-west-1b"
+	help
+	  Use the eu-west-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_1C
+	bool "eu-west-1c"
+	help
+	  Use the eu-west-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "eu-west-1a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1A
 	default "eu-west-1b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1B
 	default "eu-west-1c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_1C
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_1
+
+if TERRAFORM_AWS_REGION_EU_WEST_2
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
+	bool "eu-west-2a"
+	help
+	  Use the eu-west-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2B
+	bool "eu-west-2b"
+	help
+	  Use the eu-west-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_2C
+	bool "eu-west-2c"
+	help
+	  Use the eu-west-2c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "eu-west-2a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2A
 	default "eu-west-2b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2B
 	default "eu-west-2c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_2C
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_2
+
+if TERRAFORM_AWS_REGION_EU_WEST_3
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
+	bool "eu-west-3a"
+	help
+	  Use the eu-west-3a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3B
+	bool "eu-west-3b"
+	help
+	  Use the eu-west-3b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_EU_WEST_3C
+	bool "eu-west-3c"
+	help
+	  Use the eu-west-3c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "eu-west-3a" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3A
 	default "eu-west-3b" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3B
 	default "eu-west-3c" if TERRAFORM_AWS_AV_ZONE_EU_WEST_3C
+
+endif # TERRAFORM_AWS_REGION_EU_WEST_3
+
+if TERRAFORM_AWS_REGION_SA_EAST_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
+	bool "sa-east-1a"
+	help
+	  Use the sa-east-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
+	bool "sa-east-1b"
+	help
+	  Use the sa-east-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
+	bool "sa-east-1c"
+	help
+	  Use the sa-east-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "sa-east-1a" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1A
 	default "sa-east-1b" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1B
 	default "sa-east-1c" if TERRAFORM_AWS_AV_ZONE_SA_EAST_1C
+
+endif # TERRAFORM_AWS_REGION_SA_EAST_1
+
+if TERRAFORM_AWS_REGION_US_EAST_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1A
+	bool "us-east-1a"
+	help
+	  Use the us-east-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1B
+	bool "us-east-1b"
+	help
+	  Use the us-east-1b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1C
+	bool "us-east-1c"
+	help
+	  Use the us-east-1c availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1D
+	bool "us-east-1d"
+	help
+	  Use the us-east-1d availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1E
+	bool "us-east-1e"
+	help
+	  Use the us-east-1e availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_1F
+	bool "us-east-1f"
+	help
+	  Use the us-east-1f availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "us-east-1a" if TERRAFORM_AWS_AV_ZONE_US_EAST_1A
 	default "us-east-1b" if TERRAFORM_AWS_AV_ZONE_US_EAST_1B
 	default "us-east-1c" if TERRAFORM_AWS_AV_ZONE_US_EAST_1C
 	default "us-east-1d" if TERRAFORM_AWS_AV_ZONE_US_EAST_1D
 	default "us-east-1e" if TERRAFORM_AWS_AV_ZONE_US_EAST_1E
 	default "us-east-1f" if TERRAFORM_AWS_AV_ZONE_US_EAST_1F
+
+endif # TERRAFORM_AWS_REGION_US_EAST_1
+
+if TERRAFORM_AWS_REGION_US_EAST_2
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2A
+	bool "us-east-2a"
+	help
+	  Use the us-east-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2B
+	bool "us-east-2b"
+	help
+	  Use the us-east-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_EAST_2C
+	bool "us-east-2c"
+	help
+	  Use the us-east-2c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
 	default "us-east-2a" if TERRAFORM_AWS_AV_ZONE_US_EAST_2A
 	default "us-east-2b" if TERRAFORM_AWS_AV_ZONE_US_EAST_2B
 	default "us-east-2c" if TERRAFORM_AWS_AV_ZONE_US_EAST_2C
-	default "us-west-1b" if TERRAFORM_AWS_AV_ZONE_US_WEST_1B
+
+endif # TERRAFORM_AWS_REGION_US_EAST_2
+
+if TERRAFORM_AWS_REGION_US_WEST_1
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_1A
+	bool "us-west-1a"
+	help
+	  Use the us-west-1a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_1C
+	bool "us-west-1c"
+	help
+	  Use the us-west-1c availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
+	default "us-west-1a" if TERRAFORM_AWS_AV_ZONE_US_WEST_1A
+	default "us-west-1c" if TERRAFORM_AWS_AV_ZONE_US_WEST_1C
+
+endif # TERRAFORM_AWS_REGION_US_WEST_1
+
+if TERRAFORM_AWS_REGION_US_WEST_2
+
+choice
+	prompt "AWS availability zone"
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2A
+	bool "us-west-2a"
+	help
+	  Use the us-west-2a availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2B
+	bool "us-west-2b"
+	help
+	  Use the us-west-2b availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2C
+	bool "us-west-2c"
+	help
+	  Use the us-west-2c availability zone.
+
+config TERRAFORM_AWS_AV_ZONE_US_WEST_2D
+	bool "us-west-2d"
+	help
+	  Use the us-west-2d availability zone.
+
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
+	default "us-west-2a" if TERRAFORM_AWS_AV_ZONE_US_WEST_2A
 	default "us-west-2b" if TERRAFORM_AWS_AV_ZONE_US_WEST_2B
+	default "us-west-2c" if TERRAFORM_AWS_AV_ZONE_US_WEST_2C
 	default "us-west-2d" if TERRAFORM_AWS_AV_ZONE_US_WEST_2D
+
+endif # TERRAFORM_AWS_REGION_US_WEST_2

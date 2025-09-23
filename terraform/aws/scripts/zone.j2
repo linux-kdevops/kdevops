@@ -1,0 +1,22 @@
+if TERRAFORM_AWS_REGION_{{ region_name }}
+
+choice
+	prompt "AWS availability zone"
+
+{% for zone in zones %}
+config TERRAFORM_AWS_AV_ZONE_{{ zone['zone_name'].upper().replace('-', '_') }}
+	bool "{{ zone['zone_name'] }}"
+	help
+	  Use the {{ zone['zone_name'] }} availability zone.
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AWS_AV_ZONE
+	string
+	output yaml
+{%for zone in zones %}
+	default "{{ zone['zone_name'] }}" if TERRAFORM_AWS_AV_ZONE_{{ zone['zone_name'].upper().replace('-', '_') }}
+{% endfor %}
+
+endif # TERRAFORM_AWS_REGION_{{ region_name }}
