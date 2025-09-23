@@ -730,7 +730,7 @@
 - name: Set the export volname prefix
   tags: vars
   ansible.builtin.set_fact:
-    volname_prefix: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') }}-fs"
+    volname_prefix: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') }}-fs"
   when:
     - fstests_fstyp == "nfs" or fstests_fstyp == "cifs"
 
@@ -919,7 +919,7 @@
 
 - name: Verify section name {{ fstests_section }} exists on fstests config file
   vars:
-    fstests_section: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   tags: ["oscheck", "fstests", "run_tests", "section"]
   become: true
   become_flags: "su - -c"
@@ -970,7 +970,7 @@
 
 - name: Check and verify fstests dependencies are met prior to running fstests
   vars:
-    fstests_section: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   tags: ["oscheck", "fstests", "run_tests"]
   become: true
   become_flags: "su - -c"
@@ -1194,7 +1194,7 @@
 
 - name: Run oscheck-get-failures.sh to get list of known failed tests
   vars:
-    fstests_section: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   tags: ["oscheck", "fstests", "run_tests"]
   ansible.builtin.command: "{{ kdevops_data }}/workflows/fstests/scripts/oscheck-get-failures.sh --test-section {{ fstests_section }}"
   args:
@@ -1254,7 +1254,7 @@
 - name: Run fstests using ./oscheck.sh --print-start --journal {{ fstests_journal }} --print-done --test-section {{ fstests_section }} {{ oscheck_extra_args }} {{
     all_limit_tests }}
   vars:
-    fstests_section: "{{ ansible_host | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
     initial_baseline_expunges: "{{ fstests_initial_baseline_args | trim }}"
     skip_tests_args: "{{ fstests_skip_tests_args | trim }}"
   tags: ["oscheck", "fstests", "run_tests"]
