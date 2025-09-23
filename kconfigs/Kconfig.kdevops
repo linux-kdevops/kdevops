@@ -76,6 +76,24 @@ config KDEVOPS_CUSTOM_SSH_KEXALGORITHMS
 	  Some distributions, such as older distributions, may require a custom
 	  ssh configuration entry for the KexAlgorithms parameter.
 
+config KDEVOPS_MAKE_VERBOSE
+	bool "Enable verbose make output (V=1)"
+	default n
+	help
+	  Enable verbose output for all make operations. This is equivalent
+	  to running 'make V=1' and shows all executed commands for debugging.
+
+	  When enabled, you'll see:
+	  - All shell commands being executed
+	  - Full ansible-playbook command lines
+	  - Detailed build output
+
+	  This is useful for debugging build issues and understanding what
+	  kdevops is doing behind the scenes. You can still override this
+	  setting on the command line with 'make V=0' or 'make V=1'.
+
+	  If unsure, say N.
+
 config KDEVOPS_BASELINE_AND_DEV
 	bool "Enable both a baseline and development system per target test"
 	default n

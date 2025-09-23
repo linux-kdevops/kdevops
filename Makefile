@@ -64,6 +64,13 @@ define print_target
 	echo "==> [$1]"
 endef
 
+# Parse kconfig verbosity setting early, allow CLI to override
+ifneq (,$(wildcard .config))
+ifeq ($(CONFIG_KDEVOPS_MAKE_VERBOSE),y)
+V ?= 1
+endif
+endif
+
 ifeq ($(V),1)
 export Q=@$(call print_target,$@) && set -x &&
 export NQ=true
