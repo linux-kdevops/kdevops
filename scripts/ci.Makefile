@@ -10,7 +10,20 @@ ifneq (y,$(CONFIG_WORKFLOW_LINUX_PACKAGED))
 ifeq ($(strip $(CI_WORKFLOW)),)
 CI_WORKFLOW_BASENAME := $(shell basename $(CONFIG_BOOTLINUX_TREE) | sed 's/\.git$$//')
 else
+# Map workflow names to their appropriate .ci basename
+ifeq ($(findstring xfs,$(CI_WORKFLOW)),xfs)
+CI_WORKFLOW_BASENAME := fstests
+else ifeq ($(findstring btrfs,$(CI_WORKFLOW)),btrfs)
+CI_WORKFLOW_BASENAME := fstests
+else ifeq ($(findstring ext4,$(CI_WORKFLOW)),ext4)
+CI_WORKFLOW_BASENAME := fstests
+else ifeq ($(findstring tmpfs,$(CI_WORKFLOW)),tmpfs)
+CI_WORKFLOW_BASENAME := fstests
+else ifeq ($(findstring lbs-xfs,$(CI_WORKFLOW)),lbs-xfs)
+CI_WORKFLOW_BASENAME := fstests
+else
 CI_WORKFLOW_BASENAME := $(shell basename $(CI_WORKFLOW))
+endif
 endif
 
 ifneq ($(wildcard .ci/build-test/$(CI_WORKFLOW_BASENAME)),)
