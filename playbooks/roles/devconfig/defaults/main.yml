@@ -59,3 +59,4 @@ distro_debian_has_hop1_sources: false
 unattended_upgrades_installed: false
 workflow_infer_user_and_group: false
 kdevops_use_declared_hosts: false
+kdevops_enable_terraform: false
