@@ -13,6 +13,12 @@ copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
 {% endif %}
 
 install sudo,qemu-guest-agent,python3,bash
+
+# get rid of any rescue initramfs images, and prevent new ones from being generated
+uninstall dracut-config-rescue
+delete /boot/*rescue*
+delete /boot/loader/entries/*rescue*
+
 run-command useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
 edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
