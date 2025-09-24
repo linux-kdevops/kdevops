@@ -21,9 +21,9 @@ import seaborn as sns
 # Set style for better looking plots
 plt.style.use("seaborn-v0_8-darkgrid")
 sns.set_theme(style="whitegrid", palette="deep")
-plt.rcParams['figure.facecolor'] = '#f8f9fa'
-plt.rcParams['axes.facecolor'] = '#ffffff'
-plt.rcParams['grid.alpha'] = 0.2
+plt.rcParams["figure.facecolor"] = "#f8f9fa"
+plt.rcParams["axes.facecolor"] = "#ffffff"
+plt.rcParams["grid.alpha"] = 0.2
 
 
 def run_git_command(cmd):
@@ -234,9 +234,13 @@ def create_contribution_graphs(
                     title_suffix = f" ({year}, {month_names[month-1]}-Dec)"
                 else:
                     output_base = f"kdevops_contributions_{year}_{month_names[month-1].lower()}_{month_names[end_month-1].lower()}"
-                    title_suffix = f" ({year}, {month_names[month-1]}-{month_names[end_month-1]})"
+                    title_suffix = (
+                        f" ({year}, {month_names[month-1]}-{month_names[end_month-1]})"
+                    )
             else:
-                output_base = f"kdevops_contributions_{year}_{month_names[month-1].lower()}_dec"
+                output_base = (
+                    f"kdevops_contributions_{year}_{month_names[month-1].lower()}_dec"
+                )
                 title_suffix = f" ({year}, {month_names[month-1]}-Dec)"
         else:
             output_base = f"kdevops_contributions_{year}"
@@ -246,7 +250,7 @@ def create_contribution_graphs(
         title_suffix = " (All Time)"
 
     # Create figure with multiple subplots and better styling
-    fig = plt.figure(figsize=(24, 16), facecolor='#f8f9fa')
+    fig = plt.figure(figsize=(24, 16), facecolor="#f8f9fa")
     gs = fig.add_gridspec(
         3,
         3,
@@ -259,7 +263,7 @@ def create_contribution_graphs(
         fontsize=24,
         fontweight="bold",
         y=0.985,
-        color='#2c3e50'
+        color="#2c3e50",
     )
 
     if not contributors_total:
@@ -272,7 +276,7 @@ def create_contribution_graphs(
     commits = list(contributors_total.values())
 
     # Use a professional color gradient
-    cmap = plt.colormaps['viridis']
+    cmap = plt.colormaps["viridis"]
     colors = [cmap(i / len(contributors)) for i in range(len(contributors))]
 
     # Limit to top 15 contributors for readability
@@ -281,11 +285,19 @@ def create_contribution_graphs(
         commits = commits[:15]
         colors = colors[:15]
 
-    bars = ax1.bar(contributors, commits, color=colors, edgecolor='#2c3e50', linewidth=1.5)
-    ax1.set_title("Total Commits by Contributor", fontweight="bold", fontsize=16, color='#2c3e50', pad=20)
-    ax1.set_ylabel("Number of Commits", fontsize=12, color='#34495e')
-    ax1.spines['top'].set_visible(False)
-    ax1.spines['right'].set_visible(False)
+    bars = ax1.bar(
+        contributors, commits, color=colors, edgecolor="#2c3e50", linewidth=1.5
+    )
+    ax1.set_title(
+        "Total Commits by Contributor",
+        fontweight="bold",
+        fontsize=16,
+        color="#2c3e50",
+        pad=20,
+    )
+    ax1.set_ylabel("Number of Commits", fontsize=12, color="#34495e")
+    ax1.spines["top"].set_visible(False)
+    ax1.spines["right"].set_visible(False)
 
     # Improve x-axis labels for better readability
     ax1.tick_params(axis="x", rotation=45, labelsize=8)
@@ -347,11 +359,19 @@ def create_contribution_graphs(
             autopct="",  # No percentage text in the pie
             startangle=90,
             colors=pie_colors,
-            explode=[0.05 if i == 0 else 0 for i in range(len(main_contributors))],  # Slightly explode the largest slice
+            explode=[
+                0.05 if i == 0 else 0 for i in range(len(main_contributors))
+            ],  # Slightly explode the largest slice
             shadow=True,
-            wedgeprops={'edgecolor': 'white', 'linewidth': 2}
+            wedgeprops={"edgecolor": "white", "linewidth": 2},
         )
-        ax2.set_title("Contribution Distribution", fontweight="bold", fontsize=16, color='#2c3e50', pad=20)
+        ax2.set_title(
+            "Contribution Distribution",
+            fontweight="bold",
+            fontsize=16,
+            color="#2c3e50",
+            pad=20,
+        )
 
         # Calculate percentages for legend
         total_value = sum(main_contributors.values())
@@ -401,7 +421,9 @@ def create_contribution_graphs(
             activity_matrix.append(monthly_commits)
 
         if activity_matrix and months:
-            im = ax3.imshow(activity_matrix, cmap="coolwarm", aspect="auto", interpolation='nearest')
+            im = ax3.imshow(
+                activity_matrix, cmap="coolwarm", aspect="auto", interpolation="nearest"
+            )
             ax3.set_xticks(range(len(months)))
             month_names = [
                 "Jan",
@@ -420,7 +442,13 @@ def create_contribution_graphs(
             ax3.set_xticklabels([month_names[m - 1] for m in months])
             ax3.set_yticks(range(len(top_contributors)))
             ax3.set_yticklabels(top_contributors)
-            ax3.set_title("Monthly Activity Heatmap", fontweight="bold", fontsize=16, color='#2c3e50', pad=20)
+            ax3.set_title(
+                "Monthly Activity Heatmap",
+                fontweight="bold",
+                fontsize=16,
+                color="#2c3e50",
+                pad=20,
+            )
 
             # Add text annotations
             for i in range(len(top_contributors)):
@@ -470,7 +498,9 @@ def create_contribution_graphs(
         current_date = datetime.now()
         if (year is None) or (int(year) == current_date.year):
             # Only include months up to current month
-            months_with_data = sorted([m for m in monthly_totals.keys() if m <= current_date.month])
+            months_with_data = sorted(
+                [m for m in monthly_totals.keys() if m <= current_date.month]
+            )
         else:
             months_with_data = sorted(monthly_totals.keys())
         month_names = [
@@ -499,7 +529,7 @@ def create_contribution_graphs(
                 color="#3498db",
                 markerfacecolor="#e74c3c",
                 markeredgewidth=2,
-                markeredgecolor="#2c3e50"
+                markeredgecolor="#2c3e50",
             )
             ax4.fill_between(
                 months_with_data,
@@ -507,24 +537,42 @@ def create_contribution_graphs(
                 alpha=0.2,
                 color="#3498db",
             )
-            ax4.set_title("Monthly Commit Activity", fontweight="bold", fontsize=16, color='#2c3e50', pad=20)
-            ax4.spines['top'].set_visible(False)
-            ax4.spines['right'].set_visible(False)
+            ax4.set_title(
+                "Monthly Commit Activity",
+                fontweight="bold",
+                fontsize=16,
+                color="#2c3e50",
+                pad=20,
+            )
+            ax4.spines["top"].set_visible(False)
+            ax4.spines["right"].set_visible(False)
             ax4.set_xlabel("Month")
             ax4.set_ylabel("Total Commits")
             # FORCE matplotlib to use ONLY our specified ticks
             ax4.set_xticks(months_with_data)
             ax4.set_xticks(months_with_data, minor=False)  # No minor ticks
             ax4.set_xticklabels([month_names[m - 1] for m in months_with_data])
-            ax4.xaxis.set_tick_params(which='minor', bottom=False, top=False)  # Disable minor ticks
+            ax4.xaxis.set_tick_params(
+                which="minor", bottom=False, top=False
+            )  # Disable minor ticks
             ax4.grid(True, alpha=0.3)
 
             # Add a subtle 'Today' marker within the current year for context
             if year and int(year) == current_date.year:
-                days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
-                today_pos = current_date.month + (current_date.day - 1) / float(days_in_month)
+                days_in_month = calendar.monthrange(
+                    current_date.year, current_date.month
+                )[1]
+                today_pos = current_date.month + (current_date.day - 1) / float(
+                    days_in_month
+                )
                 if 1 <= today_pos <= 12:
-                    ax4.axvline(x=today_pos, color="#7f8c8d", linestyle=":", linewidth=1.5, alpha=0.7)
+                    ax4.axvline(
+                        x=today_pos,
+                        color="#7f8c8d",
+                        linestyle=":",
+                        linewidth=1.5,
+                        alpha=0.7,
+                    )
                     ax4.text(
                         today_pos,
                         max([monthly_totals[m] for m in months_with_data]) * 0.6,
@@ -595,7 +643,6 @@ def create_contribution_graphs(
     # 5. Top Contributors Timeline
     ax5 = fig.add_subplot(gs[1, 1])
 
-
     if active_months:
         top_3_contributors = list(contributors_total.keys())[:3]
         # Use distinctive colors with good contrast
@@ -633,15 +680,19 @@ def create_contribution_graphs(
                     color=colors_line[idx % len(colors_line)],
                     alpha=0.8,
                     markeredgewidth=2,
-                    markeredgecolor='#2c3e50'
+                    markeredgecolor="#2c3e50",
                 )
 
         ax5.set_title(
-            "Top Contributors Monthly Activity", fontweight="bold", fontsize=16, color='#2c3e50', pad=20
+            "Top Contributors Monthly Activity",
+            fontweight="bold",
+            fontsize=16,
+            color="#2c3e50",
+            pad=20,
         )
         ax5.set_xlabel("Month")
-        ax5.spines['top'].set_visible(False)
-        ax5.spines['right'].set_visible(False)
+        ax5.spines["top"].set_visible(False)
+        ax5.spines["right"].set_visible(False)
         ax5.set_ylabel("Commits")
         # Only show months with actual activity (filtering out future months)
         if (year is None) or (int(year) == current_date.year):
@@ -667,7 +718,9 @@ def create_contribution_graphs(
             "Dec",
         ]
         ax5.set_xticklabels([month_names[m - 1] for m in valid_months])
-        ax5.xaxis.set_tick_params(which='minor', bottom=False, top=False)  # Disable minor ticks
+        ax5.xaxis.set_tick_params(
+            which="minor", bottom=False, top=False
+        )  # Disable minor ticks
         ax5.legend(fontsize=10)
         ax5.grid(True, alpha=0.3)
 
@@ -682,10 +735,22 @@ def create_contribution_graphs(
 
         # Add a subtle 'Today' marker for context on current year
         if year and int(year) == current_date.year:
-            days_in_month = calendar.monthrange(current_date.year, current_date.month)[1]
-            today_pos = current_date.month + (current_date.day - 1) / float(days_in_month)
-            if valid_months and (min(valid_months) - 0.5) <= today_pos <= (max(valid_months) + 0.5):
-                ax5.axvline(x=today_pos, color="#7f8c8d", linestyle=":", linewidth=1.5, alpha=0.7)
+            days_in_month = calendar.monthrange(current_date.year, current_date.month)[
+                1
+            ]
+            today_pos = current_date.month + (current_date.day - 1) / float(
+                days_in_month
+            )
+            if valid_months and (min(valid_months) - 0.5) <= today_pos <= (
+                max(valid_months) + 0.5
+            ):
+                ax5.axvline(
+                    x=today_pos,
+                    color="#7f8c8d",
+                    linestyle=":",
+                    linewidth=1.5,
+                    alpha=0.7,
+                )
                 # Use the max commits across visible data for label height
                 _max_y = 0
                 for contributor in list(contributors_total.keys())[:3]:
@@ -765,11 +830,15 @@ def create_contribution_graphs(
         # When viewing current year or all-time, ignore future months in stats too
         current_date = datetime.now()
         if (year is None) or (int(year) == current_date.year):
-            filtered_totals = {m: v for m, v in monthly_totals.items() if m <= current_date.month}
+            filtered_totals = {
+                m: v for m, v in monthly_totals.items() if m <= current_date.month
+            }
         else:
             filtered_totals = dict(monthly_totals)
         most_active_month = (
-            max(filtered_totals.items(), key=lambda x: x[1]) if filtered_totals else None
+            max(filtered_totals.items(), key=lambda x: x[1])
+            if filtered_totals
+            else None
         )
         month_names = [
             "Jan",
@@ -791,7 +860,9 @@ def create_contribution_graphs(
         most_active_month_commits = most_active_month[1] if most_active_month else 0
         # Count active months within the considered range
         if (year is None) or (int(year) == current_date.year):
-            active_months_count = len(set(m for (c, m) in monthly_data.keys() if m <= current_date.month))
+            active_months_count = len(
+                set(m for (c, m) in monthly_data.keys() if m <= current_date.month)
+            )
         else:
             active_months_count = len(set(m for (c, m) in monthly_data.keys()))
     else:
@@ -849,9 +920,9 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
             facecolor="#ecf0f1",
             edgecolor="#34495e",
             linewidth=2,
-            alpha=0.9
+            alpha=0.9,
         ),
-        color='#2c3e50'
+        color="#2c3e50",
     )
 
     # 7. Generated-by Tag Adoption Trend
@@ -893,13 +964,13 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
             "Generated-by Tag Adoption Over Time",
             fontweight="bold",
             fontsize=16,
-            color='#2c3e50',
+            color="#2c3e50",
             pad=20,
         )
-        ax7.set_ylabel("Commits with Generated-by", fontsize=12, color='#34495e')
-        ax7.set_xlabel("Month", fontsize=12, color='#34495e')
-        ax7.spines['top'].set_visible(False)
-        ax7.spines['right'].set_visible(False)
+        ax7.set_ylabel("Commits with Generated-by", fontsize=12, color="#34495e")
+        ax7.set_xlabel("Month", fontsize=12, color="#34495e")
+        ax7.spines["top"].set_visible(False)
+        ax7.spines["right"].set_visible(False)
         ax7.grid(True, alpha=0.3)
         ax7.set_ylim(bottom=0)
         ax7.tick_params(axis="x", labelrotation=45)
@@ -924,7 +995,10 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
 
         if (year is None) or (int(year) == datetime.now().year):
             current_marker = datetime.now()
-            if timeline_dates and timeline_dates[0] <= current_marker <= timeline_dates[-1]:
+            if (
+                timeline_dates
+                and timeline_dates[0] <= current_marker <= timeline_dates[-1]
+            ):
                 ax7.axvline(
                     current_marker,
                     color="#7f8c8d",
@@ -940,8 +1014,8 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
             color="#2c3e50",
             pad=20,
         )
-        ax7.spines['top'].set_visible(False)
-        ax7.spines['right'].set_visible(False)
+        ax7.spines["top"].set_visible(False)
+        ax7.spines["right"].set_visible(False)
         ax7.set_ylabel("Commits with Generated-by", fontsize=12, color="#34495e")
         ax7.set_xlabel("Month", fontsize=12, color="#34495e")
         ax7.tick_params(axis="x", labelbottom=False)
