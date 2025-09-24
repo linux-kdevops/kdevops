@@ -15,9 +15,9 @@ inputs:
   test_mode:
     description: 'Testing mode'
     required: false
-    default: 'full-testing'
+    default: 'kdevops-ci'
   tests:
-    description: 'Custom test to run (for kdevops-validation mode only)'
+    description: 'Custom test to run'
     required: false
     default: ''
 
@@ -38,7 +38,7 @@ runs:
         if [[ -n "${{ inputs.tests }}" ]]; then
           # Custom test specified for kdevops-validation mode
           TESTS="${{ inputs.tests }}"
-        elif [[ "${{ inputs.test_mode }}" == "kdevops-validation" ]]; then
+        elif [[ "${{ inputs.test_mode }}" == "kdevops-ci" ]]; then
           # Auto-assign appropriate test based on workflow
           case "${{ inputs.ci_workflow }}" in
             *fstests*|*xfs*|*btrfs*|*ext4*|*tmpfs*)
@@ -205,7 +205,7 @@ runs:
         export KERNEL_TREE="${{ inputs.kernel_tree || 'linux' }}"
         export TEST_MODE="${{ inputs.test_mode }}"
 
-        # Get TESTS from GitHub output (determines kdevops validation vs full testing)
+        # Get TESTS from GitHub output (determines kdevops-ci vs linux-ci)
         TESTS="${{ steps.ci_test.outputs.TESTS }}"
         if [[ -n "${TESTS:-}" ]]; then
           export TESTS="$TESTS"
