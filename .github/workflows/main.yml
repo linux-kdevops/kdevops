@@ -40,7 +40,7 @@ jobs:
         || fromJSON('["self-hosted", "Linux", "X64", "linux-ci"]')
       }}
     steps:
-      - name: Checkout dkruces/kdevops
+      - name: Checkout kdevops
         uses: actions/checkout@v4
         with:
           clean: false

@@ -75,7 +75,7 @@ jobs:
       - name: Checkout kdevops
         run: |
           cd ${{ inputs.ci_workflow }}
-          git clone https://github.com/dkruces/kdevops.git --branch ci-workflow kdevops
+          git clone /mirror/kdevops.git --branch main kdevops
 
       - name: Run kdevops make defconfig-repo
         run: |

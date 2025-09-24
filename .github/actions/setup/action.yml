@@ -48,8 +48,7 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        git clone https://github.com/dkruces/kdevops.git --branch main kdevops
-
+        git clone /mirror/kdevops.git --branch main kdevops
 
     - name: Make sure our repo kdevops defconfig exists
       id: defconfig
