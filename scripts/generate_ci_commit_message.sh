@@ -199,15 +199,18 @@ generate_commit_message() {
         metadata_output="$metadata_line"
     fi
 
-    # Build kernel validation info
+    # Build kernel validation info for kdevops-ci
     local kernel_info_line=""
     if [ "$actual_kernel_ref" != "unknown" ] && [ "$kernel_describe" != "$actual_kernel_ref" ]; then
         # Show both requested and actual if they differ
-        kernel_info_line="  Kernel: $actual_kernel_ref (requested) → $kernel_describe (actual)"
+        kernel_info_line="  Kernel: $actual_kernel_ref (requested) → $kernel_describe ($wrapped_kernel_subject)"
     else
-        # Show just the kernel version if they match or no metadata
-        kernel_info_line="  Kernel: $kernel_describe"
+        # Show kernel version with commit subject for kdevops-ci
+        kernel_info_line="  Kernel: $kernel_describe ($wrapped_kernel_subject)"
     fi
+
+    # Build kernel info for linux-ci (with hash)
+    local kernel_info_line_linux_ci="  Kernel: $kernel_describe $kernel_hash"
 
     # Build the complete commit message based on scope
     if [ "$scope" = "kdevops" ]; then
@@ -229,12 +232,12 @@ METADATA:
 workflow: $CI_WORKFLOW | scope: kdevops | test: ${TESTS_PARAM:-"complete suite"} | requested: $actual_kernel_ref | actual: $kernel_describe | result: $test_result
 EOF
     else
-        # Full test suite format
+        # linux-ci format
         cat << EOF
 $header
 
 BUILD INFO:
-$kernel_info_line ($wrapped_kernel_subject)
+$kernel_info_line_linux_ci ($wrapped_kernel_subject)
   Workflow: $CI_WORKFLOW
   kdevops: $kdevops_hash ($wrapped_kdevops_subject)
   Scope: $scope_desc
