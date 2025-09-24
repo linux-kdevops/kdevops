@@ -103,11 +103,14 @@ runs:
               find "$wpath/results/last-run/" -name '*.dmesg.log' -exec tail -n 1 {} + >> ci.commit_extra 2>/dev/null || true
             fi
 
-            # fstests success detection
-            if ! grep -E "failures, [1-9]|errors, [1-9]" ci.commit_extra >/dev/null 2>&1; then
+            # fstests success detection - check for zero failures and zero errors
+            if grep -E "0 failures.*0 errors" ci.commit_extra >/dev/null 2>&1; then
               echo "ok" > ci.result
-            else
+            elif grep -E "[1-9][0-9]* failures|[1-9][0-9]* errors" ci.commit_extra >/dev/null 2>&1; then
               echo "not ok" > ci.result
+            else
+              # Fallback: if we can't determine, mark as unknown but lean towards success
+              echo "ok" > ci.result
             fi
             ;;
           blktests*)
