@@ -94,7 +94,11 @@ runs:
 
         # Use GitHub run ID for unique host prefix to avoid conflicts
         # between concurrent runs on same server
-        KDEVOPS_HOSTS_PREFIX="kci-${{ github.run_id }}"
+        if [[ "${{ inputs.test_mode }}" == "kdevops-ci" ]]; then
+          KDEVOPS_HOSTS_PREFIX="kci-${{ github.run_id }}"
+        else
+          KDEVOPS_HOSTS_PREFIX="lci-${{ github.run_id }}"
+        fi
 
         echo "Going to use defconfig-$KDEVOPS_DEFCONFIG"
 
