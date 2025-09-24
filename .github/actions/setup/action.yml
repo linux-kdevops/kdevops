@@ -50,17 +50,6 @@ runs:
         set -euxo pipefail
         git clone https://github.com/dkruces/kdevops.git --branch main kdevops
 
-    - name: Checkout custom branch with delta on kdevops/linux
-      working-directory: ${{ inputs.dir }}/kdevops
-      shell: bash
-      run: |
-        set -euxo pipefail
-        LINUX_TREE="/mirror/${{ inputs.kernel_tree }}.git"
-        LINUX_TREE_REF="${{ inputs.kernel_ref }}"
-        git clone $LINUX_TREE linux
-        cd linux
-        git checkout $LINUX_TREE_REF
-        git log -1
 
     - name: Make sure our repo kdevops defconfig exists
       id: defconfig
@@ -78,62 +67,39 @@ runs:
         "${{ github.workspace }}/scripts/github_output.sh" \
           KDEVOPS_DEFCONFIG "$KDEVOPS_DEFCONFIG"
 
-    - name: Initialize CI metadata for kdevops-results-archive for linux
-      id: metadata
-      working-directory: ${{ inputs.dir }}/kdevops/linux
+    - name: Initialize CI metadata for kdevops-results-archive
+      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
-        echo "${{ inputs.kernel_tree }}" > ../ci.trigger
+        echo "${{ inputs.kernel_tree }}" > ci.trigger
         # Get the kdevops commit subject, not kernel commit
         cd "${{ github.workspace }}" && git log -1 --pretty=format:"%s" > "${{ inputs.dir }}/kdevops/ci.subject"
         cd - > /dev/null
-        echo "${{ inputs.kernel_ref }}" > ../ci.ref
-
-        RELEVANT_GIT_TAG=$(cat ../ci.ref)
-        RELEVANT_GIT_REF=$(git rev-parse --short=12 $RELEVANT_GIT_TAG)
-
-        "${{ github.workspace }}/scripts/github_output.sh" \
-          LINUX_GIT_REF "$RELEVANT_GIT_REF"
-        "${{ github.workspace }}/scripts/github_output.sh" \
-          LINUX_GIT_TAG "$RELEVANT_GIT_TAG"
+        echo "${{ inputs.kernel_ref }}" > ci.ref
 
         # Start out pessimistic
-        echo "unknown" > ../ci.result
-        echo "Nothing to write home about." > ../ci.commit_extra
+        echo "unknown" > ci.result
+        echo "Nothing to write home about." > ci.commit_extra
 
     - name: Run kdevops make defconfig-repo
       working-directory: ${{ inputs.dir }}/kdevops
       env:
-        LINUX_GIT_TAG: ${{ steps.metadata.outputs.LINUX_GIT_TAG }}
-        LINUX_GIT_REF: ${{ steps.metadata.outputs.LINUX_GIT_REF }}
         KDEVOPS_DEFCONFIG: ${{ steps.defconfig.outputs.KDEVOPS_DEFCONFIG }}
       shell: bash
       run: |
         set -euxo pipefail
         LINUX_TREE="/mirror/${{ inputs.kernel_tree }}.git"
-        LINUX_TREE_REF="$LINUX_GIT_TAG"
+        LINUX_TREE_REF="${{ inputs.kernel_ref }}"
 
-        # We make the compromise here to use a relevant git tag for the
-        # host prefix so that folks can easily tell what exact kernel tree
-        # is being tested by using the relevant git ref. That is, if you
-        # pushed a tree with the .github/ directory as the top of the tree,
-        # that commit will not be used, we'll use the last one as that is
-        # the relevant git ref we want to annotate a test for.
-        #
-        # The compromise here is that we expect no two same identical tests
-        # on the same self-hosted server. We could extend this with something
-        # like github.run_id but its not yet clear if we can have kdevops
-        # hosts with a bundled prefix ID like that ref-runid-testname. Tests
-        # have been done with the full lenght sha1sum though and we know that
-        # does work.
-        KDEVOPS_HOSTS_PREFIX="kci-$LINUX_GIT_REF"
+        # Use GitHub run ID for unique host prefix to avoid conflicts
+        # between concurrent runs on same server
+        KDEVOPS_HOSTS_PREFIX="kci-${{ github.run_id }}"
 
         echo "Going to use defconfig-$KDEVOPS_DEFCONFIG"
 
         echo "Linux tree:          $LINUX_TREE"
         echo "Linux trigger ref:   $LINUX_TREE_REF"
-        echo "Linux tag:           $LINUX_GIT_TAG"
         echo "Runner ID:           ${{ github.run_id }}"
         echo "kdevops host prefix: $KDEVOPS_HOSTS_PREFIX"
         echo "kdevops defconfig:   defconfig-$KDEVOPS_DEFCONFIG"
@@ -183,7 +149,6 @@ runs:
       shell: bash
       run: |
         set -euxo pipefail
-        ls -ld linux
         make destroy
         make bringup
 
@@ -193,6 +158,20 @@ runs:
       run: |
         set -euxo pipefail
         make linux
+
+    - name: Generate additional CI metadata after linux checkout
+      working-directory: ${{ inputs.dir }}/kdevops
+      shell: bash
+      run: |
+        set -euxo pipefail
+        # Now that we have the linux git repo, generate additional metadata
+        cd linux
+        RELEVANT_GIT_TAG="${{ inputs.kernel_ref }}"
+        RELEVANT_GIT_REF=$(git rev-parse --short=12 $RELEVANT_GIT_TAG 2>/dev/null || echo $RELEVANT_GIT_TAG)
+
+        # Save the git ref for use by the commit message script
+        echo "$RELEVANT_GIT_REF" > ../ci.git_ref
+        echo "Generated git ref: $RELEVANT_GIT_REF for tag: $RELEVANT_GIT_TAG"
 
     - name: Build required ci tests
       working-directory: ${{ inputs.dir }}/kdevops
