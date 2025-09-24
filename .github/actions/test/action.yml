@@ -67,6 +67,7 @@ runs:
 
     - name: Generate workflow results path
       id: setpath
+      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
