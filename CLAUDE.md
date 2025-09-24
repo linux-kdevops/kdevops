@@ -417,7 +417,9 @@ any spell fixes unless asked explicitly to do that.
 ## Use the Signed-off-by tag
 
 We want to use the Signed-off-by tag which embodies the application of the
-Developer Certificate or Origin.
+Developer Certificate or Origin. Use the git configured user name and email
+for the Signed-off-by tag (check with `git config user.name` and
+`git config user.email`).
 
 ## Use Generated-by: Claude AI
 
