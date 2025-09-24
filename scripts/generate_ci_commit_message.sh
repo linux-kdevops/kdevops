@@ -170,7 +170,12 @@ generate_commit_message() {
         if [ "$test_result" = "not ok" ] || [ "$test_result" = "fail" ]; then
             status="FAIL"
         fi
-        header="$TEST_MODE: $CI_WORKFLOW ($actual_kernel_tree $kernel_describe): $status"
+        # Use plain kernel subject (no quotes), truncate if needed
+        local plain_kernel_subject="$kernel_subject"
+        if [ ${#plain_kernel_subject} -gt 50 ]; then
+            plain_kernel_subject="${kernel_subject:0:47}..."
+        fi
+        header="$TEST_MODE: $CI_WORKFLOW: $kernel_hash: $plain_kernel_subject: $status"
     fi
 
     # Build scope description
