@@ -1,0 +1,11 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Deploy Slack billing notification system for AWS cost monitoring
+
+- name: Deploy Slack billing notifications
+  hosts: localhost
+  become: yes
+  roles:
+    - role: slack-billing
+      when: enable_slack_notifications | default(false) | bool

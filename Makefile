@@ -27,6 +27,23 @@ ifdef DECLARE_HOSTS
 export DECLARED_HOSTS := $(DECLARE_HOSTS)
 endif
 
+# Export Slack billing notification CLI variables
+ifdef SLACK_WEBHOOK_URL
+export SLACK_WEBHOOK_URL := $(SLACK_WEBHOOK_URL)
+endif
+
+ifdef SLACK_CHANNEL
+export SLACK_CHANNEL := $(SLACK_CHANNEL)
+endif
+
+ifdef SLACK_THRESHOLD
+export SLACK_THRESHOLD := $(SLACK_THRESHOLD)
+endif
+
+ifdef SLACK_SCHEDULE
+export SLACK_SCHEDULE := $(SLACK_SCHEDULE)
+endif
+
 include scripts/refs.Makefile
 
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates

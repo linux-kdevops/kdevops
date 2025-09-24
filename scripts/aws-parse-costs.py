@@ -11,7 +11,7 @@ from datetime import datetime
 def parse_costs(filename):
     """Parse AWS Cost Explorer JSON output."""
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         print(f"Error: File {filename} not found", file=sys.stderr)
@@ -21,66 +21,68 @@ def parse_costs(filename):
         sys.exit(1)
 
     # Extract time period
-    if 'ResultsByTime' in data and data['ResultsByTime']:
-        result = data['ResultsByTime'][0]
-        time_period = result.get('TimePeriod', {})
-        start = time_period.get('Start', 'Unknown')
-        end = time_period.get('End', 'Unknown')
+    if "ResultsByTime" in data and data["ResultsByTime"]:
+        result = data["ResultsByTime"][0]
+        time_period = result.get("TimePeriod", {})
+        start = time_period.get("Start", "Unknown")
+        end = time_period.get("End", "Unknown")
 
         print(f"\nAWS Cost Report")
         print(f"Period: {start} to {end}")
         print("=" * 60)
 
         # Get total cost
-        total = result.get('Total', {})
+        total = result.get("Total", {})
         total_amount = 0
-        currency = 'USD'
+        currency = "USD"
 
         # If Total is provided, use it
-        if 'UnblendedCost' in total:
-            total_amount = float(total['UnblendedCost'].get('Amount', 0))
-            currency = total['UnblendedCost'].get('Unit', 'USD')
+        if "UnblendedCost" in total:
+            total_amount = float(total["UnblendedCost"].get("Amount", 0))
+            currency = total["UnblendedCost"].get("Unit", "USD")
         # Otherwise calculate from groups
         else:
-            groups = result.get('Groups', [])
+            groups = result.get("Groups", [])
             for group in groups:
-                metrics = group.get('Metrics', {})
-                if 'UnblendedCost' in metrics:
-                    total_amount += float(metrics['UnblendedCost'].get('Amount', 0))
+                metrics = group.get("Metrics", {})
+                if "UnblendedCost" in metrics:
+                    total_amount += float(metrics["UnblendedCost"].get("Amount", 0))
 
         if total_amount > 0:
             print(f"\nTotal Cost: ${total_amount:.2f} {currency}")
 
         # Get costs by service
-        groups = result.get('Groups', [])
+        groups = result.get("Groups", [])
         if groups:
             print("\nCosts by Service:")
             print("-" * 40)
 
             # Sort by cost (descending)
-            sorted_groups = sorted(groups,
-                                   key=lambda x: float(x['Metrics']['UnblendedCost']['Amount']),
-                                   reverse=True)
+            sorted_groups = sorted(
+                groups,
+                key=lambda x: float(x["Metrics"]["UnblendedCost"]["Amount"]),
+                reverse=True,
+            )
 
             for group in sorted_groups:
-                service = group['Keys'][0] if group.get('Keys') else 'Unknown'
-                metrics = group.get('Metrics', {})
-                if 'UnblendedCost' in metrics:
-                    amount = float(metrics['UnblendedCost'].get('Amount', 0))
+                service = group["Keys"][0] if group.get("Keys") else "Unknown"
+                metrics = group.get("Metrics", {})
+                if "UnblendedCost" in metrics:
+                    amount = float(metrics["UnblendedCost"].get("Amount", 0))
                     if amount > 0.01:  # Only show services with costs > $0.01
                         print(f"  {service:30} ${amount:10.2f}")
 
             # Show total at the bottom
             print("-" * 40)
-            if 'UnblendedCost' in total:
+            if "UnblendedCost" in total:
                 print(f"  {'TOTAL':30} ${total_amount:10.2f}")
 
         # Calculate daily average
         try:
-            start_date = datetime.strptime(start, '%Y-%m-%d')
-            end_date = datetime.strptime(end, '%Y-%m-%d')
+            start_date = datetime.strptime(start, "%Y-%m-%d")
+            end_date = datetime.strptime(end, "%Y-%m-%d")
             days = (end_date - start_date).days
-            if days > 0 and 'UnblendedCost' in total:
+            if days > 0 and "UnblendedCost" in total:
                 daily_avg = total_amount / days
                 print(f"\nDaily Average: ${daily_avg:.2f}")
 
@@ -101,15 +103,15 @@ def parse_costs(filename):
 def parse_forecast(filename):
     """Parse AWS Cost Forecast JSON output."""
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         return None
     except json.JSONDecodeError:
         return None
 
-    if 'Total' in data:
-        amount = float(data['Total'].get('Amount', 0))
+    if "Total" in data:
+        amount = float(data["Total"].get("Amount", 0))
         return amount
     return None
 
@@ -117,22 +119,22 @@ def parse_forecast(filename):
 def parse_breakdown(filename):
     """Parse cost breakdown by record type."""
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         return None
     except json.JSONDecodeError:
         return None
 
-    breakdown = {'Usage': 0, 'Tax': 0, 'Credit': 0}
-    if 'ResultsByTime' in data and data['ResultsByTime']:
-        result = data['ResultsByTime'][0]
-        groups = result.get('Groups', [])
+    breakdown = {"Usage": 0, "Tax": 0, "Credit": 0}
+    if "ResultsByTime" in data and data["ResultsByTime"]:
+        result = data["ResultsByTime"][0]
+        groups = result.get("Groups", [])
         for group in groups:
-            record_type = group['Keys'][0] if group.get('Keys') else 'Unknown'
-            metrics = group.get('Metrics', {})
-            if 'UnblendedCost' in metrics:
-                amount = float(metrics['UnblendedCost'].get('Amount', 0))
+            record_type = group["Keys"][0] if group.get("Keys") else "Unknown"
+            metrics = group.get("Metrics", {})
+            if "UnblendedCost" in metrics:
+                amount = float(metrics["UnblendedCost"].get("Amount", 0))
                 if record_type in breakdown:
                     breakdown[record_type] = amount
     return breakdown
@@ -141,7 +143,10 @@ def parse_breakdown(filename):
 def main():
     """Main function."""
     if len(sys.argv) < 2:
-        print("Usage: aws-parse-costs.py <cost.json> [forecast.json] [cost_breakdown.json]", file=sys.stderr)
+        print(
+            "Usage: aws-parse-costs.py <cost.json> [forecast.json] [cost_breakdown.json]",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # Parse breakdown if provided
@@ -152,11 +157,11 @@ def main():
             print(f"\nCost Breakdown:")
             print("=" * 60)
             print(f"Usage Costs:    ${breakdown['Usage']:.2f}")
-            if breakdown['Credit'] != 0:
+            if breakdown["Credit"] != 0:
                 print(f"Credits:        ${breakdown['Credit']:.2f}")
-            if breakdown['Tax'] != 0:
+            if breakdown["Tax"] != 0:
                 print(f"Tax:            ${breakdown['Tax']:.2f}")
-            net_total = breakdown['Usage'] + breakdown['Credit'] + breakdown['Tax']
+            net_total = breakdown["Usage"] + breakdown["Credit"] + breakdown["Tax"]
             print(f"Net Total:      ${net_total:.2f}")
             print("=" * 60)
 
@@ -173,34 +178,40 @@ def main():
             actual_amount = 0
             if breakdown:
                 # Use net total from breakdown
-                actual_amount = breakdown['Usage'] + breakdown['Credit'] + breakdown['Tax']
+                actual_amount = (
+                    breakdown["Usage"] + breakdown["Credit"] + breakdown["Tax"]
+                )
             else:
                 # Fall back to calculation from service costs
-                with open(sys.argv[1], 'r') as f:
+                with open(sys.argv[1], "r") as f:
                     data = json.load(f)
-                if 'ResultsByTime' in data and data['ResultsByTime']:
-                    result = data['ResultsByTime'][0]
-                    total = result.get('Total', {})
+                if "ResultsByTime" in data and data["ResultsByTime"]:
+                    result = data["ResultsByTime"][0]
+                    total = result.get("Total", {})
 
                     # If Total is provided, use it
-                    if 'UnblendedCost' in total:
-                        actual_amount = float(total['UnblendedCost'].get('Amount', 0))
+                    if "UnblendedCost" in total:
+                        actual_amount = float(total["UnblendedCost"].get("Amount", 0))
                     # Otherwise calculate from groups
                     else:
-                        groups = result.get('Groups', [])
+                        groups = result.get("Groups", [])
                         for group in groups:
-                            metrics = group.get('Metrics', {})
-                            if 'UnblendedCost' in metrics:
-                                actual_amount += float(metrics['UnblendedCost'].get('Amount', 0))
+                            metrics = group.get("Metrics", {})
+                            if "UnblendedCost" in metrics:
+                                actual_amount += float(
+                                    metrics["UnblendedCost"].get("Amount", 0)
+                                )
 
             if actual_amount != 0:
                 total_projected = actual_amount + forecast_amount
                 print(f"Total Projected Month Cost: ${total_projected:.2f}")
 
                 # If we have breakdown, also show projected without credits
-                if breakdown and breakdown['Credit'] < 0:
-                    total_usage_projected = breakdown['Usage'] + forecast_amount
-                    print(f"Projected Usage (before credits): ${total_usage_projected:.2f}")
+                if breakdown and breakdown["Credit"] < 0:
+                    total_usage_projected = breakdown["Usage"] + forecast_amount
+                    print(
+                        f"Projected Usage (before credits): ${total_usage_projected:.2f}"
+                    )
                 print(f"{'=' * 60}")
 
 

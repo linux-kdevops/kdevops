@@ -1,0 +1,12 @@
+[Unit]
+Description=kdevops AWS Billing Slack Notification Timer
+Requires=kdevops-slack-billing.service
+
+[Timer]
+# Timer schedule from configuration
+OnCalendar={{ slack_billing_schedule | default('daily') }}
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

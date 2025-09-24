@@ -5,18 +5,18 @@ config ENABLE_MONITORING
 	output yaml
 	default n
 	help
-	  Enable monitoring services to collect statistics during workflow
-	  execution. This allows collection of various system metrics while
-	  workflows are running.
+		Enable monitoring services to collect statistics during workflow
+		execution. This allows collection of various system metrics while
+		workflows are running.
 
-	  Monitoring services run in the background during test execution and
-	  automatically collect results afterward. The collected data can be
-	  used for performance analysis, debugging, and understanding system
-	  behavior during tests.
+		Monitoring services run in the background during test execution and
+		automatically collect results afterward. The collected data can be
+		used for performance analysis, debugging, and understanding system
+		behavior during tests.
 
-	  Individual workflows must add support for monitoring integration.
-	  Currently supported workflows:
-	  - fstests
+		Individual workflows must add support for monitoring integration.
+		Currently supported workflows:
+		- fstests
 
 if ENABLE_MONITORING
 
@@ -25,11 +25,11 @@ config MONITOR_DEVELOPMENTAL_STATS
 	output yaml
 	default n
 	help
-	  Enable collection of statistics that are still in development
-	  and not yet merged upstream in the Linux kernel.
+		Enable collection of statistics that are still in development
+		and not yet merged upstream in the Linux kernel.
 
-	  This is useful for testing and validating new kernel features
-	  that provide additional debugging or performance metrics.
+		This is useful for testing and validating new kernel features
+		that provide additional debugging or performance metrics.
 
 if MONITOR_DEVELOPMENTAL_STATS
 
@@ -38,15 +38,15 @@ config MONITOR_FOLIO_MIGRATION
 	output yaml
 	default n
 	help
-	  Enable monitoring of folio migration statistics if available.
-	  This requires the kernel to have the folio migration debugfs
-	  stats patch applied.
+		Enable monitoring of folio migration statistics if available.
+		This requires the kernel to have the folio migration debugfs
+		stats patch applied.
 
-	  The statistics are collected from:
-	  /sys/kernel/debug/mm/migrate/stats
+		The statistics are collected from:
+		/sys/kernel/debug/mm/migrate/stats
 
-	  This feature collects migration statistics periodically during
-	  workflow execution and can generate plots for visualization.
+		This feature collects migration statistics periodically during
+		workflow execution and can generate plots for visualization.
 
 config MONITOR_FOLIO_MIGRATION_INTERVAL
 	int "Folio migration monitoring interval (seconds)"
@@ -54,12 +54,12 @@ config MONITOR_FOLIO_MIGRATION_INTERVAL
 	default 60
 	depends on MONITOR_FOLIO_MIGRATION
 	help
-	  How often to collect folio migration statistics in seconds.
-	  Default is 60 seconds.
+		How often to collect folio migration statistics in seconds.
+		Default is 60 seconds.
 
-	  Lower values provide more granular data but may impact system
-	  performance. Higher values reduce overhead but may miss
-	  short-lived migration events.
+		Lower values provide more granular data but may impact system
+		performance. Higher values reduce overhead but may miss
+		short-lived migration events.
 
 config MONITOR_MEMORY_FRAGMENTATION
 	bool "Monitor memory fragmentation with eBPF"
@@ -125,3 +125,120 @@ endif # MONITOR_DEVELOPMENTAL_STATS
 # - Custom perf event monitoring
 
 endif # ENABLE_MONITORING
+
+config SLACK_CLI_SET
+	bool
+	default $(shell, scripts/check-cli-set-var.sh SLACK_WEBHOOK_URL) || \
+		$(shell, scripts/check-cli-set-var.sh SLACK_CHANNEL) || \
+		$(shell, scripts/check-cli-set-var.sh SLACK_THRESHOLD) || \
+		$(shell, scripts/check-cli-set-var.sh SLACK_SCHEDULE)
+
+config ENABLE_SLACK_NOTIFICATIONS
+	bool "Enable Slack notifications for cloud billing"
+	output yaml
+	default y if SLACK_CLI_SET
+	default n
+	help
+		Enable Slack notifications for AWS cloud billing reports.
+		This will set up a systemd timer to periodically check AWS costs
+		and send reports to a configured Slack channel.
+
+		This requires:
+		- AWS CLI configured with proper credentials
+		- A Slack webhook URL or AWS Chatbot integration
+		- Terraform AWS provider enabled
+
+		Can be enabled via CLI: SLACK_WEBHOOK_URL="..." make menuconfig
+
+if ENABLE_SLACK_NOTIFICATIONS
+
+choice
+	prompt "Slack integration method"
+	default SLACK_WEBHOOK
+	help
+		Choose the method for sending notifications to Slack.
+
+config SLACK_WEBHOOK
+	bool "Use Slack webhook URL"
+	default y if SLACK_CLI_SET && "$(shell, echo ${SLACK_WEBHOOK_URL})" != ""
+	help
+		Use a simple webhook URL to post messages to Slack.
+		This is easier to set up but has limited formatting options.
+
+config SLACK_AWS_CHATBOT
+	bool "Use AWS Chatbot integration"
+	help
+		Use AWS Chatbot for richer integration with AWS services.
+		This provides better formatting and direct AWS integration.
+
+endchoice
+
+config SLACK_WEBHOOK_URL
+	string "Slack webhook URL"
+	depends on SLACK_WEBHOOK
+	output yaml
+	default "$(shell, echo ${SLACK_WEBHOOK_URL})" if SLACK_CLI_SET
+	default ""
+	help
+		The Slack webhook URL to send notifications to.
+		Get this from your Slack workspace's Incoming Webhooks app.
+		Format: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX
+
+		Can be set via CLI: SLACK_WEBHOOK_URL="https://..." make menuconfig
+
+config SLACK_AWS_CHATBOT_ARN
+	string "AWS Chatbot channel ARN"
+	depends on SLACK_AWS_CHATBOT
+	output yaml
+	default ""
+	help
+		The AWS Chatbot channel configuration ARN.
+		This connects AWS services to your Slack workspace.
+
+config SLACK_CHANNEL_NAME
+	string "Slack channel name"
+	output yaml
+	default "$(shell, echo ${SLACK_CHANNEL})" if SLACK_CLI_SET && "$(shell, echo ${SLACK_CHANNEL})" != ""
+	default "#aws-billing"
+	help
+		The Slack channel to send notifications to.
+		Include the # prefix for public channels.
+
+		Can be set via CLI: SLACK_CHANNEL="#my-channel" make menuconfig
+
+config SLACK_BILLING_SCHEDULE
+	string "Billing notification schedule (systemd timer format)"
+	output yaml
+	default "$(shell, echo ${SLACK_SCHEDULE})" if SLACK_CLI_SET && "$(shell, echo ${SLACK_SCHEDULE})" != ""
+	default "daily"
+	help
+		When to send billing notifications using systemd timer format.
+		Examples:
+		- "daily" - Once per day at midnight
+		- "weekly" - Once per week on Monday
+		- "monthly" - Once per month on the 1st
+		- "*-*-* 09:00:00" - Every day at 9 AM
+		- "Mon *-*-* 09:00:00" - Every Monday at 9 AM
+
+		Can be set via CLI: SLACK_SCHEDULE="*-*-* 09:00:00" make menuconfig
+
+config SLACK_BILLING_THRESHOLD
+	int "Cost threshold for immediate alerts (USD)"
+	output yaml
+	default $(shell, echo ${SLACK_THRESHOLD}) if SLACK_CLI_SET && "$(shell, echo ${SLACK_THRESHOLD})" != ""
+	default 100
+	help
+		Send an immediate alert if the monthly cost exceeds this threshold.
+		Set to 0 to disable threshold alerts.
+
+		Can be set via CLI: SLACK_THRESHOLD=500 make menuconfig
+
+config SLACK_BILLING_FORECAST_ALERT
+	bool "Enable forecast-based alerts"
+	output yaml
+	default y
+	help
+		Send alerts when the forecasted monthly cost exceeds the threshold.
+		This helps catch cost overruns before the end of the month.
+
+endif # ENABLE_SLACK_NOTIFICATIONS

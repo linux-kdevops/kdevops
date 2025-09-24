@@ -25,12 +25,32 @@ destroy: $(KDEVOPS_DESTROY_DEPS)
 cloud-bill:
 	$(Q)$(MAKE) -f scripts/terraform.Makefile cloud-bill
 
+slack-billing-setup:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i hosts \
+		playbooks/slack-billing.yml
+
+slack-billing-test:
+	$(Q)@echo "Testing Slack billing notification..."
+	$(Q)bash scripts/slack-billing-notify.sh
+
+slack-billing-status:
+	$(Q)@if systemctl is-active --quiet kdevops-slack-billing.timer; then \
+		echo "Slack billing timer is active"; \
+		systemctl status kdevops-slack-billing.timer; \
+	else \
+		echo "Slack billing timer is not active"; \
+	fi
+
 bringup-help-menu:
 	@echo "Bringup targets:"
 	@echo "bringup            - Brings up target hosts"
 	@echo "status             - Reports the status of target hosts"
 	@echo "destroy            - Destroy all target hosts"
 	@echo "cloud-bill         - Check cloud provider costs (AWS only)"
+	@echo "slack-billing-setup - Deploy Slack billing notification system"
+	@echo "slack-billing-test  - Test Slack billing notifications"
+	@echo "slack-billing-status - Check status of Slack billing timer"
 	@echo "cleancache	  - Remove all cached images"
 	@echo ""
 

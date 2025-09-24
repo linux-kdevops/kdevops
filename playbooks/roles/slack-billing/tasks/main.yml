@@ -1,0 +1,172 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+- name: Check if Slack notifications are enabled
+  set_fact:
+    slack_notifications_enabled: "{{ enable_slack_notifications | default(false) | bool }}"
+
+- name: Deploy Slack billing notification system
+  when: slack_notifications_enabled
+  block:
+    - name: Validate Slack configuration
+      fail:
+        msg: "Slack webhook URL must be configured when using webhook integration"
+      when:
+        - slack_webhook | default(false) | bool
+        - slack_webhook_url | default('') | length == 0
+
+    - name: Validate AWS Chatbot configuration
+      fail:
+        msg: "AWS Chatbot ARN must be configured when using AWS Chatbot integration"
+      when:
+        - slack_aws_chatbot | default(false) | bool
+        - slack_aws_chatbot_arn | default('') | length == 0
+
+    - name: Check if AWS CLI is installed
+      command: which aws
+      register: aws_cli_check
+      failed_when: false
+      changed_when: false
+
+    - name: Fail if AWS CLI is not installed
+      fail:
+        msg: "AWS CLI must be installed for Slack billing notifications"
+      when: aws_cli_check.rc != 0
+
+    - name: Create kdevops user for service
+      user:
+        name: kdevops
+        system: yes
+        shell: /bin/bash
+        home: /var/lib/kdevops
+        create_home: yes
+      become: yes
+
+    - name: Ensure kdevops directory exists
+      file:
+        path: "{{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}"
+        state: directory
+        owner: kdevops
+        group: kdevops
+        mode: '0755'
+      become: yes
+
+    - name: Copy Slack notification script
+      template:
+        src: slack-billing-notify.sh.j2
+        dest: "{{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}/scripts/slack-billing-notify.sh"
+        owner: kdevops
+        group: kdevops
+        mode: '0755'
+      become: yes
+
+    - name: Create systemd service file
+      template:
+        src: kdevops-slack-billing.service.j2
+        dest: /etc/systemd/system/kdevops-slack-billing.service
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload systemd
+
+    - name: Create systemd timer file
+      template:
+        src: kdevops-slack-billing.timer.j2
+        dest: /etc/systemd/system/kdevops-slack-billing.timer
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+      notify: reload systemd
+
+    - name: Configure AWS credentials for kdevops user
+      block:
+        - name: Create AWS config directory
+          file:
+            path: /var/lib/kdevops/.aws
+            state: directory
+            owner: kdevops
+            group: kdevops
+            mode: '0700'
+          become: yes
+
+        - name: Copy AWS credentials if available
+          copy:
+            src: "{{ ansible_env.HOME }}/.aws/credentials"
+            dest: /var/lib/kdevops/.aws/credentials
+            owner: kdevops
+            group: kdevops
+            mode: '0600'
+            remote_src: yes
+          become: yes
+          when: aws_copy_credentials | default(true) | bool
+          failed_when: false
+
+        - name: Copy AWS config if available
+          copy:
+            src: "{{ ansible_env.HOME }}/.aws/config"
+            dest: /var/lib/kdevops/.aws/config
+            owner: kdevops
+            group: kdevops
+            mode: '0600'
+            remote_src: yes
+          become: yes
+          when: aws_copy_credentials | default(true) | bool
+          failed_when: false
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      become: yes
+
+    - name: Enable and start Slack billing timer
+      systemd:
+        name: kdevops-slack-billing.timer
+        enabled: yes
+        state: started
+      become: yes
+
+    - name: Check timer status
+      command: systemctl status kdevops-slack-billing.timer
+      register: timer_status
+      failed_when: false
+      changed_when: false
+
+    - name: Display timer status
+      debug:
+        msg: |
+          Slack billing notification timer status:
+          {{ timer_status.stdout_lines | join('\n') }}
+
+    - name: Run initial billing check (optional)
+      systemd:
+        name: kdevops-slack-billing.service
+        state: started
+      become: yes
+      when: slack_run_initial_check | default(false) | bool
+
+- name: Remove Slack billing notification system
+  when: not slack_notifications_enabled
+  block:
+    - name: Stop and disable timer
+      systemd:
+        name: kdevops-slack-billing.timer
+        enabled: no
+        state: stopped
+      become: yes
+      failed_when: false
+
+    - name: Remove systemd files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/systemd/system/kdevops-slack-billing.service
+        - /etc/systemd/system/kdevops-slack-billing.timer
+      become: yes
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      become: yes

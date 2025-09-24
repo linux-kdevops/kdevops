@@ -1,0 +1,209 @@
+#!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Send AWS billing notifications to Slack
+# This script is called by systemd timer to send periodic billing reports
+# and immediate alerts when thresholds are exceeded
+# Generated from Ansible template
+
+set -e
+
+# Configuration from Ansible variables
+KDEVOPS_DIR="{{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}"
+SLACK_ENABLED="{{ enable_slack_notifications | default(false) | lower }}"
+SLACK_WEBHOOK="{{ slack_webhook | default(false) | lower }}"
+SLACK_WEBHOOK_URL="{{ slack_webhook_url | default('') }}"
+SLACK_AWS_CHATBOT="{{ slack_aws_chatbot | default(false) | lower }}"
+SLACK_AWS_CHATBOT_ARN="{{ slack_aws_chatbot_arn | default('') }}"
+SLACK_CHANNEL="{{ slack_channel_name | default('#aws-billing') }}"
+SLACK_THRESHOLD="{{ slack_billing_threshold | default(100) }}"
+SLACK_FORECAST_ALERT="{{ slack_billing_forecast_alert | default(true) | lower }}"
+
+# Check if Slack notifications are enabled
+if [ "$SLACK_ENABLED" != "true" ]; then
+    echo "Slack notifications are not enabled in configuration" >&2
+    exit 0
+fi
+
+# Function to send Slack webhook message
+send_slack_webhook() {
+    local message="$1"
+    local alert_type="${2:-info}"
+
+    # Determine color based on alert type
+    local color="good"
+    case "$alert_type" in
+        warning)
+            color="warning"
+            ;;
+        danger|alert)
+            color="danger"
+            ;;
+        info|*)
+            color="good"
+            ;;
+    esac
+
+    # Create JSON payload with proper escaping
+    local escaped_message=$(echo "$message" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+    local payload=$(cat <<EOF
+{
+    "channel": "${SLACK_CHANNEL}",
+    "username": "AWS Billing Bot",
+    "icon_emoji": ":moneybag:",
+    "attachments": [
+        {
+            "color": "${color}",
+            "title": "AWS Billing Report",
+            "text": "${escaped_message}",
+            "footer": "kdevops cloud billing monitor",
+            "ts": $(date +%s)
+        }
+    ]
+}
+EOF
+)
+
+    # Send to Slack
+    response=$(curl -s -w "\n%{http_code}" -X POST -H 'Content-type: application/json' \
+        --data "${payload}" \
+        "${SLACK_WEBHOOK_URL}" 2>/dev/null)
+
+    http_code=$(echo "$response" | tail -n1)
+
+    if [ "$http_code" = "200" ]; then
+        return 0
+    else
+        echo "Failed to send Slack notification. HTTP code: $http_code" >&2
+        return 1
+    fi
+}
+
+# Function to send via AWS Chatbot (placeholder for future implementation)
+send_aws_chatbot() {
+    local message="$1"
+    local alert_type="${2:-info}"
+
+    # AWS Chatbot requires SNS topic
+    # This would need to be configured separately
+    echo "AWS Chatbot integration not yet fully implemented" >&2
+    return 1
+}
+
+# Main execution
+cd "$KDEVOPS_DIR"
+
+# Run the cloud-bill command and capture output
+echo "Fetching AWS billing data..." >&2
+BILLING_OUTPUT=$(mktemp)
+trap "rm -f $BILLING_OUTPUT" EXIT
+
+if ! make cloud-bill > "$BILLING_OUTPUT" 2>&1; then
+    echo "Error: Failed to fetch billing data" >&2
+    cat "$BILLING_OUTPUT" >&2
+
+    # Send error notification
+    if [ "$SLACK_WEBHOOK" = "true" ] && [ -n "$SLACK_WEBHOOK_URL" ]; then
+        send_slack_webhook "Failed to fetch AWS billing data. Check system logs for details." "danger"
+    fi
+    exit 1
+fi
+
+# Parse the billing output
+CURRENT_COST=$(grep "Total Cost:" "$BILLING_OUTPUT" | awk '{print $3}' | sed 's/\$//' | head -1)
+FORECAST_COST=$(grep "Total Projected Month Cost:" "$BILLING_OUTPUT" | awk '{print $5}' | sed 's/\$//' | head -1)
+DAILY_AVERAGE=$(grep "Daily Average:" "$BILLING_OUTPUT" | awk '{print $3}' | sed 's/\$//' | head -1)
+
+# Extract service breakdown (top 5 services)
+SERVICE_BREAKDOWN=$(awk '/Costs by Service:/,/^-{40}/' "$BILLING_OUTPUT" | \
+    grep -E '^\s+[A-Za-z]' | head -5 | \
+    sed 's/^[[:space:]]*/• /' | \
+    sed 's/\$/\\$/g')
+
+# Check if we got valid cost data
+if [ -z "$CURRENT_COST" ]; then
+    echo "Warning: Could not parse current cost from billing output" >&2
+    CURRENT_COST="0"
+fi
+
+# Check if current cost exceeds threshold
+ALERT_TYPE="info"
+ALERT_MESSAGE=""
+
+if [ -n "$SLACK_THRESHOLD" ] && [ "$SLACK_THRESHOLD" -gt 0 ]; then
+    # Convert costs to integers for comparison
+    CURRENT_COST_INT=$(echo "$CURRENT_COST" | cut -d. -f1)
+
+    # Handle empty or non-numeric values
+    if ! [[ "$CURRENT_COST_INT" =~ ^[0-9]+$ ]]; then
+        CURRENT_COST_INT=0
+    fi
+
+    if [ "$CURRENT_COST_INT" -ge "$SLACK_THRESHOLD" ]; then
+        ALERT_TYPE="danger"
+        ALERT_MESSAGE=":warning: *ALERT: Monthly cost has exceeded threshold of \$${SLACK_THRESHOLD}* :warning:\n"
+    fi
+
+    # Check forecast if enabled
+    if [ "$SLACK_FORECAST_ALERT" = "true" ] && [ -n "$FORECAST_COST" ]; then
+        FORECAST_COST_INT=$(echo "$FORECAST_COST" | cut -d. -f1)
+
+        # Handle empty or non-numeric values
+        if ! [[ "$FORECAST_COST_INT" =~ ^[0-9]+$ ]]; then
+            FORECAST_COST_INT=0
+        fi
+
+        if [ "$FORECAST_COST_INT" -ge "$SLACK_THRESHOLD" ]; then
+            if [ "$ALERT_TYPE" != "danger" ]; then
+                ALERT_TYPE="warning"
+                ALERT_MESSAGE=":chart_with_upwards_trend: *WARNING: Forecasted cost will exceed threshold of \$${SLACK_THRESHOLD}* :chart_with_upwards_trend:\n"
+            fi
+        fi
+    fi
+fi
+
+# Format the message
+MESSAGE="${ALERT_MESSAGE}*AWS Billing Summary*\n"
+MESSAGE="${MESSAGE}Current Month Cost: *\$${CURRENT_COST}*\n"
+
+if [ -n "$DAILY_AVERAGE" ]; then
+    MESSAGE="${MESSAGE}Daily Average: \$${DAILY_AVERAGE}\n"
+fi
+
+if [ -n "$FORECAST_COST" ]; then
+    MESSAGE="${MESSAGE}Projected Month Total: *\$${FORECAST_COST}*\n"
+fi
+
+if [ -n "$SERVICE_BREAKDOWN" ]; then
+    MESSAGE="${MESSAGE}\n*Top Services:*\n${SERVICE_BREAKDOWN}"
+fi
+
+MESSAGE="${MESSAGE}\n\n_Report generated at $(date '+%Y-%m-%d %H:%M:%S %Z')_"
+
+# Send the notification
+if [ "$SLACK_WEBHOOK" = "true" ] && [ -n "$SLACK_WEBHOOK_URL" ]; then
+    echo "Sending notification via Slack webhook..." >&2
+    if send_slack_webhook "$MESSAGE" "$ALERT_TYPE"; then
+        echo "Notification sent successfully" >&2
+    else
+        echo "Failed to send notification" >&2
+        exit 1
+    fi
+elif [ "$SLACK_AWS_CHATBOT" = "true" ] && [ -n "$SLACK_AWS_CHATBOT_ARN" ]; then
+    echo "Sending notification via AWS Chatbot..." >&2
+    if send_aws_chatbot "$MESSAGE" "$ALERT_TYPE"; then
+        echo "Notification sent successfully" >&2
+    else
+        echo "Failed to send notification" >&2
+        exit 1
+    fi
+else
+    echo "Error: No valid Slack integration method configured" >&2
+    exit 1
+fi
+
+# Save the last notification timestamp
+echo "$(date +%s)" > "${KDEVOPS_DIR}/.last_slack_billing_notification"
+
+exit 0

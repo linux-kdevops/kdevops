@@ -1,0 +1,72 @@
+# AWS Cloud Billing with Slack Notifications
+#
+# This defconfig enables AWS cloud billing monitoring with
+# automated Slack notifications for cost tracking and alerts.
+#
+# Usage:
+#   make defconfig-cloud-bill-slack-aws SLACK_WEBHOOK_URL="https://hooks.slack.com/..."
+#
+# Optional CLI variables:
+#   SLACK_WEBHOOK_URL - Your Slack webhook URL (required)
+#   SLACK_CHANNEL     - Slack channel (default: #aws-billing)
+#   SLACK_THRESHOLD   - Cost alert threshold in USD (default: 100)
+#   SLACK_SCHEDULE    - Notification schedule (default: daily)
+#
+# Examples:
+#   # Basic setup with webhook URL
+#   make defconfig-cloud-bill-slack-aws SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+#
+#   # With custom channel and threshold
+#   make defconfig-cloud-bill-slack-aws \
+#     SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..." \
+#     SLACK_CHANNEL="#cloud-costs" \
+#     SLACK_THRESHOLD=500
+#
+#   # With custom schedule (9 AM daily)
+#   make defconfig-cloud-bill-slack-aws \
+#     SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..." \
+#     SLACK_SCHEDULE="*-*-* 09:00:00"
+#
+# After configuration:
+#   make                      # Generate configuration files
+#   make slack-billing-setup  # Deploy the Slack integration
+#   make slack-billing-test   # Test the notification
+
+# Basic host configuration
+CONFIG_KDEVOPS_HOSTS_PREFIX="slack-bill"
+CONFIG_KDEVOPS_HOSTS_NUM_KEEP=1
+
+# Use localhost for deployment (no VMs needed)
+CONFIG_KDEVOPS_BASELINE_AND_DEV=n
+CONFIG_WORKFLOWS_TERRAFORM_PROVIDER=n
+CONFIG_VAGRANT=n
+CONFIG_TERRAFORM=y
+
+# AWS Configuration
+CONFIG_TERRAFORM_AWS=y
+CONFIG_TERRAFORM_AWS_DATA_ENABLE=y
+
+# Default AWS region (US East 1)
+CONFIG_TERRAFORM_AWS_REGION_US_EAST_1=y
+CONFIG_TERRAFORM_AWS_AZ_US_EAST_1A=y
+
+# Minimal instance type for cost monitoring
+CONFIG_TERRAFORM_AWS_INSTANCE_T3_MICRO=y
+
+# Skip actual instance creation - we only need AWS CLI access
+CONFIG_TERRAFORM_SKIP_DEPLOYMENT=n
+
+# Enable Slack notifications
+CONFIG_ENABLE_SLACK_NOTIFICATIONS=y
+CONFIG_SLACK_WEBHOOK=y
+
+# Default notification settings (can be overridden via CLI)
+CONFIG_SLACK_BILLING_FORECAST_ALERT=y
+
+# The actual webhook URL should be provided via CLI
+# CONFIG_SLACK_WEBHOOK_URL will be set from SLACK_WEBHOOK_URL environment variable
+
+# Optional: Set default values that can be overridden
+# CONFIG_SLACK_CHANNEL_NAME="#aws-billing"
+# CONFIG_SLACK_BILLING_SCHEDULE="daily"
+# CONFIG_SLACK_BILLING_THRESHOLD=100

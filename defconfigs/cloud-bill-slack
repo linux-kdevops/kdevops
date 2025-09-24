@@ -1,0 +1,66 @@
+# Cloud Billing with Slack Notifications (Localhost-only)
+#
+# This defconfig enables cloud billing monitoring with automated
+# Slack notifications. Runs on localhost without creating any VMs.
+#
+# Usage:
+#   make defconfig-cloud-bill-slack SLACK_WEBHOOK_URL="https://hooks.slack.com/..."
+#
+# Required:
+#   - AWS CLI installed and configured (aws configure)
+#   - Valid Slack webhook URL
+#
+# Optional CLI variables:
+#   SLACK_WEBHOOK_URL - Your Slack webhook URL (required)
+#   SLACK_CHANNEL     - Slack channel (default: #aws-billing)
+#   SLACK_THRESHOLD   - Cost alert threshold in USD (default: 100)
+#   SLACK_SCHEDULE    - Notification schedule (default: daily)
+#
+# Examples:
+#   # Basic setup with webhook URL
+#   make defconfig-cloud-bill-slack SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+#
+#   # With custom channel and threshold
+#   make defconfig-cloud-bill-slack \
+#     SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..." \
+#     SLACK_CHANNEL="#cloud-costs" \
+#     SLACK_THRESHOLD=500
+#
+#   # With custom schedule (every Monday at 9 AM)
+#   make defconfig-cloud-bill-slack \
+#     SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..." \
+#     SLACK_SCHEDULE="Mon *-*-* 09:00:00"
+#
+#   # With immediate test notification
+#   make defconfig-cloud-bill-slack SLACK_WEBHOOK_URL="..." && \
+#     make && \
+#     make slack-billing-setup && \
+#     make slack-billing-test
+#
+# After configuration:
+#   make                      # Generate configuration files
+#   make slack-billing-setup  # Deploy the Slack integration locally
+#   make slack-billing-test   # Test the notification
+#   make slack-billing-status # Check systemd timer status
+
+# Basic configuration for localhost deployment
+CONFIG_KDEVOPS_HOSTS_PREFIX="localhost"
+CONFIG_KDEVOPS_HOSTS_NUM_KEEP=1
+
+# Disable all virtualization/cloud providers - run on localhost only
+CONFIG_WORKFLOWS_TERRAFORM_PROVIDER=n
+CONFIG_VAGRANT=n
+CONFIG_TERRAFORM=n
+CONFIG_LIBVIRT=n
+CONFIG_KDEVOPS_BASELINE_AND_DEV=n
+
+# Enable Slack notifications
+CONFIG_ENABLE_SLACK_NOTIFICATIONS=y
+CONFIG_SLACK_WEBHOOK=y
+CONFIG_SLACK_BILLING_FORECAST_ALERT=y
+
+# Note: The following will be automatically set from CLI variables if provided:
+# - CONFIG_SLACK_WEBHOOK_URL (from SLACK_WEBHOOK_URL)
+# - CONFIG_SLACK_CHANNEL_NAME (from SLACK_CHANNEL, default: #aws-billing)
+# - CONFIG_SLACK_BILLING_SCHEDULE (from SLACK_SCHEDULE, default: daily)
+# - CONFIG_SLACK_BILLING_THRESHOLD (from SLACK_THRESHOLD, default: 100)

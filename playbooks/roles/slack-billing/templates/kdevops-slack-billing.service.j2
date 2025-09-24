@@ -1,0 +1,29 @@
+[Unit]
+Description=kdevops AWS Billing Slack Notification
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=kdevops
+Group=kdevops
+WorkingDirectory={{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}
+Environment="KDEVOPS_DIR={{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}"
+Environment="HOME=/var/lib/kdevops"
+ExecStart={{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}/scripts/slack-billing-notify.sh
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths={{ kdevops_dir | default('/data/cloud/gpt2/kdevops') }}
+
+# Restart policy for failed notifications
+Restart=on-failure
+RestartSec=5min
+StartLimitBurst=3
+StartLimitIntervalSec=1h
+
+[Install]
+WantedBy=multi-user.target

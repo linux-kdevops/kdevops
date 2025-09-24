@@ -1,0 +1,12 @@
+[Unit]
+Description=kdevops AWS Billing Slack Notification Timer
+Requires=kdevops-slack-billing.service
+
+[Timer]
+# This will be overridden by Ansible based on configuration
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
