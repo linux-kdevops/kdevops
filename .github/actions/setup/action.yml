@@ -20,6 +20,10 @@ inputs:
     required: false
     type: string
     default: 'master'
+  test_mode:
+    required: false
+    type: string
+    default: 'kdevops-ci'
 
 runs:
   using: "composite"
@@ -151,10 +155,21 @@ runs:
         echo "make $KDEVOPS_ARGS"
 
         make $KDEVOPS_ARGS
+
+        # Configure VM size based on CI type
+        VM_CONFIG_ARG=
+        if [[ "${{ inputs.test_mode }}" == "kdevops-ci" ]]; then
+          VM_CONFIG_ARG="defconfigs/configs/vm2g2c.config"
+          echo "Using kdevops CI configuration (2GB/2core VMs)"
+        else
+          echo "Using Linux CI configuration (4GB/8core VMs)"
+        fi
+
         ./scripts/kconfig/merge_config.sh \
         -n .config \
         defconfigs/configs/diy.config \
-        defconfigs/configs/ci.config
+        defconfigs/configs/ci.config \
+        ${VM_CONFIG_ARG}
 
     - name: Run kdevops make
       working-directory: ${{ inputs.dir }}/kdevops

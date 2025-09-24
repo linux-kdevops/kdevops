@@ -36,7 +36,7 @@ jobs:
           "${{ github.workspace }}/scripts/github_output.sh" kernel_tree "$kernel_tree"
 
   schedule:
-    name: Scheduled kdevops CI
+    name: Scheduled Linux CI
     needs: [check_ref]
     uses: ./.github/workflows/main.yml
     secrets: inherit
@@ -52,3 +52,4 @@ jobs:
       ci_workflow: ${{ matrix.ci_workflow }}
       kernel_ref: ${{ needs.check_ref.outputs.kernel_ref }}
       kernel_tree: ${{ needs.check_ref.outputs.kernel_tree }}
+      test_mode: 'linux-ci'

@@ -73,13 +73,13 @@ on:
       test_mode:
         description: 'Testing mode'
         required: false
-        default: 'full-testing'
+        default: 'kdevops-ci'
         type: choice
         options:
-          - 'full-testing'        # Complete test suite
-          - 'kdevops-validation'  # Single test for framework validation
+          - 'kdevops-ci'
+          - 'linux-ci'
       tests:
-        description: 'Custom test to run (for kdevops-validation mode only)'
+        description: 'Custom test to run (for kdevops-ci mode only)'
         required: false
         type: string
         default: ''

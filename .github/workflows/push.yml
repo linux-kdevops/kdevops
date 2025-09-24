@@ -25,5 +25,5 @@ jobs:
       ci_workflow: ${{ matrix.ci_workflow }}
       kernel_ref: 'v6.15'
       kernel_tree: 'linux'
-      test_mode: 'kdevops-validation'
+      test_mode: 'kdevops-ci'
       tests: ''
