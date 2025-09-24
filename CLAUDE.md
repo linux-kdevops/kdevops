@@ -453,6 +453,16 @@ Generated-by: Claude AI
 Signed-off-by: Your Name <email@example.com>
 ```
 
+## Avoid Shopping cart lists
+
+Generative AI seems to like to make commit logs long itemized lists of things
+it did. This is stupid. This should be avoided. It is creating very silly
+commit logs. Use plain english and get to the point. Be as clear a possible
+and get to the point of not what you want to communicate, but rather what
+will make a reviewer easily understand what the heck you are implementing.
+
+You should *think* hard about your commit log, always.
+
 ## Code Quality Requirements
 
 **IMPORTANT**: Before completing any work, you MUST run `make style` to check for
