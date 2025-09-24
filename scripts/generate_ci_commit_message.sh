@@ -10,6 +10,7 @@ set -euo pipefail
 CI_WORKFLOW="${CI_WORKFLOW:-demo}"
 KERNEL_TREE="${KERNEL_TREE:-linux}"
 TESTS_PARAM="${TESTS:-${LIMIT_TESTS:-}}"
+TEST_MODE="${TEST_MODE:-linux-ci}"
 DURATION="${DURATION:-unknown}"
 
 # Input files (expected to be created by GitHub Actions)
@@ -48,10 +49,10 @@ calculate_duration() {
     fi
 }
 
-# Determine scope and header format with enhanced context-aware detection
+# Determine scope based on test mode
 determine_scope() {
-    # Simple detection: if TESTS is set, it's kdevops validation
-    if [[ -n "${TESTS:-}" ]] || [[ -n "${LIMIT_TESTS:-}" ]] || [[ -n "${TESTS_PARAM:-}" ]]; then
+    # Use explicit test mode instead of inferring from TESTS parameter
+    if [ "$TEST_MODE" = "kdevops-ci" ]; then
         echo "kdevops"
     else
         echo "tests"
@@ -162,14 +163,14 @@ generate_commit_message() {
     local header=""
     if [ "$scope" = "kdevops" ]; then
         # kdevops-ci validation format: focus on kdevops commit being tested
-        header="kdevops-ci: $CI_WORKFLOW: $kdevops_hash $kdevops_subject"
+        header="$TEST_MODE: $CI_WORKFLOW: $kdevops_hash $kdevops_subject"
     else
-        # Full test suite format: include PASS/FAIL status
+        # linux-ci format: include PASS/FAIL status
         local status="PASS"
         if [ "$test_result" = "not ok" ] || [ "$test_result" = "fail" ]; then
             status="FAIL"
         fi
-        header="$CI_WORKFLOW ($actual_kernel_tree $kernel_describe): $status"
+        header="$TEST_MODE: $CI_WORKFLOW ($actual_kernel_tree $kernel_describe): $status"
     fi
 
     # Build scope description

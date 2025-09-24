@@ -199,6 +199,7 @@ runs:
         # Set environment variables for the commit message script
         export CI_WORKFLOW="${{ inputs.ci_workflow }}"
         export KERNEL_TREE="${{ inputs.kernel_tree || 'linux' }}"
+        export TEST_MODE="${{ inputs.test_mode }}"
 
         # Get TESTS from GitHub output (determines kdevops validation vs full testing)
         TESTS="${{ steps.ci_test.outputs.TESTS }}"
