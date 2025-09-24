@@ -44,7 +44,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           ci_workflow: ${{ inputs.ci_workflow }}
-          dir: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}-${{ github.run_id }}
           kernel_ref: ${{ inputs.kernel_ref }}
           kernel_tree: ${{ inputs.kernel_tree }}
           test_mode: ${{ inputs.test_mode }}
@@ -63,7 +63,7 @@ jobs:
         uses: ./.github/actions/test
         with:
           ci_workflow: ${{ inputs.ci_workflow }}
-          dir: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}-${{ github.run_id }}
           test_mode: ${{ inputs.test_mode }}
           tests: ${{ inputs.tests }}
 
@@ -85,13 +85,13 @@ jobs:
         uses: ./.github/actions/archive
         with:
           ci_workflow: ${{ inputs.ci_workflow }}
-          dir: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}-${{ github.run_id }}
 
       - name: Upload our kdevops results archive
         uses: actions/upload-artifact@v4
         with:
           name: kdevops-ci-results
-          path: ${{ inputs.ci_workflow }}/kdevops/archive/*.zip
+          path: ${{ inputs.ci_workflow }}-${{ github.run_id }}/kdevops/archive/*.zip
 
   cleanup:
     name: Cleanup kdevops workspace
@@ -106,4 +106,4 @@ jobs:
       - name: kdevops cleanup
         uses: ./.github/actions/cleanup
         with:
-          dir: ${{ inputs.ci_workflow }}
+          dir: ${{ inputs.ci_workflow }}-${{ github.run_id }}
