@@ -40,6 +40,11 @@ jobs:
         || fromJSON('["self-hosted", "Linux", "X64", "linux-ci"]')
       }}
     steps:
+      - name: Checkout kdevops
+        uses: actions/checkout@v4
+        with:
+          path: ${{ inputs.ci_workflow }}-${{ github.run_id }}/kdevops
+
       - name: kdevops setup
         uses: ./.github/actions/setup
         with:

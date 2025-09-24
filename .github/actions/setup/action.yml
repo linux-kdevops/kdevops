@@ -28,13 +28,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Create workspace directory
-      shell: bash
-      run: |
-        set -euxo pipefail
-        rm --recursive --force --verbose ${{ inputs.dir }}
-        mkdir --parent --verbose ${{ inputs.dir }}
-
     - name: Configure git
       shell: bash
       run: |
@@ -42,13 +35,6 @@ runs:
         git config --global --add safe.directory '*'
         git config --global user.name "kdevops"
         git config --global user.email "kdevops@lists.linux.dev"
-
-    - name: Checkout kdevops
-      working-directory: ${{ inputs.dir }}
-      shell: bash
-      run: |
-        set -euxo pipefail
-        git clone /mirror/kdevops.git --branch main kdevops
 
     - name: Make sure our repo kdevops defconfig exists
       id: defconfig
