@@ -79,6 +79,13 @@ F:	playbooks/roles/ansible_cfg
 F:	scripts/ansible_av.py
 F:	scripts/ansible.Makefile
 
+KDEVOPS CI
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	.github/
+
 GITREF
 M:	Daniel Gomez <da.gomez@samsung.com>
 L:	kdevops@lists.linux.dev
