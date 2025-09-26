@@ -4,10 +4,6 @@ name: Setup kdevops
 description: Setup kdevops workspace
 
 inputs:
-  dir:
-    description: 'Directory'
-    required: true
-    default: 'workdir'
   ci_workflow:
     required: false
     type: string
@@ -15,10 +11,12 @@ inputs:
   test_mode:
     description: 'Testing mode'
     required: false
+    type: string
     default: 'kdevops-ci'
   tests:
     description: 'Custom test to run'
     required: false
+    type: string
     default: ''
 
 runs:
@@ -26,7 +24,6 @@ runs:
   steps:
     - name: Run CI tests
       id: ci_test
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
@@ -61,13 +58,12 @@ runs:
 
         # Export TESTS for current step and save to GitHub output for later steps
         export TESTS="$TESTS"
-        "${{ github.workspace }}/scripts/github_output.sh" TESTS "$TESTS"
+        ./scripts/github_output.sh TESTS "$TESTS"
 
         make ci-test CI_WORKFLOW="${{ inputs.ci_workflow }}"
 
     - name: Generate workflow results path
       id: setpath
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
@@ -81,10 +77,9 @@ runs:
           *) wpath="workflows/selftests" ;;
         esac
 
-        "${{ github.workspace }}/scripts/github_output.sh" wpath "$wpath"
+        ./scripts/github_output.sh wpath "$wpath"
 
     - name: Generate CI commit info with workflow-specific logic
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
@@ -110,8 +105,10 @@ runs:
             elif grep -E "[1-9][0-9]* failures|[1-9][0-9]* errors" ci.commit_extra >/dev/null 2>&1; then
               echo "not ok" > ci.result
             else
-              # Fallback: if we can't determine, mark as unknown but lean towards success
-              echo "ok" > ci.result
+              # Fallback: if we can't determine from content, no results were found
+              echo "no results found" > ci.result
+              echo "::warning::No fstests results found - tests may not have executed properly"
+              exit 1
             fi
             ;;
           blktests*)
@@ -165,12 +162,18 @@ runs:
             fi
 
             # blktests success detection - look for .out.bad files (failures)
-            bad_check=$(find "$wpath/results/last-run" -name "*.out.bad" -type f | head -1)
-
-            if [ -n "$bad_check" ]; then
-              echo "not ok" > ci.result
+            if [ -d "$wpath/results/last-run" ]; then
+              bad_check=$(find "$wpath/results/last-run" -name "*.out.bad" -type f | head -1)
+              if [ -n "$bad_check" ]; then
+                echo "not ok" > ci.result
+              else
+                echo "ok" > ci.result
+              fi
             else
-              echo "ok" > ci.result
+              # No results directory - no tests were run
+              echo "no results found" > ci.result
+              echo "::warning::No blktests results directory found - tests may not have executed properly"
+              exit 1
             fi
             ;;
           *selftests*|*modules*|*mm*|*firmware*)
@@ -181,8 +184,13 @@ runs:
             # selftests success detection
             if grep -q "passed\|PASS" ci.commit_extra && ! grep -q "FAIL\|failed\|ERROR" ci.commit_extra; then
               echo "ok" > ci.result
-            else
+            elif grep -q "FAIL\|failed\|ERROR" ci.commit_extra; then
               echo "not ok" > ci.result
+            else
+              # No clear pass/fail indicators - no results found
+              echo "no results found" > ci.result
+              echo "::warning::No selftests results found - tests may not have executed properly"
+              exit 1
             fi
             ;;
           *)

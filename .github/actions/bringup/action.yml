@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: GPL-2.0
 ---
-name: Cleanup kdevops VMs
-description: Destroy VMs and cleanup workspace
+name: Bringup guests
+description: Bringup kdevops guests
 
 inputs: {}
 
 runs:
   using: "composite"
   steps:
-    - name: Run kdevops make destroy
+    - name: Run kdevops make bringup
       shell: bash
       run: |
         set -euxo pipefail
         make destroy
+        make bringup

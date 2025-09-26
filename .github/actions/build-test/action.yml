@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Setup kdevops
+description: Setup kdevops workspace
+
+inputs:
+  ci_workflow:
+    required: false
+    type: string
+    default: 'demo'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build required ci tests
+      shell: bash
+      run: |
+        set -euxo pipefail
+        make ci-build-test CI_WORKFLOW=${{ inputs.ci_workflow }}

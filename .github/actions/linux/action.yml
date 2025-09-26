@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+name: Install Linux
+description: Install Linux kernel reference target
+
+inputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build linux and boot test nodes on test kernel
+      shell: bash
+      run: |
+        set -euxo pipefail
+        make linux
+
+    - name: Generate additional CI metadata after linux checkout
+      shell: bash
+      run: |
+        set -euxo pipefail
+        # Now that we have the linux git repo, generate additional metadata
+        cd linux/
+        RELEVANT_GIT_REF=$(git rev-parse --short=12 HEAD)
+
+        # Save the git ref for use by the commit message script
+        echo "$RELEVANT_GIT_REF" > ../ci.git_ref
+        echo "Generated git ref: $RELEVANT_GIT_REF"

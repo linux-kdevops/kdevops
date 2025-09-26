@@ -8,10 +8,6 @@ inputs:
     required: false
     type: string
     default: 'demo'
-  dir:
-    description: 'Directory'
-    required: true
-    default: 'workdir'
   kernel_tree:
     required: false
     type: string
@@ -38,7 +34,6 @@ runs:
 
     - name: Make sure our repo kdevops defconfig exists
       id: defconfig
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
@@ -49,18 +44,16 @@ runs:
           exit 1
         fi
 
-        "${{ github.workspace }}/scripts/github_output.sh" \
+        ./scripts/github_output.sh \
           KDEVOPS_DEFCONFIG "$KDEVOPS_DEFCONFIG"
 
     - name: Initialize CI metadata for kdevops-results-archive
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
         echo "${{ inputs.kernel_tree }}" > ci.trigger
         # Get the kdevops commit subject, not kernel commit
-        cd "${{ github.workspace }}" && git log -1 --pretty=format:"%s" > "${{ inputs.dir }}/kdevops/ci.subject"
-        cd - > /dev/null
+        git log -1 --pretty=format:"%s" > ci.subject
         echo "${{ inputs.kernel_ref }}" > ci.ref
 
         # Start out pessimistic
@@ -68,7 +61,6 @@ runs:
         echo "Nothing to write home about." > ci.commit_extra
 
     - name: Run kdevops make defconfig-repo
-      working-directory: ${{ inputs.dir }}/kdevops
       env:
         KDEVOPS_DEFCONFIG: ${{ steps.defconfig.outputs.KDEVOPS_DEFCONFIG }}
       shell: bash
@@ -80,9 +72,9 @@ runs:
         # Use GitHub run ID for unique host prefix to avoid conflicts
         # between concurrent runs on same server
         if [[ "${{ inputs.test_mode }}" == "kdevops-ci" ]]; then
-          KDEVOPS_HOSTS_PREFIX="kci-${{ github.run_id }}"
+          KDEVOPS_HOSTS_PREFIX="kci-${{ github.run_id }}-${{ github.run_number }}"
         else
-          KDEVOPS_HOSTS_PREFIX="lci-${{ github.run_id }}"
+          KDEVOPS_HOSTS_PREFIX="lci-${{ github.run_id }}-${{ github.run_number }}"
         fi
 
         echo "Going to use defconfig-$KDEVOPS_DEFCONFIG"
@@ -127,44 +119,7 @@ runs:
         ${VM_CONFIG_ARG}
 
     - name: Run kdevops make
-      working-directory: ${{ inputs.dir }}/kdevops
       shell: bash
       run: |
         set -euxo pipefail
         make -j$(nproc)
-
-    - name: Run kdevops make bringup
-      working-directory: ${{ inputs.dir }}/kdevops
-      shell: bash
-      run: |
-        set -euxo pipefail
-        make destroy
-        make bringup
-
-    - name: Build linux and boot test nodes on test kernel
-      working-directory: ${{ inputs.dir }}/kdevops
-      shell: bash
-      run: |
-        set -euxo pipefail
-        make linux
-
-    - name: Generate additional CI metadata after linux checkout
-      working-directory: ${{ inputs.dir }}/kdevops
-      shell: bash
-      run: |
-        set -euxo pipefail
-        # Now that we have the linux git repo, generate additional metadata
-        cd linux
-        RELEVANT_GIT_TAG="${{ inputs.kernel_ref }}"
-        RELEVANT_GIT_REF=$(git rev-parse --short=12 $RELEVANT_GIT_TAG 2>/dev/null || echo $RELEVANT_GIT_TAG)
-
-        # Save the git ref for use by the commit message script
-        echo "$RELEVANT_GIT_REF" > ../ci.git_ref
-        echo "Generated git ref: $RELEVANT_GIT_REF for tag: $RELEVANT_GIT_TAG"
-
-    - name: Build required ci tests
-      working-directory: ${{ inputs.dir }}/kdevops
-      shell: bash
-      run: |
-        set -euxo pipefail
-        make ci-build-test CI_WORKFLOW=${{ inputs.ci_workflow }}
