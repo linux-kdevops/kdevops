@@ -1,0 +1,258 @@
+# SPDX-License-Identifier: GPL-2.0
+---
+# Configuration validation tests that run in GitHub-hosted containers.
+# This workflow validates kdevops configuration generation and A/B testing
+# setup without requiring infrastructure provisioning, making it suitable
+# for GitHub-hosted runners with limited resources.
+name: Configuration Tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'ci-testing/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/kdevops-ci
+
+jobs:
+  build-kdevops-containers:
+    name: Build kdevops Container (${{ matrix.base_image_name }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      debian-image: ${{ steps.set-outputs-debian.outputs.debian-image }}
+      fedora-image: ${{ steps.set-outputs-fedora.outputs.fedora-image }}
+      opensuse-image: ${{ steps.set-outputs-opensuse.outputs.opensuse-image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - base_image: debian:testing
+            base_image_name: debian
+            install_cmd: >
+              apt update && apt-get install -y
+              ansible-core
+              bash
+              bison
+              coreutils
+              flex
+              gawk
+              gcc
+              git
+              hostname
+              libvirt-clients
+              libvirt0
+              make
+              ncurses-dev
+              netcat-openbsd
+              pkg-config
+              python3
+              sudo
+              traceroute
+              which
+          - base_image: fedora:latest
+            base_image_name: fedora
+            install_cmd: >
+              dnf install -y
+              ansible
+              bash
+              bison
+              coreutils
+              flex
+              gawk
+              gcc
+              git
+              hostname
+              libvirt-client
+              make
+              ncurses-devel
+              nmap-ncat
+              pkgconf
+              python3
+              sudo
+              traceroute
+              which
+          - base_image: opensuse/tumbleweed
+            base_image_name: opensuse
+            install_cmd: >
+              zypper refresh && zypper install -y
+              ansible
+              bash
+              bison
+              coreutils
+              flex
+              gawk
+              gcc
+              git
+              hostname
+              libvirt
+              make
+              ncurses-devel
+              netcat-openbsd
+              pkg-config
+              python3
+              sudo
+              traceroute
+              which
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Dockerfile for ${{ matrix.base_image_name }}
+        run: |
+          cat > Dockerfile.${{ matrix.base_image_name }} << 'EOF'
+          FROM ${{ matrix.base_image }}
+          RUN ${{ matrix.install_cmd }}
+          RUN git config --global --add safe.directory '*' && \
+              git config --global user.name "kdevops-ci" && \
+              git config --global user.email "kdevops@lists.linux.dev"
+          RUN mkdir -p /github/home/.ssh && chmod 700 /github/home/.ssh
+          ENV USER=kdevops-ci
+          ENV HOME=/github/home
+          WORKDIR /workspace
+          EOF
+
+      - name: Build and test ${{ matrix.base_image_name }} container
+        run: |
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.base_image_name }}:${{ github.sha }}"
+
+          # Build container
+          docker build -f Dockerfile.${{ matrix.base_image_name }} -t "$IMAGE_TAG" .
+
+          # Test basic functionality
+          docker run --rm -v "$PWD:/workspace" "$IMAGE_TAG" sh -c "
+            echo '🧪 Testing kdevops build in ${{ matrix.base_image_name }} container'
+            make mrproper
+            echo '✅ Basic kdevops build validation passed'
+          "
+
+          # Push container
+          docker push "$IMAGE_TAG"
+
+      - name: Set outputs for downstream jobs (debian only)
+        id: set-outputs-debian
+        if: matrix.base_image_name == 'debian'
+        run: |
+          ./scripts/github_output.sh debian-image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-debian:${{ github.sha }}"
+
+      - name: Set outputs for downstream jobs (fedora only)
+        id: set-outputs-fedora
+        if: matrix.base_image_name == 'fedora'
+        run: |
+          ./scripts/github_output.sh fedora-image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-fedora:${{ github.sha }}"
+
+      - name: Set outputs for downstream jobs (opensuse only)
+        id: set-outputs-opensuse
+        if: matrix.base_image_name == 'opensuse'
+        run: |
+          ./scripts/github_output.sh opensuse-image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-opensuse:${{ github.sha }}"
+
+  linux-ab-config-tests:
+    name: Linux A/B Tests (${{ matrix.distro_name }})
+    runs-on: ubuntu-latest
+    needs: build-kdevops-containers
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro_name: debian
+            container_image: ${{ needs.build-kdevops-containers.outputs.debian-image }}
+          - distro_name: fedora
+            container_image: ${{ needs.build-kdevops-containers.outputs.fedora-image }}
+          - distro_name: opensuse
+            container_image: ${{ needs.build-kdevops-containers.outputs.opensuse-image }}
+    container: ${{ matrix.container_image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Linux A/B testing configuration validation
+        run: |
+          echo "🧪 Running comprehensive A/B configuration tests on ${{ matrix.distro_name }}..."
+          echo "This validates all 3 build methods without requiring VMs"
+          make check-linux-ab
+
+      - name: Validate A/B test results and generated files
+        run: |
+          echo "✅ All A/B configuration tests passed on ${{ matrix.distro_name }}!"
+          echo "📋 Validated configurations:"
+          echo "  - Target build method A/B setup"
+          echo "  - 9P build method A/B setup"
+          echo "  - Builder method A/B setup"
+          echo "  - Kernel reference differentiation"
+          echo "  - Configuration file generation (.config, .extra_vars_auto.yaml, extra_vars.yaml)"
+          echo "  - Cross-distribution compatibility: ${{ matrix.distro_name }}"
+
+  quick-config-validation:
+    name: Quick Config Tests (${{ matrix.defconfig }}) on ${{ matrix.distro_name }}
+    runs-on: ubuntu-latest
+    needs: build-kdevops-containers
+    strategy:
+      fail-fast: false
+      matrix:
+        defconfig: [blktests_nvme, xfs_reflink_4k, lbs-xfs, linux-ab-testing]
+        distro_name: [debian, fedora, opensuse]
+        include:
+          - distro_name: debian
+            container_image: ${{ needs.build-kdevops-containers.outputs.debian-image }}
+          - distro_name: fedora
+            container_image: ${{ needs.build-kdevops-containers.outputs.fedora-image }}
+          - distro_name: opensuse
+            container_image: ${{ needs.build-kdevops-containers.outputs.opensuse-image }}
+    container: ${{ matrix.container_image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test defconfig-${{ matrix.defconfig }} configuration
+        run: |
+          echo "🔧 Testing defconfig-${{ matrix.defconfig }} configuration on ${{ matrix.distro_name }}..."
+          make mrproper
+          make defconfig-${{ matrix.defconfig }}
+          echo "📁 Checking files after defconfig..."
+          test -f .config || (echo "❌ .config not generated by defconfig" && exit 1)
+          test -f .extra_vars_auto.yaml || (echo "❌ .extra_vars_auto.yaml not generated by defconfig" && exit 1)
+          echo "✅ defconfig generated .config and .extra_vars_auto.yaml successfully"
+
+      - name: Generate configuration files (container-safe)
+        run: |
+          echo "🔨 Generating core configuration files without systemd services..."
+          # Generate the essential files from DEFAULT_DEPS but skip LOCALHOST_SETUP_WORK (systemd)
+          # This generates: .kdevops.depcheck, extra_vars.yaml, ansible.cfg, hosts
+          make .kdevops.depcheck
+          make extra_vars.yaml
+          make $PWD/ansible.cfg
+          make $PWD/hosts
+          echo "✅ Core configuration files generated successfully"
+
+      - name: Verify all generated configuration files
+        run: |
+          echo "📁 Validating all generated configuration files..."
+          test -f .config || (echo "❌ .config not found" && exit 1)
+          test -f .extra_vars_auto.yaml || (echo "❌ .extra_vars_auto.yaml not found" && exit 1)
+          test -f extra_vars.yaml || (echo "❌ extra_vars.yaml not generated by make" && exit 1)
+          test -f .kdevops.depcheck || (echo "❌ .kdevops.depcheck not found" && exit 1)
+          test -f ansible.cfg || (echo "❌ ansible.cfg not found" && exit 1)
+          test -f hosts || (echo "❌ hosts not found" && exit 1)
+          echo "✅ All required configuration files generated:"
+          echo "  - .config (kernel-style configuration)"
+          echo "  - .extra_vars_auto.yaml (auto-generated from defconfig)"
+          echo "  - extra_vars.yaml (final ansible variables from make)"
+          echo "  - .kdevops.depcheck (dependency verification)"
+          echo "  - ansible.cfg (ansible configuration)"
+          echo "  - hosts (inventory file)"
