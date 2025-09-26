@@ -1,10 +1,17 @@
 #!/bin/bash
 # SPDX-License-Identifier: copyleft-next-0.3.1
 #
-# Test A/B configuration locally of all Linux AB configurations posisble.
+# Test A/B configuration locally of all Linux AB configurations possible.
 # The goal is to verify your extra_vars.yaml ends up with different kernel
 # target refs for A and B group hosts. It does so also by checking that
 # ansible will use these. No real bringup or live test is done.
+#
+# Note: Originally this script ran full 'make' for each build method, but
+# GitHub Actions containers lack systemd and infrastructure dependencies
+# that kdevops requires. Since we only need to verify configuration
+# generation (not infrastructure setup), we run 'make extra_vars.yaml'
+# which generates the ansible variables needed for A/B validation while
+# skipping systemd services and other GitHub-incompatible components.
 #
 # Outputs TAP (Test Anything Protocol) format results
 
@@ -115,11 +122,11 @@ for method in $BUILD_METHODS; do
         continue
     fi
 
-    # Generate configuration
-    if make >/dev/null 2>&1; then
-        tap_result "ok" "$method: Generate configuration (make)"
+    # Generate configuration (container-safe)
+    if make extra_vars.yaml >/dev/null 2>&1; then
+        tap_result "ok" "$method: Generate configuration (extra_vars.yaml)"
     else
-        tap_result "not ok" "$method: Generate configuration (make)" "Failed to run make"
+        tap_result "not ok" "$method: Generate configuration (extra_vars.yaml)" "Failed to generate extra_vars.yaml"
         continue
     fi
 
