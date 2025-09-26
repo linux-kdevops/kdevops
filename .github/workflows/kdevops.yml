@@ -7,10 +7,11 @@ on:
     - cron: '0 14 * * *'  # Daily at 2 PM UTC
   push:
     branches:
-      - '**'
+      - main
+      - 'ci-testing/**'
   pull_request:
     branches:
-      - '**'
+      - main
   workflow_dispatch:
     inputs:
       ci_workflow:
