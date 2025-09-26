@@ -10,6 +10,6 @@ kdevops_postfix_setup_relay: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		$(KDEVOPS_PLAYBOOKS_DIR)/postfix_relay_host.yml \
 		--extra-vars=@./extra_vars.yaml
-PHONY += kdevos_postfix_setup_relay
+PHONY += kdevops_postfix_setup_relay
 ANSIBLE_EXTRA_ARGS += $(POSTFIX_SETUP_ARGS)
 LOCALHOST_SETUP_WORK += kdevops_postfix_setup_relay
