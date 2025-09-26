@@ -8,7 +8,7 @@ Table of Contents
       * [Start kernel hacking in just 4 commands](#start-kernel-hacking-in-just-4-commands)
       * [Start running fstests in 2 commands](#start-running-fstests-in-2-commands)
       * [Start running blktests in 2 commands](#start-running-blktests-in-2-commands)
-      * [Start testing NFS with in 2 commands](#start-testing-nfs-with-in-2-commands)
+      * [Start testing NFS in 2 commands](#start-testing-nfs-in-2-commands)
       * [Runs some kernel selftests in a parallel manner](#runs-some-kernel-selftests-in-a-parallel-manner)
       * [CXL](#cxl)
       * [reboot-limit](#reboot-limit)
@@ -70,7 +70,7 @@ features.
 
 ## Generative AI usage on kdevops
 
-The kdeovps project significantly enhances the speed and accuracy of generative
+The kdevops project significantly enhances the speed and accuracy of generative
 AI for extending its features and adding new workflows. This capability was a
 core design principle. While
 [generative AI may not yet be optimal for all Linux kernel development](https://neurips.cc/virtual/2024/poster/97426),
@@ -384,9 +384,9 @@ kdevops supports its own kernel continuous integration support, so to allow
 Linux developers and Linux distributions to keep track of issues present in
 any of supported kdevops workflows and be able to tell when new regressions
 are detected. Note though that kernel-ci for kdevops is only implemented on
-a few workflows, such as fstestse and blktests. In order to support a kernel-ci
+a few workflows, such as fstests and blktests. In order to support a kernel-ci
 part of the hard task is to come up with what a baseline is, and in kdevops
-style, be able go easily `git diff` and read a regression with one line
+style, be able to easily `git diff` and read a regression with one line
 per regression. This requires a bit of time and work. And it is why some
 other workflows do not yet support a kernel-ci.
 
@@ -402,7 +402,7 @@ to commit / push updates without any bottlenecks.
 # kdevops tests results
 
 kdevops has started to enable users / developers to also push results for
-tests. This goes beyond just collecting baseline rusults for known failures,
+tests. This goes beyond just collecting baseline results for known failures,
 this aims to collect *within* all dmesg / bad log files for each test that
 failed.
 
