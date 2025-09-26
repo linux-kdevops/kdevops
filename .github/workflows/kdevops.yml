@@ -202,6 +202,23 @@ jobs:
             git checkout ${{ github.sha }}
           fi
 
+      - name: Report kdevops commit information
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          # Get current commit info
+          commit_sha=$(git rev-parse HEAD)
+          commit_short=$(git rev-parse --short HEAD)
+          commit_subject=$(git log -1 --pretty=format:"%s")
+
+          # Report the kdevops version used
+          echo "::notice title=kdevops Commit::Using kdevops commit $commit_short ($commit_sha): $commit_subject"
+
+          # Also show in regular output for logs
+          echo "✅ Running kdevops CI with commit: $commit_short"
+          echo "📝 Commit message: $commit_subject"
+
       - name: Configure kdevops
         uses: ./.github/actions/configure
         with:
