@@ -149,9 +149,14 @@ jobs:
             exit 1
           fi
 
-  kdevops-ci-matrix:
-    name: "${{ github.event.inputs.test_mode || 'kdevops-ci' }}: ${{ matrix.ci_workflow }}"
-    runs-on: self-hosted
+  ci-matrix:
+    name: "${{ github.event_name == 'schedule' && 'linux-ci' || github.event.inputs.test_mode || 'kdevops-ci' }}: ${{ matrix.ci_workflow }}"
+    runs-on: >-
+      ${{
+        (github.event_name == 'schedule' && fromJSON('["self-hosted", "linux-ci"]')) ||
+        (github.event.inputs.test_mode == 'linux-ci' && fromJSON('["self-hosted", "linux-ci"]')) ||
+        fromJSON('["self-hosted", "kdevops-ci"]')
+      }}
     needs: [check_ref, generate_kernel_ref]
     if: >-
       always() &&
@@ -258,7 +263,12 @@ jobs:
         uses: ./.github/actions/test
         with:
           ci_workflow: ${{ matrix.ci_workflow }}
-          test_mode: ${{ github.event.inputs.test_mode || 'kdevops-ci' }}
+          test_mode: >-
+            ${{
+              github.event_name == 'schedule' && 'linux-ci'
+              || github.event.inputs.test_mode
+              || 'kdevops-ci'
+            }}
           tests: ${{ github.event.inputs.tests || '' }}
         timeout-minutes: 120
 
