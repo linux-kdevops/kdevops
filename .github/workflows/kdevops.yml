@@ -184,23 +184,37 @@ jobs:
             # Repo exists - clean and update (like actions/checkout)
             git clean -ffdx
             git reset --hard HEAD
-            # Ensure correct remote URL
-            git remote set-url origin $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
-            git fetch --depth=1 origin ${{ github.ref_name }}
-            git reset --hard FETCH_HEAD
+            # Ensure correct remote URL for public repo
+            git remote set-url origin ${{ github.server_url }}/${{ github.repository }}.git
+
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              # For PRs, fetch the specific PR ref that GitHub creates
+              git fetch --depth=1 origin refs/pull/${{ github.event.number }}/head:pr-branch
+              git checkout pr-branch
+            else
+              # For push/schedule/workflow_dispatch, use the commit SHA directly
+              git fetch --depth=1 origin ${{ github.sha }}
+              git checkout ${{ github.sha }}
+            fi
           else
             # No repo - fresh clone with local mirror optimization
             if [[ -f "/mirror/kdevops.git/HEAD" ]]; then
               git clone --verbose --progress \
                 --reference /mirror/kdevops.git \
                 --depth=1 \
-                --branch ${{ github.ref_name }} \
-                $GITHUB_SERVER_URL/$GITHUB_REPOSITORY .
+                ${{ github.server_url }}/${{ github.repository }}.git .
             else
               git clone --verbose --progress \
                 --depth=1 \
-                --branch ${{ github.ref_name }} \
-                $GITHUB_SERVER_URL/$GITHUB_REPOSITORY .
+                ${{ github.server_url }}/${{ github.repository }}.git .
+            fi
+
+            # Checkout the specific commit
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              git fetch --depth=1 origin refs/pull/${{ github.event.number }}/head:pr-branch
+              git checkout pr-branch
+            else
+              git checkout ${{ github.sha }}
             fi
           fi
 
