@@ -128,10 +128,7 @@ endif # ENABLE_MONITORING
 
 config SLACK_CLI_SET
 	bool
-	default $(shell, scripts/check-cli-set-var.sh SLACK_WEBHOOK_URL) || \
-		$(shell, scripts/check-cli-set-var.sh SLACK_CHANNEL) || \
-		$(shell, scripts/check-cli-set-var.sh SLACK_THRESHOLD) || \
-		$(shell, scripts/check-cli-set-var.sh SLACK_SCHEDULE)
+	default $(shell, scripts/check-cli-set-var.sh SLACK_WEBHOOK_URL)
 
 config ENABLE_SLACK_NOTIFICATIONS
 	bool "Enable Slack notifications for cloud billing"
@@ -160,7 +157,6 @@ choice
 
 config SLACK_WEBHOOK
 	bool "Use Slack webhook URL"
-	default y if SLACK_CLI_SET && "$(shell, echo ${SLACK_WEBHOOK_URL})" != ""
 	help
 		Use a simple webhook URL to post messages to Slack.
 		This is easier to set up but has limited formatting options.
@@ -177,7 +173,6 @@ config SLACK_WEBHOOK_URL
 	string "Slack webhook URL"
 	depends on SLACK_WEBHOOK
 	output yaml
-	default "$(shell, echo ${SLACK_WEBHOOK_URL})" if SLACK_CLI_SET
 	default ""
 	help
 		The Slack webhook URL to send notifications to.
@@ -198,7 +193,6 @@ config SLACK_AWS_CHATBOT_ARN
 config SLACK_CHANNEL_NAME
 	string "Slack channel name"
 	output yaml
-	default "$(shell, echo ${SLACK_CHANNEL})" if SLACK_CLI_SET && "$(shell, echo ${SLACK_CHANNEL})" != ""
 	default "#aws-billing"
 	help
 		The Slack channel to send notifications to.
@@ -209,7 +203,6 @@ config SLACK_CHANNEL_NAME
 config SLACK_BILLING_SCHEDULE
 	string "Billing notification schedule (systemd timer format)"
 	output yaml
-	default "$(shell, echo ${SLACK_SCHEDULE})" if SLACK_CLI_SET && "$(shell, echo ${SLACK_SCHEDULE})" != ""
 	default "daily"
 	help
 		When to send billing notifications using systemd timer format.
@@ -225,7 +218,6 @@ config SLACK_BILLING_SCHEDULE
 config SLACK_BILLING_THRESHOLD
 	int "Cost threshold for immediate alerts (USD)"
 	output yaml
-	default $(shell, echo ${SLACK_THRESHOLD}) if SLACK_CLI_SET && "$(shell, echo ${SLACK_THRESHOLD})" != ""
 	default 100
 	help
 		Send an immediate alert if the monthly cost exceeds this threshold.
