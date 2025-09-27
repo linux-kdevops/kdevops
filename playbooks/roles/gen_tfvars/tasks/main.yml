@@ -51,6 +51,7 @@
                                        'g5.24xlarge' if terraform_aws_instance_g5_24xlarge | default(false) | bool else
                                        'g5.48xlarge' if terraform_aws_instance_g5_48xlarge | default(false) | bool else
                                        'p4d.24xlarge' if terraform_aws_instance_p4d_24xlarge | default(false) | bool else
+                                       'p5.4xlarge' if terraform_aws_instance_p5_4xlarge | default(false) | bool else
                                        'p5.48xlarge' if terraform_aws_instance_p5_48xlarge | default(false) | bool else
                                        terraform_aws_instance_type | default('t2.micro') }}"
   when: kdevops_terraform_provider == "aws"

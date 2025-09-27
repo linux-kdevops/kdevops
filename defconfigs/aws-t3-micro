@@ -1,0 +1,34 @@
+# AWS t3.micro instance - minimal cost testing configuration
+#
+# This defconfig sets up a minimal AWS instance for testing
+# kdevops functionality without incurring significant costs.
+# t3.micro is eligible for AWS free tier.
+
+# Basic configuration
+CONFIG_KDEVOPS_HOSTS_PREFIX="kdevops"
+CONFIG_KDEVOPS_HOSTS_NUM_KEEP=1
+
+# Use Terraform for AWS
+CONFIG_TERRAFORM=y
+CONFIG_TERRAFORM_AWS=y
+CONFIG_TERRAFORM_AWS_DATA_ENABLE=y
+
+# Skip extra storage configuration
+CONFIG_TERRAFORM_EXTRA_VARS_AUTO=y
+
+# Use us-east-1 for best availability
+CONFIG_TERRAFORM_AWS_REGION_US_EAST_1=y
+CONFIG_TERRAFORM_AWS_AZ_US_EAST_1A=y
+
+# T3 micro instance - cheapest option, free tier eligible
+CONFIG_TERRAFORM_AWS_INSTANCE_TYPE_T3=y
+CONFIG_TERRAFORM_AWS_INSTANCE_T3_MICRO_CHOICE=y
+
+# Use default VPC to avoid VPC limit issues
+# CONFIG_TERRAFORM_AWS_CREATE_VPC is not set
+CONFIG_TERRAFORM_AWS_ASSIGN_PUBLIC_IP=y
+
+# Minimal storage - single small volume
+CONFIG_TERRAFORM_AWS_EBS_VOLUMES_PER_INSTANCE=1
+CONFIG_TERRAFORM_AWS_EBS_VOLUME_SIZE=8
+CONFIG_TERRAFORM_AWS_EBS_VOLUME_TYPE_GP3=y
