@@ -305,7 +305,7 @@ mrproper:
 	$(Q)rm -rf terraform/*/.terraform
 	$(Q)rm -f terraform/*/.terraform.lock.hcl
 	$(Q)rm -f $(KDEVOPS_NODES)
-	$(Q)rm -f $(ANSIBLE_CFG_INVENTORY) $(KDEVOPS_MRPROPER)
+	$(Q)rm -f $(ANSIBLE_INVENTORY_FILE) $(KDEVOPS_MRPROPER)
 	$(Q)rm -f .config .config.old extra_vars.yaml $(KCONFIG_YAMLCFG)
 	$(Q)rm -f $(ANSIBLE_CFG_FILE)
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
