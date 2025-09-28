@@ -144,15 +144,15 @@ endif
 DEFAULT_DEPS += $(ANSIBLE_CFG_FILE)
 DEFAULT_DEPS += $(ANSIBLE_INVENTORY_FILE)
 
-ifneq (,$(KDEVOPS_NODES))
-DEFAULT_DEPS += $(KDEVOPS_NODES)
-endif
-
 include scripts/provision.Makefile
 include scripts/firstconfig.Makefile
 include scripts/systemd-timesync.Makefile
 include scripts/journal-server.Makefile
 include scripts/update_etc_hosts.Makefile
+
+ifneq (,$(KDEVOPS_NODES))
+DEFAULT_DEPS += $(KDEVOPS_NODES)
+endif
 
 KDEVOPS_BRING_UP_DEPS += $(KDEVOPS_BRING_UP_DEPS_EARLY)
 KDEVOPS_BRING_UP_DEPS += $(KDEVOPS_PROVISIONED_DEVCONFIG)
