@@ -177,7 +177,10 @@ jobs:
               && fromJSON('["blktests"]')
             || github.event_name == 'workflow_dispatch'
               && fromJSON(format('["{0}"]', github.event.inputs.ci_workflow))
-            || fromJSON('["blktests_nvme", "xfs_reflink_4k"]')
+            || fromJSON('["blktests_nvme", "blktests_block", "blktests_loop",
+                          "blktests_meta", "blktests_nbd",
+                          "blktests_scsi", "blktests_srp",
+                          "blktests_zbd"]')
           }}
     steps:
       - name: Checkout repository for ${{ matrix.ci_workflow }}
