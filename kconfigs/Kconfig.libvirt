@@ -450,6 +450,16 @@ config LIBVIRT_MEM_32G
 	help
 	  Use 32 GiB of RAM on guests.
 
+config LIBVIRT_MEM_64G
+	bool "64"
+	help
+	  Use 64 GiB of RAM on guests.
+
+config LIBVIRT_MEM_128G
+	bool "128"
+	help
+	  Use 128 GiB of RAM on guests.
+
 endchoice
 
 config LIBVIRT_MEM_MB
@@ -460,6 +470,8 @@ config LIBVIRT_MEM_MB
 	default 8192 if LIBVIRT_MEM_8G
 	default 16384 if LIBVIRT_MEM_16G
 	default 32768 if LIBVIRT_MEM_32G
+	default 65536 if LIBVIRT_MEM_64G
+	default 131072 if LIBVIRT_MEM_128G
 	help
 	  How much MiB of RAM to use per guest.
 
