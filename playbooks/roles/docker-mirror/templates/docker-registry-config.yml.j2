@@ -1,0 +1,38 @@
+# Docker Registry Configuration for kdevops mirror
+version: 0.1
+log:
+  fields:
+    service: kdevops-docker-mirror
+  level: info
+storage:
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+    Access-Control-Allow-Origin: ['*']
+    Access-Control-Allow-Methods: ['HEAD', 'GET', 'OPTIONS', 'DELETE']
+    Access-Control-Allow-Headers: ['Authorization', 'Accept']
+    Access-Control-Expose-Headers: ['Docker-Content-Digest']
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+{% if docker_mirror_pull_through_cache | default(true) %}
+proxy:
+  remoteurl: https://registry-1.docker.io
+  username: ""
+  password: ""
+{% endif %}

@@ -740,5 +740,82 @@ config NIX_CACHE_MIRROR_PATH
 	  This should be on a filesystem with sufficient space as the cache
 	  can grow to several GB over time.
 
+config ENABLE_DOCKER_MIRROR
+	bool "Enable Docker registry mirror support"
+	default $(shell, scripts/check_docker_mirror.sh ENABLE_DOCKER_MIRROR)
+	help
+	  Enable Docker registry mirror support to cache container images locally.
+	  This option enables the Docker mirror infrastructure if /mirror/docker/
+	  directory exists.
+
+config USE_DOCKER_MIRROR
+	bool "Use Docker registry mirror"
+	output yaml
+	default $(shell, scripts/check_docker_mirror.sh USE_DOCKER_MIRROR)
+	depends on ENABLE_DOCKER_MIRROR
+	help
+	  Automatically use the Docker registry mirror if it's running and accessible.
+	  This will configure workflows to use localhost:5000 as the registry mirror.
+
+config INSTALL_DOCKER_MIRROR
+	bool "Install Docker registry mirror"
+	output yaml
+	default $(shell, scripts/check_docker_mirror.sh INSTALL_DOCKER_MIRROR)
+	depends on ENABLE_DOCKER_MIRROR
+	help
+	  Enable this to set up a local Docker registry mirror for all guests
+	  and workflows that use Docker containers. This will significantly
+	  speed up container deployments by caching Docker images locally.
+
+	  When enabled, this creates:
+	  - A local Docker registry mirror at /mirror/docker/
+	  - A Docker registry server on port 5000 (configurable)
+	  - Automatic caching of pulled images
+	  - Support for offline operation with cached images
+
+	  This is particularly useful for workflows that use Docker containers
+	  such as:
+	  - MinIO object storage
+	  - Milvus vector database
+	  - AI/ML workflows with containerized services
+	  - Database benchmarking with sysbench
+
+	  The mirror will be available at: http://localhost:5000/
+
+config DOCKER_MIRROR_PORT
+	int "Docker registry mirror port"
+	output yaml
+	default 5000
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  The port for the local Docker registry mirror server.
+	  Default is 5000. Ensure this port is available and not blocked by firewall.
+
+config DOCKER_MIRROR_PATH
+	string "Docker registry mirror storage path"
+	output yaml
+	default "/mirror/docker"
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  Local filesystem path where the Docker registry mirror will store images.
+	  This should be on a filesystem with sufficient space as Docker images
+	  can consume significant storage (several GB to tens of GB depending on
+	  the workflows you use).
+
+config DOCKER_MIRROR_PULL_THROUGH_CACHE
+	bool "Enable pull-through cache mode"
+	output yaml
+	default y
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  Enable pull-through cache mode for the Docker registry mirror.
+	  When enabled, the registry will automatically cache images as they
+	  are pulled through it, acting as a transparent proxy to Docker Hub
+	  and other registries.
+
+	  This is the recommended mode as it requires no changes to image
+	  names and transparently caches all pulled images.
+
+
 endif # ENABLE_LOCAL_LINUX_MIRROR
 endif # TERRAFORM

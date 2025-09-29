@@ -1,0 +1,20 @@
+---
+- name: Install Docker mirror
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Import optional extra_args file
+      ansible.builtin.include_vars: "{{ item }}"
+      ignore_errors: true
+      with_first_found:
+        - files:
+            - "../extra_vars.yml"
+            - "../extra_vars.yaml"
+            - "../extra_vars.json"
+          skip: true
+      tags: ["vars", "docker-mirror", "docker-mirror-pull", "docker-mirror-status"]
+
+    - name: Include docker-mirror role
+      ansible.builtin.include_role:
+        name: docker-mirror
+      tags: ["docker-mirror", "docker-mirror-pull", "docker-mirror-status"]

@@ -1,0 +1,72 @@
+---
+# Pull and cache Docker images for workflows
+
+- name: Define default Docker images for workflows
+  ansible.builtin.set_fact:
+    docker_mirror_images:
+      # MinIO images
+      - "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+      # Milvus vector database images
+      - "milvusdb/milvus:2.3.0"
+      - "quay.io/coreos/etcd:v3.5.5"
+      # vLLM standard deployment
+      - "vllm/vllm-openai:latest"
+      # vLLM CPU inference deployment
+      - "openeuler/vllm-cpu:latest"
+      # vLLM production stack router
+      - "ghcr.io/vllm-project/production-stack/router:latest"
+      # LMCache-enabled deployments
+      - "lmcache/vllm-openai:2025-05-27-v1"
+      - "lmcache/vllm-openai:latest-nightly"
+      # Registry itself
+      - "registry:2"
+
+- name: Add workflow-specific images from configuration
+  ansible.builtin.set_fact:
+    docker_mirror_images: "{{ docker_mirror_images + [item] }}"
+  with_items: "{{ docker_mirror_additional_images | default([]) }}"
+  when: docker_mirror_additional_images is defined
+
+- name: Pull Docker images
+  ansible.builtin.command: "docker pull {{ item }}"
+  loop: "{{ docker_mirror_images }}"
+  register: pull_result
+  changed_when: "'Downloaded newer image' in pull_result.stdout or 'Pulling from' in pull_result.stdout"
+  retries: 3
+  delay: 5
+  until: pull_result.rc == 0
+
+- name: Tag images for local registry
+  ansible.builtin.command: |
+    docker tag {{ item }} localhost:{{ docker_mirror_port | default(5000) }}/{{ item | regex_replace('^[^/]+/', '') }}
+  loop: "{{ docker_mirror_images }}"
+  changed_when: true
+
+- name: Push images to local registry
+  ansible.builtin.command: |
+    docker push localhost:{{ docker_mirror_port | default(5000) }}/{{ item | regex_replace('^[^/]+/', '') }}
+  loop: "{{ docker_mirror_images }}"
+  register: push_result
+  changed_when: true
+  retries: 3
+  delay: 5
+  until: push_result.rc == 0
+
+- name: Create manifest file
+  ansible.builtin.template:
+    src: docker-manifest.txt.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/images/manifest.txt"
+    mode: '0644'
+
+- name: Display cached images summary
+  ansible.builtin.debug:
+    msg: |
+      Docker images cached successfully:
+      Total images: {{ docker_mirror_images | length }}
+      Registry URL: http://localhost:{{ docker_mirror_port | default(5000) }}
+
+      To use the mirror, configure Docker daemon:
+      {
+        "registry-mirrors": ["http://localhost:{{ docker_mirror_port | default(5000) }}"],
+        "insecure-registries": ["localhost:{{ docker_mirror_port | default(5000) }}"]
+      }

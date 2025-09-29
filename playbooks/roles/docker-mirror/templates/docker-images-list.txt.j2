@@ -1,0 +1,23 @@
+# Docker images list for kdevops workflows
+# This file is auto-generated from workflow configurations
+
+# MinIO workflow images
+{% if minio_container_image is defined %}
+{{ minio_container_image }}
+{% endif %}
+
+# Milvus workflow images
+{% if ai_vector_db_milvus_container_image_string is defined %}
+{{ ai_vector_db_milvus_container_image_string }}
+{% endif %}
+{% if ai_vector_db_milvus_etcd_container_image_string is defined %}
+{{ ai_vector_db_milvus_etcd_container_image_string }}
+{% endif %}
+{% if ai_vector_db_milvus_minio_container_image_string is defined %}
+{{ ai_vector_db_milvus_minio_container_image_string }}
+{% endif %}
+
+# Additional workflow images
+{% for image in docker_mirror_additional_images | default([]) %}
+{{ image }}
+{% endfor %}

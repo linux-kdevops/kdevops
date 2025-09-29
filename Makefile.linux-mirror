@@ -43,13 +43,43 @@ mirror-status: $(KDEVOPS_EXTRA_VARS)
 
 PHONY += mirror-status
 
+docker-mirror: docker-mirror-setup
+
+PHONY += docker-mirror
+
+docker-mirror-setup: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook \
+		--tags vars,docker-mirror \
+		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \
+		--extra-vars=@./extra_vars.yaml
+
+PHONY += docker-mirror-setup
+
+docker-mirror-pull: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook \
+		--tags vars,docker-mirror-pull \
+		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \
+		--extra-vars=@./extra_vars.yaml
+
+PHONY += docker-mirror-pull
+
+docker-mirror-status:
+	$(Q)scripts/check_docker_mirror.sh DOCKER_MIRROR_EXISTS
+
+PHONY += docker-mirror-status
+
 ANSIBLE_EXTRA_ARGS += $(LINUX_MIRROR_ARGS)
 LOCALHOST_SETUP_WORK += mirror
 
 mirror-help-menu:
 	@echo "Mirror options:"
-	@echo "mirror		- sets up systemd mirrors"
+	@echo "mirror		- sets up all mirrors (git, nix, docker)"
 	@echo "mirror-status	- checks systemd mirrors status"
+	@echo ""
+	@echo "Docker mirror specific targets:"
+	@echo "docker-mirror	- sets up Docker registry mirror only"
+	@echo "docker-mirror-pull	- pull and cache Docker images"
+	@echo "docker-mirror-status	- check Docker mirror status"
 	@echo ""
 
 HELP_TARGETS += mirror-help-menu

@@ -1,0 +1,23 @@
+[Unit]
+Description=Update Docker Mirror Images
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash {{ docker_mirror_path }}/scripts/update-docker-images.sh
+StandardOutput=journal+console
+StandardError=journal+console
+User=root
+Group=root
+
+# Restart on failure with delay
+Restart=on-failure
+RestartSec=30
+
+# Environment variables
+Environment="MIRROR_DIR={{ docker_mirror_path }}"
+Environment="REGISTRY_PORT={{ docker_mirror_port }}"
+
+[Install]
+WantedBy=multi-user.target
