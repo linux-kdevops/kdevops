@@ -1,0 +1,65 @@
+{# Workflow template for vLLM Production Stack #}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-vllm
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-vllm-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-vllm
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-vllm-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[vllm]
+{{ kdevops_host_prefix }}-vllm
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-vllm-dev
+{% endif %}
+
+[vllm:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_enable_iscsi %}
+[iscsi]
+{{ kdevops_host_prefix }}-iscsi
+
+[iscsi:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_nfsd_enable %}
+[nfsd]
+{{ kdevops_host_prefix }}-nfsd
+
+[nfsd:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_smbd_enable %}
+[smbd]
+{{ kdevops_host_prefix }}-smbd
+
+[smbd:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}
+
+{% if kdevops_krb5_enable %}
+[kdc]
+{{ kdevops_host_prefix }}-kdc
+
+[kdc:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+{% endif %}

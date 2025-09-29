@@ -1,0 +1,699 @@
+if KDEVOPS_WORKFLOW_ENABLE_VLLM
+
+comment "vLLM Production Stack requires at least 64 GiB RAM per guest for stable operation"
+	depends on VLLM_PRODUCTION_STACK && LIBVIRT && !LIBVIRT_MEM_64G && !LIBVIRT_MEM_128G
+
+choice
+	prompt "vLLM deployment method"
+	default VLLM_LATEST_DOCKER
+
+config VLLM_LATEST_DOCKER
+	bool "Latest vLLM Docker image"
+	output yaml
+	help
+	  Deploy vLLM using the latest official Docker images directly.
+	  This provides a simple Kubernetes deployment with:
+	  - Latest vLLM serving engine (vllm/vllm-openai:latest)
+	  - Basic Kubernetes manifests
+	  - CPU or GPU inference support
+	  - Simple benchmarking capabilities
+
+	  This is suitable for quick testing and development with the
+	  most recent vLLM features.
+
+config VLLM_PRODUCTION_STACK
+	bool "vLLM Production Stack (official Helm chart)"
+	output yaml
+	help
+	  Deploy the official vLLM Production Stack using Helm charts from
+	  github.com/vllm-project/production-stack. This includes:
+	  - vLLM serving engines with production configurations
+	  - Request router (ghcr.io/vllm-project/production-stack/router)
+	  - Observability stack with Prometheus and Grafana
+	  - LMCache support for KV cache offloading
+	  - Production-grade monitoring and scaling
+
+	  IMPORTANT: Requires vLLM v0.6.6 or later (kdevops defaults to v0.6.6)
+	  - The Helm chart hardcodes --no-enable-prefix-caching flag
+	  - v0.6.5+ supports this flag but has CPU inference bugs
+	  - v0.6.6 fixes CPU issues while maintaining compatibility
+	  - For GPU-only deployments: v0.7.3+ offers V1 engine with 1.7x speedup
+
+	  This is the recommended approach for production deployments.
+
+config VLLM_BARE_METAL
+	bool "Bare metal deployment with systemd"
+	depends on USE_LIBVIRT || TERRAFORM || KDEVOPS_USE_DECLARED_HOSTS
+	output yaml
+	help
+	  Deploy vLLM directly on bare metal servers or VMs using systemd.
+	  This provides:
+	  - Direct vLLM installation via pip or containers
+	  - Systemd service management
+	  - Support for real GPU hardware
+	  - No Kubernetes overhead
+
+	  Use KDEVOPS_USE_DECLARED_HOSTS to specify existing servers with GPUs.
+	  Ideal for dedicated GPU servers or HPC environments.
+
+endchoice
+
+# Common configuration for all deployment methods
+config VLLM_DEPLOYMENT_TYPE
+	string
+	output yaml
+	default "docker" if VLLM_LATEST_DOCKER
+	default "production-stack" if VLLM_PRODUCTION_STACK
+	default "bare-metal" if VLLM_BARE_METAL
+
+# Kubernetes-specific configuration
+if VLLM_LATEST_DOCKER || VLLM_PRODUCTION_STACK
+
+# Kubernetes deployment method
+choice
+	prompt "Kubernetes deployment method"
+	default VLLM_K8S_MINIKUBE
+
+config VLLM_K8S_MINIKUBE
+	bool "Minikube (local development)"
+	output yaml
+	help
+	  Use Minikube for local Kubernetes development and testing.
+	  This is suitable for single-node deployments and development.
+
+config VLLM_K8S_EXISTING
+	bool "Existing Kubernetes cluster"
+	output yaml
+	help
+	  Use an existing Kubernetes cluster (AWS EKS, GCP GKE, Azure AKS, etc.).
+	  The cluster should already be configured with kubectl access.
+
+endchoice
+
+# Helm configuration
+config VLLM_HELM_RELEASE_NAME
+	string "Helm release name"
+	output yaml
+	default "vllm"
+	help
+	  The name for the Helm release when deploying vLLM stack.
+
+config VLLM_HELM_NAMESPACE
+	string "Kubernetes namespace"
+	output yaml
+	default "vllm-system"
+	help
+	  The Kubernetes namespace where vLLM stack will be deployed.
+
+# Model configuration
+config VLLM_MODEL_URL
+	string "Model URL or HuggingFace model ID"
+	output yaml
+	default "facebook/opt-125m"
+	help
+	  The model to serve. Can be a HuggingFace model ID
+	  (e.g., "facebook/opt-125m", "meta-llama/Llama-2-7b-hf")
+	  or a path to local model weights.
+
+config VLLM_MODEL_NAME
+	string "Model name alias"
+	output yaml
+	default "opt-125m"
+	help
+	  A friendly name/alias for the model that will be used
+	  in API requests.
+
+# vLLM Engine version configuration
+# CLI override via environment variable VLLM=nightly or VLLM=v0.7.3
+config VLLM_CLI_VERSION_OVERRIDE
+	bool
+	default $(shell, test -n "$VLLM" && echo y || echo n)
+
+config VLLM_CLI_VERSION_STRING
+	string
+	default "$(shell, echo $VLLM)"
+	depends on VLLM_CLI_VERSION_OVERRIDE
+
+config VLLM_CLI_IS_NIGHTLY
+	bool
+	default $(shell, test "$VLLM" = "nightly" && echo y || echo n)
+	depends on VLLM_CLI_VERSION_OVERRIDE
+
+choice
+	prompt "vLLM engine version"
+	default VLLM_VERSION_CLI_NIGHTLY if VLLM_CLI_IS_NIGHTLY
+	default VLLM_VERSION_CLI_CUSTOM if VLLM_CLI_VERSION_OVERRIDE
+	default VLLM_VERSION_LATEST if VLLM_PRODUCTION_STACK && VLLM_USE_CPU_INFERENCE
+	default VLLM_VERSION_STABLE
+
+config VLLM_VERSION_V0_10_0
+	bool "v0.10.0 (recommended for Production Stack)"
+	depends on !VLLM_CLI_VERSION_OVERRIDE
+	help
+	  Use vLLM v0.10.0 - a recent version that:
+	  - Supports --no-enable-prefix-caching flag (required by Production Stack)
+	  - Should have CPU inference support improvements
+	  - Represents a major version with significant updates
+	  - Good balance of stability and features
+
+config VLLM_VERSION_STABLE
+	bool "Stable v0.10.2 (latest stable)"
+	depends on !VLLM_CLI_VERSION_OVERRIDE
+	help
+	  Use vLLM v0.10.2 - the latest stable version
+	  Note: v0.6.5-v0.6.6 have CPU inference bugs (NotImplementedError)
+
+config VLLM_VERSION_LATEST
+	bool "Latest release"
+	depends on !VLLM_CLI_VERSION_OVERRIDE
+	help
+	  Use the latest stable vLLM release (currently points to v0.10.2).
+	  Note: May have compatibility issues with Production Stack if the
+	  chart hasn't been updated to match newer vLLM changes.
+
+config VLLM_VERSION_NIGHTLY
+	bool "Nightly build (bleeding edge)"
+	depends on !VLLM_CLI_VERSION_OVERRIDE
+	help
+	  Use the latest nightly build for testing newest features.
+	  WARNING: Nightly builds are unstable and may break frequently.
+	  Not recommended for production use.
+
+config VLLM_VERSION_CLI_NIGHTLY
+	bool "Nightly build (set via CLI)"
+	depends on VLLM_CLI_IS_NIGHTLY
+	help
+	  Using nightly build as specified via VLLM=nightly environment variable.
+
+config VLLM_VERSION_CLI_CUSTOM
+	bool "Custom version (set via CLI)"
+	depends on VLLM_CLI_VERSION_OVERRIDE && !VLLM_CLI_IS_NIGHTLY
+	help
+	  Using custom version specified via VLLM environment variable.
+
+config VLLM_VERSION_CUSTOM
+	bool "Custom version"
+	depends on !VLLM_CLI_VERSION_OVERRIDE
+	help
+	  Specify a custom vLLM version tag (e.g., "v0.7.3", "v0.6.5").
+	  Use this to test specific versions or workaround compatibility issues.
+
+endchoice
+
+config VLLM_ENGINE_IMAGE_TAG
+	string "vLLM Docker image tag"
+	output yaml
+	default "latest" if VLLM_USE_CPU_INFERENCE
+	default "v0.10.0" if VLLM_VERSION_V0_10_0 && !VLLM_USE_CPU_INFERENCE
+	default "v0.10.2" if VLLM_VERSION_STABLE && !VLLM_USE_CPU_INFERENCE
+	default "v0.10.2" if VLLM_VERSION_CUSTOM && !VLLM_USE_CPU_INFERENCE
+	default "latest" if VLLM_VERSION_LATEST && !VLLM_USE_CPU_INFERENCE
+	default "nightly" if (VLLM_VERSION_NIGHTLY || VLLM_VERSION_CLI_NIGHTLY) && !VLLM_USE_CPU_INFERENCE
+	default "$(shell, echo $VLLM)" if VLLM_VERSION_CLI_CUSTOM && !VLLM_USE_CPU_INFERENCE
+	help
+	  The Docker image tag for vLLM engine.
+	  For custom version, specify the exact tag (e.g., "v0.10.2").
+
+	  IMPORTANT for CPU inference:
+	  - v0.6.3.post1: Works with CPU but lacks --no-enable-prefix-caching flag
+	  - v0.6.5-v0.6.6: BROKEN - NotImplementedError in is_async_output_supported
+	  - v0.10.0: Testing for Production Stack CPU support
+	  - v0.10.2: Latest stable version
+	  Can be overridden via VLLM environment variable (e.g., VLLM=nightly make).
+
+# Resource configuration
+config VLLM_REPLICA_COUNT
+	int "Number of vLLM engine replicas"
+	output yaml
+	default 1
+	range 1 10
+	help
+	  The number of vLLM engine replicas to deploy.
+	  Each replica requires GPU resources.
+
+config VLLM_REQUEST_CPU
+	int "CPU cores per replica"
+	output yaml
+	default 8 if VLLM_USE_CPU_INFERENCE
+	default 4
+	range 1 128
+	help
+	  Number of CPU cores requested per vLLM engine replica.
+
+	  For CPU inference, more cores enable better parallelization.
+	  With 64 vCPUs total and 2 replicas, 24 cores per replica
+	  leaves overhead for system processes.
+
+config VLLM_REQUEST_MEMORY
+	string "Memory per replica"
+	output yaml
+	default "20Gi" if VLLM_USE_CPU_INFERENCE
+	default "16Gi"
+	help
+	  Amount of memory requested per vLLM engine replica.
+	  Format: <number>Gi (e.g., "16Gi", "20Gi", "32Gi")
+
+	  Note: Total memory usage = replicas * memory_per_replica + system overhead
+	  With 64GB VM and 2 replicas, 20Gi per replica leaves ~20GB for
+	  Kubernetes, Minikube, and monitoring components.
+
+# GPU/CPU deployment configuration
+config TERRAFORM_INSTANCE_SUPPORTS_GPU_COMPUTE
+	bool "Cloud instance has GPU compute support"
+	output yaml
+	default n
+	depends on TERRAFORM
+	help
+	  Enable this if your cloud instances have GPU compute support.
+	  This is typically available on specialized GPU instances like
+	  AWS p3/g4, GCP A100/T4, or Azure NCv3 instances.
+
+	  When enabled, vLLM will be configured to use GPU acceleration.
+	  When disabled, vLLM will use CPU-only inference.
+
+config VLLM_USE_CPU_INFERENCE
+	bool "Use CPU inference mode"
+	output yaml
+	default y if !TERRAFORM_INSTANCE_SUPPORTS_GPU_COMPUTE && LIBVIRT
+	default n if TERRAFORM_INSTANCE_SUPPORTS_GPU_COMPUTE
+	help
+	  Force vLLM to use CPU inference instead of GPU.
+	  This is automatically enabled for libvirt/guestfs deployments
+	  since virtual GPUs are not available for compute workloads.
+
+	  CPU inference is slower but works everywhere and is suitable
+	  for testing, CI, and development workflows.
+
+config VLLM_REQUEST_GPU
+	int "GPUs per replica"
+	output yaml
+	default 0 if VLLM_USE_CPU_INFERENCE
+	default 1
+	range 0 8
+	help
+	  Number of GPUs requested per vLLM engine replica.
+	  Automatically set to 0 for CPU-only deployments.
+
+config VLLM_GPU_TYPE
+	string "GPU type (optional)"
+	output yaml
+	default ""
+	depends on !VLLM_USE_CPU_INFERENCE
+	help
+	  Optional GPU type specification (e.g., "nvidia.com/gpu",
+	  "nvidia.com/mig-4g.71gb"). Leave empty for default GPU type.
+	  Only applicable when using GPU inference.
+
+# vLLM engine configuration
+config VLLM_MAX_MODEL_LEN
+	int "Maximum model sequence length"
+	output yaml
+	default 2048
+	range 128 32768
+	help
+	  Maximum sequence length the model can handle.
+	  Should not exceed model's maximum context length.
+
+config VLLM_DTYPE
+	string "Model data type"
+	output yaml
+	default "auto"
+	help
+	  Data type for model weights and activations.
+	  Options: "auto", "half", "float16", "bfloat16", "float32"
+
+config VLLM_GPU_MEMORY_UTILIZATION
+	string "GPU memory utilization"
+	output yaml
+	default "0.9"
+	help
+	  Fraction of GPU memory to use for model (0.0 to 1.0).
+	  Default 0.9 leaves 10% for overhead.
+
+config VLLM_ENABLE_PREFIX_CACHING
+	bool "Enable prefix caching"
+	output yaml
+	default n
+	help
+	  Enable automatic prefix caching to improve performance
+	  for queries with common prefixes.
+
+config VLLM_ENABLE_CHUNKED_PREFILL
+	bool "Enable chunked prefill"
+	output yaml
+	default n
+	help
+	  Enable chunked prefill to reduce memory usage during
+	  the prefill phase.
+
+config VLLM_TENSOR_PARALLEL_SIZE
+	int "Tensor parallel size"
+	output yaml
+	default 1
+	range 1 8
+	help
+	  Number of GPUs to use for tensor parallelism per replica.
+	  Must be <= number of GPUs per replica.
+
+# LMCache configuration for KV cache offloading
+config VLLM_LMCACHE_ENABLED
+	bool "Enable LMCache for KV cache offloading"
+	output yaml
+	default n
+	help
+	  Enable LMCache to offload KV cache to CPU memory,
+	  allowing for larger batch sizes and better GPU utilization.
+
+if VLLM_LMCACHE_ENABLED
+
+config VLLM_LMCACHE_CPU_BUFFER_SIZE
+	string "CPU offloading buffer size (GB)"
+	output yaml
+	default "30"
+	help
+	  Size of CPU buffer for KV cache offloading in GB.
+
+endif # VLLM_LMCACHE_ENABLED
+
+# Router configuration
+config VLLM_ROUTER_ENABLED
+	bool "Enable request router"
+	output yaml
+	default y
+	help
+	  Enable the request router for load balancing and
+	  session affinity across vLLM engine replicas.
+
+if VLLM_ROUTER_ENABLED
+
+choice
+	prompt "Routing algorithm"
+	default VLLM_ROUTER_ROUND_ROBIN
+
+config VLLM_ROUTER_ROUND_ROBIN
+	bool "Round-robin routing"
+	output yaml
+	help
+	  Distribute requests evenly across all available backends.
+
+config VLLM_ROUTER_SESSION_AFFINITY
+	bool "Session-based routing"
+	output yaml
+	help
+	  Route requests from the same session to the same backend
+	  to maximize KV cache reuse.
+
+config VLLM_ROUTER_PREFIX_AWARE
+	bool "Prefix-aware routing"
+	output yaml
+	help
+	  Route requests with similar prefixes to the same backend
+	  for better cache utilization.
+
+endchoice
+
+endif # VLLM_ROUTER_ENABLED
+
+# Observability configuration
+config VLLM_OBSERVABILITY_ENABLED
+	bool "Enable observability stack"
+	output yaml
+	default y
+	help
+	  Deploy Prometheus and Grafana for monitoring vLLM metrics.
+
+if VLLM_OBSERVABILITY_ENABLED
+
+config VLLM_GRAFANA_PORT
+	int "Grafana dashboard port"
+	output yaml
+	default 3000
+	help
+	  Port for accessing the Grafana dashboard.
+
+config VLLM_PROMETHEUS_PORT
+	int "Prometheus port"
+	output yaml
+	default 9090
+	help
+	  Port for accessing Prometheus metrics.
+
+endif # VLLM_OBSERVABILITY_ENABLED
+
+# API configuration
+config VLLM_API_PORT
+	int "vLLM API port"
+	output yaml
+	default 8000
+	help
+	  Port for accessing the vLLM OpenAI-compatible API.
+
+config VLLM_API_KEY
+	string "API key for vLLM (optional)"
+	output yaml
+	default ""
+	help
+	  Optional API key for securing vLLM API access.
+	  Leave empty for no authentication.
+
+# HuggingFace token (for gated models)
+config VLLM_HF_TOKEN
+	string "HuggingFace token (optional)"
+	output yaml
+	default ""
+	help
+	  HuggingFace token for accessing gated models.
+	  Required for models like Llama-2.
+
+# Quick test mode for CI
+config VLLM_QUICK_TEST
+	bool "Enable quick test mode"
+	output yaml
+	default n
+	help
+	  Quick test mode for CI/demo with minimal resources.
+	  Uses smaller models and reduced resource requirements.
+
+# Results and benchmarking
+config VLLM_BENCHMARK_ENABLED
+	bool "Enable benchmarking"
+	output yaml
+	default y
+	help
+	  Run performance benchmarks after deployment.
+
+if VLLM_BENCHMARK_ENABLED
+
+config VLLM_BENCHMARK_DURATION
+	int "Benchmark duration (seconds)"
+	output yaml
+	default 60
+	range 10 3600
+	help
+	  Duration to run performance benchmarks.
+
+config VLLM_BENCHMARK_CONCURRENT_USERS
+	int "Concurrent users for benchmark"
+	output yaml
+	default 10
+	range 1 1000
+	help
+	  Number of concurrent users to simulate during benchmarking.
+
+config VLLM_BENCHMARK_RESULTS_DIR
+	string "Benchmark results directory"
+	output yaml
+	default "/data/vllm-benchmark"
+	help
+	  Directory where benchmark results will be stored.
+
+endif # VLLM_BENCHMARK_ENABLED
+
+endif # VLLM_LATEST_DOCKER || VLLM_PRODUCTION_STACK
+
+# vLLM Production Stack specific configuration
+if VLLM_PRODUCTION_STACK
+
+config VLLM_PROD_STACK_REPO
+	string "vLLM Production Stack Helm repository URL"
+	output yaml
+	default "https://vllm-project.github.io/production-stack"
+	help
+	  URL of the Helm repository containing the vLLM Production Stack charts.
+
+config VLLM_PROD_STACK_CHART_VERSION
+	string "Helm chart version"
+	output yaml
+	default "latest"
+	help
+	  Version of the vLLM Production Stack Helm chart to deploy.
+	  Use "latest" for the most recent version or specify a specific
+	  version like "0.1.0".
+
+config VLLM_PROD_STACK_ROUTER_IMAGE
+	string "Router image"
+	output yaml
+	default "ghcr.io/vllm-project/production-stack/router"
+	help
+	  Container image for the vLLM Production Stack router component.
+
+config VLLM_PROD_STACK_ROUTER_TAG
+	string "Router image tag"
+	output yaml
+	default "latest"
+	help
+	  Tag for the router container image.
+
+config VLLM_PROD_STACK_ENABLE_MONITORING
+	bool "Enable full monitoring stack"
+	output yaml
+	default y
+	help
+	  Enable the complete monitoring stack including:
+	  - Prometheus for metrics collection
+	  - Grafana for visualization
+	  - vLLM-specific dashboards
+	  - Alert rules for production monitoring
+
+config VLLM_PROD_STACK_ENABLE_AUTOSCALING
+	bool "Enable autoscaling"
+	output yaml
+	default n
+	help
+	  Enable Horizontal Pod Autoscaling (HPA) for vLLM engines
+	  based on CPU/GPU utilization and request rate.
+
+if VLLM_PROD_STACK_ENABLE_AUTOSCALING
+
+config VLLM_PROD_STACK_MIN_REPLICAS
+	int "Minimum engine replicas"
+	output yaml
+	default 1
+	range 1 10
+	help
+	  Minimum number of vLLM engine replicas for autoscaling.
+
+config VLLM_PROD_STACK_MAX_REPLICAS
+	int "Maximum engine replicas"
+	output yaml
+	default 5
+	range 2 50
+	help
+	  Maximum number of vLLM engine replicas for autoscaling.
+
+config VLLM_PROD_STACK_TARGET_GPU_UTILIZATION
+	int "Target GPU utilization percentage"
+	output yaml
+	default 80
+	range 50 95
+	help
+	  Target GPU utilization percentage for autoscaling decisions.
+
+endif # VLLM_PROD_STACK_ENABLE_AUTOSCALING
+
+config VLLM_PROD_STACK_CUSTOM_VALUES
+	bool "Use custom Helm values file"
+	output yaml
+	default n
+	help
+	  Use a custom values.yaml file for Helm deployment instead of
+	  generating one from kdevops configuration.
+
+if VLLM_PROD_STACK_CUSTOM_VALUES
+
+config VLLM_PROD_STACK_VALUES_PATH
+	string "Path to custom values.yaml"
+	output yaml
+	default "workflows/vllm/custom-values.yaml"
+	help
+	  Path to custom Helm values file relative to kdevops root.
+
+endif # VLLM_PROD_STACK_CUSTOM_VALUES
+
+endif # VLLM_PRODUCTION_STACK
+
+# Bare metal deployment configuration
+if VLLM_BARE_METAL
+
+config VLLM_BARE_METAL_USE_CONTAINER
+	bool "Use container runtime on bare metal"
+	output yaml
+	default y
+	help
+	  Use Docker/Podman to run vLLM on bare metal instead of
+	  installing via pip. Containers provide better isolation
+	  and dependency management.
+
+choice
+	prompt "Container runtime"
+	depends on VLLM_BARE_METAL_USE_CONTAINER
+	default VLLM_BARE_METAL_DOCKER
+
+config VLLM_BARE_METAL_DOCKER
+	bool "Docker"
+	output yaml
+	help
+	  Use Docker as the container runtime.
+
+config VLLM_BARE_METAL_PODMAN
+	bool "Podman"
+	output yaml
+	help
+	  Use Podman as the container runtime (rootless containers).
+
+endchoice
+
+config VLLM_BARE_METAL_INSTALL_METHOD
+	string "Installation method"
+	depends on !VLLM_BARE_METAL_USE_CONTAINER
+	output yaml
+	default "pip"
+	help
+	  Method to install vLLM on bare metal.
+	  Options: "pip" for PyPI installation, "source" for building from source.
+
+config VLLM_BARE_METAL_SERVICE_NAME
+	string "Systemd service name"
+	output yaml
+	default "vllm"
+	help
+	  Name of the systemd service for managing vLLM.
+
+config VLLM_BARE_METAL_DATA_DIR
+	string "Data directory for models"
+	output yaml
+	default "/var/lib/vllm"
+	help
+	  Directory where model weights and data will be stored.
+
+config VLLM_BARE_METAL_LOG_DIR
+	string "Log directory"
+	output yaml
+	default "/var/log/vllm"
+	help
+	  Directory for vLLM logs.
+
+# Declared hosts support for bare metal
+if KDEVOPS_USE_DECLARED_HOSTS
+
+config VLLM_BARE_METAL_DECLARE_HOST_GPU_TYPE
+	string "GPU type on declared hosts"
+	output yaml
+	default "nvidia-a100"
+	help
+	  Type of GPU available on the declared hosts.
+	  Examples: nvidia-a100, nvidia-v100, nvidia-a10, nvidia-h100
+
+config VLLM_BARE_METAL_DECLARE_HOST_GPU_COUNT
+	int "Number of GPUs per host"
+	output yaml
+	default 1
+	range 1 8
+	help
+	  Number of GPUs available on each declared host.
+
+endif # KDEVOPS_USE_DECLARED_HOSTS
+
+endif # VLLM_BARE_METAL
+
+endif # KDEVOPS_WORKFLOW_ENABLE_VLLM

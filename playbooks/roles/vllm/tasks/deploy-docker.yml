@@ -1,0 +1,105 @@
+---
+# Deploy vLLM using latest Docker images
+- name: vLLM Docker deployment tasks
+  block:
+    - name: Ensure Docker service is started and enabled
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+      become: yes
+
+    - name: Add current user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: Ensure docker socket has correct permissions
+      ansible.builtin.file:
+        path: /var/run/docker.sock
+        mode: '0666'
+      become: yes
+
+    - name: Reset connection to apply docker group membership
+      meta: reset_connection
+
+    - name: Setup Kubernetes environment
+      ansible.builtin.import_tasks: tasks/setup-kubernetes.yml
+      when: vllm_k8s_minikube | default(false) or vllm_k8s_existing | default(false)
+
+    - name: Create vLLM local directory
+      file:
+        path: "{{ vllm_local_path | default('/data/vllm') }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create results directory
+      file:
+        path: "{{ vllm_results_dir | default('/data/vllm-benchmark') }}"
+        state: directory
+        mode: '0755'
+
+    - name: Set vLLM Docker image with mirror if enabled
+      ansible.builtin.set_fact:
+        vllm_docker_image_final: >-
+          {%- if use_docker_mirror | default(false) | bool -%}
+            {%- if vllm_use_cpu_inference | default(false) -%}
+              localhost:{{ docker_mirror_port | default(5000) }}/vllm:v0.6.3-cpu
+            {%- else -%}
+              localhost:{{ docker_mirror_port | default(5000) }}/vllm-openai:latest
+            {%- endif -%}
+          {%- else -%}
+            {%- if vllm_use_cpu_inference | default(false) -%}
+              substratusai/vllm:v0.6.3-cpu
+            {%- else -%}
+              vllm/vllm-openai:latest
+            {%- endif -%}
+          {%- endif -%}
+
+    - name: Generate vLLM deployment manifest
+      template:
+        src: vllm-deployment.yaml.j2
+        dest: "{{ vllm_local_path | default('/data/vllm') }}/vllm-deployment.yaml"
+        mode: '0644'
+
+    - name: Deploy vLLM using kubectl
+      become: no
+      ansible.builtin.command:
+        cmd: kubectl apply -f {{ vllm_local_path | default('/data/vllm') }}/vllm-deployment.yaml
+      register: kubectl_apply
+      changed_when: "'created' in kubectl_apply.stdout or 'configured' in kubectl_apply.stdout"
+
+    - name: Wait for vLLM pods to be ready
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        label_selectors:
+          - app=vllm-server
+      register: pod_list
+      until: pod_list.resources | length > 0 and pod_list.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == pod_list.resources | length
+      retries: 30
+      delay: 10
+
+    - name: Get vLLM service endpoint
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        name: vllm-service
+      register: vllm_service
+
+    - name: Display vLLM endpoint information
+      debug:
+        msg: |
+          vLLM deployed successfully!
+          {% if vllm_k8s_type | default('minikube') == 'minikube' %}
+          To access the API, run: kubectl port-forward -n {{ vllm_helm_namespace | default('vllm-system') }} svc/vllm-service {{ vllm_api_port | default(8000) }}:8000
+          Then access: http://localhost:{{ vllm_api_port | default(8000) }}/v1/models
+          {% else %}
+          API endpoint: {{ vllm_service.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:{{ vllm_api_port | default(8000) }}
+          {% endif %}
