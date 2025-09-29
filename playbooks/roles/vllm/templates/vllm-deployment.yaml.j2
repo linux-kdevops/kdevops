@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ vllm_helm_namespace | default('vllm-system') }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-server
+  namespace: {{ vllm_helm_namespace | default('vllm-system') }}
+spec:
+  replicas: {{ vllm_replica_count | default(1) }}
+  selector:
+    matchLabels:
+      app: vllm-server
+  template:
+    metadata:
+      labels:
+        app: vllm-server
+    spec:
+      containers:
+      - name: vllm
+        image: {{ vllm_docker_image_final | default('vllm/vllm-openai:latest') }}
+{% if vllm_use_cpu_inference | default(false) %}
+        env:
+        - name: VLLM_CPU_ONLY
+          value: "1"
+{% endif %}
+        args:
+        - "--model"
+        - "{{ vllm_model_url | default('facebook/opt-125m') }}"
+        - "--host"
+        - "0.0.0.0"
+        - "--port"
+        - "8000"
+        - "--max-model-len"
+        - "512"
+{% if vllm_use_cpu_inference | default(false) %}
+        - "--device"
+        - "cpu"
+        - "--dtype"
+        - "float32"
+        - "--swap-space"
+        - "0"
+        - "--block-size"
+        - "16"
+{% else %}
+        - "--dtype"
+        - "{{ vllm_dtype | default('auto') }}"
+        - "--tensor-parallel-size"
+        - "{{ vllm_tensor_parallel_size | default(1) | string }}"
+{% endif %}
+{% if vllm_hf_token is defined and vllm_hf_token %}
+        - "--hf-token"
+        - "{{ vllm_hf_token }}"
+{% endif %}
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          requests:
+{% if vllm_use_cpu_inference | default(false) %}
+            cpu: 2
+            memory: 4Gi
+{% else %}
+            cpu: {{ vllm_request_cpu | default(4) }}
+            memory: {{ vllm_request_memory | default('16Gi') }}
+            nvidia.com/gpu: {{ vllm_request_gpu | default(1) }}
+{% endif %}
+          limits:
+{% if vllm_use_cpu_inference | default(false) %}
+            cpu: 2
+            memory: 4Gi
+{% else %}
+            cpu: {{ vllm_request_cpu | default(4) }}
+            memory: {{ vllm_request_memory | default('16Gi') }}
+            nvidia.com/gpu: {{ vllm_request_gpu | default(1) }}
+{% endif %}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-service
+  namespace: {{ vllm_helm_namespace | default('vllm-system') }}
+spec:
+  selector:
+    app: vllm-server
+  ports:
+  - port: {{ vllm_api_port | default(8000) }}
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  type: ClusterIP
