@@ -142,125 +142,25 @@
   when:
     - bootlinux_compiler_clang|bool
 
-- name: Remove the old artifacts directory on the control host
-  delegate_to: localhost
-  ansible.builtin.file:
-    path: "{{ bootlinux_artifacts_dir }}"
-    state: absent
+- name: Prepare artifacts directory for builder packages
+  ansible.builtin.include_tasks: ../packages/prepare-artifacts-dir.yml
+  vars:
+    artifacts_target_dir: "{{ bootlinux_artifacts_dir }}"
+    artifacts_clean: true
+    artifacts_organize_by_version: false
 
-- name: Ensure an empty artifacts directory exists on the control host
-  delegate_to: localhost
-  run_once: true
-  ansible.builtin.file:
-    path: "{{ bootlinux_artifacts_dir }}"
-    state: directory
-    mode: "u=rwx,g=rx,o=rx"
+- name: Generate kernel packages on builder node
+  ansible.builtin.include_tasks: ../packages/generate-packages.yml
+  vars:
+    kernel_build_dir: "{{ target_linux_dir_path }}"
+    package_generation_mode: "remote"
+    package_jobs: "{{ ansible_processor_nproc }}"
+    build_environment: "{{ bootlinux_build_environment | default({}) }}"
 
-- name: Build kernel .deb packages
-  when:
-    - ansible_os_family == "Debian"
-  block:
-    - name: Make the bindeb-pkg target
-      community.general.make:
-        chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
-        target: "bindeb-pkg"
-
-    - name: Find the build artifacts
-      ansible.builtin.find:
-        paths: "{{ artifact_paths }}"
-        patterns: "*.deb"
-        file_type: file
-        recurse: true
-      register: found_debs
-
-    - name: Fetch the build artifacts to the control host
-      ansible.builtin.fetch:
-        src: "{{ item.path }}"
-        dest: "{{ bootlinux_artifacts_dir }}/"
-        flat: true
-      loop: "{{ found_debs.files }}"
-      loop_control:
-        label: "Fetching {{ item.path | basename }} ..."
-
-- name: Build kernel .rpm packages
-  when:
-    - ansible_os_family != "Debian"
-  block:
-    - name: Build the list of artifacts directories on the builder
-      ansible.builtin.set_fact:
-        artifact_paths:
-          - "{{ target_linux_dir_path }}/rpmbuild/RPMS"
-          - "{{ ansible_env.HOME }}/rpmbuild/RPMS"
-
-    - name: Wipe the artifact directories on the builder
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop: "{{ artifact_paths }}"
-      loop_control:
-        label: "Deleting {{ item }} ..."
-
-    - name: Create empty artifact directories on the builder
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: "u=rwx,g=rx,o=rx"
-      loop: "{{ artifact_paths }}"
-      loop_control:
-        label: "Creating {{ item }} ..."
-
-    - name: Make the binrpm-pkg target
-      community.general.make:
-        chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
-        target: "binrpm-pkg"
-        params:
-          RPMOPTS: "--without devel"
-      when:
-        - bootlinux_compiler_gcc|bool
-
-    - name: Make the binrpm-pkg target
-      community.general.make:
-        chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
-        target: "binrpm-pkg"
-        params:
-          RPMOPTS: "--without devel"
-          LLVM: 1
-      when:
-        - bootlinux_compiler_clang|bool
-
-    - name: Find the build artifacts
-      ansible.builtin.find:
-        paths: "{{ artifact_paths }}"
-        patterns: "*.rpm"
-        file_type: file
-        recurse: true
-      register: found_rpms
-
-    - name: Fetch the build artifacts to the control host
-      ansible.builtin.fetch:
-        src: "{{ item.path }}"
-        dest: "{{ bootlinux_artifacts_dir }}/"
-        flat: true
-      loop: "{{ found_rpms.files }}"
-      loop_control:
-        label: "Fetching {{ item.path | basename }} ..."
-
-- name: Extract the release information of the built kernel
-  community.general.make:
-    chdir: "{{ target_linux_dir_path }}"
-    target: "kernelrelease"
-  register: kernelrelease
-
-- name: Store the kernel release information with the build artifacts
-  delegate_to: localhost
-  ansible.builtin.lineinfile:
-    create: true
-    line: "{{ kernelrelease.stdout }}"
-    mode: "u=rw,g=r,o=r"
-    path: "{{ bootlinux_artifacts_dir }}/kernel.release"
+- name: Collect package artifacts from builder to controller
+  ansible.builtin.include_tasks: ../packages/collect-artifacts.yml
+  vars:
+    artifacts_source_mode: "remote"
 
 - name: Skip the kernel install steps
   ansible.builtin.meta: end_play
