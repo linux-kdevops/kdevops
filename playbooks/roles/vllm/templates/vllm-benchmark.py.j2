@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+import asyncio
+import aiohttp
+import time
+import json
+import sys
+from typing import List, Dict
+import numpy as np
+
+
+async def send_request(session, url, prompt, max_tokens=100):
+    payload = {
+        "model": "{{ vllm_model_url | default('facebook/opt-125m') }}",
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "temperature": 0.7,
+    }
+
+    start_time = time.time()
+    try:
+        async with session.post(f"{url}/v1/completions", json=payload) as response:
+            latency = time.time() - start_time
+            if response.status == 200:
+                result = await response.json()
+                return {
+                    "success": True,
+                    "latency": latency,
+                    "tokens": len(
+                        result.get("choices", [{}])[0].get("text", "").split()
+                    ),
+                    "status": response.status,
+                }
+            else:
+                text = await response.text()
+                return {
+                    "success": False,
+                    "latency": latency,
+                    "error": f"HTTP {response.status}: {text}",
+                    "status": response.status,
+                }
+    except Exception as e:
+        return {
+            "success": False,
+            "latency": time.time() - start_time,
+            "error": str(e),
+            "status": None,
+        }
+
+
+async def run_benchmark(url: str, num_requests: int, concurrent_users: int):
+    prompts = [
+        "What is machine learning?",
+        "Explain quantum computing in simple terms.",
+        "How does the internet work?",
+        "What are the benefits of renewable energy?",
+        "Describe the process of photosynthesis.",
+    ]
+
+    results = []
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for i in range(num_requests):
+            prompt = prompts[i % len(prompts)]
+            task = send_request(session, url, prompt)
+            tasks.append(task)
+
+            if len(tasks) >= concurrent_users:
+                batch_results = await asyncio.gather(*tasks)
+                results.extend(batch_results)
+                tasks = []
+
+        if tasks:
+            batch_results = await asyncio.gather(*tasks)
+            results.extend(batch_results)
+
+    return results
+
+
+async def main():
+    url = "http://localhost:{{ vllm_api_port | default(8000) }}"
+    duration = {{vllm_benchmark_duration | default(60)}}
+    concurrent_users = {{vllm_benchmark_concurrent_users | default(10)}}
+
+    print(
+        f"Running benchmark for {duration} seconds with {concurrent_users} concurrent users..."
+    )
+
+    start_time = time.time()
+    total_requests = 0
+    all_results = []
+
+    while time.time() - start_time < duration:
+        batch_size = concurrent_users * 10
+        results = await run_benchmark(url, batch_size, concurrent_users)
+        all_results.extend(results)
+        total_requests += batch_size
+
+        elapsed = time.time() - start_time
+        if elapsed > 0:
+            print(
+                f"Progress: {elapsed:.1f}s, Requests: {total_requests}, RPS: {total_requests/elapsed:.2f}"
+            )
+
+    # Calculate statistics
+    successful = [r for r in all_results if r.get("success", False)]
+    failed = [r for r in all_results if not r.get("success", False)]
+
+    print(
+        f"\nSummary: {len(successful)} successful, {len(failed)} failed out of {len(all_results)} total"
+    )
+
+    if failed:
+        print("Sample failures:")
+        for failure in failed[:3]:  # Show first 3 failures
+            print(f"  Error: {failure.get('error', 'Unknown')}")
+
+    if successful:
+        latencies = [r["latency"] for r in successful]
+        p50 = np.percentile(latencies, 50)
+        p95 = np.percentile(latencies, 95)
+        p99 = np.percentile(latencies, 99)
+
+        results_summary = {
+            "total_requests": len(all_results),
+            "successful_requests": len(successful),
+            "failed_requests": len(all_results) - len(successful),
+            "duration_seconds": time.time() - start_time,
+            "requests_per_second": len(all_results) / (time.time() - start_time),
+            "latency_p50_ms": p50 * 1000,
+            "latency_p95_ms": p95 * 1000,
+            "latency_p99_ms": p99 * 1000,
+            "mean_latency_ms": np.mean(latencies) * 1000,
+        }
+
+        print("\n=== Benchmark Results ===")
+        for key, value in results_summary.items():
+            print(
+                f"{key}: {value:.2f}" if isinstance(value, float) else f"{key}: {value}"
+            )
+
+        # Save results
+        with open("{{ vllm_results_dir }}/benchmark_results.json", "w") as f:
+            json.dump(results_summary, f, indent=2)
+
+        print(f"\nResults saved to {{ vllm_results_dir }}/benchmark_results.json")
+    else:
+        print("No successful requests completed!")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

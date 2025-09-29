@@ -1,0 +1,236 @@
+---
+# Setup Kubernetes environment for vLLM deployment
+- name: Setup Kubernetes
+  block:
+    - name: Check if kubectl exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/kubectl
+      register: kubectl_stat
+
+    - name: Get latest kubectl version
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: yes
+      register: kubectl_version
+
+    - name: Download kubectl
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.content | trim }}/bin/linux/amd64/kubectl"
+        dest: /tmp/kubectl
+        mode: '0755'
+
+    - name: Install kubectl
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.copy:
+        src: /tmp/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        remote_src: yes
+      become: yes
+
+    # Minikube setup
+    - name: Setup Minikube
+      when: vllm_k8s_minikube | default(false)
+      block:
+        - name: Check if minikube exists
+          ansible.builtin.stat:
+            path: /usr/local/bin/minikube
+          register: minikube_stat
+
+        - name: Download minikube
+          when: not minikube_stat.stat.exists
+          ansible.builtin.get_url:
+            url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            dest: /tmp/minikube
+            mode: '0755'
+
+        - name: Install minikube
+          when: not minikube_stat.stat.exists
+          ansible.builtin.copy:
+            src: /tmp/minikube
+            dest: /usr/local/bin/minikube
+            mode: '0755'
+            remote_src: yes
+          become: yes
+
+        # Install crictl for none driver support
+        - name: Check if crictl exists
+          ansible.builtin.stat:
+            path: /usr/local/bin/crictl
+          register: crictl_stat
+
+        - name: Get latest crictl version
+          when: not crictl_stat.stat.exists
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/kubernetes-sigs/cri-tools/releases/latest
+            return_content: yes
+          register: crictl_release
+
+        - name: Download crictl
+          when: not crictl_stat.stat.exists
+          ansible.builtin.get_url:
+            url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crictl_release.json.tag_name }}/crictl-{{ crictl_release.json.tag_name }}-linux-amd64.tar.gz"
+            dest: /tmp/crictl.tar.gz
+
+        - name: Extract and install crictl
+          when: not crictl_stat.stat.exists
+          ansible.builtin.unarchive:
+            src: /tmp/crictl.tar.gz
+            dest: /usr/local/bin/
+            mode: '0755'
+            remote_src: yes
+          become: yes
+
+        - name: Check if minikube is running
+          ansible.builtin.command:
+            cmd: minikube status
+          register: minikube_status
+          failed_when: false
+          changed_when: false
+          environment:
+            MINIKUBE_HOME: /data/minikube
+
+        - name: Check if minikube container exists but is stopped
+          when: minikube_status.rc != 0
+          ansible.builtin.command:
+            cmd: docker ps -a --format "table {% raw %}{{.Names}}\t{{.Status}}{% endraw %}" | grep minikube || true
+          register: minikube_container
+          failed_when: false
+          changed_when: false
+
+        - name: Clean up stopped minikube container if exists
+          when:
+            - minikube_status.rc != 0
+            - "'minikube' in minikube_container.stdout"
+          ansible.builtin.command:
+            cmd: minikube delete --all --purge
+          environment:
+            MINIKUBE_HOME: /data/minikube
+          ignore_errors: yes
+
+        - name: Fix minikube permissions
+          ansible.builtin.file:
+            path: /root/.minikube
+            state: directory
+            mode: '0755'
+            owner: "{{ ansible_user_id | default('root') }}"
+            recurse: yes
+          become: yes
+          ignore_errors: yes
+
+        - name: Ensure /tmp has correct permissions
+          ansible.builtin.file:
+            path: /tmp
+            state: directory
+            mode: '1777'
+            owner: root
+            group: root
+          become: yes
+
+        - name: Apply sysctl setting for minikube
+          ansible.builtin.sysctl:
+            name: fs.protected_regular
+            value: '0'
+            state: present
+            reload: yes
+          become: yes
+          ignore_errors: yes
+
+        - name: Check current user for minikube driver selection
+          ansible.builtin.command:
+            cmd: whoami
+          register: current_user
+          changed_when: false
+
+        - name: Ensure kdevops user is in docker group
+          ansible.builtin.user:
+            name: kdevops
+            groups: docker
+            append: yes
+          become: yes
+
+        - name: Ensure /data/minikube has correct permissions for minikube
+          ansible.builtin.file:
+            path: /data/minikube
+            state: directory
+            owner: kdevops
+            group: docker
+            mode: '0775'
+            recurse: yes
+          become: yes
+
+        - name: Start minikube with appropriate resources
+          when: minikube_status.rc != 0
+          ansible.builtin.command:
+            cmd: >-
+              minikube start
+              --driver=docker
+              --force
+              --cpus={{ [ansible_processor_vcpus | default(4), 32] | min }}
+              --memory={{ [(ansible_memtotal_mb * 0.75) | int, 49152] | min }}
+              --disk-size=50g
+              --delete-on-failure=true
+          environment:
+            MINIKUBE_HOME: /data/minikube
+          register: minikube_start
+
+        - name: Wait for minikube to be ready
+          ansible.builtin.command:
+            cmd: minikube status
+          register: minikube_ready
+          until: minikube_ready.rc == 0
+          retries: 10
+          delay: 10
+          environment:
+            MINIKUBE_HOME: /data/minikube
+
+        - name: Enable minikube addons
+          ansible.builtin.command:
+            cmd: "minikube addons enable {{ item }}"
+          loop:
+            - metrics-server
+            - ingress
+            - storage-provisioner
+          environment:
+            MINIKUBE_HOME: /data/minikube
+          changed_when: false
+          register: addon_result
+          until: addon_result.rc == 0
+          retries: 3
+          delay: 5
+
+    # Existing cluster verification
+    - name: Verify existing Kubernetes cluster
+      when: vllm_k8s_existing | default(false)
+      block:
+        - name: Check kubectl connectivity
+          ansible.builtin.command:
+            cmd: kubectl cluster-info
+          register: cluster_info
+          failed_when: cluster_info.rc != 0
+
+        - name: Display cluster information
+          debug:
+            msg: "{{ cluster_info.stdout }}"
+
+        - name: Check for GPU support in cluster
+          when: not (vllm_use_cpu_inference | default(true))
+          ansible.builtin.command:
+            cmd: kubectl get nodes -o json
+          register: nodes_json
+          changed_when: false
+
+        - name: Verify GPU resources available
+          when: not (vllm_use_cpu_inference | default(true))
+          set_fact:
+            cluster_has_gpu: "{{ nodes_json.stdout | from_json | json_query('items[*].status.capacity.\"nvidia.com/gpu\"') | select | list | length > 0 }}"
+
+        - name: Warn if no GPU resources found
+          when: not (vllm_use_cpu_inference | default(true)) and not cluster_has_gpu | default(false)
+          debug:
+            msg: |
+              WARNING: No GPU resources found in the cluster.
+              The deployment will proceed but GPU acceleration won't be available.
+              Consider using CPU inference mode or adding GPU nodes to your cluster.
