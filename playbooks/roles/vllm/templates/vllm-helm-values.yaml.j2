@@ -1,0 +1,63 @@
+servingEngineSpec:
+  enableEngine: true
+  modelSpec:
+  - name: "{{ vllm_model_name | default('opt-125m') }}"
+{% if vllm_use_cpu_inference | default(false) %}
+    # Using third-party CPU image until official CPU image is available
+    repository: substratusai/vllm
+    tag: v0.6.3-cpu
+{% else %}
+    repository: vllm/vllm-openai
+    tag: latest
+{% endif %}
+    modelURL: "{{ vllm_model_url | default('facebook/opt-125m') }}"
+    replicaCount: {{ vllm_replica_count | default(1) }}
+    requestCPU: {{ vllm_request_cpu | default(4) }}
+    requestMemory: "{{ vllm_request_memory | default('16Gi') }}"
+    requestGPU: {{ vllm_request_gpu | default(0 if vllm_use_cpu_inference else 1) }}
+{% if vllm_gpu_type is defined and vllm_gpu_type and not (vllm_use_cpu_inference | default(false)) %}
+    requestGPUType: "{{ vllm_gpu_type }}"
+{% endif %}
+{% if vllm_use_cpu_inference | default(false) %}
+    runtimeClassName: ""  # Explicitly disable GPU runtime for CPU inference
+{% endif %}
+    vllmConfig:
+      maxModelLen: {{ vllm_max_model_len | default(2048) }}
+{% if vllm_use_cpu_inference | default(false) %}
+      device: "cpu"
+      dtype: "float32"
+      tensorParallelSize: 1
+{% else %}
+      dtype: "{{ vllm_dtype | default('auto') }}"
+      tensorParallelSize: {{ vllm_tensor_parallel_size | default(1) }}
+      gpuMemoryUtilization: {{ vllm_gpu_memory_utilization | default('0.9') }}
+{% endif %}
+      enablePrefixCaching: {{ vllm_enable_prefix_caching | default(false) | lower }}
+      enableChunkedPrefill: {{ vllm_enable_chunked_prefill | default(false) | lower }}
+{% if vllm_lmcache_enabled | default(false) %}
+    lmcacheConfig:
+      enabled: true
+      cpuOffloadingBufferSize: "{{ vllm_lmcache_cpu_buffer_size | default('30') }}"
+{% endif %}
+{% if vllm_hf_token is defined and vllm_hf_token %}
+    hf_token: "{{ vllm_hf_token }}"
+{% endif %}
+{% if vllm_api_key is defined and vllm_api_key %}
+  vllmApiKey: "{{ vllm_api_key }}"
+{% endif %}
+
+{% if vllm_router_enabled | default(true) %}
+router:
+  enabled: true
+  routingAlgorithm: "{{ vllm_router_algorithm | default('round_robin') }}"
+{% endif %}
+
+{% if vllm_observability_enabled | default(true) %}
+observability:
+  prometheus:
+    enabled: true
+    port: {{ vllm_prometheus_port | default(9090) }}
+  grafana:
+    enabled: true
+    port: {{ vllm_grafana_port | default(3000) }}
+{% endif %}
