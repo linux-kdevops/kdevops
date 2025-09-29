@@ -1,0 +1,260 @@
+#!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Script to update Docker mirror images from multiple registries
+# Handles both Docker Hub (pull-through cache) and other registries
+#
+# For Docker Hub images: Uses pull-through cache
+# For other registries: Saves as tarballs and optionally pushes to local registry
+
+set -e
+
+# Concurrency protection
+LOCK_FILE="/tmp/docker-mirror-update.lock"
+
+# Function to cleanup on exit
+cleanup() {
+    if [[ -f "${LOCK_FILE}" ]]; then
+        rm -f "${LOCK_FILE}"
+    fi
+}
+
+# Set trap to cleanup on exit
+trap cleanup EXIT
+
+# Check if another instance is running
+if [[ -f "${LOCK_FILE}" ]]; then
+    PID=$(cat "${LOCK_FILE}" 2>/dev/null || echo "unknown")
+    if [[ "${PID}" != "unknown" ]] && kill -0 "${PID}" 2>/dev/null; then
+        echo "Error: Another docker-mirror update is already running (PID: ${PID})"
+        echo "If this is incorrect, remove ${LOCK_FILE} and try again"
+        exit 1
+    else
+        echo "Warning: Stale lock file found, removing..."
+        rm -f "${LOCK_FILE}"
+    fi
+fi
+
+# Create lock file
+echo $$ > "${LOCK_FILE}"
+
+MIRROR_DIR="{{ docker_mirror_path }}"
+REGISTRY_HOST="localhost"
+REGISTRY_PORT="{{ docker_mirror_port }}"
+IMAGES_FILE="${MIRROR_DIR}/images/workflow-images.txt"
+TARBALL_DIR="${MIRROR_DIR}/registry/tarballs"
+LOG_FILE="${MIRROR_DIR}/logs/update-$(date +%Y%m%d-%H%M%S).log"
+
+# Create directories if they don't exist
+mkdir -p "${MIRROR_DIR}/logs"
+mkdir -p "${MIRROR_DIR}/images"
+mkdir -p "${TARBALL_DIR}"
+
+# Log to file and console
+exec > >(tee -a "${LOG_FILE}")
+exec 2>&1
+
+echo "Starting Docker mirror update at $(date)"
+echo "================================================"
+echo "Registry: ${REGISTRY_HOST}:${REGISTRY_PORT}"
+echo "Images file: ${IMAGES_FILE}"
+echo "Tarball storage: ${TARBALL_DIR}"
+echo ""
+
+# Check if registry is running
+if ! curl -s "http://${REGISTRY_HOST}:${REGISTRY_PORT}/v2/" > /dev/null 2>&1; then
+    echo "WARNING: Docker registry is not accessible on port ${REGISTRY_PORT}"
+    echo "Will save all images as tarballs only"
+    REGISTRY_AVAILABLE=false
+else
+    echo "Docker registry is available on port ${REGISTRY_PORT}"
+    REGISTRY_AVAILABLE=true
+fi
+
+# Function to determine if image is from Docker Hub
+is_dockerhub_image() {
+    local image="$1"
+    # Docker Hub images have format: [library/]name[:tag] or user/name[:tag]
+    # Non-Docker Hub have registry prefix: quay.io/..., gcr.io/..., etc.
+    if [[ "$image" =~ ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}/ ]]; then
+        return 1  # Has registry prefix, not Docker Hub
+    else
+        return 0  # Docker Hub image
+    fi
+}
+
+# Function to process Docker Hub images via pull-through cache
+process_dockerhub_image() {
+    local image="$1"
+    echo "  → Docker Hub image detected"
+
+    if [ "$REGISTRY_AVAILABLE" = true ]; then
+{% if docker_mirror_pull_through_cache | default(true) %}
+        echo "  → Using pull-through cache..."
+
+        # For official images without user prefix, add library/ prefix
+        if [[ ! "$image" =~ / ]]; then
+            proxy_image="${REGISTRY_HOST}:${REGISTRY_PORT}/library/${image}"
+        else
+            proxy_image="${REGISTRY_HOST}:${REGISTRY_PORT}/${image}"
+        fi
+
+        echo "  → Pulling through proxy: ${proxy_image}"
+        if docker pull "${proxy_image}" 2>&1; then
+            echo "  ✓ Successfully cached ${image} via pull-through proxy"
+            # Remove local copy (it's cached in the registry)
+            docker rmi "${proxy_image}" 2>/dev/null || true
+            return 0
+        else
+            echo "  ✗ Failed to cache via pull-through, falling back to tarball"
+        fi
+{% else %}
+        echo "  → Pull-through cache disabled, using direct pull/push..."
+        if docker pull "${image}" 2>&1; then
+            echo "  ✓ Successfully pulled ${image}"
+
+            local_tag="${REGISTRY_HOST}:${REGISTRY_PORT}/${image}"
+            docker tag "${image}" "${local_tag}"
+
+            if docker push "${local_tag}" 2>&1; then
+                echo "  ✓ Successfully pushed to local registry"
+                docker rmi "${local_tag}" 2>/dev/null || true
+                docker rmi "${image}" 2>/dev/null || true
+                return 0
+            else
+                echo "  ✗ Failed to push to registry, falling back to tarball"
+            fi
+        else
+            echo "  ✗ Failed to pull ${image}"
+            return 1
+        fi
+{% endif %}
+    fi
+
+    # Fallback: save as tarball
+    save_as_tarball "${image}"
+}
+
+# Function to process non-Docker Hub images
+process_other_registry_image() {
+    local image="$1"
+    echo "  → Non-Docker Hub image detected"
+
+    # For non-Docker Hub images, we need to save as tarball
+    # because pull-through cache only works with one upstream registry
+    save_as_tarball "${image}"
+}
+
+# Function to save image as tarball
+save_as_tarball() {
+    local image="$1"
+
+    echo "  → Pulling image directly..."
+    if docker pull "${image}" 2>&1; then
+        echo "  ✓ Successfully pulled ${image}"
+
+        # Create safe filename for tarball
+        local tar_name="$(echo "${image}" | tr '/:' '_').tar"
+        local tar_path="${TARBALL_DIR}/${tar_name}"
+
+        echo "  → Saving to ${tar_path}..."
+        if docker save "${image}" -o "${tar_path}" 2>&1; then
+            echo "  ✓ Successfully saved ${image} as tarball"
+            # Compress to save space
+            if gzip -f "${tar_path}" 2>/dev/null; then
+                echo "  ✓ Compressed to ${tar_path}.gz"
+            fi
+            # Remove local image to save space
+            docker rmi "${image}" 2>/dev/null || true
+            return 0
+        else
+            echo "  ✗ Failed to save ${image} as tarball"
+            return 1
+        fi
+    else
+        echo "  ✗ Failed to pull ${image}"
+        return 1
+    fi
+}
+
+# Process workflow images if file exists
+if [[ -f "${IMAGES_FILE}" ]]; then
+    echo "Reading images from ${IMAGES_FILE}"
+    echo ""
+
+    SUCCESS_COUNT=0
+    FAIL_COUNT=0
+
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        [[ -z "${line}" ]] && continue
+        [[ "${line}" =~ ^# ]] && continue
+
+        image="${line}"
+        echo "----------------------------"
+        echo "Processing: ${image}"
+
+        if is_dockerhub_image "${image}"; then
+            if process_dockerhub_image "${image}"; then
+                ((SUCCESS_COUNT++))
+                echo "  ✓ Image processing completed successfully"
+            else
+                ((FAIL_COUNT++))
+                echo "  ✗ Image processing failed"
+            fi
+        else
+            if process_other_registry_image "${image}"; then
+                ((SUCCESS_COUNT++))
+                echo "  ✓ Image processing completed successfully"
+            else
+                ((FAIL_COUNT++))
+                echo "  ✗ Image processing failed"
+            fi
+        fi
+        echo ""
+        echo "DEBUG: Loop iteration completed for ${image}, continuing to next..."
+    done < "${IMAGES_FILE}"
+
+    echo "DEBUG: Exited while loop normally"
+
+    echo "================================================"
+    echo "Summary: ${SUCCESS_COUNT} succeeded, ${FAIL_COUNT} failed"
+else
+    echo "WARNING: Images file not found: ${IMAGES_FILE}"
+    echo "No images to preload"
+fi
+
+# Show what's available
+echo ""
+echo "Docker mirror contents:"
+echo "----------------------"
+
+if [ "$REGISTRY_AVAILABLE" = true ]; then
+    echo ""
+    echo "Images in registry (pull-through cache for Docker Hub):"
+    curl -s "http://${REGISTRY_HOST}:${REGISTRY_PORT}/v2/_catalog" 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  Could not list catalog"
+fi
+
+echo ""
+echo "Images saved as tarballs:"
+if ls -1 "${TARBALL_DIR}"/*.tar.gz 2>/dev/null | head -10; then
+    echo "  (showing first 10)"
+    echo "  Total: $(ls -1 ${TARBALL_DIR}/*.tar.gz 2>/dev/null | wc -l) tarballs"
+else
+    echo "  No tarballs found"
+fi
+
+echo ""
+echo "To load a tarball image:"
+echo "  gunzip -c <tarball.tar.gz> | docker load"
+
+# Clean up old logs (keep last 30 days)
+echo ""
+echo "Cleaning up old logs..."
+find "${MIRROR_DIR}/logs" -name "update-*.log" -mtime +30 -delete 2>/dev/null || true
+
+echo ""
+echo "Docker mirror update completed at $(date)"
+echo "================================================"
+
+exit 0

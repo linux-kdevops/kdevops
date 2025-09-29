@@ -1,0 +1,16 @@
+# Docker Images Mirror Manifest
+# Generated: {{ ansible_date_time.iso8601 }}
+# Registry: localhost:{{ docker_mirror_port | default(5000) }}
+#
+# Cached Images:
+{% for image in docker_mirror_images %}
+{{ image }} -> localhost:{{ docker_mirror_port | default(5000) }}/{{ image | regex_replace('^[^/]+/', '') }}
+{% endfor %}
+
+# Total images cached: {{ docker_mirror_images | length }}
+#
+# To use these images, configure your Docker daemon with:
+# {
+#   "registry-mirrors": ["http://localhost:{{ docker_mirror_port | default(5000) }}"],
+#   "insecure-registries": ["localhost:{{ docker_mirror_port | default(5000) }}"]
+# }

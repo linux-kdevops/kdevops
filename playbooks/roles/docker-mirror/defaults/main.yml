@@ -1,0 +1,26 @@
+---
+# Docker mirror defaults
+
+# Installation settings
+install_docker_mirror: false
+use_docker_mirror: false
+docker_mirror_path: "/mirror/docker"
+docker_mirror_port: 5000
+docker_mirror_pull_through_cache: true
+
+# Registry container settings
+docker_registry_container_name: "kdevops-docker-mirror"
+docker_registry_image: "registry:2"
+
+# Additional images to cache (can be extended by workflows)
+docker_mirror_additional_images: []
+
+# Images that need regular updates (nightly/latest tags)
+docker_mirror_images_with_updates:
+  - "minio/minio:latest"
+  - "milvusdb/milvus:latest"
+  - "vllm/vllm-openai:latest"
+  - "openeuler/vllm-cpu:latest"
+  - "ghcr.io/vllm-project/production-stack/router:latest"
+  - "lmcache/vllm-openai:latest-nightly"
+  - "registry:latest"

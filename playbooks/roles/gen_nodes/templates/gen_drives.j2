@@ -63,3 +63,11 @@
 			 bootlinux_9p_security_model,
 			 10) }}
 {% endif %}
+{% if docker_mirror_9p %}
+  {{ drives.gen_9p_mount(docker_mirror_9p_driver,
+			 docker_mirror_9p_fsdev,
+			 docker_mirror_9p_host_path,
+			 docker_mirror_9p_mount_tag,
+			 docker_mirror_9p_security_model,
+			 11) }}
+{% endif %}

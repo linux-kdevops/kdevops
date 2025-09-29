@@ -48,8 +48,10 @@ LOCALHOST_SETUP_WORK += mirror
 
 mirror-help-menu:
 	@echo "Mirror options:"
-	@echo "mirror		- sets up systemd mirrors"
+	@echo "mirror		- sets up all mirrors (Linux git, Nix cache)"
 	@echo "mirror-status	- checks systemd mirrors status"
+	@echo ""
+	@echo "Note: Docker mirror targets are in 'make docker-mirror-help'"
 	@echo ""
 
 HELP_TARGETS += mirror-help-menu

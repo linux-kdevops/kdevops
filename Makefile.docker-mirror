@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Docker mirror setup targets
+# All configuration variables are exported via Kconfig with 'output yaml'
+# so they're automatically available in extra_vars.yaml
+
+docker-mirror-help:
+	@echo "Docker mirror setup options:"
+	@echo "docker-mirror           - Set up Docker registry mirror with background updates"
+	@echo "docker-mirror-status    - Show Docker mirror and timer status"
+	@echo "docker-mirror-pull      - Manually trigger image preloading (blocking)"
+	@echo "docker-mirror-stop      - Stop Docker mirror container and timers"
+	@echo "docker-mirror-clean     - Remove Docker mirror container (preserves data)"
+	@echo "docker-mirror-logs      - Show recent Docker mirror update logs"
+	@echo ""
+
+docker-mirror: $(KDEVOPS_EXTRA_VARS)
+	@echo "Setting up Docker registry mirror with automatic background updates..."
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--connection=local \
+		--tags docker-mirror \
+		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \
+		--extra-vars=@./extra_vars.yaml
+	@echo ""
+	@echo "✓ Docker mirror setup complete!"
+	@echo ""
+	@echo "The registry is running at: http://localhost:$$(grep docker_mirror_port extra_vars.yaml | cut -d: -f2 | tr -d ' ')"
+	@echo "Images will be downloaded automatically in the background."
+	@echo ""
+	@echo "Useful commands:"
+	@echo "  make docker-mirror-status  - Check mirror and timer status"
+	@echo "  make docker-mirror-logs    - View recent update logs"
+	@echo "  make docker-mirror-pull    - Manually trigger image downloads"
+
+docker-mirror-status:
+	@echo "Docker Registry Status:"
+	@echo "======================="
+	@docker ps -f name=kdevops-docker-mirror --format "table {{.Status}}\t{{.Ports}}" 2>/dev/null || echo "Registry not running"
+	@echo ""
+	@echo "Update Timer Status:"
+	@echo "==================="
+	@systemctl status docker-mirror-update.timer 2>/dev/null | grep -E "(Active:|Trigger:)" || echo "Timer not configured"
+	@echo ""
+	@echo "Last Update:"
+	@echo "==========="
+	@if [ -d "$$(grep docker_mirror_path extra_vars.yaml | cut -d: -f2 | tr -d ' ' | tr -d '"')/logs" ]; then \
+		ls -lt $$(grep docker_mirror_path extra_vars.yaml | cut -d: -f2 | tr -d ' ' | tr -d '"')/logs/*.log 2>/dev/null | head -1 || echo "No logs found"; \
+	else \
+		echo "Log directory not found"; \
+	fi
+
+docker-mirror-pull: $(KDEVOPS_EXTRA_VARS)
+	@echo "Manually triggering Docker image downloads..."
+	@echo "This may take several minutes depending on image sizes and network speed."
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--connection=local \
+		--tags docker-mirror-pull \
+		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \
+		--extra-vars=@./extra_vars.yaml
+
+docker-mirror-logs:
+	@echo "Recent Docker mirror update logs:"
+	@echo "================================="
+	@docker_path=$$(grep docker_mirror_path extra_vars.yaml | cut -d: -f2 | tr -d ' ' | tr -d '"'); \
+	if [ -d "$$docker_path/logs" ]; then \
+		for log in $$(ls -t $$docker_path/logs/*.log 2>/dev/null | head -3); do \
+			echo ""; \
+			echo "==> $$log <=="; \
+			tail -20 "$$log" | grep -E "(Processing:|succeeded|failed|Summary:|Docker mirror update completed)"; \
+		done; \
+	else \
+		echo "No logs found"; \
+	fi
+
+docker-mirror-stop:
+	@echo "Stopping Docker mirror services..."
+	@sudo systemctl stop docker-mirror-update.timer 2>/dev/null || true
+	@sudo systemctl stop docker-mirror-update.service 2>/dev/null || true
+	@docker stop kdevops-docker-mirror 2>/dev/null || true
+	@echo "Docker mirror services stopped."
+
+docker-mirror-clean:
+	@echo "Removing Docker mirror container..."
+	@docker stop kdevops-docker-mirror 2>/dev/null || true
+	@docker rm kdevops-docker-mirror 2>/dev/null || true
+	@echo "Docker mirror container removed."
+	@docker_path=$$(grep docker_mirror_path extra_vars.yaml | cut -d: -f2 | tr -d ' ' | tr -d '"'); \
+	echo "Note: Mirror data in $$docker_path is preserved."
+	@echo "Note: Systemd timer remains configured. Use 'make docker-mirror-stop' to disable it."
+
+PHONY += docker-mirror docker-mirror-help docker-mirror-status docker-mirror-pull
+PHONY += docker-mirror-stop docker-mirror-clean docker-mirror-logs
+HELP_TARGETS += docker-mirror-help

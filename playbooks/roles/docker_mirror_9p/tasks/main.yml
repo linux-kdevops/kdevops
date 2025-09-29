@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+---
+# Docker mirror 9P mount configuration tasks
+# This role sets up the 9P mount for Docker registry mirror access in guest VMs
+
+- name: Ensure Docker mirror 9P host directory exists
+  file:
+    path: "{{ docker_mirror_9p_host_path }}"
+    state: directory
+    mode: '0755'
+  when: docker_mirror_9p|bool
+  delegate_to: localhost
+  run_once: true
+
+- name: Create Docker mirror 9P guest mount point
+  file:
+    path: "{{ docker_mirror_9p_guest_mount_point }}"
+    state: directory
+    mode: '0755'
+  when: docker_mirror_9p|bool
+
+- name: Mount Docker mirror 9P filesystem in guest
+  mount:
+    src: "{{ docker_mirror_9p_mount_tag }}"
+    path: "{{ docker_mirror_9p_guest_mount_point }}"
+    fstype: "9p"
+    opts: "trans=virtio,version=9p2000.L,rw"
+    state: mounted
+  when: docker_mirror_9p|bool
+  tags: ['docker_mirror_9p_mount']
+
+- name: Verify Docker mirror 9P mount is active
+  command: mountpoint -q "{{ docker_mirror_9p_guest_mount_point }}"
+  changed_when: false
+  when: docker_mirror_9p|bool
+  register: mount_check
+  failed_when: mount_check.rc != 0
+  tags: ['docker_mirror_9p_mount']

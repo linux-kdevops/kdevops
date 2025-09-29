@@ -1,0 +1,209 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+- name: Check if Docker mirror directory exists
+  ansible.builtin.stat:
+    path: "{{ docker_mirror_path | default('/mirror/docker') }}"
+  register: docker_mirror_dir
+  tags: ["docker-mirror", "docker-mirror-status"]
+
+- name: Check if Docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_installed
+  ignore_errors: true
+  changed_when: false
+  tags: ["docker-mirror"]
+
+- name: Install Docker dependencies
+  ansible.builtin.include_tasks: install-deps/main.yml
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+    - docker_installed.rc != 0
+  tags: ["docker-mirror"]
+
+- name: Create Docker mirror directory structure
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ docker_mirror_path | default('/mirror/docker') }}"
+    - "{{ docker_mirror_path | default('/mirror/docker') }}/registry"
+    - "{{ docker_mirror_path | default('/mirror/docker') }}/config"
+    - "{{ docker_mirror_path | default('/mirror/docker') }}/images"
+    - "{{ docker_mirror_path | default('/mirror/docker') }}/scripts"
+    - "{{ docker_mirror_path | default('/mirror/docker') }}/logs"
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Create Docker registry configuration
+  ansible.builtin.template:
+    src: docker-registry-config.yml.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/config/config.yml"
+    mode: '0644'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Check if Docker registry container is running
+  ansible.builtin.command: docker ps -f name=kdevops-docker-mirror --format "{{ '{{' }}.Status{{ '}}' }}"
+  register: registry_status
+  changed_when: false
+  ignore_errors: true
+  tags: ["docker-mirror", "docker-mirror-status"]
+
+- name: Pull registry image
+  ansible.builtin.command: docker pull registry:2
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+  register: pull_registry
+  changed_when: "'Downloaded newer image' in pull_registry.stdout or 'Pulling from' in pull_registry.stdout"
+
+- name: Start Docker registry mirror container
+  ansible.builtin.command: |
+    docker run -d \
+      --name kdevops-docker-mirror \
+      --restart=always \
+      -p {{ docker_mirror_port | default(5000) }}:5000 \
+      -v {{ docker_mirror_path | default('/mirror/docker') }}/registry:/var/lib/registry \
+      -v {{ docker_mirror_path | default('/mirror/docker') }}/config/config.yml:/etc/docker/registry/config.yml \
+      -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 \
+      -e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry \
+      -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+      registry:2
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+    - registry_status.stdout == "" or "Exited" in registry_status.stdout
+  tags: ["docker-mirror"]
+  register: docker_run_result
+  failed_when: docker_run_result.rc != 0 and "already in use by container" not in docker_run_result.stderr
+  changed_when: docker_run_result.rc == 0
+
+- name: Wait for registry to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ docker_mirror_port | default(5000) }}/v2/"
+    status_code: 200
+  register: registry_ready
+  retries: 10
+  delay: 2
+  until: registry_ready.status == 200
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Display Docker mirror status
+  ansible.builtin.debug:
+    msg: |
+      Docker Mirror Status:
+      - Directory exists: {{ docker_mirror_dir.stat.exists | default(false) }}
+      - Registry running: {{ registry_status.stdout != "" and "Up" in registry_status.stdout }}
+      - Registry URL: http://localhost:{{ docker_mirror_port | default(5000) }}
+      - Mirror path: {{ docker_mirror_path | default('/mirror/docker') }}
+  tags: ["docker-mirror-status"]
+
+- name: Create Docker images list from workflows
+  ansible.builtin.template:
+    src: docker-images-list.txt.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/images/workflow-images.txt"
+    mode: '0644'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror", "docker-mirror-pull"]
+
+- name: Create README in images directory to clarify its purpose
+  ansible.builtin.template:
+    src: images-README.md
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/images/README.md"
+    mode: '0644'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror", "docker-mirror-images"]
+
+- name: Pull and cache Docker images (manual only)
+  ansible.builtin.include_tasks: pull_images.yml
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror-pull"]
+
+- name: Create update script from template
+  become: true
+  ansible.builtin.template:
+    src: update-docker-images.sh.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/scripts/update-docker-images.sh"
+    mode: '0755'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Install systemd service for Docker mirror updates
+  become: true
+  ansible.builtin.template:
+    src: docker-mirror-update.service.j2
+    dest: /etc/systemd/system/docker-mirror-update.service
+    mode: '0644'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Install systemd timer for Docker mirror updates
+  become: true
+  ansible.builtin.template:
+    src: docker-mirror-update.timer.j2
+    dest: /etc/systemd/system/docker-mirror-update.timer
+    mode: '0644'
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Reload systemd daemon
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Enable and start Docker mirror update timer
+  become: true
+  ansible.builtin.systemd:
+    name: docker-mirror-update.timer
+    enabled: yes
+    state: started
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+
+- name: Trigger initial Docker mirror update in background
+  become: true
+  ansible.builtin.systemd:
+    name: docker-mirror-update.service
+    state: started
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]
+  register: initial_update
+  failed_when: false  # Don't fail if service is already running
+
+- name: Display Docker mirror setup completion
+  ansible.builtin.debug:
+    msg: |
+      Docker mirror setup complete!
+
+      Registry running at: http://localhost:{{ docker_mirror_port | default(5000) }}
+      Mirror directory: {{ docker_mirror_path | default('/mirror/docker') }}
+
+      ✓ Initial image download has been triggered in the background
+      ✓ Automatic updates configured via systemd timer (runs daily)
+
+      Monitor progress:
+        systemctl status docker-mirror-update.service
+        tail -f {{ docker_mirror_path | default('/mirror/docker') }}/logs/update-*.log
+
+      The initial download is running now and may take 10-30 minutes
+      depending on image sizes and internet speed.
+  when:
+    - (install_docker_mirror | default(false) == 'y') or (install_docker_mirror | default(false) | bool)
+  tags: ["docker-mirror"]

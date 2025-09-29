@@ -1,0 +1,14 @@
+---
+# Main task file for installing Docker dependencies
+
+- name: Install Docker dependencies on Debian
+  ansible.builtin.include_tasks: debian/main.yml
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker dependencies on RedHat
+  ansible.builtin.include_tasks: redhat/main.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Install Docker dependencies on SUSE
+  ansible.builtin.include_tasks: suse/main.yml
+  when: ansible_os_family == "Suse"

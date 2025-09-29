@@ -1,0 +1,19 @@
+[Unit]
+Description=Daily Docker Mirror Images Update
+Requires=docker-mirror-update.service
+
+[Timer]
+# Run daily at 2 AM
+OnCalendar=*-*-* 02:00:00
+
+# Run on boot after 10 minutes
+OnBootSec=10min
+
+# If missed, run immediately
+Persistent=true
+
+# Randomize start time by up to 30 minutes to avoid thundering herd
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

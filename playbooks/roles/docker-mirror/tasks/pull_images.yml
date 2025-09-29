@@ -1,0 +1,117 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# Tasks to manually preload Docker images
+
+- name: Ensure update script exists
+  ansible.builtin.stat:
+    path: "{{ docker_mirror_path | default('/mirror/docker') }}/scripts/update-docker-images.sh"
+  register: update_script
+  tags: ["docker-mirror-pull"]
+
+- name: Create update script if it doesn't exist
+  become: true
+  ansible.builtin.template:
+    src: update-docker-images.sh.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/scripts/update-docker-images.sh"
+    mode: '0755'
+  when: not update_script.stat.exists
+  tags: ["docker-mirror-pull"]
+
+- name: Ensure workflow images list exists
+  ansible.builtin.stat:
+    path: "{{ docker_mirror_path | default('/mirror/docker') }}/images/workflow-images.txt"
+  register: images_list
+  tags: ["docker-mirror-pull"]
+
+- name: Create Docker images list if it doesn't exist
+  ansible.builtin.template:
+    src: docker-images-list.txt.j2
+    dest: "{{ docker_mirror_path | default('/mirror/docker') }}/images/workflow-images.txt"
+    mode: '0644'
+  when: not images_list.stat.exists
+  tags: ["docker-mirror-pull"]
+
+- name: Run Docker mirror image preload script
+  become: true
+  ansible.builtin.command: "{{ docker_mirror_path | default('/mirror/docker') }}/scripts/update-docker-images.sh"
+  register: preload_result
+  changed_when: "'succeeded' in preload_result.stdout"
+  failed_when: false  # Don't fail on partial success
+  async: 1800  # Allow up to 30 minutes for large image downloads
+  poll: 10  # Check status every 10 seconds
+  tags: ["docker-mirror-pull"]
+
+- name: Parse preload results
+  ansible.builtin.set_fact:
+    preload_summary: "{{ preload_result.stdout_lines | select('match', '.*(Processing:|succeeded|failed|Summary:|Docker Hub|Non-Docker Hub|tarball).*') | list }}"
+  when: preload_result is defined and preload_result.stdout_lines is defined
+  tags: ["docker-mirror-pull"]
+
+- name: Display preload summary
+  ansible.builtin.debug:
+    msg: |
+      Docker Image Preload Results:
+      =============================
+      {% for line in preload_summary | default([]) %}
+      {{ line }}
+      {% endfor %}
+  when: preload_summary is defined
+  tags: ["docker-mirror-pull"]
+
+- name: Check for saved tarballs
+  ansible.builtin.shell: |
+    if [ -d "{{ docker_mirror_path | default('/mirror/docker') }}/registry/tarballs" ]; then
+      find "{{ docker_mirror_path | default('/mirror/docker') }}/registry/tarballs" -name "*.tar.gz" -type f | wc -l
+    else
+      echo 0
+    fi
+  register: tarball_count
+  changed_when: false
+  failed_when: false
+  tags: ["docker-mirror-pull"]
+
+- name: Get tarball sizes
+  ansible.builtin.shell: |
+    if [ -d "{{ docker_mirror_path | default('/mirror/docker') }}/registry/tarballs" ]; then
+      du -sh "{{ docker_mirror_path | default('/mirror/docker') }}/registry/tarballs" 2>/dev/null | cut -f1
+    else
+      echo "0"
+    fi
+  register: tarball_size
+  changed_when: false
+  failed_when: false
+  tags: ["docker-mirror-pull"]
+
+- name: Display storage information
+  ansible.builtin.debug:
+    msg: |
+      Docker Mirror Storage:
+      ======================
+      Tarballs: {{ tarball_count.stdout }} compressed images
+      Total size: {{ tarball_size.stdout }}
+      Location: {{ docker_mirror_path | default('/mirror/docker') }}/registry/tarballs/
+
+      Registry pull-through cache is available for Docker Hub images at:
+      http://localhost:{{ docker_mirror_port | default(5000) }}
+
+      To use cached images:
+      - Docker Hub images: docker pull localhost:{{ docker_mirror_port | default(5000) }}/<image>
+      - Other registries: gunzip -c <tarball.tar.gz> | docker load
+  when: tarball_count.stdout | int > 0 or preload_result is defined
+  tags: ["docker-mirror-pull"]
+
+- name: Check for failed images
+  ansible.builtin.shell: |
+    grep -c "Failed to" {{ docker_mirror_path | default('/mirror/docker') }}/logs/update-*.log 2>/dev/null | tail -1 || echo 0
+  register: failed_count
+  changed_when: false
+  failed_when: false
+  tags: ["docker-mirror-pull"]
+
+- name: Display warning if images failed
+  ansible.builtin.debug:
+    msg: |
+      ⚠️  WARNING: {{ failed_count.stdout }} images failed to download
+      Check logs in {{ docker_mirror_path | default('/mirror/docker') }}/logs/ for details
+  when: failed_count.stdout | int > 0
+  tags: ["docker-mirror-pull"]

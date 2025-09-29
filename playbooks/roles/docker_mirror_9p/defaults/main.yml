@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+---
+# Docker mirror 9P mount defaults
+# These defaults match the Kconfig defaults but can be overridden
+docker_mirror_9p: false
+
+# 9P mount configuration parameters
+docker_mirror_9p_host_path: "/mirror/docker"
+docker_mirror_9p_mount_tag: "kdevops_9p_docker_mirror"
+docker_mirror_9p_fsdev: "kdevops_docker_mirror_fsdev"
+docker_mirror_9p_security_model: "none"
+docker_mirror_9p_driver: "virtio-9p-pci"
+
+# Guest mount point where the 9P filesystem will be mounted
+docker_mirror_9p_guest_mount_point: "/mirror/docker"

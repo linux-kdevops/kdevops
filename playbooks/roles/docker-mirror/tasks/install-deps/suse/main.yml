@@ -1,0 +1,33 @@
+---
+# Install Docker on SUSE/openSUSE
+
+- name: Install Docker
+  become: true
+  ansible.builtin.zypper:
+    name:
+      - docker
+      - docker-compose
+    state: present
+
+- name: Install Python Docker library
+  become: true
+  ansible.builtin.zypper:
+    name:
+      - python3-docker-py
+    state: present
+
+- name: Start and enable Docker service
+  become: true
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Add current user to docker group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  when: ansible_user != 'root'

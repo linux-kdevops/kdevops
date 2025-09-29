@@ -104,6 +104,14 @@ bootlinux_9p_mount_tag: "ignore"
 bootlinux_9p_security_model: "none"
 bootlinux_9p_driver: "virtio-9p-pci"
 
+# Docker mirror 9P mount defaults
+docker_mirror_9p: false
+docker_mirror_9p_host_path: "/mirror/docker"
+docker_mirror_9p_fsdev: "kdevops_docker_mirror_fsdev"
+docker_mirror_9p_mount_tag: "kdevops_9p_docker_mirror"
+docker_mirror_9p_security_model: "none"
+docker_mirror_9p_driver: "virtio-9p-pci"
+
 bootlinux_builder: false
 
 guestfs_requires_uefi: false
