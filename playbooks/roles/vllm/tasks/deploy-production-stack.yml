@@ -1,0 +1,268 @@
+---
+# Deploy vLLM Production Stack using official Helm charts
+- name: vLLM Production Stack deployment tasks
+  block:
+    - name: Setup Kubernetes environment
+      ansible.builtin.import_tasks: tasks/setup-kubernetes.yml
+
+    - name: Ensure Helm is installed
+      ansible.builtin.import_tasks: tasks/setup-helm.yml
+
+    - name: Set vLLM engine image with Docker mirror if enabled
+      ansible.builtin.set_fact:
+        vllm_engine_image_final: "localhost:{{ docker_mirror_port | default(5000) }}/{{ vllm_engine_image_repo | regex_replace('^[^/]+/', '') }}"
+      when:
+        - use_docker_mirror | default(false) | bool
+
+    - name: Use default vLLM engine image if mirror not enabled
+      ansible.builtin.set_fact:
+        vllm_engine_image_final: "{{ vllm_engine_image_repo }}"
+      when:
+        - not (use_docker_mirror | default(false) | bool)
+
+    - name: Set router image with Docker mirror if enabled
+      ansible.builtin.set_fact:
+        vllm_router_image_final: "localhost:{{ docker_mirror_port | default(5000) }}/{{ vllm_prod_stack_router_image | regex_replace('^[^/]+/', '') }}"
+      when:
+        - use_docker_mirror | default(false) | bool
+
+    - name: Use default router image if mirror not enabled
+      ansible.builtin.set_fact:
+        vllm_router_image_final: "{{ vllm_prod_stack_router_image | default('ghcr.io/vllm-project/production-stack/router') }}"
+      when:
+        - not (use_docker_mirror | default(false) | bool)
+
+    - name: Add vLLM Production Stack Helm repository
+      kubernetes.core.helm_repository:
+        name: vllm-prod-stack
+        repo_url: "{{ vllm_prod_stack_repo | default('https://vllm-project.github.io/production-stack') }}"
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+
+    - name: Update Helm repositories
+      ansible.builtin.command:
+        cmd: helm repo update
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      changed_when: false
+
+    - name: Verify kubectl context and cluster connectivity
+      ansible.builtin.command:
+        cmd: kubectl cluster-info --request-timeout=30s
+      register: cluster_info
+      retries: 3
+      delay: 10
+      until: cluster_info.rc == 0
+      failed_when: cluster_info.rc != 0
+
+    - name: Set kubectl context for Helm operations
+      ansible.builtin.command:
+        cmd: kubectl config use-context minikube
+      when: vllm_k8s_minikube | default(false)
+      ignore_errors: yes
+
+    - name: Create vLLM local directory
+      ansible.builtin.file:
+        path: "{{ vllm_local_path | default('/data/vllm') }}"
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Create vLLM namespace
+      kubernetes.core.k8s:
+        name: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+
+    - name: Generate Helm values file for Production Stack
+      template:
+        src: vllm-prod-stack-official-values.yaml.j2
+        dest: "{{ vllm_local_path | default('/data/vllm') }}/prod-stack-values.yaml"
+        mode: '0644'
+      when: not (vllm_prod_stack_custom_values | default(false))
+
+    - name: Copy custom Helm values file
+      copy:
+        src: "{{ vllm_prod_stack_values_path }}"
+        dest: "{{ vllm_local_path | default('/data/vllm') }}/prod-stack-values.yaml"
+        mode: '0644'
+      when: vllm_prod_stack_custom_values | default(false)
+
+    - name: Deploy vLLM Production Stack with Helm
+      kubernetes.core.helm:
+        name: "{{ vllm_helm_release_name | default('vllm-prod') }}-{{ inventory_hostname_short }}"
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        chart_ref: vllm-prod-stack/vllm-stack
+        values_files:
+          - "{{ vllm_local_path | default('/data/vllm') }}/prod-stack-values.yaml"
+        wait: true
+        timeout: 30m
+        chart_version: "{{ vllm_prod_stack_chart_version if vllm_prod_stack_chart_version != 'latest' else omit }}"
+        force: true  # Force reinstall if needed
+        atomic: false  # Don't rollback on failure to help debugging
+        create_namespace: true
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      register: helm_deploy
+      retries: 2
+      delay: 30
+      until: helm_deploy is succeeded
+
+    - name: Wait for vLLM engine pods to be ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        label_selectors:
+          - model={{ vllm_model_name }}
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      register: engine_pods
+      until: >
+        engine_pods.resources | length > 0 and
+        engine_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == engine_pods.resources | length
+      retries: 30
+      delay: 10
+
+    - name: Wait for router pod to be ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Deployment
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        name: "{{ vllm_helm_release_name | default('vllm-prod') }}-{{ inventory_hostname_short }}-deployment-router"
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      register: router_deployment
+      until: >
+        router_deployment.resources | length > 0 and
+        router_deployment.resources[0].status.readyReplicas | default(0) > 0 and
+        router_deployment.resources[0].status.readyReplicas == router_deployment.resources[0].status.replicas
+      retries: 20
+      delay: 5
+      when: vllm_router_enabled | default(true)
+
+    - name: Check if monitoring components exist
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        label_selectors:
+          - app.kubernetes.io/name=prometheus
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      register: prometheus_check
+      ignore_errors: yes
+      when: vllm_prod_stack_enable_monitoring | default(true)
+
+    - name: Setup monitoring stack
+      when:
+        - vllm_prod_stack_enable_monitoring | default(true)
+        - prometheus_check is defined
+        - prometheus_check.resources | length > 0
+      block:
+        - name: Wait for Prometheus to be ready
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Pod
+            namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+            label_selectors:
+              - app.kubernetes.io/name=prometheus
+          environment:
+            KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+            MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+          become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+          register: prometheus_pod
+          until: prometheus_pod.resources | length > 0 and prometheus_pod.resources[0].status.phase == "Running"
+          retries: 20
+          delay: 5
+
+        - name: Wait for Grafana to be ready
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Pod
+            namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+            label_selectors:
+              - app.kubernetes.io/name=grafana
+          environment:
+            KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+            MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+          become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+          register: grafana_pod
+          until: grafana_pod.resources | length > 0 and grafana_pod.resources[0].status.phase == "Running"
+          retries: 20
+          delay: 5
+
+    - name: Get service endpoints
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+      environment:
+        KUBECONFIG: "{{ '/root/.kube/config' if vllm_k8s_minikube | default(false) else '~/.kube/config' }}"
+        MINIKUBE_HOME: "{{ '/data/minikube' if vllm_k8s_minikube | default(false) else omit }}"
+      become: "{{ true if vllm_k8s_minikube | default(false) else false }}"
+      register: services
+
+    - name: Display deployment information
+      debug:
+        msg: |
+          vLLM Production Stack deployed successfully!
+
+          Services available:
+          {% for service in services.resources %}
+          - {{ service.metadata.name }}: {{ service.spec.type }}
+            {% if service.spec.type == 'LoadBalancer' and service.status.loadBalancer.ingress is defined %}
+            External IP: {{ service.status.loadBalancer.ingress[0].ip | default('pending') }}
+            {% endif %}
+          {% endfor %}
+
+          {% if vllm_k8s_minikube | default(false) %}
+          To access services on Minikube:
+          - API: kubectl port-forward -n {{ vllm_helm_namespace }} svc/vllm-router {{ vllm_api_port }}:8000
+          {% if vllm_prod_stack_enable_monitoring | default(true) %}
+          - Grafana: kubectl port-forward -n {{ vllm_helm_namespace }} svc/grafana {{ vllm_grafana_port }}:3000
+          - Prometheus: kubectl port-forward -n {{ vllm_helm_namespace }} svc/prometheus {{ vllm_prometheus_port }}:9090
+          {% endif %}
+          {% endif %}
+
+    - name: Setup autoscaling
+      when: vllm_prod_stack_enable_autoscaling | default(false)
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: autoscaling/v2
+          kind: HorizontalPodAutoscaler
+          metadata:
+            name: vllm-engine-hpa
+            namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+          spec:
+            scaleTargetRef:
+              apiVersion: apps/v1
+              kind: Deployment
+              name: vllm-engine
+            minReplicas: "{{ vllm_prod_stack_min_replicas | default(1) }}"
+            maxReplicas: "{{ vllm_prod_stack_max_replicas | default(5) }}"
+            metrics:
+            - type: Resource
+              resource:
+                name: "{{ 'nvidia.com/gpu' if not (vllm_use_cpu_inference | default(false)) else 'cpu' }}"
+                target:
+                  type: Utilization
+                  averageUtilization: "{{ vllm_prod_stack_target_gpu_utilization | default(80) }}"

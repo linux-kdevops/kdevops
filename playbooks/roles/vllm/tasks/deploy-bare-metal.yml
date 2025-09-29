@@ -1,0 +1,227 @@
+---
+# Deploy vLLM on bare metal with systemd
+- name: vLLM bare metal deployment tasks
+  block:
+    - name: Create vLLM directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+      become: yes
+      loop:
+        - "{{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}"
+        - "{{ vllm_bare_metal_log_dir | default('/var/log/vllm') }}"
+        - /etc/vllm
+
+    - name: Check GPU availability
+      ansible.builtin.command:
+        cmd: nvidia-smi -L
+      register: gpu_check
+      failed_when: false
+      changed_when: false
+
+    - name: Set GPU facts
+      set_fact:
+        has_nvidia_gpu: "{{ gpu_check.rc == 0 }}"
+        gpu_count: "{{ vllm_bare_metal_declare_host_gpu_count | default(gpu_check.stdout_lines | length if gpu_check.rc == 0 else 0) }}"
+        gpu_type: "{{ vllm_bare_metal_declare_host_gpu_type | default('auto-detected') }}"
+
+    - name: Display GPU information
+      debug:
+        msg: |
+          GPU Configuration:
+          - GPUs Available: {{ 'Yes' if has_nvidia_gpu else 'No' }}
+          - GPU Count: {{ gpu_count }}
+          {% if has_nvidia_gpu %}
+          - GPU Type: {{ gpu_type }}
+          {% endif %}
+          - Inference Mode: {{ 'GPU' if has_nvidia_gpu else 'CPU' }}
+
+    # Container-based deployment
+    - name: Deploy vLLM with container runtime
+      when: vllm_bare_metal_use_container | default(true)
+      block:
+        - name: Determine container runtime
+          set_fact:
+            container_runtime: "{{ 'docker' if vllm_bare_metal_docker | default(true) else 'podman' }}"
+
+        - name: Ensure container runtime is installed
+          package:
+            name: "{{ container_runtime }}"
+            state: present
+          become: yes
+
+        - name: Install nvidia-container-toolkit for GPU support
+          when: has_nvidia_gpu
+          package:
+            name: nvidia-container-toolkit
+            state: present
+          become: yes
+
+        - name: Configure container runtime for GPU
+          when: has_nvidia_gpu and container_runtime == 'docker'
+          ansible.builtin.command:
+            cmd: nvidia-ctk runtime configure --runtime=docker
+          become: yes
+          register: nvidia_config
+          changed_when: nvidia_config.rc == 0
+
+        - name: Restart Docker to apply GPU configuration
+          when: has_nvidia_gpu and container_runtime == 'docker' and nvidia_config.changed
+          systemd:
+            name: docker
+            state: restarted
+          become: yes
+
+        - name: Set vLLM bare metal container image with Docker mirror if enabled
+          ansible.builtin.set_fact:
+            vllm_bare_metal_image_final: >-
+              {%- if use_docker_mirror | default(false) | bool -%}
+                {%- if not has_nvidia_gpu -%}
+                  localhost:{{ docker_mirror_port | default(5000) }}/vllm:v0.6.3-cpu
+                {%- else -%}
+                  localhost:{{ docker_mirror_port | default(5000) }}/vllm-openai:latest
+                {%- endif -%}
+              {%- else -%}
+                {%- if not has_nvidia_gpu -%}
+                  substratusai/vllm:v0.6.3-cpu
+                {%- else -%}
+                  vllm/vllm-openai:latest
+                {%- endif -%}
+              {%- endif -%}
+
+        - name: Pull vLLM container image
+          community.docker.docker_image:
+            name: "{{ vllm_bare_metal_image_final }}"
+            source: pull
+
+        - name: Create vLLM systemd service for container
+          template:
+            src: vllm-container.service.j2
+            dest: "/etc/systemd/system/{{ vllm_bare_metal_service_name | default('vllm') }}.service"
+            mode: '0644'
+          become: yes
+          notify: restart vllm
+
+    # Direct installation (pip/source)
+    - name: Deploy vLLM with direct installation
+      when: not (vllm_bare_metal_use_container | default(true))
+      block:
+        - name: Ensure Python 3.8+ is installed
+          package:
+            name:
+              - python3
+              - python3-pip
+              - python3-venv
+            state: present
+          become: yes
+
+        - name: Create vLLM virtual environment
+          command:
+            cmd: python3 -m venv /opt/vllm/venv
+            creates: /opt/vllm/venv
+          become: yes
+
+        - name: Install vLLM from pip
+          pip:
+            name: vllm
+            virtualenv: /opt/vllm/venv
+            state: present
+          when: vllm_bare_metal_install_method | default('pip') == 'pip'
+          become: yes
+
+        - name: Install vLLM from source
+          when: vllm_bare_metal_install_method | default('pip') == 'source'
+          block:
+            - name: Clone vLLM repository
+              git:
+                repo: https://github.com/vllm-project/vllm.git
+                dest: /opt/vllm/src
+                version: main
+              become: yes
+
+            - name: Install vLLM from source
+              pip:
+                name: /opt/vllm/src
+                virtualenv: /opt/vllm/venv
+                editable: true
+              become: yes
+
+        - name: Create vLLM systemd service for direct installation
+          template:
+            src: vllm-direct.service.j2
+            dest: "/etc/systemd/system/{{ vllm_bare_metal_service_name | default('vllm') }}.service"
+            mode: '0644'
+          become: yes
+          notify: restart vllm
+
+    - name: Create vLLM configuration file
+      template:
+        src: vllm.conf.j2
+        dest: /etc/vllm/vllm.conf
+        mode: '0644'
+      become: yes
+      notify: restart vllm
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      become: yes
+
+    - name: Start and enable vLLM service
+      systemd:
+        name: "{{ vllm_bare_metal_service_name | default('vllm') }}"
+        state: started
+        enabled: yes
+      become: yes
+
+    - name: Wait for vLLM to be ready
+      uri:
+        url: "http://localhost:{{ vllm_api_port | default(8000) }}/health"
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Get vLLM models
+      uri:
+        url: "http://localhost:{{ vllm_api_port | default(8000) }}/v1/models"
+        method: GET
+      register: models_response
+
+    - name: Display deployment information
+      debug:
+        msg: |
+          vLLM deployed successfully on bare metal!
+
+          Service: {{ vllm_bare_metal_service_name | default('vllm') }}
+          Status: Active
+          API Endpoint: http://{{ ansible_default_ipv4.address }}:{{ vllm_api_port | default(8000) }}
+
+          Available Models:
+          {% for model in models_response.json.data %}
+          - {{ model.id }}
+          {% endfor %}
+
+          GPU Configuration:
+          - Mode: {{ 'GPU-accelerated' if has_nvidia_gpu else 'CPU-only' }}
+          {% if has_nvidia_gpu %}
+          - GPUs: {{ gpu_count }}
+          - Type: {{ gpu_type }}
+          {% endif %}
+
+          Service Management:
+          - Start: sudo systemctl start {{ vllm_bare_metal_service_name | default('vllm') }}
+          - Stop: sudo systemctl stop {{ vllm_bare_metal_service_name | default('vllm') }}
+          - Status: sudo systemctl status {{ vllm_bare_metal_service_name | default('vllm') }}
+          - Logs: sudo journalctl -u {{ vllm_bare_metal_service_name | default('vllm') }} -f
+
+# Handler for restarting vLLM
+- name: restart vllm
+  systemd:
+    name: "{{ vllm_bare_metal_service_name | default('vllm') }}"
+    state: restarted
+  become: yes

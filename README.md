@@ -285,9 +285,29 @@ For detailed documentation and demo results, see the
 
 ### AI workflow
 
-kdevops now supports AI/ML system benchmarking, starting with vector databases
-like Milvus. Similar to fstests, you can quickly set up and benchmark AI
+kdevops now supports AI/ML system benchmarking, including vector databases
+and LLM serving infrastructure. Similar to fstests, you can quickly set up and benchmark AI
 infrastructure with just a few commands:
+
+#### vLLM Production Stack
+Deploy and benchmark large language models using the vLLM Production Stack:
+
+```bash
+make defconfig-vllm
+make bringup
+make vllm
+make vllm-benchmark
+```
+
+The vLLM workflow provides:
+- **Production LLM Deployment**: Kubernetes-based vLLM serving with Helm
+- **Request Routing**: Multiple algorithms (round-robin, session affinity, prefix-aware)
+- **Observability**: Integrated Prometheus and Grafana monitoring
+- **Performance Features**: Prefix caching, chunked prefill, KV cache offloading
+- **A/B Testing**: Compare different model configurations
+
+#### Milvus Vector Database
+Benchmark vector database performance for AI applications:
 
 ```bash
 make defconfig-ai-milvus-docker
@@ -303,6 +323,7 @@ The AI workflow supports:
 - **Demo Results**: View actual benchmark HTML reports and performance visualizations
 
 For details and demo results, see:
+- [kdevops vLLM workflow documentation](workflows/vllm/)
 - [kdevops AI workflow documentation](docs/ai/README.md)
 - [Milvus performance demo results](docs/ai/vector-databases/milvus.md#demo-results)
 
@@ -358,6 +379,7 @@ want to just use the kernel that comes with your Linux distribution.
   * [kdevops selftests docs](docs/selftests.md)
   * [kdevops reboot-limit docs](docs/reboot-limit.md)
   * [kdevops AI workflow docs](docs/ai/README.md)
+  * [kdevops vLLM workflow docs](workflows/vllm/)
 
 # kdevops general documentation
 

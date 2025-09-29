@@ -5,6 +5,37 @@ and example commits and their outcomes, and notes by users of the AI agent
 grading. It is also instructive for humans to learn how to use generative
 AI to easily extend kdevops for their own needs.
 
+## Adding new AI/ML workflows
+
+### Adding vLLM Production Stack workflow
+
+**Prompt:**
+I have placed in ../production-stack/ the https://github.com/vllm-project/production-stack.git
+project. Familiarize yourself with it and then add support for as a new
+I workflow, other than Milvus AI on kdevops.
+
+**AI:** Claude Code
+**Commit:** TBD
+**Result:** Tough
+**Grading:** 50%
+
+**Notes:**
+
+Adding just vllm was fairly trivial. However the production stack project
+lacked any clear documentation about what docker container image could be
+used for CPU support, and all docker container images had one or another
+obscure issue.
+
+So while getting the vllm and the production stack generally supported was
+faily trivial, the lack of proper docs make it hard to figure out exactly what
+to do.
+
+Fortunately the implementation correctly identified the need for Kubernetes
+orchestration, included support for various deployment options (Minikube vs
+existing clusters), and integrated monitoring with Prometheus/Grafana. The
+workflow supports A/B testing, multiple routing algorithms, and performance
+benchmarking capabilities.
+
 ## Extending existing Linux kernel selftests
 
 Below are a set of example prompts / result commits of extending existing

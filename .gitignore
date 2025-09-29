@@ -91,6 +91,7 @@ playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml
 workflows/selftests/results/
 
 workflows/minio/results/
+workflows/vllm/results/
 
 workflows/linux/refs/default/Kconfig.linus
 workflows/linux/refs/default/Kconfig.next
