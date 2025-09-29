@@ -106,6 +106,7 @@ config KDEVOPS_PYTHON_INTERPRETER
 	string "Which default python interpreter to use"
 	default "/usr/bin/python2" if HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
 	default "/usr/bin/python3" if !HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
+	output yaml
 	help
 	  The python interpreter must be specified clearly for each host when
 	  using ansible, otherwise you will run into odd issues if the
@@ -119,6 +120,7 @@ config KDEVOPS_PYTHON_INTERPRETER
 config KDEVOPS_PYTHON_OLD_INTERPRETER
 	string "Which python interpreter to use for old systems"
 	default "/usr/bin/python2"
+	output yaml
 	help
 	  The default python interpreter may be python3 but we need something
 	  so that we can specify it on older systems. You can then use the
