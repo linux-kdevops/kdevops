@@ -1,10 +1,14 @@
 config MINIO_CONTAINER_IMAGE_STRING
 	string "MinIO container image"
 	output yaml
+	default "localhost:5000/minio/minio:RELEASE.2024-01-16T16-07-38Z" if KDEVOPS_DOCKER_MIRROR
 	default "minio/minio:RELEASE.2024-01-16T16-07-38Z"
 	help
 	The MinIO container image to use for S3 storage benchmarking.
 	Using a recent stable release with performance improvements.
+
+	When KDEVOPS_DOCKER_MIRROR is enabled, the image URL is automatically
+	prefixed with the local registry address for faster pulls.
 
 config MINIO_CONTAINER_NAME
 	string "The local MinIO container name"
