@@ -355,4 +355,3 @@
     mode: "u=rw,g=r,o=r"
   when:
     - custom_image_stat.stat.exists or custom_image_download is changed
-    - custom_image != base_image_pathname
