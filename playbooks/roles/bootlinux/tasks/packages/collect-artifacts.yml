@@ -1,0 +1,93 @@
+---
+# Modular task file for artifact collection and organization
+# Handles both local copy (9P) and remote fetch (builder) modes
+#
+# Required variables:
+#   artifacts_source_mode: "local" (9P) or "remote" (builder)
+#   prepared_artifacts_dir: Destination directory for artifacts (set by prepare-artifacts-dir.yml)
+# Expected input facts (set by generate-packages.yml):
+#   generated_packages: List of package files found
+#   package_type: "deb" or "rpm"
+#   extracted_kernelrelease: Kernel release string
+
+- name: Validate required input facts
+  ansible.builtin.fail:
+    msg: "Required fact {{ item }} not set by generate-packages.yml"
+  when: vars[item] is not defined
+  loop:
+    - generated_packages
+    - package_type
+    - extracted_kernelrelease
+    - prepared_artifacts_dir
+
+- name: Set collection mode defaults
+  ansible.builtin.set_fact:
+    is_local_collection: "{{ artifacts_source_mode == 'local' }}"
+
+- name: Collect packages using local copy (9P mode)
+  delegate_to: localhost
+  when: is_local_collection | bool
+  block:
+    - name: Copy packages to artifacts directory (local mode)
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "{{ prepared_artifacts_dir }}/"
+        mode: "u=rw,g=r,o=r"
+      loop: "{{ generated_packages }}"
+      loop_control:
+        label: "Copying {{ item.path | basename }} ..."
+
+- name: Collect packages using fetch (builder mode)
+  when: not is_local_collection | bool
+  block:
+    - name: Fetch packages to artifacts directory (remote mode)
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ prepared_artifacts_dir }}/"
+        flat: true
+        mode: "u=rw,g=r,o=r"
+      loop: "{{ generated_packages }}"
+      loop_control:
+        label: "Fetching {{ item.path | basename }} ..."
+
+- name: Store kernel release information with artifacts
+  delegate_to: localhost
+  ansible.builtin.lineinfile:
+    create: true
+    line: "{{ extracted_kernelrelease }}"
+    mode: "u=rw,g=r,o=r"
+    path: "{{ prepared_artifacts_dir }}/kernel.release"
+
+- name: Generate build metadata
+  delegate_to: localhost
+  ansible.builtin.template:
+    src: build_info.j2
+    dest: "{{ prepared_artifacts_dir }}/build.info"
+    mode: "u=rw,g=r,o=r"
+  vars:
+    build_info:
+      kernel_release: "{{ extracted_kernelrelease }}"
+      package_type: "{{ package_type }}"
+      build_mode: "{{ artifacts_source_mode }}"
+      build_timestamp: "{{ ansible_date_time.iso8601 }}"
+      packages_count: "{{ generated_packages | length }}"
+      target_kernel_ref: "{{ target_linux_ref | default('unknown') }}"
+  ignore_errors: true  # Template might not exist yet
+
+- name: Display collection summary
+  delegate_to: localhost
+  ansible.builtin.debug:
+    msg: |
+      Package collection completed:
+      - Mode: {{ artifacts_source_mode }}
+      - Packages: {{ generated_packages | length }} {{ package_type }} files
+      - Kernel: {{ extracted_kernelrelease }}
+      - Location: {{ prepared_artifacts_dir }}
+
+- name: Set collection results facts
+  ansible.builtin.set_fact:
+    package_collection_results:
+      artifacts_dir: "{{ prepared_artifacts_dir }}"
+      package_count: "{{ generated_packages | length }}"
+      package_type: "{{ package_type }}"
+      kernel_release: "{{ extracted_kernelrelease }}"

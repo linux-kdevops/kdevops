@@ -1,0 +1,43 @@
+---
+# Modular task file for artifact directory management
+# Used by both builder and 9P package generation modes
+#
+# Required variables:
+#   artifacts_target_dir: Directory where artifacts will be stored
+# Optional variables:
+#   artifacts_clean: Whether to clean existing directory (default: true)
+#   artifacts_organize_by_version: Create version subdirectories (default: false)
+#   target_kernel_ref: Kernel version for subdirectory organization
+
+- name: Set artifact directory management defaults
+  ansible.builtin.set_fact:
+    artifacts_clean: "{{ artifacts_clean | default(true) }}"
+    artifacts_organize_by_version: "{{ artifacts_organize_by_version | default(false) }}"
+
+- name: Determine final artifact destination
+  ansible.builtin.set_fact:
+    final_artifacts_dir: >-
+      {{
+        artifacts_target_dir + '/' + target_kernel_ref
+        if artifacts_organize_by_version and target_kernel_ref is defined
+        else artifacts_target_dir
+      }}
+
+- name: Remove the old artifacts directory
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ final_artifacts_dir }}"
+    state: absent
+  when: artifacts_clean | bool
+
+- name: Ensure artifacts directory exists
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.file:
+    path: "{{ final_artifacts_dir }}"
+    state: directory
+    mode: "u=rwx,g=rx,o=rx"
+
+- name: Set artifact directory fact for use by other tasks
+  ansible.builtin.set_fact:
+    prepared_artifacts_dir: "{{ final_artifacts_dir }}"
