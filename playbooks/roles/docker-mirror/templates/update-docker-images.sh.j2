@@ -1,0 +1,114 @@
+#!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Script to update Docker mirror images
+# Called by systemd timer for regular updates
+
+set -e
+
+MIRROR_DIR="{{ docker_mirror_path }}"
+REGISTRY_PORT="{{ docker_mirror_port }}"
+LOG_FILE="${MIRROR_DIR}/logs/update-$(date +%Y%m%d-%H%M%S).log"
+
+# Create log directory if it doesn't exist
+mkdir -p "${MIRROR_DIR}/logs"
+
+# Redirect output to log file
+exec 1>"${LOG_FILE}"
+exec 2>&1
+
+echo "Starting Docker mirror update at $(date)"
+echo "================================================"
+
+# List of images to update - includes nightly/latest tags
+IMAGES=(
+{% for image in docker_mirror_images_with_updates | default([]) %}
+    "{{ image }}"
+{% endfor %}
+    # MinIO - check for updates
+    "minio/minio:latest"
+    "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+
+    # Milvus - check for updates
+    "milvusdb/milvus:latest"
+    "milvusdb/milvus:2.3.0"
+
+    # vLLM - standard deployment
+    "vllm/vllm-openai:latest"
+
+    # LMCache - stable and nightly builds for KV cache offloading
+    "lmcache/vllm-openai:2025-05-27-v1"
+    "lmcache/vllm-openai:latest-nightly"
+
+    # etcd - stable version
+    "quay.io/coreos/etcd:v3.5.5"
+
+    # Registry itself
+    "registry:2"
+    "registry:latest"
+)
+
+# Function to pull and cache an image
+update_image() {
+    local image="$1"
+    local image_name="${image#*/}"
+    local local_tag="localhost:${REGISTRY_PORT}/${image_name}"
+
+    echo ""
+    echo "Updating: ${image}"
+    echo "----------------------------"
+
+    # Pull the latest version
+    if docker pull "${image}" 2>&1; then
+        echo "  ✓ Successfully pulled ${image}"
+
+        # Tag for local registry
+        docker tag "${image}" "${local_tag}"
+
+        # Push to local registry
+        if docker push "${local_tag}" 2>&1; then
+            echo "  ✓ Successfully pushed to local registry"
+        else
+            echo "  ✗ Failed to push to local registry"
+            return 1
+        fi
+    else
+        echo "  ✗ Failed to pull ${image}"
+        return 1
+    fi
+}
+
+# Check if registry is running
+if ! curl -s "http://localhost:${REGISTRY_PORT}/v2/" > /dev/null 2>&1; then
+    echo "ERROR: Docker registry is not running on port ${REGISTRY_PORT}"
+    exit 1
+fi
+
+# Update each image
+SUCCESS_COUNT=0
+FAIL_COUNT=0
+
+for image in "${IMAGES[@]}"; do
+    if update_image "${image}"; then
+        ((SUCCESS_COUNT++))
+    else
+        ((FAIL_COUNT++))
+    fi
+done
+
+# Clean up old images
+echo ""
+echo "Cleaning up old images..."
+docker image prune -f 2>&1 || true
+
+# Summary
+echo ""
+echo "================================================"
+echo "Update completed at $(date)"
+echo "Success: ${SUCCESS_COUNT} images"
+echo "Failed: ${FAIL_COUNT} images"
+
+# Rotate logs (keep last 30 days)
+find "${MIRROR_DIR}/logs" -name "update-*.log" -mtime +30 -delete 2>/dev/null || true
+
+exit 0

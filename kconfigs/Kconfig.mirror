@@ -740,5 +740,268 @@ config NIX_CACHE_MIRROR_PATH
 	  This should be on a filesystem with sufficient space as the cache
 	  can grow to several GB over time.
 
+config ENABLE_DOCKER_MIRROR
+	bool "Enable Docker registry mirror support"
+	default $(shell, scripts/check_docker_mirror.sh ENABLE_DOCKER_MIRROR)
+	help
+	  Enable Docker registry mirror support to cache container images locally.
+	  This option enables the Docker mirror infrastructure if /mirror/docker/
+	  directory exists.
+
+config USE_DOCKER_MIRROR
+	bool "Use Docker registry mirror"
+	output yaml
+	default $(shell, scripts/check_docker_mirror.sh USE_DOCKER_MIRROR)
+	depends on ENABLE_DOCKER_MIRROR
+	help
+	  Automatically use the Docker registry mirror if it's running and accessible.
+	  This will configure workflows to use localhost:5000 as the registry mirror.
+
+config INSTALL_DOCKER_MIRROR
+	bool "Install Docker registry mirror"
+	output yaml
+	default $(shell, scripts/check_docker_mirror.sh INSTALL_DOCKER_MIRROR)
+	depends on ENABLE_DOCKER_MIRROR
+	help
+	  Enable this to set up a local Docker registry mirror for all guests
+	  and workflows that use Docker containers. This will significantly
+	  speed up container deployments by caching Docker images locally.
+
+	  When enabled, this creates:
+	  - A local Docker registry mirror at /mirror/docker/
+	  - A Docker registry server on port 5000 (configurable)
+	  - Automatic caching of pulled images
+	  - Support for offline operation with cached images
+
+	  This is particularly useful for workflows that use Docker containers
+	  such as:
+	  - MinIO object storage
+	  - Milvus vector database
+	  - AI/ML workflows with containerized services
+	  - Database benchmarking with sysbench
+
+	  The mirror will be available at: http://localhost:5000/
+
+config DOCKER_MIRROR_PORT
+	int "Docker registry mirror port"
+	output yaml
+	default 5000
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  The port for the local Docker registry mirror server.
+	  Default is 5000. Ensure this port is available and not blocked by firewall.
+
+config DOCKER_MIRROR_PATH
+	string "Docker registry mirror storage path"
+	output yaml
+	default "/mirror/docker"
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  Local filesystem path where the Docker registry mirror will store images.
+	  This should be on a filesystem with sufficient space as Docker images
+	  can consume significant storage (several GB to tens of GB depending on
+	  the workflows you use).
+
+config DOCKER_MIRROR_PULL_THROUGH_CACHE
+	bool "Enable pull-through cache mode"
+	output yaml
+	default y
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  Enable pull-through cache mode for the Docker registry mirror.
+	  When enabled, the registry will automatically cache images as they
+	  are pulled through it, acting as a transparent proxy to Docker Hub
+	  and other registries.
+
+	  This is the recommended mode as it requires no changes to image
+	  names and transparently caches all pulled images.
+
+menuconfig DOCKER_MIRROR_PRELOAD_IMAGES
+	bool "Preload Docker images for offline operation"
+	default y
+	depends on INSTALL_DOCKER_MIRROR
+	help
+	  Enable this to preload specific Docker images into the registry mirror
+	  for offline operation. This ensures that commonly used images are
+	  available even without internet connectivity.
+
+	  When enabled, the selected images will be pulled and cached during
+	  the mirror setup process.
+
+if DOCKER_MIRROR_PRELOAD_IMAGES
+
+config DOCKER_MIRROR_PRELOAD_MINIO
+	bool "Preload MinIO container image"
+	output yaml
+	default y
+	help
+	  Preload the MinIO object storage container image.
+	  Image: quay.io/minio/minio:latest
+
+config DOCKER_MIRROR_MINIO_IMAGE
+	string "MinIO container image"
+	output yaml
+	default "quay.io/minio/minio:latest"
+	depends on DOCKER_MIRROR_PRELOAD_MINIO
+	help
+	  The MinIO container image to preload into the Docker registry mirror.
+
+config DOCKER_MIRROR_PRELOAD_MILVUS
+	bool "Preload Milvus vector database images"
+	output yaml
+	default y
+	help
+	  Preload the Milvus vector database container images including:
+	  - Milvus standalone server
+	  - etcd (for metadata storage)
+	  - MinIO (for object storage)
+
+config DOCKER_MIRROR_MILVUS_IMAGE
+	string "Milvus container image"
+	output yaml
+	default "milvusdb/milvus:v2.4.5"
+	depends on DOCKER_MIRROR_PRELOAD_MILVUS
+	help
+	  The Milvus standalone container image to preload.
+
+config DOCKER_MIRROR_MILVUS_ETCD_IMAGE
+	string "Milvus etcd container image"
+	output yaml
+	default "quay.io/coreos/etcd:v3.5.5"
+	depends on DOCKER_MIRROR_PRELOAD_MILVUS
+	help
+	  The etcd container image used by Milvus for metadata storage.
+
+config DOCKER_MIRROR_MILVUS_MINIO_IMAGE
+	string "Milvus MinIO container image"
+	output yaml
+	default "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+	depends on DOCKER_MIRROR_PRELOAD_MILVUS
+	help
+	  The MinIO container image used by Milvus for object storage.
+
+config DOCKER_MIRROR_PRELOAD_POSTGRES
+	bool "Preload PostgreSQL container image"
+	output yaml
+	default y
+	help
+	  Preload the PostgreSQL database container image for database
+	  benchmarking workflows.
+
+config DOCKER_MIRROR_POSTGRES_IMAGE
+	string "PostgreSQL container image"
+	output yaml
+	default "postgres:16-alpine"
+	depends on DOCKER_MIRROR_PRELOAD_POSTGRES
+	help
+	  The PostgreSQL container image to preload.
+
+config DOCKER_MIRROR_PRELOAD_MYSQL
+	bool "Preload MySQL container image"
+	output yaml
+	default y
+	help
+	  Preload the MySQL database container image for database
+	  benchmarking workflows.
+
+config DOCKER_MIRROR_MYSQL_IMAGE
+	string "MySQL container image"
+	output yaml
+	default "mysql:8.0"
+	depends on DOCKER_MIRROR_PRELOAD_MYSQL
+	help
+	  The MySQL container image to preload.
+
+config DOCKER_MIRROR_PRELOAD_MARIADB
+	bool "Preload MariaDB container image"
+	output yaml
+	default y
+	help
+	  Preload the MariaDB database container image for database
+	  benchmarking workflows.
+
+config DOCKER_MIRROR_MARIADB_IMAGE
+	string "MariaDB container image"
+	output yaml
+	default "mariadb:11"
+	depends on DOCKER_MIRROR_PRELOAD_MARIADB
+	help
+	  The MariaDB container image to preload.
+
+config DOCKER_MIRROR_PRELOAD_REDIS
+	bool "Preload Redis container image"
+	output yaml
+	default y
+	help
+	  Preload the Redis in-memory database container image.
+
+config DOCKER_MIRROR_REDIS_IMAGE
+	string "Redis container image"
+	output yaml
+	default "redis:7-alpine"
+	depends on DOCKER_MIRROR_PRELOAD_REDIS
+	help
+	  The Redis container image to preload.
+
+config DOCKER_MIRROR_PRELOAD_ELASTICSEARCH
+	bool "Preload Elasticsearch container image"
+	output yaml
+	default y
+	help
+	  Preload the Elasticsearch search engine container image.
+
+config DOCKER_MIRROR_ELASTICSEARCH_IMAGE
+	string "Elasticsearch container image"
+	output yaml
+	default "docker.elastic.co/elasticsearch/elasticsearch:8.14.0"
+	depends on DOCKER_MIRROR_PRELOAD_ELASTICSEARCH
+	help
+	  The Elasticsearch container image to preload.
+
+config DOCKER_MIRROR_PRELOAD_VLLM
+	bool "Preload vLLM container images"
+	output yaml
+	default y
+	help
+	  Preload vLLM (Large Language Model serving) container images.
+
+config DOCKER_MIRROR_VLLM_IMAGE
+	string "vLLM container image"
+	output yaml
+	default "vllm/vllm-openai:latest"
+	depends on DOCKER_MIRROR_PRELOAD_VLLM
+	help
+	  The vLLM container image for serving large language models.
+
+config DOCKER_MIRROR_VLLM_CPU_IMAGE
+	string "vLLM CPU container image"
+	output yaml
+	default "openeuler/vllm-cpu:latest"
+	depends on DOCKER_MIRROR_PRELOAD_VLLM
+	help
+	  The vLLM CPU-optimized container image for serving large language models
+	  on CPU-only systems.
+
+config DOCKER_MIRROR_PRELOAD_CUSTOM
+	bool "Preload custom Docker images"
+	output yaml
+	default n
+	help
+	  Enable this to specify additional custom Docker images to preload
+	  into the registry mirror.
+
+config DOCKER_MIRROR_CUSTOM_IMAGES
+	string "Custom Docker images (space-separated)"
+	output yaml
+	default ""
+	depends on DOCKER_MIRROR_PRELOAD_CUSTOM
+	help
+	  Space-separated list of additional Docker images to preload.
+	  Example: "nginx:alpine ubuntu:22.04 python:3.11-slim"
+
+	  These images will be pulled and cached during mirror setup.
+
+endif # DOCKER_MIRROR_PRELOAD_IMAGES
+
 endif # ENABLE_LOCAL_LINUX_MIRROR
 endif # TERRAFORM
