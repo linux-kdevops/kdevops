@@ -1,0 +1,36 @@
+---
+# Modular kernel package generation
+# Generates .deb packages using bindeb-pkg
+
+- name: Generate .deb packages from kernel build
+  when: ansible_os_family == "Debian"
+  block:
+    - name: Build bindeb-pkg target
+      community.general.make:
+        chdir: "{{ kernel_build_dir }}"
+        jobs: "{{ package_jobs | default(ansible_processor_nproc) }}"
+        target: "bindeb-pkg"
+        params: "{{ bootlinux_make_params | default({}) }}"
+      environment: "{{ build_environment | default({}) }}"
+
+    - name: Find generated .deb packages
+      ansible.builtin.find:
+        paths: "{{ kernel_build_dir }}/.."
+        patterns: "*.deb"
+        file_type: file
+      register: found_packages
+
+    - name: Store package results
+      ansible.builtin.set_fact:
+        generated_packages: "{{ found_packages.files }}"
+        package_type: "deb"
+
+- name: Extract kernel release for metadata
+  community.general.make:
+    chdir: "{{ kernel_build_dir }}"
+    target: "kernelrelease"
+  register: kernelrelease_result
+
+- name: Store kernel release fact
+  ansible.builtin.set_fact:
+    extracted_kernelrelease: "{{ kernelrelease_result.stdout }}"

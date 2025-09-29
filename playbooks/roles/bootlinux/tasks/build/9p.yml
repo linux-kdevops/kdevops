@@ -288,3 +288,40 @@
     - snaik_oil_file_9p.stat.exists
   run_once: true
   delegate_to: localhost
+
+- name: Generate distribution packages for 9P build
+  when:
+    - bootlinux_9p_build_packages | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: ["build-linux", "9p-packages"]
+  block:
+    - name: Generate kernel packages on controller
+      ansible.builtin.include_tasks: ../packages/generate-packages.yml
+      vars:
+        kernel_build_dir: "{{ bootlinux_9p_host_path }}"
+        package_jobs: "{{ nproc_9p.stdout }}"
+        build_environment: "{{ bootlinux_build_environment }}"
+
+    - name: Create repository directory
+      ansible.builtin.file:
+        path: "{{ bootlinux_9p_repository_path }}/{{ target_linux_ref | default('current') }}"
+        state: directory
+        mode: "u=rwx,g=rx,o=rx"
+
+    - name: Copy packages to repository
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "{{ bootlinux_9p_repository_path }}/{{ target_linux_ref | default('current') }}/"
+        mode: "u=rw,g=r,o=r"
+      loop: "{{ generated_packages }}"
+      loop_control:
+        label: "Copying {{ item.path | basename }}"
+
+    - name: Store kernel release in repository
+      ansible.builtin.lineinfile:
+        create: true
+        line: "{{ extracted_kernelrelease }}"
+        mode: "u=rw,g=r,o=r"
+        path: "{{ bootlinux_9p_repository_path }}/{{ target_linux_ref | default('current') }}/kernel.release"
+

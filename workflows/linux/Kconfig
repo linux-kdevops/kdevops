@@ -147,6 +147,65 @@ config BOOTLINUX_9P_MOUNT_TAG
 	help
 	  This sets the 9p mount tag to use.
 
+config BOOTLINUX_9P_BUILD_PACKAGES
+	bool "Generate distribution packages alongside 9P build"
+	default n
+	help
+	  When enabled, the 9P build process will also generate .deb or .rpm
+	  packages suitable for distribution. Packages are stored in the
+	  artifacts directory and can be used to create local repositories
+	  or for installation on external systems.
+
+	  This combines the speed of 9P builds with the distribution
+	  capabilities of the builder mode.
+
+config BOOTLINUX_9P_REPOSITORY_PATH
+	string "Repository path for built packages"
+	depends on BOOTLINUX_9P_BUILD_PACKAGES
+	default "{{ topdir_path }}/workflows/linux/artifacts"
+	help
+	  Path where kernel packages will be stored. This can be:
+	  - Local path: /home/user/kernel-repo
+	  - NFS mount: /mnt/ci-server/kernel-repo
+	  - Shared storage accessible by CI systems
+
+	  The directory structure will be organized by kernel version:
+	  /path/to/repo/v6.15/linux-image-*.deb
+
+config BOOTLINUX_9P_CHECK_EXISTING
+	bool "Check for existing packages before building"
+	depends on BOOTLINUX_9P_BUILD_PACKAGES
+	default y
+	help
+	  Before building, check if kernel packages already exist in the
+	  repository path. If packages exist and match the target kernel
+	  version, skip the build entirely.
+
+	  This enables efficient CI workflows where multiple jobs can
+	  share pre-built kernel artifacts.
+
+config BOOTLINUX_9P_INSTALL_METHOD
+	choice "Guest installation method when using packages"
+	depends on BOOTLINUX_9P_BUILD_PACKAGES
+	default BOOTLINUX_9P_INSTALL_PACKAGES
+
+config BOOTLINUX_9P_INSTALL_TRADITIONAL
+	bool "Traditional 9P source installation"
+	help
+	  Install kernel using traditional method (mount source tree,
+	  run make modules_install install). This is the original 9P
+	  behavior.
+
+config BOOTLINUX_9P_INSTALL_PACKAGES
+	bool "Package-based installation"
+	help
+	  Install kernel using generated packages via dpkg/rpm.
+	  Packages are shared to guests via separate 9P mount and
+	  installed using package manager. This is cleaner and
+	  enables proper package management on guests.
+
+endchoice
+
 endmenu
 
 endif # BOOTLINUX_9P

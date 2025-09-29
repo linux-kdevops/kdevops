@@ -84,6 +84,10 @@ bootlinux_artifacts_dir: "{{ topdir_path }}/workflows/linux/artifacts"
 kernel_packages: []
 workflow_linux_packaged: false
 
+# 9P package generation defaults
+bootlinux_9p_build_packages: false
+bootlinux_9p_repository_path: "{{ topdir_path }}/workflows/linux/artifacts"
+
 # A/B testing defaults
 bootlinux_ab_same_ref: true
 bootlinux_ab_different_ref: false
