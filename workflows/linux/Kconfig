@@ -149,6 +149,7 @@ config BOOTLINUX_9P_MOUNT_TAG
 
 config BOOTLINUX_9P_BUILD_PACKAGES
 	bool "Generate distribution packages alongside 9P build"
+	output yaml
 	default n
 	help
 	  When enabled, the 9P build process will also generate .deb or .rpm
@@ -161,6 +162,7 @@ config BOOTLINUX_9P_BUILD_PACKAGES
 
 config BOOTLINUX_9P_REPOSITORY_PATH
 	string "Repository path for built packages"
+	output yaml
 	depends on BOOTLINUX_9P_BUILD_PACKAGES
 	default "{{ topdir_path }}/workflows/linux/artifacts"
 	help
@@ -184,8 +186,8 @@ config BOOTLINUX_9P_CHECK_EXISTING
 	  This enables efficient CI workflows where multiple jobs can
 	  share pre-built kernel artifacts.
 
-config BOOTLINUX_9P_INSTALL_METHOD
-	choice "Guest installation method when using packages"
+choice
+	prompt "Guest installation method when using packages"
 	depends on BOOTLINUX_9P_BUILD_PACKAGES
 	default BOOTLINUX_9P_INSTALL_PACKAGES
 

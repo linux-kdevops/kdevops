@@ -26,3 +26,20 @@
       - kmod
       - ccache
     state: present
+
+- name: Install .deb package build dependencies for 9P package generation
+  become: true
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - debhelper-compat
+      - libdw-dev
+      - dpkg-dev
+    state: present
+    update_cache: true
+  retries: 3
+  delay: 5
+  register: debpkg_result
+  until: debpkg_result is succeeded
+  when:
+    - bootlinux_9p_build_packages|default(false)|bool
