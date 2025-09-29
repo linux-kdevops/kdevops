@@ -364,9 +364,9 @@
 
 - name: Run blktests using oscheck.sh
   vars:
-    group: "{{ ansible_host | regex_replace('blktests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    group: "{{ inventory_hostname | regex_replace('blktests-') | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
     ansible_callback_diy_runner_on_ok_msg: |
-      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
+      $ {{ ansible_callback_diy.task.args._raw_params | default('command') }}
       {{ ansible_callback_diy.result.output.stdout | default('') }}
   tags: ["blktests", "run_tests"]
   become: true
