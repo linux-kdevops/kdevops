@@ -1,0 +1,108 @@
+---
+- name: Install vLLM system dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.yum:
+    name:
+      - git
+      - curl
+      - wget
+      - python3
+      - docker
+      - ca-certificates
+      - gnupg
+    state: present
+  when: ansible_distribution_major_version|int <= 7
+  tags: ["vllm", "deps"]
+
+- name: Install vLLM system dependencies (dnf)
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - git
+      - curl
+      - wget
+      - python3
+      - docker
+      - ca-certificates
+      - gnupg
+    state: present
+  when: ansible_distribution_major_version|int >= 8
+  tags: ["vllm", "deps"]
+
+- name: Install Python development dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.yum:
+    name:
+      - python3-devel
+      - python3-setuptools
+      - python3-wheel
+      - gcc
+      - gcc-c++
+      - make
+    state: present
+  when: ansible_distribution_major_version|int <= 7
+  tags: ["vllm", "deps"]
+
+- name: Install Python development dependencies (dnf)
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-devel
+      - python3-setuptools
+      - python3-wheel
+      - gcc
+      - gcc-c++
+      - make
+    state: present
+  when: ansible_distribution_major_version|int >= 8
+  tags: ["vllm", "deps"]
+
+- name: Install Python benchmarking dependencies (yum)
+  become: true
+  become_method: sudo
+  ansible.builtin.yum:
+    name:
+      - python3-aiohttp
+      - python3-numpy
+      - python3-pandas
+      - python3-matplotlib
+    state: present
+  when: ansible_distribution_major_version|int <= 7
+  tags: ["vllm", "deps", "benchmark"]
+
+- name: Install Python benchmarking dependencies (dnf)
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-aiohttp
+      - python3-numpy
+      - python3-pandas
+      - python3-matplotlib
+    state: present
+  when: ansible_distribution_major_version|int >= 8
+  tags: ["vllm", "deps", "benchmark"]
+
+- name: Install Python Kubernetes client library (yum)
+  become: true
+  become_method: sudo
+  ansible.builtin.yum:
+    name:
+      - python3-kubernetes
+    state: present
+  when: ansible_distribution_major_version|int <= 7
+  tags: ["vllm", "deps"]
+
+- name: Install Python Kubernetes client library (dnf)
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - python3-kubernetes
+    state: present
+  when: ansible_distribution_major_version|int >= 8
+  tags: ["vllm", "deps"]
