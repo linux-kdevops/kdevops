@@ -195,6 +195,7 @@ include Makefile.hypervisor-tunings
 endif # CONFIG_HYPERVISOR_TUNING
 
 include Makefile.linux-mirror
+include Makefile.docker-mirror
 
 ifeq (y,$(CONFIG_KDEVOPS_DISTRO_REG_METHOD_TWOLINE))
 DEFAULT_DEPS += playbooks/secret.yml
