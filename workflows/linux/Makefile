@@ -44,6 +44,8 @@ BOOTLINUX_ARGS	+= target_linux_install_b4='$(CONFIG_BOOTLINUX_TEST_MESSAGE_ID_IN
 endif
 
 LINUX_CLONE_DEFAULT_TYPE := linux-clone-clients
+LINUX_BUILD_DEFAULT_TYPE := linux-build-clients
+LINUX_DEPLOY_DEFAULT_TYPE := linux-deploy-clients
 ifeq (y,$(CONFIG_BOOTLINUX_9P))
 BOOTLINUX_ARGS	+= bootlinux_9p_host_path='$(subst ",,$(CONFIG_BOOTLINUX_9P_HOST_PATH))'
 BOOTLINUX_ARGS	+= bootlinux_9p_msize='$(subst ",,$(CONFIG_BOOTLINUX_9P_MSIZE))'
@@ -52,6 +54,8 @@ BOOTLINUX_ARGS	+= bootlinux_9p_security_model='$(subst ",,$(CONFIG_BOOTLINUX_9P_
 BOOTLINUX_ARGS	+= bootlinux_9p_driver='$(subst ",,$(CONFIG_BOOTLINUX_9P_DRIVER))'
 BOOTLINUX_ARGS	+= bootlinux_9p_mount_tag='$(subst ",,$(CONFIG_BOOTLINUX_9P_MOUNT_TAG))'
 LINUX_CLONE_DEFAULT_TYPE := linux-clone-9p
+LINUX_BUILD_DEFAULT_TYPE := linux-build-9p
+LINUX_DEPLOY_DEFAULT_TYPE := linux-deploy-9p
 endif
 
 # XXX: I can't seem to use after this LINUX_DYNAMIC_RUNTIME_VARS += for other
@@ -148,21 +152,43 @@ linux-mount:
 		--tags vars,9p_mount \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
-PHONY += linux-deploy
-linux-deploy:
+PHONY += linux-deploy-clients
+linux-deploy-clients: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline:dev' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
-PHONY += linux-build
-linux-build:
+PHONY += linux-deploy-9p
+linux-deploy-9p: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'localhost' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
+		--extra-vars="$(BOOTLINUX_ARGS)"
+
+PHONY += linux-deploy
+linux-deploy: $(KDEVOPS_NODES) $(LINUX_DEPLOY_DEFAULT_TYPE)
+
+PHONY += linux-build-clients
+linux-build-clients: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline:dev' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,saved,vars \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+
+PHONY += linux-build-9p
+linux-build-9p: $(KDEVOPS_NODES)
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'localhost' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--tags vars,build-linux \
+		--extra-vars="$(BOOTLINUX_ARGS)"
+
+PHONY += linux-build
+linux-build: $(KDEVOPS_NODES) $(LINUX_BUILD_DEFAULT_TYPE)
 
 PHONY += linux-install
 linux-install:

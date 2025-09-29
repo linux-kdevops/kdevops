@@ -126,6 +126,7 @@
   run_once: true
   delegate_to: localhost
   when: not bootlinux_use_config_fragments|default(false)|bool
+  tags: ["build-linux"]
 
 - name: Use configuration fragments for Linux {{ target_linux_tree }} on the control node
   ansible.builtin.import_tasks: ../config-fragments.yml
