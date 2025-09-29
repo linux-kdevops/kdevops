@@ -1,0 +1,129 @@
+---
+# Configure Docker to use /data for storage to avoid filling up root filesystem
+
+- name: Ensure /data/docker directory exists
+  ansible.builtin.file:
+    path: /data/docker
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: yes
+
+- name: Check if Docker daemon.json exists
+  ansible.builtin.stat:
+    path: /etc/docker/daemon.json
+  register: docker_daemon_config
+
+- name: Read existing Docker daemon configuration
+  ansible.builtin.slurp:
+    src: /etc/docker/daemon.json
+  register: docker_daemon_json
+  when: docker_daemon_config.stat.exists
+
+- name: Parse existing Docker daemon configuration
+  set_fact:
+    docker_config: "{{ docker_daemon_json.content | b64decode | from_json }}"
+  when: docker_daemon_config.stat.exists
+
+- name: Initialize Docker configuration if not exists
+  set_fact:
+    docker_config: {}
+  when: not docker_daemon_config.stat.exists
+
+- name: Update Docker data-root configuration
+  set_fact:
+    docker_config: "{{ docker_config | combine({'data-root': '/data/docker'}) }}"
+
+- name: Configure Docker daemon to use /data
+  ansible.builtin.copy:
+    content: "{{ docker_config | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+    owner: root
+    group: root
+    backup: yes
+  become: yes
+  register: docker_daemon_updated
+
+- name: Stop Docker service
+  ansible.builtin.systemd:
+    name: docker
+    state: stopped
+  become: yes
+  when: docker_daemon_updated.changed
+
+# Handle existing Docker data if present
+- name: Check if old Docker data exists
+  ansible.builtin.stat:
+    path: /var/lib/docker
+  register: old_docker_data
+
+- name: Check if Docker data directory has content
+  ansible.builtin.find:
+    paths: /var/lib/docker
+    file_type: any
+    recurse: no
+  register: docker_content
+  when: old_docker_data.stat.exists and old_docker_data.stat.isdir
+
+- name: Move existing Docker data to /data (if any exists)
+  ansible.builtin.shell:
+    cmd: "cp -a /var/lib/docker/. /data/docker/ && rm -rf /var/lib/docker"
+  become: yes
+  when:
+    - docker_daemon_updated.changed
+    - old_docker_data.stat.exists
+    - old_docker_data.stat.isdir
+    - docker_content.matched | default(0) > 0
+
+- name: Remove empty Docker data directory
+  ansible.builtin.file:
+    path: /var/lib/docker
+    state: absent
+  become: yes
+  when:
+    - docker_daemon_updated.changed
+    - old_docker_data.stat.exists
+    - docker_content.matched | default(0) == 0
+
+- name: Start Docker service
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: docker_daemon_updated.changed
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+# Configure minikube to use /data as well
+- name: Ensure /data/minikube directory exists with correct ownership
+  ansible.builtin.file:
+    path: /data/minikube
+    state: directory
+    mode: '0755'
+    owner: kdevops
+    group: kdevops
+    recurse: yes
+  become: yes
+
+# Ensure vLLM specific directories use /data
+- name: Create vLLM data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: kdevops
+    group: kdevops
+  become: yes
+  loop:
+    - /data/vllm
+    - /data/vllm/models
+    - /data/vllm/cache
+    - /data/vllm-benchmark

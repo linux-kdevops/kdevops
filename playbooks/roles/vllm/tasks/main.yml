@@ -1,0 +1,552 @@
+---
+# First ensure we have the data partition for vLLM storage
+- ansible.builtin.include_role:
+    name: create_data_partition
+  tags: ["data_partition", "vllm-storage"]
+
+- name: Set vLLM workflow variables
+  set_fact:
+    vllm_workflow_enabled: true
+  tags: vars
+
+- name: Install vLLM dependencies
+  ansible.builtin.import_tasks: tasks/install-deps/main.yml
+  tags: ["vllm", "deps"]
+
+# Configure Docker and storage to use /data partition BEFORE starting any containers
+- name: Configure Docker to use /data for storage
+  ansible.builtin.import_tasks: tasks/configure-docker-data.yml
+  tags: ["deps", "docker-config", "storage", "vllm-deploy"]
+
+# Route to appropriate deployment method based on configuration
+- name: Deploy vLLM using latest Docker images
+  ansible.builtin.import_tasks: tasks/deploy-docker.yml
+  when: vllm_deployment_type | default('docker') == 'docker'
+  tags: ["vllm-deploy"]
+
+- name: Deploy vLLM Production Stack with Helm
+  ansible.builtin.import_tasks: tasks/deploy-production-stack.yml
+  when: vllm_deployment_type | default('docker') == 'production-stack'
+  tags: ["vllm-deploy"]
+
+- name: Deploy vLLM on bare metal
+  ansible.builtin.import_tasks: tasks/deploy-bare-metal.yml
+  when: vllm_deployment_type | default('docker') == 'bare-metal'
+  tags: ["vllm-deploy"]
+
+# Legacy deployment block - will be moved to deploy-docker.yml
+- name: vLLM deployment tasks (legacy)
+  tags: vllm-deploy
+  when: vllm_deployment_type | default('docker') != 'production-stack'
+  block:
+    - name: Ensure Docker service is started and enabled
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+      become: yes
+
+    - name: Add current user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: Ensure docker socket has correct permissions
+      ansible.builtin.file:
+        path: /var/run/docker.sock
+        mode: '0666'
+      become: yes
+
+    - name: Reset connection to apply docker group membership
+      meta: reset_connection
+
+    - name: Wait for Docker to be accessible
+      ansible.builtin.wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 30
+
+    - name: Test Docker access
+      ansible.builtin.command:
+        cmd: docker version
+      register: docker_test
+      become: no
+      failed_when: false
+      changed_when: false
+      retries: 3
+      delay: 2
+      until: docker_test.rc == 0
+
+    - name: Check if kubectl exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/kubectl
+      register: kubectl_stat
+
+    - name: Get latest kubectl version
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: yes
+      register: kubectl_version
+
+    - name: Download kubectl
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.content | trim }}/bin/linux/amd64/kubectl"
+        dest: /tmp/kubectl
+        mode: '0755'
+
+    - name: Install kubectl
+      when: not kubectl_stat.stat.exists
+      ansible.builtin.copy:
+        src: /tmp/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        remote_src: yes
+
+    - name: Check if helm exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/helm
+      register: helm_stat
+
+    - name: Download Helm installer script
+      when: not helm_stat.stat.exists
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get-helm-3.sh
+        mode: '0755'
+
+    - name: Install Helm
+      when: not helm_stat.stat.exists
+      ansible.builtin.command:
+        cmd: /tmp/get-helm-3.sh
+      environment:
+        HELM_INSTALL_DIR: /usr/local/bin
+
+    - name: Check if minikube exists
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      ansible.builtin.stat:
+        path: /usr/local/bin/minikube
+      register: minikube_stat
+
+    - name: Download Minikube
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - not minikube_stat.stat.exists
+      ansible.builtin.get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /tmp/minikube-linux-amd64
+        mode: '0755'
+
+    - name: Install Minikube
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - not minikube_stat.stat.exists
+      ansible.builtin.copy:
+        src: /tmp/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+        remote_src: yes
+
+    - name: Get available system memory
+      ansible.builtin.command:
+        cmd: free -m
+      register: memory_info
+      changed_when: false
+
+    - name: Calculate minikube memory allocation
+      set_fact:
+        minikube_memory_mb: >-
+          {%- set total_mem = memory_info.stdout_lines[1].split()[1] | int -%}
+          {%- set requested_mem = (vllm_request_memory | default('16Gi') | regex_replace('Gi', '') | int) * 1024 -%}
+          {%- set available_mem = (total_mem * 0.8) | int -%}
+          {{ [requested_mem, available_mem, 3072] | min }}
+
+    - name: Calculate minikube CPU allocation
+      set_fact:
+        minikube_cpus: >-
+          {%- set requested_cpus = vllm_request_cpu | default(4) | int -%}
+          {%- set available_cpus = ansible_processor_vcpus | default(4) | int -%}
+          {{ [requested_cpus, available_cpus] | min }}
+
+    - name: Check if Minikube is already running
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      become: no
+      ansible.builtin.command:
+        cmd: minikube status --format={{ "{{.Host}}" }}
+      register: minikube_status
+      changed_when: false
+      failed_when: false
+
+    - name: Ensure Minikube directory permissions
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      ansible.builtin.file:
+        path: /data/minikube
+        state: directory
+        owner: "kdevops"
+        group: "kdevops"
+        mode: '0755'
+        recurse: yes
+      become: yes
+
+    - name: Display minikube start parameters
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - minikube_status.stdout != 'Running'
+      debug:
+        msg: "Starting minikube with {{ minikube_cpus }} CPUs, {{ minikube_memory_mb }}MB RAM, 50GB disk. This may take 5-10 minutes on first run..."
+
+    - name: Start Minikube cluster
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - minikube_status.stdout != 'Running'
+      become: no
+      ansible.builtin.command:
+        cmd: minikube start --driver=docker --cpus={{ minikube_cpus }} --memory={{ minikube_memory_mb }} --disk-size=50g
+      environment:
+        MINIKUBE_HOME: /data/minikube
+      register: minikube_start
+      changed_when: "'Done!' in minikube_start.stdout"
+      async: 600  # Allow up to 10 minutes
+      poll: 30    # Check every 30 seconds
+
+    - name: Enable GPU support in Minikube (if available)
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - not (vllm_use_cpu_inference | default(false))
+        - vllm_request_gpu | default(1) | int > 0
+      become: no
+      ansible.builtin.command:
+        cmd: minikube addons enable nvidia-gpu-device-plugin
+      ignore_errors: yes
+
+    - name: Disable GPU support in Minikube for CPU inference
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - vllm_use_cpu_inference | default(false)
+        - minikube_status.stdout == 'Running'
+      become: no
+      ansible.builtin.command:
+        cmd: minikube addons disable nvidia-gpu-device-plugin
+      ignore_errors: yes
+
+    - name: Clone vLLM production stack repository
+      git:
+        repo: "{{ vllm_production_stack_repo }}"
+        dest: "{{ vllm_local_path }}/production-stack-repo"
+        version: "{{ vllm_production_stack_version }}"
+        update: yes
+        force: yes
+      when: false  # Not needed for production-stack deployment type which uses Helm
+
+    - name: Create results directory
+      file:
+        path: "{{ vllm_results_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Generate vLLM deployment manifest
+      template:
+        src: vllm-deployment.yaml.j2
+        dest: "{{ vllm_local_path }}/vllm-deployment.yaml"
+        mode: '0644'
+      when: vllm_deployment_type != "production-stack"
+
+    - name: Deploy vLLM using kubectl
+      become: no
+      ansible.builtin.command:
+        cmd: kubectl apply -f {{ vllm_local_path }}/vllm-deployment.yaml
+      register: kubectl_apply
+      changed_when: "'created' in kubectl_apply.stdout or 'configured' in kubectl_apply.stdout"
+      when: vllm_deployment_type != "production-stack"
+
+    - name: Wait for vLLM pods to be ready
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        label_selectors:
+          - app=vllm-server
+      register: pod_list
+      until: pod_list.resources | length > 0 and pod_list.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == pod_list.resources | length
+      retries: 30
+      delay: 10
+      when: vllm_deployment_type != "production-stack"
+
+    - name: Get vLLM service endpoint
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        name: vllm-service
+      register: vllm_service
+
+    - name: Display vLLM endpoint information
+      debug:
+        msg: |
+          vLLM deployed successfully!
+          {% if vllm_k8s_type | default('minikube') == 'minikube' %}
+          To access the API, run: kubectl port-forward -n {{ vllm_helm_namespace | default('vllm-system') }} svc/vllm-service {{ vllm_api_port | default(8000) }}:8000
+          Then access: http://localhost:{{ vllm_api_port | default(8000) }}/v1/models
+          {% else %}
+          API endpoint: {{ vllm_service.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:{{ vllm_api_port | default(8000) }}
+          {% endif %}
+
+- name: vLLM benchmark tasks
+  tags: vllm-benchmark
+  when: vllm_benchmark_enabled | default(true)
+  block:
+    - name: Create benchmark script
+      template:
+        src: vllm-benchmark.py.j2
+        dest: "{{ vllm_local_path }}/benchmark.py"
+        mode: '0755'
+
+    - name: Set up port forwarding for benchmarking
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      become: no
+      ansible.builtin.command:
+        cmd: kubectl port-forward -n {{ vllm_helm_namespace | default('vllm-system') }} svc/vllm-service {{ vllm_api_port | default(8000) }}:8000
+      async: 300
+      poll: 0
+      register: port_forward_task
+
+    - name: Wait for port forwarding to be ready
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      ansible.builtin.wait_for:
+        port: "{{ vllm_api_port | default(8000) }}"
+        host: localhost
+        delay: 2
+        timeout: 30
+
+    - name: Run benchmark
+      become: no
+      ansible.builtin.command:
+        cmd: python3 benchmark.py
+        chdir: "{{ vllm_local_path }}"
+      register: benchmark_output
+      ignore_errors: yes
+
+    - name: Stop port forwarding
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - port_forward_task is defined
+      become: no
+      ansible.builtin.async_status:
+        jid: "{{ port_forward_task.ansible_job_id }}"
+      register: job_result
+      failed_when: false
+
+    - name: Kill port forwarding if still running
+      when:
+        - vllm_k8s_type | default('minikube') == 'minikube'
+        - port_forward_task is defined
+        - job_result.finished is defined
+        - not job_result.finished
+      become: no
+      ansible.builtin.command:
+        cmd: kill {{ port_forward_task.ansible_job_id }}
+      ignore_errors: yes
+
+    - name: Display benchmark results
+      debug:
+        msg: "{{ benchmark_output.stdout }}"
+      when: benchmark_output.stdout is defined
+
+    - name: Collect benchmark results from remote
+      when: benchmark_output.rc == 0
+      fetch:
+        src: "{{ vllm_results_dir }}/benchmark_results.json"
+        dest: "{{ topdir_path }}/workflows/vllm/results/{{ inventory_hostname }}_benchmark_results.json"
+        flat: yes
+      ignore_errors: yes
+
+    - name: Collect system information
+      ansible.builtin.setup:
+        gather_subset:
+          - hardware
+          - virtual
+      register: system_info
+
+    - name: Save system information
+      copy:
+        content: |
+          {
+            "hostname": "{{ inventory_hostname }}",
+            "distribution": "{{ ansible_distribution }}",
+            "distribution_version": "{{ ansible_distribution_version }}",
+            "kernel": "{{ ansible_kernel }}",
+            "processor_count": {{ ansible_processor_count }},
+            "processor_cores": {{ ansible_processor_cores }},
+            "memtotal_mb": {{ ansible_memtotal_mb }},
+            "virtualization_type": "{{ ansible_virtualization_type | default('bare-metal') }}",
+            "virtualization_role": "{{ ansible_virtualization_role | default('host') }}",
+            "date": "{{ ansible_date_time.iso8601 }}"
+          }
+        dest: "{{ vllm_results_dir }}/system_info.json"
+        mode: '0644'
+
+    - name: Collect system information to control host
+      fetch:
+        src: "{{ vllm_results_dir }}/system_info.json"
+        dest: "{{ topdir_path }}/workflows/vllm/results/{{ inventory_hostname }}_system_info.json"
+        flat: yes
+
+- name: vLLM monitoring tasks
+  tags: vllm-monitor
+  when: vllm_observability_enabled | default(true)
+  block:
+    - name: Get Grafana service information
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        name: vllm-grafana
+      register: grafana_service
+
+    - name: Get Prometheus service information
+      become: no
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        name: vllm-prometheus
+      register: prometheus_service
+
+    - name: Display monitoring URLs
+      debug:
+        msg: |
+          Monitoring Stack URLs:
+          {% if vllm_k8s_type | default('minikube') == 'minikube' %}
+          Grafana: kubectl port-forward -n {{ vllm_helm_namespace | default('vllm-system') }} svc/vllm-grafana {{ vllm_grafana_port | default(3000) }}:3000
+          Prometheus: kubectl port-forward -n {{ vllm_helm_namespace | default('vllm-system') }} svc/vllm-prometheus {{ vllm_prometheus_port | default(9090) }}:9090
+          {% else %}
+          Grafana: http://{{ grafana_service.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:{{ vllm_grafana_port | default(3000) }}
+          Prometheus: http://{{ prometheus_service.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:{{ vllm_prometheus_port | default(9090) }}
+          {% endif %}
+
+- name: vLLM cleanup tasks
+  tags: vllm-cleanup
+  block:
+    - name: Delete all resources in vLLM namespace
+      become: no
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        state: absent
+        wait: true
+      ignore_errors: yes
+
+    - name: Delete Helm release if exists
+      become: no
+      kubernetes.core.helm:
+        name: "{{ vllm_helm_release_name | default('vllm') }}"
+        namespace: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        state: absent
+      ignore_errors: yes
+
+- name: vLLM teardown tasks
+  tags: vllm-teardown
+  block:
+    - name: Delete vLLM deployment
+      become: no
+      ansible.builtin.command:
+        cmd: kubectl delete -f {{ vllm_local_path }}/vllm-deployment.yaml
+      ignore_errors: yes
+
+    - name: Delete namespace
+      become: no
+      kubernetes.core.k8s:
+        name: "{{ vllm_helm_namespace | default('vllm-system') }}"
+        api_version: v1
+        kind: Namespace
+        state: absent
+        wait: true
+
+    - name: Stop Minikube if configured
+      when: vllm_k8s_type | default('minikube') == 'minikube'
+      become: no
+      ansible.builtin.command:
+        cmd: minikube stop
+      ignore_errors: yes
+
+- name: vLLM results tasks
+  tags: vllm-results
+  block:
+    - name: Check if benchmark results exist
+      stat:
+        path: "{{ vllm_results_dir }}/benchmark_results.json"
+      register: results_file
+
+    - name: Read benchmark results
+      when: results_file.stat.exists
+      slurp:
+        src: "{{ vllm_results_dir }}/benchmark_results.json"
+      register: benchmark_data
+
+    - name: Display benchmark results
+      when: results_file.stat.exists
+      debug:
+        msg: |
+          === vLLM Benchmark Results ===
+          {{ benchmark_data.content | b64decode | from_json | to_nice_yaml }}
+
+    - name: No results found
+      when: not results_file.stat.exists
+      debug:
+        msg: "No benchmark results found. Run 'make vllm-benchmark' first."
+
+- name: vLLM visualization tasks
+  tags: vllm-visualize
+  block:
+    - name: Create local results directory
+      file:
+        path: "{{ topdir_path }}/workflows/vllm/results/html"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Generate visualization script
+      template:
+        src: vllm-visualize.py.j2
+        dest: "{{ topdir_path }}/workflows/vllm/results/visualize.py"
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Check for collected results
+      find:
+        paths: "{{ topdir_path }}/workflows/vllm/results"
+        patterns: "*_benchmark_results.json"
+      register: result_files
+      delegate_to: localhost
+      run_once: true
+
+    - name: Generate HTML visualization
+      when: result_files.files | length > 0
+      ansible.builtin.command:
+        cmd: python3 visualize.py
+        chdir: "{{ topdir_path }}/workflows/vllm/results"
+      delegate_to: localhost
+      run_once: true
+      register: viz_output
+
+    - name: Display visualization results
+      when: result_files.files | length > 0
+      debug:
+        msg: |
+          Visualization complete!
+          Open the following file in your browser:
+          {{ topdir_path }}/workflows/vllm/results/html/index.html
+
+    - name: No results to visualize
+      when: result_files.files | length == 0
+      debug:
+        msg: "No benchmark results found. Run 'make vllm-benchmark' first to generate data."

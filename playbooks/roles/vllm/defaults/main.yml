@@ -1,0 +1,17 @@
+---
+# vLLM role default variables
+vllm_production_stack_repo: https://github.com/vllm-project/production-stack.git
+vllm_production_stack_version: main
+vllm_local_path: /data/vllm
+vllm_results_dir: "{{ vllm_benchmark_results_dir | default('/data/vllm-benchmark') }}"
+
+# Default image versions that are known to work
+# Note: vLLM v0.10.2+ is recommended for Production Stack with CPU inference
+# - v0.6.5+ required for --no-enable-prefix-caching flag support
+# - v0.6.5-v0.6.6 have CPU inference bugs (NotImplementedError in is_async_output_supported)
+# - v0.10.2 fixes all CPU inference issues and is production ready
+# For CPU inference, use openeuler/vllm-cpu instead of vllm/vllm-openai
+vllm_engine_image_repo: "{{ 'openeuler/vllm-cpu' if vllm_use_cpu_inference | default(false) else 'vllm/vllm-openai' }}"
+vllm_engine_image_tag: "{{ 'latest' if vllm_use_cpu_inference | default(false) else 'v0.10.2' }}"
+vllm_prod_stack_router_image: ghcr.io/vllm-project/production-stack/router
+vllm_prod_stack_router_tag: latest
