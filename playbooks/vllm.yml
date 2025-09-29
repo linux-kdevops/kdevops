@@ -1,0 +1,11 @@
+---
+- name: Deploy and manage vLLM Production Stack
+  hosts: baseline:dev
+  become: yes
+  become_method: sudo
+  vars:
+    ansible_ssh_pipelining: true
+  roles:
+    - role: create_data_partition
+      tags: ["data_partition"]
+    - role: vllm

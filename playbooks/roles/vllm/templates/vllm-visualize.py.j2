@@ -1,0 +1,434 @@
+#!/usr/bin/env python3
+{% raw %}
+"""
+vLLM Benchmark Results Visualization
+Generates HTML report with performance graphs
+"""
+
+import json
+import os
+import glob
+from datetime import datetime
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import numpy as np
+
+def load_results():
+    """Load all benchmark and system info JSON files"""
+    results = {}
+
+    # Load benchmark results
+    for filename in glob.glob("*_benchmark_results.json"):
+        hostname = filename.replace("_benchmark_results.json", "")
+        try:
+            with open(filename, 'r') as f:
+                results[hostname] = {'benchmark': json.load(f)}
+        except:
+            print(f"Warning: Could not load {filename}")
+            continue
+
+    # Load system info
+    for filename in glob.glob("*_system_info.json"):
+        hostname = filename.replace("_system_info.json", "")
+        try:
+            with open(filename, 'r') as f:
+                if hostname in results:
+                    results[hostname]['system'] = json.load(f)
+                else:
+                    results[hostname] = {'system': json.load(f)}
+        except:
+            print(f"Warning: Could not load {filename}")
+
+    return results
+
+def create_latency_chart(results):
+    """Create latency comparison chart"""
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    hosts = []
+    p50_values = []
+    p95_values = []
+    p99_values = []
+
+    for hostname, data in results.items():
+        if 'benchmark' in data:
+            hosts.append(hostname)
+            benchmark = data['benchmark']
+            p50_values.append(benchmark.get('latency_p50_ms', 0))
+            p95_values.append(benchmark.get('latency_p95_ms', 0))
+            p99_values.append(benchmark.get('latency_p99_ms', 0))
+
+    if hosts:
+        x = np.arange(len(hosts))
+        width = 0.25
+
+        ax.bar(x - width, p50_values, width, label='P50', color='green', alpha=0.8)
+        ax.bar(x, p95_values, width, label='P95', color='orange', alpha=0.8)
+        ax.bar(x + width, p99_values, width, label='P99', color='red', alpha=0.8)
+
+        ax.set_xlabel('Host')
+        ax.set_ylabel('Latency (ms)')
+        ax.set_title('vLLM Response Latency by Percentile')
+        ax.set_xticks(x)
+        ax.set_xticklabels(hosts, rotation=45, ha='right')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        plt.savefig('html/latency_chart.png', dpi=100, bbox_inches='tight')
+        plt.close()
+        return True
+    return False
+
+def create_throughput_chart(results):
+    """Create throughput comparison chart"""
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    hosts = []
+    rps_values = []
+
+    for hostname, data in results.items():
+        if 'benchmark' in data:
+            hosts.append(hostname)
+            benchmark = data['benchmark']
+            rps_values.append(benchmark.get('requests_per_second', 0))
+
+    if hosts:
+        colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(hosts)))
+        bars = ax.bar(hosts, rps_values, color=colors, alpha=0.8)
+
+        # Add value labels on bars
+        for bar, value in zip(bars, rps_values):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{value:.0f}',
+                   ha='center', va='bottom')
+
+        ax.set_xlabel('Host')
+        ax.set_ylabel('Requests per Second')
+        ax.set_title('vLLM Throughput Performance')
+        ax.set_xticklabels(hosts, rotation=45, ha='right')
+        ax.grid(True, alpha=0.3, axis='y')
+
+        plt.tight_layout()
+        plt.savefig('html/throughput_chart.png', dpi=100, bbox_inches='tight')
+        plt.close()
+        return True
+    return False
+
+def create_success_rate_chart(results):
+    """Create success rate pie chart"""
+    total_successful = 0
+    total_failed = 0
+
+    for hostname, data in results.items():
+        if 'benchmark' in data:
+            benchmark = data['benchmark']
+            total_successful += benchmark.get('successful_requests', 0)
+            total_failed += benchmark.get('failed_requests', 0)
+
+    if total_successful > 0 or total_failed > 0:
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        sizes = [total_successful, total_failed]
+        labels = ['Successful', 'Failed']
+        colors = ['#28a745', '#dc3545']
+        explode = (0.05, 0.05)
+
+        ax.pie(sizes, explode=explode, labels=labels, colors=colors,
+               autopct='%1.1f%%', shadow=True, startangle=90)
+        ax.axis('equal')
+        ax.set_title('Overall Request Success Rate')
+
+        plt.tight_layout()
+        plt.savefig('html/success_rate_chart.png', dpi=100, bbox_inches='tight')
+        plt.close()
+        return True
+    return False
+
+def generate_html_report(results):
+    """Generate HTML report with embedded charts"""
+
+    # Calculate summary statistics
+    total_requests = 0
+    total_successful = 0
+    total_failed = 0
+    avg_rps = []
+    avg_p50 = []
+    avg_p95 = []
+    avg_p99 = []
+
+    for hostname, data in results.items():
+        if 'benchmark' in data:
+            benchmark = data['benchmark']
+            total_requests += benchmark.get('total_requests', 0)
+            total_successful += benchmark.get('successful_requests', 0)
+            total_failed += benchmark.get('failed_requests', 0)
+            avg_rps.append(benchmark.get('requests_per_second', 0))
+            avg_p50.append(benchmark.get('latency_p50_ms', 0))
+            avg_p95.append(benchmark.get('latency_p95_ms', 0))
+            avg_p99.append(benchmark.get('latency_p99_ms', 0))
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vLLM Benchmark Results - {{ ansible_date_time.date }}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }}
+        h1 {{
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }}
+        h2 {{
+            color: #34495e;
+            margin-top: 30px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }}
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }}
+        .metric-card {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .metric-value {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }}
+        .metric-label {{
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }}
+        th {{
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+        }}
+        tr:hover {{
+            background: #f8f9fa;
+        }}
+        .chart-container {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .chart-container img {{
+            max-width: 100%;
+            height: auto;
+        }}
+        .success {{ color: #27ae60; font-weight: bold; }}
+        .warning {{ color: #f39c12; font-weight: bold; }}
+        .error {{ color: #e74c3c; font-weight: bold; }}
+        .footer {{
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            color: #7f8c8d;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <h1>🚀 vLLM Benchmark Results Report</h1>
+    <p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+
+    <h2>📊 Summary Statistics</h2>
+    <div class="summary-grid">
+        <div class="metric-card">
+            <div class="metric-value">{total_requests:,d}</div>
+            <div class="metric-label">Total Requests</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{np.mean(avg_rps) if avg_rps else 0:.0f}</div>
+            <div class="metric-label">Avg Requests/Sec</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{np.mean(avg_p50) if avg_p50 else 0:.1f}ms</div>
+            <div class="metric-label">Avg P50 Latency</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{np.mean(avg_p95) if avg_p95 else 0:.1f}ms</div>
+            <div class="metric-label">Avg P95 Latency</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{np.mean(avg_p99) if avg_p99 else 0:.1f}ms</div>
+            <div class="metric-label">Avg P99 Latency</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" class="{'success' if total_failed == 0 else 'warning' if total_failed < total_successful else 'error'}">
+                {(total_successful / (total_successful + total_failed) * 100) if (total_successful + total_failed) > 0 else 0:.1f}%
+            </div>
+            <div class="metric-label">Success Rate</div>
+        </div>
+    </div>
+
+    <h2>🖥️ Test Environment Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Host</th>
+                <th>Distribution</th>
+                <th>Kernel</th>
+                <th>CPUs</th>
+                <th>Memory (MB)</th>
+                <th>Virtualization</th>
+                <th>Test Date</th>
+            </tr>
+        </thead>
+        <tbody>"""
+
+    for hostname, data in results.items():
+        if 'system' in data:
+            sys = data['system']
+            html_content += f"""
+            <tr>
+                <td><strong>{hostname}</strong></td>
+                <td>{sys.get('distribution', 'N/A')} {sys.get('distribution_version', '')}</td>
+                <td>{sys.get('kernel', 'N/A')}</td>
+                <td>{sys.get('processor_cores', 'N/A')}</td>
+                <td>{'{:,}'.format(sys.get('memtotal_mb', 0)) if isinstance(sys.get('memtotal_mb', 0), int) else 'N/A'}</td>
+                <td>{sys.get('virtualization_type', 'N/A')}</td>
+                <td>{sys.get('date', 'N/A')}</td>
+            </tr>"""
+
+    html_content += """
+        </tbody>
+    </table>
+
+    <h2>📈 Performance Results</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Host</th>
+                <th>Total Requests</th>
+                <th>Successful</th>
+                <th>Failed</th>
+                <th>Requests/Sec</th>
+                <th>P50 (ms)</th>
+                <th>P95 (ms)</th>
+                <th>P99 (ms)</th>
+                <th>Mean (ms)</th>
+            </tr>
+        </thead>
+        <tbody>"""
+
+    for hostname, data in results.items():
+        if 'benchmark' in data:
+            bench = data['benchmark']
+            success_class = 'success' if bench.get('failed_requests', 0) == 0 else 'warning' if bench.get('failed_requests', 0) < bench.get('successful_requests', 1) else 'error'
+            html_content += f"""
+            <tr>
+                <td><strong>{hostname}</strong></td>
+                <td>{bench.get('total_requests', 0):,d}</td>
+                <td class="success">{bench.get('successful_requests', 0):,d}</td>
+                <td class="{success_class}">{bench.get('failed_requests', 0):,d}</td>
+                <td>{bench.get('requests_per_second', 0):.1f}</td>
+                <td>{bench.get('latency_p50_ms', 0):.1f}</td>
+                <td>{bench.get('latency_p95_ms', 0):.1f}</td>
+                <td>{bench.get('latency_p99_ms', 0):.1f}</td>
+                <td>{bench.get('mean_latency_ms', 0):.1f}</td>
+            </tr>"""
+
+    html_content += """
+        </tbody>
+    </table>
+
+    <h2>📊 Performance Visualizations</h2>"""
+
+    # Add charts if they exist
+    if os.path.exists('html/throughput_chart.png'):
+        html_content += """
+    <div class="chart-container">
+        <h3>Throughput Comparison</h3>
+        <img src="throughput_chart.png" alt="Throughput Chart">
+    </div>"""
+
+    if os.path.exists('html/latency_chart.png'):
+        html_content += """
+    <div class="chart-container">
+        <h3>Latency Distribution</h3>
+        <img src="latency_chart.png" alt="Latency Chart">
+    </div>"""
+
+    if os.path.exists('html/success_rate_chart.png'):
+        html_content += """
+    <div class="chart-container">
+        <h3>Success Rate Overview</h3>
+        <img src="success_rate_chart.png" alt="Success Rate Chart">
+    </div>"""
+
+    html_content += f"""
+    <div class="footer">
+        <p>Generated by vLLM kdevops workflow | Configuration: {% endraw %}{{ vllm_model_url | default('facebook/opt-125m') }}{% raw %}</p>
+        <p>CPU Inference Mode: {% endraw %}{{ vllm_use_cpu_inference | default(false) }}{% raw %} | Max Model Length: {% endraw %}{{ vllm_max_model_len | default(2048) }}{% raw %}</p>
+    </div>
+</body>
+</html>"""
+
+    with open('html/index.html', 'w') as f:
+        f.write(html_content)
+
+    print(f"HTML report generated: html/index.html")
+
+def main():
+    """Main execution function"""
+    print("Loading benchmark results...")
+    results = load_results()
+
+    if not results:
+        print("Error: No results found to visualize")
+        return 1
+
+    print(f"Found results for {len(results)} hosts")
+
+    # Create charts
+    print("Generating performance charts...")
+    create_throughput_chart(results)
+    create_latency_chart(results)
+    create_success_rate_chart(results)
+
+    # Generate HTML report
+    print("Generating HTML report...")
+    generate_html_report(results)
+
+    print("Visualization complete!")
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
+{% endraw %}
