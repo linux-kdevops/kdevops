@@ -6,6 +6,10 @@ config MINIO_CONTAINER_IMAGE_STRING
 	The MinIO container image to use for S3 storage benchmarking.
 	Using a recent stable release with performance improvements.
 
+	When KDEVOPS_DOCKER_MIRROR is enabled, Docker's native registry-mirrors
+	configuration automatically uses the local cache transparently without
+	requiring image URL rewriting.
+
 config MINIO_CONTAINER_NAME
 	string "The local MinIO container name"
 	default "minio-warp-server"
