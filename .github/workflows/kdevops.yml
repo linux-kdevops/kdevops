@@ -207,7 +207,9 @@ jobs:
             git fetch --depth=1 origin refs/pull/${{ github.event.number }}/head:pr-branch
             git checkout pr-branch
           else
-            git checkout ${{ github.sha }}
+            # For push events, checkout the branch head instead of specific SHA
+            git fetch --depth=1 origin ${{ github.ref }}
+            git checkout FETCH_HEAD
           fi
 
       - name: Report kdevops commit information
