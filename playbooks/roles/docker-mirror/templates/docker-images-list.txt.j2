@@ -1,0 +1,52 @@
+# Docker images list for kdevops workflows
+# This file is auto-generated from Kconfig mirror configuration
+
+# MinIO object storage
+{% if docker_mirror_preload_minio | default(False) | bool %}
+{{ docker_mirror_minio_image }}
+{% endif %}
+
+# Milvus vector database
+{% if docker_mirror_preload_milvus | default(False) | bool %}
+{{ docker_mirror_milvus_image }}
+{{ docker_mirror_milvus_etcd_image }}
+{{ docker_mirror_milvus_minio_image }}
+{% endif %}
+
+# PostgreSQL database
+{% if docker_mirror_preload_postgres | default(False) | bool %}
+{{ docker_mirror_postgres_image }}
+{% endif %}
+
+# MySQL database
+{% if docker_mirror_preload_mysql | default(False) | bool %}
+{{ docker_mirror_mysql_image }}
+{% endif %}
+
+# MariaDB database
+{% if docker_mirror_preload_mariadb | default(False) | bool %}
+{{ docker_mirror_mariadb_image }}
+{% endif %}
+
+# Redis in-memory database
+{% if docker_mirror_preload_redis | default(False) | bool %}
+{{ docker_mirror_redis_image }}
+{% endif %}
+
+# Elasticsearch search engine
+{% if docker_mirror_preload_elasticsearch | default(False) | bool %}
+{{ docker_mirror_elasticsearch_image }}
+{% endif %}
+
+# vLLM for LLM serving
+{% if docker_mirror_preload_vllm | default(False) | bool %}
+{{ docker_mirror_vllm_image }}
+{{ docker_mirror_vllm_cpu_image }}
+{% endif %}
+
+# Custom images
+{% if docker_mirror_preload_custom | default(False) | bool and docker_mirror_custom_images | default('') != '' %}
+{% for image in docker_mirror_custom_images.split() %}
+{{ image }}
+{% endfor %}
+{% endif %}
