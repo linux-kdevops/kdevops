@@ -335,6 +335,7 @@ config LIBVIRT_LARGE_CPU
 
 choice
 	prompt "Guest vCPUs"
+	default LIBVIRT_VCPUS_64 if KDEVOPS_WORKFLOW_DEDICATE_VLLM
 	default LIBVIRT_VCPUS_8
 
 config LIBVIRT_VCPUS_2
@@ -408,6 +409,7 @@ config LIBVIRT_VCPUS_COUNT
 
 choice
 	prompt "How much GiB memory to use per guest"
+	default LIBVIRT_MEM_64G if KDEVOPS_WORKFLOW_DEDICATE_VLLM
 	default LIBVIRT_MEM_4G
 
 config LIBVIRT_MEM_2G
@@ -478,6 +480,7 @@ config LIBVIRT_MEM_MB
 config LIBVIRT_IMAGE_SIZE
 	string "VM image size"
 	output yaml
+	default "100G" if KDEVOPS_WORKFLOW_DEDICATE_VLLM
 	default "20G"
 	depends on GUESTFS
 	help

@@ -1,0 +1,50 @@
+---
+- name: Install vLLM system dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.zypper:
+    name:
+      - git
+      - curl
+      - wget
+      - python3
+      - docker
+      - ca-certificates
+      - gnupg
+    state: present
+  tags: ["vllm", "deps"]
+
+- name: Install Python development dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.zypper:
+    name:
+      - python3-devel
+      - python3-setuptools
+      - python3-wheel
+      - gcc
+      - gcc-c++
+      - make
+    state: present
+  tags: ["vllm", "deps"]
+
+- name: Install Python benchmarking dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.zypper:
+    name:
+      - python3-aiohttp
+      - python3-numpy
+      - python3-pandas
+      - python3-matplotlib
+    state: present
+  tags: ["vllm", "deps", "benchmark"]
+
+- name: Install Python Kubernetes client library
+  become: true
+  become_method: sudo
+  ansible.builtin.zypper:
+    name:
+      - python3-kubernetes
+    state: present
+  tags: ["vllm", "deps"]

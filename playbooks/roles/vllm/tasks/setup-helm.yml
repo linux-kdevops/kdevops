@@ -1,0 +1,33 @@
+---
+# Setup Helm for vLLM deployment
+- name: Setup Helm
+  block:
+    - name: Check if helm exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/helm
+      register: helm_stat
+
+    - name: Download Helm installer script
+      when: not helm_stat.stat.exists
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get-helm-3.sh
+        mode: '0755'
+
+    - name: Install Helm
+      when: not helm_stat.stat.exists
+      ansible.builtin.command:
+        cmd: /tmp/get-helm-3.sh
+      environment:
+        HELM_INSTALL_DIR: /usr/local/bin
+      become: yes
+
+    - name: Verify Helm installation
+      ansible.builtin.command:
+        cmd: helm version --short
+      register: helm_version
+      changed_when: false
+
+    - name: Display Helm version
+      debug:
+        msg: "Helm version: {{ helm_version.stdout }}"
