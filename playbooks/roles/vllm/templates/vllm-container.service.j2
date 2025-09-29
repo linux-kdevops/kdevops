@@ -1,0 +1,80 @@
+[Unit]
+Description=vLLM Container Service
+Documentation=https://docs.vllm.ai
+After=network.target {{ container_runtime | default('docker') }}.service
+Requires={{ container_runtime | default('docker') }}.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+User={{ ansible_user_id }}
+Group={{ ansible_user_gid }}
+
+# Environment variables
+Environment="MODEL={{ vllm_model_url | default('facebook/opt-125m') }}"
+Environment="PORT={{ vllm_api_port | default(8000) }}"
+Environment="MAX_MODEL_LEN={{ vllm_max_model_len | default(2048) }}"
+{% if vllm_hf_token is defined and vllm_hf_token %}
+Environment="HF_TOKEN={{ vllm_hf_token }}"
+{% endif %}
+{% if vllm_api_key is defined and vllm_api_key %}
+Environment="VLLM_API_KEY={{ vllm_api_key }}"
+{% endif %}
+
+# Container command
+{% if container_runtime | default('docker') == 'docker' %}
+ExecStartPre=/usr/bin/{{ container_runtime }} pull {{ 'substratusai/vllm:v0.6.3-cpu' if not has_nvidia_gpu else 'vllm/vllm-openai:latest' }}
+ExecStart=/usr/bin/{{ container_runtime }} run --rm \
+    --name {{ vllm_bare_metal_service_name | default('vllm') }} \
+    -p {{ vllm_api_port | default(8000) }}:8000 \
+    -v {{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}:/data \
+    -v {{ vllm_bare_metal_log_dir | default('/var/log/vllm') }}:/logs \
+    {% if has_nvidia_gpu %}--gpus all {% endif %}\
+    {% if vllm_hf_token is defined and vllm_hf_token %}-e HF_TOKEN=${HF_TOKEN} {% endif %}\
+    {% if vllm_api_key is defined and vllm_api_key %}-e VLLM_API_KEY=${VLLM_API_KEY} {% endif %}\
+    {{ 'substratusai/vllm:v0.6.3-cpu' if not has_nvidia_gpu else 'vllm/vllm-openai:latest' }} \
+    --model ${MODEL} \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --max-model-len ${MAX_MODEL_LEN} \
+    {% if not has_nvidia_gpu %}--device cpu --dtype float32 {% endif %}\
+    {% if has_nvidia_gpu %}--tensor-parallel-size {{ vllm_tensor_parallel_size | default(1) }} {% endif %}\
+    {% if has_nvidia_gpu %}--gpu-memory-utilization {{ vllm_gpu_memory_utilization | default('0.9') }} {% endif %}\
+    {% if vllm_enable_prefix_caching | default(false) %}--enable-prefix-caching {% endif %}\
+    {% if vllm_enable_chunked_prefill | default(false) %}--enable-chunked-prefill {% endif %}\
+    --download-dir {{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}/models
+
+ExecStop=/usr/bin/{{ container_runtime }} stop {{ vllm_bare_metal_service_name | default('vllm') }}
+{% else %}
+# Podman support
+ExecStartPre=/usr/bin/podman pull {{ 'substratusai/vllm:v0.6.3-cpu' if not has_nvidia_gpu else 'vllm/vllm-openai:latest' }}
+ExecStart=/usr/bin/podman run --rm \
+    --name {{ vllm_bare_metal_service_name | default('vllm') }} \
+    -p {{ vllm_api_port | default(8000) }}:8000 \
+    -v {{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}:/data:Z \
+    -v {{ vllm_bare_metal_log_dir | default('/var/log/vllm') }}:/logs:Z \
+    {% if has_nvidia_gpu %}--device nvidia.com/gpu=all {% endif %}\
+    {% if vllm_hf_token is defined and vllm_hf_token %}-e HF_TOKEN=${HF_TOKEN} {% endif %}\
+    {% if vllm_api_key is defined and vllm_api_key %}-e VLLM_API_KEY=${VLLM_API_KEY} {% endif %}\
+    {{ 'substratusai/vllm:v0.6.3-cpu' if not has_nvidia_gpu else 'vllm/vllm-openai:latest' }} \
+    --model ${MODEL} \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --max-model-len ${MAX_MODEL_LEN} \
+    {% if not has_nvidia_gpu %}--device cpu --dtype float32 {% endif %}\
+    {% if has_nvidia_gpu %}--tensor-parallel-size {{ vllm_tensor_parallel_size | default(1) }} {% endif %}\
+    {% if has_nvidia_gpu %}--gpu-memory-utilization {{ vllm_gpu_memory_utilization | default('0.9') }} {% endif %}\
+    {% if vllm_enable_prefix_caching | default(false) %}--enable-prefix-caching {% endif %}\
+    {% if vllm_enable_chunked_prefill | default(false) %}--enable-chunked-prefill {% endif %}\
+    --download-dir {{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}/models
+
+ExecStop=/usr/bin/podman stop {{ vllm_bare_metal_service_name | default('vllm') }}
+{% endif %}
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

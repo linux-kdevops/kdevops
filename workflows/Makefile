@@ -74,6 +74,10 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_AI))
 include workflows/ai/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_AI == y
 
+ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_VLLM))
+include workflows/vllm/Makefile
+endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_VLLM == y
+
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_MINIO))
 include workflows/minio/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_MINIO == y
