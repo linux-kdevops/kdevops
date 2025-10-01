@@ -35,6 +35,13 @@ resource "oci_core_instance" "kdevops_instance" {
 
   metadata = {
     ssh_authorized_keys = file(var.ssh_config_pubkey_file)
+    user_data = base64encode(templatefile("${path.module}/../scripts/cloud-init.sh", {
+      user_data_log_dir = "/var/log/kdevops"
+      user_data_enabled = "yes"
+      ssh_config_user   = var.ssh_config_user
+      ssh_config_port   = var.ssh_config_port
+      new_hostname      = element(var.kdevops_nodes, count.index)
+    }))
   }
 
   preemptible_instance_config {
@@ -155,8 +162,8 @@ resource "oci_core_security_list" "kdevops_security_list" {
     source_type = "CIDR_BLOCK"
     stateless   = false
     tcp_options {
-      min = 22
-      max = 22
+      min = var.ssh_config_port
+      max = var.ssh_config_port
     }
   }
   ingress_security_rules {

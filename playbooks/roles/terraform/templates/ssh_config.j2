@@ -1,7 +1,7 @@
 Host {{ item.key }} {{ item.value }}
 	HostName {{ item.value }}
 	User {{ kdevops_terraform_ssh_config_user }}
-	Port 22
+	Port {{ ansible_cfg_ssh_port }}
 	IdentityFile {{ kdevops_terraform_ssh_config_privkey_file }}
 {% if ssh_config_kexalgorithms %}
 	KexAlgorithms {{ ssh_config_kexalgorithms }}

@@ -39,8 +39,8 @@ resource "aws_security_group" "kdevops_sec_group" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
-    from_port = 22
-    to_port   = 22
+    from_port = var.ssh_config_port
+    to_port   = var.ssh_config_port
     protocol  = "tcp"
   }
 
@@ -82,6 +82,7 @@ data "template_file" "script_user_data" {
     user_data_log_dir = var.user_data_log_dir
     user_data_enabled = var.user_data_enabled
     ssh_config_user   = var.ssh_config_user
+    ssh_config_port   = var.ssh_config_port
     new_hostname      = element(var.kdevops_nodes, count.index),
   }
 }
