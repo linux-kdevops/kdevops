@@ -71,7 +71,16 @@
               "--hostname", inventory_hostname,
               "--ssh-inject", "kdevops:file:" + ssh_key + ".pub",
               "--timezone", host_timezone.stdout
-            ]
+            ] + (
+              [
+                "--run-command", "sed -i '/^#*Port /d' /etc/ssh/sshd_config",
+                "--append-line", "/etc/ssh/sshd_config:Port " + (ansible_cfg_ssh_port | string),
+                "--firstboot-command", "semanage port -a -t ssh_port_t -p tcp " + (ansible_cfg_ssh_port | string) + " 2>/dev/null || semanage port -m -t ssh_port_t -p tcp " + (ansible_cfg_ssh_port | string) + "; systemctl restart sshd",
+                "--firstboot-command", "if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-enabled firewalld >/dev/null 2>&1; then firewall-cmd --permanent --add-port=" + (ansible_cfg_ssh_port | string) + "/tcp && firewall-cmd --reload; fi",
+                "--firstboot-command", "if command -v ufw >/dev/null 2>&1 && systemctl is-active ufw >/dev/null 2>&1; then ufw allow " + (ansible_cfg_ssh_port | string) + "/tcp; fi"
+              ]
+              if ansible_cfg_ssh_port | int != 22 else []
+            )
           }}
 
     - name: Build the root image for each target node (as root)
