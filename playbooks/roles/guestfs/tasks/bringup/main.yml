@@ -61,35 +61,30 @@
       register: host_timezone
       delegate_to: localhost
 
+    - name: Build virt-sysprep command arguments for each target node
+      ansible.builtin.set_fact:
+        virt_sysprep_args: >-
+          {{
+            [
+              "virt-sysprep",
+              "-a", root_image,
+              "--hostname", inventory_hostname,
+              "--ssh-inject", "kdevops:file:" + ssh_key + ".pub",
+              "--timezone", host_timezone.stdout
+            ]
+          }}
+
     - name: Build the root image for each target node (as root)
       become: true
       become_method: ansible.builtin.sudo
       ansible.builtin.command:
-        argv:
-          - "virt-sysprep"
-          - "-a"
-          - "{{ root_image }}"
-          - "--hostname"
-          - "{{ inventory_hostname }}"
-          - "--ssh-inject"
-          - "kdevops:file:{{ ssh_key }}.pub"
-          - "--timezone"
-          - "{{ host_timezone.stdout }}"
+        argv: "{{ virt_sysprep_args }}"
       when:
         - libvirt_uri_system|bool
 
     - name: Build the root image for each target node (non-root)
       ansible.builtin.command:
-        argv:
-          - "virt-sysprep"
-          - "-a"
-          - "{{ root_image }}"
-          - "--hostname"
-          - "{{ inventory_hostname }}"
-          - "--ssh-inject"
-          - "kdevops:file:{{ ssh_key }}.pub"
-          - "--timezone"
-          - "{{ host_timezone.stdout }}"
+        argv: "{{ virt_sysprep_args }}"
       when:
         - not libvirt_uri_system|bool
 
