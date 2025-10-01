@@ -47,7 +47,10 @@ playbook_on_stats_msg_color = bright green
 [callback_profile_tasks]
 summary_only = true
 {% endif %}
+[ssh_connection]
+remote_port = {{ ansible_cfg_ssh_port }}
 {% if ansible_facts['distribution'] == 'openSUSE' %}
+
 [connection]
 retries = {{ ansible_cfg_reconnection_retries }}
 {% endif %}

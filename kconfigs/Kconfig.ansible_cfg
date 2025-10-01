@@ -316,6 +316,47 @@ config ANSIBLE_CFG_INVENTORY
 
 endif # ANSIBLE_CFG_INVENTORY_CUSTOM
 
+config ANSIBLE_CFG_SSH_PORT_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_SSH_PORT)
+
+config ANSIBLE_CFG_SSH_PORT_CUSTOM
+	bool "Enable a custom Ansible SSH port setting"
+	default n
+	help
+	  When this setting is enabled, specify the SSH port for
+	  Ansible to use when connecting to target nodes.
+
+	  When this setting is disabled, kdevops uses the default
+	  SSH port (22), which can be overridden with
+	  "ANSIBLE_CFG_SSH_PORT=NN" on the "make" command line.
+
+	  This is useful when your target hosts use a non-standard
+	  SSH port for security or network configuration reasons.
+
+if ANSIBLE_CFG_SSH_PORT_CUSTOM
+
+config ANSIBLE_CFG_SSH_PORT
+	int "Ansible SSH port"
+	output yaml
+	help
+	  Set the SSH port for Ansible to use when connecting to target
+	  nodes. The default port is 22.
+
+	  https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ssh_connection.html#parameter-remote_port
+
+endif # ANSIBLE_CFG_SSH_PORT_CUSTOM
+
+if !ANSIBLE_CFG_SSH_PORT_CUSTOM
+
+config ANSIBLE_CFG_SSH_PORT
+	int
+	output yaml
+	default 22 if !ANSIBLE_CFG_SSH_PORT_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(ANSIBLE_CFG_SSH_PORT)) if ANSIBLE_CFG_SSH_PORT_SET_BY_CLI
+
+endif # !ANSIBLE_CFG_SSH_PORT_CUSTOM
+
 if DISTRO_OPENSUSE
 
 config ANSIBLE_CFG_RECONNECTION_RETRIES
