@@ -76,7 +76,7 @@ resource "aws_key_pair" "kdevops_keypair" {
 
 data "template_file" "script_user_data" {
   count    = local.kdevops_num_boxes
-  template = file("templates/script.sh")
+  template = file("../scripts/cloud-init.sh")
 
   vars = {
     user_data_log_dir = var.user_data_log_dir
