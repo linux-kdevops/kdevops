@@ -98,12 +98,121 @@ If you know these failures are real, you can commit them:
 It would be nice for you to commit back over results to our archive, specially
 if you are adding expunges for a kernel.
 
-To do that do:
+## Submitting results to the community archive
 
-bash
+kdevops maintains a community results archive at
+[kdevops-results-archive](https://github.com/linux-kdevops/kdevops-results-archive)
+to help track test baselines across different kernels, configurations, and
+environments. You can contribute your test results to help the community build
+confidence in kernel baselines.
+
+### Prerequisites
+
+1. Clone the results archive repository in the same parent directory as kdevops:
+
+```bash
+cd ..  # Go to parent directory of kdevops
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/linux-kdevops/kdevops-results-archive.git
+cd kdevops  # Return to kdevops directory
 ```
+
+The `GIT_LFS_SKIP_SMUDGE=1` flag prevents downloading all result tarballs,
+saving significant bandwidth (results in a ~2.5M directory instead of 218M+).
+
+2. Ensure you have run fstests and have results available:
+
+```bash
+make fstests-baseline
+# or
+make fstests
+```
+
+### Using copy-results.sh
+
+The script automates copying your results to the archive with proper organization:
+
+```bash
 scripts/workflows/fstests/copy-results.sh
 ```
+
+The script will:
+
+1. **Detect your environment**: Automatically determines if you're using
+   libvirt-qemu, cloud, or custom infrastructure
+
+2. **Organize results**: Creates a directory structure following the pattern:
+   ```
+   workflows/fstests/results/archive/$USER/$FSTYP/$TYPE/YYYYMMDD-NNNN/
+   ```
+   Where:
+   - `$USER`: Your username
+   - `$FSTYP`: Filesystem type (xfs, ext4, btrfs, etc.)
+   - `$TYPE`: Infrastructure type (libvirt-qemu, cloud, custom)
+   - `YYYYMMDD`: Current date
+   - `NNNN`: Sequential counter (0001, 0002, etc.) for multiple runs per day
+
+3. **Copy files**: Places the following files in the archive:
+   - `<kernel-version>.xz`: Compressed test results tarball
+   - `kdevops.config`: Your kdevops configuration for reproducibility
+
+4. **Stage for commit**: Automatically runs `git add` on the new files
+
+### Example workflow
+
+```bash
+# Run your fstests
+make fstests-baseline
+
+# Copy results to archive
+scripts/workflows/fstests/copy-results.sh
+
+# The script will output the commands it ran and show:
+# Filesystem:     xfs
+# Kernel tested:  6.9.0-rc6
+#
+# Running:
+#
+# mkdir -p workflows/fstests/results/archive/jdoe/xfs/libvirt-qemu/20240505-0001
+# cp workflows/fstests/results/6.9.0-rc6.xz workflows/fstests/results/archive/...
+# cp .config workflows/fstests/results/archive/.../kdevops.config
+
+# Now commit and push to the archive
+cd ../kdevops-results-archive
+git commit -a -s
+git push
+```
+
+### Multiple runs per day
+
+The script supports running multiple tests per day with different configurations
+(e.g., XFS with quota enabled vs disabled). Each run gets a unique counter:
+
+```
+workflows/fstests/results/archive/jdoe/xfs/libvirt-qemu/20240505-0001/
+workflows/fstests/results/archive/jdoe/xfs/libvirt-qemu/20240505-0002/
+workflows/fstests/results/archive/jdoe/xfs/libvirt-qemu/20240505-0003/
+```
+
+The script automatically increments the counter to avoid conflicts.
+
+### Archive benefits
+
+Results submitted to the archive:
+
+- **Build community baselines**: Help establish known-good test results
+- **Track regressions**: Enable comparison across kernel versions
+- **Support CI/CD**: Automated dashboard generation at [kdevops.org](https://kdevops.org)
+- **Provide reproducibility**: Include configuration files for test recreation
+- **Use Git LFS**: Efficient storage and selective download of result tarballs
+
+### Troubleshooting
+
+If the script reports errors:
+
+- **Missing archive**: Ensure `kdevops-results-archive` is cloned in the parent directory
+- **No results**: Run `make fstests` or `make fstests-baseline` first
+- **Missing files**: Verify `workflows/fstests/results/last-kernel.txt` exists and
+  the corresponding `.xz` tarball is present
 
 ## Augment expunges for a kernel
 
