@@ -291,6 +291,102 @@ kubectl describe deployment -n vllm-system vllm
 helm list -n vllm-system
 ```
 
+## GPU Compatibility
+
+### vLLM v0.10.x GPU Requirements
+
+vLLM v0.10.x and later versions use **FlashInfer** CUDA kernels for optimized attention computation. FlashInfer requires GPUs with **compute capability >= 8.0**. Using older GPUs will result in runtime failures during inference.
+
+#### Error Symptoms
+
+If you attempt to use an incompatible GPU, vLLM will fail during engine initialization with:
+
+```
+RuntimeError: TopPSamplingFromProbs failed with error code too many resources requested for launch
+```
+
+This error occurs when FlashInfer CUDA kernels try to allocate more GPU resources (registers, shared memory, thread blocks) than the GPU architecture can provide.
+
+#### Incompatible GPUs (Compute Capability < 8.0)
+
+The following GPUs **WILL NOT WORK** with vLLM v0.10.x+ GPU inference:
+
+| GPU Model | Compute Capability | Status |
+|-----------|-------------------|--------|
+| Tesla T4 | 7.5 | ❌ Incompatible |
+| Tesla V100 | 7.0 | ❌ Incompatible |
+| Tesla P100 | 6.0 | ❌ Incompatible |
+| GTX 1080 Ti | 6.1 | ❌ Incompatible |
+| GTX 1070 | 6.1 | ❌ Incompatible |
+| Quadro P6000 | 6.1 | ❌ Incompatible |
+
+#### Compatible GPUs (Compute Capability >= 8.0)
+
+The following GPUs **WILL WORK** with vLLM v0.10.x+ GPU inference:
+
+| GPU Model | Compute Capability | Status |
+|-----------|-------------------|--------|
+| A100 | 8.0 | ✅ Compatible |
+| A10G | 8.6 | ✅ Compatible |
+| A30 | 8.0 | ✅ Compatible |
+| H100 | 9.0 | ✅ Compatible |
+| L40 | 8.9 | ✅ Compatible |
+| RTX 3090 | 8.6 | ✅ Compatible |
+| RTX 4090 | 8.9 | ✅ Compatible |
+| RTX A6000 | 8.6 | ✅ Compatible |
+
+#### Workarounds for Incompatible GPUs
+
+If you have a GPU with compute capability < 8.0, you have several options:
+
+**Option 1: Use CPU Inference**
+```bash
+make defconfig-vllm-production-stack-declared-hosts
+# This uses CPU-optimized vLLM images (openeuler/vllm-cpu)
+```
+
+**Option 2: Use Older vLLM Version**
+
+vLLM v0.6.x and earlier versions don't use FlashInfer and work with older GPUs. You can modify the defconfig to use an older engine image:
+
+```bash
+CONFIG_VLLM_ENGINE_IMAGE_TAG="v0.6.3"
+```
+
+**Note**: Older versions lack production stack features and may have different API compatibility.
+
+**Option 3: Upgrade to Compatible GPU**
+
+For production GPU inference with vLLM v0.10.x+, upgrade to a GPU with compute capability >= 8.0 (see compatible GPUs table above).
+
+#### Technical Background
+
+FlashInfer implements fused CUDA kernels for attention computation that use advanced GPU features:
+- **Dynamic shared memory allocation**: Requires larger shared memory per block
+- **Warp-level primitives**: Uses newer warp shuffle and reduction operations
+- **Thread block size**: Requires support for larger thread blocks
+- **Register file size**: Needs more registers per thread than older architectures provide
+
+GPUs with compute capability < 8.0 have architectural limitations in:
+- Maximum shared memory per block (48KB on CC 7.x vs 164KB on CC 8.0)
+- Register file size per SM
+- Maximum thread blocks per SM
+- Warp scheduling efficiency
+
+When FlashInfer kernels launch on these older GPUs, the CUDA runtime returns `too many resources requested for launch` because the kernel configuration exceeds the hardware's architectural limits.
+
+#### Verifying GPU Compatibility
+
+To check your GPU's compute capability:
+
+```bash
+# Using nvidia-smi
+nvidia-smi --query-gpu=name,compute_cap --format=csv
+
+# Using CUDA samples (if installed)
+/usr/local/cuda/extras/demo_suite/deviceQuery
+```
+
 ## Integration with kdevops Workflows
 
 The vLLM workflow integrates with kdevops features:
