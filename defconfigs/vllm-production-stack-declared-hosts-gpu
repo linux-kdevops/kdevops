@@ -1,20 +1,22 @@
 #
 # vLLM Production Stack with declared hosts - GPU ENABLED
 #
-# GPU COMPATIBILITY REQUIREMENTS:
+# ============================================================================
+# NVIDIA GPU COMPATIBILITY (CUDA):
+# ============================================================================
 #
-# vLLM v0.10.x uses FlashInfer CUDA kernels that require GPUs with compute
-# capability >= 8.0. GPUs with lower compute capability will fail with:
+# vLLM v0.10.x uses FlashInfer CUDA kernels that require NVIDIA GPUs with
+# compute capability >= 8.0. Older NVIDIA GPUs will fail with:
 #   "RuntimeError: TopPSamplingFromProbs failed with error code
 #    too many resources requested for launch"
 #
-# INCOMPATIBLE GPUs (compute capability < 8.0):
+# INCOMPATIBLE NVIDIA GPUs (compute capability < 8.0):
 #   - Tesla T4 (7.5) - WILL NOT WORK with vLLM v0.10.x+
 #   - Tesla V100 (7.0)
 #   - Tesla P100 (6.0)
 #   - GTX 1080 Ti (6.1)
 #
-# COMPATIBLE GPUs (compute capability >= 8.0):
+# COMPATIBLE NVIDIA GPUs (compute capability >= 8.0):
 #   - A100 (8.0)
 #   - A10G (8.6)
 #   - A30 (8.0)
@@ -22,10 +24,30 @@
 #   - RTX 3090 (8.6)
 #   - RTX 4090 (8.9)
 #
-# WORKAROUNDS for incompatible GPUs:
+# ============================================================================
+# AMD GPU COMPATIBILITY (ROCm):
+# ============================================================================
+#
+# AMD GPUs use ROCm instead of CUDA and have DIFFERENT requirements.
+# vLLM supports AMD GPUs with ROCm 6.2+:
+#
+# FULLY COMPATIBLE AMD GPUs:
+#   - MI300X (gfx942) - BEST AMD support, vLLM V1 optimized
+#   - MI250/MI250X (gfx90a) - Production ready
+#   - MI210 (gfx90a) - Production ready
+#   - W7900 (gfx1100) - Supported but requires BUILD_FA=0
+#   - RX 7900 XTX/XT (gfx1100) - Supported but requires BUILD_FA=0
+#
+# Note: AMD uses GFX architecture versions, not compute capability numbers.
+#       W7900 and RX 7900 series require disabling Flash Attention during
+#       vLLM build due to RDNA 3 architecture limitations.
+#
+# ============================================================================
+# WORKAROUNDS for incompatible NVIDIA GPUs:
+# ============================================================================
 #   1. Use an older vLLM version (v0.6.x or earlier)
 #   2. Use CPU inference mode (vllm-production-stack-declared-hosts)
-#   3. Use a compatible GPU listed above
+#   3. Use a compatible NVIDIA GPU (CC >= 8.0) or AMD GPU (see above)
 #
 # Automatically generated file; DO NOT EDIT.
 # kdevops 5.0.2 Configuration
