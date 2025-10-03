@@ -12,7 +12,7 @@ mkdir {{ target_dir }}
 copy-in {{ guestfs_distro_source_and_dest_file }}:{{ target_dir }}
 {% endif %}
 
-install sudo,qemu-guest-agent,python3,bash
+install sudo,qemu-guest-agent,python3,bash,policycoreutils-python-utils
 
 # get rid of any rescue initramfs images, and prevent new ones from being generated
 uninstall dracut-config-rescue

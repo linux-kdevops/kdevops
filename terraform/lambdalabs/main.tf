@@ -88,7 +88,7 @@ resource "null_resource" "ansible_update_ssh_config_hosts" {
   for_each = var.ssh_config_update ? toset(var.kdevops_nodes) : []
 
   provisioner "local-exec" {
-    command = "python3 ${path.module}/../../scripts/update_ssh_config_lambdalabs.py update ${each.key} ${lambdalabs_instance.kdevops[each.key].ip} ${local.ssh_user} ${var.ssh_config_name} ${var.ssh_config_privkey_file} 'Lambda Labs'"
+    command = "python3 ${path.module}/../../scripts/update_ssh_config_lambdalabs.py update ${each.key} ${lambdalabs_instance.kdevops[each.key].ip} ${local.ssh_user} ${var.ssh_config_name} ${var.ssh_config_privkey_file} 'Lambda Labs' ${var.ssh_config_port}"
   }
 
   triggers = {
@@ -113,6 +113,43 @@ resource "null_resource" "remove_ssh_config" {
   }
 }
 
+# Configure SSH port if not using default port 22
+resource "null_resource" "configure_ssh_port" {
+  for_each = var.ssh_config_port != 22 ? toset(var.kdevops_nodes) : []
+
+  connection {
+    type        = "ssh"
+    host        = lambdalabs_instance.kdevops[each.key].ip
+    user        = local.ssh_user
+    port        = 22
+    private_key = file(pathexpand(var.ssh_config_privkey_file))
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting for system to be ready...'",
+      "sudo cloud-init status --wait || true",
+      "echo 'Configuring SSH to listen on port ${var.ssh_config_port}'",
+      "sudo sed -i '/^[#[:space:]]*Port/d' /etc/ssh/sshd_config",
+      "echo 'Port ${var.ssh_config_port}' | sudo tee -a /etc/ssh/sshd_config",
+      "if [ -d /etc/selinux ] && sudo sestatus 2>/dev/null | grep -q 'SELinux status.*enabled'; then if ! command -v semanage >/dev/null 2>&1; then sudo yum install -y policycoreutils-python-utils 2>&1 || sudo dnf install -y policycoreutils-python-utils 2>&1 || true; fi; if command -v semanage >/dev/null 2>&1; then sudo semanage port -a -t ssh_port_t -p tcp ${var.ssh_config_port} 2>&1 || sudo semanage port -m -t ssh_port_t -p tcp ${var.ssh_config_port} 2>&1 || true; fi; fi",
+      "if command -v firewall-cmd >/dev/null 2>&1 && sudo systemctl is-enabled firewalld >/dev/null 2>&1; then sudo firewall-cmd --permanent --add-port=${var.ssh_config_port}/tcp && sudo firewall-cmd --reload; fi",
+      "if command -v ufw >/dev/null 2>&1 && sudo systemctl is-active ufw >/dev/null 2>&1; then sudo ufw allow ${var.ssh_config_port}/tcp; fi",
+      "sudo systemctl restart sshd",
+      "echo 'SSH port configuration completed'"
+    ]
+  }
+
+  depends_on = [
+    lambdalabs_instance.kdevops,
+    null_resource.ansible_update_ssh_config_hosts
+  ]
+
+  triggers = {
+    instance_id = lambdalabs_instance.kdevops[each.key].id
+  }
+}
+
 # Ansible provisioning
 resource "null_resource" "ansible_provision" {
   for_each = toset(var.kdevops_nodes)
@@ -121,6 +158,7 @@ resource "null_resource" "ansible_provision" {
     type        = "ssh"
     host        = lambdalabs_instance.kdevops[each.key].ip
     user        = local.ssh_user
+    port        = var.ssh_config_port
     private_key = file(pathexpand(var.ssh_config_privkey_file))
   }
 
@@ -145,7 +183,8 @@ resource "null_resource" "ansible_provision" {
 
   depends_on = [
     lambdalabs_instance.kdevops,
-    null_resource.ansible_update_ssh_config_hosts
+    null_resource.ansible_update_ssh_config_hosts,
+    null_resource.configure_ssh_port
   ]
 
   triggers = {

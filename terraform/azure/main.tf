@@ -43,7 +43,7 @@ resource "azurerm_network_security_group" "kdevops_sg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "22"
+    destination_port_range     = tostring(var.ssh_config_port)
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -89,6 +89,13 @@ resource "azurerm_linux_virtual_machine" "kdevops_vm" {
   size                            = var.azure_vmsize
   admin_username                  = var.ssh_config_user
   disable_password_authentication = true
+  custom_data = base64encode(templatefile("${path.module}/../scripts/cloud-init.sh", {
+    user_data_log_dir = "/var/log/kdevops"
+    user_data_enabled = "yes"
+    ssh_config_user   = var.ssh_config_user
+    ssh_config_port   = var.ssh_config_port
+    new_hostname      = element(var.kdevops_nodes, count.index)
+  }))
 
   os_disk {
     # Note: yes using the names like the ones below is better however it also

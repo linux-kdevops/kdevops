@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def update_ssh_config(
-    action, hostname, ip_address, username, config_file, ssh_key, provider_name
+    action, hostname, ip_address, username, config_file, ssh_key, provider_name, port=22
 ):
     """
     Update SSH configuration file with Lambda Labs instance details.
@@ -24,6 +24,7 @@ def update_ssh_config(
         config_file: SSH config file path
         ssh_key: Path to SSH private key
         provider_name: Provider name for comments
+        port: SSH port number (default: 22)
     """
     config_file = os.path.expanduser(config_file)
     ssh_key = os.path.expanduser(ssh_key)
@@ -33,7 +34,7 @@ def update_ssh_config(
 Host {hostname} {ip_address}
 \tHostName {ip_address}
 \tUser {username}
-\tPort 22
+\tPort {port}
 \tIdentityFile {ssh_key}
 \tUserKnownHostsFile /dev/null
 \tStrictHostKeyChecking no
@@ -90,7 +91,7 @@ def main():
     """Main entry point."""
     if len(sys.argv) < 7:
         print(
-            f"Usage: {sys.argv[0]} <action> <hostname> <ip_address> <username> <config_file> <ssh_key> [provider_name]"
+            f"Usage: {sys.argv[0]} <action> <hostname> <ip_address> <username> <config_file> <ssh_key> [provider_name] [port]"
         )
         print("  action: 'update' or 'remove'")
         print("  hostname: Instance hostname")
@@ -99,6 +100,7 @@ def main():
         print("  config_file: SSH config file path")
         print("  ssh_key: Path to SSH private key")
         print("  provider_name: Optional provider name (default: 'Lambda Labs')")
+        print("  port: Optional SSH port (default: 22)")
         sys.exit(1)
 
     action = sys.argv[1]
@@ -108,9 +110,17 @@ def main():
     config_file = sys.argv[5]
     ssh_key = sys.argv[6]
     provider_name = sys.argv[7] if len(sys.argv) > 7 else "Lambda Labs"
+    port = int(sys.argv[8]) if len(sys.argv) > 8 else 22
 
     update_ssh_config(
-        action, hostname, ip_address, username, config_file, ssh_key, provider_name
+        action,
+        hostname,
+        ip_address,
+        username,
+        config_file,
+        ssh_key,
+        provider_name,
+        port,
     )
 
 

@@ -430,7 +430,7 @@
         python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py update \
           {{ item }} \
           {{ nixos_vm_ips[item] }} \
-          22 \
+          {{ ansible_cfg_ssh_port }} \
           kdevops \
           {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
           {{ ssh_key_path_for_config.stdout | trim }} \

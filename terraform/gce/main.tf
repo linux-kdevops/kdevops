@@ -3,6 +3,19 @@ data "google_compute_image" "kdevops_image" {
   family  = var.gce_image_family
 }
 
+resource "google_compute_firewall" "kdevops_ssh" {
+  name    = "kdevops-allow-ssh"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = [tostring(var.ssh_config_port)]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["kdevops-ssh"]
+}
+
 resource "google_compute_instance" "kdevops_instance" {
   count        = local.kdevops_num_boxes
   name         = element(var.kdevops_nodes, count.index)
@@ -33,7 +46,15 @@ resource "google_compute_instance" "kdevops_instance" {
     ssh-keys = format("%s:%s", var.ssh_config_user, file(var.ssh_config_pubkey_file))
   }
 
-  metadata_startup_script = "echo hi > /test.txt"
+  metadata_startup_script = templatefile("${path.module}/../scripts/cloud-init.sh", {
+    user_data_log_dir = "/var/log/kdevops"
+    user_data_enabled = "yes"
+    ssh_config_user   = var.ssh_config_user
+    ssh_config_port   = var.ssh_config_port
+    new_hostname      = element(var.kdevops_nodes, count.index)
+  })
+
+  tags = ["kdevops-ssh"]
 }
 
 module "kdevops_compute_disks" {

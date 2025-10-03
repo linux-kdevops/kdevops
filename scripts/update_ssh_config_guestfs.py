@@ -21,7 +21,7 @@ from pathlib import Path
 ssh_template = """Host {name} {addr}
 	HostName {addr}
 	User kdevops
-	Port 22
+	Port {port}
 	IdentityFile {sshkey}
 	UserKnownHostsFile /dev/null
 	StrictHostKeyChecking no
@@ -97,6 +97,7 @@ def main():
         context = {
             "name": name,
             "addr": addr,
+            "port": extra_vars.get("ansible_cfg_ssh_port", 22),
             "sshkey": f"{extra_vars['guestfs_path']}/{name}/ssh/id_ed25519",
         }
         sshconf.write(ssh_template.format(**context))

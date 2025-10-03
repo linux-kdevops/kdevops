@@ -44,6 +44,12 @@ variable "ssh_config_kexalgorithms" {
   default     = ""
 }
 
+variable "ssh_config_port" {
+  description = "SSH port to use for remote connections and firewall rules"
+  type        = number
+  default     = 22
+}
+
 variable "private_net_enabled" {
   description = "Is the private network enabled?"
   default     = "false"

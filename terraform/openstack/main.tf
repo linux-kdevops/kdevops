@@ -19,8 +19,8 @@ resource "openstack_compute_secgroup_v2" "kdevops_security_group" {
 
   # SSH
   rule {
-    from_port   = 22
-    to_port     = 22
+    from_port   = var.ssh_config_port
+    to_port     = var.ssh_config_port
     ip_protocol = "tcp"
     cidr        = "0.0.0.0/0"
   }
@@ -62,6 +62,13 @@ resource "openstack_compute_instance_v2" "kdevops_instances" {
   flavor_name     = var.flavor_name
   key_pair        = var.ssh_pubkey_name
   security_groups = [openstack_compute_secgroup_v2.kdevops_security_group.name]
+  user_data = templatefile("${path.module}/../scripts/cloud-init.sh", {
+    user_data_log_dir = "/var/log/kdevops"
+    user_data_enabled = "yes"
+    ssh_config_user   = var.ssh_config_user
+    ssh_config_port   = var.ssh_config_port
+    new_hostname      = element(var.kdevops_nodes, count.index)
+  })
   network {
     name          = var.public_network_name
   }
