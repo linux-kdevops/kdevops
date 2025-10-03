@@ -60,11 +60,11 @@
     state: present
   tags: ["vllm", "deps"]
 
-- name: Add kdevops user to docker group
+- name: Add current user to docker group
   become: true
   become_method: sudo
   ansible.builtin.user:
-    name: kdevops
+    name: "{{ ansible_user_id }}"
     groups: docker
     append: yes
   tags: ["vllm", "deps", "docker-config"]

@@ -27,22 +27,41 @@ fi
 # Check if baseline and dev are enabled
 BASELINE_AND_DEV=$(grep "^CONFIG_KDEVOPS_BASELINE_AND_DEV=y" "${TOPDIR}/.config" || true)
 
+# Check if using declared hosts (bare metal or existing infrastructure)
+USE_DECLARED_HOSTS=$(grep "^CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y" "${TOPDIR}/.config" || true)
+
+# Check deployment type
+VLLM_BARE_METAL=$(grep "^CONFIG_VLLM_BARE_METAL=y" "${TOPDIR}/.config" || true)
+
 # Get node names from extra_vars.yaml
 if [[ ! -f "${TOPDIR}/extra_vars.yaml" ]]; then
     echo -e "${RED}Error: extra_vars.yaml not found. Run 'make' first.${NC}"
     exit 1
 fi
 
-KDEVOPS_HOST_PREFIX=$(grep "^kdevops_host_prefix:" "${TOPDIR}/extra_vars.yaml" | awk '{print $2}' | tr -d '"')
-if [[ -z "$KDEVOPS_HOST_PREFIX" ]]; then
-    echo -e "${RED}Error: Could not determine host prefix from extra_vars.yaml${NC}"
-    exit 1
-fi
+# Determine nodes to test based on deployment type
+if [[ -n "$USE_DECLARED_HOSTS" ]]; then
+    # For declared hosts, get the actual hostnames from extra_vars.yaml
+    DECLARED_HOSTS=$(grep "^kdevops_declared_hosts:" "${TOPDIR}/extra_vars.yaml" | awk '{print $2}' | tr -d '"')
+    if [[ -z "$DECLARED_HOSTS" ]]; then
+        echo -e "${RED}Error: Declared hosts enabled but no hosts specified in extra_vars.yaml${NC}"
+        exit 1
+    fi
+    # Split comma-separated hosts into array
+    IFS=',' read -ra NODES <<< "$DECLARED_HOSTS"
+else
+    # For provisioned VMs, use the host prefix
+    KDEVOPS_HOST_PREFIX=$(grep "^kdevops_host_prefix:" "${TOPDIR}/extra_vars.yaml" | awk '{print $2}' | tr -d '"')
+    if [[ -z "$KDEVOPS_HOST_PREFIX" ]]; then
+        echo -e "${RED}Error: Could not determine host prefix from extra_vars.yaml${NC}"
+        exit 1
+    fi
 
-# Determine nodes to test
-NODES=("${KDEVOPS_HOST_PREFIX}-vllm")
-if [[ -n "$BASELINE_AND_DEV" ]]; then
-    NODES+=("${KDEVOPS_HOST_PREFIX}-vllm-dev")
+    # Determine nodes to test
+    NODES=("${KDEVOPS_HOST_PREFIX}-vllm")
+    if [[ -n "$BASELINE_AND_DEV" ]]; then
+        NODES+=("${KDEVOPS_HOST_PREFIX}-vllm-dev")
+    fi
 fi
 
 # Function to test a single node
@@ -65,15 +84,20 @@ test_node() {
 
     echo "Node IP: ${node_ip}"
 
-    # Check if port-forward is running
-    local pf_running=$(ssh "${node}" "ps aux | grep 'kubectl port-forward' | grep 8000 | grep -v grep" 2>/dev/null || true)
+    # Only setup kubectl port-forward for Kubernetes deployments
+    if [[ -z "$VLLM_BARE_METAL" ]]; then
+        # Check if port-forward is running
+        local pf_running=$(ssh "${node}" "ps aux | grep 'kubectl port-forward' | grep 8000 | grep -v grep" 2>/dev/null || true)
 
-    if [[ -z "$pf_running" ]]; then
-        echo "Starting kubectl port-forward..."
-        ssh "${node}" "sudo nohup kubectl --kubeconfig=/root/.kube/config port-forward -n vllm-system svc/vllm-prod-${node}-router-service 8000:80 --address=0.0.0.0 > /tmp/pf.log 2>&1 &" 2>/dev/null || true
-        sleep 2
+        if [[ -z "$pf_running" ]]; then
+            echo "Starting kubectl port-forward..."
+            ssh "${node}" "sudo nohup kubectl --kubeconfig=/root/.kube/config port-forward -n vllm-system svc/vllm-prod-${node}-router-service 8000:80 --address=0.0.0.0 > /tmp/pf.log 2>&1 &" 2>/dev/null || true
+            sleep 2
+        else
+            echo "kubectl port-forward already running"
+        fi
     else
-        echo "kubectl port-forward already running"
+        echo "Deployment type: Bare metal (direct connection to port 8000)"
     fi
 
     # Prepare JSON payload

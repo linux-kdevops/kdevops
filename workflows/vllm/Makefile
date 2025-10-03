@@ -44,6 +44,22 @@ vllm-cleanup:
 		--tags vars,vllm-cleanup \
 		--extra-vars=@./extra_vars.yaml
 
+vllm-cleanup-full:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		playbooks/vllm.yml \
+		--tags vars,vllm-cleanup \
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars='{"vllm_cleanup_remove_binaries": true}'
+
+vllm-cleanup-purge:
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		--limit 'baseline:dev' \
+		playbooks/vllm.yml \
+		--tags vars,vllm-cleanup \
+		--extra-vars=@./extra_vars.yaml \
+		--extra-vars='{"vllm_cleanup_remove_binaries": true, "vllm_cleanup_remove_data": true}'
+
 vllm-results:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
 		--limit 'baseline:dev' \
@@ -102,17 +118,19 @@ vllm-quick-test:
 
 vllm-help-menu:
 	@echo "vLLM Production Stack options:"
-	@echo "vllm                      - Deploy vLLM stack to Kubernetes"
-	@echo "vllm-deploy               - Deploy vLLM stack to Kubernetes (same as vllm)"
+	@echo "vllm                      - Deploy vLLM stack"
+	@echo "vllm-deploy               - Deploy vLLM stack (same as vllm)"
 	@echo "vllm-benchmark            - Run performance benchmarks and collect results"
 	@echo "vllm-monitor              - Display monitoring dashboard URLs"
 	@echo "vllm-status               - Check detailed deployment status (verbose)"
 	@echo "vllm-status-simplified    - Check deployment status (clean summary)"
 	@echo "vllm-quick-test           - Quick API test (baseline + dev if enabled)"
 	@echo "vllm-teardown             - Gracefully remove vLLM deployment"
-	@echo "vllm-cleanup              - Force delete all vLLM resources (use when stuck)"
+	@echo "vllm-cleanup              - Remove vLLM containers/services (keep binaries & data)"
+	@echo "vllm-cleanup-full         - Remove everything including binaries (kubectl, helm, minikube)"
+	@echo "vllm-cleanup-purge        - PURGE ALL: Remove binaries + all data directories"
 	@echo "vllm-results              - Collect and visualize benchmark results"
 	@echo "vllm-visualize-results    - Generate HTML visualization of benchmark results"
 	@echo ""
 
-.PHONY: vllm vllm-deploy vllm-benchmark vllm-monitor vllm-status vllm-status-simplified vllm-quick-test vllm-teardown vllm-cleanup vllm-results vllm-visualize-results vllm-help-menu
+.PHONY: vllm vllm-deploy vllm-benchmark vllm-monitor vllm-status vllm-status-simplified vllm-quick-test vllm-teardown vllm-cleanup vllm-cleanup-full vllm-cleanup-purge vllm-results vllm-visualize-results vllm-help-menu
