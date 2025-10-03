@@ -1,0 +1,110 @@
+---
+# Cleanup tasks for bare metal vLLM deployment
+# Removes all installed components and data
+
+- name: Stop and remove vLLM systemd service
+  ansible.builtin.systemd:
+    name: "{{ vllm_bare_metal_service_name | default('vllm') }}"
+    state: stopped
+    enabled: no
+  become: yes
+  ignore_errors: yes
+
+- name: Remove vLLM systemd service file
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ vllm_bare_metal_service_name | default('vllm') }}.service"
+    state: absent
+  become: yes
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: Stop all vLLM Docker containers
+  ansible.builtin.command:
+    cmd: docker stop $(docker ps -a -q --filter ancestor={{ vllm_bare_metal_image_final }})
+  ignore_errors: yes
+  changed_when: false
+
+- name: Remove all vLLM Docker containers
+  ansible.builtin.command:
+    cmd: docker rm $(docker ps -a -q --filter ancestor={{ vllm_bare_metal_image_final }})
+  ignore_errors: yes
+  changed_when: false
+
+- name: Remove vLLM Docker images
+  ansible.builtin.command:
+    cmd: docker rmi {{ vllm_bare_metal_image_final }}
+  ignore_errors: yes
+  changed_when: false
+
+- name: Stop minikube if running
+  ansible.builtin.command:
+    cmd: minikube stop
+  ignore_errors: yes
+  changed_when: false
+  become: no
+
+- name: Delete minikube cluster
+  ansible.builtin.command:
+    cmd: minikube delete
+  ignore_errors: yes
+  changed_when: false
+  become: no
+
+- name: Remove kubectl binary
+  ansible.builtin.file:
+    path: /usr/local/bin/kubectl
+    state: absent
+  become: yes
+  when: vllm_cleanup_remove_binaries | default(false)
+
+- name: Remove minikube binary
+  ansible.builtin.file:
+    path: /usr/local/bin/minikube
+    state: absent
+  become: yes
+  when: vllm_cleanup_remove_binaries | default(false)
+
+- name: Remove helm binary
+  ansible.builtin.file:
+    path: /usr/local/bin/helm
+    state: absent
+  become: yes
+  when: vllm_cleanup_remove_binaries | default(false)
+
+- name: Remove vLLM data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  become: yes
+  loop:
+    - "{{ vllm_bare_metal_data_dir | default('/var/lib/vllm') }}"
+    - "{{ vllm_bare_metal_log_dir | default('/var/log/vllm') }}"
+    - "{{ vllm_local_path | default('/data/vllm') }}"
+    - "{{ vllm_results_dir | default('/data/vllm/results') }}"
+  when: vllm_cleanup_remove_data | default(false)
+
+- name: Remove /data/minikube directory
+  ansible.builtin.file:
+    path: /data/minikube
+    state: absent
+  become: yes
+  when: vllm_cleanup_remove_data | default(false)
+
+- name: Display cleanup completion message
+  debug:
+    msg: |
+      vLLM bare metal cleanup completed.
+
+      Removed:
+      - vLLM systemd service
+      - vLLM Docker containers and images
+      - Minikube cluster
+
+      To also remove binaries (kubectl, minikube, helm), run:
+        make vllm-cleanup-full
+
+      To remove all data directories, run:
+        make vllm-cleanup-purge
