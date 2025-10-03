@@ -47,11 +47,24 @@
           set_fact:
             container_runtime: "{{ 'docker' if vllm_bare_metal_docker | default(true) else 'podman' }}"
 
-        - name: Ensure container runtime is installed
-          package:
-            name: "{{ container_runtime }}"
-            state: present
+        - name: Ensure Docker service is started and enabled
+          ansible.builtin.systemd:
+            name: docker
+            state: started
+            enabled: yes
           become: yes
+          when: container_runtime == 'docker'
+
+        - name: Add current user to docker group
+          ansible.builtin.user:
+            name: "{{ ansible_user_id }}"
+            groups: docker
+            append: yes
+          become: yes
+          when: container_runtime == 'docker'
+
+        - name: Reset connection to apply docker group membership
+          meta: reset_connection
 
         - name: Install nvidia-container-toolkit for GPU support
           when: has_nvidia_gpu
@@ -75,27 +88,57 @@
             state: restarted
           become: yes
 
-        - name: Set vLLM bare metal container image with Docker mirror if enabled
+        - name: Set vLLM bare metal container images
           ansible.builtin.set_fact:
-            vllm_bare_metal_image_final: >-
-              {%- if use_docker_mirror | default(false) | bool -%}
-                {%- if not has_nvidia_gpu -%}
-                  localhost:{{ docker_mirror_port | default(5000) }}/vllm:v0.6.3-cpu
-                {%- else -%}
-                  localhost:{{ docker_mirror_port | default(5000) }}/vllm-openai:latest
-                {%- endif -%}
+            vllm_bare_metal_image_mirror: >-
+              {%- if not has_nvidia_gpu -%}
+                localhost:{{ docker_mirror_port | default(5000) }}/vllm:v0.6.3-cpu
               {%- else -%}
-                {%- if not has_nvidia_gpu -%}
-                  substratusai/vllm:v0.6.3-cpu
-                {%- else -%}
-                  vllm/vllm-openai:latest
-                {%- endif -%}
+                localhost:{{ docker_mirror_port | default(5000) }}/vllm-openai:latest
+              {%- endif -%}
+            vllm_bare_metal_image_public: >-
+              {%- if not has_nvidia_gpu -%}
+                substratusai/vllm:v0.6.3-cpu
+              {%- else -%}
+                vllm/vllm-openai:latest
               {%- endif -%}
 
-        - name: Pull vLLM container image
-          community.docker.docker_image:
-            name: "{{ vllm_bare_metal_image_final }}"
-            source: pull
+        - name: Set initial image to try (mirror if enabled, otherwise public)
+          ansible.builtin.set_fact:
+            vllm_bare_metal_image_final: "{{ vllm_bare_metal_image_mirror if (use_docker_mirror | default(false) | bool) else vllm_bare_metal_image_public }}"
+
+        - name: Check if vLLM container image already exists
+          ansible.builtin.command:
+            cmd: "docker images -q {{ vllm_bare_metal_image_final }}"
+          register: image_exists
+          changed_when: false
+          failed_when: false
+
+        - name: Try pulling from Docker mirror first (if configured)
+          ansible.builtin.command:
+            cmd: "docker pull {{ vllm_bare_metal_image_mirror }}"
+          register: docker_pull_mirror
+          when:
+            - use_docker_mirror | default(false) | bool
+            - image_exists.stdout == ""
+          failed_when: false
+          changed_when: "'Downloaded' in docker_pull_mirror.stdout or 'Pull complete' in docker_pull_mirror.stdout"
+
+        - name: Fall back to public registry if mirror failed
+          ansible.builtin.command:
+            cmd: "docker pull {{ vllm_bare_metal_image_public }}"
+          register: docker_pull_public
+          when:
+            - image_exists.stdout == ""
+            - (not (use_docker_mirror | default(false) | bool)) or (docker_pull_mirror is defined and docker_pull_mirror.rc != 0)
+          changed_when: "'Downloaded' in docker_pull_public.stdout or 'Pull complete' in docker_pull_public.stdout"
+
+        - name: Update final image name if we used public registry
+          ansible.builtin.set_fact:
+            vllm_bare_metal_image_final: "{{ vllm_bare_metal_image_public }}"
+          when:
+            - docker_pull_public is defined
+            - docker_pull_public.rc == 0
 
         - name: Create vLLM systemd service for container
           template:
@@ -103,7 +146,7 @@
             dest: "/etc/systemd/system/{{ vllm_bare_metal_service_name | default('vllm') }}.service"
             mode: '0644'
           become: yes
-          notify: restart vllm
+          register: systemd_service_container
 
     # Direct installation (pip/source)
     - name: Deploy vLLM with direct installation
@@ -155,7 +198,13 @@
             dest: "/etc/systemd/system/{{ vllm_bare_metal_service_name | default('vllm') }}.service"
             mode: '0644'
           become: yes
-          notify: restart vllm
+          register: systemd_service_direct
+
+    - name: Check if vLLM configuration template exists
+      stat:
+        path: "{{ role_path }}/templates/vllm.conf.j2"
+      register: vllm_conf_template
+      delegate_to: localhost
 
     - name: Create vLLM configuration file
       template:
@@ -163,12 +212,24 @@
         dest: /etc/vllm/vllm.conf
         mode: '0644'
       become: yes
-      notify: restart vllm
+      register: vllm_config
+      when: vllm_conf_template.stat.exists
 
     - name: Reload systemd daemon
       systemd:
         daemon_reload: yes
       become: yes
+
+    - name: Restart vLLM service if configuration changed
+      systemd:
+        name: "{{ vllm_bare_metal_service_name | default('vllm') }}"
+        state: restarted
+        daemon_reload: yes
+      become: yes
+      when: >-
+        (systemd_service_container is defined and systemd_service_container.changed) or
+        (systemd_service_direct is defined and systemd_service_direct.changed) or
+        (vllm_config is defined and vllm_config.changed)
 
     - name: Start and enable vLLM service
       systemd:
@@ -218,10 +279,3 @@
           - Stop: sudo systemctl stop {{ vllm_bare_metal_service_name | default('vllm') }}
           - Status: sudo systemctl status {{ vllm_bare_metal_service_name | default('vllm') }}
           - Logs: sudo journalctl -u {{ vllm_bare_metal_service_name | default('vllm') }} -f
-
-# Handler for restarting vLLM
-- name: restart vllm
-  systemd:
-    name: "{{ vllm_bare_metal_service_name | default('vllm') }}"
-    state: restarted
-  become: yes

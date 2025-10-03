@@ -8,4 +8,5 @@
   roles:
     - role: create_data_partition
       tags: ["data_partition"]
+      when: data_device is defined and data_device != None and data_device | length > 0
     - role: vllm
