@@ -83,17 +83,82 @@
             remote_src: yes
           become: yes
 
-        - name: Check if minikube is running
+        - name: Ensure docker socket has correct permissions
+          ansible.builtin.file:
+            path: /var/run/docker.sock
+            mode: '0666'
+          become: yes
+          ignore_errors: yes
+
+        - name: Check if veth kernel support is available
+          ansible.builtin.shell:
+            cmd: |
+              if [ -f /proc/config.gz ]; then
+                zcat /proc/config.gz | grep "^CONFIG_VETH=" || echo "CONFIG_VETH_NOT_SET"
+              elif [ -f /boot/config-$(uname -r) ]; then
+                grep "^CONFIG_VETH=" /boot/config-$(uname -r) || echo "CONFIG_VETH_NOT_SET"
+              else
+                echo "CONFIG_VETH=unknown"
+              fi
+          register: veth_check
+          failed_when: false
+          changed_when: false
+
+        - name: Try to load veth module if configured as module
           ansible.builtin.command:
-            cmd: minikube status
-          register: minikube_status
+            cmd: modprobe veth
+          become: yes
+          when: "'CONFIG_VETH=m' in veth_check.stdout"
+          failed_when: false
+          changed_when: false
+
+        - name: Verify veth module is loaded
+          ansible.builtin.shell:
+            cmd: lsmod | grep -q veth && echo "loaded" || echo "not_loaded"
+          register: veth_loaded
+          failed_when: false
+          changed_when: false
+
+        - name: Determine if veth is available
+          ansible.builtin.set_fact:
+            veth_available: "{{ (veth_check.stdout == 'CONFIG_VETH=y' or veth_check.stdout == 'CONFIG_VETH=m') or veth_loaded.stdout == 'loaded' }}"
+
+        - name: Fail if veth support is missing (required for Docker/minikube)
+          ansible.builtin.fail:
+            msg: |
+              ERROR: Kernel veth support is REQUIRED for Docker networking with minikube.
+
+              Current status:
+                Kernel configuration: {{ veth_check.stdout }}
+                veth module status: {{ veth_loaded.stdout }}
+                Kernel version: {{ ansible_kernel }}
+
+              REQUIRED: Rebuild your kernel with CONFIG_VETH enabled:
+                CONFIG_VETH=y  (built-in, recommended)
+                    OR
+                CONFIG_VETH=m  (loadable module)
+
+              Most distribution kernels include this by default.
+              Custom/RC kernels may need to explicitly enable it.
+          when:
+            - vllm_k8s_minikube | default(false)
+            - not veth_available
+
+        - name: Check if minikube is running
+          ansible.builtin.shell:
+            cmd: minikube status 2>&1 | grep -q "Running" && echo "RUNNING" || echo "NOT_RUNNING"
+          register: minikube_status_check
           failed_when: false
           changed_when: false
           environment:
             MINIKUBE_HOME: /data/minikube
 
+        - name: Set minikube running status
+          ansible.builtin.set_fact:
+            minikube_is_running: "{{ minikube_status_check.stdout == 'RUNNING' }}"
+
         - name: Check if minikube container exists but is stopped
-          when: minikube_status.rc != 0
+          when: not minikube_is_running
           ansible.builtin.command:
             cmd: docker ps -a --format "table {% raw %}{{.Names}}\t{{.Status}}{% endraw %}" | grep minikube || true
           register: minikube_container
@@ -102,7 +167,7 @@
 
         - name: Clean up stopped minikube container if exists
           when:
-            - minikube_status.rc != 0
+            - not minikube_is_running
             - "'minikube' in minikube_container.stdout"
           ansible.builtin.command:
             cmd: minikube delete --all --purge
@@ -151,18 +216,23 @@
             append: yes
           become: yes
 
-        - name: Ensure /data/minikube has correct permissions for minikube
-          ansible.builtin.file:
-            path: /data/minikube
-            state: directory
-            owner: kdevops
-            group: docker
-            mode: '0775'
-            recurse: yes
+        - name: Ensure /data/minikube directory exists
+          ansible.builtin.shell:
+            cmd: |
+              # Handle symlink case - ensure target exists
+              if [ -L /data ]; then
+                target=$(readlink -f /data)
+                mkdir -p "$target"
+              fi
+              mkdir -p /data/minikube
+              chown kdevops:docker /data/minikube
+              chmod 0775 /data/minikube
+          args:
+            creates: /data/minikube
           become: yes
 
         - name: Start minikube with appropriate resources
-          when: minikube_status.rc != 0
+          when: not minikube_is_running
           ansible.builtin.command:
             cmd: >-
               minikube start
@@ -172,6 +242,7 @@
               --memory={{ [(ansible_memtotal_mb * 0.75) | int, 49152] | min }}
               --disk-size=50g
               --delete-on-failure=true
+              {{ '--gpus all' if not vllm_use_cpu_inference|default(false) else '' }}
           environment:
             MINIKUBE_HOME: /data/minikube
           register: minikube_start

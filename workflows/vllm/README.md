@@ -291,6 +291,206 @@ kubectl describe deployment -n vllm-system vllm
 helm list -n vllm-system
 ```
 
+## GPU Compatibility
+
+### NVIDIA GPU Requirements (CUDA)
+
+vLLM v0.10.x and later versions use **FlashInfer** CUDA kernels for optimized attention computation on NVIDIA GPUs. FlashInfer requires NVIDIA GPUs with **compute capability >= 8.0**. Using older NVIDIA GPUs will result in runtime failures during inference.
+
+**Important**: The compute capability requirements below apply **only to NVIDIA CUDA GPUs**. AMD GPUs use ROCm and have different compatibility requirements (see AMD GPU section below).
+
+#### Error Symptoms
+
+If you attempt to use an incompatible GPU, vLLM will fail during engine initialization with:
+
+```
+RuntimeError: TopPSamplingFromProbs failed with error code too many resources requested for launch
+```
+
+This error occurs when FlashInfer CUDA kernels try to allocate more GPU resources (registers, shared memory, thread blocks) than the GPU architecture can provide.
+
+#### Incompatible GPUs (Compute Capability < 8.0)
+
+The following GPUs **WILL NOT WORK** with vLLM v0.10.x+ GPU inference:
+
+| GPU Model | Compute Capability | Status |
+|-----------|-------------------|--------|
+| Tesla T4 | 7.5 | ❌ Incompatible |
+| Tesla V100 | 7.0 | ❌ Incompatible |
+| Tesla P100 | 6.0 | ❌ Incompatible |
+| GTX 1080 Ti | 6.1 | ❌ Incompatible |
+| GTX 1070 | 6.1 | ❌ Incompatible |
+| Quadro P6000 | 6.1 | ❌ Incompatible |
+
+#### Compatible GPUs (Compute Capability >= 8.0)
+
+The following GPUs **WILL WORK** with vLLM v0.10.x+ GPU inference:
+
+| GPU Model | Compute Capability | Status |
+|-----------|-------------------|--------|
+| A100 | 8.0 | ✅ Compatible |
+| A10G | 8.6 | ✅ Compatible |
+| A30 | 8.0 | ✅ Compatible |
+| H100 | 9.0 | ✅ Compatible |
+| L40 | 8.9 | ✅ Compatible |
+| RTX 3090 | 8.6 | ✅ Compatible |
+| RTX 4090 | 8.9 | ✅ Compatible |
+| RTX A6000 | 8.6 | ✅ Compatible |
+
+#### Workarounds for Incompatible GPUs
+
+If you have a GPU with compute capability < 8.0, you have several options:
+
+**Option 1: Use CPU Inference**
+```bash
+make defconfig-vllm-production-stack-declared-hosts
+# This uses CPU-optimized vLLM images (openeuler/vllm-cpu)
+```
+
+**Option 2: Use Older vLLM Version**
+
+vLLM v0.6.x and earlier versions don't use FlashInfer and work with older GPUs. You can modify the defconfig to use an older engine image:
+
+```bash
+CONFIG_VLLM_ENGINE_IMAGE_TAG="v0.6.3"
+```
+
+**Note**: Older versions lack production stack features and may have different API compatibility.
+
+**Option 3: Upgrade to Compatible GPU**
+
+For production GPU inference with vLLM v0.10.x+, upgrade to a GPU with compute capability >= 8.0 (see compatible GPUs table above).
+
+#### Technical Background
+
+FlashInfer implements fused CUDA kernels for attention computation that use advanced GPU features:
+- **Dynamic shared memory allocation**: Requires larger shared memory per block
+- **Warp-level primitives**: Uses newer warp shuffle and reduction operations
+- **Thread block size**: Requires support for larger thread blocks
+- **Register file size**: Needs more registers per thread than older architectures provide
+
+GPUs with compute capability < 8.0 have architectural limitations in:
+- Maximum shared memory per block (48KB on CC 7.x vs 164KB on CC 8.0)
+- Register file size per SM
+- Maximum thread blocks per SM
+- Warp scheduling efficiency
+
+When FlashInfer kernels launch on these older GPUs, the CUDA runtime returns `too many resources requested for launch` because the kernel configuration exceeds the hardware's architectural limits.
+
+#### Verifying NVIDIA GPU Compatibility
+
+To check your NVIDIA GPU's compute capability:
+
+```bash
+# Using nvidia-smi
+nvidia-smi --query-gpu=name,compute_cap --format=csv
+
+# Using CUDA samples (if installed)
+/usr/local/cuda/extras/demo_suite/deviceQuery
+```
+
+### AMD GPU Requirements (ROCm)
+
+AMD GPUs use **ROCm** instead of CUDA and have **different compatibility requirements** than NVIDIA GPUs. vLLM supports AMD GPUs through ROCm 6.2+ with architecture-specific optimizations.
+
+#### Supported AMD GPU Architectures
+
+| GPU Model | Architecture | ROCm Support | Flash Attention | Notes |
+|-----------|-------------|--------------|-----------------|-------|
+| **MI300X/MI300A** | gfx942 (CDNA 3) | ✅ Excellent | ✅ Yes | Best AMD support, FP8 KV cache, vLLM V1 optimized |
+| **MI250X/MI250** | gfx90a (CDNA 2) | ✅ Full | ✅ Yes | Production ready, well tested |
+| **MI210** | gfx90a (CDNA 2) | ✅ Full | ✅ Yes | Production ready |
+| **W7900** | gfx1100 (RDNA 3) | ✅ Supported | ❌ No | Requires `BUILD_FA=0` |
+| **RX 7900 XTX** | gfx1100 (RDNA 3) | ✅ Supported | ❌ No | Requires `BUILD_FA=0` |
+| **RX 7900 XT** | gfx1100 (RDNA 3) | ✅ Supported | ❌ No | Requires `BUILD_FA=0` |
+
+#### Key Differences from NVIDIA
+
+1. **No Compute Capability**: AMD uses GFX architecture versions (gfx90a, gfx942, gfx1100) instead of NVIDIA's compute capability numbering
+2. **ROCm Instead of CUDA**: Requires ROCm 6.2+ runtime and drivers
+3. **Different Attention Kernels**: Uses CK (Composable Kernel) Flash Attention instead of FlashInfer
+4. **Architecture-Specific Builds**: vLLM must be built with specific GFX targets (e.g., `FX_GFX_ARCHS=gfx90a;gfx942`)
+
+#### AMD W7900 Workstation GPU
+
+The **AMD Radeon Pro W7900** is fully supported but requires special configuration:
+
+**Requirements:**
+- ROCm 6.2 or later
+- Flash Attention must be disabled during build
+- Build command: `BUILD_FA=0 DOCKER_BUILDKIT=1 docker build ...`
+
+**Why disable Flash Attention?**
+The gfx1100 architecture (RDNA 3) used in W7900/RX 7900 series doesn't support CK Flash Attention kernels. vLLM will fall back to standard attention mechanisms, which still provide good performance for workstation inference workloads.
+
+**Performance Notes:**
+- W7900 has 48GB VRAM (excellent for large models)
+- RDNA 3 architecture is optimized for graphics/workstation tasks
+- For maximum LLM inference performance, MI300X (CDNA 3) is preferred
+
+#### AMD MI300X Data Center GPU
+
+The **AMD Instinct MI300X** has the **best vLLM support** among AMD GPUs:
+
+**Advantages:**
+- ✅ vLLM V1 engine fully optimized for MI300X
+- ✅ FP8 KV cache support (MI300+ exclusive)
+- ✅ CK Flash Attention enabled by default
+- ✅ 192GB HBM3 memory per GPU
+- ✅ Extensively tested and documented by AMD ROCm team
+
+**Use Cases:**
+- Large-scale production LLM serving
+- Multi-GPU distributed inference
+- Models requiring >80GB VRAM (e.g., Llama-70B, Mixtral-8x22B)
+
+#### Building vLLM for AMD GPUs
+
+**For MI300X/MI250 (CDNA):**
+```bash
+# Flash Attention enabled (default)
+export FX_GFX_ARCHS="gfx90a;gfx942"
+docker build -t vllm-rocm .
+```
+
+**For W7900/RX 7900 (RDNA 3):**
+```bash
+# Flash Attention must be disabled
+export FX_GFX_ARCHS="gfx1100"
+BUILD_FA=0 DOCKER_BUILDKIT=1 docker build -t vllm-rocm .
+```
+
+#### Verifying AMD GPU Compatibility
+
+To check your AMD GPU architecture:
+
+```bash
+# Using rocminfo
+rocminfo | grep "Name:" | grep -E "gfx"
+
+# Using rocm-smi
+rocm-smi --showproductname
+
+# Check ROCm version
+cat /opt/rocm/.info/version
+```
+
+Expected output examples:
+- MI300X: `gfx942` (CDNA 3)
+- MI250: `gfx90a` (CDNA 2)
+- W7900: `gfx1100` (RDNA 3)
+
+#### AMD vs NVIDIA: Summary
+
+| Feature | NVIDIA (CUDA) | AMD (ROCm) |
+|---------|--------------|------------|
+| **Compatibility Metric** | Compute Capability (e.g., 8.0) | GFX Architecture (e.g., gfx942) |
+| **Minimum Requirement** | CC >= 8.0 for FlashInfer | ROCm 6.2+, architecture-dependent |
+| **Attention Kernels** | FlashInfer (CUDA) | CK Flash Attention (ROCm) |
+| **Best GPU for vLLM** | H100, A100 | MI300X |
+| **Workstation GPU** | RTX 4090 | W7900 (Flash Attn disabled) |
+| **Budget Option** | Not compatible (need CC 8.0+) | W7900 (48GB VRAM) |
+
 ## Integration with kdevops Workflows
 
 The vLLM workflow integrates with kdevops features:
