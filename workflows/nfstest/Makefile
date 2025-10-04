@@ -99,6 +99,7 @@ nfstest-help-menu:
 	@echo "nfstest options:"
 	@echo "nfstest                              - Git clone nfstest and install it"
 	@echo "nfstest-{baseline,dev}               - Run selected nfstests on baseline or dev hosts and collect results"
+	@echo "nfstests-results-visualize           - Generate HTML visualization of test results"
 	@echo ""
 
 HELP_TARGETS += nfstest-help-menu

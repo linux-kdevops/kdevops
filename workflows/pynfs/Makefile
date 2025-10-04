@@ -13,7 +13,7 @@ WORKFLOW_ARGS += $(PYNFS_ARGS)
 
 
 ifndef LAST_KERNEL
-LAST_KERNEL := $(shell cat workflows/pynfs/results/last-kernel.txt 2>/dev/null)
+LAST_KERNEL := $(shell cat workflows/pynfs/results/last-kernel.txt 2>/dev/null || ls -1dt workflows/pynfs/results/*/ 2>/dev/null | grep -v "last-run" | head -1 | xargs -r basename)
 endif
 
 ifeq ($(LAST_KERNEL), $(shell cat workflows/pynfs/results/last-kernel.txt 2>/dev/null))
@@ -76,10 +76,25 @@ pynfs-show-results:
 		| xargs $(XARGS_ARGS) \
 		| sed '$${/^$$/d;}'
 
+pynfs-visualize:
+	$(Q)if [ ! -d "workflows/pynfs/results/$(LAST_KERNEL)" ]; then \
+		echo "Error: No results found for kernel $(LAST_KERNEL)"; \
+		echo "Available kernels:"; \
+		ls -1 workflows/pynfs/results/ | grep -v last; \
+		exit 1; \
+	fi
+	$(Q)echo "Generating HTML visualization for kernel $(LAST_KERNEL)..."
+	$(Q)python3 scripts/workflows/pynfs/visualize_results.py \
+		workflows/pynfs/results/$(LAST_KERNEL) \
+		$(LAST_KERNEL) \
+		--output workflows/pynfs/results/$(LAST_KERNEL)/html/index.html
+	$(Q)echo "✅ Visualization complete: workflows/pynfs/results/$(LAST_KERNEL)/html/index.html"
+
 pynfs-help-menu:
 	@echo "pynfs options:"
 	@echo "pynfs                             - Git clone pynfs, build and install it"
 	@echo "pynfs-{baseline,dev}              - Run the pynfs test on baseline  or dev hosts and collect results"
+	@echo "pynfs-visualize                   - Generate HTML visualization of test results"
 	@echo ""
 
 HELP_TARGETS += pynfs-help-menu

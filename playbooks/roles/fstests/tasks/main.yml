@@ -758,7 +758,7 @@
     export_options: "{{ nfsd_export_options }}"
     export_fstype: "{{ fstests_nfs_export_fstype }}"
     export_size: 20g
-    export_pnfs: "{{ fstests_nfs_section_pnfs | bool }}"
+    export_pnfs: false
   when:
     - fstests_fstyp == "nfs"
     - fstests_nfs_use_kdevops_nfsd|bool
@@ -772,7 +772,7 @@
     export_options: "{{ nfsd_export_options }}"
     export_fstype: "{{ fstests_nfs_export_fstype }}"
     export_size: 30g
-    export_pnfs: "{{ fstests_nfs_section_pnfs | bool }}"
+    export_pnfs: false
   when:
     - fstests_fstyp == "nfs"
     - fstests_nfs_use_kdevops_nfsd|bool
@@ -1137,6 +1137,7 @@
     state: started
   when:
     - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
 
 - name: Hint to watchdog tests are about to kick off
   ansible.builtin.file:
