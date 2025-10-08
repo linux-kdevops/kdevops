@@ -102,6 +102,14 @@ def get_known_ami_owners():
                 r'OL.*-.*',
             ]
         },
+        'pytorch': {
+            'owner_id': '898082745236',
+            'owner_name': 'PyTorch',
+            'description': 'AWS Deep Learning with PyTorch',
+            'search_patterns': [
+                r'Deep Learning OSS Nvidia Driver AMI GPU PyTorch.*',
+            ]
+        },
         'redhat': {
             'owner_id': '309956199498',
             'owner_name': 'RedHat',
@@ -271,6 +279,18 @@ def classify_ami_name(ami_name, owner_name):
         return 'Amazon Linux 2'
     elif 'amzn-ami' in ami_lower:
         return 'Amazon Linux 1'
+
+    elif 'pytorch' in ami_lower:
+        if '20.04' in ami_lower:
+            return 'PyTorch Ubuntu 20.04 LTS'
+        elif '22.04' in ami_lower:
+            return 'PyTorch Ubuntu 22.04 LTS'
+        elif '24.04' in ami_lower:
+            return 'PyTorch Ubuntu 24.04 LTS'
+        elif 'amazon linux 2023' in ami_lower:
+            return 'PyTorch Amazon Linux 2023'
+        else:
+            return 'PyTorch Amazon Linux 2'
 
     elif 'ubuntu' in ami_lower:
         if 'noble' in ami_lower or '24.04' in ami_lower:
