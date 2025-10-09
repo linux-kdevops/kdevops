@@ -1,0 +1,64 @@
+---
+# NVMe OCP SMART interim monitoring collection (without stopping monitoring)
+- name: Check if NVMe OCP SMART monitoring is enabled
+  ansible.builtin.set_fact:
+    nvme_ocp_smart_enabled: "{{ monitor_nvme_ocp_smart|default(false)|bool }}"
+
+- name: Create NVMe OCP SMART snapshots for interim collection
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    for file in /root/monitoring/nvme_ocp_smart_*_stats.txt; do
+      if [ -f "$file" ]; then
+        base_name=$(basename "$file" .txt)
+        cp "$file" "/root/monitoring/${base_name}_snapshot.txt"
+      fi
+    done
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+
+- name: Collect NVMe OCP SMART snapshot files
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: "ls /root/monitoring/nvme_ocp_smart_*_snapshot.txt 2>/dev/null || true"
+  register: nvme_ocp_smart_snapshot_files
+  changed_when: false
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+
+- name: Copy NVMe OCP SMART snapshots to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_{{ item | basename | replace('_snapshot', '_interim') }}"
+    flat: true
+    validate_checksum: false
+  loop: "{{ nvme_ocp_smart_snapshot_files.stdout_lines|default([]) }}"
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_smart_snapshot_files.stdout != ""
+
+- name: Clean up NVMe OCP SMART snapshot files
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: "rm -f /root/monitoring/nvme_ocp_smart_*_snapshot.txt"
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_smart_snapshot_files.stdout != ""
+
+- name: Display NVMe OCP SMART interim collection summary
+  ansible.builtin.debug:
+    msg: |
+      NVMe OCP SMART interim collection complete.
+      Snapshot files copied: {{ nvme_ocp_smart_snapshot_files.stdout_lines|default([])|length }}
+      Results directory: {{ monitoring_results_path }}
+      Monitoring continues running...
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_smart_snapshot_files.stdout != ""

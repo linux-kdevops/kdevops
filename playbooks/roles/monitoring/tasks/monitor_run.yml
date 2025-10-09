@@ -7,6 +7,11 @@
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool
 
+# Import NVMe OCP SMART monitoring tasks
+- ansible.builtin.include_tasks: monitors/nvme_ocp_smart/run.yml
+  when:
+    - monitor_nvme_ocp_smart|default(false)|bool
+
 # Fragmentation monitoring tasks
 - name: Create fragmentation scripts directory
   become: true

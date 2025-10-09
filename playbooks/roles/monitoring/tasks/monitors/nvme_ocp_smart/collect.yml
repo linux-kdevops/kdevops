@@ -1,0 +1,115 @@
+---
+# NVMe OCP SMART monitoring collection
+- name: Check if NVMe OCP SMART monitoring is enabled
+  ansible.builtin.set_fact:
+    nvme_ocp_smart_enabled: "{{ monitor_nvme_ocp_smart|default(false)|bool }}"
+
+- name: Check for NVMe OCP SMART monitoring processes
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: "ls /root/monitoring/nvme_ocp_smart_*.pid 2>/dev/null || true"
+  register: nvme_ocp_smart_pids
+  changed_when: false
+  when:
+    - enable_monitoring|default(false)|bool
+
+- name: Stop NVMe OCP SMART monitoring processes
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    for pidfile in /root/monitoring/nvme_ocp_smart_*.pid; do
+      if [ -f "$pidfile" ]; then
+        device_name=$(basename "$pidfile" .pid | sed 's/nvme_ocp_smart_//')
+        pid=$(cat "$pidfile")
+        if ps -p $pid > /dev/null 2>&1; then
+          kill $pid
+          echo "Stopped NVMe OCP SMART monitoring for device $device_name (PID $pid)"
+        else
+          echo "NVMe OCP SMART monitoring for device $device_name (PID $pid) was not running"
+        fi
+        rm -f "$pidfile"
+      fi
+    done
+  register: nvme_ocp_stop_monitor
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_pids.stdout != ""
+
+- name: Collect NVMe OCP SMART monitoring data files
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: "ls /root/monitoring/nvme_ocp_smart_*_stats.txt 2>/dev/null || true"
+  register: nvme_ocp_smart_data_files
+  changed_when: false
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+
+- name: Copy NVMe OCP SMART monitoring data to localhost
+  become: true
+  become_method: sudo
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_{{ item | basename }}"
+    flat: true
+    validate_checksum: false
+  loop: "{{ nvme_ocp_smart_data_files.stdout_lines|default([]) }}"
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_smart_data_files.stdout != ""
+
+- name: Display NVMe OCP SMART data collection summary
+  ansible.builtin.debug:
+    msg: |
+      NVMe OCP SMART monitoring collection complete.
+      Data files copied: {{ nvme_ocp_smart_data_files.stdout_lines|default([])|length }}
+      Results directory: {{ monitoring_results_path }}
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_smart_data_files.stdout != ""
+
+- name: Find collected NVMe OCP SMART stats files for plotting
+  ansible.builtin.find:
+    paths: "{{ monitoring_results_path }}"
+    patterns: "*nvme_ocp_smart*_stats.txt"
+    file_type: file
+  delegate_to: localhost
+  run_once: true
+  register: nvme_ocp_stats_files
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+
+- name: Generate NVMe OCP SMART plots on localhost
+  ansible.builtin.command:
+    cmd: >
+      python3 {{ playbook_dir }}/roles/monitoring/files/plot_nvme_ocp_stats.py
+      -o {{ monitoring_results_path }}/nvme_ocp_smart_plot.png
+      {{ nvme_ocp_stats_files.files | map(attribute='path') | join(' ') }}
+  delegate_to: localhost
+  run_once: true
+  register: nvme_ocp_plot_generation
+  ignore_errors: true
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_stats_files.files is defined
+    - nvme_ocp_stats_files.files | length > 0
+
+- name: Display NVMe OCP SMART plotting status
+  ansible.builtin.debug:
+    msg: |
+      NVMe OCP SMART plotting {% if nvme_ocp_plot_generation.rc == 0 %}succeeded{% else %}failed{% endif %}.
+      {% if nvme_ocp_plot_generation.rc == 0 %}
+      Plot saved to: {{ monitoring_results_path }}/nvme_ocp_smart_plot.png
+      {% else %}
+      Error: {{ nvme_ocp_plot_generation.stderr | default('Unknown error') }}
+      {% endif %}
+  delegate_to: localhost
+  run_once: true
+  when:
+    - enable_monitoring|default(false)|bool
+    - nvme_ocp_smart_enabled|bool
+    - nvme_ocp_plot_generation is defined

@@ -116,6 +116,51 @@ config MONITOR_FRAGMENTATION_OUTPUT_DIR
 
 endif # MONITOR_DEVELOPMENTAL_STATS
 
+config MONITOR_NVME_OCP_SMART
+	bool "Monitor NVMe OCP extended SMART statistics"
+	output yaml
+	default n
+	help
+	  Enable monitoring of NVMe OCP (Open Compute Project) extended SMART
+	  statistics using nvme-cli OCP plugin.
+
+	  Collects extended statistics from:
+	  nvme ocp smart-add-log --output-format=json
+
+	  The collected data includes cloud SSD specific metrics:
+	  - Advanced wear leveling data (erase counts, bad blocks)
+	  - Extended reliability metrics (ECC errors, XOR recovery)
+	  - Thermal throttling and power management data
+	  - Capacitor health and power loss protection status
+	  - PCIe error counters and endurance estimates
+
+config MONITOR_NVME_OCP_SMART_INTERVAL
+	int "NVMe OCP SMART monitoring interval (seconds)"
+	output yaml
+	default 120
+	depends on MONITOR_NVME_OCP_SMART
+	range 60 3600
+	help
+	  How often to collect NVMe OCP SMART statistics in seconds.
+	  Default is 120 seconds (2 minutes).
+
+	  OCP SMART data changes more slowly than standard SMART metrics,
+	  so longer intervals are appropriate. Shorter intervals may not
+	  provide meaningful additional data and increase system overhead.
+
+config MONITOR_NVME_OCP_SMART_DEVICES
+	string "NVMe OCP devices to monitor (space-separated)"
+	output yaml
+	default "auto"
+	depends on MONITOR_NVME_OCP_SMART
+	help
+	  Space-separated list of OCP-compatible NVMe devices to monitor.
+
+	  Use "auto" to automatically discover OCP-compatible devices by
+	  testing nvme ocp smart-add-log capability.
+
+	  Manual specification: "/dev/nvme0n1 /dev/nvme1n1"
+
 # Future monitoring options can be added here
 # Examples:
 # - Memory pressure monitoring
