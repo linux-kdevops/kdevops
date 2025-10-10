@@ -100,6 +100,52 @@ def get_lambdalabs_summary() -> tuple[bool, str]:
         return False, "Lambda Labs: Error querying API - using defaults"
 
 
+def generate_aws_kconfig() -> bool:
+    """
+    Generate AWS Kconfig files.
+    Returns True on success, False on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    aws_scripts_dir = os.path.join(project_root, "terraform", "aws", "scripts")
+    aws_kconfigs_dir = os.path.join(project_root, "terraform", "aws", "kconfigs")
+
+    # Define the script-to-output mapping
+    scripts_to_run = [
+        ("gen_kconfig_ami", "Kconfig.ami"),
+        ("gen_kconfig_instance", "Kconfig.instance"),
+        ("gen_kconfig_location", "Kconfig.location"),
+    ]
+
+    all_success = True
+
+    for script_name, kconfig_file in scripts_to_run:
+        script_path = os.path.join(aws_scripts_dir, script_name)
+        output_path = os.path.join(aws_kconfigs_dir, kconfig_file)
+
+        # Run the script and capture its output
+        result = subprocess.run(
+            [script_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            # Write the output to the corresponding Kconfig file
+            try:
+                with open(output_path, 'w') as f:
+                    f.write(result.stdout)
+            except IOError as e:
+                print(f"Error writing {kconfig_file}: {e}", file=sys.stderr)
+                all_success = False
+        else:
+            print(f"Error running {script_name}: {result.stderr}", file=sys.stderr)
+            all_success = False
+
+    return all_success
+
+
 def main():
     """Main function to generate cloud configurations."""
     print("Cloud Provider Configuration Summary")
@@ -121,14 +167,22 @@ def main():
         print(f"⚠ {summary}")
     print()
 
-    # AWS (placeholder - not implemented)
-    print("⚠ AWS: Dynamic configuration not yet implemented")
+    # AWS - Generate Kconfig files
+    kconfig_generated = generate_aws_kconfig()
+    if kconfig_generated:
+        print("✓ AWS: Kconfig files generated successfully")
+    else:
+        print("⚠ AWS: Failed to generate Kconfig files - using defaults")
+    print()
 
     # Azure (placeholder - not implemented)
     print("⚠ Azure: Dynamic configuration not yet implemented")
 
     # GCE (placeholder - not implemented)
     print("⚠ GCE: Dynamic configuration not yet implemented")
+
+    # OCI (placeholder - not implemented)
+    print("⚠ OCI: Dynamic configuration not yet implemented")
 
     print()
     print("Note: Dynamic configurations query real-time availability")

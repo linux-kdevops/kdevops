@@ -109,8 +109,8 @@ config TERRAFORM_AWS_AMI_OWNER
 config TERRAFORM_AWS_NS
 	string
 	output yaml
-	default "AlmaLinux OS *" if TERRAFORM_AWS_AMI_ALMALINUX_10
-	default "AlmaLinux OS 8.*" if TERRAFORM_AWS_AMI_ALMALINUX_8
+	default "AlmaLinux OS Kitten 10.202509*" if TERRAFORM_AWS_AMI_ALMALINUX_10
+	default "AlmaLinux OS 8.10.202*" if TERRAFORM_AWS_AMI_ALMALINUX_8
 	default "almalinux9-x86_64-community-vmware-bundle" if TERRAFORM_AWS_AMI_ALMALINUX_9
 
 endif # TERRAFORM_AWS_DISTRO_ALMALINUX
@@ -139,7 +139,7 @@ config TERRAFORM_AWS_AMI_OWNER
 config TERRAFORM_AWS_NS
 	string
 	output yaml
-	default "amzn2-ami-*" if TERRAFORM_AWS_AMI_AMAZON_LINUX_2
+	default "amzn2-ami-minimal-*" if TERRAFORM_AWS_AMI_AMAZON_LINUX_2
 	default "al2023-ami-*" if TERRAFORM_AWS_AMI_AMAZON_LINUX_2023
 
 endif # TERRAFORM_AWS_DISTRO_AMAZON
@@ -257,9 +257,9 @@ config TERRAFORM_AWS_NS
 	default "fedora-coreos-39.20240*" if TERRAFORM_AWS_AMI_FEDORA_39
 	default "fedora-coreos-40.202410*" if TERRAFORM_AWS_AMI_FEDORA_40
 	default "fedora-coreos-41.20250*" if TERRAFORM_AWS_AMI_FEDORA_41
-	default "fedora-coreos-42.202509*" if TERRAFORM_AWS_AMI_FEDORA_42
-	default "fedora-coreos-43.20250917.1*" if TERRAFORM_AWS_AMI_FEDORA_43
-	default "fedora-coreos-44.202509*" if TERRAFORM_AWS_AMI_FEDORA_44
+	default "fedora-coreos-42.202510*" if TERRAFORM_AWS_AMI_FEDORA_42
+	default "fedora-coreos-43.2025100*" if TERRAFORM_AWS_AMI_FEDORA_43
+	default "fedora-coreos-44.2025100*" if TERRAFORM_AWS_AMI_FEDORA_44
 
 endif # TERRAFORM_AWS_DISTRO_FEDORA
 
@@ -322,9 +322,9 @@ config TERRAFORM_AWS_AMI_OWNER
 config TERRAFORM_AWS_NS
 	string
 	output yaml
-	default "RHEL-10.0.0_HVM*" if TERRAFORM_AWS_AMI_RHEL_10
+	default "RHEL-10.0.0_HVM-20250*" if TERRAFORM_AWS_AMI_RHEL_10
 	default "RHEL-7.9_HVM-20240930-x86_64-0-Hourly2-GP3" if TERRAFORM_AWS_AMI_RHEL_7
-	default "RHEL-8.10.0_HVM-20250*" if TERRAFORM_AWS_AMI_RHEL_8
+	default "RHEL-8.10.0_HVM-2025*" if TERRAFORM_AWS_AMI_RHEL_8
 	default "RHEL-9.*" if TERRAFORM_AWS_AMI_RHEL_9
 
 endif # TERRAFORM_AWS_DISTRO_REDHAT
@@ -392,8 +392,8 @@ config TERRAFORM_AWS_AMI_OWNER
 config TERRAFORM_AWS_NS
 	string
 	output yaml
-	default "suse-sles-12-sp5-v20250*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_12
-	default "suse-sles-15-sp*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_15
+	default "suse-sles-12-sp5-v2025*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_12
+	default "suse-sles-15-sp7-*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_15
 	default "suse-sle-micro-5-*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_5
 	default "suse-sle-micro-6-*" if TERRAFORM_AWS_AMI_SUSE_LINUX_ENTERPRISE_6
 
@@ -428,6 +428,9 @@ config TERRAFORM_AWS_AMI_UBUNTU_24_10
 config TERRAFORM_AWS_AMI_UBUNTU_25_04
 	bool "Ubuntu 25.04"
 
+config TERRAFORM_AWS_AMI_UBUNTU_25_10
+	bool "Ubuntu 25.10"
+
 endchoice
 
 config TERRAFORM_AWS_AMI_OWNER
@@ -445,5 +448,6 @@ config TERRAFORM_AWS_NS
 	default "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_24_04_LTS
 	default "ubuntu/images/hvm-ssd-gp3/ubuntu-oracular-24.10-a*" if TERRAFORM_AWS_AMI_UBUNTU_24_10
 	default "ubuntu/images/hvm-ssd-gp3/ubuntu-plucky-25.04-a*" if TERRAFORM_AWS_AMI_UBUNTU_25_04
+	default "ubuntu/images/hvm-ssd-gp3/ubuntu-questing-25.10-a*" if TERRAFORM_AWS_AMI_UBUNTU_25_10
 
 endif # TERRAFORM_AWS_DISTRO_CANONICAL

@@ -186,6 +186,20 @@ config TERRAFORM_AWS_INSTANCE_FAMILY_C8GN
 	  See https://aws.amazon.com/ec2/instance-types/c8gn/ for
 	  details.
 
+config TERRAFORM_AWS_INSTANCE_FAMILY_C8I
+	bool "c8i"
+	depends on TARGET_ARCH_X86_64
+	help
+	  See https://aws.amazon.com/ec2/instance-types/c8i/ for
+	  details.
+
+config TERRAFORM_AWS_INSTANCE_FAMILY_C8I_FLEX
+	bool "c8i-flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  See https://aws.amazon.com/ec2/instance-types/c8i-flex/ for
+	  details.
+
 config TERRAFORM_AWS_INSTANCE_FAMILY_D2
 	bool "d2"
 	depends on TARGET_ARCH_X86_64
@@ -828,6 +842,13 @@ config TERRAFORM_AWS_INSTANCE_FAMILY_R8G
 	depends on TARGET_ARCH_ARM64
 	help
 	  See https://aws.amazon.com/ec2/instance-types/r8g/ for
+	  details.
+
+config TERRAFORM_AWS_INSTANCE_FAMILY_R8GB
+	bool "r8gb"
+	depends on TARGET_ARCH_ARM64
+	help
+	  See https://aws.amazon.com/ec2/instance-types/r8gb/ for
 	  details.
 
 config TERRAFORM_AWS_INSTANCE_FAMILY_R8GD
@@ -3510,6 +3531,222 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 
 endif # TERRAFORM_AWS_INSTANCE_FAMILY_C8GN
 
+if TERRAFORM_AWS_INSTANCE_FAMILY_C8I
+
+choice
+	prompt "Instance type"
+	default TERRAFORM_AWS_INSTANCE_SIZE_C8I_LARGE
+	help
+	  Add storage by increasing the number of EBS volumes per
+	  instance.
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_LARGE
+	bool "c8i.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 2
+	  RAM: 4.0 GiB
+	  Network speed: Up to 12.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_XLARGE
+	bool "c8i.xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 4
+	  RAM: 8.0 GiB
+	  Network speed: Up to 12.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_2XLARGE
+	bool "c8i.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 8
+	  RAM: 16.0 GiB
+	  Network speed: Up to 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_4XLARGE
+	bool "c8i.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 16
+	  RAM: 32.0 GiB
+	  Network speed: Up to 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_8XLARGE
+	bool "c8i.8xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 32
+	  RAM: 64.0 GiB
+	  Network speed: 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_12XLARGE
+	bool "c8i.12xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 48
+	  RAM: 96.0 GiB
+	  Network speed: 22.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_16XLARGE
+	bool "c8i.16xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 64
+	  RAM: 128.0 GiB
+	  Network speed: 30 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_24XLARGE
+	bool "c8i.24xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 96
+	  RAM: 192.0 GiB
+	  Network speed: 40 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_32XLARGE
+	bool "c8i.32xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 128
+	  RAM: 256.0 GiB
+	  Network speed: 50 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_48XLARGE
+	bool "c8i.48xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 192
+	  RAM: 384.0 GiB
+	  Network speed: 75 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_METAL_48XL
+	bool "c8i.metal-48xl"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 192
+	  RAM: 384.0 GiB
+	  Network speed: 75 Gigabit
+	  Bare metal instance.
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_96XLARGE
+	bool "c8i.96xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 384
+	  RAM: 768.0 GiB
+	  Network speed: 100 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_METAL_96XL
+	bool "c8i.metal-96xl"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 384
+	  RAM: 768.0 GiB
+	  Network speed: 100 Gigabit
+	  Bare metal instance.
+
+endchoice
+
+config TERRAFORM_AWS_INSTANCE_TYPE
+	string
+	output yaml
+	default "c8i.large" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_LARGE
+	default "c8i.xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_XLARGE
+	default "c8i.2xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_2XLARGE
+	default "c8i.4xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_4XLARGE
+	default "c8i.8xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_8XLARGE
+	default "c8i.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_12XLARGE
+	default "c8i.16xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_16XLARGE
+	default "c8i.24xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_24XLARGE
+	default "c8i.32xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_32XLARGE
+	default "c8i.48xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_48XLARGE
+	default "c8i.metal-48xl" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_METAL_48XL
+	default "c8i.96xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_96XLARGE
+	default "c8i.metal-96xl" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_METAL_96XL
+
+endif # TERRAFORM_AWS_INSTANCE_FAMILY_C8I
+
+if TERRAFORM_AWS_INSTANCE_FAMILY_C8I_FLEX
+
+choice
+	prompt "Instance type"
+	default TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_LARGE
+	help
+	  Add storage by increasing the number of EBS volumes per
+	  instance.
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_LARGE
+	bool "c8i-flex.large"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 2
+	  RAM: 4.0 GiB
+	  Network speed: Up to 12.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_XLARGE
+	bool "c8i-flex.xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 4
+	  RAM: 8.0 GiB
+	  Network speed: Up to 12.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_2XLARGE
+	bool "c8i-flex.2xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 8
+	  RAM: 16.0 GiB
+	  Network speed: Up to 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_4XLARGE
+	bool "c8i-flex.4xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 16
+	  RAM: 32.0 GiB
+	  Network speed: Up to 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_8XLARGE
+	bool "c8i-flex.8xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 32
+	  RAM: 64.0 GiB
+	  Network speed: Up to 15 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_12XLARGE
+	bool "c8i-flex.12xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 48
+	  RAM: 96.0 GiB
+	  Network speed: Up to 22.5 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_16XLARGE
+	bool "c8i-flex.16xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 64
+	  RAM: 128.0 GiB
+	  Network speed: Up to 30 Gigabit
+
+endchoice
+
+config TERRAFORM_AWS_INSTANCE_TYPE
+	string
+	output yaml
+	default "c8i-flex.large" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_LARGE
+	default "c8i-flex.xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_XLARGE
+	default "c8i-flex.2xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_2XLARGE
+	default "c8i-flex.4xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_4XLARGE
+	default "c8i-flex.8xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_8XLARGE
+	default "c8i-flex.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_12XLARGE
+	default "c8i-flex.16xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_C8I_FLEX_16XLARGE
+
+endif # TERRAFORM_AWS_INSTANCE_FAMILY_C8I_FLEX
+
 if TERRAFORM_AWS_INSTANCE_FAMILY_D2
 
 choice
@@ -5369,6 +5606,15 @@ config TERRAFORM_AWS_INSTANCE_SIZE_I8G_16XLARGE
 	  Network speed: Up to 37.5 Gigabit
 	  Additional storage: 15000 GB ssd
 
+config TERRAFORM_AWS_INSTANCE_SIZE_I8G_24XLARGE
+	bool "i8g.24xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 96
+	  RAM: 768.0 GiB
+	  Network speed: Up to 56.25 Gigabit
+	  Additional storage: 22500 GB ssd
+
 config TERRAFORM_AWS_INSTANCE_SIZE_I8G_METAL_24XL
 	bool "i8g.metal-24xl"
 	depends on TARGET_ARCH_ARM64
@@ -5378,15 +5624,6 @@ config TERRAFORM_AWS_INSTANCE_SIZE_I8G_METAL_24XL
 	  Network speed: Up to 56.25 Gigabit
 	  Additional storage: 22500 GB ssd
 	  Bare metal instance.
-
-config TERRAFORM_AWS_INSTANCE_SIZE_I8G_24XLARGE
-	bool "i8g.24xlarge"
-	depends on TARGET_ARCH_ARM64
-	help
-	  vCPU count: 96
-	  RAM: 768.0 GiB
-	  Network speed: Up to 56.25 Gigabit
-	  Additional storage: 22500 GB ssd
 
 config TERRAFORM_AWS_INSTANCE_SIZE_I8G_48XLARGE
 	bool "i8g.48xlarge"
@@ -5409,8 +5646,8 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "i8g.8xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_8XLARGE
 	default "i8g.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_12XLARGE
 	default "i8g.16xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_16XLARGE
-	default "i8g.metal-24xl" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_METAL_24XL
 	default "i8g.24xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_24XLARGE
+	default "i8g.metal-24xl" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_METAL_24XL
 	default "i8g.48xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_I8G_48XLARGE
 
 endif # TERRAFORM_AWS_INSTANCE_FAMILY_I8G
@@ -6685,6 +6922,14 @@ config TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_6XLARGE
 	  RAM: 96.0 GiB
 	  Network speed: 50 Gigabit
 
+config TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_12XLARGE
+	bool "m5zn.12xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 48
+	  RAM: 192.0 GiB
+	  Network speed: 100 Gigabit
+
 config TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_METAL
 	bool "m5zn.metal"
 	depends on TARGET_ARCH_X86_64
@@ -6693,14 +6938,6 @@ config TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_METAL
 	  RAM: 192.0 GiB
 	  Network speed: 100 Gigabit
 	  Bare metal instance.
-
-config TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_12XLARGE
-	bool "m5zn.12xlarge"
-	depends on TARGET_ARCH_X86_64
-	help
-	  vCPU count: 48
-	  RAM: 192.0 GiB
-	  Network speed: 100 Gigabit
 
 endchoice
 
@@ -6712,8 +6949,8 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "m5zn.2xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_2XLARGE
 	default "m5zn.3xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_3XLARGE
 	default "m5zn.6xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_6XLARGE
-	default "m5zn.metal" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_METAL
 	default "m5zn.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_12XLARGE
+	default "m5zn.metal" if TERRAFORM_AWS_INSTANCE_SIZE_M5ZN_METAL
 
 endif # TERRAFORM_AWS_INSTANCE_FAMILY_M5ZN
 
@@ -11223,6 +11460,114 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 
 endif # TERRAFORM_AWS_INSTANCE_FAMILY_R8G
 
+if TERRAFORM_AWS_INSTANCE_FAMILY_R8GB
+
+choice
+	prompt "Instance type"
+	default TERRAFORM_AWS_INSTANCE_SIZE_R8GB_MEDIUM
+	help
+	  Add storage by increasing the number of EBS volumes per
+	  instance.
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_MEDIUM
+	bool "r8gb.medium"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 1
+	  RAM: 8.0 GiB
+	  Network speed: Up to 16.66 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_LARGE
+	bool "r8gb.large"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 2
+	  RAM: 16.0 GiB
+	  Network speed: Up to 20 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_XLARGE
+	bool "r8gb.xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 4
+	  RAM: 32.0 GiB
+	  Network speed: Up to 26.66 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_2XLARGE
+	bool "r8gb.2xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 8
+	  RAM: 64.0 GiB
+	  Network speed: Up to 33.33 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_4XLARGE
+	bool "r8gb.4xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 16
+	  RAM: 128.0 GiB
+	  Network speed: 33.33 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_8XLARGE
+	bool "r8gb.8xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 32
+	  RAM: 256.0 GiB
+	  Network speed: 66.66 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_12XLARGE
+	bool "r8gb.12xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 48
+	  RAM: 384.0 GiB
+	  Network speed: 100 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_16XLARGE
+	bool "r8gb.16xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 64
+	  RAM: 512.0 GiB
+	  Network speed: 133.33 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_24XLARGE
+	bool "r8gb.24xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 96
+	  RAM: 768.0 GiB
+	  Network speed: 200 Gigabit
+
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GB_METAL_24XL
+	bool "r8gb.metal-24xl"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 96
+	  RAM: 768.0 GiB
+	  Network speed: 200 Gigabit
+	  Bare metal instance.
+
+endchoice
+
+config TERRAFORM_AWS_INSTANCE_TYPE
+	string
+	output yaml
+	default "r8gb.medium" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_MEDIUM
+	default "r8gb.large" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_LARGE
+	default "r8gb.xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_XLARGE
+	default "r8gb.2xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_2XLARGE
+	default "r8gb.4xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_4XLARGE
+	default "r8gb.8xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_8XLARGE
+	default "r8gb.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_12XLARGE
+	default "r8gb.16xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_16XLARGE
+	default "r8gb.24xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_24XLARGE
+	default "r8gb.metal-24xl" if TERRAFORM_AWS_INSTANCE_SIZE_R8GB_METAL_24XL
+
+endif # TERRAFORM_AWS_INSTANCE_FAMILY_R8GB
+
 if TERRAFORM_AWS_INSTANCE_FAMILY_R8GD
 
 choice
@@ -11304,6 +11649,15 @@ config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_16XLARGE
 	  Network speed: 30 Gigabit
 	  Additional storage: 3800 GB ssd
 
+config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_24XLARGE
+	bool "r8gd.24xlarge"
+	depends on TARGET_ARCH_ARM64
+	help
+	  vCPU count: 96
+	  RAM: 768.0 GiB
+	  Network speed: 40 Gigabit
+	  Additional storage: 5700 GB ssd
+
 config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_24XL
 	bool "r8gd.metal-24xl"
 	depends on TARGET_ARCH_ARM64
@@ -11313,15 +11667,6 @@ config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_24XL
 	  Network speed: 40 Gigabit
 	  Additional storage: 5700 GB ssd
 	  Bare metal instance.
-
-config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_24XLARGE
-	bool "r8gd.24xlarge"
-	depends on TARGET_ARCH_ARM64
-	help
-	  vCPU count: 96
-	  RAM: 768.0 GiB
-	  Network speed: 40 Gigabit
-	  Additional storage: 5700 GB ssd
 
 config TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_48XL
 	bool "r8gd.metal-48xl"
@@ -11355,8 +11700,8 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "r8gd.8xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_8XLARGE
 	default "r8gd.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_12XLARGE
 	default "r8gd.16xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_16XLARGE
-	default "r8gd.metal-24xl" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_24XL
 	default "r8gd.24xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_24XLARGE
+	default "r8gd.metal-24xl" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_24XL
 	default "r8gd.metal-48xl" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_METAL_48XL
 	default "r8gd.48xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_R8GD_48XLARGE
 
@@ -13008,6 +13353,15 @@ config TERRAFORM_AWS_INSTANCE_SIZE_Z1D_6XLARGE
 	  Network speed: 12 Gigabit
 	  Additional storage: 900 GB ssd
 
+config TERRAFORM_AWS_INSTANCE_SIZE_Z1D_12XLARGE
+	bool "z1d.12xlarge"
+	depends on TARGET_ARCH_X86_64
+	help
+	  vCPU count: 48
+	  RAM: 384.0 GiB
+	  Network speed: 25 Gigabit
+	  Additional storage: 1800 GB ssd
+
 config TERRAFORM_AWS_INSTANCE_SIZE_Z1D_METAL
 	bool "z1d.metal"
 	depends on TARGET_ARCH_X86_64
@@ -13017,15 +13371,6 @@ config TERRAFORM_AWS_INSTANCE_SIZE_Z1D_METAL
 	  Network speed: 25 Gigabit
 	  Additional storage: 1800 GB ssd
 	  Bare metal instance.
-
-config TERRAFORM_AWS_INSTANCE_SIZE_Z1D_12XLARGE
-	bool "z1d.12xlarge"
-	depends on TARGET_ARCH_X86_64
-	help
-	  vCPU count: 48
-	  RAM: 384.0 GiB
-	  Network speed: 25 Gigabit
-	  Additional storage: 1800 GB ssd
 
 endchoice
 
@@ -13037,8 +13382,8 @@ config TERRAFORM_AWS_INSTANCE_TYPE
 	default "z1d.2xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_2XLARGE
 	default "z1d.3xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_3XLARGE
 	default "z1d.6xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_6XLARGE
-	default "z1d.metal" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_METAL
 	default "z1d.12xlarge" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_12XLARGE
+	default "z1d.metal" if TERRAFORM_AWS_INSTANCE_SIZE_Z1D_METAL
 
 endif # TERRAFORM_AWS_INSTANCE_FAMILY_Z1D
 
