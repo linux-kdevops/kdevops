@@ -130,6 +130,9 @@ def main():
     # GCE (placeholder - not implemented)
     print("⚠ GCE: Dynamic configuration not yet implemented")
 
+    # OCI (placeholder - not implemented)
+    print("⚠ OCI: Dynamic configuration not yet implemented")
+
     print()
     print("Note: Dynamic configurations query real-time availability")
     print("Run 'make menuconfig' to configure your cloud provider")
