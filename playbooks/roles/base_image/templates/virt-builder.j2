@@ -77,9 +77,5 @@ firstboot-command update-locale LANG=en_US.UTF-8
 firstboot-command systemctl stop ssh
 firstboot-command systemctl start ssh
 
-{% if guestfs_copy_sources_from_host_to_guest %}
-delete /etc/apt/sources.list.d/debian.sources
-{% endif %}
-
 {% endif %}
 {% endif %}
