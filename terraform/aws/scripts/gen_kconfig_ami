@@ -359,6 +359,9 @@ def generate_terraform_pattern(group_key, sample_amis):
     """
     Generate a Terraform-compatible filter pattern from sample AMIs.
 
+    The pattern preserves distinguishing characteristics (like OS identifiers)
+    while wildcarding variable parts (version numbers, dates).
+
     Args:
         group_key (str): Classification key
         sample_amis (list): List of sample AMI info
@@ -372,22 +375,68 @@ def generate_terraform_pattern(group_key, sample_amis):
     # Analyze common patterns in AMI names
     names = [ami['name'] for ami in sample_amis]
 
-    # Find the longest common prefix and suffix patterns
+    # Single AMI case
     if len(names) == 1:
-        # Single AMI - create a pattern that matches similar names
         name = names[0]
-        # Replace specific dates/versions with wildcards
-        pattern = re.sub(r'\d{4}-\d{2}-\d{2}', '*', name)  # Replace dates
-        pattern = re.sub(r'-\d+\.\d+\.\d+', '-*', pattern)  # Replace version numbers
-        pattern = re.sub(r'_\d+\.\d+\.\d+', '_*', pattern)  # Replace version numbers with underscores
+        pattern = _create_pattern_with_wildcards(name)
         return pattern
 
-    # Multiple AMIs - find common pattern
-    common_parts = []
-    min_len = min(len(name) for name in names)
+    # Multiple AMIs - need to find distinctive pattern
+    # Look for parenthetical OS identifiers like "(Ubuntu 20.04)" or "(Amazon Linux 2)"
+    os_identifier = _extract_os_identifier(names)
 
-    # Find common prefix
+    if os_identifier:
+        # Find common prefix before the OS identifier
+        prefix = _find_common_prefix_before_marker(names, os_identifier)
+        if prefix:
+            # Create pattern: "prefix * (OS identifier)*"
+            # Wildcard version numbers before OS, preserve OS, wildcard everything after
+            return f"{prefix}*{os_identifier}*"
+
+    # Fallback: find common prefix and use it directly
+    # This works well for distributions without OS identifiers
+    prefix = _find_common_prefix(names)
+    if prefix and len(prefix) > 5:  # Only use prefix if it's substantial
+        return f"{prefix}*"
+
+    # Last resort: create pattern from first name with wildcards
+    return _create_pattern_with_wildcards(names[0])
+
+
+def _extract_os_identifier(names):
+    """
+    Extract common OS identifier from AMI names.
+
+    Looks for patterns like "(Ubuntu 20.04)", "(Amazon Linux 2)", etc.
+
+    Args:
+        names (list): List of AMI names
+
+    Returns:
+        str: Common OS identifier or None
+    """
+    # Look for parenthetical content that appears in all names
+    paren_pattern = re.compile(r'\([^)]+\)')
+
+    # Find all parenthetical matches in first name
+    first_matches = paren_pattern.findall(names[0])
+
+    # Check if any of these matches appear in all names
+    for match in first_matches:
+        if all(match in name for name in names):
+            return match
+
+    return None
+
+
+def _find_common_prefix(names):
+    """Find the longest common prefix across all names."""
+    if not names:
+        return ""
+
+    min_len = min(len(name) for name in names)
     prefix_len = 0
+
     for i in range(min_len):
         chars = set(name[i] for name in names)
         if len(chars) == 1:
@@ -395,17 +444,72 @@ def generate_terraform_pattern(group_key, sample_amis):
         else:
             break
 
-    if prefix_len > 0:
-        prefix = names[0][:prefix_len]
-        return f"{prefix}*"
+    return names[0][:prefix_len] if prefix_len > 0 else ""
 
-    # If no common prefix, try to extract the base pattern
-    first_name = names[0]
-    # Replace numbers and dates with wildcards
-    pattern = re.sub(r'\d{8}', '*', first_name)  # Replace 8-digit dates
-    pattern = re.sub(r'\d{4}-\d{2}-\d{2}', '*', pattern)  # Replace ISO dates
-    pattern = re.sub(r'-\d+\.\d+\.\d+', '-*', pattern)  # Replace version numbers
-    pattern = re.sub(r'_\d+\.\d+\.\d+', '_*', pattern)  # Replace version numbers with underscores
+
+def _find_common_prefix_before_marker(names, marker):
+    """
+    Find common prefix that appears before a marker string.
+
+    Args:
+        names (list): List of AMI names
+        marker (str): Marker string to stop at
+
+    Returns:
+        str: Common prefix before marker
+    """
+    # Extract the part before the marker in each name
+    prefixes = []
+    for name in names:
+        marker_pos = name.find(marker)
+        if marker_pos > 0:
+            prefixes.append(name[:marker_pos])
+
+    if not prefixes:
+        return ""
+
+    return _find_common_prefix(prefixes)
+
+
+def _create_pattern_with_wildcards(name):
+    """
+    Create a pattern from a single AMI name by replacing variable parts.
+
+    Args:
+        name (str): AMI name
+
+    Returns:
+        str: Pattern with wildcards
+    """
+    pattern = name
+
+    # Replace dates in various formats
+    pattern = re.sub(r'\d{8}', '*', pattern)  # 8-digit dates like 20250101
+    pattern = re.sub(r'\d{4}-\d{2}-\d{2}', '*', pattern)  # ISO dates like 2025-01-01
+
+    # Replace version numbers (but preserve OS versions in parentheses)
+    # Only replace version patterns that are NOT inside parentheses
+    # This is tricky, so we'll use a more targeted approach
+
+    # Replace standalone version numbers like "2.3.1" or "1.13"
+    # But first, protect parenthetical content
+    paren_content = []
+    def save_paren(match):
+        paren_content.append(match.group(0))
+        return f"<<<PAREN{len(paren_content)-1}>>>"
+
+    pattern = re.sub(r'\([^)]+\)', save_paren, pattern)
+
+    # Now replace version numbers outside of parentheses
+    pattern = re.sub(r'\s\d+\.\d+(?:\.\d+)?\s', ' * ', pattern)  # Space-delimited versions
+    pattern = re.sub(r'-\d+\.\d+(?:\.\d+)?(?=\s|$|-)', '-*', pattern)  # Hyphen-prefixed versions
+
+    # Restore parenthetical content
+    for i, content in enumerate(paren_content):
+        pattern = pattern.replace(f"<<<PAREN{i}>>>", content)
+
+    # Clean up multiple consecutive wildcards
+    pattern = re.sub(r'\*+', '*', pattern)
 
     return pattern
 
