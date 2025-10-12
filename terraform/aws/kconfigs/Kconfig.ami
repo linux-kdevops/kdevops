@@ -24,6 +24,9 @@ config TERRAFORM_AWS_DISTRO_FEDORA
 config TERRAFORM_AWS_DISTRO_ORACLE
 	bool "Oracle Linux"
 
+config TERRAFORM_AWS_DISTRO_PYTORCH
+	bool "AWS Deep Learning with PyTorch"
+
 config TERRAFORM_AWS_DISTRO_REDHAT
 	bool "Red Hat Enterprise Linux"
 
@@ -279,6 +282,47 @@ config TERRAFORM_AWS_NS
 	default "OL9.3-*" if TERRAFORM_AWS_AMI_ORACLE_LINUX_9
 
 endif # TERRAFORM_AWS_DISTRO_ORACLE
+
+if TERRAFORM_AWS_DISTRO_PYTORCH
+
+choice
+	prompt "Release"
+	help
+	  Choose a specific release from the AWS Deep Learning with PyTorch
+	  distribution.
+
+config TERRAFORM_AWS_AMI_PYTORCH_AMAZON_LINUX_2
+	bool "PyTorch Amazon Linux 2"
+
+config TERRAFORM_AWS_AMI_PYTORCH_AMAZON_LINUX_2023
+	bool "PyTorch Amazon Linux 2023"
+
+config TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_20_04_LTS
+	bool "PyTorch Ubuntu 20.04 LTS"
+
+config TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_22_04_LTS
+	bool "PyTorch Ubuntu 22.04 LTS"
+
+config TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_24_04_LTS
+	bool "PyTorch Ubuntu 24.04 LTS"
+
+endchoice
+
+config TERRAFORM_AWS_AMI_OWNER
+	string
+	output yaml
+	default "898082745236"
+
+config TERRAFORM_AWS_NS
+	string
+	output yaml
+	default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch *(Amazon Linux 2)*" if TERRAFORM_AWS_AMI_PYTORCH_AMAZON_LINUX_2
+	default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.*(Amazon Linux 2023)*" if TERRAFORM_AWS_AMI_PYTORCH_AMAZON_LINUX_2023
+	default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch *(Ubuntu 20.04)*" if TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_20_04_LTS
+	default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.*(Ubuntu 22.04)*" if TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_22_04_LTS
+	default "Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.8 *(Ubuntu 24.04)*" if TERRAFORM_AWS_AMI_PYTORCH_UBUNTU_24_04_LTS
+
+endif # TERRAFORM_AWS_DISTRO_PYTORCH
 
 if TERRAFORM_AWS_DISTRO_REDHAT
 
