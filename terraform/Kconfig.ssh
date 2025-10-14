@@ -20,28 +20,14 @@ config TERRAFORM_SSH_CONFIG_USER
 	  pre-created when terraform provisions a cloud instance.
 
 config TERRAFORM_SSH_CONFIG_PUBKEY_FILE
-	string "The ssh public key to use to log in"
+	string "File containing Ansible's ssh public key"
 	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8).pub" if TERRAFORM_LAMBDALABS
 	default "~/.ssh/kdevops_terraform.pub"
 	help
-	  The ssh public key which will be pegged onto the systems's
-	  ~/.ssh/authorized_keys file so you can log in.
-
-	  For Lambda Labs, the key path is made unique per directory by appending
-	  the directory checksum to avoid conflicts when running multiple kdevops
-	  instances.
-
-config TERRAFORM_SSH_CONFIG_PRIVKEY_FILE
-	string "The ssh private key file for authentication"
-	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8)" if TERRAFORM_LAMBDALABS
-	default "~/.ssh/kdevops_terraform"
-	help
-	  The ssh private key file used for authenticating to the systems.
-	  This should correspond to the public key specified above.
-
-	  For Lambda Labs, the key path is made unique per directory by appending
-	  the directory checksum to avoid conflicts when running multiple kdevops
-	  instances.
+	  The filename of the file containing an ssh public key
+	  Ansible is to use to manage its target nodes. The
+	  matching private key should be located in a file using
+	  the same basename (without the ".pub").
 
 config TERRAFORM_SSH_CONFIG_GENKEY
 	bool "Should we create a new random key for you?"
