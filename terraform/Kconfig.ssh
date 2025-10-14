@@ -1,11 +1,10 @@
 config TERRAFORM_SSH_USER_INFER
-	bool "Selecting this will infer your username from you local system"
+	bool "Infer the ssh user name"
 	default y if !TERRAFORM_LAMBDALABS
 	default n if TERRAFORM_LAMBDALABS
 	help
-	  If enabled we and you are running 'make menuconfig' as user sonia,
-	  then we'd infer this and peg sonia as the default user name for you.
-	  We'll simply run $(shell echo $USER).
+	  If enabled and you are running 'make menuconfig' as user sonia,
+	  then use "sonia" as the ssh user name.
 
 	  Note: This is automatically disabled for Lambda Labs since they
 	  don't support custom SSH users.
@@ -16,13 +15,9 @@ config TERRAFORM_SSH_CONFIG_USER
 	default "ubuntu" if TERRAFORM_LAMBDALABS
 	default "admin" if !TERRAFORM_SSH_USER_INFER && !TERRAFORM_LAMBDALABS
 	help
-	  The SSH username to use for connecting to the target systems.
-
-	  For Lambda Labs, this is set to 'ubuntu' as Lambda Labs doesn't
-	  support custom users and typically deploys Ubuntu instances.
-
-	  For other providers, this will be inferred from your local username
-	  or set to a default value.
+	  The SSH username Ansible will use to connect to its target
+	  nodes. Generally this username has to match a user that is
+	  pre-created when terraform provisions a cloud instance.
 
 config TERRAFORM_SSH_CONFIG_PUBKEY_FILE
 	string "The ssh public key to use to log in"
