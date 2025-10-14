@@ -72,6 +72,24 @@
   when:
     - not libvirt_uri_system|bool
 
+- name: Set proper ownership on base image for rcloud access (system libvirt)
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: "{{ base_image_pathname }}"
+    owner: root
+    group: "{{ libvirt_qemu_group | default('libvirt-qemu') }}"
+    mode: "0640"
+  when:
+    - libvirt_uri_system|bool
+
+- name: Set proper permissions on base image (user libvirt)
+  ansible.builtin.file:
+    path: "{{ base_image_pathname }}"
+    mode: "0644"
+  when:
+    - not libvirt_uri_system|bool
+
 - name: Clean up the virt-builder command file
   ansible.builtin.file:
     path: "{{ command_file.path }}"
