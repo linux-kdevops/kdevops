@@ -25,24 +25,12 @@
     storagedir: "{{ kdevops_storage_pool_path }}/guestfs"
   delegate_to: localhost
 
-- name: Set the pathname of the OS base image
+- name: Set the pathname of the base image in base_images directory
   tags:
     - base_image
     - bringup
   ansible.builtin.set_fact:
     base_image: "{{ storagedir }}/base_images/{{ virtbuilder_os_version }}.raw"
-  when:
-    - not guestfs_has_custom_raw_image|bool
-  delegate_to: localhost
-
-- name: Set the pathname of the custom OS base image
-  tags:
-    - base_image
-    - bringup
-  ansible.builtin.set_fact:
-    base_image: "{{ storagedir }}/custom_images/{{ virtbuilder_os_version }}/{{ virtbuilder_os_version }}.raw"
-  when:
-    - guestfs_has_custom_raw_image|bool
   delegate_to: localhost
 
 - name: Ensure the required base OS image exists
