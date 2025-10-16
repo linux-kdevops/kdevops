@@ -21,7 +21,7 @@ delete /boot/*rescue*
 delete /boot/loader/entries/*rescue*
 {% endif %}
 
-run-command useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
+run-command getent passwd kdevops || useradd {{ kdevops_uid }} -s /bin/bash -m kdevops
 append-line /etc/sudoers.d/kdevops:kdevops   ALL=(ALL)       NOPASSWD: ALL
 edit /etc/default/grub:s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttyS0"/
 run-command {{ update_grub_cmd }}
