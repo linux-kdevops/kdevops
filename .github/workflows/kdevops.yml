@@ -74,6 +74,7 @@ on:
           - linux
           - linux-next
           - linux-stable
+          - kdevops-linus
       kernel_ref:
         description: "Linux tree git reference (branch/tag/commit-id)"
         required: true
