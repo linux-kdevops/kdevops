@@ -272,7 +272,14 @@ jobs:
               || 'kdevops-ci'
             }}
           tests: ${{ github.event.inputs.tests || '' }}
-        timeout-minutes: 120
+        # Timeout: linux-ci runs full test suite (24 hours),
+        # kdevops-ci runs single test (2 hours)
+        timeout-minutes: >-
+          ${{
+            (github.event_name == 'schedule' && 1440)
+            || (github.event.inputs.test_mode == 'linux-ci' && 1440)
+            || 120
+          }}
 
       - name: Archive results
         uses: ./.github/actions/archive
