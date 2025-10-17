@@ -88,6 +88,8 @@
     - { path: "/etc/default/locale", line: "LANG=en_US.UTF-8" }
     - { path: "/etc/default/locale", line: "LANGUAGE=en_US:en" }
     - { path: "/etc/locale.gen", line: "en_US.UTF-8 UTF-8" }
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
   tags: firstconfig
 
 - name: Generate and update locales
@@ -98,6 +100,8 @@
     locale-gen en_US.UTF-8
     update-locale LANG=en_US.UTF-8
   changed_when: true
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
   tags: firstconfig
 
 - name: Check if /mirror directory exists on localhost
