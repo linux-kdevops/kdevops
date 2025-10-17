@@ -1,0 +1,25 @@
+---
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  ignore_errors: true
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  tags: vars
+
+# Include generic Rust dependencies role
+- name: Install Rust build dependencies
+  ansible.builtin.include_role:
+    name: install-rust-deps
+
+# Include generic Go dependencies role
+- name: Install Go build dependencies
+  ansible.builtin.include_role:
+    name: install-go-deps
+
+# Install rcloud-specific dependencies (libvirt development libraries)
+- name: Install rcloud-specific build dependencies
+  ansible.builtin.include_tasks: install-deps/main.yml

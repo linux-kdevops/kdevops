@@ -45,6 +45,17 @@ config TERRAFORM_LAMBDALABS
 	  solution. Lambda Labs provides GPU-accelerated instances optimized
 	  for machine learning and high-performance computing workloads.
 
+config TERRAFORM_RCLOUD
+	bool "rcloud - Local Private Cloud"
+	help
+	  Enabling this means you are going to use rcloud as your cloud
+	  solution. rcloud is a local private cloud that provides a REST API
+	  for VM management through libvirt, similar to public cloud providers.
+
+	  This requires a running rcloud server (see defconfig-rcloud).
+	  Users can then provision VMs through the rcloud API using the
+	  standard Terraform workflow, treating rcloud as a local cloud provider.
+
 endchoice
 
 source "terraform/gce/Kconfig"
@@ -53,3 +64,4 @@ source "terraform/azure/Kconfig"
 source "terraform/oci/Kconfig"
 source "terraform/openstack/Kconfig"
 source "terraform/lambdalabs/Kconfig"
+source "terraform/rcloud/Kconfig"

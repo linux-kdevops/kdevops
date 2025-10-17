@@ -1,0 +1,58 @@
+# rcloud user/client configuration
+#
+# PURPOSE: Provision VMs through rcloud REST API using Terraform
+#
+# This defconfig is for USERS who want to provision VMs through an existing
+# rcloud server. The admin must have already set up the rcloud server using
+# defconfig-rcloud.
+#
+# Typical workflow:
+#   # Admin setup (one time):
+#   make defconfig-rcloud
+#   make
+#   make rcloud            # Sets up rcloud server and base images
+#
+#   # User workflow (on same system or remotely):
+#   make defconfig-rcloud-guest-test
+#   make
+#   make bringup           # Provisions VMs through rcloud API using Terraform
+#
+# This treats rcloud as a local cloud provider, just like AWS or Azure.
+# Users provision VMs through the standard Terraform workflow.
+
+# Basic system configuration
+CONFIG_KDEVOPS_HOSTS_PREFIX="rcloud-test"
+
+# Number of VMs to create
+CONFIG_KDEVOPS_NODES=1
+
+# VM resources (requested from rcloud)
+CONFIG_LIBVIRT_MACHINE_TYPE_Q35=y
+CONFIG_LIBVIRT_HOST_PASSTHROUGH=y
+CONFIG_LIBVIRT_MEMORY_MB=4096
+CONFIG_LIBVIRT_VCPUS=2
+
+# Disk configuration
+CONFIG_LIBVIRT_EXTRA_STORAGE_DRIVE_NVME=y
+CONFIG_LIBVIRT_NVME_DISK_SIZE_GIB=50
+
+# Disable test workflows (rcloud provides the infrastructure)
+CONFIG_WORKFLOWS=n
+
+# Use Terraform to provision VMs through rcloud API
+# This treats rcloud as a local cloud provider, similar to AWS/Azure
+CONFIG_TERRAFORM=y
+CONFIG_TERRAFORM_RCLOUD=y
+CONFIG_TERRAFORM_RCLOUD_API_URL="http://localhost:8765"
+# Use nocloud variant to match the base image created by defconfig-rcloud
+# The nocloud variant doesn't have cloud-init and works better for local testing
+CONFIG_TERRAFORM_RCLOUD_BASE_IMAGE="debian-13-nocloud-amd64-daily.raw"
+
+# IMPORTANT: SSH key configuration for rcloud service
+# The rcloud service cannot access files in ~/.ssh/ due to directory permissions.
+# You MUST configure the SSH key path to a location accessible by the rcloud service.
+# Recommended: Store keys in your kdevops directory, for example:
+#   CONFIG_TERRAFORM_SSH_CONFIG_PUBKEY_FILE="/path/to/kdevops/kdevops_terraform.pub"
+# The private key path will automatically derive from the public key path (removes .pub suffix).
+# After loading this defconfig, run 'make menuconfig' and update the SSH paths under:
+#   "Bring up methods" -> "Terraform ssh configuration" -> "SSH public key file"

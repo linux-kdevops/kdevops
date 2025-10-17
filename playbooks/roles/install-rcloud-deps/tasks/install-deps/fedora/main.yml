@@ -1,0 +1,9 @@
+---
+- name: Install rcloud-specific build dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - libvirt-devel
+    state: present
+  tags: ["rcloud", "deps"]

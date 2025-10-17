@@ -1,0 +1,107 @@
+---
+- name: Install and configure rcloud REST API server
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Ensure rcloud binary was built
+      stat:
+        path: "{{ playbook_dir }}/../workflows/rcloud/target/release/rcloud"
+      register: rcloud_binary
+      failed_when: not rcloud_binary.stat.exists
+
+    - name: Install rcloud binary
+      copy:
+        src: "{{ playbook_dir }}/../workflows/rcloud/target/release/rcloud"
+        dest: /usr/local/bin/rcloud
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Create rcloud system user
+      user:
+        name: rcloud
+        system: yes
+        shell: /usr/sbin/nologin
+        home: /var/lib/rcloud
+        create_home: yes
+
+    - name: Create rcloud configuration directory
+      file:
+        path: /etc/rcloud
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Create systemd service file
+      copy:
+        dest: /etc/systemd/system/rcloud.service
+        mode: '0644'
+        owner: root
+        group: root
+        content: |
+          [Unit]
+          Description=rcloud REST API server for VM management
+          Documentation=https://github.com/linux-kdevops/kdevops
+          After=network.target libvirtd.service
+          Requires=libvirtd.service
+
+          [Service]
+          Type=simple
+          User=rcloud
+          Group=rcloud
+          WorkingDirectory={{ topdir_path }}
+          Environment="KDEVOPS_ROOT={{ topdir_path }}"
+          Environment="RUST_LOG=info"
+          Environment="RCLOUD_STORAGE_POOL_PATH={{ kdevops_storage_pool_path | default(libvirt_storage_pool_path) }}"
+          Environment="RCLOUD_BASE_IMAGES_DIR={{ guestfs_base_image_dir }}"
+          Environment="RCLOUD_LIBVIRT_URI={{ libvirt_uri | default('qemu:///system') }}"
+          Environment="RCLOUD_NETWORK_BRIDGE={{ libvirt_bridge_name | default('default') }}"
+          ExecStart=/usr/local/bin/rcloud
+          Restart=on-failure
+          RestartSec=5s
+
+          # Security hardening
+          NoNewPrivileges=true
+          PrivateTmp=true
+          ProtectSystem=strict
+          ProtectHome=true
+          ReadWritePaths=/var/lib/rcloud {{ kdevops_storage_pool_path | default(libvirt_storage_pool_path) }}
+          ReadOnlyPaths={{ topdir_path }} {{ kdevops_storage_pool_path | default(libvirt_storage_pool_path) }}/guestfs
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Add rcloud user to libvirt-qemu group
+      user:
+        name: rcloud
+        groups: "{{ libvirt_qemu_group | default('libvirt-qemu') }}"
+        append: yes
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable rcloud service
+      systemd:
+        name: rcloud
+        enabled: yes
+
+    - name: Extract port from bind address
+      set_fact:
+        rcloud_port: "{{ (rcloud_server_bind | default('127.0.0.1:8765')).split(':')[1] }}"
+
+    - name: Display service status instructions
+      debug:
+        msg:
+          - "rcloud service installed successfully"
+          - "Start the service with: sudo systemctl start rcloud"
+          - "Check status with: sudo systemctl status rcloud"
+          - "View logs with: sudo journalctl -u rcloud -f"
+          - ""
+          - "API will be available at: http://{{ rcloud_server_bind | default('127.0.0.1:8765') }}"
+          - ""
+          - "Test with:"
+          - "  curl http://localhost:{{ rcloud_port }}/api/v1/health"
+          - "  curl http://localhost:{{ rcloud_port }}/api/v1/status"

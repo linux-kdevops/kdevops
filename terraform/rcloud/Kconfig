@@ -1,0 +1,25 @@
+if TERRAFORM_RCLOUD
+
+config TERRAFORM_RCLOUD_API_URL
+	string "rcloud API server URL"
+	default "http://localhost:8765"
+	help
+	  The URL of the rcloud REST API server. This should point to a running
+	  rcloud server instance that was set up using defconfig-rcloud.
+
+	  Default is http://localhost:8765 for local development and testing.
+
+	  For remote rcloud servers, use: http://server-hostname:8765
+
+config TERRAFORM_RCLOUD_BASE_IMAGE
+	string "Base image name to use for VMs"
+	default "debian-13-generic-amd64-daily"
+	help
+	  The name of the base image to use when creating VMs through rcloud.
+	  This must match a base image that exists in the rcloud server's
+	  base image directory (typically /xfs1/libvirt/guestfs/base_images/).
+
+	  The base images are created on the rcloud server using guestfs
+	  (see defconfig-rcloud).
+
+endif # TERRAFORM_RCLOUD

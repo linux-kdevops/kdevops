@@ -1,0 +1,5 @@
+---
+- name: Install rcloud build dependencies
+  hosts: localhost
+  roles:
+    - role: install-rcloud-deps

@@ -377,6 +377,7 @@ want to just use the kernel that comes with your Linux distribution.
   * [kdevops CXL docs](docs/cxl.md)
   * [kdevops NFS docs](docs/nfs.md)
   * [kdevops selftests docs](docs/selftests.md)
+  * [kdevops rcloud docs](workflows/rcloud/docs/TESTING.md)
   * [kdevops reboot-limit docs](docs/reboot-limit.md)
   * [kdevops AI workflow docs](docs/ai/README.md)
   * [kdevops vLLM workflow docs](workflows/vllm/)
