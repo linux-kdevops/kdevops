@@ -134,7 +134,7 @@ def generate_aws_kconfig() -> bool:
         if result.returncode == 0:
             # Write the output to the corresponding Kconfig file
             try:
-                with open(output_path, 'w') as f:
+                with open(output_path, "w") as f:
                     f.write(result.stdout)
             except IOError as e:
                 print(f"Error writing {kconfig_file}: {e}", file=sys.stderr)
