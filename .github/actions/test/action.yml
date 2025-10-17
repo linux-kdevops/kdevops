@@ -122,19 +122,16 @@ runs:
 
               # Count total tests by unique test names (not file extensions)
               # Get base test names by removing extensions and extracting just the test name
-              test_names=$(find "$wpath/results/last-run" -type f -name "*" | \
+              total_tests=$(find "$wpath/results/last-run" -type f -name "*" | \
                 grep -E '/[^/]*$' | \
                 sed 's|.*/||' | \
                 sed 's/\.\(full\|out\|runtime\|dmesg\)$//' | \
-                sort -u)
-              total_tests=$(echo "$test_names" | grep -v '^$' | wc -l)
+                sort -u | \
+                grep -v '^$' | \
+                wc -l)
 
-              bad_files=$(find "$wpath/results/last-run" -name "*.out.bad" -type f)
-              if [[ -n "$bad_files" ]]; then
-                failed_tests=$(echo "$bad_files" | wc -l)
-              else
-                failed_tests=0
-              fi
+              # Count failed tests directly from find output
+              failed_tests=$(find "$wpath/results/last-run" -name "*.out.bad" -type f | wc -l)
 
               passed_tests=$((total_tests - failed_tests))
 
