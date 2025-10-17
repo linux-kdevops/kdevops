@@ -149,8 +149,8 @@ runs:
               # Show sample test status files for passed tests
               if [ $passed_tests -gt 0 ]; then
                 echo -e "\nSample passed test:" >> ci.commit_extra
-                sample_files=$(find "$wpath/results/last-run" -type f -name "*" ! -name "*.out.bad" ! -name "*.dmesg")
-                sample_file=$(echo "$sample_files" | head -1)
+                # Get first sample file directly without echo pipe to avoid SIGPIPE with set -o pipefail
+                sample_file=$(find "$wpath/results/last-run" -type f -name "*" ! -name "*.out.bad" ! -name "*.dmesg" | head -1)
                 if [ -n "$sample_file" ] && [ -f "$sample_file" ]; then
                   cat "$sample_file" >> ci.commit_extra || echo "Failed to read sample file" >> ci.commit_extra
                 else
