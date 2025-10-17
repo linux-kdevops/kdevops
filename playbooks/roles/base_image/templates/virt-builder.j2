@@ -29,7 +29,7 @@ root-password password:kdevops
 sm-unregister
 {% endif %}
 
-{% if distro_debian_based is defined and distro_debian_based %}
+{% if guestfs_debian is defined and guestfs_debian %}
 {# Ugh, debian has to be told to bring up the network and regenerate ssh keys #}
 {# Hope we get that interface name right! #}
 install isc-dhcp-client,ifupdown
@@ -44,7 +44,7 @@ firstboot-command systemctl start ssh
 firstboot-command apt update && apt upgrade --yes
 uninstall unattended-upgrades
 
-{% if distro_debian_trixie is defined and distro_debian_trixie %}
+{% if guestfs_debian_trixie is defined and guestfs_debian_trixie %}
 {# CONFIG_GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST will not work #}
 {# if /etc/nsswitch.conf has a line like this: #}
 {# #}
