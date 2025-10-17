@@ -1,0 +1,9 @@
+---
+- name: Install Go build dependencies
+  become: true
+  become_method: sudo
+  community.general.zypper:
+    name:
+      - go
+    state: present
+  tags: ["go", "deps"]
