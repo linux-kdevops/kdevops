@@ -76,6 +76,7 @@ choice
 
 config GUESTFS_FEDORA
 	bool "Fedora (or derived distro)"
+	output yaml
 	select HAVE_DISTRO_XFS_PREFERS_MANUAL if FSTESTS_XFS
 	select HAVE_DISTRO_BTRFS_PREFERS_MANUAL if FSTESTS_BTRFS
 	select HAVE_DISTRO_EXT4_PREFERS_MANUAL if FSTESTS_EXT4
@@ -87,6 +88,7 @@ config GUESTFS_FEDORA
 
 config GUESTFS_DEBIAN
 	bool "Debian"
+	output yaml
 	select HAVE_CUSTOM_DISTRO_HOST_PREFIX
 	select HAVE_DISTRO_XFS_PREFERS_MANUAL if FSTESTS_XFS
 	select HAVE_DISTRO_BTRFS_PREFERS_MANUAL if FSTESTS_BTRFS
@@ -108,6 +110,7 @@ choice
 
 config GUESTFS_DEBIAN_TRIXIE
 	bool "Debian 13 - Trixie"
+	output yaml
 	select GUESTFS_REQUIRES_UEFI
 	select GUESTFS_HAS_CUSTOM_RAW_IMAGE
 	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_URL
@@ -126,6 +129,7 @@ config GUESTFS_DEBIAN_TRIXIE
 
 config GUESTFS_DEBIAN_BUSTER
 	bool "Debian 12 - Buster"
+	output yaml
 	help
 	  Select this for debian buster, debian 12.
 
