@@ -614,3 +614,5 @@ config KDEVOPS_WORKFLOW_NAME
 endif
 
 endif # WORKFLOWS
+
+source "workflows/rcloud/Kconfig"

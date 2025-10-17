@@ -24,6 +24,9 @@ endif
 ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
 export KDEVOPS_CLOUD_PROVIDER=lambdalabs
 endif
+ifeq (y,$(CONFIG_TERRAFORM_RCLOUD))
+export KDEVOPS_CLOUD_PROVIDER=rcloud
+endif
 
 KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/terraform_nodes.tf.j2
 KDEVOPS_NODES :=		terraform/$(KDEVOPS_CLOUD_PROVIDER)/nodes.tf
@@ -64,6 +67,11 @@ ifeq (y,$(CONFIG_TERRAFORM_PRIVATE_NET))
 TERRAFORM_EXTRA_VARS += terraform_private_net_enabled='true'
 TERRAFORM_EXTRA_VARS += terraform_private_net_prefix=$(subst ",,$(CONFIG_TERRAFORM_PRIVATE_NET_PREFIX))
 TERRAFORM_EXTRA_VARS += terraform_private_net_mask=$(subst ",,$(CONFIG_TERRAFORM_PRIVATE_NET_MASK))
+endif
+
+ifeq (y,$(CONFIG_TERRAFORM_RCLOUD))
+TERRAFORM_EXTRA_VARS += terraform_rcloud_api_url=$(subst ",,$(CONFIG_TERRAFORM_RCLOUD_API_URL))
+TERRAFORM_EXTRA_VARS += terraform_rcloud_base_image=$(subst ",,$(CONFIG_TERRAFORM_RCLOUD_BASE_IMAGE))
 endif
 
 SSH_CONFIG_USER:=$(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_USER))

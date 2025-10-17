@@ -179,6 +179,7 @@ endif # WORKFLOW_KOTD_ENABLE
 DEFAULT_DEPS += $(DEFAULT_DEPS_REQS_EXTRA_VARS)
 
 include scripts/install-menuconfig-deps.Makefile
+include scripts/install-rcloud-deps.Makefile
 
 include Makefile.btrfs_progs
 
@@ -196,6 +197,10 @@ endif # CONFIG_HYPERVISOR_TUNING
 
 include Makefile.linux-mirror
 include Makefile.docker-mirror
+
+ifeq (y,$(CONFIG_RCLOUD))
+include workflows/rcloud/Makefile
+endif
 
 ifeq (y,$(CONFIG_KDEVOPS_DISTRO_REG_METHOD_TWOLINE))
 DEFAULT_DEPS += playbooks/secret.yml

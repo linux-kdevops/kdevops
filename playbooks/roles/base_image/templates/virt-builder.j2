@@ -34,12 +34,16 @@ sm-unregister
 {% if guestfs_debian is defined and guestfs_debian %}
 {# Ugh, debian has to be told to bring up the network and regenerate ssh keys #}
 {# Hope we get that interface name right! #}
-install isc-dhcp-client,ifupdown
+install isc-dhcp-client,ifupdown,openssh-server
 mkdir /etc/network/interfaces.d/
 append-line /etc/network/interfaces.d/enp1s0:auto enp1s0
 append-line /etc/network/interfaces.d/enp1s0:allow-hotplug enp1s0
 append-line /etc/network/interfaces.d/enp1s0:iface enp1s0 inet dhcp
-firstboot-command systemctl disable systemd-networkd-wait-online.service
+run-command systemctl disable systemd-networkd.service
+run-command systemctl disable systemd-networkd-wait-online.service
+run-command systemctl mask systemd-networkd.service
+run-command systemctl enable networking.service
+run-command systemctl enable ifup@enp1s0.service
 firstboot-command systemctl stop ssh
 firstboot-command DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure -p low --force openssh-server
 firstboot-command systemctl start ssh
