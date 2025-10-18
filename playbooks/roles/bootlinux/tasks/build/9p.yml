@@ -166,22 +166,18 @@
       $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
       {{ ansible_callback_diy.result.output.stdout | default('') }}
 
-- name: Get nproc on the control node
-  ansible.builtin.command: "{{ num_jobs }}"
+- name: Get configured job count for host-side 9P builds
+  ansible.builtin.set_fact:
+    nproc_9p_jobs: "{{ kdevops_host_jobs }}"
   tags: ["build-linux", "cxl-build"]
-  register: nproc_9p
   run_once: true
   delegate_to: localhost
-  vars:
-    ansible_callback_diy_runner_on_ok_msg: |
-      $ {{ ansible_callback_diy.result.output.cmd | join(' ') }}
-      {{ ansible_callback_diy.result.output.stdout | default('') }}
 
 - name: Debug kernel build command configuration for 9P build
   ansible.builtin.debug:
     msg: |
       === KERNEL BUILD COMMAND DEBUG (9P BUILD) ===
-      build_jobs: {{ nproc_9p.stdout }}
+      build_jobs: {{ nproc_9p_jobs }}
       bootlinux_make_params: {{ bootlinux_make_params }}
       bootlinux_build_environment: {{ bootlinux_build_environment }}
       bootlinux_ccache: {{ bootlinux_ccache|default(false) }}
@@ -234,9 +230,9 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease | default('') }} on the control node using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} {{ target_user_kernelrelease | default('') }} on the control node using {{ nproc_9p_jobs }} threads
   community.general.make:
-    jobs: "{{ nproc_9p.stdout }}"
+    jobs: "{{ nproc_9p_jobs }}"
     chdir: "{{ bootlinux_9p_host_path }}"
     params: "{{ bootlinux_make_params | combine({'KERNELRELEASE': target_user_kernelrelease}) }}"
   environment: "{{ bootlinux_build_environment }}"
@@ -246,9 +242,9 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} on the control node using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} on the control node using {{ nproc_9p_jobs }} threads
   community.general.make:
-    jobs: "{{ nproc_9p.stdout }}"
+    jobs: "{{ nproc_9p_jobs }}"
     chdir: "{{ bootlinux_9p_host_path }}"
     params: "{{ bootlinux_make_params }}"
   environment: "{{ bootlinux_build_environment }}"
@@ -258,9 +254,9 @@
   run_once: true
   delegate_to: localhost
 
-- name: Build {{ target_linux_tree }} cxl_test on the control node using {{ nproc_9p.stdout }} threads
+- name: Build {{ target_linux_tree }} cxl_test on the control node using {{ nproc_9p_jobs }} threads
   community.general.make:
-    jobs: "{{ nproc_9p.stdout }}"
+    jobs: "{{ nproc_9p_jobs }}"
     chdir: "{{ bootlinux_9p_host_path }}"
     params: "{{ bootlinux_make_params | combine({'M': 'tools/testing/cxl'}) }}"
   environment: "{{ bootlinux_build_environment }}"

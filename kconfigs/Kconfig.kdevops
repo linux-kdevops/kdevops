@@ -120,6 +120,67 @@ config KDEVOPS_BASELINE_AND_DEV
 	  know you have spare resources for the additional dev nodes and know
 	  they are immediatey useful to you.
 
+config KDEVOPS_NPROC_SET_BY_CLI
+	bool
+	default $(shell, scripts/check-cli-set-var.sh KDEVOPS_NPROC)
+
+config KDEVOPS_NPROC_CUSTOM
+	bool "Enable a custom limit for host-side parallel jobs"
+	default n
+	help
+	  When this setting is enabled, specify the maximum number of
+	  parallel jobs for tasks that execute on the control host
+	  (kdevops node), not inside guest VMs. This controls
+	  parallelism for host-side operations such as:
+	    - Linux kernel compilation (make -j)
+	    - QEMU builds
+	    - Package generation (bindeb-pkg, binrpm-pkg)
+	    - Any other parallel operations on the control node
+
+	  When this setting is disabled, kdevops uses all available
+	  host CPUs, which is optimal for dedicated single-user build
+	  machines. The default can be overridden with
+	  "KDEVOPS_NPROC=NN" on the "make" command line.
+
+	  For shared CI runners or multi-tenant environments, enable
+	  this to limit resource usage and prevent CPU oversubscription.
+	  The value should be calculated based on:
+	    Total host cores / Expected concurrent kdevops jobs
+
+	  Examples:
+	    - 64-core runner, 8 concurrent jobs → KDEVOPS_NPROC=8
+	    - 32-core runner, 4 concurrent jobs → KDEVOPS_NPROC=8
+	    - Single dedicated machine → leave disabled (use all)
+
+	  Note: This does NOT affect guest VM CPU allocation, which is
+	  controlled by CONFIG_GUESTFS_VCPUS and related settings.
+
+	  If unsure, say N.
+
+if KDEVOPS_NPROC_CUSTOM
+
+config KDEVOPS_NPROC
+	int "Number of parallel jobs for host-side tasks"
+	output yaml
+	help
+	  Set the maximum number of parallel jobs for tasks that
+	  execute on the control host.
+
+	  Can also be set via CLI:
+	    make defconfig-blktests KDEVOPS_NPROC=8
+
+endif # KDEVOPS_NPROC_CUSTOM
+
+if !KDEVOPS_NPROC_CUSTOM
+
+config KDEVOPS_NPROC
+	int
+	output yaml
+	default 0 if !KDEVOPS_NPROC_SET_BY_CLI
+	default $(shell, ./scripts/append-makefile-vars-int.sh $(KDEVOPS_NPROC)) if KDEVOPS_NPROC_SET_BY_CLI
+
+endif # !KDEVOPS_NPROC_CUSTOM
+
 config HAVE_DISTRO_SUPPORTS_EXTRA_ADDON
 	bool
 	default n

@@ -125,7 +125,7 @@
 - name: Build {{ target_linux_tree }}
   community.general.make:
     chdir: "{{ target_linux_dir_path }}"
-    jobs: "{{ ansible_processor_nproc }}"
+    jobs: "{{ kdevops_host_jobs }}"
     target: "all"
   when:
     - bootlinux_compiler_gcc|bool
@@ -151,7 +151,7 @@
 - name: Build {{ target_linux_tree }}
   community.general.make:
     chdir: "{{ target_linux_dir_path }}"
-    jobs: "{{ ansible_processor_nproc }}"
+    jobs: "{{ kdevops_host_jobs }}"
     params:
       LLVM: 1
     target: "all"
@@ -179,7 +179,7 @@
     - name: Make the bindeb-pkg target
       community.general.make:
         chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
+        jobs: "{{ kdevops_host_jobs }}"
         target: "bindeb-pkg"
 
     - name: Find the build artifacts
@@ -229,7 +229,7 @@
     - name: Make the binrpm-pkg target
       community.general.make:
         chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
+        jobs: "{{ kdevops_host_jobs }}"
         target: "binrpm-pkg"
         params:
           RPMOPTS: "--without devel"
@@ -239,7 +239,7 @@
     - name: Make the binrpm-pkg target
       community.general.make:
         chdir: "{{ target_linux_dir_path }}"
-        jobs: "{{ ansible_processor_nproc }}"
+        jobs: "{{ kdevops_host_jobs }}"
         target: "binrpm-pkg"
         params:
           RPMOPTS: "--without devel"

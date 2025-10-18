@@ -21,6 +21,9 @@ target_linux_tree: "linux-stable"
 target_linux_dir_path: "{{ data_path }}/{{ target_linux_tree }}"
 kdevops_baseline_and_dev: false
 
+# Computed number of jobs for host-side tasks (uses kdevops_nproc from extra_vars.yaml)
+kdevops_host_jobs: "{{ kdevops_nproc if kdevops_nproc > 0 else ansible_processor_vcpus }}"
+
 target_linux_ref: "v4.19.133"
 target_linux_delta_file:
 target_linux_config: "config-{{ target_linux_ref }}"
@@ -31,7 +34,8 @@ make: "make"
 # introduce fact "ansible_processor_nproc": number of usable vcpus #66569
 # https://github.com/ansible/ansible/pull/66569
 # Build command without environment variables (added via environment dict)
-target_linux_make_cmd: "{{ make }} -j{{ ansible_processor_vcpus }}"
+# Uses kdevops_host_jobs which respects KDEVOPS_NPROC for host-side parallelism control
+target_linux_make_cmd: "{{ make }} -j{{ kdevops_host_jobs }}"
 
 # Make parameters dictionary for community.general.make module
 bootlinux_make_params: >-
