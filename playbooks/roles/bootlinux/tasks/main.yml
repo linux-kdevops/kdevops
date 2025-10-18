@@ -16,6 +16,13 @@
   when:
     - not workflow_linux_packaged|bool
 
+# Install generic Rust toolchain dependencies
+- name: Install Rust build dependencies
+  ansible.builtin.include_role:
+    name: install-rust-deps
+  when:
+    - not workflow_linux_packaged|bool
+
 # Distro specific
 - name: Install dependencies to build and install the Linux kernel
   ansible.builtin.import_tasks:
