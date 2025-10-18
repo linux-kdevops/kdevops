@@ -70,7 +70,7 @@ resource "aws_security_group" "kdevops_internal_group" {
 
 
 resource "aws_key_pair" "kdevops_keypair" {
-  key_name   = var.ssh_keyname
+  key_name   = var.aws_ssh_key_name
   public_key = var.ssh_config_pubkey_file != "" ? file(var.ssh_config_pubkey_file) : ""
 }
 
@@ -133,7 +133,7 @@ resource "aws_instance" "kdevops_instance" {
     aws_security_group.kdevops_sec_group.id,
     aws_security_group.kdevops_internal_group.id
   ]
-  key_name        = var.ssh_keyname
+  key_name        = var.aws_ssh_key_name
   subnet_id       = aws_subnet.kdevops_subnet.id
   user_data_base64 = element(
     data.template_cloudinit_config.kdevops_config.*.rendered,

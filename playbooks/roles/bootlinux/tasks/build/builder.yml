@@ -110,9 +110,17 @@
   community.general.make:
     chdir: "{{ target_linux_dir_path }}"
     target: "olddefconfig"
+  register: olddefconfig_output
   when:
     - bootlinux_compiler_gcc|bool
     - not bootlinux_use_config_fragments|default(false)|bool
+
+- name: Report unexpected Kconfig setting changes
+  ansible.builtin.debug:
+    var: olddefconfig_output.stderr_lines
+  when:
+    - bootlinux_compiler_gcc|bool
+    - "'warning:' in olddefconfig_output.stderr"
 
 - name: Build {{ target_linux_tree }}
   community.general.make:
@@ -128,9 +136,17 @@
     params:
       LLVM: 1
     target: "olddefconfig"
+  register: olddefconfig_llvm_output
   when:
     - bootlinux_compiler_clang|bool
     - not bootlinux_use_config_fragments|default(false)|bool
+
+- name: Report unexpected Kconfig setting changes
+  ansible.builtin.debug:
+    var: olddefconfig_output.stderr_lines
+  when:
+    - bootlinux_compiler_clang|bool
+    - "'warning:' in olddefconfig_llvm_output.stderr"
 
 - name: Build {{ target_linux_tree }}
   community.general.make:

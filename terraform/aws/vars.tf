@@ -74,9 +74,9 @@ variable "aws_shared_credentials_file" {
   default     = "~/.aws/credentials"
 }
 
-variable "ssh_keyname" {
+variable "aws_ssh_key_name" {
   default     = "kdevops_aws_key"
-  description = "The name of your ssh key, this is just the name displayed and used on aws in the backend"
+  description = "The name of the ssh key-pair to install in instances"
   type        = string
 }
 
