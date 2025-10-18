@@ -1,0 +1,42 @@
+if TERRAFORM_OCI_REGION_{{ region_code }}
+
+config TERRAFORM_OCI_REGION
+	string
+	output yaml
+	default "{{ region_name }}"
+
+choice
+	prompt "Availability Domain"
+	default TERRAFORM_OCI_REGION_{{ region_code }}_AD{{ ads[0]['number'] if ads else '1' }}
+	help
+	  The number of the Availability Domain. This number
+	  corresponds to the integer at the end of the Availability
+	  Domain name.
+
+	  The OCI Fault Domain is chosen automatically.
+
+{% if ads %}
+{% for ad in ads %}
+config TERRAFORM_OCI_REGION_{{ region_code }}_AD{{ ad['number'] }}
+	bool "{{ ad['number'] }}"
+
+{% endfor %}
+{% else %}
+config TERRAFORM_OCI_REGION_{{ region_code }}_AD1
+	bool "1"
+
+{% endif %}
+endchoice
+
+config TERRAFORM_OCI_AD_NUMBER
+	int
+	output yaml
+{% if ads %}
+{% for ad in ads %}
+	default {{ ad['number'] }} if TERRAFORM_OCI_REGION_{{ region_code }}_AD{{ ad['number'] }}
+{% endfor %}
+{% else %}
+	default 1
+{% endif %}
+
+endif # TERRAFORM_OCI_REGION_{{ region_code }}
