@@ -1,0 +1,11 @@
+---
+- name: Install Rust build dependencies
+  become: true
+  become_method: sudo
+  community.general.zypper:
+    name:
+      - cargo
+      - rust
+      - pkg-config
+    state: present
+  tags: ["rust", "deps"]
