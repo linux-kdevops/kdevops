@@ -1,0 +1,94 @@
+# OCI Region Friendly Names
+#
+# This file maps OCI region identifiers to human-friendly display names
+# used in the kdevops Kconfig menus.
+#
+# Canonical Source:
+#   https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
+#   (Official Oracle Cloud Infrastructure Regions and Availability Domains page)
+#
+#   IMPORTANT: This URL points to HTML documentation, not an API. The
+#   documentation format and content can change at any time. Use the OCI
+#   CLI for programmatic access: oci iam region list
+#
+# Last Verified: 2025-10-19
+# Total Regions: 41
+#
+# Format:
+#   region-identifier: "Friendly Display Name"
+#
+# Ordering Requirement:
+#   The regions below are maintained in the same order as they appear in
+#   Oracle's official documentation table. This makes verification easier
+#   and provides a consistent ordering for the generated Kconfig.
+#
+# How to update this file:
+# -----------------------
+# When Oracle adds new regions or you want to customize the display names:
+#
+# 1. Find the official region identifier from OCI:
+#    $ oci iam region-subscription list
+#
+# 2. Look up the region's friendly name from Oracle's documentation:
+#    https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
+#
+# 3. Add a new entry following the format above. Use the pattern:
+#    "<Country/Continent> <Direction/Description> (<City>)"
+#
+#    Examples:
+#    - "US West (Phoenix)"
+#    - "Europe (Frankfurt)"
+#    - "Asia Pacific (Tokyo)"
+#
+# 4. Maintain the same order as shown in Oracle's documentation table.
+#
+# 5. Update the "Last Verified" date and "Total Regions" count above.
+#
+# 6. After updating this file, regenerate the Kconfig.location file:
+#    $ cd terraform/oci/scripts
+#    $ ./gen_kconfig_location > ../kconfigs/Kconfig.location
+#
+# Region Mappings:
+# ----------------
+
+ap-sydney-1: "Australia East (Sydney)"
+ap-melbourne-1: "Australia Southeast (Melbourne)"
+sa-saopaulo-1: "Brazil East (Sao Paulo)"
+sa-vinhedo-1: "Brazil Southeast (Vinhedo)"
+ca-montreal-1: "Canada Southeast (Montreal)"
+ca-toronto-1: "Canada Southeast (Toronto)"
+sa-santiago-1: "Chile Central (Santiago)"
+sa-valparaiso-1: "Chile West (Valparaiso)"
+sa-bogota-1: "Colombia Central (Bogota)"
+eu-paris-1: "France Central (Paris)"
+eu-marseille-1: "France South (Marseille)"
+eu-frankfurt-1: "Germany Central (Frankfurt)"
+ap-hyderabad-1: "India South (Hyderabad)"
+ap-mumbai-1: "India West (Mumbai)"
+ap-batam-1: "Indonesia North (Batam)"
+il-jerusalem-1: "Israel Central (Jerusalem)"
+eu-milan-1: "Italy Northwest (Milan)"
+ap-osaka-1: "Japan Central (Osaka)"
+ap-tokyo-1: "Japan East (Tokyo)"
+mx-queretaro-1: "Mexico Central (Queretaro)"
+mx-monterrey-1: "Mexico Northeast (Monterrey)"
+eu-amsterdam-1: "Netherlands Northwest (Amsterdam)"
+me-riyadh-1: "Saudi Arabia Central (Riyadh)"
+me-jeddah-1: "Saudi Arabia West (Jeddah)"
+eu-jovanovac-1: "Serbia Central (Jovanovac)"
+ap-singapore-1: "Singapore (Singapore)"
+ap-singapore-2: "Singapore West (Singapore)"
+af-johannesburg-1: "South Africa Central (Johannesburg)"
+ap-seoul-1: "South Korea Central (Seoul)"
+ap-chuncheon-1: "South Korea North (Chuncheon)"
+eu-madrid-1: "Spain Central (Madrid)"
+eu-stockholm-1: "Sweden Central (Stockholm)"
+eu-zurich-1: "Switzerland North (Zurich)"
+me-abudhabi-1: "UAE Central (Abu Dhabi)"
+me-dubai-1: "UAE East (Dubai)"
+uk-london-1: "UK South (London)"
+uk-cardiff-1: "UK West (Newport)"
+us-ashburn-1: "US East (Ashburn)"
+us-chicago-1: "US Midwest (Chicago)"
+us-phoenix-1: "US West (Phoenix)"
+us-sanjose-1: "US West (San Jose)"
