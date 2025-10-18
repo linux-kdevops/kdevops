@@ -92,11 +92,25 @@ runs:
           KMOD_TIMEOUT_ARG="KMOD_TIMEOUT=222"
         fi
 
+        # Set NPROC based on CI mode to limit host-side parallelism
+        # This prevents CPU oversubscription when multiple jobs run concurrently
+        # The CLI override automatically uses the SET_BY_CLI path
+        if [[ "${{ inputs.test_mode }}" == "kdevops-ci" ]]; then
+          # kdevops-ci: Lightweight testing with 2-core VMs, use NPROC=2
+          NPROC_ARG="KDEVOPS_NPROC=2"
+          echo "Setting KDEVOPS_NPROC=2 for kdevops-ci (matches 2-core VMs)"
+        else
+          # linux-ci: Full testing with 8-core VMs, use NPROC=8
+          NPROC_ARG="KDEVOPS_NPROC=8"
+          echo "Setting KDEVOPS_NPROC=8 for linux-ci (matches 8-core VMs)"
+        fi
+
         KDEVOPS_ARGS="\
         KDEVOPS_HOSTS_PREFIX=$KDEVOPS_HOSTS_PREFIX \
         LINUX_TREE=$LINUX_TREE \
         LINUX_TREE_REF=$LINUX_TREE_REF \
         ${KMOD_TIMEOUT_ARG} \
+        ${NPROC_ARG} \
         defconfig-$KDEVOPS_DEFCONFIG"
         echo "Going to run:"
         echo "make $KDEVOPS_ARGS"
