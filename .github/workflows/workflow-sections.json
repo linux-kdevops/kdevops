@@ -1,0 +1,154 @@
+{
+  "expandable_workflows": {
+    "blktests": {
+      "description": "All blktests sections (9 jobs)",
+      "sections": [
+        "blktests_block",
+        "blktests_loop",
+        "blktests_meta",
+        "blktests_nbd",
+        "blktests_nvme",
+        "blktests_nvmemp",
+        "blktests_scsi",
+        "blktests_srp",
+        "blktests_zbd"
+      ]
+    },
+    "xfs": {
+      "description": "All XFS sections - complete coverage (28 jobs)",
+      "sections": [
+        "xfs_crc",
+        "xfs_crc_logdev",
+        "xfs_crc_logdev_rtdev",
+        "xfs_crc_rtdev",
+        "xfs_crc_rtdev_extsize_28k",
+        "xfs_crc_rtdev_extsize_64k",
+        "xfs_nocrc",
+        "xfs_nocrc_512",
+        "xfs_nocrc_1k",
+        "xfs_nocrc_2k",
+        "xfs_nocrc_4k",
+        "xfs_nocrc_8k_4ks",
+        "xfs_nocrc_16k_4ks",
+        "xfs_nocrc_32_4ks",
+        "xfs_nocrc_64_4ks",
+        "xfs_reflink",
+        "xfs_reflink_logdev",
+        "xfs_reflink_1024",
+        "xfs_reflink_2k",
+        "xfs_reflink_4k",
+        "xfs_reflink_8k_4ks",
+        "xfs_reflink_16k_4ks",
+        "xfs_reflink_32k_4ks",
+        "xfs_reflink_64k_4ks",
+        "xfs_reflink_dir_bsize_8k",
+        "xfs_reflink_normapbt",
+        "xfs_reflink_stripe_len",
+        "xfs_reflink_nrext64"
+      ]
+    },
+    "xfs_crc_all": {
+      "description": "All XFS CRC-enabled sections (6 jobs)",
+      "sections": [
+        "xfs_crc",
+        "xfs_crc_logdev",
+        "xfs_crc_logdev_rtdev",
+        "xfs_crc_rtdev",
+        "xfs_crc_rtdev_extsize_28k",
+        "xfs_crc_rtdev_extsize_64k"
+      ]
+    },
+    "xfs_nocrc_all": {
+      "description": "All XFS NOCRC sections - legacy support (10 jobs)",
+      "sections": [
+        "xfs_nocrc",
+        "xfs_nocrc_512",
+        "xfs_nocrc_1k",
+        "xfs_nocrc_2k",
+        "xfs_nocrc_4k",
+        "xfs_nocrc_8k_4ks",
+        "xfs_nocrc_16k_4ks",
+        "xfs_nocrc_32_4ks",
+        "xfs_nocrc_64_4ks",
+        "xfs_nocrc_lbs"
+      ]
+    },
+    "xfs_reflink_all": {
+      "description": "All XFS reflink sections - copy-on-write (15 jobs)",
+      "sections": [
+        "xfs_reflink",
+        "xfs_reflink_logdev",
+        "xfs_reflink_1024",
+        "xfs_reflink_2k",
+        "xfs_reflink_4k",
+        "xfs_reflink_4k_8ks",
+        "xfs_reflink_8k_4ks",
+        "xfs_reflink_16k_4ks",
+        "xfs_reflink_32k_4ks",
+        "xfs_reflink_64k_4ks",
+        "xfs_reflink_dir_bsize_8k",
+        "xfs_reflink_lbs",
+        "xfs_reflink_normapbt",
+        "xfs_reflink_stripe_len",
+        "xfs_reflink_nrext64"
+      ]
+    },
+    "xfs_lbs_all": {
+      "description": "All XFS large block size sections - >4K blocks (10 jobs)",
+      "sections": [
+        "xfs_nocrc_8k_4ks",
+        "xfs_nocrc_16k_4ks",
+        "xfs_nocrc_32_4ks",
+        "xfs_nocrc_64_4ks",
+        "xfs_nocrc_lbs",
+        "xfs_reflink_8k_4ks",
+        "xfs_reflink_16k_4ks",
+        "xfs_reflink_32k_4ks",
+        "xfs_reflink_64k_4ks",
+        "xfs_reflink_lbs"
+      ]
+    }
+  },
+  "single_section_workflows": [
+    "blktests_block",
+    "blktests_loop",
+    "blktests_meta",
+    "blktests_nbd",
+    "blktests_nvme",
+    "blktests_nvmemp",
+    "blktests_scsi",
+    "blktests_srp",
+    "blktests_zbd",
+    "xfs_crc",
+    "xfs_crc_logdev",
+    "xfs_crc_logdev_rtdev",
+    "xfs_crc_rtdev",
+    "xfs_crc_rtdev_extsize_28k",
+    "xfs_crc_rtdev_extsize_64k",
+    "xfs_nocrc",
+    "xfs_nocrc_512",
+    "xfs_nocrc_1k",
+    "xfs_nocrc_2k",
+    "xfs_nocrc_4k",
+    "xfs_nocrc_8k_4ks",
+    "xfs_nocrc_16k_4ks",
+    "xfs_nocrc_32_4ks",
+    "xfs_nocrc_64_4ks",
+    "xfs_nocrc_lbs",
+    "xfs_reflink",
+    "xfs_reflink_logdev",
+    "xfs_reflink_1024",
+    "xfs_reflink_2k",
+    "xfs_reflink_4k",
+    "xfs_reflink_4k_8ks",
+    "xfs_reflink_8k_4ks",
+    "xfs_reflink_16k_4ks",
+    "xfs_reflink_32k_4ks",
+    "xfs_reflink_64k_4ks",
+    "xfs_reflink_dir_bsize_8k",
+    "xfs_reflink_lbs",
+    "xfs_reflink_normapbt",
+    "xfs_reflink_stripe_len",
+    "xfs_reflink_nrext64"
+  ]
+}

@@ -15,12 +15,20 @@ on:
   workflow_dispatch:
     inputs:
       ci_workflow:
-        description: "CI Workflow"
+        description: "CI Workflow (parent workflows expand to multiple jobs)"
         required: true
         default: 'blktests_nvme'
         type: choice
         options:
-          - blktests
+          # === PARENT WORKFLOWS (expand to multiple jobs) ===
+          - blktests                        # → 9 jobs (all blktests sections)
+          - xfs                             # → 28 jobs (complete XFS coverage)
+          - xfs_crc_all                     # → 6 jobs (CRC-enabled only)
+          - xfs_nocrc_all                   # → 10 jobs (NOCRC legacy support)
+          - xfs_reflink_all                 # → 15 jobs (reflink/CoW only)
+          - xfs_lbs_all                     # → 10 jobs (large block size only)
+
+          # === BLKTESTS - Individual Sections ===
           - blktests_block
           - blktests_loop
           - blktests_meta
@@ -30,41 +38,39 @@ on:
           - blktests_scsi
           - blktests_srp
           - blktests_zbd
-          - lbs-xfs
-          - lbs-xfs-bdev-large-nvme
-          - lbs-xfs-bdev-nvme
-          - lbs-xfs-small
-          - xfs
-          - xfs-soak
+
+          # === XFS - Individual Sections ===
           - xfs_crc
           - xfs_crc_logdev
+          - xfs_crc_logdev_rtdev
           - xfs_crc_rtdev
           - xfs_crc_rtdev_extsize_28k
           - xfs_crc_rtdev_extsize_64k
           - xfs_nocrc
-          - xfs_nocrc_16k_4ks
+          - xfs_nocrc_512
           - xfs_nocrc_1k
           - xfs_nocrc_2k
-          - xfs_nocrc_32_4ks
           - xfs_nocrc_4k
-          - xfs_nocrc_512
-          - xfs_nocrc_64_4ks
           - xfs_nocrc_8k_4ks
+          - xfs_nocrc_16k_4ks
+          - xfs_nocrc_32_4ks
+          - xfs_nocrc_64_4ks
           - xfs_nocrc_lbs
           - xfs_reflink
           - xfs_reflink_1024
-          - xfs_reflink_16k_4ks
           - xfs_reflink_2k
-          - xfs_reflink_32k_4ks
           - xfs_reflink_4k
           - xfs_reflink_4k_8ks
+          - xfs_reflink_8k_4ks
+          - xfs_reflink_16k_4ks
+          - xfs_reflink_32k_4ks
           - xfs_reflink_64k_4ks
           - xfs_reflink_dir_bsize_8k
-          - xfs_reflink_lbs
           - xfs_reflink_logdev
           - xfs_reflink_normapbt
-          - xfs_reflink_nrext64
           - xfs_reflink_stripe_len
+          - xfs_reflink_nrext64
+          - xfs_reflink_lbs
       kernel_tree:
         description: "Linux kernel tree to use"
         required: true
@@ -149,6 +155,49 @@ jobs:
             exit 1
           fi
 
+  expand_workflow:
+    name: Determine workflow sections
+    runs-on: [self-hosted]
+    outputs:
+      sections: ${{ steps.expand.outputs.sections }}
+      is_expanded: ${{ steps.expand.outputs.is_expanded }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Expand workflow to sections
+        id: expand
+        run: |
+          set -euxo pipefail
+
+          # Get the workflow to expand
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            workflow="blktests"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            workflow="${{ github.event.inputs.ci_workflow }}"
+          else
+            # Push/PR: use default list
+            sections='["blktests_nvme", "xfs_reflink_4k"]'
+            ./scripts/github_output.sh sections "$sections"
+            ./scripts/github_output.sh is_expanded "false"
+            exit 0
+          fi
+
+          # Use expansion script
+          sections=$(./scripts/expand_workflow_sections.py "$workflow")
+
+          # Determine if this was an expansion (multiple sections)
+          section_count=$(echo "$sections" | jq 'length')
+          if [ "$section_count" -gt 1 ]; then
+            is_expanded="true"
+            echo "::notice::Workflow '$workflow' expanded to $section_count sections"
+          else
+            is_expanded="false"
+          fi
+
+          ./scripts/github_output.sh sections "$sections"
+          ./scripts/github_output.sh is_expanded "$is_expanded"
+
   ci-matrix:
     name: "${{ github.event_name == 'schedule' && 'linux-ci' || github.event.inputs.test_mode || 'kdevops-ci' }}: ${{ matrix.ci_workflow }}"
     runs-on: >-
@@ -157,7 +206,7 @@ jobs:
         (github.event.inputs.test_mode == 'linux-ci' && fromJSON('["self-hosted", "linux-ci"]')) ||
         fromJSON('["self-hosted", "kdevops-ci"]')
       }}
-    needs: [check_ref, generate_kernel_ref]
+    needs: [check_ref, generate_kernel_ref, expand_workflow]
     if: >-
       always() &&
       (
@@ -167,18 +216,12 @@ jobs:
       (
         needs.generate_kernel_ref.result == 'success' ||
         needs.generate_kernel_ref.result == 'skipped'
-      )
+      ) &&
+      needs.expand_workflow.result == 'success'
     strategy:
       fail-fast: false
       matrix:
-        ci_workflow: >-
-          ${{
-            github.event_name == 'schedule'
-              && fromJSON('["blktests"]')
-            || github.event_name == 'workflow_dispatch'
-              && fromJSON(format('["{0}"]', github.event.inputs.ci_workflow))
-            || fromJSON('["blktests_nvme", "xfs_reflink_4k"]')
-          }}
+        ci_workflow: ${{ fromJSON(needs.expand_workflow.outputs.sections) }}
     steps:
       - name: Checkout repository for ${{ matrix.ci_workflow }}
         shell: bash
