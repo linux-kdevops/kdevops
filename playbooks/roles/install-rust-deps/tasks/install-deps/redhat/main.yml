@@ -1,0 +1,11 @@
+---
+- name: Install Rust build dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.dnf:
+    name:
+      - cargo
+      - rust
+      - pkgconfig
+    state: present
+  tags: ["rust", "deps"]

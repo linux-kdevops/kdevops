@@ -1,0 +1,12 @@
+---
+- name: Install Rust build dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - cargo
+      - rustc
+      - pkg-config
+    state: present
+    update_cache: false
+  tags: ["rust", "deps"]
