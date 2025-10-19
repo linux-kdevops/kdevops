@@ -1,0 +1,171 @@
+# OCI Catalog Shapes
+#
+# This file contains well-known OCI compute shapes that may not be visible
+# via the OCI API. These shapes typically require service limit increases or
+# are in limited availability.
+#
+# Purpose:
+#   The --include-catalog option in gen_kconfig_shape merges these shapes
+#   with API-discovered shapes to provide a complete menu of shapes that
+#   users can request access to.
+#
+# Canonical Sources:
+#   https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm
+#   (Official Oracle Cloud Infrastructure Compute Shapes documentation)
+#
+#   Note: Shape availability varies by region and requires proper service
+#   limits. Use the OCI console to check availability and request limit
+#   increases if needed.
+#
+# Last Updated: 2025-10-21
+# Total Catalog Shapes: 11
+#
+# Format:
+#   shape-name:
+#     architectures: [x86_64|arm64]
+#     is_flex: true|false           # Optional, indicates flexible shapes
+#     is_bare_metal: true|false     # Optional, indicates bare metal shapes
+#     has_gpu: true|false            # Optional, indicates GPU shapes
+#     description: "Human-readable description"
+#
+# Selection Criteria for Catalog Shapes:
+# ---------------------------------------
+# A shape should be in this catalog if it meets these criteria:
+#
+# 1. NOT visible via standard OCI API query:
+#    $ cd terraform/oci/scripts
+#    $ ./gen_kconfig_shape --families --format raw
+#    If the shape family does NOT appear in the output, it's a catalog candidate.
+#
+# 2. Documented in Oracle's official compute shapes reference:
+#    https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm
+#
+# 3. Requires service limit increases or has limited regional availability:
+#    - DenseIO shapes (local NVMe storage) - often require limit increases
+#    - GPU shapes (NVIDIA GPUs) - limited availability, require special quotas
+#    - HPC shapes (high-performance computing) - specialty shapes with restrictions
+#
+# 4. Generally available (not preview/beta shapes that may be discontinued)
+#
+# How to update this file:
+# -----------------------
+# When Oracle adds new shapes or you want to include additional catalog shapes:
+#
+# 1. Check if the shape is already API-visible in your tenancy:
+#    $ cd terraform/oci/scripts
+#    $ ./gen_kconfig_shape --families --format raw | grep -i "FAMILY_NAME"
+#
+#    If found in API output, DO NOT add to catalog (API discovery handles it).
+#    If NOT found, proceed to step 2.
+#
+# 2. Verify the shape exists in Oracle's documentation:
+#    https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm
+#
+#    Look for shape specifications including:
+#    - Architecture (x86_64 or arm64)
+#    - Whether it's Flex (flexible sizing)
+#    - Whether it's bare metal (BM prefix)
+#    - GPU information if applicable
+#
+# 3. Add the entry following the format specification above.
+#
+#    Architecture detection rules:
+#    - Shapes with A1, A2 in name: arm64 (Ampere)
+#    - Shapes with AMD/Intel processors: x86_64
+#    - Check Oracle docs if uncertain
+#
+#    Type detection rules:
+#    - Name ends with .Flex: set is_flex: true
+#    - Name starts with BM.: set is_bare_metal: true
+#    - Contains GPU in name: set has_gpu: true
+#
+# 4. Update the "Last Updated" date and "Total Catalog Shapes" count above.
+#
+# 5. Test that the shape loads correctly:
+#    $ cd terraform/oci/scripts
+#    $ ./gen_kconfig_shape --include-catalog --families --format raw | grep "SHAPE_NAME"
+#    Verify the shape appears with a '*' indicating it's from the catalog.
+#
+# 6. Regenerate Kconfig.shape:
+#    $ ./gen_kconfig_shape --include-catalog > ../kconfigs/Kconfig.shape
+#
+# Example Decision Process:
+# -------------------------
+# Q: Should I add VM.Standard.E5.Flex to the catalog?
+# A: No. This shape is widely available and appears in standard API queries.
+#    Run ./gen_kconfig_shape --families to verify it's already discovered.
+#
+# Q: Should I add BM.GPU.H100.8 (hypothetical new GPU shape)?
+# A: Yes, if:
+#    - It doesn't appear in ./gen_kconfig_shape --families output
+#    - It's documented at the Oracle reference URL above
+#    - It's a specialty shape (GPU = yes, requires quotas)
+#
+# Q: How do I know if a shape needs is_flex vs is_bare_metal?
+# A: Check the shape name:
+#    - Ends with .Flex → is_flex: true
+#    - Starts with BM. → is_bare_metal: true
+#    - Can be both (e.g., BM.Something.Flex would have both set to true)
+#
+# Catalog Shape Definitions:
+# --------------------------
+
+# DenseIO Shapes - High I/O with local NVMe storage
+VM.DenseIO.E4.Flex:
+  architectures: [x86_64]
+  is_flex: true
+  description: "DenseIO E4 Flex with local NVMe storage"
+
+BM.DenseIO1.36:
+  architectures: [x86_64]
+  is_bare_metal: true
+  description: "DenseIO1 bare metal with local NVMe storage"
+
+BM.DenseIO2.52:
+  architectures: [x86_64]
+  is_bare_metal: true
+  description: "DenseIO2 bare metal with local NVMe storage"
+
+VM.DenseIO.A2.Flex:
+  architectures: [arm64]
+  is_flex: true
+  description: "DenseIO A2 Flex ARM with local NVMe storage"
+
+# GPU Shapes - For AI/ML and graphics workloads
+VM.GPU.A10.1:
+  architectures: [x86_64]
+  has_gpu: true
+  description: "1x NVIDIA A10 GPU"
+
+VM.GPU.A10.2:
+  architectures: [x86_64]
+  has_gpu: true
+  description: "2x NVIDIA A10 GPUs"
+
+BM.GPU.A10.4:
+  architectures: [x86_64]
+  is_bare_metal: true
+  has_gpu: true
+  description: "4x NVIDIA A10 GPUs"
+
+BM.GPU4.8:
+  architectures: [x86_64]
+  is_bare_metal: true
+  has_gpu: true
+  description: "8x NVIDIA A100 GPUs"
+
+VM.GPU.GU1.1:
+  architectures: [x86_64]
+  has_gpu: true
+  description: "1x NVIDIA P100 GPU"
+
+VM.GPU.GU1.2:
+  architectures: [x86_64]
+  has_gpu: true
+  description: "2x NVIDIA P100 GPUs"
+
+BM.GPU.GM4.8:
+  architectures: [x86_64]
+  is_bare_metal: true
+  has_gpu: true
+  description: "8x NVIDIA V100 GPUs"

@@ -1,0 +1,44 @@
+choice
+	prompt "OCI shape family"
+	default TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	help
+	  This option selects the class of virtual hardware (CPUs and
+	  memory) to provision for each target node. Most CPU
+	  architectures, including x86, run two threads per physical
+	  core, so one OCPU is the equal of two vCPUs for x86-based
+	  compute.
+
+	  Which shapes are available is limited by your subscription
+	  and what hardware has been deployed in your selected region.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+	bool "Generic shapes"
+	help
+	  These shapes are recommended for developers who do not
+	  require a specific model of CPU for their workflows.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	bool "Flex shapes"
+	help
+	  A flexible shape is a virtual machine that lets you
+	  customize the number of OCPUs and the amount of memory
+	  per instance. The network bandwidth and number of VNICs
+	  scale proportionately with the number of OCPUs.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_FIXED
+	bool "Fixed shapes"
+	help
+	  A fixed shape is a virtual machine with a predetermined
+	  number of OCPUs and amount of memory. These shapes offer
+	  consistent performance characteristics with configurations
+	  optimized for common workload patterns.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+	bool "Bare metal"
+	help
+	  A bare metal shape is a whole physical machine without
+	  virtualization. This gives deterministic performance
+	  characteristics but is less configurable than a flex
+	  shape.
+
+endchoice
