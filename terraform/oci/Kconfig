@@ -10,7 +10,10 @@ menu "Resource location"
 source "terraform/oci/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
-source "terraform/oci/kconfigs/Kconfig.compute"
+comment "Shape selection"
+source "terraform/oci/kconfigs/Kconfig.shape"
+comment "OS image selection"
+source "terraform/oci/kconfigs/Kconfig.image"
 endmenu
 menu "Storage"
 source "terraform/oci/kconfigs/Kconfig.storage"

@@ -1,0 +1,38 @@
+choice
+	prompt "Distribution"
+	default TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+	help
+	  Select the Linux distribution to install on each instance.
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+	bool "Oracle Linux"
+	help
+	  Select this if you want to use a release of Oracle Linux
+	  as the operating system in your instances.
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_UBUNTU
+	bool "Ubuntu"
+	help
+	  Select this if you want to use a release of Ubuntu Linux
+	  as the operating system in your instances.
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM
+	bool "Custom image OCID"
+	help
+	  Select this if you want to enter a specific OCID for
+	  an OS image. Use this if you wish to use a custom or
+	  marketplace image not included in the fixed choices in
+	  this menu.
+
+	  The image you specify must reside in the same region as
+	  your instances.
+
+	  More image choices are available:
+
+	  https://docs.oracle.com/en-us/iaas/images/
+
+endchoice
+
+source "terraform/oci/kconfigs/images/Kconfig.OracleLinux"
+source "terraform/oci/kconfigs/images/Kconfig.Ubuntu"
+source "terraform/oci/kconfigs/images/Kconfig.custom"
