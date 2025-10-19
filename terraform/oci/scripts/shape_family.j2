@@ -1,0 +1,57 @@
+if TERRAFORM_OCI_SHAPE_FAMILY_{{ family_name }}
+
+choice
+	prompt "Shape type"
+	default TERRAFORM_OCI_SHAPE_{{ shapes[0]['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+	help
+	  Select the specific shape configuration within this family.
+	  Each shape provides different combinations of OCPUs, memory,
+	  storage, and networking capacity.
+
+{% for shape in shapes %}
+config TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+	bool "{{ shape['shape_name'] }}"
+{% if 'x86_64' in shape['cpu_isa'] %}
+	depends on TARGET_ARCH_X86_64
+{% elif 'arm64' in shape['cpu_isa'] %}
+	depends on TARGET_ARCH_ARM64
+{% endif %}
+	help
+{% if shape['is_flex'] %}
+	  Flexible shape: OCPU and memory can be customized.
+{% else %}
+	  OCPU count: {{ shape['ocpus'] }}
+	  Memory: {{ shape['memory_gb'] }} GB
+{% endif %}
+	  Architecture: {{ shape['cpu_isa'] }}
+	  Network: {{ shape['network_performance'] }}
+{% if shape['storage'] != 'Block storage only' %}
+	  Local storage: {{ shape['storage'] }}
+{% endif %}
+{% if shape['gpu'] != 'None' %}
+	  GPU: {{ shape['gpu'] }}
+{% endif %}
+{% if shape['is_bare_metal'] %}
+	  Bare metal instance.
+{% endif %}
+{% if 'processor' in shape %}
+	  Processor: {{ shape['processor'] }}
+{% endif %}
+{% if shape['is_catalog_shape'] %}
+
+	  NOTE: This shape may require service limit increases and may not
+	  be available in all regions. Contact Oracle support to request
+	  access if needed.
+{% endif %}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+{% for shape in shapes %}
+	default "{{ shape['shape_name'] }}" if TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+{% endfor %}
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_{{ family_name }}
