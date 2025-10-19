@@ -1,0 +1,802 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve compute image information from OCI. Use it to construct the "images"
+Kconfig menu.
+
+OCI images are OS templates that can be used to launch compute instances.
+This script queries the OCI API to discover available images and generates
+Kconfig menu entries for them.
+
+Publisher Definitions:
+    Publisher definitions (e.g., "Oracle Linux", "Ubuntu") are maintained
+    in the publisher_definitions.yml file in the same directory as this
+    script. This makes it easier to update publisher information when Oracle
+    adds new distributions or when you want to customize display names and
+    priorities.
+
+    To update publisher definitions:
+    1. Edit terraform/oci/scripts/publisher_definitions.yml
+    2. Add or modify entries following the existing format
+    3. Run this script to regenerate Kconfig.images
+
+    The YAML file contains detailed instructions for how to add new
+    publisher definitions. If the YAML file is not found, the script
+    falls back to dynamic publisher discovery by analyzing image names.
+
+Image Discovery:
+    By default, this script aggregates images from all subscribed regions to
+    provide a comprehensive mapping of image OCIDs across regions.
+
+    This script focuses exclusively on OCI platform images (official
+    Oracle-provided images). Marketplace and community images are not
+    included in the automated discovery, though users can still specify
+    marketplace image OCIDs manually via the "Custom image OCID" option.
+
+    The script discovers Linux distribution platform images using:
+    - Known publishers defined in publisher_definitions.yml
+    - Dynamic discovery that detects new distributions automatically
+
+Usage:
+    # Generate images Kconfig from all subscribed regions (default)
+    ./gen_kconfig_image > ../kconfigs/Kconfig.images
+
+    # List all available OS publishers
+    ./gen_kconfig_image --publishers
+
+    # Get details for a specific publisher
+    ./gen_kconfig_image oracle
+"""
+
+import sys
+import os
+import argparse
+import re
+from collections import defaultdict
+
+from oci_common import (
+    get_default_region,
+    get_default_compartment,
+    get_subscribed_regions,
+    get_jinja2_environment,
+    load_yaml_config,
+    create_identity_client,
+    create_compute_client,
+    get_all_region_keys,
+    get_region_kconfig_name,
+)
+
+# Cache for loaded publisher definitions (loaded once per script execution)
+_cached_publishers = None
+_publishers_load_attempted = False
+
+
+def discover_publishers_from_images(images, quiet=False):
+    """
+    Dynamically discover Linux publishers from image display names.
+
+    This function analyzes image names to find publishers beyond the
+    hard-coded list, enabling automatic discovery of new Linux distributions.
+
+    Args:
+        images (list): List of OCI image objects
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary of discovered publisher patterns
+    """
+    discovered = {}
+    seen_patterns = defaultdict(set)
+
+    # Patterns to check for potential new Linux distributions
+    # Format: (regex_pattern, key, publisher_name, description)
+    # Only match distributions with "Linux" in the name - this is self-filtering
+    # and doesn't require explicit exclusion of non-Linux systems
+    discovery_patterns = [
+        (r"^([\w\-]+)-Linux-", None, None, "Linux"),
+    ]
+
+    for image in images:
+        display_name = image.display_name
+
+        # Check for Linux patterns
+        for pattern_regex, _, _, suffix in discovery_patterns:
+            match = re.match(pattern_regex, display_name, re.IGNORECASE)
+            if match:
+                publisher_prefix = match.group(1).lower()
+
+                # Skip if we already know this publisher
+                known_publishers = get_known_publishers()
+                if publisher_prefix in known_publishers:
+                    continue
+
+                # Create a key for this publisher
+                if publisher_prefix not in discovered:
+                    # Capitalize properly for display
+                    display_name_parts = publisher_prefix.split("-")
+                    publisher_display = " ".join(
+                        part.capitalize() for part in display_name_parts
+                    )
+
+                    discovered[publisher_prefix] = {
+                        "publisher_name": publisher_display,
+                        "description": f"{publisher_display} {suffix}",
+                        "display_name_patterns": [],
+                        "priority": 100,  # Lower priority for discovered
+                        "discovered": True,  # Mark as dynamically discovered
+                    }
+
+                # Add the pattern for this publisher
+                pattern_str = f"{match.group(1)}-.*"
+                seen_patterns[publisher_prefix].add(pattern_str)
+
+    # Update discovered publishers with their patterns
+    for key, patterns in seen_patterns.items():
+        if key in discovered:
+            discovered[key]["display_name_patterns"] = list(patterns)
+
+    if not quiet and discovered:
+        print(
+            f"Dynamically discovered {len(discovered)} new Linux publisher(s):",
+            file=sys.stderr,
+        )
+        for key, info in discovered.items():
+            print(
+                f"  - {info['publisher_name']}: {info['description']}", file=sys.stderr
+            )
+
+    return discovered
+
+
+def get_known_publishers():
+    """
+    Get dictionary of known OS image publishers in OCI.
+
+    Publisher definitions are loaded from publisher_definitions.yml to make
+    it easier to update when Oracle adds new Linux distributions or when you
+    want to customize publisher priorities and naming.
+
+    The YAML file contains publisher information including:
+    - publisher_name: Display name for the publisher/company
+    - description: Full description used in Kconfig help text
+    - display_name_patterns: List of regex patterns to match image names
+    - priority: Display order (lower numbers appear first)
+
+    If the YAML file is not found or fails to parse, an empty dictionary
+    is returned and the script relies on dynamic publisher discovery via
+    discover_publishers_from_images() to identify Linux distributions.
+
+    The publishers are cached after first load to avoid repeated file I/O
+    and duplicate warnings.
+
+    To update the publisher definitions:
+    1. Edit terraform/oci/scripts/publisher_definitions.yml
+    2. Add or modify entries following the existing format
+    3. Regenerate Kconfig.images by running this script
+
+    See publisher_definitions.yml for detailed update instructions.
+
+    Returns:
+        dict: Dictionary mapping publisher keys to publisher information,
+              or empty dict if YAML is unavailable (dynamic discovery
+              will be used instead)
+    """
+    global _cached_publishers, _publishers_load_attempted
+
+    # Return cached result if already loaded
+    if _publishers_load_attempted:
+        return _cached_publishers if _cached_publishers else {}
+
+    # Mark that we've attempted to load (even if it fails)
+    _publishers_load_attempted = True
+
+    _cached_publishers = load_yaml_config("publisher_definitions.yml", quiet=True)
+    if not _cached_publishers:
+        print(
+            "Warning: publisher_definitions.yml not found or empty. "
+            "Relying on dynamic publisher discovery.",
+            file=sys.stderr,
+        )
+    return _cached_publishers
+
+
+def get_image_type_description(listing_type):
+    """
+    Convert OCI listing_type to user-friendly description.
+
+    Note: This script only processes platform images (listing_type "NONE" or None).
+
+    Args:
+        listing_type (str): OCI image listing_type
+
+    Returns:
+        str: User-friendly description
+    """
+    if listing_type == "NONE" or listing_type is None:
+        return "Platform image"
+    else:
+        # Unexpected listing type - should not happen with platform-only images
+        return f"Image ({listing_type})"
+
+
+def get_all_images(compartment_ocid, regions=None, quiet=False):
+    """
+    Get all available platform images across specified regions with dynamic
+    publisher discovery.
+
+    This enhanced version discovers new Linux publishers dynamically while
+    fetching images.
+
+    Args:
+        compartment_ocid (str): OCI compartment OCID
+        regions (list): List of region names to query. If None, uses default region.
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        tuple: (images_dict, all_publishers) where:
+            - images_dict: Dictionary mapping (display_name, arch) to region->ocid mappings
+            - all_publishers: Combined dictionary of known and discovered publishers
+    """
+    # Lazy import of OCI exceptions - only needed when actually using OCI API
+    from oci.exceptions import ServiceError, ConfigFileNotFound
+
+    if regions is None:
+        regions = [get_default_region()]
+
+    # Store images as: {(display_name, arch): {region: ocid, listing_type: type}}
+    all_images = defaultdict(lambda: {"regions": {}, "listing_type": None})
+    all_image_objects = []  # Keep track of image objects for discovery
+
+    for region in regions:
+        if not quiet:
+            print(f"Fetching images from {region}...", file=sys.stderr)
+
+        try:
+            compute = create_compute_client(region)
+
+            images_response = compute.list_images(
+                compartment_ocid, sort_by="DISPLAYNAME", sort_order="ASC"
+            )
+            images = images_response.data
+            all_image_objects.extend(images)  # Collect for publisher discovery
+
+            # First pass: collect all images (we'll filter after discovery)
+            for image in images:
+                display_name = image.display_name
+                arch = get_image_architecture(display_name)
+                key = (display_name, arch)
+                all_images[key]["regions"][region] = image.id
+                # Capture listing_type (should be same across regions for same image)
+                if all_images[key]["listing_type"] is None:
+                    all_images[key]["listing_type"] = getattr(
+                        image, "listing_type", None
+                    )
+
+        except ConfigFileNotFound:
+            print(
+                "Error: OCI config file not found. Please configure OCI CLI.",
+                file=sys.stderr,
+            )
+            return {}, {}
+        except ServiceError as e:
+            print(f"  Warning: Could not query {region}: {e.message}", file=sys.stderr)
+            continue
+        except Exception as e:
+            print(f"  Warning: Error querying {region}: {e}", file=sys.stderr)
+            continue
+
+    # Discover new publishers from the collected images
+    discovered_publishers = discover_publishers_from_images(all_image_objects, quiet)
+
+    # Merge known and discovered publishers
+    all_publishers = get_known_publishers()
+    all_publishers.update(discovered_publishers)
+
+    # Now filter images based on all publishers (known + discovered)
+    filtered_images = defaultdict(lambda: {"regions": {}, "listing_type": None})
+    recognized_count = 0
+
+    for (display_name, arch), image_data in all_images.items():
+        if is_recognized_image(display_name, all_publishers):
+            filtered_images[(display_name, arch)] = image_data
+            recognized_count += 1
+
+    if not quiet:
+        print(
+            f"\nTotal publishers: {len(all_publishers)} "
+            f"({len(discovered_publishers)} discovered)",
+            file=sys.stderr,
+        )
+        print(f"Total recognized Linux images: {recognized_count}", file=sys.stderr)
+
+    return filtered_images, all_publishers
+
+
+def is_recognized_image(display_name, publishers):
+    """
+    Check if an image display name matches any publisher patterns.
+
+    All publisher patterns are Linux-specific, so no explicit exclusion
+    of non-Linux systems is needed.
+
+    Args:
+        display_name (str): Image display name
+        publishers (dict): Dictionary of publisher information
+
+    Returns:
+        bool: True if image is recognized
+    """
+    for publisher_info in publishers.values():
+        for pattern in publisher_info["display_name_patterns"]:
+            if re.match(pattern, display_name, re.IGNORECASE):
+                return True
+    return False
+
+
+def get_image_architecture(display_name):
+    """
+    Infer image architecture from display name.
+
+    Args:
+        display_name (str): Image display name
+
+    Returns:
+        str: 'x86_64' or 'arm64'
+    """
+    display_lower = display_name.lower()
+    if "aarch64" in display_lower or "arm64" in display_lower:
+        return "arm64"
+    elif "gpu" in display_lower or "gen2-gpu" in display_lower:
+        return "x86_64"  # GPU instances are x86_64
+    else:
+        return "x86_64"  # Default to x86_64
+
+
+def classify_image(display_name, publishers):
+    """
+    Classify an image into publisher and version groups using dynamic publishers.
+
+    Args:
+        display_name (str): Image display name
+        publishers (dict): Dictionary of publisher information
+
+    Returns:
+        tuple: (publisher_key, version_key, friendly_name, full_display_name)
+    """
+    display_lower = display_name.lower()
+
+    # Check each publisher's patterns
+    for pub_key, pub_info in publishers.items():
+        for pattern in pub_info["display_name_patterns"]:
+            if re.match(pattern, display_name, re.IGNORECASE):
+                # Found a matching publisher
+                # Extract version using the publisher's pattern as a guide
+                # Convert pattern like "Oracle-Linux-.*" to "Oracle-Linux-"
+                # Then look for version number immediately after this prefix
+                version_match = None
+
+                # Try to extract the prefix from the pattern (remove wildcards)
+                prefix = pattern.replace(".*", "").replace("\\d+", "").replace("-$", "")
+                if prefix:
+                    # Look for version after the prefix: prefix-X.Y or prefix X.Y
+                    version_pattern = rf"{re.escape(prefix)}[-\s](\d+(?:\.\d+)?)"
+                    version_match = re.search(
+                        version_pattern, display_name, re.IGNORECASE
+                    )
+
+                # Fallback: match version numbers followed by a hyphen
+                # This matches platform images (e.g., "Oracle-Linux-9.6-2025...")
+                if not version_match:
+                    version_match = re.search(r"(\d+(?:\.\d+)?)-", display_name)
+
+                if version_match:
+                    version = version_match.group(1).replace(".", "_")
+
+                    # Determine architecture variant
+                    variant = ""
+                    if "gen2-gpu" in display_lower:
+                        variant = "_GPU"
+                    elif "aarch64" in display_lower or "arm64" in display_lower:
+                        variant = "_ARM64"
+                    else:
+                        variant = "_X86"
+
+                    # Create version key
+                    version_key = f"{pub_key.upper()}_{version}{variant}"
+
+                    # Create friendly name
+                    friendly_name = (
+                        f"{pub_info['description']} {version_match.group(1)}"
+                    )
+                    if variant == "_GPU":
+                        friendly_name += " Gen2 GPU"
+                    elif variant == "_ARM64":
+                        friendly_name += " (aarch64)"
+                    elif variant == "_X86":
+                        friendly_name += " (x86)"
+
+                    # Add discovered marker if applicable
+                    if pub_info.get("discovered"):
+                        friendly_name += " [NEW]"
+
+                    return (pub_key, version_key, friendly_name, display_name)
+
+    return (None, None, None, None)
+
+
+def organize_images_by_publisher(images_dict, publishers, quiet=False):
+    """
+    Organize images by publisher and version using dynamic publishers.
+
+    Args:
+        images_dict (dict): Dictionary from get_all_images()
+        publishers (dict): Dictionary of publisher information
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Organized structure {publisher: {version_key: {regions, display_name, ...}}}
+    """
+    organized = defaultdict(lambda: defaultdict(dict))
+
+    for (display_name, arch), image_data in images_dict.items():
+        publisher_key, version_key, friendly_name, full_display_name = classify_image(
+            display_name, publishers
+        )
+
+        if not publisher_key or not version_key:
+            continue
+
+        # Extract region OCIDs and listing type from the data structure
+        region_ocids = image_data["regions"]
+        listing_type = image_data.get("listing_type")
+
+        # Multiple platform images may map to same version_key with different
+        # release dates (e.g., Oracle-Linux-9.5-2024.01.01 and 9.5-2024.02.01).
+        # Keep the newest image by comparing release dates in display names.
+        if version_key in organized[publisher_key]:
+            existing_display_name = organized[publisher_key][version_key][
+                "display_name"
+            ]
+            # Extract dates from display names (format: YYYY.MM.DD)
+            # Dates are alphabetically sortable, so simple string comparison works
+            if display_name <= existing_display_name:
+                # Current image is older or same, keep existing
+                continue
+            # Current image is newer, replace existing (fall through to store)
+
+        # Store image information
+        organized[publisher_key][version_key] = {
+            "friendly_name": friendly_name,
+            "display_name": full_display_name,
+            "architecture": arch,
+            "region_ocids": region_ocids,
+            "listing_type": listing_type,
+            "image_type": get_image_type_description(listing_type),
+        }
+
+    if not quiet:
+        for publisher, versions in organized.items():
+            pub_info = publishers.get(publisher, {})
+            status = " (discovered)" if pub_info.get("discovered") else ""
+            print(
+                f"Publisher '{publisher}'{status}: {len(versions)} versions",
+                file=sys.stderr,
+            )
+
+    return organized
+
+
+def get_release_notes_url(display_name):
+    """
+    Generate the Oracle Cloud documentation URL for an image's release notes.
+
+    Args:
+        display_name (str): Image display name
+
+    Returns:
+        str: URL to release notes or empty string if not applicable
+    """
+    # Convert display name to URL-friendly format
+    # Example: Oracle-Linux-9.6-2025.06.17-0 ->
+    #          oracle-linux-9-6-2025-06-17-0
+    url_slug = display_name.lower()
+    url_slug = url_slug.replace("canonical-ubuntu-", "ubuntu-")
+    url_slug = url_slug.replace(".", "-")
+
+    # Determine the base path
+    if "oracle-linux" in display_name.lower():
+        # Determine major version for URL path
+        version_match = re.search(r"(\d+)\.", display_name)
+        if version_match:
+            major_version = version_match.group(1)
+            return f"https://docs.oracle.com/en-us/iaas/images/oracle-linux-{major_version}x/{url_slug}.htm"
+    elif "ubuntu" in display_name.lower():
+        # Determine version for URL path (2004, 2204, 2404)
+        version_match = re.search(r"(\d+)\.(\d+)", display_name)
+        if version_match:
+            major = version_match.group(1)
+            minor = version_match.group(2)
+            version_str = f"{major}{minor}"
+            return f"https://docs.oracle.com/en-us/iaas/images/ubuntu-{version_str}/{url_slug}.htm"
+
+    return ""
+
+
+def output_images_kconfig(organized_images, publishers, regions, region_key_map):
+    """
+    Output images menu in Kconfig format with dynamic publishers.
+
+    Args:
+        organized_images (dict): Organized images from organize_images_by_publisher()
+        publishers (dict): Dictionary of all publishers (known + discovered)
+        regions (list): List of region names that were queried
+        region_key_map (dict): Mapping from region_name to region_key
+    """
+    # Output header comment showing which regions were queried
+    print("# This file was auto-generated by gen_kconfig_image")
+    print("# Queried OCI regions: " + ", ".join(sorted(regions)))
+    print("#")
+    print("# Note: Images may not be available in regions not listed above.")
+    print("# See individual image help text for specific region availability.")
+    print()
+
+    environment = get_jinja2_environment()
+
+    # Sort publishers by priority for consistent ordering
+    sorted_publishers = sorted(
+        [(k, v) for k, v in publishers.items() if k in organized_images],
+        key=lambda x: (x[1].get("priority", 100), x[0]),
+    )
+
+    # Output the top-level distribution choice menu
+    template = environment.get_template("image_distributions.j2")
+    print(
+        template.render(
+            publishers=[pub[0] for pub in sorted_publishers],
+        )
+    )
+    print()
+
+    # Create a lambda that uses the region_key_map
+    def get_kconfig_name(region_name):
+        return get_region_kconfig_name(region_name, region_key_map)
+
+    def version_sort_key(version_item):
+        """
+        Extract numeric version from version_key for proper chronological sorting.
+
+        Version keys are like: ORACLE_9_6_X86, UBUNTU_22_04_ARM64
+        Sort by numeric version (oldest to newest), not alphabetic.
+        """
+        version_key, version_data = version_item
+        parts = version_key.split("_")
+
+        # Remove publisher prefix, leaving version numbers and architecture
+        # Could be: [major, minor, arch] or [major, arch]
+        version_parts = parts[1:]
+
+        major = 0
+        minor = 0
+
+        # The last part is usually the architecture (X86, ARM64, GPU)
+        # Everything before that is version numbers
+        if len(version_parts) >= 2:
+            try:
+                major = int(version_parts[0])
+                # Try to parse second part as minor version
+                if len(version_parts) >= 3:
+                    try:
+                        minor = int(version_parts[1])
+                    except ValueError:
+                        # Second part is arch, no minor version
+                        minor = 0
+            except ValueError:
+                pass
+
+        # Architecture preference: X86, ARM64, GPU for consistent ordering
+        arch_order = {"X86": 0, "ARM64": 1, "GPU": 2}
+        arch = version_parts[-1] if version_parts else "X86"
+        arch_priority = arch_order.get(arch, 99)
+
+        return (major, minor, arch_priority)
+
+    # Output each publisher's images
+    template = environment.get_template("image_publisher.j2")
+    for publisher_key, publisher_info in sorted_publishers:
+        versions = organized_images.get(publisher_key, {})
+
+        # Sort versions numerically (oldest to newest)
+        sorted_versions = sorted(versions.items(), key=version_sort_key)
+
+        # Add discovered marker to description if applicable
+        description = publisher_info.get("description", publisher_key)
+        if publisher_info.get("discovered"):
+            description += " (Discovered)"
+
+        print(
+            template.render(
+                publisher_key=publisher_key,
+                publisher_name=publisher_info.get("publisher_name", publisher_key),
+                publisher_description=description,
+                versions=sorted_versions,
+                get_release_notes_url=get_release_notes_url,
+                get_region_kconfig_name=get_kconfig_name,
+            )
+        )
+        print()
+
+
+def output_publishers_raw(quiet=False):
+    """Output available publishers in table format."""
+    publishers = get_known_publishers()
+
+    if not quiet:
+        print(f"Known OS image publishers ({len(publishers)}):\n")
+
+    print(f"{'Publisher Key':<15} {'Publisher Name':<20} {'Description':<30}")
+    print("-" * 70)
+
+    for key, info in publishers.items():
+        print(
+            f"{key:<15} " f"{info['publisher_name']:<20} " f"{info['description']:<30}"
+        )
+
+
+def output_publisher_raw(publisher_key, organized_images, quiet=False):
+    """Output publisher image information in table format."""
+    publishers = get_known_publishers()
+    publisher_info = publishers.get(publisher_key, {})
+
+    if not quiet:
+        print(f"Images for {publisher_info.get('publisher_name', publisher_key)}")
+        print(f"Description: {publisher_info.get('description', '')}\n")
+
+    versions = organized_images.get(publisher_key, {})
+    if not versions:
+        print(f"No images found for publisher '{publisher_key}'.")
+        return
+
+    print(f"{'Version':<40} {'Architecture':<15} {'Regions':<10}")
+    print("-" * 70)
+
+    for version_key, version_info in sorted(versions.items()):
+        region_count = len(version_info["region_ocids"])
+        print(
+            f"{version_info['friendly_name']:<40} "
+            f"{version_info['architecture']:<15} "
+            f"{region_count:<10}"
+        )
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get OCI compute image information and generate Kconfig",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate Kconfig from all subscribed regions (default)
+  python %(prog)s > ../kconfigs/Kconfig.images
+
+  # List available publishers
+  python %(prog)s --publishers
+
+  # Get details for a specific publisher
+  python %(prog)s oracle --format raw
+
+  # Query specific region only
+  python %(prog)s --region us-chicago-1
+        """,
+    )
+    parser.add_argument(
+        "publisher_key", nargs="?", help="Publisher key (e.g., oracle, ubuntu)"
+    )
+
+    parser.add_argument(
+        "--publishers", action="store_true", help="List all known publishers"
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--region",
+        "-r",
+        help="Query specific region only (default: aggregate from all subscribed regions)",
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    if args.publishers:
+        # Show both known and discovered publishers
+        compartment_ocid = get_default_compartment()
+        if compartment_ocid:
+            # Get one region's images to discover publishers
+            region = get_default_region()
+            images_dict, all_publishers = get_all_images(
+                compartment_ocid, [region], True
+            )  # Quiet mode for discovery
+
+            print("Known and Discovered Linux Publishers:")
+            print("-" * 70)
+            print(
+                f"{'Publisher Key':<15} {'Publisher Name':<20} {'Description':<25} {'Status':<10}"
+            )
+            print("-" * 70)
+
+            sorted_pubs = sorted(
+                all_publishers.items(), key=lambda x: (x[1].get("priority", 100), x[0])
+            )
+            for key, info in sorted_pubs:
+                status = "Discovered" if info.get("discovered") else "Built-in"
+                print(
+                    f"{key:<15} "
+                    f"{info['publisher_name']:<20} "
+                    f"{info['description']:<25} "
+                    f"{status:<10}"
+                )
+        else:
+            output_publishers_raw(args.quiet)
+        return
+
+    compartment_ocid = get_default_compartment()
+    if not compartment_ocid:
+        print("Error: Could not determine compartment OCID", file=sys.stderr)
+        sys.exit(1)
+
+    # Get region key mappings from OCI API
+    region_key_map = get_all_region_keys(args.quiet)
+
+    # Determine which regions to query
+    if args.region:
+        regions = [args.region]
+    else:
+        regions = get_subscribed_regions(args.quiet)
+
+    # Get platform images from OCI API with dynamic publisher discovery
+    images_dict, all_publishers = get_all_images(compartment_ocid, regions, args.quiet)
+
+    if not images_dict:
+        print("Error: No images found", file=sys.stderr)
+        sys.exit(1)
+
+    # Organize images by publisher using discovered publishers
+    organized_images = organize_images_by_publisher(
+        images_dict, all_publishers, args.quiet
+    )
+
+    if args.publisher_key:
+        if args.publisher_key not in organized_images:
+            print(f"Error: Unknown publisher '{args.publisher_key}'", file=sys.stderr)
+            print(
+                f"Available publishers: {', '.join(organized_images.keys())}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if args.format == "raw":
+            output_publisher_raw(args.publisher_key, organized_images, args.quiet)
+        else:
+            # For Kconfig format of single publisher, output full menu
+            output_images_kconfig(
+                organized_images, all_publishers, regions, region_key_map
+            )
+        return
+
+    # Output full Kconfig menu with dynamic publishers
+    output_images_kconfig(organized_images, all_publishers, regions, region_key_map)
+
+
+if __name__ == "__main__":
+    main()

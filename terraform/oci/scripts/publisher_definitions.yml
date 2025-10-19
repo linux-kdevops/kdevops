@@ -1,0 +1,148 @@
+# OCI Image Publisher Definitions
+#
+# This file defines known OS image publishers in Oracle Cloud Infrastructure
+# and their image naming patterns for automatic image discovery.
+#
+# Purpose:
+#   When generating Kconfig.images, the gen_kconfig_image script uses these
+#   publisher definitions to:
+#   - Recognize and categorize OS images by their display names
+#   - Generate organized Kconfig menus grouped by Linux distribution
+#   - Provide friendly names and descriptions for each distribution
+#
+# Dynamic Discovery:
+#   In addition to these known publishers, the gen_kconfig_image script can
+#   dynamically discover new Linux distributions by analyzing image naming
+#   patterns. Discovered publishers are marked with [NEW] in the generated
+#   Kconfig output.
+#
+# Last Verified: 2025-10-21
+# Total Publishers: 10
+#
+# Format:
+# -------
+# publisher_key:
+#   publisher_name: "Display Name"
+#   description: "Full Description"
+#   display_name_patterns:
+#     - "regex-pattern-1"
+#     - "regex-pattern-2"
+#   priority: N
+#
+# Fields:
+#   publisher_key:           Short identifier (lowercase, used in Kconfig symbols)
+#   publisher_name:          Human-friendly publisher/company name
+#   description:             Full description shown in Kconfig help text
+#   display_name_patterns:   List of regex patterns to match image display names
+#   priority:                Display order (lower numbers appear first)
+#
+# How to update this file:
+# ------------------------
+# When Oracle adds new Linux distributions or you want to customize the list:
+#
+# 1. Find available images in your OCI tenancy:
+#    $ oci compute image list --compartment-id <your-compartment-ocid> \
+#        --sort-by DISPLAYNAME --all
+#
+# 2. Identify the image naming pattern from the display_name field.
+#    Examples:
+#    - "Oracle-Linux-9.6-2025.06.17-0" -> Pattern: "Oracle-Linux-.*"
+#    - "Canonical-Ubuntu-22.04-2024.10.14-0" -> Pattern: "Canonical-Ubuntu-.*"
+#    - "AlmaLinux-8-2024.10.11-0" -> Pattern: "AlmaLinux-.*"
+#
+# 3. Add a new publisher entry following the format above. Choose:
+#    - A unique publisher_key (lowercase, no spaces)
+#    - A descriptive publisher_name and description
+#    - Regex patterns that match all variants of that distribution
+#    - A priority number (higher numbers appear later in menus)
+#
+# 4. Update the "Last Verified" date and "Total Publishers" count above.
+#
+# 5. After updating this file, regenerate the Kconfig.images file:
+#    $ cd terraform/oci/scripts
+#    $ ./gen_kconfig_image > ../kconfigs/Kconfig.images
+#
+# 6. You can verify your patterns match correctly by running:
+#    $ ./gen_kconfig_image --publishers
+#
+# Notes:
+# ------
+# - Patterns are evaluated as Python regex with re.IGNORECASE flag
+# - The script processes images in priority order (lower priority first)
+# - Only Linux distributions are included (no Windows, BSD, etc.)
+# - Dynamic discovery can find new distributions not listed here
+#
+# Publisher Definitions:
+# ----------------------
+
+oracle:
+  publisher_name: "Oracle"
+  description: "Oracle Linux"
+  display_name_patterns:
+    - "Oracle-Linux-.*"
+    - "Oracle Linux .*"
+    - "Oracle-Autonomous-Linux-.*"
+  priority: 1
+
+ubuntu:
+  publisher_name: "Canonical"
+  description: "Ubuntu"
+  display_name_patterns:
+    - "Canonical-Ubuntu-.*"
+  priority: 2
+
+centos:
+  publisher_name: "CentOS"
+  description: "CentOS Linux"
+  display_name_patterns:
+    - "CentOS-\\d+-.*"
+  priority: 3
+
+almalinux:
+  publisher_name: "AlmaLinux"
+  description: "AlmaLinux OS"
+  display_name_patterns:
+    - "AlmaLinux-.*"
+  priority: 4
+
+rocky:
+  publisher_name: "Rocky Enterprise"
+  description: "Rocky Linux"
+  display_name_patterns:
+    - "Rocky-Linux-.*"
+  priority: 5
+
+suse:
+  publisher_name: "SUSE"
+  description: "SUSE Linux Enterprise"
+  display_name_patterns:
+    - "SUSE-.*"
+  priority: 6
+
+opensuse:
+  publisher_name: "openSUSE"
+  description: "openSUSE Linux"
+  display_name_patterns:
+    - "openSUSE-.*"
+  priority: 7
+
+redhat:
+  publisher_name: "Red Hat"
+  description: "Red Hat Enterprise Linux"
+  display_name_patterns:
+    - "Red-Hat-.*"
+  priority: 8
+
+debian:
+  publisher_name: "Debian"
+  description: "Debian Linux"
+  display_name_patterns:
+    - "Debian-.*"
+  priority: 9
+
+fedora:
+  publisher_name: "Fedora"
+  description: "Fedora Linux"
+  display_name_patterns:
+    - "Fedora-.*"
+  priority: 10

@@ -1,0 +1,79 @@
+{#
+  This template is rendered by gen_kconfig_image script.
+
+  Template variables:
+  - publisher_key: str (e.g., 'oracle', 'ubuntu')
+  - publisher_name: str (e.g., 'Oracle Linux')
+  - publisher_description: str (full description)
+  - versions: list of (version_key, version_info) tuples (pre-sorted)
+  - get_release_notes_url: function to generate doc URLs
+  - get_region_kconfig_name: function to convert region names
+#}
+{% if publisher_key == 'oracle' %}
+if TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+{% elif publisher_key == 'ubuntu' %}
+if TERRAFORM_OCI_OPERATING_SYSTEM_UBUNTU
+{% else %}
+if TERRAFORM_OCI_OPERATING_SYSTEM_{{ publisher_key | upper }}
+{% endif %}
+
+choice
+	prompt "OS release"
+{# versions is a list of (version_key, version_info) tuples from sorted_versions in gen_kconfig_image #}
+{% for version_key, version_info in versions | reverse %}
+{% if "ARM64" in version_key %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_{{ version_key }} if TARGET_ARCH_ARM64
+{% elif "X86" in version_key %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_{{ version_key }} if TARGET_ARCH_X86_64
+{% endif %}
+{% endfor %}
+	help
+	  Select the release of {{ publisher_description }} to install on each
+	  instance.
+
+{% for version_key, version_info in versions %}
+config TERRAFORM_OCI_OPERATING_SYSTEM_{{ version_key }}
+	bool "{{ version_info['friendly_name'] }}"
+{% if "ARM64" in version_key %}
+	depends on TARGET_ARCH_ARM64
+{% elif "GPU" in version_key %}
+	depends on TARGET_ARCH_X86_64
+{% elif "X86" in version_key %}
+	depends on TARGET_ARCH_X86_64
+{% endif %}
+	help
+	  {{ version_info['display_name'] }}
+
+	  Image type: {{ version_info.get('image_type', 'Unknown') }}
+
+	  Available in regions: {% for region in version_info['region_ocids'].keys() | sort %}{{ region }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% if get_release_notes_url(version_info['display_name']) %}
+	  Image release notes:
+	  {{ get_release_notes_url(version_info['display_name']) }}
+{% endif %}
+
+{% endfor %}
+endchoice
+
+{% for version_key, version_info in versions %}
+if TERRAFORM_OCI_OPERATING_SYSTEM_{{ version_key }}
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string
+	output yaml
+{# version_info['region_ocids'] is a dict, so .items() is required here #}
+{% for region, ocid in version_info['region_ocids'].items() %}
+	default "{{ ocid }}" if TERRAFORM_OCI_REGION_{{ get_region_kconfig_name(region) }}
+{% endfor %}
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_{{ version_key }}
+
+{% endfor %}
+{% if publisher_key == 'oracle' %}
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+{% elif publisher_key == 'ubuntu' %}
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_UBUNTU
+{% else %}
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_{{ publisher_key | upper }}
+{% endif %}
