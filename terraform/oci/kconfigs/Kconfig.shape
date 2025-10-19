@@ -11,6 +11,12 @@ choice
 	  Which shapes are available is limited by your subscription
 	  and what hardware has been deployed in your selected region.
 
+config TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+	bool "Generic shapes"
+	help
+	  These shapes are recommended for developers who do not
+	  require a specific model of CPU for their workflows.
+
 config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
 	bool "Flex shapes"
 	help
@@ -18,12 +24,6 @@ config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
 	  customize the number of OCPUs and the amount of memory
 	  per instance. The network bandwidth and number of VNICs
 	  scale proportionately with the number of OCPUs.
-
-config TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
-	bool "Generic shapes"
-	help
-	  These shapes are recommended for developers who do not
-	  require a specific model of CPU for their workflows.
 
 config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
 	bool "Bare metal"
@@ -35,6 +35,240 @@ config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
 
 endchoice
 
-source "terraform/oci/kconfigs/shapes/Kconfig.flex"
-source "terraform/oci/kconfigs/shapes/Kconfig.generic"
-source "terraform/oci/kconfigs/shapes/Kconfig.bm"
+if TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+	bool "VM.Standard.x86.Generic"
+	depends on TARGET_ARCH_X86_64
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "VM.Standard.x86.Generic" if TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+
+config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
+	int "Instance CPU count"
+	output yaml
+	default 2
+	help
+	  The Oracle CPU (OCPU) represents physical CPU cores and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, runs two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
+
+config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
+	int "Instance memory size"
+	output yaml
+	default 4
+	help
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUS in each
+	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+
+if TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more detail, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#flexible
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+	bool "VM.Standard3.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Selecting this option provisions each guest with between 1
+	  and 32 OCPUs (physical cores) and up to 512MB of memory.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E4_FLEX
+	bool "VM.Standard.E4.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Selecting this option provisions each guest with between 1
+	  and 114 OCPUs (physical AMD cores) and up to 1760MB of memory.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E5_FLEX
+	bool "VM.Standard.E5.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Selecting this option provisions each guest with between 1
+	  and 94 OCPUs (physical AMD cores) and up to 1048MB of memory.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_A1_FLEX
+	bool "VM.Standard.A1.Flex"
+	depends on TARGET_ARCH_ARM64
+	help
+	  Selecting this option provisions each guest with between 1
+	  and 80 OCPUs (physical ARM cores) and up to 512MB of memory.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_A2_FLEX
+	bool "VM.Standard.A2.Flex"
+	depends on TARGET_ARCH_ARM64
+	help
+	  Selecting this option provisions each guest with between 1
+	  and 78 OCPUs (physical ARM cores) and up to 946MB of memory.
+
+config TERRAFORM_OCI_SHAPE_VM_DENSEIO_E4_FLEX
+	bool "VM.DenseIO.E4.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Selecting this option provisions each instance with either
+	  8 OCPUs and 128 GB memory, 16 OCPUs and 256 GB memory, or
+	  32 OCPUs and 512 GB memory. CPUs are based on the AMD
+	  x86_64 platform.
+
+config TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
+	bool "VM.Optimized3.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Selecting this option provisions each instance with up to
+	  18 OCPUS. The memory provisioned for each instance is
+	  typically matches a multiple of the number of OCPUS.
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "VM.Standard3.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+	default "VM.Standard.E4.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E4_FLEX
+	default "VM.Standard.E5.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E5_FLEX
+	default "VM.Standard.A1.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_A1_FLEX
+	default "VM.Standard.A2.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_A2_FLEX
+	default "VM.DenseIO.E4.Flex" if TERRAFORM_OCI_SHAPE_VM_DENSEIO_E4_FLEX
+	default "VM.Optimized3.Flex" if TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
+
+config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
+	int "Instance CPU count"
+	output yaml
+	default 2
+	help
+	  The Oracle CPU (OCPU) represents physical CPU cores and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, runs two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
+
+config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
+	int "Instance memory size"
+	output yaml
+	default 4
+	help
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUS in each
+	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
+if TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more details, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#baremetalshapes
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	bool "BM.Standard3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  X9-based standard compute. Processor: Intel Xeon Platinum
+	  8358. Base frequency 2.6 GHz, max turbo frequency 3.4 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E4
+	bool "BM.Standard.E4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E4-based standard compute. Processor: AMD EPYC 7J13. Base
+	  frequency 2.55 GHz, max boost frequency 3.5 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E5
+	bool "BM.Standard.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E5-based standard compute. Processor: AMD EPYC 9J14. Base
+	  frequency 2.4 GHz, max boost frequency 3.7 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_A1
+	bool "BM.Standard.A1"
+	depends on TARGET_ARCH_ARM64
+	help
+	  OCI Ampere A1 Compute Arm-based standard compute. Each
+	  OCPU corresponds to a single hardware execution thread.
+	  Processor: Ampere Altra Q80-30. Max frequency 3.0 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_DENSEIO_E4
+	bool "BM.DenseIO.E4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E4-based dense I/O compute. Processor: AMD EPYC 7J13.
+	  Base frequency 2.55 GHz, max boost frequency 3.5 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_DENSEIO_E5
+	bool "BM.DenseIO.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  E5-based dense I/O compute. Processor: AMD EPYC 9J14.
+	  Base frequency 2.4 GHz, max boost frequency 3.7 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3
+	bool "BM.Optimized3"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: Intel Xeon 6354. Base frequency 3.0 GHz, max
+	  turbo frequency 3.6 GHz.
+
+config TERRAFORM_OCI_SHAPE_BM_HPC_E5
+	bool "BM.HPC.E5"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: AMD EPYC 9J14. Base frequency 2.4 GHz, max
+	  boost frequency 3.7 GHz.
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "BM.Standard3" if TERRAFORM_OCI_SHAPE_BM_STANDARD3
+	default "BM.Standard.E4" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E4
+	default "BM.Standard.E5" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E5
+	default "BM.Standard.A1" if TERRAFORM_OCI_SHAPE_BM_STANDARD_A1
+	default "BM.DenseIO.E4" if TERRAFORM_OCI_SHAPE_BM_DENSEIO_E4
+	default "BM.DenseIO.E5" if TERRAFORM_OCI_SHAPE_BM_DENSEIO_E5
+	default "BM.Optimized3" if TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3
+	default "BM.HPC.E5" if TERRAFORM_OCI_SHAPE_BM_HPC_E5
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
