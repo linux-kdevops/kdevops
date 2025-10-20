@@ -1,0 +1,6 @@
+---
+- name: Set up udev rules for /dev/disk/kdevops/
+  gather_facts: false
+  hosts: baseline:dev:service
+  roles:
+    - role: extra_volumes

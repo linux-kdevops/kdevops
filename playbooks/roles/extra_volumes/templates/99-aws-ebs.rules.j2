@@ -1,0 +1,1 @@
+ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", SUBSYSTEM=="block", PROGRAM="/usr/local/bin/udev-ebs-tagger %k", SYMLINK+="%c"

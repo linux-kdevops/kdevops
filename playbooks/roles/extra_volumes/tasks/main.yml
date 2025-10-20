@@ -1,0 +1,6 @@
+---
+- name: Include provider-specific tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/providers/{{ kdevops_terraform_provider }}.yml"
+  when:
+    - kdevops_terraform_provider == "aws"

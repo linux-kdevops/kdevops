@@ -1,0 +1,26 @@
+#!/bin/bash
+
+DEVICE="$1"
+
+# Ensure the target directory exists
+mkdir -p /dev/disk/kdevops
+
+# Get volume ID from device serial
+VOLUME_ID=$(/usr/bin/lsblk -no SERIAL "/dev/$DEVICE" 2>/dev/null | head -1)
+if [[ -z "$VOLUME_ID" || "$VOLUME_ID" == "null" ]]; then
+    exit 0
+fi
+
+# Static mapping from Terraform outputs
+case "$VOLUME_ID" in
+{% for tags, volume_id in volume_mapping.items() %}
+    "{{ volume_id.replace("-", "") }}")
+        SYMLINKS="disk/kdevops/{{ tags }} "
+        echo "$SYMLINKS" | sed 's/[[:space:]]*$//'
+        ;;
+{% endfor %}
+    *)
+        # Unknown volume
+        exit 0
+        ;;
+esac

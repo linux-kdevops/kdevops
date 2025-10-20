@@ -539,13 +539,13 @@ config FSTESTS_SPARSE_DEV
 	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
 	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
 	default "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
-	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
-	default "/dev/nvme1n1" if TERRAFORM_GCE
-	default "/dev/sdd" if TERRAFORM_AZURE
+	default TERRAFORM_AWS_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_AWS
+	default TERRAFORM_GCE_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_GCE
+	default TERRAFORM_AZURE_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_AZURE
 	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
 	help
-	  The device to use to create a filesystem on where we will place
-	  sparse files.
+	  The device pathname to use to create a filesystem where
+	  fstests places sparse files.
 
 choice
 	prompt "Filesystem to use where sparse files will live"

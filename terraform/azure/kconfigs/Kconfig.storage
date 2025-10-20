@@ -212,8 +212,18 @@ config TERRAFORM_AZURE_MANAGED_DISKS_TIER
 	default "P50" if TERRAFORM_AZURE_MANAGED_DISKS_TIER_P50
 
 config TERRAFORM_AZURE_DATA_VOLUME_DEVICE_FILE_NAME
-	string "Device name for the /data file system"
+	string "Data volume's device file name"
+	output yaml
 	default "/dev/disk/azure/scsi1/lun0"
 	help
-	  This option sets the name of the block device on each target
-	  node that is to be used for the /data file system.
+	  This option sets the name of the block device on each
+	  target node that is to be used for the /data file system.
+
+config TERRAFORM_AZURE_SPARSE_VOLUME_DEVICE_FILE_NAME
+	string "Sparse volume's device file name"
+	output yaml
+	default "/dev/disk/azure/scsi1/lun1"
+	help
+	  This option sets the name of the block device on each
+	  target node that can be used for the fstests sparse device
+	  tests.

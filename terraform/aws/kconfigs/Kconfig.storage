@@ -203,5 +203,18 @@ config TERRAFORM_AWS_EBS_VOLUME_SIZE
 	default 4096 if TERRAFORM_AWS_EBS_VOLUME_SIZE_4096G
 
 config TERRAFORM_AWS_DATA_VOLUME_DEVICE_FILE_NAME
-	string
-	default "/dev/nvme1n1"
+	string "Data volume's device file name"
+	output yaml
+	default "/dev/disk/kdevops/extra-volume-00"
+	help
+	  This option sets the name of the block device on each
+	  target node that is to be used for the /data file system.
+
+config TERRAFORM_AWS_SPARSE_VOLUME_DEVICE_FILE_NAME
+	string "Sparse volume's device file name"
+	output yaml
+	default "/dev/disk/kdevops/extra-volume-01"
+	help
+	  This option sets the name of the block device on each
+	  target node that can be used for the fstests sparse device
+	  tests.

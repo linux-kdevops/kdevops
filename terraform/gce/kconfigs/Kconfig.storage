@@ -206,6 +206,18 @@ config TERRAFORM_GCE_DISK_THROUGHPUT
 	depends on TERRAFORM_GCE_DISK_NEEDS_THROUGHPUT
 
 config TERRAFORM_GCE_DATA_VOLUME_DEVICE_FILE_NAME
-	string
+	string "Data volume's device file name"
 	output yaml
 	default "/dev/disk/by-id/google-persistent-disk-1"
+	help
+	  This option sets the name of the block device on each
+	  target node that is to be used for the /data file system.
+
+config TERRAFORM_GCE_SPARSE_VOLUME_DEVICE_FILE_NAME
+	string "Sparse volume's device file name"
+	output yaml
+	default "/dev/disk/by-id/google-persistent-disk-2"
+	help
+	  This option sets the name of the block device on each
+	  target node that can be used for the fstests sparse device
+	  tests.
