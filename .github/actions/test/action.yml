@@ -146,8 +146,7 @@ runs:
               # Show sample test status files for passed tests
               if [ $passed_tests -gt 0 ]; then
                 echo -e "\nSample passed test:" >> ci.commit_extra
-                # Get first sample file directly without echo pipe to avoid SIGPIPE with set -o pipefail
-                sample_file=$(find "$wpath/results/last-run" -type f -name "*" ! -name "*.out.bad" ! -name "*.dmesg" | head -1)
+                sample_file=$(find "$wpath/results/last-run" -type f -name "*" ! -name "*.out.bad" ! -name "*.dmesg" -print -quit)
                 if [ -n "$sample_file" ] && [ -f "$sample_file" ]; then
                   cat "$sample_file" >> ci.commit_extra || echo "Failed to read sample file" >> ci.commit_extra
                 else
@@ -160,7 +159,7 @@ runs:
 
             # blktests success detection - look for .out.bad files (failures)
             if [ -d "$wpath/results/last-run" ]; then
-              bad_check=$(find "$wpath/results/last-run" -name "*.out.bad" -type f | head -1)
+              bad_check=$(find "$wpath/results/last-run" -name "*.out.bad" -type f -print -quit)
               if [ -n "$bad_check" ]; then
                 echo "not ok" > ci.result
               else
