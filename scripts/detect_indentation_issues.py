@@ -34,9 +34,11 @@ def check_file_indentation(file_path):
 
         # Special rules for certain file types
         file_ext = Path(file_path).suffix.lower()
+        file_name = Path(file_path).name
         is_yaml = file_ext in [".yml", ".yaml"]
-        is_makefile = "Makefile" in Path(file_path).name or file_ext == ".mk"
+        is_makefile = "Makefile" in file_name or file_ext == ".mk"
         is_python = file_ext == ".py"
+        is_kconfig = file_name.startswith("Kconfig")
 
         # Check each line for issues
         for line_num, line in enumerate(lines, 1):
@@ -69,6 +71,11 @@ def check_file_indentation(file_path):
                     issues.append(
                         f"Line {line_num}: Tab character in Python file (PEP 8 recommends spaces)"
                     )
+            elif is_kconfig:
+                # Kconfig files use tabs for indentation and tab+spaces for help text
+                # The pattern "\t  " (tab followed by 2 spaces) is valid for help text
+                # So we don't flag this as mixed indentation
+                pass
             else:
                 # For other files, check for mixed indentation
                 if leading_ws:
