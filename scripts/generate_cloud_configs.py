@@ -10,6 +10,7 @@ import os
 import sys
 import subprocess
 import json
+import argparse
 
 
 def generate_lambdalabs_kconfig() -> bool:
@@ -146,16 +147,12 @@ def generate_aws_kconfig() -> bool:
     return all_success
 
 
-def main():
-    """Main function to generate cloud configurations."""
-    print("Cloud Provider Configuration Summary")
-    print("=" * 60)
-    print()
-
-    # Lambda Labs - Generate Kconfig files first
+def process_lambdalabs():
+    """Process Lambda Labs configuration."""
+    # Generate Kconfig files first
     kconfig_generated = generate_lambdalabs_kconfig()
 
-    # Lambda Labs - Get summary
+    # Get summary
     success, summary = get_lambdalabs_summary()
     if success:
         print(f"✓ {summary}")
@@ -167,7 +164,9 @@ def main():
         print(f"⚠ {summary}")
     print()
 
-    # AWS - Generate Kconfig files
+
+def process_aws():
+    """Process AWS configuration."""
     kconfig_generated = generate_aws_kconfig()
     if kconfig_generated:
         print("✓ AWS: Kconfig files generated successfully")
@@ -175,14 +174,73 @@ def main():
         print("⚠ AWS: Failed to generate Kconfig files - using defaults")
     print()
 
-    # Azure (placeholder - not implemented)
+
+def process_azure():
+    """Process Azure configuration (placeholder)."""
     print("⚠ Azure: Dynamic configuration not yet implemented")
 
-    # GCE (placeholder - not implemented)
+
+def process_gce():
+    """Process GCE configuration (placeholder)."""
     print("⚠ GCE: Dynamic configuration not yet implemented")
 
-    # OCI (placeholder - not implemented)
+
+def process_oci():
+    """Process OCI configuration (placeholder)."""
     print("⚠ OCI: Dynamic configuration not yet implemented")
+
+
+def main():
+    """Main function to generate cloud configurations."""
+    parser = argparse.ArgumentParser(
+        description="Generate dynamic cloud configurations for supported providers",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                      # Generate configs for all providers
+  %(prog)s --provider lambdalabs    # Generate configs for Lambda Labs only
+  %(prog)s --provider aws           # Generate configs for AWS only
+  %(prog)s --provider azure         # Generate configs for Azure only
+
+Supported providers: lambdalabs, aws, azure, gce, oci
+        """,
+    )
+
+    parser.add_argument(
+        "--provider",
+        choices=["lambdalabs", "aws", "azure", "gce", "oci"],
+        help="Generate configuration for a specific cloud provider only",
+    )
+
+    args = parser.parse_args()
+
+    # Provider dispatch table
+    providers = {
+        "lambdalabs": process_lambdalabs,
+        "aws": process_aws,
+        "azure": process_azure,
+        "gce": process_gce,
+        "oci": process_oci,
+    }
+
+    print("Cloud Provider Configuration Summary")
+    print("=" * 60)
+    print()
+
+    # If a specific provider is requested, only process that one
+    if args.provider:
+        if args.provider in providers:
+            providers[args.provider]()
+        else:
+            print(f"Error: Unknown provider '{args.provider}'", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # Process all providers
+        process_lambdalabs()
+        process_aws()
+        process_azure()
+        process_gce()
+        process_oci()
 
     print()
     print("Note: Dynamic configurations query real-time availability")
