@@ -11,7 +11,7 @@ source "terraform/oci/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
 comment "Shape selection"
-source "terraform/oci/kconfigs/Kconfig.shape"
+source "terraform/oci/kconfigs/Kconfig.shape.generated"
 comment "OS image selection"
 source "terraform/oci/kconfigs/Kconfig.image"
 endmenu

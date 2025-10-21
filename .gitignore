@@ -123,6 +123,7 @@ terraform/aws/kconfigs/Kconfig.location.generated
 terraform/aws/scripts/__pycache__/
 
 terraform/oci/kconfigs/Kconfig.location.generated
+terraform/oci/kconfigs/Kconfig.shape.generated
 terraform/oci/scripts/__pycache__/
 
 .cloud.initialized
