@@ -147,6 +147,50 @@ def generate_aws_kconfig() -> bool:
     return all_success
 
 
+def generate_oci_kconfig() -> bool:
+    """
+    Generate OCI Kconfig files.
+    Returns True on success, False on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    oci_scripts_dir = os.path.join(project_root, "terraform", "oci", "scripts")
+    oci_kconfigs_dir = os.path.join(project_root, "terraform", "oci", "kconfigs")
+
+    # Define the script-to-output mapping
+    scripts_to_run = [
+        ("gen_kconfig_location", "Kconfig.location.generated"),
+    ]
+
+    all_success = True
+
+    for script_name, kconfig_file in scripts_to_run:
+        script_path = os.path.join(oci_scripts_dir, script_name)
+        output_path = os.path.join(oci_kconfigs_dir, kconfig_file)
+
+        # Run the script and capture its output
+        result = subprocess.run(
+            [script_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            # Write the output to the corresponding Kconfig file
+            try:
+                with open(output_path, "w") as f:
+                    f.write(result.stdout)
+            except IOError as e:
+                print(f"Error writing {kconfig_file}: {e}", file=sys.stderr)
+                all_success = False
+        else:
+            print(f"Error running {script_name}: {result.stderr}", file=sys.stderr)
+            all_success = False
+
+    return all_success
+
+
 def process_lambdalabs():
     """Process Lambda Labs configuration."""
     # Generate Kconfig files first
@@ -186,8 +230,13 @@ def process_gce():
 
 
 def process_oci():
-    """Process OCI configuration (placeholder)."""
-    print("⚠ OCI: Dynamic configuration not yet implemented")
+    """Process OCI configuration."""
+    kconfig_generated = generate_oci_kconfig()
+    if kconfig_generated:
+        print("✓ OCI: Kconfig files generated successfully")
+    else:
+        print("⚠ OCI: Failed to generate Kconfig files - using defaults")
+    print()
 
 
 def main():

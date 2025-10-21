@@ -1,7 +1,13 @@
+# OCI provider configuration
+#
+# This file sources dynamically Kconfig menus. Run
+# 'make cloud-config-oci' to populate the .generated files
+# with current OCI resource information.
+
 if TERRAFORM_OCI
 
 menu "Resource location"
-source "terraform/oci/kconfigs/Kconfig.location"
+source "terraform/oci/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
 source "terraform/oci/kconfigs/Kconfig.compute"

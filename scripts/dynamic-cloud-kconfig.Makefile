@@ -20,8 +20,14 @@ AWS_KCONFIG_LOCATION := $(AWS_KCONFIG_DIR)/Kconfig.location.generated
 
 AWS_KCONFIGS := $(AWS_KCONFIG_AMI) $(AWS_KCONFIG_INSTANCE) $(AWS_KCONFIG_LOCATION)
 
+# OCI dynamic configuration
+OCI_KCONFIG_DIR := terraform/oci/kconfigs
+OCI_KCONFIG_LOCATION := $(OCI_KCONFIG_DIR)/Kconfig.location.generated
+
+OCI_KCONFIGS := $(OCI_KCONFIG_LOCATION)
+
 # Add generated files to mrproper clean list
-KDEVOPS_MRPROPER += $(LAMBDALABS_KCONFIGS) $(AWS_KCONFIGS)
+KDEVOPS_MRPROPER += $(LAMBDALABS_KCONFIGS) $(AWS_KCONFIGS) $(OCI_KCONFIGS)
 
 # Touch Lambda Labs generated files so Kconfig can source them
 # This ensures the files exist (even if empty) before Kconfig runs
@@ -32,7 +38,11 @@ dynamic_lambdalabs_kconfig_touch:
 dynamic_aws_kconfig_touch:
 	$(Q)touch $(AWS_KCONFIGS)
 
-DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch
+# Touch OCI generated files so Kconfig can source them
+dynamic_oci_kconfig_touch:
+	$(Q)touch $(OCI_KCONFIGS)
+
+DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_oci_kconfig_touch
 
 # Lambda Labs targets use --provider argument for efficiency
 cloud-config-lambdalabs:
@@ -42,6 +52,10 @@ cloud-config-lambdalabs:
 cloud-config-aws:
 	$(Q)python3 scripts/generate_cloud_configs.py --provider aws
 
+# OCI targets use --provider argument for efficiency
+cloud-config-oci:
+	$(Q)python3 scripts/generate_cloud_configs.py --provider oci
+
 # Clean Lambda Labs generated files
 clean-cloud-config-lambdalabs:
 	$(Q)rm -f $(LAMBDALABS_KCONFIGS)
@@ -50,7 +64,11 @@ clean-cloud-config-lambdalabs:
 clean-cloud-config-aws:
 	$(Q)rm -f $(AWS_KCONFIGS)
 
-DYNAMIC_CLOUD_KCONFIG += cloud-config-lambdalabs cloud-config-aws
+# Clean OCI generated files
+clean-cloud-config-oci:
+	$(Q)rm -f $(OCI_KCONFIGS)
+
+DYNAMIC_CLOUD_KCONFIG += cloud-config-lambdalabs cloud-config-aws cloud-config-oci
 
 cloud-config-help:
 	@echo "Cloud-specific dynamic kconfig targets:"
@@ -72,4 +90,7 @@ cloud-list-all:
 	$(Q)chmod +x scripts/cloud_list_all.sh
 	$(Q)scripts/cloud_list_all.sh
 
-PHONY += cloud-config cloud-config-lambdalabs cloud-config-aws clean-cloud-config clean-cloud-config-lambdalabs clean-cloud-config-aws cloud-config-help cloud-list-all
+PHONY += cloud-config clean-cloud-config cloud-config-help cloud-list-all
+PHONY += cloud-config-aws clean-cloud-config-aws
+PHONY += cloud-config-lambdalabs clean-cloud-config-lambdalabs
+PHONY += cloud-config-oci clean-cloud-config-oci
