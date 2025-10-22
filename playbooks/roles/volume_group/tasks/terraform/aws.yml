@@ -10,39 +10,19 @@
 # are not fixed and cannot be depended upon to locate specific
 # devices or their content.
 #
-# The block device name attached to each volume is fixed by
-# terraform but not exposed to Ansible or the guest. It has to be
-# extracted from terraform state and matched to a volume ID, which
-# appears as the device serial number.
-#
-# The root EBS device is not included in terraform's block device
-# map, so is easily avoided.
+# Instead, rely on a directory created by a udev rule to find the
+# EBS block devices attached on behalf of kdevops. The rule
+# guarantees the symlinks names always point to the same block
+# device.
 #
 
-- name: Retrieve the block_device_map from terraform
-  delegate_to: localhost
-  run_once: true
-  ansible.builtin.command:
-    chdir: "{{ topdir_path }}/terraform/aws/"
-    cmd: "terraform output -json block_device_map"
-  register: terraform_output
-  changed_when: false
+- name: Retrieve list of symlinks residing under /dev/disk/kdevops
+  ansible.builtin.find:
+    file_type: link
+    paths: "/dev/disk/kdevops"
+    excludes: "{{ data_device | basename }}"
+  register: find_output
 
-- name: Exclude the device that will house the /data file system
-  vars:
-    block_device_dict: "{{ terraform_output.stdout | from_json }}"
-    local_map: "{{ block_device_dict[inventory_hostname] }}"
+- name: Extract device paths from find output
   ansible.builtin.set_fact:
-    ebs_volume_ids: "{{ ebs_volume_ids + ['nvme-Amazon_Elastic_Block_Store_' + item.value | regex_replace('-', '')] }}"
-  when:
-    item.key != data_device
-  with_dict: "{{ local_map }}"
-
-- name: Add unused EBS volumes to the volume list
-  ansible.builtin.set_fact:
-    physical_volumes: "{{ physical_volumes + ['/dev/' + item.key] }}"
-  when:
-    - item.value.links.ids | intersect(ebs_volume_ids) | list | count > 0
-  loop_control:
-    label: "Adding block device: /dev/{{ item.key }}"
-  with_dict: "{{ ansible_devices }}"
+    physical_volumes: "{{ find_output.files | map(attribute='path') | list }}"
