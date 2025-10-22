@@ -1,0 +1,53 @@
+config RCLOUD
+	bool "Enable rcloud REST API server"
+	default n
+	help
+	  Enable rcloud - a private cloud infrastructure REST API server for
+	  managing VMs through libvirt. This provides a Ubicloud-like interface
+	  for declarative VM management using Terraform.
+
+	  rcloud leverages existing guestfs infrastructure (base images, storage
+	  pools) and provides a REST API for VM lifecycle management.
+
+	  When enabled, running 'make' will build the rcloud Rust binary, and
+	  'make rcloud' will install and configure the systemd service.
+
+	  This is typically enabled on a dedicated server to provide cloud-like
+	  VM provisioning to multiple users.
+
+if RCLOUD
+
+config RCLOUD_SERVER_BIND
+	string "rcloud API server bind address"
+	output yaml
+	default "127.0.0.1:8765"
+	help
+	  Address and port for the rcloud API server to bind to.
+
+	  Default is localhost only (127.0.0.1:8765) for security.
+	  Port 8765 is chosen to avoid conflicts with common services.
+	  Use 0.0.0.0:8765 to allow network access (not recommended without
+	  authentication - see docs/AUTHENTICATION.md).
+
+	  Users can access via SSH tunnel:
+	    ssh -L 8765:localhost:8765 server
+
+config RCLOUD_WORKERS
+	int "Number of worker threads"
+	output yaml
+	default 4
+	help
+	  Number of worker threads for the rcloud API server.
+	  Default is 4, suitable for most deployments.
+
+config RCLOUD_ENABLE_TERRAFORM_PROVIDER
+	bool "Build Terraform provider"
+	default y
+	help
+	  Build the Terraform provider for rcloud. This allows managing
+	  rcloud VMs using Infrastructure as Code with Terraform.
+
+	  The provider will be built in terraform-provider-rcloud/ and can
+	  be installed to ~/.terraform.d/plugins/ for local development.
+
+endif # RCLOUD

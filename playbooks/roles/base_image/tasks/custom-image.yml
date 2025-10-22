@@ -347,11 +347,13 @@
     - custom_image_stat.stat.exists or custom_image_download is changed
     - custom_image != base_image_pathname
 
-- name: Set proper permissions on base image
+- name: Set proper ownership on base image for rcloud access
   become: true
   become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ base_image_pathname }}"
-    mode: "u=rw,g=r,o=r"
+    owner: root
+    group: "{{ libvirt_qemu_group | default('libvirt-qemu') }}"
+    mode: "0640"
   when:
     - custom_image_stat.stat.exists or custom_image_download is changed

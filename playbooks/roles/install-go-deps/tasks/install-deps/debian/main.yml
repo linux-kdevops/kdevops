@@ -1,0 +1,10 @@
+---
+- name: Install Go build dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - golang-go
+    state: present
+    update_cache: false
+  tags: ["go", "deps"]

@@ -481,6 +481,28 @@ The style checker will identify:
 Fix all reported issues before submitting your work. The `make style` command
 checks both file whitespace and the most recent commit message format.
 
+### Rust Code Quality
+
+For Rust code in kdevops (workflows/rcloud, etc.), ALWAYS run both:
+
+```bash
+# Format code using Linux kernel rustfmt standards
+cargo fmt
+
+# Check for common mistakes and idioms
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+**Rust Quality Checklist**:
+- ✅ Run `cargo fmt` to auto-format code according to .rustfmt.toml
+- ✅ Run `cargo clippy` with `-D warnings` (treat warnings as errors)
+- ✅ Fix ALL clippy warnings before committing
+- ✅ Common clippy fixes: remove unnecessary casts, use `.flatten()` instead of manual `if let Ok`, remove unused imports
+
+The install-rust-deps role provides both cargo/rustc and the .rustfmt.toml
+configuration from the Linux kernel, ensuring consistent Rust code quality
+across all kdevops workflows.
+
 ### Automatic Whitespace Fixing
 
 For convenience, you can automatically fix whitespace issues using:

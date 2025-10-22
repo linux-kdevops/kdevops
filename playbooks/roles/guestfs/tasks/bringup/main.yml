@@ -50,10 +50,21 @@
         state: directory
       delegate_to: localhost
 
-    - name: Duplicate the root disk image for each target node
+    - name: Duplicate the root disk image for each target node (as root)
+      become: true
+      become_method: ansible.builtin.sudo
       ansible.builtin.command:
         cmd: "cp --reflink=auto {{ base_image }} {{ root_image }}"
       delegate_to: localhost
+      when:
+        - libvirt_uri_system|bool
+
+    - name: Duplicate the root disk image for each target node (non-root)
+      ansible.builtin.command:
+        cmd: "cp --reflink=auto {{ base_image }} {{ root_image }}"
+      delegate_to: localhost
+      when:
+        - not libvirt_uri_system|bool
 
     - name: Get the timezone of the control host
       ansible.builtin.command:

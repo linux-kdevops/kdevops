@@ -1,0 +1,53 @@
+# rcloud server-only configuration
+#
+# PURPOSE: Production deployment of rcloud REST API server
+#
+# Use this when:
+#   - Deploying rcloud to a dedicated server
+#   - Base images already exist (created elsewhere or separately)
+#   - You only need the rcloud server component
+#
+# For testing/development, use 'defconfig-rcloud-guest-test' instead,
+# which includes both base image creation AND rcloud server setup.
+#
+# This defconfig:
+#   - Installs the rcloud REST API server
+#   - Enables the Terraform provider
+#   - Configures the systemd service
+#   - Does NOT create base images (assumes they exist)
+#   - Does NOT create test VMs (rcloud creates them on demand via API)
+#
+# After 'make rcloud', the API will be available at:
+#   http://localhost:8765/api/v1/health
+#
+# Test with:
+#   make rcloud-status                    # Check health
+#   curl http://localhost:8765/api/v1/vms # List VMs
+#   terraform apply                       # Use Terraform provider
+
+# Skip interactive bringup (rcloud server doesn't need test VMs)
+CONFIG_SKIP_BRINGUP=y
+
+# Disable test workflows (this is a cloud infrastructure server)
+CONFIG_WORKFLOWS=n
+
+# Enable guestfs for base image management
+CONFIG_GUESTFS=y
+
+# Use Debian nocloud variant for local VM testing
+# The nocloud variant doesn't have cloud-init and is designed for bare metal/local use
+# The generic variant requires cloud-init which virt-builder removes, breaking networking
+CONFIG_GUESTFS_DEBIAN_TRIXIE_NOCLOUD_AMD64=y
+
+# Don't copy host APT sources to guest base images
+# Base images should use standard Debian repositories for reliability
+# Custom repositories can be added during per-user VM customization
+# Note: Must disable GUESTFS_DEBIAN_COPY_HOST_SOURCES (not COPY_SOURCES directly)
+# because Kconfig 'select' cannot be overridden
+CONFIG_GUESTFS_DEBIAN_COPY_HOST_SOURCES=n
+
+# Enable rcloud REST API server
+CONFIG_RCLOUD=y
+CONFIG_RCLOUD_SERVER_BIND="127.0.0.1:8765"
+CONFIG_RCLOUD_WORKERS=4
+CONFIG_RCLOUD_ENABLE_TERRAFORM_PROVIDER=y

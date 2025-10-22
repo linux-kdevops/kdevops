@@ -1,0 +1,10 @@
+---
+- name: Install rcloud-specific build dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - libvirt-dev
+    state: present
+    update_cache: false
+  tags: ["rcloud", "deps"]
