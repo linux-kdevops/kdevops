@@ -159,6 +159,7 @@ def generate_oci_kconfig() -> bool:
 
     # Define the script-to-output mapping
     scripts_to_run = [
+        ("gen_kconfig_image", "Kconfig.image.generated"),
         ("gen_kconfig_location", "Kconfig.location.generated"),
         ("gen_kconfig_shape", "Kconfig.shape.generated"),
     ]
