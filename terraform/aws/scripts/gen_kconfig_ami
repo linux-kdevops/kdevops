@@ -12,6 +12,7 @@ import re
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -633,17 +634,39 @@ def output_ami_menu_kconfig(owners, region):
         )
     )
     template = environment.get_template("distro.j2")
+
+    # Parallelize AMI discovery for all owners
+    owner_infos = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # Submit all tasks
+        future_to_owner = {
+            executor.submit(
+                get_owner_ami_info, owners, owner_key, region, True
+            ): owner_key
+            for owner_key in owners.keys()
+        }
+
+        # Collect results as they complete
+        for future in as_completed(future_to_owner):
+            owner_key = future_to_owner[future]
+            try:
+                owner_infos[owner_key] = future.result()
+            except Exception as exc:
+                print(f"Error discovering AMIs for {owner_key}: {exc}", file=sys.stderr)
+
+    # Print results in original order
     for owner_key in owners.keys():
-        owner_info = get_owner_ami_info(owners, owner_key, region, True)
-        print()
-        print(
-            template.render(
-                owner_name=owner_info["owner_name"].upper().replace(" ", "_"),
-                owner_id=owner_info["owner_id"],
-                owner_description=owner_info["description"],
-                discovered=sorted(owner_info["discovered_patterns"].items()),
+        if owner_key in owner_infos:
+            owner_info = owner_infos[owner_key]
+            print()
+            print(
+                template.render(
+                    owner_name=owner_info["owner_name"].upper().replace(" ", "_"),
+                    owner_id=owner_info["owner_id"],
+                    owner_description=owner_info["description"],
+                    discovered=sorted(owner_info["discovered_patterns"].items()),
+                )
             )
-        )
 
 
 def output_owners_kconfig(owners):
