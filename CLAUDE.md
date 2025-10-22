@@ -527,6 +527,28 @@ make fix-whitespace-last-commit
 
 This will fix all white space only for new files you add.
 
+### Testing Generated Kconfig Files
+
+When working with scripts that generate Kconfig files (like `terraform/*/scripts/gen_kconfig_*`),
+the indentation checker cannot properly validate Jinja2 template files (.j2) because they
+can generate any kind of output, not just Kconfig.
+
+**Correct approach**: Generate the output to a file named with "Kconfig" prefix and test that:
+
+```bash
+# Example: Testing AWS AMI Kconfig generation
+cd terraform/aws/scripts
+python3 gen_kconfig_ami --quiet > /tmp/Kconfig.ami.test 2>&1
+python3 ../../../scripts/detect_indentation_issues.py /tmp/Kconfig.ami.test
+```
+
+The indentation checker recognizes files starting with "Kconfig" and applies the correct
+rules (tabs for indentation, tab+2spaces for help text is valid).
+
+**Why this matters**: Jinja2 templates (.j2) are generic and can generate Python, YAML,
+Kconfig, or any other format. The style checker cannot determine the output format from
+the template filename alone. Always test the generated output, not the template.
+
 ## Complex System Interactions
 
 kdevops integrates multiple subsystems (Ansible, Kconfig, Git, Make) that often
