@@ -120,6 +120,7 @@ terraform/lambdalabs/.terraform_api_key
 terraform/aws/kconfigs/Kconfig.ami.generated
 terraform/aws/kconfigs/Kconfig.instance.generated
 terraform/aws/kconfigs/Kconfig.location.generated
+terraform/aws/scripts/__pycache__/
 
 .cloud.initialized
 
