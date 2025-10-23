@@ -94,8 +94,14 @@ config KDEVOPS_MAKE_VERBOSE
 
 	  If unsure, say N.
 
+config KDEVOPS_BASELINE_AND_DEV_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh TEST_AB)
+
 config KDEVOPS_BASELINE_AND_DEV
 	bool "Enable both a baseline and development system per target test"
+	default y if KDEVOPS_BASELINE_AND_DEV_SET_BY_CLI
 	default n
 	help
 	  By default kdevops will only spawn a baseline target node (local
