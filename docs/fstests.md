@@ -83,6 +83,158 @@ The expunge will will *not* be used if the TESTS argument is used and so
 running the above will *ensure* the tests are run even if they are known to
 crash on a system for a target section.
 
+# A/B Testing with Different Kernels
+
+kdevops supports advanced A/B testing workflows that allow you to compare test
+results between different kernel versions, branches, or configurations. This is
+particularly useful for validating patches, comparing stable releases, or
+detecting performance regressions across kernel versions.
+
+## CLI Environment Variables
+
+You can use environment variables to configure kdevops without modifying your
+.config file. This is especially useful for automated testing and quick
+configuration changes. The following variables are supported:
+
+### A/B Testing Variables
+
+- `TEST_AB=y` - Enables baseline and development nodes
+  (sets `CONFIG_KDEVOPS_BASELINE_AND_DEV=y`)
+
+### Host Configuration
+
+- `KDEVOPS_HOSTS_PREFIX="name"` - Sets the hostname prefix for all nodes
+  (sets `CONFIG_KDEVOPS_HOSTS_PREFIX`)
+
+### Baseline Kernel Configuration
+
+- `LINUX_TREE=/path/to/tree.git` - Git repository URL or local path for baseline kernel
+  (sets `CONFIG_BOOTLINUX_TREE`)
+- `LINUX_TREE_REF=v6.16` - Git reference (tag, branch, or commit) for baseline
+  (sets `CONFIG_BOOTLINUX_TREE_REF`)
+
+### Development Kernel Configuration (A/B Testing)
+
+- `LINUX_DEV_TREE=/path/to/tree.git` - Git repository for development kernel
+  (sets `CONFIG_BOOTLINUX_DEV_TREE`)
+- `LINUX_DEV_TREE_REF=branch-name` - Git reference for development kernel
+  (sets `CONFIG_TARGET_LINUX_DEV_REF`)
+
+### Testing Configuration
+
+- `SOAK_DURATION=432000` - Duration in seconds for soak testing (432000 = 5 days)
+  (sets `CONFIG_FSTESTS_SOAK_DURATION`)
+
+## A/B Testing Workflow Example
+
+Here's a complete example that tests XFS reflink functionality comparing a
+stable kernel (v6.16) against a development branch with new patches:
+
+```bash
+# Configure kdevops with A/B testing enabled
+make defconfig-xfs_reflink \
+    TEST_AB=y \
+    KDEVOPS_HOSTS_PREFIX="parallewb" \
+    LINUX_TREE=/mirror/mcgrof-linus.git/ \
+    LINUX_TREE_REF=v6.16 \
+    LINUX_DEV_TREE=/mirror/mcgrof-linus.git/ \
+    LINUX_DEV_TREE_REF="20250807-migrate-folios-stats-pw" \
+    SOAK_DURATION=432000 -j128
+
+# Build the configuration
+make -j$(nproc)
+
+# Provision baseline and dev nodes
+make bringup
+
+# Build and install kernels (baseline on baseline node, dev on dev node)
+make linux
+
+# Run fstests on baseline and dev
+make fstests-tests
+```
+
+### Understanding the Configuration
+
+This example creates two test nodes:
+
+1. **Baseline node** (`parallewb-xfs-reflink`):
+   - Runs kernel v6.16 from `/mirror/mcgrof-linus.git/`
+   - Provides the reference test results, ie, this is our baseline
+
+2. **Development node** (`parallewb-xfs-reflink-dev`):
+   - Runs kernel from branch `20250807-migrate-folios-stats-pw`
+   - Tests new patches against the baseline
+
+Both nodes run the same XFS reflink test configuration, allowing direct
+comparison of test results between kernel versions.
+
+### Long-term Soak Testing
+
+The `SOAK_DURATION=432000` (5 days) enables extended stress testing:
+
+- Tests designed for soak testing will run for the specified duration
+- Helps catch rare race conditions and memory leaks
+- More effective than simple test loops for long-term stability validation
+- Results are tracked separately for baseline and dev nodes
+- This is an insane amount of time as it will take 5 days *per* test
+  which supports to run with soak duration. So this is just an example.
+
+### Comparing Results
+
+After tests complete, you can compare results between baseline and dev nodes.
+For detailed information on comparing fstests results, including automated
+regression detection and side-by-side comparisons, see the
+[Comparing fstests results](https://github.com/linux-kdevops/kdevops-results-archive#comparing-fstests-results)
+section in the kdevops-results-archive documentation.
+
+The results archive provides the `bin/compare-results-fstests.py` script which:
+- Automatically detects regressions and fixes between test runs
+- Provides verbose side-by-side test comparison
+- Handles multiple filesystem test profiles
+- Extracts kernel versions from commit messages
+
+Quick example:
+```bash
+# View test results summary
+make fstests-results
+
+# For automated comparison using the results archive
+cd ../kdevops-results-archive
+./bin/compare-results-fstests.py <baseline-commit> <test-commit>
+
+# Detailed verbose comparison
+./bin/compare-results-fstests.py <baseline-commit> <test-commit> --verbose
+```
+
+### Using Local Git Mirrors
+
+The example uses local git mirrors (`/mirror/mcgrof-linus.git/`) for faster
+kernel builds and reduced network usage. Local mirrors are particularly useful
+for:
+
+- **Repeated testing**: Avoid re-cloning repositories
+- **Offline development**: Work without network access
+- **Custom branches**: Test local development branches
+- **CI/CD environments**: Faster pipeline execution
+
+You can create a local mirror with:
+
+```bash
+git clone --mirror \
+    git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+    /mirror/mcgrof-linus.git
+```
+
+### Parallel Builds
+
+The `-j128` flag enables parallel processing:
+
+- Applied to both configuration (`make defconfig-xfs_reflink -j128`)
+- And to the build process (`make -j128`)
+- Significantly reduces setup and build time
+- Adjust based on your system's CPU core count
+
 ## Review regressions
 
 To see regressions:
