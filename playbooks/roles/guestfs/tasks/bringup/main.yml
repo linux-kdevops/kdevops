@@ -91,6 +91,10 @@
                 "--firstboot-command", "if command -v ufw >/dev/null 2>&1 && systemctl is-active ufw >/dev/null 2>&1; then ufw allow " + (ansible_cfg_ssh_port | string) + "/tcp; fi"
               ]
               if ansible_cfg_ssh_port | int != 22 else []
+            ) + (
+              ["--no-selinux-relabel"]
+              if (guestfs_fedora is defined and guestfs_fedora|bool and ansible_distribution|lower in ['debian', 'ubuntu'])
+              else []
             )
           }}
 
