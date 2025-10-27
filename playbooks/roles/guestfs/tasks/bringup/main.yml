@@ -112,35 +112,6 @@
       when:
         - not libvirt_uri_system|bool
 
-    - name: Relabel root image after virt-sysprep for Fedora on Debian (as root)
-      become: true
-      become_method: ansible.builtin.sudo
-      ansible.builtin.command:
-        argv:
-          - "virt-customize"
-          - "-a"
-          - "{{ root_image }}"
-          - "--selinux-relabel"
-      delegate_to: localhost
-      when:
-        - libvirt_uri_system|bool
-        - guestfs_fedora is defined
-        - guestfs_fedora|bool
-        - ansible_distribution|lower in ['debian', 'ubuntu']
-
-    - name: Relabel root image after virt-sysprep for Fedora on Debian (non-root)
-      ansible.builtin.command:
-        argv:
-          - "virt-customize"
-          - "-a"
-          - "{{ root_image }}"
-          - "--selinux-relabel"
-      delegate_to: localhost
-      when:
-        - not libvirt_uri_system|bool
-        - guestfs_fedora is defined
-        - guestfs_fedora|bool
-        - ansible_distribution|lower in ['debian', 'ubuntu']
 
     - name: Create largeio devices
       ansible.builtin.include_tasks:
