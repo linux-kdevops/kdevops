@@ -113,9 +113,9 @@ def generate_aws_kconfig() -> bool:
 
     # Define the script-to-output mapping
     scripts_to_run = [
-        ("gen_kconfig_ami", "Kconfig.ami"),
-        ("gen_kconfig_instance", "Kconfig.instance"),
-        ("gen_kconfig_location", "Kconfig.location"),
+        ("gen_kconfig_ami", "Kconfig.ami.generated"),
+        ("gen_kconfig_instance", "Kconfig.instance.generated"),
+        ("gen_kconfig_location", "Kconfig.location.generated"),
     ]
 
     all_success = True

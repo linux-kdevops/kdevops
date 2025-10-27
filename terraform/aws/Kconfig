@@ -1,3 +1,9 @@
+# AWS provider configuration
+#
+# This file sources static wrapper files which in turn source
+# dynamically generated Kconfig menu data. Run 'make cloud-config-aws'
+# to populate Kconfig.*.generated with current AWS resource information.
+
 if TERRAFORM_AWS
 
 menu "Resource Location"
