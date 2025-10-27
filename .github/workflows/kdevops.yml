@@ -88,6 +88,15 @@ on:
         options:
           - 'kdevops-ci'
           - 'linux-ci'
+      guest_os:
+        description: 'Guest OS for testing'
+        required: false
+        default: 'default'
+        type: choice
+        options:
+          - default      # Use defconfig's default (typically Debian 13 on debian hosts)
+          - debian-13    # Force Debian 13 Trixie
+          - fedora-41    # Force Fedora 41
       tests:
         description: 'Custom test to run (for kdevops-ci mode only)'
         required: false
@@ -231,6 +240,7 @@ jobs:
         uses: ./.github/actions/configure
         with:
           ci_workflow: ${{ matrix.ci_workflow }}
+          guest_os: ${{ github.event.inputs.guest_os || 'default' }}
           kernel_ref: >-
             ${{
               github.event_name == 'schedule' && needs.generate_kernel_ref.outputs.kernel_ref

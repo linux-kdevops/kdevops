@@ -20,6 +20,10 @@ inputs:
     required: false
     type: string
     default: 'kdevops-ci'
+  guest_os:
+    required: false
+    type: string
+    default: 'default'
 
 runs:
   using: "composite"
@@ -112,11 +116,27 @@ runs:
           echo "Using Linux CI configuration (4GB/8core VMs)"
         fi
 
+        # Configure guest OS if specified
+        GUEST_OS_CONFIG=
+        if [[ "${{ inputs.guest_os }}" != "default" ]]; then
+          GUEST_OS_CONFIG="defconfigs/configs/guestfs-${{ inputs.guest_os }}.config"
+
+          if [[ ! -f "$GUEST_OS_CONFIG" ]]; then
+            echo "Error: Guest OS config not found: $GUEST_OS_CONFIG"
+            exit 1
+          fi
+
+          echo "Using guest OS configuration: $GUEST_OS_CONFIG"
+        else
+          echo "Using default guest OS from defconfig"
+        fi
+
         ./scripts/kconfig/merge_config.sh \
         -n .config \
         defconfigs/configs/diy.config \
         defconfigs/configs/ci.config \
-        ${VM_CONFIG_ARG}
+        ${VM_CONFIG_ARG} \
+        ${GUEST_OS_CONFIG}
 
     - name: Run kdevops make
       shell: bash
