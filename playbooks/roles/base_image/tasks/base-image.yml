@@ -74,7 +74,7 @@
     - not libvirt_uri_system|bool
   register: virt_builder_result_user
 
-- name: Force SELinux relabeling for Fedora images on non-SELinux hosts (system libvirt)
+- name: Set SELinux to permissive mode for Fedora images on non-SELinux hosts (system libvirt)
   become: true
   become_method: ansible.builtin.sudo
   ansible.builtin.command:
@@ -82,7 +82,8 @@
       - "virt-customize"
       - "-a"
       - "{{ base_image_pathname }}"
-      - "--selinux-relabel"
+      - "--run-command"
+      - "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
   when:
     - libvirt_uri_system|bool
     - guestfs_fedora is defined
@@ -90,13 +91,14 @@
     - ansible_distribution|lower in ['debian', 'ubuntu']
     - virt_builder_result_system is changed
 
-- name: Force SELinux relabeling for Fedora images on non-SELinux hosts (user libvirt)
+- name: Set SELinux to permissive mode for Fedora images on non-SELinux hosts (user libvirt)
   ansible.builtin.command:
     argv:
       - "virt-customize"
       - "-a"
       - "{{ base_image_pathname }}"
-      - "--selinux-relabel"
+      - "--run-command"
+      - "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
   when:
     - not libvirt_uri_system|bool
     - guestfs_fedora is defined
