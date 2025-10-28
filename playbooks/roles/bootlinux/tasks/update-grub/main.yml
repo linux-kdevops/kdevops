@@ -1,9 +1,20 @@
 ---
 # tasks to install update-grub
+- name: Debug OS family for GRUB update
+  ansible.builtin.debug:
+    msg: |
+      Target host: {{ inventory_hostname }}
+      OS Family: {{ ansible_facts['os_family'] }}
+      OS Family (lower): {{ ansible_facts['os_family']|lower }}
+      Distribution: {{ ansible_facts['distribution'] }}
+      Distribution Version: {{ ansible_facts['distribution_version'] }}
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
+
 - name: Distro specific update of your GRUB boot file
-  ansible.builtin.import_tasks: debian.yml
+  ansible.builtin.include_tasks: debian.yml
   when: ansible_facts['os_family']|lower == 'debian'
-- ansible.builtin.import_tasks: suse.yml
+- ansible.builtin.include_tasks: suse.yml
   when: ansible_facts['os_family']|lower == 'suse'
-- ansible.builtin.import_tasks: redhat.yml
+- ansible.builtin.include_tasks: redhat.yml
   when: ansible_facts['os_family']|lower == 'redhat'
