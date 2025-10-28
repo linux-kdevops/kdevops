@@ -1,4 +1,22 @@
 ---
+- name: Gather facts from localhost for dependency installation
+  ansible.builtin.setup:
+    filter: "ansible_os_family,ansible_distribution"
+  delegate_to: localhost
+  register: localhost_facts
+  run_once: true
+
+- name: Set localhost OS facts for 9P build
+  ansible.builtin.set_fact:
+    localhost_os_family: "{{ localhost_facts.ansible_facts.ansible_os_family }}"
+    localhost_distribution: "{{ localhost_facts.ansible_facts.ansible_distribution }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Refresh target host facts after localhost gathering
+  ansible.builtin.setup:
+    filter: "ansible_os_family,ansible_distribution,ansible_distribution_version"
+
 - name: Install dependencies to build the Linux kernel
   delegate_to: localhost
   run_once: true
