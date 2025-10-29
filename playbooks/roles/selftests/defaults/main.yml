@@ -37,3 +37,9 @@ selftest_kernelspace: false
 selftest_xarray: false
 selftest_maple: false
 selftest_vma: false
+
+# Distro controls
+distro_debian_based: false
+distro_fedora: false
+distro_redhat_based: false
+distro_suse_based: false

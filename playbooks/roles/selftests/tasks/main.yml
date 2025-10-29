@@ -19,7 +19,7 @@
 - name: Install dependencies to build Linux selftests on host
   tags: ["deps"]
   run_once: true
-  ansible.builtin.import_tasks: install-deps/main.yml
+  ansible.builtin.import_tasks: install-deps/main-localhost.yml
   delegate_to: localhost
   when:
     - bootlinux_9p|bool
