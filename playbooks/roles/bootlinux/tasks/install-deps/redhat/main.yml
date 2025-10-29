@@ -3,7 +3,7 @@
   ansible.builtin.include_role:
     name: epel-release
   when:
-    - ansible_distribution != "Fedora"
+    - not distro_fedora|bool
 
 - name: Install packages we care about
   become: true
@@ -67,7 +67,7 @@
   vars:
     packages:
       - btrfs-progs
-  when: ansible_distribution == 'Fedora'
+  when: distro_fedora|bool
 
 - name: Install clang
   become: true

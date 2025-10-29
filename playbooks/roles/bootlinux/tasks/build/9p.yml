@@ -14,7 +14,7 @@
   when:
     - target_linux_install_b4 is defined
     - target_linux_install_b4
-    - ansible_facts['os_family']|lower != 'debian'
+    - not distro_debian_based|bool
   run_once: true
   delegate_to: localhost
 
