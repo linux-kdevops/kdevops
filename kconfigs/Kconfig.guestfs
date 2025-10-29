@@ -118,12 +118,12 @@ config GUESTFS_DEBIAN_TRIXIE
 	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_SHA512SUMS
 	select GUESTFS_HAS_CUSTOM_RAW_IMAGE_ROLLING
 	help
-	  Select this for debian trixie, debian 13. Since debian does not yet
-	  provie a virt-builder repo, we must download mock up our own URL
-	  for trixie release, as the default guestfs repo only has debian buster.
+	  Select this for Debian Trixie, Debian 13. Since Debian does not yet
+	  provide a virt-builder repo, we must download mock up our own URL
+	  for trixie release, as the default guestfs repo only has Debian Buster.
 	  We download the image for you once, and once its there we don't refresh
 	  it. We can later add support to force a refresh using the latest URL,
-	  as trixie is debian-testing and debian testing always has an new
+	  as trixie is debian-testing and Debian Testing always has a new
 	  up to date image release, that is, its a rolling distribution release.
 
 	  This doesn't work yet.. it gets stuck on the grub prompt.
@@ -132,7 +132,7 @@ config GUESTFS_DEBIAN_BUSTER
 	bool "Debian 12 - Buster"
 	output yaml
 	help
-	  Select this for debian buster, debian 12.
+	  Select this for Debian Buster, Debian 12.
 
 endchoice
 
@@ -204,16 +204,16 @@ config GUESTFS_DEBIAN_COPY_HOST_SOURCES
 	default DISTRO_DEBIAN_HAS_HOP1_SOURCES
 	select GUESTFS_COPY_SOURCES_FROM_HOST_TO_GUEST
 	help
-	  We have detected that you are running debian on the host, this option
+	  We have detected that you are running Debian on the host, this option
 	  will be enabled by default if we detect that your /etc/apt/sources.list
 	  is using a source we determine has only one hop via traceroute to it,
 	  for details of that heuristic see the script:
 
 	    ./scripts/get-distro-has-hop-count-sources.sh
 
-	  If your hop distance to your mirror is just 1, you are using debian on
-	  the host, want to use debian guests, both host and guest match the
-	  target release, then its a good assumtion you'd likely want to take
+	  If your hop distance to your mirror is just 1, you are using Debian on
+	  the host, want to use Debian guests, both host and guest match the
+	  target release, then its a good assumption you'd likely want to take
 	  advantage of that same mirror for your guests. So disable this if you
 	  really don't want to take advantage of your sources.list.
 
