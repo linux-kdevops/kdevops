@@ -245,6 +245,7 @@ config KDEVOPS_DEVCONFIG_ENABLE_CUSTOM_REPOS
 config KDEVOPS_DEVCONFIG_CUSTOM_REPOS
 	string "Comma separated list of custom repositories to be enabled"
 	default ""
+	output yaml
 	depends on KDEVOPS_DEVCONFIG_ENABLE_CUSTOM_REPOS=y
 	help
 	  Comma separated list of custom repositories to be enabled
@@ -252,6 +253,7 @@ config KDEVOPS_DEVCONFIG_CUSTOM_REPOS
 config KDEVOPS_DEVCONFIG_CUSTOM_PACKAGES
 	string "Comma separated list of custom packages to be installed"
 	default ""
+	output yaml
 	depends on KDEVOPS_DEVCONFIG_ENABLE_CUSTOM_REPOS=y
 	help
 	  Comma separated list of custom packages to be installed

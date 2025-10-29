@@ -60,3 +60,7 @@ unattended_upgrades_installed: false
 workflow_infer_user_and_group: false
 kdevops_use_declared_hosts: false
 kdevops_enable_terraform: false
+
+# Custom repository and package installation defaults
+kdevops_devconfig_custom_repos: ""
+kdevops_devconfig_custom_packages: ""
