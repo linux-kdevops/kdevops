@@ -73,6 +73,7 @@ append-line /etc/nsswitch.conf:ethers:         db files
 append-line /etc/nsswitch.conf:rpc:            db files
 append-line /etc/nsswitch.conf:netgroup:       nis
 uninstall cloud-init
+install locales-all
 write /etc/default/locale:LANG=en_US.UTF-8
 append-line /etc/default/locale:LANGUAGE=en_US:en
 write /etc/locale.gen:en_US.UTF-8 UTF-8
