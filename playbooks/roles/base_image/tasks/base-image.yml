@@ -52,6 +52,7 @@
     creates: "{{ base_image_pathname }}"
   when:
     - libvirt_uri_system|bool
+  register: virt_builder_result_system
 
 - name: Generate a new base image for {{ base_image_os_version }}
   ansible.builtin.command:
@@ -71,6 +72,39 @@
     creates: "{{ base_image_pathname }}"
   when:
     - not libvirt_uri_system|bool
+  register: virt_builder_result_user
+
+- name: Set SELinux to permissive mode for Fedora images on non-SELinux hosts (system libvirt)
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    argv:
+      - "virt-customize"
+      - "-a"
+      - "{{ base_image_pathname }}"
+      - "--run-command"
+      - "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
+  when:
+    - libvirt_uri_system|bool
+    - guestfs_fedora is defined
+    - guestfs_fedora|bool
+    - ansible_distribution|lower in ['debian', 'ubuntu']
+    - virt_builder_result_system is changed
+
+- name: Set SELinux to permissive mode for Fedora images on non-SELinux hosts (user libvirt)
+  ansible.builtin.command:
+    argv:
+      - "virt-customize"
+      - "-a"
+      - "{{ base_image_pathname }}"
+      - "--run-command"
+      - "sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config"
+  when:
+    - not libvirt_uri_system|bool
+    - guestfs_fedora is defined
+    - guestfs_fedora|bool
+    - ansible_distribution|lower in ['debian', 'ubuntu']
+    - virt_builder_result_user is changed
 
 - name: Set proper ownership on base image for rcloud access (system libvirt)
   become: true
