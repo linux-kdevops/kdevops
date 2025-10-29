@@ -33,11 +33,15 @@ ssh_template = """Host {name} {addr}
 
 # We take the first IPv4 address on the first non-loopback interface.
 def get_addr(name):
+    # Timeout increased to 180s to account for slower boot times with Fedora guests
+    # on Debian hosts (SELinux permissive mode initialization takes longer).
+    timeout_seconds = int(os.environ.get("KDEVOPS_SSH_CONFIG_TIMEOUT", "180"))
     attempt = 0
     while True:
         attempt += 1
-        if attempt > 60:
-            raise Exception(f"Unable to get an address for {name} after 60s")
+        if attempt > timeout_seconds:
+            raise Exception(f"Unable to get an address for {name} after {timeout_seconds}s. "
+                          f"VM may be taking longer to boot. Check 'virsh console {name}' for boot status.")
 
         result = subprocess.run(
             [
