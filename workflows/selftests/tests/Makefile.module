@@ -4,5 +4,5 @@ selftests-module:
 	$(Q)$(MAKE) selftests-baseline HOSTS=$(KDEVOPS_HOSTS_PREFIX)-module
 endif
 
-selftests-help-menu-target-modules:
+selftests-help-menu-target-module:
 	@echo "selftests-module                 - Runs selftests for module"
