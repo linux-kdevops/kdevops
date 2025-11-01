@@ -250,19 +250,16 @@ def create_contribution_graphs(
         title_suffix = " (All Time)"
 
     # Create figure with multiple subplots and better styling
-    fig = plt.figure(figsize=(24, 16), facecolor="#f8f9fa")
+    fig = plt.figure(figsize=(24, 16), facecolor="#f8f9fa", constrained_layout=True)
     gs = fig.add_gridspec(
         3,
         3,
         height_ratios=[1, 1, 1.1],
-        hspace=0.35,
-        wspace=0.3,
     )
     fig.suptitle(
         f"kdevops Contribution Analysis{title_suffix}",
         fontsize=24,
         fontweight="bold",
-        y=0.985,
         color="#2c3e50",
     )
 
@@ -386,7 +383,7 @@ def create_contribution_graphs(
             legend_labels,
             title="Contributors",
             loc="center left",
-            bbox_to_anchor=(1, 0, 0.5, 1),
+            bbox_to_anchor=(1.05, 0, 0.5, 1),
             fontsize=10,
             title_fontsize=11,
             frameon=True,
@@ -441,7 +438,12 @@ def create_contribution_graphs(
             ]
             ax3.set_xticklabels([month_names[m - 1] for m in months])
             ax3.set_yticks(range(len(top_contributors)))
-            ax3.set_yticklabels(top_contributors)
+            # Truncate long contributor names to prevent overlap
+            truncated_names = [
+                name if len(name) <= 20 else name[:17] + "..."
+                for name in top_contributors
+            ]
+            ax3.set_yticklabels(truncated_names, fontsize=9)
             ax3.set_title(
                 "Monthly Activity Heatmap",
                 fontweight="bold",
@@ -1032,8 +1034,6 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}{date_note}
             fontweight="bold",
             color="#7f8c8d",
         )
-
-    fig.tight_layout(rect=[0, 0, 1, 0.97], pad=2.5)
 
     # Ensure output directory exists and save the plots
     os.makedirs("docs/contrib", exist_ok=True)
