@@ -1,0 +1,110 @@
+{#
+  This template is rendered by gen_kconfig_image script.
+
+  Template variables:
+  - publisher_key: str (e.g., 'debian', 'redhat')
+  - publisher_name: str (e.g., 'Debian')
+  - publisher_description: str (full description)
+  - versions: list of (version_key, version_info) tuples (pre-sorted)
+#}
+if TERRAFORM_AZURE_IMAGE_PUBLISHER_{{ publisher_key | upper }}
+
+if TARGET_ARCH_X86_64
+
+choice
+	prompt "{{ publisher_description }} release"
+{# versions is a list of (version_key, version_info) tuples from sorted_versions in gen_kconfig_image #}
+{% for version_key, version_info in versions | reverse %}
+{% if "X86" in version_key and "ARM64" not in version_key %}
+	default TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }} if TARGET_ARCH_X86_64
+{% endif %}
+{% endfor %}
+	help
+	  This option specifies which of a publisher's offers to use
+	  when creating kdevops compute instances.
+
+{% for version_key, version_info in versions %}
+{% if "X86" in version_key and "ARM64" not in version_key %}
+config TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+	bool "{{ version_info['friendly_name'] }}"
+	help
+	  This option sets the OS image to {{ version_info['friendly_name'] }}.
+
+	  Publisher: {{ version_info['publisher_id'] }}
+	  Offer: {{ version_info['offer'] }}
+	  SKU: {{ version_info['sku'] }}
+
+{% endif %}
+{% endfor %}
+endchoice
+
+config TERRAFORM_AZURE_IMAGE_OFFER
+	string
+	output yaml
+{% for version_key, version_info in versions %}
+{% if "X86" in version_key and "ARM64" not in version_key %}
+	default "{{ version_info['offer'] }}" if TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+{% endif %}
+{% endfor %}
+
+config TERRAFORM_AZURE_IMAGE_SKU
+	string
+	output yaml
+{% for version_key, version_info in versions %}
+{% if "X86" in version_key and "ARM64" not in version_key %}
+	default "{{ version_info['sku'] }}" if TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+{% endif %}
+{% endfor %}
+
+endif # TARGET_ARCH_X86_64
+
+if TARGET_ARCH_ARM64
+
+choice
+	prompt "{{ publisher_description }} release"
+{# versions is a list of (version_key, version_info) tuples from sorted_versions in gen_kconfig_image #}
+{% for version_key, version_info in versions | reverse %}
+{% if "ARM64" in version_key %}
+	default TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }} if TARGET_ARCH_ARM64
+{% endif %}
+{% endfor %}
+	help
+	  This option specifies which of a publisher's offers to use
+	  when creating kdevops compute instances.
+
+{% for version_key, version_info in versions %}
+{% if "ARM64" in version_key %}
+config TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+	bool "{{ version_info['friendly_name'] }}"
+	help
+	  This option sets the OS image to {{ version_info['friendly_name'] }}.
+
+	  Publisher: {{ version_info['publisher_id'] }}
+	  Offer: {{ version_info['offer'] }}
+	  SKU: {{ version_info['sku'] }}
+
+{% endif %}
+{% endfor %}
+endchoice
+
+config TERRAFORM_AZURE_IMAGE_OFFER
+	string
+	output yaml
+{% for version_key, version_info in versions %}
+{% if "ARM64" in version_key %}
+	default "{{ version_info['offer'] }}" if TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+{% endif %}
+{% endfor %}
+
+config TERRAFORM_AZURE_IMAGE_SKU
+	string
+	output yaml
+{% for version_key, version_info in versions %}
+{% if "ARM64" in version_key %}
+	default "{{ version_info['sku'] }}" if TERRAFORM_AZURE_IMAGE_LINUX_{{ version_key }}
+{% endif %}
+{% endfor %}
+
+endif # TARGET_ARCH_ARM64
+
+endif # TERRAFORM_AZURE_IMAGE_PUBLISHER_{{ publisher_key | upper }}

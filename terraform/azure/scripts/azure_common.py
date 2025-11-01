@@ -255,6 +255,99 @@ def get_vm_sizes_and_skus(region, quiet=False):
         return [], {}
 
 
+def get_all_offers_and_skus(publisher_id, region, quiet=False, max_workers=10):
+    """
+    Get all offers and SKUs for a publisher using Azure SDK with parallel execution.
+
+    This function uses parallel SKU fetching for optimal performance with
+    publishers that have many offers. The parallelization is safe because
+    each SKU query is independent and the Azure API supports concurrent requests.
+
+    Args:
+            publisher_id (str): Azure publisher identifier (e.g., "Debian", "RedHat")
+            region (str): Azure region name
+            quiet (bool): Suppress debug messages
+            max_workers (int): Maximum concurrent workers for parallel SKU fetching
+
+    Returns:
+            dict: Dictionary mapping offer names to lists of SKU names
+                  Example: {"debian-12": ["12", "12-arm64"], ...}
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    if not quiet:
+        print(f"Querying offers for {publisher_id} in {region}...", file=sys.stderr)
+
+    try:
+        client, _ = get_compute_client()
+
+        # Get all offers (single fast API call)
+        offers = list(client.virtual_machine_images.list_offers(region, publisher_id))
+
+        if not offers:
+            return {}
+
+        if not quiet:
+            print(
+                f"  Found {len(offers)} offers, fetching SKUs in parallel...",
+                file=sys.stderr,
+            )
+
+        def fetch_skus_for_offer(offer):
+            """Helper function to fetch SKUs for a single offer."""
+            offer_name = offer.name
+
+            # Skip test offers and other non-production offers
+            offer_lower = offer_name.lower()
+            if any(
+                skip in offer_lower
+                for skip in ["test", "preview", "experimental", "-dev", "staging"]
+            ):
+                return (offer_name, [])
+
+            try:
+                skus = list(
+                    client.virtual_machine_images.list_skus(
+                        region, publisher_id, offer_name
+                    )
+                )
+                sku_names = [sku.name for sku in skus if sku.name]
+                return (offer_name, sku_names)
+            except Exception as e:
+                if not quiet:
+                    print(
+                        f"    Warning: Failed to get SKUs for {offer_name}: {e}",
+                        file=sys.stderr,
+                    )
+                return (offer_name, [])
+
+        # Fetch SKUs for all offers in parallel
+        offers_dict = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            results = executor.map(fetch_skus_for_offer, offers)
+
+            for offer_name, sku_names in results:
+                if sku_names:
+                    offers_dict[offer_name] = sku_names
+
+        if not quiet:
+            print(
+                f"  Found {len(offers_dict)} offers with available SKUs",
+                file=sys.stderr,
+            )
+
+        return offers_dict
+
+    except Exception as e:
+        if not quiet:
+            print(
+                f"Error: Failed to query offers and SKUs for {publisher_id}: {e}",
+                file=sys.stderr,
+            )
+            print("Ensure you are logged in with 'az login'", file=sys.stderr)
+        return {}
+
+
 def exit_on_empty_result(result, context, quiet=False):
     """
     Exit with error if result is empty or None.

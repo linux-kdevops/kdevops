@@ -1,0 +1,35 @@
+choice
+	prompt "Azure image publisher"
+{% if 'debian' in publishers %}
+	default TERRAFORM_AZURE_IMAGE_PUBLISHER_DEBIAN
+{% elif 'redhat' in publishers %}
+	default TERRAFORM_AZURE_IMAGE_PUBLISHER_REDHAT
+{% elif 'canonical' in publishers %}
+	default TERRAFORM_AZURE_IMAGE_PUBLISHER_CANONICAL
+{% elif publishers %}
+	default TERRAFORM_AZURE_IMAGE_PUBLISHER_{{ publishers[0] | upper }}
+{% endif %}
+	help
+	  This option specifies the publisher of the boot image used to
+	  create the kdevops target nodes.
+
+	  The distributions listed here are official Azure platform images
+	  provided by various publishers. These images are well-tested and
+	  actively maintained.
+
+{% for publisher_key in publishers %}
+config TERRAFORM_AZURE_IMAGE_PUBLISHER_{{ publisher_key | upper }}
+	bool "{{ publisher_key | title }}"
+	help
+	  Select this if you want to use images from the {{ publisher_key | title }}
+	  publisher.
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AZURE_IMAGE_PUBLISHER
+	string
+	output yaml
+{% for publisher_key in publishers %}
+	default "{{ publisher_key }}" if TERRAFORM_AZURE_IMAGE_PUBLISHER_{{ publisher_key | upper }}
+{% endfor %}
