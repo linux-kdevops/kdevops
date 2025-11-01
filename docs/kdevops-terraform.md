@@ -11,7 +11,6 @@ Below are the list of clouds providers currently supported:
   * aws - Amazon Web Service
   * gce - Google Cloud Compute
   * oci - Oracle Cloud Infrastructure
-  * openstack (special minicloud support added)
 
 You configure which cloud provider you want to use, what feature from that
 cloud provider you want to use, and then you can use kdevops to select which
@@ -172,40 +171,6 @@ Use the documentation to get your subscription ID, tenant ID, and
 application id. Set these values via "make menuconfig" in the
 Terraform Providers submenu.
 
-
-### Openstack
-
-Openstack is supported. This solution relies on the clouds.yaml file for
-openstack configuration. This simplifies setting up authentication
-considerably.
-
-#### Minicloud Openstack support
-
-minicloud has a custom setup where the you have to SSH with a special port
-depending on the IP address you get, if you enable minicloud we do this
-computation for you and tell you where to SSH to, but we also have support
-to update your ~/ssh/config for you.
-
-Please note that minicloud takes a while to update its ports / mac address
-tables, and so you may not be able to log in until after about 5 minutes after
-you are able to create the nodes. Have patience.
-
-Your terraform.tfvars may look something like:
-
-```
-instance_prefix = "my-random-project"
-
-image_name = "Debian 10 ppc64le"
-flavor_name = "minicloud.tiny"
-
-ssh_config_pubkey_file = "~/.ssh/minicloud.pub"
-ssh_config = "~/.ssh/config"
-ssh_config_user = "debian"
-ssh_config_update = "true"
-ssh_config_use_strict_settings = "true"
-ssh_config_backup = "true"
-
-```
 
 ### AWS - Amazon Web Services
 
