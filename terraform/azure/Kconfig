@@ -1,13 +1,13 @@
 if TERRAFORM_AZURE
 
 menu "Resource Location"
-source "terraform/azure/kconfigs/Kconfig.location"
+source "terraform/azure/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
 comment "Size selection"
-source "terraform/azure/kconfigs/Kconfig.size"
+source "terraform/azure/kconfigs/Kconfig.size.generated"
 comment "OS image selection"
-source "terraform/azure/kconfigs/Kconfig.image"
+source "terraform/azure/kconfigs/Kconfig.image.generated"
 endmenu
 menu "Storage"
 source "terraform/azure/kconfigs/Kconfig.storage"

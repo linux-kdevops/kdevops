@@ -20,6 +20,14 @@ AWS_KCONFIG_LOCATION := $(AWS_KCONFIG_DIR)/Kconfig.location.generated
 
 AWS_KCONFIGS := $(AWS_KCONFIG_AMI) $(AWS_KCONFIG_INSTANCE) $(AWS_KCONFIG_LOCATION)
 
+# Azure dynamic configuration
+AZURE_KCONFIG_DIR := terraform/azure/kconfigs
+AZURE_KCONFIG_IMAGE := $(AZURE_KCONFIG_DIR)/Kconfig.image.generated
+AZURE_KCONFIG_LOCATION := $(AZURE_KCONFIG_DIR)/Kconfig.location.generated
+AZURE_KCONFIG_SIZE := $(AZURE_KCONFIG_DIR)/Kconfig.size.generated
+
+AZURE_KCONFIGS := $(AZURE_KCONFIG_LOCATION) $(AZURE_KCONFIG_SIZE) $(AZURE_KCONFIG_IMAGE)
+
 # OCI dynamic configuration
 OCI_KCONFIG_DIR := terraform/oci/kconfigs
 OCI_KCONFIG_IMAGE := $(OCI_KCONFIG_DIR)/Kconfig.image.generated
@@ -29,7 +37,7 @@ OCI_KCONFIG_SHAPE := $(OCI_KCONFIG_DIR)/Kconfig.shape.generated
 OCI_KCONFIGS := $(OCI_KCONFIG_IMAGE) $(OCI_KCONFIG_LOCATION) $(OCI_KCONFIG_SHAPE)
 
 # Add generated files to mrproper clean list
-KDEVOPS_MRPROPER += $(LAMBDALABS_KCONFIGS) $(AWS_KCONFIGS) $(OCI_KCONFIGS)
+KDEVOPS_MRPROPER += $(LAMBDALABS_KCONFIGS) $(AWS_KCONFIGS) $(AZURE_KCONFIGS) $(OCI_KCONFIGS)
 
 # Touch Lambda Labs generated files so Kconfig can source them
 # This ensures the files exist (even if empty) before Kconfig runs
@@ -40,11 +48,15 @@ dynamic_lambdalabs_kconfig_touch:
 dynamic_aws_kconfig_touch:
 	$(Q)touch $(AWS_KCONFIGS)
 
+# Touch Azure generated files so Kconfig can source them
+dynamic_azure_kconfig_touch:
+	$(Q)touch $(AZURE_KCONFIGS)
+
 # Touch OCI generated files so Kconfig can source them
 dynamic_oci_kconfig_touch:
 	$(Q)touch $(OCI_KCONFIGS)
 
-DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_oci_kconfig_touch
+DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_azure_kconfig_touch dynamic_oci_kconfig_touch
 
 # Lambda Labs targets use --provider argument for efficiency
 cloud-config-lambdalabs:
@@ -53,6 +65,10 @@ cloud-config-lambdalabs:
 # AWS targets use --provider argument for efficiency
 cloud-config-aws:
 	$(Q)python3 scripts/generate_cloud_configs.py --provider aws
+
+# Azure targets use --provider argument for efficiency
+cloud-config-azure:
+	$(Q)python3 scripts/generate_cloud_configs.py --provider azure
 
 # OCI targets use --provider argument for efficiency
 cloud-config-oci:
@@ -66,17 +82,22 @@ clean-cloud-config-lambdalabs:
 clean-cloud-config-aws:
 	$(Q)rm -f $(AWS_KCONFIGS)
 
+# Clean Azure generated files
+clean-cloud-config-azure:
+	$(Q)rm -f $(AZURE_KCONFIGS)
+
 # Clean OCI generated files
 clean-cloud-config-oci:
 	$(Q)rm -f $(OCI_KCONFIGS)
 
-DYNAMIC_CLOUD_KCONFIG += cloud-config-lambdalabs cloud-config-aws cloud-config-oci
+DYNAMIC_CLOUD_KCONFIG += cloud-config-lambdalabs cloud-config-aws cloud-config-azure cloud-config-oci
 
 cloud-config-help:
 	@echo "Cloud-specific dynamic kconfig targets:"
 	@echo "cloud-config            - generates all cloud provider dynamic kconfig content"
 	@echo "cloud-config-lambdalabs - generates Lambda Labs dynamic kconfig content"
 	@echo "cloud-config-aws        - generates AWS dynamic kconfig content"
+	@echo "cloud-config-azure      - generates Azure dynamic kconfig content"
 	@echo "cloud-config-oci        - generates OCI dynamic kconfig content"
 	@echo "clean-cloud-config      - removes all generated cloud kconfig files"
 	@echo "cloud-list-all          - list all cloud instances for configured provider"
@@ -86,7 +107,7 @@ HELP_TARGETS += cloud-config-help
 cloud-config:
 	$(Q)python3 scripts/generate_cloud_configs.py
 
-clean-cloud-config: clean-cloud-config-lambdalabs clean-cloud-config-aws clean-cloud-config-oci
+clean-cloud-config: clean-cloud-config-lambdalabs clean-cloud-config-aws clean-cloud-config-azure clean-cloud-config-oci
 	$(Q)echo "Cleaned all cloud provider dynamic Kconfig files."
 
 cloud-list-all:
@@ -95,5 +116,6 @@ cloud-list-all:
 
 PHONY += cloud-config clean-cloud-config cloud-config-help cloud-list-all
 PHONY += cloud-config-aws clean-cloud-config-aws
+PHONY += cloud-config-azure clean-cloud-config-azure
 PHONY += cloud-config-lambdalabs clean-cloud-config-lambdalabs
 PHONY += cloud-config-oci clean-cloud-config-oci
