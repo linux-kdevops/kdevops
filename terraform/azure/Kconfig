@@ -4,7 +4,10 @@ menu "Resource Location"
 source "terraform/azure/kconfigs/Kconfig.location"
 endmenu
 menu "Compute"
-source "terraform/azure/kconfigs/Kconfig.compute"
+comment "Size selection"
+source "terraform/azure/kconfigs/Kconfig.size"
+comment "OS image selection"
+source "terraform/azure/kconfigs/Kconfig.image"
 endmenu
 menu "Storage"
 source "terraform/azure/kconfigs/Kconfig.storage"
