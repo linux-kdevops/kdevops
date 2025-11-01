@@ -220,7 +220,7 @@ make mmtests-compare  # Generate comparison reports
 
 ### Infrastructure Support
 - **Virtualization**: libguestfs with libvirt (recommended), legacy Vagrant
-- **Cloud**: AWS, Azure, GCE, OCI, OpenStack support via Terraform
+- **Cloud**: AWS, Azure, GCE, OCI support via Terraform
 - **PCIe Passthrough**: Real hardware testing in VMs with dynamic device assignment
 - **Mirror Support**: For air-gapped environments
 
