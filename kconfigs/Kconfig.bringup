@@ -45,7 +45,6 @@ config TERRAFORM
 
 	    * Azure
 	    * AWS
-	    * OpenStack
 	    * GCE
 
 	  Enabling this option will enable installing terraform dependencies
