@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve region information from Azure. Use it to construct the
+"locations" Kconfig menu.
+
+This script queries the Azure API using the Azure CLI to dynamically
+generate a Kconfig file containing all available Azure regions. Unlike
+OCI, Azure provides rich metadata including physical locations and
+display names directly through the API, so no separate mapping file
+is needed.
+
+Usage:
+        # Generate complete Kconfig.location file
+        ./gen_kconfig_location > ../kconfigs/Kconfig.location
+
+        # List all available regions
+        ./gen_kconfig_location --regions
+
+        # Get details for a specific region
+        ./gen_kconfig_location westus
+"""
+
+import sys
+import argparse
+
+from azure_common import (
+    get_default_region,
+    get_all_regions,
+    get_jinja2_environment,
+    get_region_kconfig_name,
+    exit_on_empty_result,
+)
+
+
+def get_region_friendly_name(region):
+    """
+    Get a friendly display name for a region using Azure API metadata.
+
+    Args:
+            region (dict): Region dictionary from Azure API
+
+    Returns:
+            str: Friendly name suitable for display in Kconfig
+    """
+    display_name = region.get("displayName", region["name"])
+    physical_location = region.get("metadata", {}).get("physicalLocation")
+
+    # Combine display name with physical location if available
+    if physical_location:
+        return f"{display_name} ({physical_location})"
+
+    # Fall back to just the display name
+    return display_name
+
+
+def get_region_info(regions, region_name, quiet=False):
+    """
+    Get detailed information about a specific region.
+
+    Args:
+            regions (list): List of all available regions
+            region_name (str): Azure region name (e.g., 'westus', 'eastus2')
+            quiet (bool): Suppress debug messages
+
+    Returns:
+            dict: Dictionary containing region information
+    """
+    if not quiet:
+        print(f"Querying information for region {region_name}...", file=sys.stderr)
+
+    region_info = next((r for r in regions if r["name"] == region_name), None)
+
+    if not region_info:
+        if not quiet:
+            print(f"Region {region_name} was not found", file=sys.stderr)
+        return None
+
+    return region_info
+
+
+def output_region_kconfig(region_info):
+    """Output region information in Kconfig format."""
+    region_name = region_info["name"]
+    friendly_name = get_region_friendly_name(region_info)
+    kconfig_name = get_region_kconfig_name(region_name)
+
+    print(f"config TERRAFORM_AZURE_REGION_{kconfig_name}")
+    print(f'\tbool "{friendly_name}"')
+    print("\thelp")
+    print(f"\t  This option selects the {friendly_name} region.")
+
+    # Add paired region info if available
+    metadata = region_info.get("metadata", {})
+    paired_regions = metadata.get("pairedRegion", [])
+    if paired_regions:
+        paired_name = paired_regions[0].get("name", "")
+        if paired_name:
+            print(f"\t  This region is paired with {paired_name}.")
+
+    print()
+
+
+def output_region_raw(region_info, quiet=False):
+    """Output region information in table format."""
+    if not quiet:
+        print(f"Region:        {region_info['name']}")
+        print(f"Display Name:  {region_info['displayName']}")
+        print(f"Regional Name: {region_info.get('regionalDisplayName', 'N/A')}")
+
+        metadata = region_info.get("metadata", {})
+        if metadata:
+            print("\nMetadata:")
+            for key, value in metadata.items():
+                if key == "pairedRegion" and value:
+                    print(f"  {key}: {value[0].get('name', 'N/A')}")
+                else:
+                    print(f"  {key}: {value}")
+
+
+def output_regions_kconfig(regions):
+    """Output available regions in Kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("regions.j2")
+
+    default_region = get_default_region()
+    default_kconfig = get_region_kconfig_name(default_region)
+
+    # Enhance region data with friendly names for template
+    enhanced_regions = []
+    for region in regions:
+        enhanced_region = region.copy()
+        enhanced_region["friendly_name"] = get_region_friendly_name(region)
+        enhanced_regions.append(enhanced_region)
+
+    print(
+        template.render(
+            default_region=default_kconfig,
+            regions=enhanced_regions,
+        )
+    )
+
+
+def output_regions_raw(regions, quiet=False):
+    """Output available regions in table format."""
+    if not quiet:
+        print(f"Available Azure regions ({len(regions)}):\n")
+        print(f"{'Region Name':<25} {'Display Name':<40}")
+        print("-" * 67)
+
+    for region in regions:
+        print(f"{region['name']:<25} {region['displayName']:<40}")
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get Azure region information",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python %(prog)s --regions
+  python %(prog)s westus
+  python %(prog)s eastus2 --quiet
+		""",
+    )
+    parser.add_argument(
+        "region_name",
+        nargs="?",
+        help="Azure region name (e.g., westus, eastus2, westeurope)",
+    )
+
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--regions", action="store_true", help="List all available Azure regions"
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    if not args.quiet:
+        print("Fetching list of all Azure regions...", file=sys.stderr)
+
+    regions = get_all_regions(args.quiet)
+    exit_on_empty_result(regions, "Azure region query", args.quiet)
+
+    if args.regions:
+        if args.format == "kconfig":
+            output_regions_kconfig(regions)
+        else:
+            output_regions_raw(regions, args.quiet)
+        return
+
+    if args.region_name:
+        if not args.quiet:
+            print(
+                f"Fetching information for region {args.region_name}...",
+                file=sys.stderr,
+            )
+
+        region_info = get_region_info(regions, args.region_name, args.quiet)
+        if region_info:
+            if args.format == "kconfig":
+                output_region_kconfig(region_info)
+            else:
+                output_region_raw(region_info, args.quiet)
+        else:
+            print(
+                f"Could not retrieve information for region '{args.region_name}'.",
+                file=sys.stderr,
+            )
+            print(
+                "Try running with --regions to see available regions.", file=sys.stderr
+            )
+            sys.exit(1)
+        return
+
+    output_regions_kconfig(regions)
+
+
+if __name__ == "__main__":
+    main()
