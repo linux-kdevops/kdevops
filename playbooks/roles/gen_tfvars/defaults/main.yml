@@ -31,12 +31,6 @@ terraform_aws_ebs_volume_type: "gp3"
 terraform_oci_assign_public_ip: false
 terraform_oci_use_existing_vcn: false
 
-terraform_openstack_cloud_name: "invalid"
-terraform_openstack_instance_prefix: "invalid"
-terraform_openstack_flavor: "invalid"
-terraform_openstack_image_name: "invalid"
-terraform_openstack_ssh_pubkey_name: "invalid"
-
 # Lambda Labs defaults
 terraform_lambdalabs_region: "us-west-1"
 terraform_lambdalabs_instance_type: "gpu_1x_a10"
