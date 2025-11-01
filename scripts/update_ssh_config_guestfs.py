@@ -40,8 +40,10 @@ def get_addr(name):
     while True:
         attempt += 1
         if attempt > timeout_seconds:
-            raise Exception(f"Unable to get an address for {name} after {timeout_seconds}s. "
-                          f"VM may be taking longer to boot. Check 'virsh console {name}' for boot status.")
+            raise Exception(
+                f"Unable to get an address for {name} after {timeout_seconds}s. "
+                f"VM may be taking longer to boot. Check 'virsh console {name}' for boot status."
+            )
 
         result = subprocess.run(
             [
