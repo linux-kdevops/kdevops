@@ -1,0 +1,253 @@
+# Azure VM Family Metadata
+#
+# This file contains human-readable descriptions and metadata for Azure VM
+# size families to support hierarchical Kconfig menu generation.
+#
+# Purpose:
+#   The gen_kconfig_size script uses this metadata to generate a two-layer
+#   Kconfig menu: first select a VM family, then select a specific size
+#   within that family.
+#
+# Canonical Sources:
+#   https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+#   (Official Azure VM sizes documentation)
+#
+# Last Updated: 2025-11-10
+#
+# Format:
+#   family-prefix:
+#     description: "Short one-line description"
+#     help_text: "Detailed multi-line help text describing use cases"
+#     workloads:
+#       - "Example workload 1"
+#       - "Example workload 2"
+#
+# Family Naming Convention:
+#   Azure VM families are identified by the prefix pattern in VM size names.
+#   For example:
+#   - Standard_D2s_v3 → Standard_D family
+#   - Standard_E16_v4 → Standard_E family
+#   - Standard_F8s_v2 → Standard_F family
+#
+# How to update this file:
+# -----------------------
+# When Azure introduces new VM families or you need to update descriptions:
+#
+# 1. Check which families are discovered by the API:
+#    $ cd terraform/azure/scripts
+#    $ ./gen_kconfig_size --families
+#
+# 2. Verify family details in Azure documentation:
+#    https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+#
+# 3. Add or update the family entry following the format above.
+#
+# 4. Update the "Last Updated" date above.
+#
+# 5. Test that families render correctly:
+#    $ ./gen_kconfig_size > /tmp/Kconfig.size.test 2>&1
+#    $ python3 ../../../scripts/detect_indentation_issues.py /tmp/Kconfig.size.test
+#
+# 6. Regenerate Kconfig.size:
+#    $ ./gen_kconfig_size > ../kconfigs/Kconfig.size.generated
+#
+
+# General Purpose Families
+Standard_A:
+  description: "Basic compute, entry-level"
+  help_text: |
+    Entry-level VMs for development and test workloads with basic CPU
+    performance and economical pricing. Suitable for learning, development,
+    and non-production environments.
+  workloads:
+    - "Development and testing"
+    - "Low-traffic web servers"
+    - "Small databases"
+
+Standard_B:
+  description: "Burstable, cost-effective"
+  help_text: |
+    Burstable CPU performance for workloads that don't need continuous full
+    CPU. Accumulates CPU credits during idle periods and uses them during
+    bursts. Ideal for workloads with variable CPU usage patterns.
+  workloads:
+    - "Development and test environments"
+    - "Low-traffic web servers"
+    - "Small databases"
+    - "Microservices"
+
+Standard_D:
+  description: "General purpose, balanced"
+  help_text: |
+    Balanced CPU-to-memory ratio suitable for most production workloads.
+    Provides consistent performance with local SSD temporary storage.
+    Most versatile family for general compute needs.
+  workloads:
+    - "Web servers and application servers"
+    - "Medium-traffic websites"
+    - "Small to medium databases"
+    - "Cache servers"
+
+Standard_DS:
+  description: "General purpose with premium storage"
+  help_text: |
+    D-series with premium SSD storage support. Balanced compute and storage
+    performance for production workloads requiring fast, low-latency storage.
+  workloads:
+    - "Production web applications"
+    - "Application servers"
+    - "Small to medium databases with SSD requirements"
+
+# Memory Optimized Families
+Standard_E:
+  description: "Memory optimized, high RAM"
+  help_text: |
+    High memory-to-CPU ratio optimized for memory-intensive workloads.
+    Provides 8GB RAM per vCPU, ideal for applications that require large
+    amounts of memory relative to CPU.
+  workloads:
+    - "Relational databases (SQL Server, MySQL, PostgreSQL)"
+    - "In-memory analytics"
+    - "Large caches (Redis, Memcached)"
+    - "SAP applications"
+
+Standard_ES:
+  description: "Memory optimized with premium storage"
+  help_text: |
+    E-series with premium SSD storage support. High memory and fast storage
+    for databases and memory-intensive applications requiring low-latency disk.
+  workloads:
+    - "Large relational databases"
+    - "In-memory databases with persistent storage"
+    - "Data warehousing"
+
+Standard_M:
+  description: "Memory optimized, very large"
+  help_text: |
+    Largest memory VMs in Azure with up to 4TB of RAM. Designed for extremely
+    memory-intensive enterprise workloads. Supports premium storage and
+    write accelerator for optimal database performance.
+  workloads:
+    - "SAP HANA"
+    - "Very large SQL Server instances"
+    - "In-memory databases"
+    - "Large-scale analytics"
+
+# Compute Optimized Families
+Standard_F:
+  description: "Compute optimized, high CPU"
+  help_text: |
+    High CPU-to-memory ratio optimized for compute-intensive workloads.
+    Provides 2GB RAM per vCPU, ideal for CPU-bound applications.
+  workloads:
+    - "Batch processing"
+    - "Web servers with high traffic"
+    - "Analytics and data processing"
+    - "Gaming servers"
+    - "Machine learning inference"
+
+Standard_FS:
+  description: "Compute optimized with premium storage"
+  help_text: |
+    F-series with premium SSD storage support. High CPU performance combined
+    with fast storage for compute and I/O intensive workloads.
+  workloads:
+    - "High-performance batch processing"
+    - "Analytics with large datasets"
+    - "Gaming servers with fast storage"
+
+# Storage Optimized Families
+Standard_L:
+  description: "Storage optimized, high I/O"
+  help_text: |
+    High disk throughput and I/O optimized for storage-intensive workloads.
+    Features large local NVMe disks with very high IOPS and throughput.
+  workloads:
+    - "NoSQL databases (Cassandra, MongoDB, Couchbase)"
+    - "Data warehousing"
+    - "Large transactional databases"
+    - "Distributed file systems"
+
+Standard_LS:
+  description: "Storage optimized with premium storage"
+  help_text: |
+    L-series with premium SSD storage support. Maximum storage throughput
+    for data-intensive applications requiring both local and remote storage.
+  workloads:
+    - "Large-scale NoSQL databases"
+    - "Big data analytics"
+    - "Data lake applications"
+
+# GPU Families
+Standard_N:
+  description: "GPU-enabled compute"
+  help_text: |
+    GPU-enabled VMs with NVIDIA GPUs for AI/ML training and inference,
+    graphics rendering, video processing, and other GPU-accelerated workloads.
+  workloads:
+    - "Deep learning training"
+    - "Machine learning inference"
+    - "Graphics rendering"
+    - "Video encoding/transcoding"
+    - "Scientific simulations"
+
+Standard_NC:
+  description: "GPU compute, NVIDIA"
+  help_text: |
+    NVIDIA GPU VMs for AI/ML workloads and GPU-accelerated compute.
+    Optimized for deep learning training with high GPU memory bandwidth.
+  workloads:
+    - "Deep learning model training"
+    - "AI/ML workloads"
+    - "GPU-accelerated HPC"
+
+Standard_ND:
+  description: "GPU deep learning, NVIDIA"
+  help_text: |
+    NVIDIA GPU VMs optimized for deep learning training with very high
+    GPU-to-GPU interconnect bandwidth (NVLink). Ideal for distributed
+    training of large models.
+  workloads:
+    - "Large-scale distributed deep learning"
+    - "Training large language models"
+    - "Multi-GPU AI/ML workloads"
+
+Standard_NV:
+  description: "GPU visualization, NVIDIA"
+  help_text: |
+    NVIDIA GPU VMs for remote visualization, streaming, gaming, and
+    OpenGL/DirectX applications. Optimized for graphics workloads.
+  workloads:
+    - "Remote visualization"
+    - "CAD/CAM applications"
+    - "3D rendering"
+    - "Cloud gaming"
+    - "Video streaming"
+
+# High Performance Compute
+Standard_H:
+  description: "HPC, high performance"
+  help_text: |
+    High Performance Computing VMs with high CPU performance and optional
+    RDMA networking for MPI workloads. Designed for compute-intensive HPC
+    and scientific computing.
+  workloads:
+    - "Scientific simulations"
+    - "Computational fluid dynamics"
+    - "Weather modeling"
+    - "Molecular dynamics"
+    - "MPI-based parallel computing"
+
+# ARM64 Families
+Standard_Dp:
+  description: "ARM64 general purpose (Ampere Altra)"
+  help_text: |
+    ARM64-based VMs using Ampere Altra processors. General purpose workloads
+    with excellent performance-per-dollar ratio and energy efficiency.
+    Compatible with ARM64 Linux distributions.
+  workloads:
+    - "Cloud-native applications"
+    - "Web servers"
+    - "Application servers"
+    - "Containerized workloads"
+    - "Microservices"

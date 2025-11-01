@@ -148,6 +148,113 @@ def get_region_kconfig_name(region_name):
     return region_name.upper().replace("-", "_")
 
 
+def get_compute_client():
+    """
+    Get an authenticated Azure Compute Management client.
+
+    Returns:
+            tuple: (ComputeManagementClient, subscription_id)
+
+    Raises:
+            Exception: If authentication fails or SDK is not available
+    """
+    from azure.common.credentials import get_cli_profile
+    from azure.mgmt.compute import ComputeManagementClient
+
+    # Get credentials from Azure CLI profile (reuses 'az login' session)
+    profile = get_cli_profile()
+    credentials, subscription_id, _ = profile.get_login_credentials(
+        resource="https://management.azure.com"
+    )
+
+    client = ComputeManagementClient(credentials, subscription_id)
+    return client, subscription_id
+
+
+def get_vm_sizes_and_skus(region, quiet=False):
+    """
+    Get all VM sizes and capabilities for a region using a single Azure SDK call.
+
+    This function uses the resource SKUs API which provides all the information
+    from both VM sizes and SKU capabilities in a single efficient API call.
+
+    Args:
+            region (str): Azure region name
+            quiet (bool): Suppress debug messages
+
+    Returns:
+            tuple: (sizes_list, capabilities_dict) where:
+                - sizes_list: List of VM size dictionaries in CLI-compatible format
+                - capabilities_dict: Dict mapping VM size names to their capabilities
+    """
+    if not quiet:
+        print(f"Fetching VM sizes and capabilities from {region}...", file=sys.stderr)
+
+    try:
+        client, _ = get_compute_client()
+
+        # Query resource SKUs using SDK with location filter
+        # This single API call provides all information we need
+        skus = list(client.resource_skus.list(filter=f"location eq '{region}'"))
+
+        # Filter to VM SKUs only
+        vm_skus = [s for s in skus if s.resource_type == "virtualMachines"]
+
+        # Build both data structures
+        size_list = []
+        sku_capabilities = {}
+
+        for sku in vm_skus:
+            if not sku.capabilities:
+                continue
+
+            # Convert capabilities list to dictionary for easy lookup
+            caps = {cap.name: cap.value for cap in sku.capabilities}
+
+            # Extract size information from capabilities
+            # The resource SKUs API provides the same data as the VM sizes API
+            try:
+                cores = int(caps.get("vCPUs", 0))
+                memory_mb = int(float(caps.get("MemoryGB", 0)) * 1024)
+                max_disks = int(caps.get("MaxDataDiskCount", 0))
+                resource_disk_mb = int(caps.get("MaxResourceVolumeMB", 0))
+                os_disk_mb = int(caps.get("OSVhdSizeMB", 0))
+
+                # Build VM size dict in CLI-compatible format
+                size_list.append(
+                    {
+                        "name": sku.name,
+                        "numberOfCores": cores,
+                        "memoryInMB": memory_mb,
+                        "maxDataDiskCount": max_disks,
+                        "resourceDiskSizeInMB": resource_disk_mb,
+                        "osDiskSizeInMB": os_disk_mb,
+                    }
+                )
+
+                # Store capabilities for this size
+                sku_capabilities[sku.name] = caps
+
+            except (ValueError, TypeError) as e:
+                if not quiet:
+                    print(
+                        f"Warning: Could not parse capabilities for {sku.name}: {e}",
+                        file=sys.stderr,
+                    )
+                continue
+
+        if not quiet:
+            print(f"  Found {len(size_list)} VM sizes in {region}", file=sys.stderr)
+
+        return size_list, sku_capabilities
+
+    except Exception as e:
+        if not quiet:
+            print(f"Error: Failed to query VM sizes and SKUs: {e}", file=sys.stderr)
+            print("Ensure you are logged in with 'az login'", file=sys.stderr)
+        return [], {}
+
+
 def exit_on_empty_result(result, context, quiet=False):
     """
     Exit with error if result is empty or None.

@@ -1,0 +1,653 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve VM size information from Azure. Use it to construct the
+"VM sizes" Kconfig menu.
+
+Azure VM sizes represent compute instance configurations with varying
+combinations of CPU, memory, storage, and networking capacity. This script
+queries the Azure API to discover available VM sizes and generates Kconfig
+menu entries for them.
+
+VM Size Discovery:
+        By default, this script queries VM sizes from the default region configured
+        in Azure CLI. The --all-regions option aggregates VM sizes from all regions
+        to provide a comprehensive list.
+
+        Note: VM size availability varies by region. Not all sizes listed may be
+        available in your selected region.
+
+Usage:
+        # Generate VM sizes Kconfig from default region
+        ./gen_kconfig_size > ../kconfigs/Kconfig.size.generated
+
+        # Include VM sizes from all regions
+        ./gen_kconfig_size --all-regions > ../kconfigs/Kconfig.size.generated
+
+        # List all available VM size families
+        ./gen_kconfig_size --families
+
+        # Get details for a specific VM size family
+        ./gen_kconfig_size Standard_D
+"""
+
+import sys
+import argparse
+import re
+import os
+import yaml
+
+from azure_common import (
+    get_default_region,
+    get_all_regions,
+    get_jinja2_environment,
+    get_vm_sizes_and_skus,
+    exit_on_empty_result,
+)
+
+
+def get_all_vm_sizes_and_capabilities(regions=None, quiet=False):
+    """
+    Get all available VM sizes and capabilities across specified regions.
+
+    Filters out Gen1-only VM sizes to ensure compatibility with Gen2 OS images.
+    Gen2 images work on both Gen2-only and Gen1+Gen2 VM sizes (94% of all sizes),
+    while Gen1 images only work on Gen1-only and Gen1+Gen2 sizes (59% of all sizes).
+    This filtering maximizes VM size availability while using modern Gen2 images.
+
+    Args:
+            regions (list): List of region names to query. If None, uses default region.
+            quiet (bool): Suppress debug messages
+
+    Returns:
+            tuple: (sizes_list, capabilities_dict) where:
+                - sizes_list: List of VM size dictionaries (deduplicated by name)
+                - capabilities_dict: Dict mapping VM size names to capabilities
+    """
+    if regions is None:
+        default_region = get_default_region()
+        regions = [default_region]
+
+    all_sizes = {}  # Use dict to deduplicate by VM size name
+    all_capabilities = {}  # Capabilities from first region where size is found
+
+    for region_info in regions:
+        region = region_info if isinstance(region_info, str) else region_info["name"]
+
+        sizes, capabilities = get_vm_sizes_and_skus(region, quiet)
+
+        # Add sizes to dict, using size name as key to deduplicate
+        # Filter out Gen1-only VM sizes to ensure compatibility with Gen2 images
+        for size in sizes:
+            if size["name"] not in all_sizes:
+                # Check HyperV generation support
+                size_caps = capabilities.get(size["name"], {})
+                hyperv_gens = size_caps.get("HyperVGenerations", "")
+
+                # Skip Gen1-only VM sizes (keep Gen2-only and Gen1+Gen2)
+                if hyperv_gens == "V1":
+                    continue
+
+                all_sizes[size["name"]] = size
+                # Store capabilities from first region where we see this size
+                if size["name"] in capabilities:
+                    all_capabilities[size["name"]] = capabilities[size["name"]]
+
+    if not quiet:
+        print(
+            f"\nTotal unique VM sizes across all regions: {len(all_sizes)}",
+            file=sys.stderr,
+        )
+
+    return list(all_sizes.values()), all_capabilities
+
+
+def extract_vm_size_family(size_name):
+    """
+    Extract VM size family from the VM size name.
+
+    Azure VM size names follow patterns like:
+    - Standard_D2s_v3 -> Standard_D (family)
+    - Standard_DS3_v2 -> Standard_DS (family)
+    - Standard_B1ls -> Standard_B (family)
+    - Standard_NC6s_v3 -> Standard_NC (family)
+
+    Args:
+            size_name (str): Azure VM size name
+
+    Returns:
+            str: Family name
+    """
+    # Match patterns like Standard_D, Standard_DS, Standard_B, etc.
+    match = re.match(r"^(Standard_[A-Z]+)", size_name)
+    if match:
+        return match.group(1)
+
+    # Handle special cases or return the full name if pattern doesn't match
+    parts = size_name.split("_")
+    if len(parts) >= 2:
+        return f"{parts[0]}_{parts[1][0]}"
+
+    return size_name
+
+
+def parse_vm_size_families(sizes, quiet=False):
+    """
+    Extract VM size families from the list of sizes.
+
+    Args:
+            sizes (list): List of VM size dictionaries
+            quiet (bool): Suppress debug messages
+
+    Returns:
+            dict: Dictionary with family info including count of sizes per family
+    """
+    families = {}
+    seen_sizes = set()
+
+    for size in sizes:
+        size_name = size["name"]
+
+        # Skip duplicate size names
+        if size_name in seen_sizes:
+            continue
+        seen_sizes.add(size_name)
+
+        # Parse VM size family from name
+        family = extract_vm_size_family(size_name)
+
+        if family not in families:
+            families[family] = {
+                "family_name": family,
+                "size_count": 0,
+                "min_cores": float("inf"),
+                "max_cores": 0,
+                "min_memory_gb": float("inf"),
+                "max_memory_gb": 0,
+            }
+
+        families[family]["size_count"] += 1
+
+        # Track min/max cores and memory
+        cores = size["numberOfCores"]
+        memory_gb = size["memoryInMB"] / 1024.0
+
+        families[family]["min_cores"] = min(families[family]["min_cores"], cores)
+        families[family]["max_cores"] = max(families[family]["max_cores"], cores)
+        families[family]["min_memory_gb"] = min(
+            families[family]["min_memory_gb"], memory_gb
+        )
+        families[family]["max_memory_gb"] = max(
+            families[family]["max_memory_gb"], memory_gb
+        )
+
+    return families
+
+
+def get_vm_size_family_info(family_name, sizes, quiet=False):
+    """
+    Get VM size information for a specific family.
+
+    Args:
+            family_name (str): VM size family name (e.g., 'Standard_D', 'Standard_DS')
+            sizes (list): List of all VM sizes
+            quiet (bool): Suppress debug messages
+
+    Returns:
+            list: List of dictionaries containing VM size information
+    """
+    family_sizes = []
+
+    for size in sizes:
+        size_name = size["name"]
+        size_family = extract_vm_size_family(size_name)
+
+        # Match sizes that belong to this family
+        if size_family == family_name:
+            family_sizes.append(size)
+
+    if not family_sizes:
+        if not quiet:
+            print(f"No VM sizes found in family '{family_name}'.", file=sys.stderr)
+        return []
+
+    if not quiet:
+        print(
+            f"Found {len(family_sizes)} VM sizes in family '{family_name}'",
+            file=sys.stderr,
+        )
+
+    # Extract detailed information
+    size_info = []
+    for size in family_sizes:
+        size_info.append(
+            {
+                "name": size["name"],
+                "cores": size["numberOfCores"],
+                "memory_gb": size["memoryInMB"] / 1024.0,
+                "max_data_disks": size["maxDataDiskCount"],
+                "resource_disk_gb": size["resourceDiskSizeInMB"] / 1024.0
+                if size["resourceDiskSizeInMB"] > 0
+                else 0,
+            }
+        )
+
+    # Sort by cores, then memory
+    size_info.sort(key=lambda x: (x["cores"], x["memory_gb"]))
+
+    return size_info
+
+
+def determine_architecture(size_name):
+    """
+    Determine CPU architecture from VM size name.
+
+    Most Azure VM sizes are x86_64. ARM64-based sizes are in the
+    Dps and Dpds families (Ampere Altra processors).
+
+    Args:
+            size_name (str): Azure VM size name
+
+    Returns:
+            str: CPU architecture ('arm64' or 'x86_64')
+    """
+    # ARM64 VM families
+    if re.match(r"Standard_Dp[sd]", size_name):
+        return "arm64"
+
+    # Default to x86_64
+    return "x86_64"
+
+
+def natural_sort_key(vm_size_name):
+    """
+    Generate a sort key for natural (numeric) ordering of VM size names.
+
+    Converts VM size names like Standard_DS11_v2 into a tuple that sorts
+    naturally: Standard_DS1, DS2, DS3, ..., DS10, DS11, DS12 instead of
+    the alphabetic ordering DS1, DS11, DS12, DS2, DS3.
+
+    Args:
+            vm_size_name (str): Azure VM size name (e.g., "Standard_DS3_v2")
+
+    Returns:
+            tuple: Sort key tuple with string and integer components
+    """
+    parts = re.split(r'(\d+)', vm_size_name)
+    key = []
+    for part in parts:
+        if part.isdigit():
+            key.append(int(part))
+        else:
+            key.append(part)
+    return tuple(key)
+
+
+def load_family_metadata(quiet=False):
+    """
+    Load VM family metadata from YAML file.
+
+    Returns:
+            dict: Dictionary mapping family prefixes to metadata
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    metadata_file = os.path.join(script_dir, "vm_family_metadata.yml")
+
+    try:
+        with open(metadata_file, "r") as f:
+            metadata = yaml.safe_load(f)
+            if not quiet:
+                print(
+                    f"Loaded metadata for {len(metadata)} VM families", file=sys.stderr
+                )
+            return metadata
+    except FileNotFoundError:
+        if not quiet:
+            print(
+                f"Warning: Family metadata file not found: {metadata_file}",
+                file=sys.stderr,
+            )
+        return {}
+    except Exception as e:
+        if not quiet:
+            print(f"Warning: Error loading family metadata: {e}", file=sys.stderr)
+        return {}
+
+
+def output_sizes_kconfig(sizes, sku_capabilities=None, default_size="Standard_DS3_v2"):
+    """
+    Output VM sizes menu in Kconfig format.
+
+    Args:
+            sizes (list): List of VM size dictionaries
+            sku_capabilities (dict): Dictionary mapping VM size names to capabilities
+            default_size (str): Default VM size to select
+    """
+    if sku_capabilities is None:
+        sku_capabilities = {}
+
+    environment = get_jinja2_environment()
+    template = environment.get_template("sizes.j2")
+
+    # Enhance size data for template
+    enhanced_sizes = []
+    for size in sizes:
+        memory_gb = size["memoryInMB"] / 1024.0
+        resource_disk_gb = (
+            size["resourceDiskSizeInMB"] / 1024.0
+            if size["resourceDiskSizeInMB"] > 0
+            else 0
+        )
+        arch = determine_architecture(size["name"])
+
+        # Get accelerated networking capability
+        size_name = size["name"]
+        caps = sku_capabilities.get(size_name, {})
+        accel_networking = caps.get("AcceleratedNetworkingEnabled", "False") == "True"
+
+        enhanced_sizes.append(
+            {
+                "name": size_name,
+                "cores": size["numberOfCores"],
+                "memory_gb": memory_gb,
+                "max_data_disks": size["maxDataDiskCount"],
+                "resource_disk_gb": resource_disk_gb,
+                "architecture": arch,
+                "accelerated_networking": accel_networking,
+            }
+        )
+
+    # Sort sizes by family, then cores, then memory
+    enhanced_sizes.sort(
+        key=lambda x: (extract_vm_size_family(x["name"]), x["cores"], x["memory_gb"])
+    )
+
+    # Find default size config name
+    default_config = f"TERRAFORM_AZURE_VM_SIZE_{default_size.upper().replace('.', '_').replace('-', '_')}"
+
+    print(
+        template.render(
+            sizes=enhanced_sizes,
+            default_config=default_config,
+        )
+    )
+
+
+def output_families_kconfig(sizes, sku_capabilities=None, default_size="Standard_DS3_v2", quiet=False):
+    """
+    Output VM sizes in family-based hierarchical Kconfig format.
+
+    Args:
+            sizes (list): List of VM size dictionaries
+            sku_capabilities (dict): Dictionary mapping VM size names to capabilities
+            default_size (str): Default VM size to select
+            quiet (bool): Suppress informational messages
+    """
+    if sku_capabilities is None:
+        sku_capabilities = {}
+
+    # Load family metadata from YAML
+    family_metadata = load_family_metadata(quiet)
+
+    # Group sizes by family
+    family_groups = {}
+    for size in sizes:
+        size_name = size["name"]
+        family_prefix = extract_vm_size_family(size_name)
+
+        if family_prefix not in family_groups:
+            family_groups[family_prefix] = []
+
+        family_groups[family_prefix].append(size)
+
+    # Build family data for template
+    families = []
+    default_family = None
+
+    for family_prefix in sorted(family_groups.keys()):
+        family_sizes = family_groups[family_prefix]
+
+        # Get metadata from YAML or use defaults
+        metadata = family_metadata.get(family_prefix, {})
+        description = metadata.get("description", "Azure VM family")
+        help_text = metadata.get("help_text", f"Virtual machines in the {family_prefix} family.")
+
+        # Calculate family statistics
+        min_cores = min(s["numberOfCores"] for s in family_sizes)
+        max_cores = max(s["numberOfCores"] for s in family_sizes)
+        min_memory_gb = min(s["memoryInMB"] / 1024.0 for s in family_sizes)
+        max_memory_gb = max(s["memoryInMB"] / 1024.0 for s in family_sizes)
+
+        # Determine family architecture
+        family_arch = determine_architecture(family_sizes[0]["name"])
+
+        # Build enhanced size list for this family
+        enhanced_sizes = []
+        for size in sorted(family_sizes, key=lambda x: natural_sort_key(x["name"])):
+            size_name = size["name"]
+            memory_gb = size["memoryInMB"] / 1024.0
+            resource_disk_gb = (
+                size["resourceDiskSizeInMB"] / 1024.0
+                if size["resourceDiskSizeInMB"] > 0
+                else 0
+            )
+
+            # Get accelerated networking capability
+            caps = sku_capabilities.get(size_name, {})
+            accel_networking = caps.get("AcceleratedNetworkingEnabled", "False") == "True"
+
+            config_name = size_name.upper().replace(".", "_").replace("-", "_")
+            enhanced_sizes.append(
+                {
+                    "name": size_name,
+                    "config_name": config_name,
+                    "cores": size["numberOfCores"],
+                    "memory_gb": memory_gb,
+                    "max_data_disks": size["maxDataDiskCount"],
+                    "resource_disk_gb": resource_disk_gb,
+                    "accelerated_networking": accel_networking,
+                }
+            )
+
+        # Check if default size is in this family
+        is_default_family = any(s["name"] == default_size for s in family_sizes)
+        if is_default_family:
+            default_family = family_prefix
+
+        # Find default size config within family
+        default_size_config = None
+        for enhanced_size in enhanced_sizes:
+            if enhanced_size["name"] == default_size:
+                default_size_config = f"TERRAFORM_AZURE_VM_SIZE_{enhanced_size['config_name']}"
+                break
+        if default_size_config is None:
+            default_size_config = f"TERRAFORM_AZURE_VM_SIZE_{enhanced_sizes[0]['config_name']}"
+
+        config_name = family_prefix.upper().replace(".", "_").replace("-", "_")
+        families.append(
+            {
+                "family_name": family_prefix,
+                "config_name": config_name,
+                "description": description,
+                "help_text": help_text,
+                "architecture": family_arch,
+                "size_count": len(family_sizes),
+                "min_cores": min_cores,
+                "max_cores": max_cores,
+                "min_memory_gb": min_memory_gb,
+                "max_memory_gb": max_memory_gb,
+                "sizes": enhanced_sizes,
+                "default_size_config": default_size_config,
+            }
+        )
+
+    # Set default family config
+    if default_family:
+        default_family_config = f"TERRAFORM_AZURE_VM_FAMILY_{default_family.upper().replace('.', '_').replace('-', '_')}"
+    else:
+        default_family_config = f"TERRAFORM_AZURE_VM_FAMILY_{families[0]['config_name']}"
+
+    # Render template
+    environment = get_jinja2_environment()
+    template = environment.get_template("families.j2")
+
+    print(
+        template.render(
+            families=families,
+            default_family_config=default_family_config,
+        )
+    )
+
+
+def output_families_raw(sizes, quiet=False):
+    """Output available VM size families in table format."""
+    families = parse_vm_size_families(sizes)
+
+    if not quiet:
+        print(f"Available VM size families ({len(families)}):\n")
+
+    print(f"{'Family':<20} {'Count':<6} {'Cores Range':<15} {'Memory Range (GB)':<20}")
+    print("-" * 65)
+
+    sorted_families = sorted(families.values(), key=lambda x: x["family_name"])
+    for family in sorted_families:
+        cores_range = f"{family['min_cores']}-{family['max_cores']}"
+        memory_range = f"{family['min_memory_gb']:.1f}-{family['max_memory_gb']:.1f}"
+
+        print(
+            f"{family['family_name']:<20} "
+            f"{family['size_count']:<6} "
+            f"{cores_range:<15} "
+            f"{memory_range:<20}"
+        )
+
+
+def output_family_raw(sizes, quiet=False):
+    """Output VM size family information in table format."""
+    if not quiet:
+        print(f"Found {len(sizes)} VM sizes:\n")
+
+    print(
+        f"{'VM Size Name':<30} {'Cores':<8} {'Memory (GB)':<15} {'Max Disks':<12} {'Temp Storage (GB)':<18}"
+    )
+    print("-" * 90)
+
+    for size in sizes:
+        print(
+            f"{size['name']:<30} "
+            f"{size['cores']:<8} "
+            f"{size['memory_gb']:<15.1f} "
+            f"{size['max_data_disks']:<12} "
+            f"{size['resource_disk_gb']:<18.1f}"
+        )
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get Azure VM size information including hardware specs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate Kconfig from default region
+  python %(prog)s > ../kconfigs/Kconfig.size.generated
+
+  # Include sizes from all regions
+  python %(prog)s --all-regions > ../kconfigs/Kconfig.size.generated
+
+  # Query specific VM size family
+  python %(prog)s Standard_D
+
+  # List all available families
+  python %(prog)s --families --format raw
+
+  # Query specific region only
+  python %(prog)s --region westus2 --families
+		""",
+    )
+    parser.add_argument(
+        "family_name",
+        nargs="?",
+        help="VM size family name (e.g., Standard_D, Standard_DS, Standard_B)",
+    )
+
+    parser.add_argument(
+        "--families", action="store_true", help="List all available VM size families"
+    )
+    parser.add_argument(
+        "--all-regions",
+        action="store_true",
+        help="Include VM sizes from all regions (default: default region only)",
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--region",
+        "-r",
+        help="Query specific region only (default: default configured region)",
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    # Determine which regions to query
+    if args.region:
+        # Query specific region only
+        regions = [args.region]
+    elif args.all_regions:
+        # Query all regions
+        regions = get_all_regions(args.quiet)
+        exit_on_empty_result(regions, "Azure region query", args.quiet)
+    else:
+        # Query default region only
+        regions = [get_default_region()]
+
+    # Get VM sizes and capabilities in a single API call
+    sizes, sku_capabilities = get_all_vm_sizes_and_capabilities(regions, args.quiet)
+    exit_on_empty_result(sizes, "Azure VM size query", args.quiet)
+
+    if args.families:
+        output_families_raw(sizes, args.quiet)
+        return
+
+    if args.family_name:
+        if not args.quiet:
+            print(
+                f"Fetching information for the {args.family_name} family...",
+                file=sys.stderr,
+            )
+
+        family_sizes = get_vm_size_family_info(args.family_name, sizes, args.quiet)
+
+        if not family_sizes:
+            print(
+                f"No VM sizes found for family '{args.family_name}'.", file=sys.stderr
+            )
+            print(
+                "Try running with --families to see available VM size families.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        # Output raw format for family queries
+        output_family_raw(family_sizes, args.quiet)
+        return
+
+    # Output family-based hierarchical Kconfig menu
+    output_families_kconfig(sizes, sku_capabilities, quiet=args.quiet)
+
+
+if __name__ == "__main__":
+    main()
