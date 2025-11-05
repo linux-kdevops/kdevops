@@ -6,6 +6,7 @@ config DEFAULT_BLKTESTS_URL
 
 config DEFAULT_BLKTRACE_URL
 	string
+	output yaml
 	default "https://git.kernel.dk/blktrace"
 
 config DEFAULT_DATE_ISO8601
@@ -14,6 +15,7 @@ config DEFAULT_DATE_ISO8601
 
 config DEFAULT_DBENCH_URL
 	string
+	output yaml
 	default "https://github.com/linux-kdevops/dbench.git"
 
 config DEFAULT_FSTESTS_GIT_URL
@@ -38,6 +40,7 @@ config DEFAULT_FSTESTS_KDEVOPS_GITLAB_HTTPS_URL
 
 config DEFAULT_GIT_URL
 	string
+	output yaml
 	default "https://git.kernel.org/pub/scm/git/git.git"
 
 config DEFAULT_KDEVOPS_GITHUB_HTTPS_URL
@@ -54,6 +57,7 @@ config DEFAULT_KDEVOPS_LINUX_HTTPS_URL
 
 config DEFAULT_PYNFS_GIT_URL
 	string
+	output yaml
 	default "git://git.linux-nfs.org/projects/cdmackay/pynfs.git"
 
 config DEFAULT_QEMU_GITHUB_HTTPS_URL
@@ -102,6 +106,7 @@ config DEFAULT_LINUX_NEXT_HTTPS_GOOGLE_URL
 
 config DEFAULT_LTP_URL
 	string
+	output yaml
 	default "https://github.com/linux-test-project/ltp.git"
 
 config DEFAULT_MODULES_GIT
@@ -146,6 +151,7 @@ config DEFAULT_MCGROF_NEXT_HTTPS_GOOGLE_URL
 
 config DEFAULT_NFSTEST_URL
 	string
+	output yaml
 	default "git://git.linux-nfs.org/projects/mora/nfstest.git"
 
 config DEFAULT_TORVALDS_GIT_URL
@@ -210,8 +216,10 @@ config DEFAULT_XFS_HTTPS_GOOGLE_URL
 
 config DEFAULT_XFSDUMP_URL
 	string
+	output yaml
 	default "https://github.com/linux-kdevops/xfsdump-dev.git"
 
 config DEFAULT_XFSPROGS_URL
 	string
+	output yaml
 	default "https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git"

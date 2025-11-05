@@ -5,25 +5,39 @@ local_systemd_path: "/usr/local/lib/systemd/system/"
 
 install_linux_mirror: false
 # Please keep these in alphabetical order
-defaults_blktrace_git: "https://git.kernel.dk/blktrace"
-defaults_dbench_git: "https://github.com/linux-kdevops/dbench.git"
+default_blktrace_url: "https://git.kernel.dk/blktrace"
+default_dbench_url: "https://github.com/linux-kdevops/dbench.git"
+default_git_url: "https://git.kernel.org/pub/scm/git/git.git"
+default_ltp_url: "https://github.com/linux-test-project/ltp.git"
+default_nfstest_url: "git://git.linux-nfs.org/projects/mora/nfstest.git"
+default_pynfs_git_url: "git://git.linux-nfs.org/projects/cdmackay/pynfs.git"
 defaults_kdevops_results_archive_git: "https://github.com/linux-kdevops/kdevops-results-archive.git"
-defaults_git_git: "https://git.kernel.org/pub/scm/git/git.git"
-defaults_ltp_git: "https://github.com/linux-test-project/ltp.git"
 defaults_mmtests_git: "https://github.com/gormanm/mmtests.git"
-defaults_nfstest_git: "git://git.linux-nfs.org/projects/mora/nfstest.git"
-defaults_pynfs_git: "git://git.linux-nfs.org/projects/cdmackay/pynfs.git"
-defaults_xfsprogs_git: "https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git"
-defaults_xfsdump_git: "https://github.com/linux-kdevops/xfsdump-dev.git"
+default_xfsdump_url: "https://github.com/linux-kdevops/xfsdump-dev.git"
+default_xfsprogs_url: "https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git"
 
 # These are mirrors which have variability support. The above should be converted
 # to these types so to support alternatives for sources and also the ability to
 # not use git and instead https in case of firewall restrictions in some
 # environments.
+# Please keep these in alphabetical order
+mirror_blktests_url: "https://github.com/osandov/blktests.git"
+mirror_fstests_url: "https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git"
+mirror_kdevops_fstests_url: "https://github.com/linux-kdevops/fstests.git"
+mirror_kdevops_linus_url: "https://github.com/linux-kdevops/linux.git"
 mirror_kdevops_url: "https://github.com/linux-kdevops/kdevops.git"
-mirror_stable_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+mirror_mcgrof_linus_url: "https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+mirror_mcgrof_url: "https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git"
+mirror_mmtests_url: "https://github.com/gormanm/mmtests.git"
+mirror_modules_url: "https://git.kernel.org/pub/scm/linux/kernel/git/modules/linux.git"
+mirror_next_url: "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+mirror_qemu_jic23_url: "https://gitlab.com/jic23/qemu.git"
+mirror_qemu_url: "https://gitlab.com/qemu-project/qemu.git"
 mirror_stable_rc_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
-mirror_torvalds_url: "git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+mirror_stable_url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+mirror_torvalds_url: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+mirror_vfs_url: "https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git"
+mirror_xfs_url: "https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git"
 
 install_only_git_daemon: false
 
