@@ -26,7 +26,6 @@ mirror-status: $(KDEVOPS_EXTRA_VARS)
 PHONY += mirror-status
 
 ANSIBLE_EXTRA_ARGS += $(LINUX_MIRROR_ARGS)
-LOCALHOST_SETUP_WORK += mirror
 
 mirror-help-menu:
 	@echo "Mirror options:"
