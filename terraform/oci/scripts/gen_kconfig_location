@@ -1,0 +1,476 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve region and availability domain information from OCI. Use
+it to construct the "locations" Kconfig menu.
+
+Region Friendly Names:
+    Region friendly names (e.g., "US Midwest (Chicago)") are maintained
+    in the region_friendly_names.yml file in the same directory as this
+    script. This makes it easier to update the friendly names when Oracle
+    adds new regions or when you want to customize the display names.
+
+    To update region friendly names:
+    1. Edit terraform/oci/scripts/region_friendly_names.yml
+    2. Add or modify entries following the existing format
+    3. Run this script to regenerate Kconfig.location
+
+    The YAML file contains detailed instructions for how to find and add
+    new region information. If a region is not found in the YAML file,
+    the script will auto-generate a friendly name from the region identifier.
+
+Usage:
+    # Generate complete Kconfig.location file
+    ./gen_kconfig_location > ../kconfigs/Kconfig.location
+
+    # List all available regions
+    ./gen_kconfig_location --regions
+
+    # Get details for a specific region
+    ./gen_kconfig_location us-chicago-1
+"""
+
+import os
+import sys
+import argparse
+
+import oci
+from oci.exceptions import ServiceError
+
+from oci_common import (
+    get_default_region,
+    get_jinja2_environment,
+    load_yaml_config,
+    create_identity_client,
+    get_oci_config,
+)
+
+
+def load_region_friendly_names():
+    """
+    Load region friendly names from the YAML configuration file.
+
+    The friendly names are maintained in region_friendly_names.yml to make
+    it easier to update when Oracle adds new regions. The YAML file contains
+    the canonical mapping from OCI region identifiers to human-readable
+    display names.
+
+    To update the friendly names:
+    1. Edit terraform/oci/scripts/region_friendly_names.yml
+    2. Add or modify entries following the existing format
+    3. Regenerate Kconfig.location by running this script
+
+    See region_friendly_names.yml for detailed update instructions.
+
+    Returns:
+        dict: Dictionary mapping region names to friendly display names
+    """
+    return load_yaml_config("region_friendly_names.yml")
+
+
+def get_region_code(regions, region_name):
+    """
+    Get the 3-letter code for a region by looking it up in the regions list.
+
+    Args:
+        regions (list): List of region dictionaries
+        region_name (str): OCI region name (e.g., 'us-chicago-1')
+
+    Returns:
+        str: 3-letter code (e.g., 'ORD') from OCI's official region_key
+    """
+    for region in regions:
+        if region["region_name"] == region_name:
+            return region["region_code"]
+
+    # Fallback if region not found (should not happen in normal operation)
+    # Take first 3 letters of the location part
+    parts = region_name.split("-")
+    if len(parts) >= 2:
+        return parts[1][:3].upper()
+    return region_name[:3].upper()
+
+
+def get_region_friendly_name(region_name, friendly_names=None):
+    """
+    Get a friendly display name for a region.
+
+    Region friendly names are loaded from region_friendly_names.yml.
+    If a region is not found in the YAML file, an auto-generated name
+    is returned.
+
+    The YAML file can be updated to add new regions or customize names.
+    See load_region_friendly_names() for update instructions.
+
+    Args:
+        region_name (str): OCI region name (e.g., 'us-chicago-1')
+        friendly_names (dict): Optional pre-loaded friendly names dict.
+                               If None, names will be loaded from YAML.
+
+    Returns:
+        str: Friendly name (e.g., 'US Midwest (Chicago)')
+    """
+    # Load friendly names from YAML if not provided
+    if friendly_names is None:
+        friendly_names = load_region_friendly_names()
+
+    # Look up the friendly name in the loaded data
+    if region_name in friendly_names:
+        return friendly_names[region_name]
+
+    # Auto-generate if not in map
+    parts = region_name.split("-")
+    if len(parts) >= 2:
+        location = parts[1].title()
+        return f"{parts[0].upper()} ({location})"
+    return region_name
+
+
+def get_all_regions():
+    """
+    Retrieve the list of all OCI regions in the OC1 realm.
+
+    Returns all regions available in OCI and marks which ones the tenancy
+    is subscribed to, making the subscription status field meaningful.
+
+    Returns:
+        list: sorted list of dictionaries each containing a region
+    """
+    try:
+        config = get_oci_config()
+        identity = create_identity_client()
+
+        # Get all regions in the OC1 realm
+        all_regions = identity.list_regions().data
+
+        # Get region subscriptions to determine which regions are subscribed
+        region_subscriptions = identity.list_region_subscriptions(
+            config["tenancy"]
+        ).data
+
+        # Create a mapping of subscribed regions for quick lookup
+        subscribed_regions = {}
+        home_region = None
+        for subscription in region_subscriptions:
+            subscribed_regions[subscription.region_name] = subscription.status
+            if subscription.is_home_region:
+                home_region = subscription.region_name
+
+        # Load friendly names once for efficiency
+        friendly_names = load_region_friendly_names()
+
+        regions = []
+        for region in all_regions:
+            region_name = region.name
+            is_subscribed = region_name in subscribed_regions
+            regions.append(
+                {
+                    "region_name": region_name,
+                    "region_code": region.key,
+                    "friendly_name": get_region_friendly_name(
+                        region_name, friendly_names
+                    ),
+                    "status": subscribed_regions.get(region_name, "NOT_SUBSCRIBED"),
+                    "is_home_region": region_name == home_region,
+                    "is_subscribed": is_subscribed,
+                }
+            )
+
+        return sorted(regions, key=lambda x: x["region_name"])
+
+    except oci.exceptions.ConfigFileNotFound:
+        print(
+            "Error: OCI config file not found. Please configure OCI CLI.",
+            file=sys.stderr,
+        )
+        return []
+    except Exception as e:
+        print(f"Error retrieving OCI regions: {e}", file=sys.stderr)
+        return []
+
+
+def get_region_info(regions, region_name, quiet=False):
+    """
+    Get detailed information about a specific region including availability domains.
+
+    Args:
+        regions (list): List of all regions
+        region_name (str): OCI region name (e.g., 'us-chicago-1')
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary containing region information and availability domains
+    """
+    try:
+        if not quiet:
+            print(f"Querying information for region {region_name}...", file=sys.stderr)
+
+        region_info = next(
+            filter(lambda x: x["region_name"] == region_name, regions), None
+        )
+        if not region_info:
+            if not quiet:
+                print(f"Region {region_name} was not found", file=sys.stderr)
+            return None
+
+        # Create identity client for the specific region
+        identity = create_identity_client(region_name)
+        config = get_oci_config(region_name)
+
+        # List availability domains
+        availability_domains = identity.list_availability_domains(
+            config["tenancy"]
+        ).data
+
+        ad_list = []
+        for ad in availability_domains:
+            # Extract AD number from name (e.g., "MhqG:US-CHICAGO-1-AD-1" -> 1)
+            ad_name = ad.name
+            ad_number = ad_name.split("-")[-1] if "-" in ad_name else "1"
+
+            ad_info = {
+                "name": ad_name,
+                "number": ad_number,
+            }
+            ad_list.append(ad_info)
+
+        result = {
+            "region_name": region_info["region_name"],
+            "region_code": region_info["region_code"],
+            "friendly_name": region_info["friendly_name"],
+            "status": region_info.get("status", "READY"),
+            "is_home_region": region_info.get("is_home_region", False),
+            "availability_domain_count": len(ad_list),
+            "availability_domains": sorted(ad_list, key=lambda x: x["number"]),
+        }
+
+        if not quiet:
+            print(
+                f"Found {len(ad_list)} availability domains in {region_name}",
+                file=sys.stderr,
+            )
+
+        return result
+
+    except ServiceError as e:
+        print(f"OCI API Error: {e.message}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        return None
+
+
+def output_region_kconfig(region_info):
+    """Output region information in Kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("ad.j2")
+    print(
+        template.render(
+            region_code=region_info["region_code"],
+            region_name=region_info["region_name"],
+            ads=region_info["availability_domains"],
+        )
+    )
+
+
+def output_region_raw(region_info, quiet=False):
+    """Output region information in table format."""
+    if not quiet:
+        print(f"Region:                {region_info['region_name']}")
+        print(f"Code:                  {region_info['region_code']}")
+        print(f"Friendly Name:         {region_info['friendly_name']}")
+        print(f"Status:                {region_info['status']}")
+        print(f"Home Region:           {region_info['is_home_region']}")
+        print(f"Availability Domains:  {region_info['availability_domain_count']}")
+
+    print(f"{'AD Name':<40} {'AD Number':<10}")
+    print("-" * 50)
+
+    for ad in region_info["availability_domains"]:
+        print(f"{ad['name']:<40} {ad['number']:<10}")
+
+
+def output_regions_kconfig(regions):
+    """Output available regions in kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("regions.j2")
+    print(
+        template.render(
+            default_region=get_region_code(regions, get_default_region()),
+            regions=regions,
+        )
+    )
+
+
+def output_regions_raw(regions, quiet=False):
+    """Output available regions in table format."""
+    if not quiet:
+        print(f"Available OCI regions ({len(regions)}):\n")
+        print(f"{'Region Name':<20} {'Code':<8} {'Status':<12} {'Home':<8}")
+        print("-" * 50)
+
+    for region in regions:
+        status = region.get("status", "Unknown")
+        is_home = "Yes" if region.get("is_home_region", False) else "No"
+        print(
+            f"{region['region_name']:<20} {region['region_code']:<8} {status:<12} {is_home:<8}"
+        )
+
+
+def output_locations_kconfig(regions, include_unsubscribed=False):
+    """
+    Output the complete locations menu in Kconfig format.
+
+    Args:
+        regions (list): List of all regions
+        include_unsubscribed (bool): Include non-subscribed regions in output
+    """
+    environment = get_jinja2_environment()
+
+    # Filter to subscribed regions only unless --include-unsubscribed is specified
+    # (can't deploy to non-subscribed regions, so they shouldn't be in Kconfig by default)
+    if include_unsubscribed:
+        kconfig_regions = regions
+    else:
+        kconfig_regions = [r for r in regions if r.get("is_subscribed", False)]
+
+    # Output the region choice menu
+    template = environment.get_template("regions.j2")
+    print(
+        template.render(
+            default_region=get_region_code(kconfig_regions, get_default_region()),
+            regions=kconfig_regions,
+        )
+    )
+
+    # Output each region's availability domain configuration
+    # Note: Can only query AD info for subscribed regions
+    template = environment.get_template("ad.j2")
+    for region in kconfig_regions:
+        # For non-subscribed regions, create a default AD configuration
+        # (API will fail with auth error for non-subscribed regions)
+        if not region.get("is_subscribed", True):
+            # Default to 1 availability domain for unsubscribed regions
+            region_info = {
+                "region_name": region["region_name"],
+                "region_code": region["region_code"],
+                "friendly_name": region["friendly_name"],
+                "status": region.get("status", "NOT_SUBSCRIBED"),
+                "is_home_region": False,
+                "availability_domain_count": 1,
+                "availability_domains": [
+                    {
+                        "name": f"{region['region_name'].upper()}-AD-1",
+                        "number": "1",
+                    }
+                ],
+            }
+        else:
+            region_info = get_region_info(kconfig_regions, region["region_name"], True)
+
+        if region_info:
+            print()
+            print(
+                template.render(
+                    region_code=region_info["region_code"],
+                    region_name=region_info["region_name"],
+                    ads=region_info["availability_domains"],
+                )
+            )
+
+    # Output the compartment name configuration
+    print()
+    print("config TERRAFORM_OCI_COMPARTMENT_NAME")
+    print('\tstring "OCI compartment name"')
+    print("\toutput yaml")
+    print("\thelp")
+    print("\t  The compartment name where your instances are to be created.")
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get OCI region and availability domain information",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python %(prog)s --regions
+  python %(prog)s us-chicago-1
+  python %(prog)s ap-mumbai-1 --quiet
+  python %(prog)s --include-unsubscribed > kconfigs/Kconfig.location
+        """,
+    )
+    parser.add_argument(
+        "region_name",
+        nargs="?",
+        help="OCI region name (e.g., us-chicago-1, ap-mumbai-1)",
+    )
+
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--regions", action="store_true", help="List all available OCI regions"
+    )
+    parser.add_argument(
+        "--include-unsubscribed",
+        action="store_true",
+        help="Include non-subscribed regions in Kconfig output (default: subscribed only)",
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    if not args.quiet:
+        print("Fetching list of OCI region subscriptions...", file=sys.stderr)
+    regions = get_all_regions()
+    if not regions:
+        sys.exit(1)
+
+    if args.regions:
+        if args.format == "kconfig":
+            output_regions_kconfig(regions)
+        else:
+            output_regions_raw(regions, args.quiet)
+        return
+
+    if args.region_name:
+        if not args.quiet:
+            print(
+                f"Fetching information for region {args.region_name}...",
+                file=sys.stderr,
+            )
+
+        region_info = get_region_info(regions, args.region_name, args.quiet)
+        if region_info:
+            if args.format == "kconfig":
+                output_region_kconfig(region_info)
+            else:
+                output_region_raw(region_info, args.quiet)
+        else:
+            print(
+                f"Could not retrieve information for region '{args.region_name}'.",
+                file=sys.stderr,
+            )
+            print(
+                "Try running with --regions to see available regions.", file=sys.stderr
+            )
+            sys.exit(1)
+        return
+
+    output_locations_kconfig(regions, args.include_unsubscribed)
+
+
+if __name__ == "__main__":
+    main()

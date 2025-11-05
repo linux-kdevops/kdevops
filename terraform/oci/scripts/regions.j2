@@ -1,0 +1,24 @@
+choice
+	prompt "OCI Region"
+	default TERRAFORM_OCI_REGION_{{ default_region }}
+	help
+	  A region is a collection of geographically co-located data
+	  centers that share data and hardware resources. For more
+	  information:
+
+	  https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
+
+	  Using this menu, select the region in which you wish to
+	  deploy your kdevops resources. Your tenancy must be
+	  subscribed to the region you select here. Use:
+
+	    $ oci iam region-subscription list
+
+	  for a list of regions to which your tenancy subscribes.
+
+{% for region in regions %}
+config TERRAFORM_OCI_REGION_{{ region['region_code'] }}
+	bool "{{ region['friendly_name'] }}"
+
+{% endfor %}
+endchoice

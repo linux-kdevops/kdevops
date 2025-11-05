@@ -1,0 +1,70 @@
+if TERRAFORM_OCI_SHAPE_FAMILY_FIXED
+
+choice
+	prompt "OCI shape"
+{% if shapes and shapes | length > 0 %}
+	default TERRAFORM_OCI_SHAPE_{{ shapes[0]['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+{% else %}
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD2_1
+{% endif %}
+	help
+	  Select the specific shape configuration. Fixed shapes have
+	  predetermined OCPU and memory configurations optimized for
+	  common workload patterns. For more details, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm
+
+{% for shape in shapes %}
+{# Validate required fields are present and have valid values for fixed shapes #}
+{% if 'shape_name' not in shape or 'ocpus' not in shape or 'memory_gb' not in shape or 'cpu_isa' not in shape %}
+{# Skip malformed shape entries #}
+{% continue %}
+{% endif %}
+{% if shape['ocpus'] == 'Flexible' or shape['memory_gb'] == 'Flexible' %}
+{# Skip flex shapes that were incorrectly categorized as fixed #}
+{% continue %}
+{% endif %}
+config TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+	bool "{{ shape['shape_name'] }}"
+{% if shape['cpu_isa'] == 'x86_64' %}
+	depends on TARGET_ARCH_X86_64
+{% elif shape['cpu_isa'] == 'arm64' %}
+	depends on TARGET_ARCH_ARM64
+{% endif %}
+	help
+{% if 'processor' in shape %}
+	  Processor: {{ shape['processor'] }}
+
+{% endif %}
+	  OCPU count: {{ shape['ocpus'] }}
+	  Memory: {{ shape['memory_gb'] }} GB
+	  Architecture: {{ shape['cpu_isa'] }}
+{% if shape.get('network_performance', 'Not specified') != 'Not specified' %}
+	  Network: {{ shape['network_performance'] }}
+{% endif %}
+{% if shape.get('storage', 'Block storage only') != 'Block storage only' %}
+	  Local storage: {{ shape['storage'] }}
+{% endif %}
+{% if shape.get('gpu', 'None') != 'None' %}
+	  GPU: {{ shape['gpu'] }}
+{% endif %}
+{% if shape.get('is_catalog_shape', False) %}
+
+	  NOTE: This shape may require service limit increases and may not
+	  be available in all regions. Contact Oracle support to request
+	  access if needed.
+{% endif %}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+{% for shape in shapes %}
+{% if 'shape_name' in shape and 'ocpus' in shape and 'memory_gb' in shape and shape['ocpus'] != 'Flexible' and shape['memory_gb'] != 'Flexible' %}
+	default "{{ shape['shape_name'] }}" if TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+{% endif %}
+{% endfor %}
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FIXED

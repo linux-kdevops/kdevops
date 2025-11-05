@@ -1,0 +1,97 @@
+if TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
+choice
+	prompt "OCI shape"
+{% if shapes and shapes | length > 0 %}
+	default TERRAFORM_OCI_SHAPE_{{ shapes[0]['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+{% else %}
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+{% endif %}
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more detail, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#flexible
+
+{% for shape in shapes %}
+{# Validate required fields are present #}
+{% if 'shape_name' not in shape or 'cpu_isa' not in shape %}
+{# Skip malformed shape entries #}
+{% continue %}
+{% endif %}
+config TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+	bool "{{ shape['shape_name'] }}"
+{% if shape['cpu_isa'] == 'x86_64' %}
+	depends on TARGET_ARCH_X86_64
+{% elif shape['cpu_isa'] == 'arm64' %}
+	depends on TARGET_ARCH_ARM64
+{% endif %}
+	help
+	  {{ shape['processor'] if 'processor' in shape else 'Flexible shape: OCPU and memory can be customized.' }}
+
+{% if 'ocpu_min' in shape and 'ocpu_max' in shape %}
+	  OCPU range: {{ shape['ocpu_min'] }} to {{ shape['ocpu_max'] }}
+{% endif %}
+{% if 'memory_per_ocpu_min' in shape and 'memory_per_ocpu_max' in shape %}
+	  Memory per OCPU: {{ shape['memory_per_ocpu_min'] }} to {{ shape['memory_per_ocpu_max'] }} GB
+{% endif %}
+{% if 'memory_min' in shape and 'memory_max' in shape %}
+	  Total memory range: {{ shape['memory_min'] }} to {{ shape['memory_max'] }} GB
+{% endif %}
+	  Architecture: {{ shape['cpu_isa'] }}
+{% if shape.get('network_performance', 'Not specified') != 'Not specified' %}
+	  Network: {{ shape['network_performance'] }}
+{% endif %}
+{% if shape.get('storage', 'Block storage only') != 'Block storage only' %}
+	  Local storage: {{ shape['storage'] }}
+{% endif %}
+{% if shape.get('gpu', 'None') != 'None' %}
+	  GPU: {{ shape['gpu'] }}
+{% endif %}
+{% if shape.get('is_catalog_shape', False) %}
+
+	  NOTE: This shape may require service limit increases and may not
+	  be available in all regions. Contact Oracle support to request
+	  access if needed.
+{% endif %}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+{% for shape in shapes %}
+{% if 'shape_name' in shape and 'cpu_isa' in shape %}
+	default "{{ shape['shape_name'] }}" if TERRAFORM_OCI_SHAPE_{{ shape['shape_name'].upper().replace('.', '_').replace('-', '_') }}
+{% endif %}
+{% endfor %}
+
+config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
+	int "Instance CPU count"
+	output yaml
+	default 2
+	help
+	  The Oracle CPU (OCPU) represents physical CPU cores and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, run two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
+
+config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
+	int "Instance memory size"
+	output yaml
+	default 4
+	help
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUs in each
+	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FLEX

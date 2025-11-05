@@ -1,0 +1,90 @@
+choice
+	prompt "Distribution"
+{% if 'oracle' in publishers %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+{% elif 'ubuntu' in publishers %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_UBUNTU
+{% elif 'centos' in publishers %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_CENTOS
+{% elif publishers %}
+	default TERRAFORM_OCI_OPERATING_SYSTEM_{{ publishers[0] | upper }}
+{% endif %}
+	help
+	  Select the Linux distribution to install on each instance.
+
+	  The distributions listed here are official OCI platform images
+	  provided by Oracle. These images are well-tested, actively
+	  maintained, and available across all subscribed regions.
+
+	  For marketplace or custom images, select "Custom image OCID"
+	  below and enter the image OCID directly.
+
+{% for publisher_key in publishers %}
+{% if publisher_key == 'oracle' %}
+config TERRAFORM_OCI_OPERATING_SYSTEM_ORACLE_LINUX
+	bool "Oracle Linux"
+	help
+	  Select this if you want to use a release of Oracle Linux
+	  as the operating system in your instances.
+
+{% elif publisher_key == 'ubuntu' %}
+config TERRAFORM_OCI_OPERATING_SYSTEM_UBUNTU
+	bool "Ubuntu"
+	help
+	  Select this if you want to use a release of Ubuntu Linux
+	  as the operating system in your instances.
+
+{% else %}
+config TERRAFORM_OCI_OPERATING_SYSTEM_{{ publisher_key | upper }}
+	bool "{{ publisher_key | title }}"
+	help
+	  Select this if you want to use a release of {{ publisher_key | title }}
+	  as the operating system in your instances.
+
+{% endif %}
+{% endfor %}
+
+config TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM
+	bool "Custom image OCID"
+	help
+	  Select this if you want to enter a specific OCID for
+	  an OS image. Use this option for:
+
+	  - Marketplace images (not included in automated menu)
+	  - Community images
+	  - Custom-built images
+	  - Older platform image releases
+
+	  Note: The automated distribution menu above only includes
+	  official OCI platform images. Marketplace images must be
+	  specified manually using this custom OCID option.
+
+	  The image you specify must reside in the same region as
+	  your instances.
+
+	  More image choices are available:
+
+	  https://docs.oracle.com/en-us/iaas/images/
+
+endchoice
+
+if TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM
+
+config TERRAFORM_OCI_OS_IMAGE_OCID
+	string "OS image OCID"
+	output yaml
+	help
+	  An image is a template of a virtual hard drive. It
+	  contains the operating system and other software for each
+	  instance. Select an image by specifying the OCID of the
+	  image to use. You can select:
+
+	  - An older release than the latest image release
+	  - An older operating system release
+	  - A custom-made image
+
+	  More detail is available:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/bringyourownimage.htm
+
+endif # TERRAFORM_OCI_OPERATING_SYSTEM_CUSTOM

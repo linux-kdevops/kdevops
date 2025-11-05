@@ -1,0 +1,950 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve compute shape information from OCI. Use it to construct the "shapes"
+Kconfig menu.
+
+OCI shapes represent compute instance configurations with varying combinations
+of CPU, memory, storage, and networking capacity. This script queries the OCI
+API to discover available shapes and generates Kconfig menu entries for them.
+
+Shape Discovery:
+    By default, this script aggregates shapes from all subscribed regions to
+    provide a comprehensive list of shapes actually available in your tenancy.
+
+    The --include-catalog option adds well-known shapes (like DenseIO, GPU shapes)
+    that may require service limit increases or are in limited availability.
+
+Usage:
+    # Generate shapes Kconfig from all subscribed regions (default)
+    ./gen_kconfig_shape > ../kconfigs/Kconfig.shapes
+
+    # Include catalog shapes that may need service limits
+    ./gen_kconfig_shape --include-catalog > ../kconfigs/Kconfig.shapes
+
+    # List all available shape families
+    ./gen_kconfig_shape --families
+
+    # Get details for a specific shape family
+    ./gen_kconfig_shape VM.Standard.E4
+"""
+
+import sys
+import os
+import argparse
+
+import oci
+from oci.exceptions import ServiceError, ConfigFileNotFound
+
+from oci_common import (
+    get_default_region,
+    get_default_compartment,
+    get_subscribed_regions,
+    get_jinja2_environment,
+    load_yaml_config,
+    create_compute_client,
+)
+
+
+def get_all_shapes(compartment_ocid, regions=None, quiet=False):
+    """
+    Get all available compute shapes across specified regions.
+
+    Args:
+        compartment_ocid (str): OCI compartment OCID
+        regions (list): List of region names to query. If None, uses default region.
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        list: List of shape objects aggregated from all regions (deduplicated by name)
+    """
+    if regions is None:
+        regions = [get_default_region()]
+
+    all_shapes = {}  # Use dict to deduplicate by shape name
+
+    for region in regions:
+        if not quiet:
+            print(f"Fetching shapes from {region}...", file=sys.stderr)
+
+        try:
+            compute = create_compute_client(region)
+
+            shapes_response = compute.list_shapes(compartment_ocid)
+            shapes = shapes_response.data
+
+            # Add shapes to dict, using shape name as key to deduplicate
+            for shape in shapes:
+                if shape.shape not in all_shapes:
+                    all_shapes[shape.shape] = shape
+
+            if not quiet:
+                print(f"  Found {len(shapes)} shapes in {region}", file=sys.stderr)
+
+        except ConfigFileNotFound:
+            print(
+                "Error: OCI config file not found. Please configure OCI CLI.",
+                file=sys.stderr,
+            )
+            return []
+        except ServiceError as e:
+            print(f"  Warning: Could not query {region}: {e.message}", file=sys.stderr)
+            continue
+        except Exception as e:
+            print(f"  Warning: Error querying {region}: {e}", file=sys.stderr)
+            continue
+
+    if not quiet:
+        print(
+            f"\nTotal unique shapes across all regions: {len(all_shapes)}",
+            file=sys.stderr,
+        )
+
+    return list(all_shapes.values())
+
+
+def get_catalog_shapes():
+    """
+    Return a list of well-known OCI shapes that may not be visible via API.
+
+    These shapes may require service limit increases or are in limited
+    availability. They are included to provide a complete menu of shapes
+    that users can request access to.
+
+    The catalog is loaded from catalog_shapes.yml to make it easier to
+    update when Oracle adds new shapes. See catalog_shapes.yml for
+    instructions on how to update the catalog.
+
+    Returns:
+        dict: Dictionary mapping shape names to their basic properties
+    """
+    return load_yaml_config("catalog_shapes.yml")
+
+
+def merge_catalog_shapes(api_shapes, quiet=False):
+    """
+    Merge API-discovered shapes with catalog shapes.
+
+    Args:
+        api_shapes (list): Shapes discovered via API
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        list: Combined list of API shapes plus catalog shapes (deduplicated)
+    """
+    # Create a dict from API shapes
+    shapes_dict = {shape.shape: shape for shape in api_shapes}
+
+    catalog = get_catalog_shapes()
+    added_count = 0
+
+    # Mark all API shapes as not from catalog
+    for shape in shapes_dict.values():
+        shape.is_catalog_shape = False
+
+    # Add catalog shapes that aren't already in API results
+    for shape_name, properties in catalog.items():
+        if shape_name not in shapes_dict:
+            # Create a minimal shape object with catalog properties
+            # We'll use a simple namespace object to mimic OCI shape structure
+            from types import SimpleNamespace
+
+            catalog_shape = SimpleNamespace(
+                shape=shape_name,
+                processor_description=properties.get("description", ""),
+                memory_in_gbs=0,  # Will show as "Flexible" or unknown
+                ocpus=0,  # Will show as "Flexible" or unknown
+                gpus=1 if properties.get("has_gpu", False) else 0,
+                is_catalog_shape=True,  # Mark as catalog shape
+            )
+            shapes_dict[shape_name] = catalog_shape
+            added_count += 1
+
+    if not quiet and added_count > 0:
+        print(f"Added {added_count} shapes from catalog", file=sys.stderr)
+
+    return list(shapes_dict.values())
+
+
+def parse_all_shape_families(shapes, quiet=False):
+    """
+    Extract shape families from the list of shapes.
+
+    OCI shape names follow a pattern like "VM.Standard.E4.Flex" or
+    "BM.Standard2.52". This function groups shapes by their family
+    prefix (e.g., "VM.Standard.E4" or "BM.Standard2").
+
+    Args:
+        shapes (list): List of shape objects from OCI API
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary with family info including count of shapes per family
+    """
+    families = {}
+    seen_shapes = set()
+
+    for shape in shapes:
+        shape_name = shape.shape
+
+        # Skip duplicate shape names
+        if shape_name in seen_shapes:
+            continue
+        seen_shapes.add(shape_name)
+
+        # Parse shape family from name
+        # Examples:
+        #   VM.Standard.E4.Flex -> VM.Standard.E4
+        #   VM.Standard3.Flex -> VM.Standard3
+        #   BM.Standard2.52 -> BM.Standard2
+        parts = shape_name.split(".")
+
+        # Determine family based on shape naming patterns
+        if len(parts) >= 3:
+            # Handle patterns like VM.Standard.E4.Flex or VM.Standard.A1.Flex
+            if parts[-1] == "Flex":
+                family = ".".join(parts[:-1])  # VM.Standard.E4
+            else:
+                # Handle fixed shapes like BM.Standard2.52
+                family = ".".join(parts[:-1])  # BM.Standard2
+        elif len(parts) == 2:
+            # Handle patterns like VM.Standard3.Flex -> VM.Standard3
+            family = ".".join(parts)
+        else:
+            family = shape_name
+
+        if family not in families:
+            families[family] = {
+                "family_name": family,
+                "shape_count": 0,
+                "has_gpu": False,
+                "architectures": set(),
+                "is_flex": False,
+                "is_bare_metal": False,
+                "has_catalog_shapes": False,
+            }
+
+        families[family]["shape_count"] += 1
+
+        # Determine if it's a flex shape
+        if ".Flex" in shape_name or shape_name.endswith(".Flex"):
+            families[family]["is_flex"] = True
+
+        # Determine if it's bare metal
+        if shape_name.startswith("BM."):
+            families[family]["is_bare_metal"] = True
+
+        # Check for GPU
+        if hasattr(shape, "gpus") and shape.gpus > 0:
+            families[family]["has_gpu"] = True
+
+        # Check if this shape is from catalog
+        if getattr(shape, "is_catalog_shape", False):
+            families[family]["has_catalog_shapes"] = True
+
+        # Get processor architecture
+        if hasattr(shape, "processor_description"):
+            proc_desc = shape.processor_description.lower()
+            if "amd" in proc_desc or "intel" in proc_desc or "x86" in proc_desc:
+                families[family]["architectures"].add("x86_64")
+            elif "arm" in proc_desc or "ampere" in proc_desc:
+                families[family]["architectures"].add("arm64")
+            else:
+                families[family]["architectures"].add("x86_64")  # Default to x86_64
+        else:
+            # Default architecture based on shape naming
+            if "A1" in shape_name or "A2" in shape_name:
+                families[family]["architectures"].add("arm64")
+            else:
+                families[family]["architectures"].add("x86_64")
+
+    # Convert architecture sets to sorted lists for JSON serialization
+    for family in families.values():
+        family["architectures"] = sorted(list(family["architectures"]))
+
+    return families
+
+
+def get_gpu_info(shape):
+    """
+    Extract GPU information from shape data.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        str: Formatted GPU information string
+    """
+    if not hasattr(shape, "gpus") or shape.gpus == 0:
+        return "None"
+
+    gpu_count = shape.gpus
+
+    # Try to get GPU description if available
+    gpu_desc = getattr(shape, "gpu_description", None)
+    if gpu_desc:
+        if gpu_count > 1:
+            return f"{gpu_count}x {gpu_desc}"
+        return gpu_desc
+
+    # Fallback to just count
+    if gpu_count > 1:
+        return f"{gpu_count}x GPU"
+    return "GPU"
+
+
+def extract_cpu_architecture(shape):
+    """
+    Determine CPU architecture from shape information.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        str: CPU architecture ('arm64' or 'x86_64')
+    """
+    shape_name = shape.shape
+    cpu_isa = "x86_64"  # Default
+
+    # Check processor description
+    if hasattr(shape, "processor_description"):
+        proc_desc = shape.processor_description.lower()
+        if "arm" in proc_desc or "ampere" in proc_desc:
+            return "arm64"
+        elif "amd" in proc_desc or "intel" in proc_desc:
+            return "x86_64"
+
+    # Fall back to shape naming patterns
+    if "A1" in shape_name or "A2" in shape_name:
+        return "arm64"
+
+    return cpu_isa
+
+
+def extract_memory_info(shape):
+    """
+    Extract memory information from shape data.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        dict: Dictionary with memory_gb and optional flex memory ranges
+    """
+    memory_info = {
+        "memory_gb": 0,
+    }
+
+    if hasattr(shape, "memory_in_gbs"):
+        memory_info["memory_gb"] = shape.memory_in_gbs
+    elif hasattr(shape, "memory_options"):
+        # Flex shapes have memory options
+        if hasattr(shape.memory_options, "default_per_ocpu_in_g_bs"):
+            # For flex shapes, use a default OCPU count to show typical memory
+            default_ocpus = 1
+            if hasattr(shape, "ocpus"):
+                default_ocpus = shape.ocpus
+            memory_info["memory_gb"] = (
+                shape.memory_options.default_per_ocpu_in_g_bs * default_ocpus
+            )
+
+        # Extract min/max memory per OCPU for flex shapes
+        if hasattr(shape.memory_options, "min_per_ocpu_in_g_bs"):
+            memory_info["memory_per_ocpu_min"] = (
+                shape.memory_options.min_per_ocpu_in_g_bs
+            )
+        if hasattr(shape.memory_options, "max_per_ocpu_in_g_bs"):
+            memory_info["memory_per_ocpu_max"] = (
+                shape.memory_options.max_per_ocpu_in_g_bs
+            )
+        if hasattr(shape.memory_options, "min_in_g_bs"):
+            memory_info["memory_min"] = shape.memory_options.min_in_g_bs
+        if hasattr(shape.memory_options, "max_in_g_bs"):
+            memory_info["memory_max"] = shape.memory_options.max_in_g_bs
+
+    return memory_info
+
+
+def extract_ocpu_info(shape):
+    """
+    Extract OCPU information from shape data.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        dict: Dictionary with ocpus and optional flex OCPU ranges
+    """
+    ocpu_info = {
+        "ocpus": 0,
+    }
+
+    if hasattr(shape, "ocpus"):
+        ocpu_info["ocpus"] = shape.ocpus
+    elif hasattr(shape, "ocpu_options"):
+        # Flex shapes have OCPU options
+        if hasattr(shape.ocpu_options, "min"):
+            ocpu_info["ocpus"] = shape.ocpu_options.min
+            ocpu_info["ocpu_min"] = shape.ocpu_options.min
+        if hasattr(shape.ocpu_options, "max"):
+            ocpu_info["ocpu_max"] = shape.ocpu_options.max
+
+    return ocpu_info
+
+
+def extract_network_info(shape):
+    """
+    Extract network bandwidth information from shape data.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        str: Network bandwidth description
+    """
+    if hasattr(shape, "networking_bandwidth_in_gbps"):
+        return f"{shape.networking_bandwidth_in_gbps} Gbps"
+    elif hasattr(shape, "max_vnic_attachments"):
+        return f"{shape.max_vnic_attachments} VNICs"
+    return "Not specified"
+
+
+def extract_storage_info(shape):
+    """
+    Extract storage information from shape data.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        str: Storage description
+    """
+    if hasattr(shape, "local_disks") and shape.local_disks > 0:
+        disk_size = getattr(shape, "local_disks_total_size_in_gbs", 0)
+        return f"{disk_size} GB local storage ({shape.local_disks} disks)"
+    return "Block storage only"
+
+
+def extract_shape_info(shape):
+    """
+    Extract detailed information from a single shape object.
+
+    Args:
+        shape: Shape object from OCI API
+
+    Returns:
+        dict: Dictionary containing shape information
+    """
+    shape_name = shape.shape
+
+    # Extract various aspects of the shape
+    cpu_isa = extract_cpu_architecture(shape)
+    gpu_info = get_gpu_info(shape)
+    memory_info = extract_memory_info(shape)
+    ocpu_info = extract_ocpu_info(shape)
+    network_bandwidth = extract_network_info(shape)
+    storage = extract_storage_info(shape)
+
+    # Build the hardware info dictionary
+    hardware_info = {
+        "shape_name": shape_name,
+        "ocpus": ocpu_info["ocpus"] if ocpu_info["ocpus"] > 0 else "Flexible",
+        "memory_gb": memory_info["memory_gb"]
+        if memory_info["memory_gb"] > 0
+        else "Flexible",
+        "cpu_isa": cpu_isa,
+        "gpu": gpu_info,
+        "network_performance": network_bandwidth,
+        "storage": storage,
+        "is_flex": ".Flex" in shape_name or shape_name.endswith(".Flex"),
+        "is_bare_metal": shape_name.startswith("BM."),
+        "is_catalog_shape": getattr(shape, "is_catalog_shape", False),
+    }
+
+    # Add flex shape ranges if available
+    for key in ["ocpu_min", "ocpu_max"]:
+        if key in ocpu_info:
+            hardware_info[key] = ocpu_info[key]
+
+    for key in [
+        "memory_min",
+        "memory_max",
+        "memory_per_ocpu_min",
+        "memory_per_ocpu_max",
+    ]:
+        if key in memory_info:
+            hardware_info[key] = memory_info[key]
+
+    # Add processor description if available
+    if hasattr(shape, "processor_description"):
+        hardware_info["processor"] = shape.processor_description
+
+    return hardware_info
+
+
+def get_shape_family_info(family_name, shapes, region, quiet=False):
+    """
+    Get shape information for a specific OCI shape family.
+
+    Args:
+        family_name (str): Shape family name (e.g., 'VM.Standard.E4', 'BM.Standard2')
+        shapes (list): List of all shapes
+        region (str): OCI region being queried
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        list: List of dictionaries containing shape information
+    """
+    family_shapes = []
+
+    for shape in shapes:
+        shape_name = shape.shape
+
+        # Match shapes that belong to this family
+        if shape_name.startswith(family_name):
+            family_shapes.append(shape)
+
+    if not family_shapes:
+        if not quiet:
+            print(f"No shapes found starting with '{family_name}'.", file=sys.stderr)
+        return []
+
+    if not quiet:
+        print(
+            f"Found {len(family_shapes)} shapes in family '{family_name}'",
+            file=sys.stderr,
+        )
+
+    shape_info = []
+    seen_shapes = set()
+
+    for shape in family_shapes:
+        shape_name = shape.shape
+
+        # Skip duplicate shape names (OCI API may return same shape multiple times)
+        if shape_name in seen_shapes:
+            continue
+        seen_shapes.add(shape_name)
+
+        # Get processor architecture
+        cpu_isa = "x86_64"  # Default
+        if hasattr(shape, "processor_description"):
+            proc_desc = shape.processor_description.lower()
+            if "arm" in proc_desc or "ampere" in proc_desc:
+                cpu_isa = "arm64"
+            elif "amd" in proc_desc or "intel" in proc_desc:
+                cpu_isa = "x86_64"
+
+        # Shape naming patterns for ARM detection
+        if "A1" in shape_name or "A2" in shape_name:
+            cpu_isa = "arm64"
+
+        gpu_info = get_gpu_info(shape)
+
+        # Get memory in GB
+        memory_gb = 0
+        memory_min = None
+        memory_max = None
+        memory_per_ocpu_min = None
+        memory_per_ocpu_max = None
+        if hasattr(shape, "memory_in_gbs"):
+            memory_gb = shape.memory_in_gbs
+        elif hasattr(shape, "memory_options"):
+            # Flex shapes have memory options
+            if hasattr(shape.memory_options, "default_per_ocpu_in_g_bs"):
+                # For flex shapes, use a default OCPU count to show typical memory
+                default_ocpus = 1
+                if hasattr(shape, "ocpus"):
+                    default_ocpus = shape.ocpus
+                memory_gb = (
+                    shape.memory_options.default_per_ocpu_in_g_bs * default_ocpus
+                )
+            # Extract min/max memory per OCPU for flex shapes
+            if hasattr(shape.memory_options, "min_per_ocpu_in_g_bs"):
+                memory_per_ocpu_min = shape.memory_options.min_per_ocpu_in_g_bs
+            if hasattr(shape.memory_options, "max_per_ocpu_in_g_bs"):
+                memory_per_ocpu_max = shape.memory_options.max_per_ocpu_in_g_bs
+            if hasattr(shape.memory_options, "min_in_g_bs"):
+                memory_min = shape.memory_options.min_in_g_bs
+            if hasattr(shape.memory_options, "max_in_g_bs"):
+                memory_max = shape.memory_options.max_in_g_bs
+
+        # Get OCPU count
+        ocpus = 0
+        ocpu_min = None
+        ocpu_max = None
+        if hasattr(shape, "ocpus"):
+            ocpus = shape.ocpus
+        elif hasattr(shape, "ocpu_options"):
+            # Flex shapes have OCPU options
+            if hasattr(shape.ocpu_options, "min"):
+                ocpus = shape.ocpu_options.min
+                ocpu_min = shape.ocpu_options.min
+            if hasattr(shape.ocpu_options, "max"):
+                ocpu_max = shape.ocpu_options.max
+
+        # Network bandwidth
+        network_bandwidth = "Not specified"
+        if hasattr(shape, "networking_bandwidth_in_gbps"):
+            network_bandwidth = f"{shape.networking_bandwidth_in_gbps} Gbps"
+        elif hasattr(shape, "max_vnic_attachments"):
+            network_bandwidth = f"{shape.max_vnic_attachments} VNICs"
+
+        # Storage
+        storage = "Block storage only"
+        if hasattr(shape, "local_disks") and shape.local_disks > 0:
+            disk_size = getattr(shape, "local_disks_total_size_in_gbs", 0)
+            storage = f"{disk_size} GB local storage ({shape.local_disks} disks)"
+
+        hardware_info = {
+            "shape_name": shape_name,
+            "ocpus": ocpus if ocpus > 0 else "Flexible",
+            "memory_gb": memory_gb if memory_gb > 0 else "Flexible",
+            "cpu_isa": cpu_isa,
+            "gpu": gpu_info,
+            "network_performance": network_bandwidth,
+            "storage": storage,
+            "is_flex": ".Flex" in shape_name or shape_name.endswith(".Flex"),
+            "is_bare_metal": shape_name.startswith("BM."),
+            "is_catalog_shape": getattr(shape, "is_catalog_shape", False),
+        }
+
+        # Add flex shape ranges if available
+        if ocpu_min is not None:
+            hardware_info["ocpu_min"] = ocpu_min
+        if ocpu_max is not None:
+            hardware_info["ocpu_max"] = ocpu_max
+        if memory_min is not None:
+            hardware_info["memory_min"] = memory_min
+        if memory_max is not None:
+            hardware_info["memory_max"] = memory_max
+        if memory_per_ocpu_min is not None:
+            hardware_info["memory_per_ocpu_min"] = memory_per_ocpu_min
+        if memory_per_ocpu_max is not None:
+            hardware_info["memory_per_ocpu_max"] = memory_per_ocpu_max
+
+        # Add processor description if available
+        if hasattr(shape, "processor_description"):
+            hardware_info["processor"] = shape.processor_description
+
+        shape_info.append(hardware_info)
+
+    # Sort by memory size (handling 'Flexible' string)
+    def sort_key(x):
+        mem = x["memory_gb"]
+        return (0, 0) if mem == "Flexible" else (1, float(mem))
+
+    return sorted(shape_info, key=sort_key)
+
+
+def group_shapes_by_type(shapes, region):
+    """
+    Group shapes by type (flex, fixed, bare_metal).
+
+    Args:
+        shapes (list): List of all shapes
+        region (str): OCI region being queried
+
+    Returns:
+        dict: Dictionary with 'flex', 'fixed', and 'bare_metal' keys containing shape lists
+    """
+    flex_shapes = []
+    fixed_shapes = []
+    bare_metal_shapes = []
+    seen_shapes = set()
+
+    for shape in shapes:
+        shape_name = shape.shape
+
+        # Skip duplicate shape names
+        if shape_name in seen_shapes:
+            continue
+        seen_shapes.add(shape_name)
+
+        # Extract shape information directly (O(1) operation per shape)
+        info = extract_shape_info(shape)
+
+        # Categorize by type
+        if info["is_flex"]:
+            flex_shapes.append(info)
+        elif info["is_bare_metal"]:
+            bare_metal_shapes.append(info)
+        else:
+            # Fixed shapes: VM shapes that are not flex
+            if shape_name.startswith("VM."):
+                fixed_shapes.append(info)
+
+    # Sort shapes within each category
+    def sort_key(x):
+        # Sort by shape name
+        return x["shape_name"]
+
+    flex_shapes.sort(key=sort_key)
+    fixed_shapes.sort(key=sort_key)
+    bare_metal_shapes.sort(key=sort_key)
+
+    return {
+        "flex": flex_shapes,
+        "fixed": fixed_shapes,
+        "bare_metal": bare_metal_shapes,
+    }
+
+
+def output_shapes_kconfig(shapes, region):
+    """Output shapes menu in Kconfig format."""
+    environment = get_jinja2_environment()
+
+    # Output the top-level choice menu (GENERIC, FLEX, FIXED, BARE_METAL)
+    template = environment.get_template("shape_families.j2")
+    print(template.render())
+    print()
+
+    # Output the GENERIC family submenu
+    template = environment.get_template("generic_family.j2")
+    print(template.render())
+    print()
+
+    # Group shapes by type
+    shape_groups = group_shapes_by_type(shapes, region)
+
+    # Output FLEX shapes submenu
+    if shape_groups["flex"]:
+        template = environment.get_template("flex_shapes.j2")
+        print(template.render(shapes=shape_groups["flex"]))
+        print()
+
+    # Output FIXED shapes submenu
+    if shape_groups["fixed"]:
+        template = environment.get_template("fixed_shapes.j2")
+        print(template.render(shapes=shape_groups["fixed"]))
+        print()
+
+    # Output BARE_METAL shapes submenu
+    if shape_groups["bare_metal"]:
+        template = environment.get_template("bare_metal_shapes.j2")
+        print(template.render(shapes=shape_groups["bare_metal"]))
+        print()
+
+
+def output_families_kconfig(shapes):
+    """Output shape families in Kconfig format."""
+    families = parse_all_shape_families(shapes)
+    sorted_families = sorted(families.values(), key=lambda x: x["family_name"])
+
+    environment = get_jinja2_environment()
+
+    template = environment.get_template("shape_families.j2")
+    print(
+        template.render(
+            sorted_families=sorted_families,
+        )
+    )
+
+
+def output_families_raw(shapes, region, quiet=False):
+    """Output available shape families in table format."""
+    families = parse_all_shape_families(shapes)
+
+    if not quiet:
+        print(f"Available shape families in {region}:\n")
+
+    print(f"{'Family':<25} {'Count':<6} {'GPU':<5} {'Type':<12} {'Architectures':<20}")
+    print("-" * 75)
+
+    sorted_families = sorted(families.values(), key=lambda x: x["family_name"])
+    has_any_catalog = False
+    for family in sorted_families:
+        gpu_indicator = "Yes" if family["has_gpu"] else "No"
+        architectures = ", ".join(family["architectures"])
+
+        shape_type = []
+        if family["is_flex"]:
+            shape_type.append("Flex")
+        if family["is_bare_metal"]:
+            shape_type.append("Bare Metal")
+        if not shape_type:
+            shape_type.append("Fixed")
+        shape_type_str = ", ".join(shape_type)
+
+        family_name = family["family_name"]
+        if family.get("has_catalog_shapes", False):
+            family_name = family_name + " *"
+            has_any_catalog = True
+
+        print(
+            f"{family_name:<25} "
+            f"{family['shape_count']:<6} "
+            f"{gpu_indicator:<5} "
+            f"{shape_type_str:<12} "
+            f"{architectures:<20}"
+        )
+
+    if has_any_catalog:
+        print("\n* Contains catalog shapes - may require service limit increases")
+
+    if not quiet:
+        print(f"\nFound {len(families)} shape families", file=sys.stderr)
+
+
+def output_family_kconfig(family_name, shapes):
+    """Output results in kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("shape_family.j2")
+    print(
+        template.render(
+            family_name=family_name.upper().replace(".", "_").replace("-", "_"),
+            shapes=shapes,
+        )
+    )
+
+
+def output_family_raw(shapes, quiet=False):
+    """Output results in table format."""
+    if not quiet:
+        print(f"Found {len(shapes)} shapes:\n")
+
+    print(
+        f"{'Shape Name':<30} {'OCPUs':<10} {'Memory (GB)':<15} {'CPU ISA':<10} {'GPU':<25} {'Storage':<30}"
+    )
+    print("-" * 130)
+
+    for shape in shapes:
+        shape_name = shape["shape_name"]
+        if shape.get("is_catalog_shape", False):
+            shape_name = shape_name + " *"
+        print(
+            f"{shape_name:<30} "
+            f"{str(shape['ocpus']):<10} "
+            f"{str(shape['memory_gb']):<15} "
+            f"{shape['cpu_isa']:<10} "
+            f"{shape['gpu']:<25} "
+            f"{shape['storage']:<30}"
+        )
+
+    # Add note about catalog shapes if any are present
+    has_catalog = any(shape.get("is_catalog_shape", False) for shape in shapes)
+    if has_catalog:
+        print("\n* Catalog shape - may require service limit increases")
+
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get OCI compute shape information including hardware specs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate Kconfig from all subscribed regions (default)
+  python %(prog)s > ../kconfigs/Kconfig.shapes
+
+  # Include catalog shapes (DenseIO, GPU, etc.)
+  python %(prog)s --include-catalog > ../kconfigs/Kconfig.shapes
+
+  # Query specific shape family
+  python %(prog)s VM.Standard.E4
+
+  # List all available families
+  python %(prog)s --families --format raw
+
+  # Query specific region only
+  python %(prog)s --region us-chicago-1 --families
+        """,
+    )
+    parser.add_argument(
+        "family_name",
+        nargs="?",  # Make family_name optional when using --families
+        help="Shape family name (e.g., VM.Standard.E4, VM.Standard3, BM.Standard2)",
+    )
+
+    parser.add_argument(
+        "--families", action="store_true", help="List all available shape families"
+    )
+    parser.add_argument(
+        "--include-catalog",
+        action="store_true",
+        help="Include well-known shapes from catalog (DenseIO, GPU shapes) that may require service limits",
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--region",
+        "-r",
+        help="Query specific region only (default: aggregate from all subscribed regions)",
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    compartment_ocid = get_default_compartment()
+    if not compartment_ocid:
+        print("Error: Could not determine compartment OCID", file=sys.stderr)
+        sys.exit(1)
+
+    # Determine which regions to query
+    if args.region:
+        # Query specific region only
+        regions = [args.region]
+        region_desc = args.region
+    else:
+        # Query all subscribed regions (default)
+        regions = get_subscribed_regions(args.quiet)
+        region_desc = "all subscribed regions"
+
+    # Get shapes from OCI API
+    shapes = get_all_shapes(compartment_ocid, regions, args.quiet)
+    if not shapes:
+        sys.exit(1)
+
+    # Optionally merge with catalog shapes
+    if args.include_catalog:
+        shapes = merge_catalog_shapes(shapes, args.quiet)
+
+    if args.families:
+        if args.format == "kconfig":
+            output_families_kconfig(shapes)
+        else:
+            output_families_raw(shapes, region_desc, args.quiet)
+        return
+
+    if args.family_name:
+        if not args.quiet:
+            print(
+                f"Fetching information for the {args.family_name} family...",
+                file=sys.stderr,
+            )
+
+        family_shapes = get_shape_family_info(
+            args.family_name, shapes, region_desc, args.quiet
+        )
+
+        if not family_shapes:
+            print(f"No shapes found for family '{args.family_name}'.", file=sys.stderr)
+            print(
+                "Try running with --families to see available shape families.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if args.format == "kconfig":
+            output_family_kconfig(args.family_name, family_shapes)
+        else:
+            output_family_raw(family_shapes, args.quiet)
+        return
+
+    output_shapes_kconfig(shapes, region_desc)
+
+
+if __name__ == "__main__":
+    main()
