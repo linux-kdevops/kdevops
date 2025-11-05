@@ -1,4 +1,0 @@
----
-- name: OpenStack
-  ansible.builtin.fail:
-    msg: Support for OpenStack has not yet been implemented

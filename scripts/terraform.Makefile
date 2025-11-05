@@ -18,9 +18,6 @@ endif
 ifeq (y,$(CONFIG_TERRAFORM_OCI))
 export KDEVOPS_CLOUD_PROVIDER=oci
 endif
-ifeq (y,$(CONFIG_TERRAFORM_OPENSTACK))
-export KDEVOPS_CLOUD_PROVIDER=openstack
-endif
 ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
 export KDEVOPS_CLOUD_PROVIDER=lambdalabs
 endif
@@ -52,16 +49,6 @@ KDEVOPS_MRPROPER += terraform/$(KDEVOPS_CLOUD_PROVIDER)/.terraform.lock.hcl
 KDEVOPS_MRPROPER += $(KDEVOPS_NODES)
 
 DEFAULT_DEPS_REQS_EXTRA_VARS += $(KDEVOPS_TFVARS)
-
-ifeq (y,$(CONFIG_TERRAFORM_OPENSTACK))
-TERRAFORM_EXTRA_VARS += terraform_openstack_cloud_name=$(subst ",,$(CONFIG_TERRAFORM_TERRAFORM_OPENSTACK_CLOUD_NAME))
-TERRAFORM_EXTRA_VARS += terraform_openstack_instance_prefix=$(subst ",,$(CONFIG_TERRAFORM_TERRAFORM_OPENSTACK_INSTANCE_PREFIX))
-TERRAFORM_EXTRA_VARS += terraform_openstack_flavor=$(subst ",,$(CONFIG_TERRAFORM_OPENSTACK_FLAVOR))
-TERRAFORM_EXTRA_VARS += terraform_openstack_ssh_pubkey_name=$(subst ",,$(CONFIG_TERRAFORM_OPENSTACK_SSH_PUBKEY_NAME))
-TERRAFORM_EXTRA_VARS += terraform_openstack_public_network_name=$(subst ",,$(CONFIG_TERRAFORM_OPENSTACK_PUBLIC_NETWORK_NAME))
-
-ANSIBLE_EXTRA_ARGS_SEPARATED += terraform_openstack_image_name=$(subst $(space),+,$(CONFIG_TERRAFORM_OPENSTACK_IMAGE_NAME))
-endif
 
 ifeq (y,$(CONFIG_TERRAFORM_PRIVATE_NET))
 TERRAFORM_EXTRA_VARS += terraform_private_net_enabled='true'

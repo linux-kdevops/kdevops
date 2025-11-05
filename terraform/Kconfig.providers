@@ -31,12 +31,6 @@ config TERRAFORM_OCI
 	  Enabling this means you are going to use OCI for your cloud
 	  solution.
 
-config TERRAFORM_OPENSTACK
-	bool "OpenStack"
-	help
-	  Enabling this means you are going to use OpenStack for your cloud
-	  solution.
-
 config TERRAFORM_LAMBDALABS
 	bool "Lambda Labs"
 	depends on TARGET_ARCH_X86_64
@@ -62,6 +56,5 @@ source "terraform/gce/Kconfig"
 source "terraform/aws/Kconfig"
 source "terraform/azure/Kconfig"
 source "terraform/oci/Kconfig"
-source "terraform/openstack/Kconfig"
 source "terraform/lambdalabs/Kconfig"
 source "terraform/rcloud/Kconfig"

@@ -147,7 +147,7 @@ choice
 config GUESTFS_DEBIAN_TRIXIE_GENERIC_AMD64
 	bool "debian-13-generic-amd64-daily"
 	help
-	  Should run in any environment using cloud-init, for e.g. OpenStack,
+	  Should run in any environment using cloud-init, for e.g.
 	  DigitalOcean and also on bare metal. This is the image you should
 	  try to use and stick to for kernel testing.
 
