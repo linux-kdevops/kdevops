@@ -167,7 +167,7 @@
 - name: Check systemd unit status for mirror services
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
-    scope: user
+    scope: "{{ systemd_scope }}"
   register: mirror_service_status
   with_items:
     - "{{ mirrors.get('mirrors') }}"
@@ -189,12 +189,12 @@
 - name: Check systemd unit status for mirror timers
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
-    scope: user
+    scope: "{{ systemd_scope }}"
   register: mirror_timer_status
   with_items:
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
-    label: "Checking service status for {{ item.short_name | regex_replace('/', '-') }}--mirror.timer ..."
+    label: "Checking timer status for {{ item.short_name | regex_replace('/', '-') }}-mirror.timer unit ..."
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
