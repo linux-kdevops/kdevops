@@ -68,7 +68,26 @@
     - install_linux_mirror|bool
   tags: ["mirror"]
 
+- name: Create /mirror directory for system-level mirrors
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
+  ansible.builtin.file:
+    path: /mirror/
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - install_linux_mirror|bool
+    - not install_only_git_daemon|bool
+    - ansible_user_id == 'root'
+  tags: ["mirror"]
+
 - name: Start mirroring
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   delegate_to: localhost
   run_once: true
   ansible.builtin.shell: |
@@ -83,6 +102,9 @@
   tags: ["mirror"]
 
 - name: Generate systemd service and timer unit files
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   delegate_to: localhost
   run_once: true
   ansible.builtin.shell: |
@@ -113,6 +135,9 @@
     - not install_only_git_daemon|bool
 
 - name: Copy systemd service file to user/system systemd dir
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.copy:
     src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     dest: "{{ systemd_dir }}/"
@@ -125,6 +150,9 @@
     - not install_only_git_daemon|bool
 
 - name: Copy systemd timer file to user/system systemd dir
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.copy:
     src: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     dest: "{{ systemd_dir }}/"
@@ -137,6 +165,9 @@
     - not install_only_git_daemon|bool
 
 - name: Enable systemd unit for mirror services
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     state: started
@@ -151,6 +182,9 @@
     - not install_only_git_daemon|bool
 
 - name: Enable systemd unit for mirror timers
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     state: started
@@ -165,6 +199,9 @@
     - not install_only_git_daemon|bool
 
 - name: Check systemd unit status for mirror services
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.service"
     scope: "{{ systemd_scope }}"
@@ -186,6 +223,9 @@
     - not install_only_git_daemon|bool
 
 - name: Check systemd unit status for mirror timers
+  become: true
+  become_flags: "su - -c"
+  become_method: ansible.builtin.sudo
   ansible.builtin.systemd_service:
     name: "{{ item.short_name | regex_replace('/', '-') }}-mirror.timer"
     scope: "{{ systemd_scope }}"
