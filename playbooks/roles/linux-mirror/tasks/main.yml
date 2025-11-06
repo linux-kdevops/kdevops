@@ -177,10 +177,16 @@
   when:
     - not install_only_git_daemon|bool
 
-- name: Service status
+- name: Display mirror service status
   ansible.builtin.debug:
-    msg: "{{ item.status.ActiveState }}"
+    msg: |
+      Mirror: {{ item.item.short_name }}
+        Service: {{ item.item.short_name | regex_replace('/', '-') }}-mirror.service
+        State: {{ item.status.ActiveState }}
+        Enabled: {{ item.status.UnitFileState }}
   loop: "{{ mirror_service_status.results }}"
+  loop_control:
+    label: "{{ item.item.short_name }}"
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
@@ -198,10 +204,16 @@
   when:
     - not install_only_git_daemon|bool
 
-- name: Service timer status
+- name: Display mirror timer status
   ansible.builtin.debug:
-    msg: "{{ item.status.ActiveState }}"
+    msg: |
+      Mirror: {{ item.item.short_name }}
+        Timer: {{ item.item.short_name | regex_replace('/', '-') }}-mirror.timer
+        State: {{ item.status.ActiveState }}
+        Enabled: {{ item.status.UnitFileState }}
   loop: "{{ mirror_timer_status.results }}"
+  loop_control:
+    label: "{{ item.item.short_name }}"
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
