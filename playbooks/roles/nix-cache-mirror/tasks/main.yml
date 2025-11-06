@@ -141,7 +141,8 @@
 - name: Check if firewalld is running
   ansible.builtin.command: systemctl is-active firewalld
   register: firewalld_status
-  ignore_errors: true
+  failed_when: false
+  changed_when: false
   when:
     - install_nix_cache_mirror | bool
     - linux_mirror_nfs | bool
