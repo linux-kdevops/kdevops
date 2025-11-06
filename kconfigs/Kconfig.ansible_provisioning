@@ -104,6 +104,7 @@ config HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
 
 config KDEVOPS_PYTHON_INTERPRETER
 	string "Which default python interpreter to use"
+	output yaml
 	default "/usr/bin/python2" if HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
 	default "/usr/bin/python3" if !HAVE_DISTRO_PREFERS_ANSIBLE_PYTHON2
 	help
@@ -118,6 +119,7 @@ config KDEVOPS_PYTHON_INTERPRETER
 
 config KDEVOPS_PYTHON_OLD_INTERPRETER
 	string "Which python interpreter to use for old systems"
+	output yaml
 	default "/usr/bin/python2"
 	help
 	  The default python interpreter may be python3 but we need something

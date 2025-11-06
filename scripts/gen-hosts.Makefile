@@ -16,8 +16,6 @@ GENHOSTS_EXTRA_ARGS += kdevops_hosts_template_full_path='$(KDEVOPS_HOSTS_TEMPLAT
 
 GENHOSTS_EXTRA_ARGS += kdevops_playbooks_dir_full_path='$(KDEVOPS_PLAYBOOKS_DIR_FULL_PATH)'
 GENHOSTS_EXTRA_ARGS += kdevops_genhosts_templates_dir='$(KDEVOPS_HOSTS_TEMPLATE_DIR)'
-GENHOSTS_EXTRA_ARGS += kdevops_python_interpreter='$(CONFIG_KDEVOPS_PYTHON_INTERPRETER)'
-GENHOSTS_EXTRA_ARGS += kdevops_python_old_interpreter='$(CONFIG_KDEVOPS_PYTHON_OLD_INTERPRETER)'
 ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 GENHOSTS_EXTRA_ARGS += kdevops_baseline_and_dev='True'
 endif
