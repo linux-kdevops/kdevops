@@ -1,0 +1,9 @@
+---
+- name: Install NFS server packages on RedHat/Fedora
+  become: true
+  ansible.builtin.package:
+    name:
+      - rpcbind
+      - nfs-utils
+    state: present
+  tags: ["mirror"]

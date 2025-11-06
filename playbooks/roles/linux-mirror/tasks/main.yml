@@ -256,17 +256,37 @@
     enabled: true
   tags: ["mirror"]
 
-- name: Install NFS server packages (for root user and if NFS is enabled)
-  become: true
-  ansible.builtin.package:
-    name:
-      - rpcbind
-    state: present
+- name: Install NFS server dependencies
+  ansible.builtin.include_tasks: install-deps/nfs/main.yml
   when:
     - not install_only_git_daemon|bool
     - ansible_user_id == 'root'
     - linux_mirror_nfs | bool
   tags: ["nfs", "mirror"]
+
+- name: Set NFS server service name for Debian/Ubuntu
+  ansible.builtin.set_fact:
+    nfs_server_service: nfs-kernel-server
+  when:
+    - ansible_os_family == 'Debian'
+    - linux_mirror_nfs | bool
+  tags: ["mirror"]
+
+- name: Set NFS server service name for RedHat/Fedora
+  ansible.builtin.set_fact:
+    nfs_server_service: nfs-server
+  when:
+    - ansible_os_family == 'RedHat'
+    - linux_mirror_nfs | bool
+  tags: ["mirror"]
+
+- name: Set NFS server service name for SUSE
+  ansible.builtin.set_fact:
+    nfs_server_service: nfsserver
+  when:
+    - ansible_os_family == 'Suse'
+    - linux_mirror_nfs | bool
+  tags: ["mirror"]
 
 - name: Ensure rpcbind and NFS services are started and enabled (for root user and if NFS is enabled)
   become: true
@@ -276,7 +296,7 @@
     enabled: true
   loop:
     - rpcbind
-    - nfs-server
+    - "{{ nfs_server_service }}"
   when:
     - ansible_user_id == 'root'
     - not install_only_git_daemon|bool
