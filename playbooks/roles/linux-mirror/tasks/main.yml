@@ -179,9 +179,8 @@
 
 - name: Service status
   ansible.builtin.debug:
-    var: "{{ item }}.status.ActiveState"
-  with_items:
-    - "{{ mirror_service_status.item }}"
+    msg: "{{ item.status.ActiveState }}"
+  loop: "{{ mirror_service_status.results }}"
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
@@ -201,9 +200,8 @@
 
 - name: Service timer status
   ansible.builtin.debug:
-    var: "{{ item }}.status.ActiveState"
-  with_items:
-    - "{{ mirror_timer_status.item }}"
+    msg: "{{ item.status.ActiveState }}"
+  loop: "{{ mirror_timer_status.results }}"
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
