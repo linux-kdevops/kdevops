@@ -214,13 +214,20 @@
   when:
     - not install_only_git_daemon|bool
 
-- name: Service status
+- name: Display mirror service status
   ansible.builtin.debug:
-    msg: "{{ item.status.ActiveState }}"
-  loop: "{{ mirror_service_status.results }}"
+    msg: |
+      {% for result in mirror_service_status.results %}
+      Mirror: {{ result.item.short_name }}
+        Service: {{ result.item.short_name | regex_replace('/', '-') }}-mirror.service
+        State: {{ result.status.ActiveState }}
+        Enabled: {{ result.status.UnitFileState }}
+      {% endfor %}
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Check systemd unit status for mirror timers
   become: true
@@ -238,13 +245,20 @@
   when:
     - not install_only_git_daemon|bool
 
-- name: Service timer status
+- name: Display mirror timer status
   ansible.builtin.debug:
-    msg: "{{ item.status.ActiveState }}"
-  loop: "{{ mirror_timer_status.results }}"
+    msg: |
+      {% for result in mirror_timer_status.results %}
+      Mirror: {{ result.item.short_name }}
+        Timer: {{ result.item.short_name | regex_replace('/', '-') }}-mirror.timer
+        State: {{ result.status.ActiveState }}
+        Enabled: {{ result.status.UnitFileState }}
+      {% endfor %}
   tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
+  vars:
+    ansible_callback_diy_runner_on_ok_msg: "{{ ansible_callback_diy.result.output.msg }}"
 
 - name: Enable git service systemd socket activation
   become: true
