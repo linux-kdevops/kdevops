@@ -359,9 +359,8 @@
   ansible.builtin.command:
     cmd: systemctl is-active firewalld
   register: firewalld_status
-  ignore_errors: true
+  failed_when: false
   changed_when: false
-  failed_when: firewalld_status.rc not in [0, 3, 4] # rc=0 (active), rc=3 (inactive but not an error), 4 not present
   when:
     - not install_only_git_daemon|bool
     - linux_mirror_nfs | bool
