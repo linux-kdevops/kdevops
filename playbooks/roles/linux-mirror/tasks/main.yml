@@ -100,7 +100,7 @@
   ansible.builtin.include_vars:
     file: "{{ topdir_path }}/playbooks/roles/linux-mirror/linux-mirror-systemd/mirrors.yaml"
     name: mirrors
-  tags: ["mirror", "status-check"]
+  tags: ["mirror", "mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
@@ -108,7 +108,7 @@
   ansible.builtin.set_fact:
     systemd_scope: "{{ 'system' if ansible_user_id == 'root' else 'user' }}"
     systemd_dir: "{{ '/etc/systemd/system/' if ansible_user_id == 'root' else mirror_user_system_dir }}"
-  tags: ["mirror"]
+  tags: ["mirror", "mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
@@ -173,7 +173,7 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Checking service status for {{ item.short_name | regex_replace('/', '-') }}-mirror.service unit ..."
-  tags: ["status-check"]
+  tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
@@ -182,7 +182,7 @@
     var: "{{ item }}.status.ActiveState"
   with_items:
     - "{{ mirror_service_status.item }}"
-  tags: ["status-check"]
+  tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
@@ -195,7 +195,7 @@
     - "{{ mirrors.get('mirrors') }}"
   loop_control:
     label: "Checking service status for {{ item.short_name | regex_replace('/', '-') }}--mirror.timer ..."
-  tags: ["status-check"]
+  tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
@@ -204,7 +204,7 @@
     var: "{{ item }}.status.ActiveState"
   with_items:
     - "{{ mirror_timer_status.item }}"
-  tags: ["status-check"]
+  tags: ["mirror-status"]
   when:
     - not install_only_git_daemon|bool
 
