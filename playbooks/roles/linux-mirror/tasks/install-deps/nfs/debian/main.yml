@@ -1,0 +1,9 @@
+---
+- name: Install NFS server packages on Debian/Ubuntu
+  become: true
+  ansible.builtin.package:
+    name:
+      - rpcbind
+      - nfs-kernel-server
+    state: present
+  tags: ["mirror"]

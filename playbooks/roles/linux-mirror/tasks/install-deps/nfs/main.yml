@@ -1,0 +1,15 @@
+---
+- name: Import Debian NFS dependencies
+  ansible.builtin.import_tasks: debian/main.yml
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Import RedHat NFS dependencies
+  ansible.builtin.import_tasks: redhat/main.yml
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Import SUSE NFS dependencies
+  ansible.builtin.import_tasks: suse/main.yml
+  when:
+    - ansible_os_family == 'Suse'
