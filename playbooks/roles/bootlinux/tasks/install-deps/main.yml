@@ -2,14 +2,14 @@
 - name: Debian-specific setup
   ansible.builtin.import_tasks: debian/main.yml
   when:
-    - distro_debian_based|bool
+    - ansible_os_family == "Debian"
 
 - name: SuSE-specific setup
   ansible.builtin.import_tasks: suse/main.yml
   when:
-    - distro_suse_based|bool
+    - ansible_os_family == "Suse"
 
 - name: Red Hat-specific setup
   ansible.builtin.import_tasks: redhat/main.yml
   when:
-    - distro_redhat_based|bool
+    - ansible_os_family == "RedHat"
