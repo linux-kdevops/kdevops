@@ -40,4 +40,7 @@
       - libncurses-dev
       - b4
       - ccache
+      - rsync
+      - dwarves
+      - lz4
     state: present
