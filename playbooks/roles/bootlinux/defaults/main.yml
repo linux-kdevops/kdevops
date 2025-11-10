@@ -141,9 +141,3 @@ bootlinux_fragment_x86: false
 bootlinux_fragment_xarray: false
 bootlinux_fragment_xarray_no_multi: false
 
-
-# Distro controls
-distro_debian_based: false
-distro_fedora: false
-distro_redhat_based: false
-distro_suse_based: false

@@ -69,6 +69,16 @@ endif
 BOOTLINUX_ARGS += bootlinux_cxl_test=$(CONFIG_ENABLE_CXL_TEST)
 WORKFLOW_ARGS += $(BOOTLINUX_ARGS)
 
+# Default host limit for bootlinux operations
+BOOTLINUX_LIMIT := baseline:dev
+
+# When NFS server is enabled, include it in kernel updates so that workflows
+# like fstests, gitr, nfstest, and pynfs can test the kernel's NFS server
+# implementation (knfsd).
+ifeq (y,$(CONFIG_KDEVOPS_SETUP_NFSD))
+BOOTLINUX_LIMIT := baseline:dev:nfsd
+endif
+
 PHONY +=  linux-help-menu
 linux-help-menu:
 	@echo "Linux git kernel development options"
@@ -102,14 +112,14 @@ linux: linux-baseline linux-dev
 else
 linux: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 endif
 else
 linux: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 endif
@@ -143,7 +153,7 @@ endif
 PHONY += linux-mount
 linux-mount:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,9p_mount \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
@@ -151,7 +161,7 @@ linux-mount:
 PHONY += linux-deploy
 linux-deploy:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
@@ -159,7 +169,7 @@ linux-deploy:
 PHONY += linux-build
 linux-build:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,saved,vars \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
@@ -167,7 +177,7 @@ linux-build:
 PHONY += linux-install
 linux-install:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
@@ -175,7 +185,7 @@ linux-install:
 PHONY += linux-uninstall
 linux-uninstall:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags uninstall-linux,vars \
 		--extra-vars '{ "uninstall_kernel_enable": "True", $(LINUX_DYNAMIC_RUNTIME_VARS) }' \
@@ -183,7 +193,7 @@ linux-uninstall:
 
 linux-clone-clients: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) \
 		--tags vars,clone
@@ -202,20 +212,20 @@ linux-clone: $(KDEVOPS_NODES) $(LINUX_CLONE_DEFAULT_TYPE)
 PHONY += linux-grub-setup
 linux-grub-setup:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags manual-update-grub,saved,vars
 
 PHONY += linux-reboot
 linux-reboot:
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags vars,reboot
 
 PHONY += uname
 uname:
-	$(Q)ansible 'baseline:dev' -b -m command -a "uname -r" -o \
+	$(Q)ansible '$(BOOTLINUX_LIMIT)' -b -m command -a "uname -r" -o \
 	| awk -F '|' '{gsub(/^ +| +$$/, "", $$2); printf "%-30s %s\n", $$1, $$4}' \
 	| sed -e 's|(stdout)||'
 
@@ -223,7 +233,7 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL))
 PHONY += linux-cxl
 linux-cxl: $(KDEVOPS_NODES)
 	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
-		--limit 'baseline:dev' \
+		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags 'vars,cxl-build,cxl-install'                             \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)

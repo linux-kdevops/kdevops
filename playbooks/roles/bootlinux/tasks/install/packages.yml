@@ -39,3 +39,45 @@
       loop: "{{ kernel_packages }}"
       loop_control:
         label: "Installing {{ item }}"
+      changed_when: true
+
+- name: Install the built kernel debs on the target nodes
+  when:
+    - ansible_os_family == "Debian"
+  block:
+    - name: Find the kernel build artifacts on the control host
+      delegate_to: localhost
+      ansible.builtin.find:
+        paths: "{{ bootlinux_artifacts_dir }}"
+        patterns: "*.deb"
+        file_type: file
+        recurse: true
+      register: found_debs
+
+    - name: Upload the kernel build artifacts to the target nodes
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "/tmp"
+        mode: "u=rw,g=r,o=r"
+      loop: "{{ found_debs.files }}"
+      loop_control:
+        label: "Uploading {{ item.path | basename }} ..."
+
+    - name: Add the core kernel package
+      ansible.builtin.set_fact:
+        kernel_packages: "{{ kernel_packages + ['/tmp/' + item.path | basename] }}"
+      when:
+        - "'headers' not in item.path"
+      loop: "{{ found_debs.files }}"
+      loop_control:
+        label: "Adding {{ item.path | basename }} ..."
+
+    - name: Install the selected kernel build artifacts on the target nodes
+      become: true
+      become_method: ansible.builtin.sudo
+      ansible.builtin.command:
+        cmd: "dpkg -i {{ item }}"
+      loop: "{{ kernel_packages }}"
+      loop_control:
+        label: "Installing {{ item }}"
+      changed_when: true

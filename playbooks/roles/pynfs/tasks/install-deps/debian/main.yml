@@ -1,7 +1,7 @@
 ---
 - name: Install pynfs build dependencies
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     name:
       - gcc
@@ -13,7 +13,18 @@
       - swig
       - python3-gssapi
       - python3-ply
-      - python3-standard-xdrlib
     state: present
     update_cache: true
   tags: ["pynfs", "deps"]
+
+# xdrlib was removed from Python 3.13; Debian packages it as python3-mda-xdrlib
+- name: Install xdrlib from Debian package on Debian 13+
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.apt:
+    name:
+      - python3-mda-xdrlib
+    state: present
+  tags: ["pynfs", "deps"]
+  when:
+    - ansible_distribution_major_version | int >= 13

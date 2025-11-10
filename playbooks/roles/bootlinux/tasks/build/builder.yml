@@ -176,6 +176,11 @@
   when:
     - ansible_os_family == "Debian"
   block:
+    - name: Build the list of artifacts directories on the builder
+      ansible.builtin.set_fact:
+        artifact_paths:
+          - "{{ target_linux_dir_path }}/.."
+
     - name: Make the bindeb-pkg target
       community.general.make:
         chdir: "{{ target_linux_dir_path }}"

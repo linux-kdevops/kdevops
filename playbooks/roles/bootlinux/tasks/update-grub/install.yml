@@ -212,3 +212,66 @@
       when:
         - kernel_release_file.stat.exists
 
+    # GRUB detection logic for packaged kernels on Debian
+    - name: Construct the command line to determine the default boot entry (package)
+      tags:
+        - saved
+      ansible.builtin.set_fact:
+        determine_default_kernel_id: >-
+          awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg |
+          awk '{print NR-1" ... "$0}' |
+          grep {{ kernelrelease }} |
+          head -1 |
+          awk '{print $1}'
+      when:
+        - kernel_release_file.stat.exists
+        - kernelrelease is defined
+        - kernelrelease != "unknown"
+        - ansible_facts['os_family']|lower == 'debian'
+
+    - name: Determine the target kernel's GRUB boot entry number (package)  # noqa: command-instead-of-shell
+      tags:
+        - saved
+      become: true
+      become_flags: "su - -c"
+      become_method: ansible.builtin.sudo
+      ansible.builtin.shell:
+        cmd: "{{ determine_default_kernel_id }}"
+      register: grub_boot_number_cmd
+      changed_when: false
+      when:
+        - kernel_release_file.stat.exists
+        - kernelrelease is defined
+        - kernelrelease != "unknown"
+        - determine_default_kernel_id is defined
+
+    - name: Set the target kernel to be booted by default (package)
+      become: true
+      become_flags: "su - -c"
+      become_method: ansible.builtin.sudo
+      ansible.builtin.command:
+        cmd: "/usr/sbin/grub-set-default \"{{ grub_boot_number_cmd.stdout_lines.0 }}\""
+      changed_when: true
+      tags: ["saved"]
+      when:
+        - grub_boot_number_cmd is defined
+        - grub_boot_number_cmd.rc is defined
+        - grub_boot_number_cmd.rc == 0
+        - grub_boot_number_cmd.stdout is defined
+        - grub_boot_number_cmd.stdout != ""
+
+    - name: Itemize kernel and GRUB entry selected (package)
+      ansible.builtin.debug:
+        msg: >-
+          {{ target_kernel }} determined to be {{ grub_boot_number_cmd.stdout_lines.0 }}
+          on the GRUB2 flat menu.
+          Ran: grub-set-default {{ grub_boot_number_cmd.stdout_lines.0 }}
+      vars:
+        target_kernel: "{{ kernelrelease }}"
+      tags: ["saved"]
+      when:
+        - grub_boot_number_cmd is defined
+        - grub_boot_number_cmd.rc is defined
+        - grub_boot_number_cmd.rc == 0
+        - grub_boot_number_cmd.stdout is defined
+        - grub_boot_number_cmd.stdout != ""
