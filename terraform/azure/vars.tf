@@ -47,3 +47,8 @@ variable "azure_vmsize" {
   description = "VM size"
   type        = string
 }
+
+variable "azure_accelerated_networking_enabled" {
+  description = "Enable accelerated networking for network interfaces"
+  type        = bool
+}
