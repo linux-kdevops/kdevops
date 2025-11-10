@@ -77,6 +77,7 @@ cloud-config-help:
 	@echo "cloud-config            - generates all cloud provider dynamic kconfig content"
 	@echo "cloud-config-lambdalabs - generates Lambda Labs dynamic kconfig content"
 	@echo "cloud-config-aws        - generates AWS dynamic kconfig content"
+	@echo "cloud-config-oci        - generates OCI dynamic kconfig content"
 	@echo "clean-cloud-config      - removes all generated cloud kconfig files"
 	@echo "cloud-list-all          - list all cloud instances for configured provider"
 
@@ -85,7 +86,7 @@ HELP_TARGETS += cloud-config-help
 cloud-config:
 	$(Q)python3 scripts/generate_cloud_configs.py
 
-clean-cloud-config: clean-cloud-config-lambdalabs clean-cloud-config-aws
+clean-cloud-config: clean-cloud-config-lambdalabs clean-cloud-config-aws clean-cloud-config-oci
 	$(Q)echo "Cleaned all cloud provider dynamic Kconfig files."
 
 cloud-list-all:
