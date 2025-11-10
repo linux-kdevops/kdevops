@@ -1,0 +1,36 @@
+#!/bin/bash
+# Persistent DHCP lease caching - ISC dhclient enter hook
+# This hook saves successful DHCP leases to a persistent cache
+# Managed by kdevops - dhclient_cache role
+
+CACHE_DIR="/var/lib/dhcp/cache"
+CACHE_FILE="${CACHE_DIR}/dhclient.${interface}.cached-lease"
+CACHE_TIMEOUT={{ dhclient_cache_timeout }}
+
+# Only cache on BOUND, RENEW, or REBIND events
+case "${reason}" in
+    BOUND|RENEW|REBIND)
+        # Ensure cache directory exists
+        mkdir -p "${CACHE_DIR}"
+
+        # Save current lease information to cache file
+        if [ -n "${new_ip_address}" ]; then
+            {
+                echo "# Cached DHCP lease for ${interface}"
+                echo "# Cached at: $(date)"
+                echo "# Cache timeout: ${CACHE_TIMEOUT} seconds"
+                echo "interface=\"${interface}\""
+                echo "new_ip_address=\"${new_ip_address}\""
+                echo "new_subnet_mask=\"${new_subnet_mask}\""
+                echo "new_routers=\"${new_routers}\""
+                echo "new_domain_name_servers=\"${new_domain_name_servers}\""
+                echo "new_broadcast_address=\"${new_broadcast_address}\""
+                echo "new_dhcp_lease_time=\"${new_dhcp_lease_time}\""
+                echo "cache_timestamp=\"$(date +%s)\""
+            } > "${CACHE_FILE}"
+
+            chmod 644 "${CACHE_FILE}"
+            logger -t kdevops-dhcp-cache "Saved DHCP lease to cache for ${interface}: ${new_ip_address}"
+        fi
+        ;;
+esac

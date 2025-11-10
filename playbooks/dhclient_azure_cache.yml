@@ -1,0 +1,6 @@
+---
+- name: Configure persistent DHCP caching for cloud VMs
+  hosts: all:!localhost
+  gather_facts: true
+  roles:
+    - role: dhclient_cache

@@ -1,0 +1,42 @@
+---
+# NetworkManager persistent DHCP caching implementation
+# Used by: RHEL 8+, Fedora 30+, CentOS 8+
+
+- name: Detect primary network interface
+  ansible.builtin.set_fact:
+    primary_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+
+- name: Create NetworkManager dispatcher script for DHCP cache save
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: networkmanager-dispatcher.j2
+    dest: /etc/NetworkManager/dispatcher.d/10-kdevops-dhcp-cache
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Ensure lease cache directory exists
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: /var/lib/NetworkManager/cache
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Get current IP configuration via NetworkManager
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.shell: |
+    nmcli -t -f IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show {{ primary_interface }} | \
+    awk -F: '{print $2}' > /var/lib/NetworkManager/cache/{{ primary_interface }}.cached-config
+    echo "cache_timestamp=$(date +%s)" >> /var/lib/NetworkManager/cache/{{ primary_interface }}.cached-config
+    chmod 644 /var/lib/NetworkManager/cache/{{ primary_interface }}.cached-config
+  args:
+    creates: /var/lib/NetworkManager/cache/{{ primary_interface }}.cached-config
+  changed_when: true

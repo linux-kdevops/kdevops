@@ -1,0 +1,45 @@
+---
+- name: Configure persistent DHCP caching for cloud VMs
+  block:
+    - name: Detect DHCP client mechanism
+      ansible.builtin.set_fact:
+        dhcp_mechanism: >-
+          {%- if ansible_facts['os_family']|lower == 'suse' -%}
+            wicked
+          {%- elif ansible_facts['os_family']|lower in ['redhat', 'rocky', 'almalinux'] -%}
+            {%- if ansible_facts['distribution_major_version']|int >= 8 -%}
+              networkmanager
+            {%- else -%}
+              isc-dhclient
+            {%- endif -%}
+          {%- elif ansible_facts['os_family']|lower == 'debian' -%}
+            isc-dhclient
+          {%- else -%}
+            unknown
+          {%- endif -%}
+
+    - name: Display detected DHCP mechanism
+      ansible.builtin.debug:
+        msg: "Detected DHCP mechanism: {{ dhcp_mechanism }} on {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+    - name: Configure ISC dhclient persistent caching
+      ansible.builtin.include_tasks: isc-dhclient.yml
+      when: dhcp_mechanism == 'isc-dhclient'
+
+    - name: Configure NetworkManager persistent caching
+      ansible.builtin.include_tasks: networkmanager.yml
+      when: dhcp_mechanism == 'networkmanager'
+
+    - name: Configure wicked persistent caching
+      ansible.builtin.include_tasks: wicked.yml
+      when: dhcp_mechanism == 'wicked'
+
+    - name: Warn about unsupported DHCP mechanism
+      ansible.builtin.debug:
+        msg: "WARNING: DHCP mechanism '{{ dhcp_mechanism }}' is not supported for persistent caching"
+      when: dhcp_mechanism == 'unknown'
+
+  when:
+    - dhclient_cache_enabled|bool
+    - kdevops_enable_terraform is defined
+    - kdevops_enable_terraform|bool
