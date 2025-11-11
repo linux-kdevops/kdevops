@@ -1,9 +1,14 @@
 [general]
 pipefs-directory={{ pipefs_directory }}
 
+[mountd]
+manage-gids=y
+
 [nfsd]
 udp=y
 rdma=y
+vers4.0=y
+min-threads=1
 threads={{ nfsd_threads }}
 grace-time={{ nfsd_lease_time }}
 lease-time={{ nfsd_lease_time }}

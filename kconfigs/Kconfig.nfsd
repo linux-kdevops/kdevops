@@ -57,13 +57,13 @@ config NFSD_EXPORT_OPTIONS
 
 config NFSD_THREADS
 	int "Number of nfsd threads to spawn"
-	default 8
+	default 128
 	help
 	  Number of nfsd threads to start up for testing.
 
 config NFSD_LEASE_TIME
 	int "NFSv4 lease time and grace period, in seconds"
-	default 90
+	default 30
 	help
 	  Time, in seconds, that the NFS server will wait before expiring
 	  a client lease. Production servers typically use 90 seconds to
