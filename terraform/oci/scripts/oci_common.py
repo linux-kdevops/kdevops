@@ -102,6 +102,7 @@ def get_jinja2_environment(template_path: Optional[str] = None) -> Environment:
         loader=FileSystemLoader(template_path),
         trim_blocks=True,
         lstrip_blocks=True,
+        extensions=["jinja2.ext.loopcontrols"],
     )
 
 
