@@ -16,7 +16,7 @@ config TERRAFORM_AWS
 	  Enabling this means you are going to use AWS for your cloud solution.
 
 config TERRAFORM_AZURE
-	bool "Azure"
+	bool "Azure - Microsoft Azure"
 	depends on TARGET_ARCH_X86_64
 	select TERRAFORM_PRIVATE_NET
 	help
