@@ -39,6 +39,15 @@ config TERRAFORM_LAMBDALABS
 	  solution. Lambda Labs provides GPU-accelerated instances optimized
 	  for machine learning and high-performance computing workloads.
 
+config TERRAFORM_DATACRUNCH
+	bool "DataCrunch"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Enabling this means you are going to use DataCrunch for your cloud
+	  solution. DataCrunch provides GPU-accelerated instances optimized
+	  for machine learning and high-performance computing workloads with
+	  H100 GPUs and PyTorch pre-installed images.
+
 config TERRAFORM_RCLOUD
 	bool "rcloud - Local Private Cloud"
 	help
@@ -57,4 +66,5 @@ source "terraform/aws/Kconfig"
 source "terraform/azure/Kconfig"
 source "terraform/oci/Kconfig"
 source "terraform/lambdalabs/Kconfig"
+source "terraform/datacrunch/Kconfig"
 source "terraform/rcloud/Kconfig"

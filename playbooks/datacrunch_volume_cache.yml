@@ -1,0 +1,83 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# DataCrunch OS-NVMe Volume Cache Management
+#
+# This playbook captures and caches volume IDs from DataCrunch instances
+# to enable volume reuse across destroy/recreate cycles when KEEP=1 is enabled.
+#
+# Usage:
+#   ansible-playbook playbooks/datacrunch_volume_cache.yml --extra-vars="action=save"
+#   ansible-playbook playbooks/datacrunch_volume_cache.yml --extra-vars="action=load"
+#   ansible-playbook playbooks/datacrunch_volume_cache.yml --extra-vars="action=delete"
+
+- name: Manage DataCrunch volume cache
+  hosts: localhost
+  gather_facts: no
+  vars:
+    volume_cache_script: "{{ playbook_dir }}/../terraform/datacrunch/scripts/volume_cache.py"
+    terraform_dir: "{{ playbook_dir }}/../terraform/{{ kdevops_terraform_provider }}"
+    action: "save"  # save, load, or delete
+  tasks:
+    - name: Check if we're using DataCrunch provider
+      fail:
+        msg: "This playbook only works with DataCrunch provider"
+      when: kdevops_terraform_provider != "datacrunch"
+
+    - name: Check if KEEP volumes is enabled
+      fail:
+        msg: "Volume caching only makes sense when TERRAFORM_DATACRUNCH_KEEP_VOLUMES is enabled"
+      when:
+        - action == "save"
+        - not terraform_datacrunch_keep_volumes | default(false) | bool
+
+    - name: Get terraform output
+      command: terraform output -json
+      args:
+        chdir: "{{ terraform_dir }}"
+      register: terraform_output
+      changed_when: false
+      when: action == "save"
+
+    - name: Parse terraform output
+      set_fact:
+        instance_details: "{{ (terraform_output.stdout | from_json).instance_details.value }}"
+      when: action == "save"
+
+    - name: Save volume IDs to cache
+      command: >
+        python3 {{ volume_cache_script }} save
+        {{ kdevops_host_prefix }}
+        {{ item.key }}
+        {{ item.value.os_volume_id }}
+      loop: "{{ instance_details | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}: {{ item.value.os_volume_id }}"
+      when:
+        - action == "save"
+        - item.value.os_volume_id is defined
+        - item.value.os_volume_id != ""
+      changed_when: true
+
+    - name: Delete volume mappings from cache
+      command: >
+        python3 {{ volume_cache_script }} delete
+        {{ kdevops_host_prefix }}
+        {{ item }}
+      loop: "{{ kdevops_nodes }}"
+      when: action == "delete"
+      ignore_errors: true
+      changed_when: true
+
+    - name: List cached volume mappings
+      command: >
+        python3 {{ volume_cache_script }} list
+        {{ kdevops_host_prefix }}
+      when: action == "list"
+      register: cache_list
+      changed_when: false
+
+    - name: Display cached volumes
+      debug:
+        msg: "{{ cache_list.stdout_lines }}"
+      when: action == "list"

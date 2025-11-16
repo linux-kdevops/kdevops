@@ -1,0 +1,183 @@
+# DataCrunch instance types (dynamically generated)
+
+choice
+	prompt "DataCrunch instance type"
+	default TERRAFORM_DATACRUNCH_INSTANCE_TYPE_ANY_1H100
+	help
+	  Select the DataCrunch instance type for your deployment.
+	  These options are dynamically generated from the DataCrunch API.
+	  Includes A100 and H100 GPUs for high-performance computing.
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1A100_40S_22V
+	bool "1A100.40S.22V - Single A100 40GB SXM"
+	help
+	  Dedicated Hardware Instance with single NVIDIA A100 40GB SXM GPU
+	  Price: ~$1.39 per hour (pay-as-you-go)
+	  CPU: 22 vCPUs, RAM: 80GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_2A100_40S_44V
+	bool "2A100.40S.44V - Dual A100 40GB SXM"
+	help
+	  Dedicated Hardware Instance with 2x NVIDIA A100 40GB SXM GPUs
+	  Price: ~$2.78 per hour (pay-as-you-go)
+	  CPU: 44 vCPUs, RAM: 160GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4A100_40S_88V
+	bool "4A100.40S.88V - Quad A100 40GB SXM"
+	help
+	  Dedicated Hardware Instance with 4x NVIDIA A100 40GB SXM GPUs
+	  Price: ~$5.56 per hour (pay-as-you-go)
+	  CPU: 88 vCPUs, RAM: 320GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_8A100_40S_176V
+	bool "8A100.40S.176V - 8x A100 40GB SXM"
+	help
+	  Dedicated Hardware Instance with 8x NVIDIA A100 40GB SXM GPUs
+	  Price: ~$11.12 per hour (pay-as-you-go)
+	  CPU: 176 vCPUs, RAM: 640GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_B300_OR_LESS
+	bool "B300_OR_LESS - Best available up to B300 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier GPU available.
+	  Tries tiers in order: B300 → B200 → H100 → A100-80 → A100-40 →
+	  RTX PRO 6000 → RTX 6000 Ada → L40S → RTX A6000.
+
+	  Use this for maximum performance with automatic fallback to any
+	  available single GPU when top-tier options are unavailable.
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_B200_OR_LESS
+	bool "B200_OR_LESS - Best available up to B200 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier GPU available.
+	  Tries tiers in order: B200 → H100 → A100-80 → A100-40 →
+	  RTX PRO 6000 → RTX 6000 Ada → L40S → RTX A6000.
+
+	  Use when you want the best available GPU up to B200.
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_H100_OR_LESS
+	bool "H100_OR_LESS - Best available up to H100 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier GPU available.
+	  Tries tiers in order: H100 → A100-80 → A100-40 → RTX PRO 6000 →
+	  RTX 6000 Ada → L40S → RTX A6000.
+
+	  Use when you want any single GPU with H100 as the maximum tier.
+	  This provides the best chance of successful provisioning while
+	  staying within H100 pricing tier.
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_ANY_1H100
+	bool "ANY_1H100 - Any single H100 available (auto-select)"
+	help
+	  Automatically select any available single H100 instance variant.
+	  This will check capacity for all single H100 variants (1H100.80S.30V,
+	  1H100.80S.32V, etc.) and provision whichever is available.
+
+	  Use this when you need a single H100 GPU but don't care about the
+	  specific CPU/RAM configuration. The system will automatically find
+	  an available variant during bringup.
+
+	  Price: ~$1.99/hr for single H100 variants
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1H100_80S_30V
+	bool "1H100.80S.30V - $1.99/hr"
+	help
+	  Dedicated Hardware Instance
+	  Price: $1.99 per hour (pay-as-you-go)
+	  CPU: {'description': '30 CPU', 'number_of_cores': 30}, RAM: N/A GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1H100_80S_32V
+	bool "1H100.80S.32V - $1.99/hr"
+	help
+	  Dedicated Hardware Instance
+	  Price: $1.99 per hour (pay-as-you-go)
+	  CPU: {'description': '32 CPU', 'number_of_cores': 32}, RAM: N/A GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_2H100_80S_80V
+	bool "2H100.80S.80V - $3.98/hr"
+	help
+	  Dedicated Hardware Instance
+	  Price: $3.98 per hour (pay-as-you-go)
+	  CPU: {'description': '80 CPU', 'number_of_cores': 80}, RAM: N/A GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4H100_80S_176V
+	bool "4H100.80S.176V - $7.96/hr"
+	help
+	  Dedicated Hardware Instance
+	  Price: $7.96 per hour (pay-as-you-go)
+	  CPU: {'description': '176 CPU', 'number_of_cores': 176}, RAM: N/A GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_8H100_80S_176V
+	bool "8H100.80S.176V - $15.92/hr"
+	help
+	  Dedicated Hardware Instance
+	  Price: $15.92 per hour (pay-as-you-go)
+	  CPU: {'description': '176 CPU', 'number_of_cores': 176}, RAM: N/A GB
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1B200_30V
+	bool "1B200.30V - Single NVIDIA Blackwell B200"
+	help
+	  Dedicated Hardware Instance with single NVIDIA Blackwell B200 GPU
+	  Latest generation GPU architecture
+	  30 vCPUs
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1B300_30V
+	bool "1B300.30V - Single NVIDIA Blackwell B300"
+	help
+	  Dedicated Hardware Instance with single NVIDIA Blackwell B300 GPU
+	  Latest generation GPU architecture
+	  30 vCPUs
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1V100_6V
+	bool "1V100.6V - Tesla V100 (cheapest option)"
+	help
+	  Dedicated Hardware Instance with single Tesla V100 GPU
+	  6 vCPUs, 23 GiB RAM
+	  Lowest cost GPU option
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4B200_120V
+	bool "4B200.120V - NVIDIA Blackwell B200"
+	help
+	  Dedicated Hardware Instance with NVIDIA Blackwell B200 GPUs
+	  4x B200 GPUs with 120 vCPUs
+	  Latest generation GPU architecture
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4B300_120V
+	bool "4B300.120V - NVIDIA Blackwell B300"
+	help
+	  Dedicated Hardware Instance with NVIDIA Blackwell B300 GPUs
+	  4x B300 GPUs with 120 vCPUs
+	  Latest generation GPU architecture
+
+endchoice
+
+config TERRAFORM_DATACRUNCH_INSTANCE_TYPE
+	string "DataCrunch instance type value"
+	output yaml
+	default "B300_OR_LESS" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_B300_OR_LESS
+	default "B200_OR_LESS" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_B200_OR_LESS
+	default "H100_OR_LESS" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_H100_OR_LESS
+	default "ANY_1H100" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_ANY_1H100
+	default "1A100.40S.22V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1A100_40S_22V
+	default "2A100.40S.44V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_2A100_40S_44V
+	default "4A100.40S.88V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4A100_40S_88V
+	default "8A100.40S.176V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_8A100_40S_176V
+	default "1H100.80S.30V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1H100_80S_30V
+	default "1H100.80S.32V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1H100_80S_32V
+	default "2H100.80S.80V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_2H100_80S_80V
+	default "4H100.80S.176V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4H100_80S_176V
+	default "8H100.80S.176V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_8H100_80S_176V
+	default "1B200.30V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1B200_30V
+	default "1B300.30V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1B300_30V
+	default "1V100.6V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_1V100_6V
+	default "4B200.120V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4B200_120V
+	default "4B300.120V" if TERRAFORM_DATACRUNCH_INSTANCE_TYPE_4B300_120V
+	help
+	  The actual instance type string to use for provisioning.
+
+	  Special wildcard values will automatically select instances:
+	    - "B300_OR_LESS": Best GPU up to B300 (tier-based fallback to V100)
+	    - "B200_OR_LESS": Best GPU up to B200 (tier-based fallback to V100)
+	    - "H100_OR_LESS": Best GPU up to H100 (tier-based fallback to V100)
+	    - "ANY_1H100": Any single H100 variant available
+

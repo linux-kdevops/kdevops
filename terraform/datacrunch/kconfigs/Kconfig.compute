@@ -1,0 +1,7 @@
+# DataCrunch compute configuration
+
+# Include dynamically generated instance types
+source "terraform/datacrunch/kconfigs/Kconfig.compute.generated"
+
+# This string config is defined in the generated file with proper defaults
+# based on the chosen instance type option
