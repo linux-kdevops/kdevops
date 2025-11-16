@@ -1,0 +1,87 @@
+---
+# DataCrunch-specific ML environment setup tasks
+- name: Update all packages to latest versions on DataCrunch instances
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
+
+- name: Install development and ML dependencies on DataCrunch instances
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.apt:
+    name:
+      - git
+      - flex
+      - make
+      - m4
+      - python3.12-venv
+      - npm
+      - libncurses-dev
+    state: present
+  when:
+    - ansible_facts['os_family']|lower == 'debian'
+
+- name: Create Python virtual environment
+  ansible.builtin.command:
+    cmd: python3 -m venv {{ ansible_env.HOME }}/.venv
+    creates: "{{ ansible_env.HOME }}/.venv/bin/activate"
+
+- name: Install PyTorch in virtual environment
+  ansible.builtin.pip:
+    name: torch
+    virtualenv: "{{ ansible_env.HOME }}/.venv"
+
+- name: Unload NVIDIA kernel modules to avoid PyTorch/driver mismatch
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.shell: |
+    modprobe -r nvidia_uvm 2>/dev/null || true
+    modprobe -r nvidia_drm 2>/dev/null || true
+    modprobe -r nvidia_modeset 2>/dev/null || true
+    modprobe -r nvidia 2>/dev/null || true
+  ignore_errors: true
+  changed_when: false
+
+- name: Reload NVIDIA kernel module
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.modprobe:
+    name: nvidia
+    state: present
+  ignore_errors: true
+
+- name: Install Claude Code globally via npm
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: yes
+    state: present
+
+- name: Add PyTorch activation message to MOTD
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.copy:
+    dest: /etc/motd
+    content: |
+      To activate pytorch run:
+
+      source ~/.venv/bin/activate
+    mode: '0644'
+
+- name: Auto-activate Python virtualenv on login
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: "test -s ~/.venv/bin/activate && source ~/.venv/bin/activate"
+    create: yes
+    mode: '0644'

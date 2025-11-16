@@ -11,6 +11,8 @@ Below are the list of clouds providers currently supported:
   * aws - Amazon Web Service
   * gce - Google Cloud Compute
   * oci - Oracle Cloud Infrastructure
+  * datacrunch - DataCrunch GPU Cloud
+  * lambdalabs - Lambda Labs GPU Cloud
 
 You configure which cloud provider you want to use, what feature from that
 cloud provider you want to use, and then you can use kdevops to select which
@@ -268,3 +270,183 @@ selected:
 If your Ansible controller (where you run "make bringup") and your
 test instances operate inside the same subnet, you can disable the
 TERRAFORM_OCI_ASSIGN_PUBLIC_IP option for better network security.
+
+### DataCrunch - GPU Cloud Provider
+
+kdevops supports DataCrunch, a cloud provider specialized in GPU computing
+with competitive pricing for NVIDIA A100, H100, B200, and B300 instances.
+
+#### Quick Start with DataCrunch
+
+DataCrunch requires API key authentication. Create your credentials file:
+
+```bash
+mkdir -p ~/.datacrunch
+cat > ~/.datacrunch/credentials << EOF
+[default]
+datacrunch_client_id=your-client-id-here
+datacrunch_client_secret=your-client-secret-here
+EOF
+chmod 600 ~/.datacrunch/credentials
+```
+
+Get your API credentials from: https://cloud.datacrunch.io/
+
+#### DataCrunch Defconfigs
+
+kdevops provides several pre-configured defconfigs for DataCrunch:
+
+**Single GPU Instances:**
+```bash
+make defconfig-datacrunch-a100        # Single A100 40GB SXM GPU
+make defconfig-datacrunch-h100-pytorch # Single H100 80GB with PyTorch image
+```
+
+**Multi-GPU Instances:**
+```bash
+make defconfig-datacrunch-4x-h100-pytorch # 4x H100 80GB with PyTorch
+make defconfig-datacrunch-4x-b200         # 4x B200 (Blackwell architecture)
+make defconfig-datacrunch-4x-b300         # 4x B300 (Blackwell architecture)
+```
+
+#### Using Defconfigs with Workflows
+
+DataCrunch defconfigs can be combined with workflow CLI parameters.
+For example, to enable the knlp ML research workflow:
+
+```bash
+make defconfig-datacrunch-a100 KNLP=1
+make bringup
+```
+
+This automatically configures a DataCrunch A100 instance with the knlp
+workflow enabled, setting up the ML research environment with kernel
+development methodologies.
+
+#### Instance Types
+
+DataCrunch offers various GPU instance types:
+
+**A100 Series (40GB SXM):**
+- 1A100.40S.22V - Single GPU, 22 vCPUs, 80GB RAM (~$1.39/hr)
+- 2A100.40S.44V - Dual GPU, 44 vCPUs, 160GB RAM (~$2.78/hr)
+- 4A100.40S.88V - Quad GPU, 88 vCPUs, 320GB RAM (~$5.56/hr)
+- 8A100.40S.176V - 8x GPU, 176 vCPUs, 640GB RAM (~$11.12/hr)
+
+**H100 Series (80GB SXM):**
+- 1H100.80S.30V - Single GPU, 30 vCPUs (~$1.99/hr)
+- 1H100.80S.32V - Single GPU, 32 vCPUs (~$1.99/hr)
+- 2H100.80S.80V - Dual GPU, 80 vCPUs (~$3.98/hr)
+- 4H100.80S.176V - Quad GPU, 176 vCPUs (~$7.96/hr)
+- 8H100.80S.176V - 8x GPU, 176 vCPUs (~$15.92/hr)
+
+**Blackwell Series (Latest Architecture):**
+- 4B200.120V - 4x B200 GPUs, 120 vCPUs
+- 4B300.120V - 4x B300 GPUs, 120 vCPUs
+
+#### Images
+
+DataCrunch provides various OS images optimized for ML workloads:
+
+- ubuntu-24.04-cuda-12.8-open-docker - Ubuntu 24.04 with CUDA 12.8 and Docker
+- ubuntu-22.04-pytorch - Ubuntu 22.04 with PyTorch pre-installed
+- ubuntu-22.04 - Ubuntu 22.04 base
+- ubuntu-20.04 - Ubuntu 20.04 base
+- debian-11 - Debian 11
+- debian-12 - Debian 12
+
+All images use `root` as the default SSH user.
+
+#### Post-Provisioning Setup
+
+kdevops automatically configures DataCrunch instances with:
+
+1. System updates (apt-get dist-upgrade)
+2. Development tools (git, make, flex, python3.12-venv, npm, etc.)
+3. Python virtual environment at `~/.venv`
+4. PyTorch installation
+5. NVIDIA kernel module reload
+6. Claude Code installation via npm
+
+This happens automatically during `make bringup` via the datacrunch_ml_setup
+Ansible role.
+
+#### Capacity Checking
+
+kdevops automatically checks instance availability before provisioning:
+
+```bash
+# Check capacity manually
+./scripts/datacrunch_check_capacity.py
+
+# Check specific instance type
+./scripts/datacrunch_check_capacity.py --instance-type 1H100.80S.32V
+```
+
+The bringup process automatically selects an available location for your
+chosen instance type.
+
+#### SSH Configuration
+
+DataCrunch instances are automatically added to your SSH config with
+checksum-based filenames (e.g., `~/.ssh/config_kdevops_2df337e6`).
+This allows multiple kdevops directories to coexist without conflicts.
+
+The SSH config is automatically created during `make bringup` and removed
+during `make destroy`.
+
+#### Example: Complete Workflow
+
+```bash
+# Configure for DataCrunch with knlp workflow
+make defconfig-datacrunch-a100 KNLP=1
+
+# Review configuration (optional)
+make menuconfig
+
+# Provision instance and setup environment
+make bringup
+
+# The instance is now ready with:
+# - Python venv with PyTorch and knlp dependencies
+# - Claude Code installed
+# - NVIDIA drivers loaded
+# - SSH configured
+
+# SSH into instance
+ssh demo-knlp  # hostname from your configuration
+
+# Destroy when done
+make destroy
+```
+
+#### Troubleshooting
+
+**API Authentication Issues:**
+Check your credentials file exists and has correct permissions:
+```bash
+ls -l ~/.datacrunch/credentials
+# Should show: -rw------- (600 permissions)
+```
+
+**Instance Type Not Available:**
+If your desired instance type isn't available, kdevops will show
+available alternatives. Use the capacity checker to see current
+availability:
+```bash
+./scripts/datacrunch_check_capacity.py
+```
+
+**Provider Installation:**
+If using a locally built DataCrunch provider (for development), ensure
+you have the dev_overrides configured in `~/.terraformrc`:
+```hcl
+provider_installation {
+  dev_overrides {
+    "squat/datacrunch" = "/home/user/go/bin"
+  }
+  direct {}
+}
+```
+
+For more information, visit: https://datacrunch.io/
