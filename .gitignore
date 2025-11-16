@@ -131,3 +131,4 @@ terraform/oci/scripts/__pycache__/
 
 scripts/__pycache__/
 docs/contrib/kdevops_contributions*
+cloud-bill

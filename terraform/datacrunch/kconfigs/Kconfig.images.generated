@@ -1,0 +1,90 @@
+# DataCrunch OS images (dynamically generated)
+
+choice
+	prompt "DataCrunch OS image"
+	default TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_8_OPEN_DOCKER
+	help
+	  Select the operating system image for your instances.
+	  These options are dynamically generated from the DataCrunch API.
+	  PyTorch images are recommended for ML workloads.
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_8_OPEN_DOCKER
+	bool "Ubuntu 24.04 + CUDA 12.8 Open + Docker"
+	help
+	  Ubuntu 24.04 + CUDA 12.8 Open + Docker
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_8_OPEN
+	bool "Ubuntu 24.04 + CUDA 12.8 Open"
+	help
+	  Ubuntu 24.04 + CUDA 12.8 Open
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_6_DOCKER
+	bool "Ubuntu 24.04 + CUDA 12.6 + Docker"
+	help
+	  Ubuntu 24.04 + CUDA 12.6 + Docker
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_6
+	bool "Ubuntu 24.04 + CUDA 12.6"
+	help
+	  Ubuntu 24.04 + CUDA 12.6
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04
+	bool "Ubuntu 24.04"
+	help
+	  Ubuntu 24.04
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_8_OPEN_DOCKER
+	bool "Ubuntu 22.04 + CUDA 12.8 Open + Docker"
+	help
+	  Ubuntu 22.04 + CUDA 12.8 Open + Docker
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_8_OPEN
+	bool "Ubuntu 22.04 + CUDA 12.8 Open"
+	help
+	  Ubuntu 22.04 + CUDA 12.8 Open
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_4_DOCKER
+	bool "Ubuntu 22.04 + CUDA 12.4 + Docker"
+	help
+	  Ubuntu 22.04 + CUDA 12.4 + Docker
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_4
+	bool "Ubuntu 22.04 + CUDA 12.4"
+	help
+	  Ubuntu 22.04 + CUDA 12.4
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_0_DOCKER
+	bool "Ubuntu 22.04 + CUDA 12.0 + Docker"
+	help
+	  Ubuntu 22.04 + CUDA 12.0 + Docker
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_0
+	bool "Ubuntu 22.04 + CUDA 12.0"
+	help
+	  Ubuntu 22.04 + CUDA 12.0
+
+config TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04
+	bool "Ubuntu 22.04"
+	help
+	  Ubuntu 22.04
+
+endchoice
+
+config TERRAFORM_DATACRUNCH_IMAGE
+	string "DataCrunch image ID"
+	output yaml
+	default "ubuntu-24.04-cuda-12.8-open-docker" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_8_OPEN_DOCKER
+	default "ubuntu-24.04-cuda-12.8-open" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_8_OPEN
+	default "ubuntu-24.04-cuda-12.6-docker" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_6_DOCKER
+	default "ubuntu-24.04-cuda-12.6" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04_CUDA_12_6
+	default "ubuntu-24.04" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_24_04
+	default "ubuntu-22.04-cuda-12.8-open-docker" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_8_OPEN_DOCKER
+	default "ubuntu-22.04-cuda-12.8-open" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_8_OPEN
+	default "ubuntu-22.04-cuda-12.4-docker" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_4_DOCKER
+	default "ubuntu-22.04-cuda-12.4" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_4
+	default "ubuntu-22.04-cuda-12.0-docker" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_0_DOCKER
+	default "ubuntu-22.04-cuda-12.0" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04_CUDA_12_0
+	default "ubuntu-22.04" if TERRAFORM_DATACRUNCH_IMAGE_UBUNTU_22_04
+	help
+	  The actual image ID to use for instance provisioning.
+
