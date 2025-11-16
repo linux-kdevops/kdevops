@@ -432,6 +432,12 @@ def main():
     """Main function to run the program."""
     args = parse_arguments()
 
+    # Check for OCI config early - exit silently if not configured
+    if not os.path.exists(os.path.expanduser("~/.oci/config")):
+        if not args.quiet:
+            print("OCI not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
     if not args.quiet:
         print("Fetching list of OCI region subscriptions...", file=sys.stderr)
     regions = get_all_regions()
