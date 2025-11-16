@@ -887,6 +887,12 @@ def main():
     """Main function to run the program."""
     args = parse_arguments()
 
+    # Check for OCI config early - exit silently if not configured
+    if not os.path.exists(os.path.expanduser("~/.oci/config")):
+        if not args.quiet:
+            print("OCI not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
     compartment_ocid = get_default_compartment()
     if not compartment_ocid:
         print("Error: Could not determine compartment OCID", file=sys.stderr)
