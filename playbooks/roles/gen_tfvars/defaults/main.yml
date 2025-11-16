@@ -39,6 +39,12 @@ terraform_lambdalabs_image: "ubuntu-22.04"
 terraform_lambdalabs_persistent_storage: false
 terraform_lambdalabs_persistent_storage_size: 100
 
+# DataCrunch defaults
+terraform_datacrunch_location: "FIN-01"
+terraform_datacrunch_instance_type: "1x.h100.pcie"
+terraform_datacrunch_image: "ubuntu-22.04-pytorch"
+terraform_datacrunch_ssh_key_name: "kdevops-datacrunch"
+
 # SSH config defaults for templates
 sshconfig: "~/.ssh/config"
 sshconfig_fname: "~/.ssh/config"

@@ -1,0 +1,7 @@
+# DataCrunch OS image configuration
+
+# Include dynamically generated images
+source "terraform/datacrunch/kconfigs/Kconfig.images.generated"
+
+# This string config is defined in the generated file with proper defaults
+# based on the chosen image option

@@ -292,6 +292,35 @@ def process_oci():
     print()
 
 
+def generate_datacrunch_kconfig() -> bool:
+    """
+    Generate DataCrunch Kconfig files.
+    Returns True on success, False on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    generator_path = os.path.join(script_dir, "generate_datacrunch_kconfig.py")
+
+    # Generate the Kconfig files
+    result = subprocess.run(
+        [generator_path],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    return result.returncode == 0
+
+
+def process_datacrunch():
+    """Process DataCrunch configuration."""
+    kconfig_generated = generate_datacrunch_kconfig()
+    if kconfig_generated:
+        print("✓ DataCrunch: Kconfig files generated successfully")
+    else:
+        print("⚠ DataCrunch: Failed to generate Kconfig files - using defaults")
+    print()
+
+
 def main():
     """Main function to generate cloud configurations."""
     parser = argparse.ArgumentParser(
@@ -301,16 +330,17 @@ def main():
 Examples:
   %(prog)s                      # Generate configs for all providers
   %(prog)s --provider lambdalabs    # Generate configs for Lambda Labs only
+  %(prog)s --provider datacrunch    # Generate configs for DataCrunch only
   %(prog)s --provider aws           # Generate configs for AWS only
   %(prog)s --provider azure         # Generate configs for Azure only
 
-Supported providers: lambdalabs, aws, azure, gce, oci
+Supported providers: lambdalabs, datacrunch, aws, azure, gce, oci
         """,
     )
 
     parser.add_argument(
         "--provider",
-        choices=["lambdalabs", "aws", "azure", "gce", "oci"],
+        choices=["lambdalabs", "datacrunch", "aws", "azure", "gce", "oci"],
         help="Generate configuration for a specific cloud provider only",
     )
 
@@ -319,6 +349,7 @@ Supported providers: lambdalabs, aws, azure, gce, oci
     # Provider dispatch table
     providers = {
         "lambdalabs": process_lambdalabs,
+        "datacrunch": process_datacrunch,
         "aws": process_aws,
         "azure": process_azure,
         "gce": process_gce,
@@ -339,6 +370,7 @@ Supported providers: lambdalabs, aws, azure, gce, oci
     else:
         # Process all providers
         process_lambdalabs()
+        process_datacrunch()
         process_aws()
         process_azure()
         process_gce()

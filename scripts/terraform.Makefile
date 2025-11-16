@@ -21,6 +21,9 @@ endif
 ifeq (y,$(CONFIG_TERRAFORM_LAMBDALABS))
 export KDEVOPS_CLOUD_PROVIDER=lambdalabs
 endif
+ifeq (y,$(CONFIG_TERRAFORM_DATACRUNCH))
+export KDEVOPS_CLOUD_PROVIDER=datacrunch
+endif
 ifeq (y,$(CONFIG_TERRAFORM_RCLOUD))
 export KDEVOPS_CLOUD_PROVIDER=rcloud
 endif
@@ -65,7 +68,11 @@ SSH_CONFIG_USER:=$(subst ",,$(CONFIG_TERRAFORM_SSH_CONFIG_USER))
 # XXX: add support to auto-infer in devconfig role as we did with the bootlinux
 # role. Then we can re-use the same infer_uid_and_group=True variable and
 # we could then remove this entry.
+ifeq (root,${SSH_CONFIG_USER})
+TERRAFORM_EXTRA_VARS += data_home_dir=/root
+else
 TERRAFORM_EXTRA_VARS += data_home_dir=/home/${SSH_CONFIG_USER}
+endif
 
 ifeq (y,$(CONFIG_KDEVOPS_SSH_CONFIG_UPDATE))
 TERRAFORM_EXTRA_VARS += kdevops_terraform_ssh_config_update='True'

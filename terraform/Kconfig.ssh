@@ -1,19 +1,21 @@
 config TERRAFORM_SSH_USER_INFER
 	bool "Infer the ssh user name"
-	default y if !TERRAFORM_LAMBDALABS
-	default n if TERRAFORM_LAMBDALABS
+	default y if !TERRAFORM_LAMBDALABS && !TERRAFORM_DATACRUNCH
+	default n if TERRAFORM_LAMBDALABS || TERRAFORM_DATACRUNCH
 	help
 	  If enabled and you are running 'make menuconfig' as user sonia,
 	  then use "sonia" as the ssh user name.
 
-	  Note: This is automatically disabled for Lambda Labs since they
-	  don't support custom SSH users.
+	  Note: This is automatically disabled for Lambda Labs and DataCrunch
+	  since they require specific SSH users (ubuntu for Lambda Labs,
+	  root for DataCrunch).
 
 config TERRAFORM_SSH_CONFIG_USER
 	string "The username to create on the target systems"
-	default $(shell, echo $USER) if TERRAFORM_SSH_USER_INFER && !TERRAFORM_LAMBDALABS
+	default $(shell, echo $USER) if TERRAFORM_SSH_USER_INFER && !TERRAFORM_LAMBDALABS && !TERRAFORM_DATACRUNCH
 	default "ubuntu" if TERRAFORM_LAMBDALABS
-	default "admin" if !TERRAFORM_SSH_USER_INFER && !TERRAFORM_LAMBDALABS
+	default "root" if TERRAFORM_DATACRUNCH
+	default "admin" if !TERRAFORM_SSH_USER_INFER && !TERRAFORM_LAMBDALABS && !TERRAFORM_DATACRUNCH
 	help
 	  The SSH username Ansible will use to connect to its target
 	  nodes. Generally this username has to match a user that is
