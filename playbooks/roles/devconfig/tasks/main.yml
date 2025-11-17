@@ -155,6 +155,23 @@
   ansible.builtin.copy: src={{ dev_gitconfig_dest }} dest=/root/ remote_src=yes
   when: dev_git_config_file.stat.exists
 
+- name: Check if the developer has a tmux config
+  delegate_to: localhost
+  ansible.builtin.stat: path={{ dev_tmux_conf_src }}
+  run_once: true
+  register: dev_tmux_config_file
+
+- name: Copy the developer's tmux.conf *if* it exists
+  ansible.builtin.copy: src={{ dev_tmux_conf_src }} dest={{ dev_tmux_conf_dest }}
+  when: dev_tmux_config_file.stat.exists
+
+- name: Copy the developer's tmux.conf *if* it exists to root
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.copy: src={{ dev_tmux_conf_dest }} dest=/root/ remote_src=yes
+  when: dev_tmux_config_file.stat.exists
+
 - name: Check if the system has a user vimrc file
   ansible.builtin.stat:
     path: ~/.vimrc
