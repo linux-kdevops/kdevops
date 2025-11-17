@@ -1,0 +1,6 @@
+---
+- name: Setup knlp AI workflow
+  hosts: all
+  gather_facts: yes
+  roles:
+    - role: knlp
