@@ -1,0 +1,53 @@
+config WORKFLOW_KNLP
+	bool "Enable the knlp ML research workflow"
+	default y if KDEVOPS_WORKFLOW_ENABLE_KNLP
+	default n
+	output yaml
+	help
+	  This enables the knlp (Kernel Natural Language Processing) workflow.
+	  knlp is a collaborative transformer architecture research project that
+	  applies Linux kernel development methodologies to machine learning
+	  experimentation and reproducibility.
+
+	  The project demonstrates how kernel development best practices -
+	  Kconfig-driven configuration, defconfig presets, Makefile-based builds,
+	  and rigorous testing - can improve ML research workflows with better
+	  reproducibility, configuration management, and systematic testing.
+
+	  The workflow will clone the knlp repository from GitHub and install
+	  all required Python dependencies.
+
+	  Repository: https://github.com/mcgrof/knlp
+
+if WORKFLOW_KNLP
+
+menu "knlp ML research workflow configuration"
+
+config WORKFLOW_KNLP_GIT_URL
+	string "knlp git repository URL"
+	default "https://github.com/mcgrof/knlp.git"
+	output yaml
+	help
+	  The git repository URL for knlp. You can override this if you
+	  want to use a fork or a local mirror.
+
+config WORKFLOW_KNLP_GIT_REF
+	string "knlp git reference (branch, tag, or commit)"
+	default "main"
+	output yaml
+	help
+	  The git reference to checkout. This can be a branch name, tag,
+	  or commit SHA. Default is 'main'.
+
+config WORKFLOW_KNLP_DATA_PATH
+	string "Path to install knlp"
+	default "/data/knlp"
+	output yaml
+	help
+	  The directory where knlp will be cloned and installed.
+	  This should have sufficient space for the repository and
+	  any models or data it downloads.
+
+endmenu # knlp AI workflow configuration
+
+endif # WORKFLOW_KNLP
