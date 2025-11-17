@@ -119,6 +119,7 @@ if WORKFLOWS_DEDICATED_WORKFLOW
 
 choice
 	prompt "Dedicated target Linux test workflow"
+	default KDEVOPS_WORKFLOW_DEDICATE_KNLP if "$(KNLP)" != ""
 	default KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
@@ -256,6 +257,18 @@ config KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
 	  This will dedicate your configuration to running only the
 	  build-linux workflow for repeated Linux kernel builds.
 
+config KDEVOPS_WORKFLOW_DEDICATE_KNLP
+	bool "knlp"
+	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	select KDEVOPS_WORKFLOW_ENABLE_KNLP
+	help
+	  This will dedicate your configuration to running only the
+	  knlp ML research workflow for transformer architecture research
+	  using kernel development methodologies.
+
+	  This can be enabled via CLI with KNLP=1:
+	    make defconfig-datacrunch-a100 KNLP=1
+
 endchoice
 
 config KDEVOPS_WORKFLOW_NAME
@@ -276,6 +289,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "vllm" if KDEVOPS_WORKFLOW_DEDICATE_VLLM
 	default "minio" if KDEVOPS_WORKFLOW_DEDICATE_MINIO
 	default "build-linux" if KDEVOPS_WORKFLOW_DEDICATE_BUILD_LINUX
+	default "knlp" if KDEVOPS_WORKFLOW_DEDICATE_KNLP
 
 endif
 
@@ -579,6 +593,17 @@ menu "Configure Linux kernel build workflow"
 source "workflows/build-linux/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
+
+config KDEVOPS_WORKFLOW_ENABLE_KNLP
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_KNLP || KDEVOPS_WORKFLOW_DEDICATE_KNLP
+
+if KDEVOPS_WORKFLOW_ENABLE_KNLP
+menu "Configure knlp ML research workflow"
+source "workflows/knlp/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_KNLP
 
 config KDEVOPS_WORKFLOW_ENABLE_SSD_STEADY_STATE
        bool "Attain SSD steady state prior to tests"

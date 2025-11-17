@@ -1,0 +1,33 @@
+{# Workflow template for knlp ML research #}
+[all]
+localhost ansible_connection=local
+{{ kdevops_host_prefix }}-knlp
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-knlp-dev
+{% endif %}
+
+[all:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+[baseline]
+{{ kdevops_host_prefix }}-knlp
+
+[baseline:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% if kdevops_baseline_and_dev %}
+[dev]
+{{ kdevops_host_prefix }}-knlp-dev
+
+[dev:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+[knlp]
+{{ kdevops_host_prefix }}-knlp
+{% if kdevops_baseline_and_dev %}
+{{ kdevops_host_prefix }}-knlp-dev
+{% endif %}
+
+[knlp:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"

@@ -1,0 +1,4 @@
+---
+knlp_git_url: "https://github.com/mcgrof/knlp.git"
+knlp_git_ref: "main"
+knlp_data_path: "/data/knlp"

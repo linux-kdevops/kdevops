@@ -746,3 +746,17 @@
   when:
     - devconfig_enable_kotd|bool
   tags: ["kotd"]
+
+- name: Setup DataCrunch ML environment (PyTorch, venv, Claude Code)
+  ansible.builtin.include_tasks: datacrunch_ml.yml
+  when:
+    - kdevops_terraform_provider is defined
+    - kdevops_terraform_provider == 'datacrunch'
+  tags: ["datacrunch", "ml"]
+
+- name: Setup KNLP ML research workflow
+  ansible.builtin.include_tasks: knlp.yml
+  when:
+    - workflow_knlp is defined
+    - workflow_knlp|bool
+  tags: ["knlp", "ml"]
