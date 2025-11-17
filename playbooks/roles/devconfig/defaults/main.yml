@@ -9,6 +9,10 @@ dev_gitconfig_src: "~/.gitconfig"
 # Where we copy it to
 dev_gitconfig_dest: "{{ data_home_dir }}/.gitconfig"
 
+# Tmux configuration
+dev_tmux_conf_src: "~/.tmux.conf"
+dev_tmux_conf_dest: "{{ data_home_dir }}/.tmux.conf"
+
 # The bash script we check for on the virtual machine
 dev_bash_config: "{{ data_home_dir }}/.bashrc"
 dev_bash_config_root: "/root/.bashrc"
