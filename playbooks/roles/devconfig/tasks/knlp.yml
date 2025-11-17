@@ -1,0 +1,24 @@
+---
+# KNLP ML research workflow setup tasks
+- name: Create knlp data directory
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ workflow_knlp_data_path }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: "0755"
+
+- name: Clone knlp repository
+  ansible.builtin.git:
+    repo: "{{ workflow_knlp_git_url }}"
+    dest: "{{ workflow_knlp_data_path }}"
+    version: "{{ workflow_knlp_git_ref }}"
+    update: yes
+
+- name: Install knlp Python requirements
+  ansible.builtin.pip:
+    requirements: "{{ workflow_knlp_data_path }}/requirements.txt"
+    virtualenv: "{{ ansible_env.HOME }}/.venv"
