@@ -1,4 +1,3 @@
 ---
-ssh_config_kexalgorithms: ""
 # This will be set from extra_vars.yaml based on Kconfig selection
 terraform_binary_path: "/usr/local/bin/terraform"

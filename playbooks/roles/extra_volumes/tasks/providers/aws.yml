@@ -17,6 +17,7 @@
   delegate_to: localhost
   run_once: true
   cloud.terraform.terraform_output:
+    binary_path: "{{ terraform_binary_path }}"
     format: json
     name: "extra_volumes_map"
     project_path: "{{ topdir_path }}/terraform/aws"

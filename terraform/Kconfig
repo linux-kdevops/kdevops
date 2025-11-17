@@ -34,4 +34,37 @@ config TERRAFORM_PRIVATE_NET_MASK
 	depends on TERRAFORM_PRIVATE_NET
 	help
 	  Length of the network mask to use for the private network.
+
+choice
+	prompt "Infrastructure as Code tool"
+	default TERRAFORM_USE_TERRAFORM
+	help
+	  Choose whether to use Terraform or OpenTofu for infrastructure
+	  provisioning. OpenTofu is an open-source fork of Terraform that
+	  maintains compatibility with Terraform configurations.
+
+config TERRAFORM_USE_TERRAFORM
+	bool "Use Terraform"
+	output yaml
+	help
+	  Use HashiCorp Terraform for infrastructure provisioning.
+	  Terraform is the original infrastructure as code tool.
+
+config TERRAFORM_USE_OPENTOFU
+	bool "Use OpenTofu"
+	output yaml
+	help
+	  Use OpenTofu for infrastructure provisioning. OpenTofu is an
+	  open-source fork of Terraform maintained by the Linux Foundation
+	  that provides a community-driven alternative while maintaining
+	  compatibility with Terraform configurations.
+
+endchoice
+
+config TERRAFORM_BINARY_PATH
+	string
+	default "/usr/local/bin/terraform" if TERRAFORM_USE_TERRAFORM
+	default "/usr/local/bin/tofu" if TERRAFORM_USE_OPENTOFU
+	output yaml
+
 endif # TERRAFORM
