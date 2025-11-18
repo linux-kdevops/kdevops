@@ -1,0 +1,140 @@
+---
+- name: Multi-filesystem fio-tests comparison and analysis
+  hosts: localhost
+  gather_facts: yes
+  tags: [ 'fio_tests' ]
+  vars:
+    results_dir: "{{ fio_tests_results_dir | default('/data/fio-tests') }}"
+    output_dir: "{{ fio_tests_results_dir | default('/data/fio-tests') }}/multi-fs-comparison"
+    python_path: "{{ ansible_python_interpreter | default('/usr/bin/python3') }}"
+    comparison_script: "{{ kdevops_playbooks_dir }}/python/workflows/fio-tests/fio-multi-fs-compare.py"
+  tasks:
+    - name: Check if results directory exists
+      stat:
+        path: "{{ results_dir }}"
+      register: results_dir_stat
+
+    - name: Fail if results directory doesn't exist
+      fail:
+        msg: "Results directory {{ results_dir }} does not exist. Run fio-tests first."
+      when: not results_dir_stat.stat.exists
+
+    - name: Create output directory for multi-filesystem comparison
+      file:
+        path: "{{ output_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if comparison script exists
+      stat:
+        path: "{{ comparison_script }}"
+      register: script_stat
+
+    - name: Fail if comparison script doesn't exist
+      fail:
+        msg: "Multi-filesystem comparison script not found at {{ comparison_script }}"
+      when: not script_stat.stat.exists
+
+    - name: Find all fio result JSON files from different filesystem configurations
+      find:
+        paths: "{{ results_dir }}"
+        patterns: "*.json"
+        recurse: yes
+      register: json_files
+
+    - name: Display found result files
+      debug:
+        msg: "Found {{ json_files.files | length }} JSON result files"
+
+    - name: Fail if no results found
+      fail:
+        msg: "No fio result JSON files found in {{ results_dir }}. Run fio-tests first."
+      when: json_files.files | length == 0
+
+    - name: Extract filesystem configurations from file paths
+      set_fact:
+        filesystem_configs: >-
+          {{
+            json_files.files 
+            | map(attribute='path') 
+            | map('dirname') 
+            | map('basename') 
+            | unique 
+            | list
+          }}
+
+    - name: Display detected filesystem configurations
+      debug:
+        msg: "Detected filesystem configurations: {{ filesystem_configs }}"
+
+    - name: Check if multiple filesystem configurations exist
+      fail:
+        msg: |
+          Only one filesystem configuration detected. Multi-filesystem comparison requires 
+          results from multiple filesystem configurations. Available: {{ filesystem_configs }}
+      when: filesystem_configs | length < 2
+
+    - name: Install required Python packages for graphing
+      pip:
+        name:
+          - pandas
+          - matplotlib
+          - seaborn
+          - numpy
+        executable: "{{ python_path | replace('/usr/bin/python3', '/usr/bin/pip3') }}"
+      become: yes
+      when: fio_tests_enable_graphing | default(true) | bool
+
+    - name: Generate multi-filesystem comparison plots
+      shell: |
+        {{ python_path }} {{ comparison_script }} \
+          {{ results_dir }} \
+          --output-dir {{ output_dir }} \
+          --title "Multi-Filesystem Performance Comparison"
+      register: comparison_output
+      changed_when: true
+
+    - name: Display comparison generation output
+      debug:
+        var: comparison_output.stdout_lines
+
+    - name: Find generated comparison plots
+      find:
+        paths: "{{ output_dir }}"
+        patterns: "*.png,*.csv"
+        recurse: no
+      register: generated_files
+
+    - name: Display generated files
+      debug:
+        msg: "Generated {{ generated_files.files | length }} comparison files in {{ output_dir }}"
+
+    - name: List generated comparison files
+      debug:
+        msg: "{{ item.path | basename }}"
+      loop: "{{ generated_files.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Create results summary
+      template:
+        src: "{{ kdevops_playbooks_dir }}/templates/fio-tests-multi-fs-summary.html.j2"
+        dest: "{{ output_dir }}/multi-filesystem-comparison-summary.html"
+        mode: '0644'
+      vars:
+        timestamp: "{{ ansible_date_time.iso8601 }}"
+        total_configs: "{{ filesystem_configs | length }}"
+        total_files: "{{ json_files.files | length }}"
+      when: generated_files.files | length > 0
+
+    - name: Display final summary
+      debug:
+        msg: |
+          Multi-filesystem comparison completed successfully!
+          
+          Results location: {{ output_dir }}
+          Filesystem configurations analyzed: {{ filesystem_configs | join(', ') }}
+          Total result files processed: {{ json_files.files | length }}
+          Generated comparison files: {{ generated_files.files | length }}
+          
+          View the summary at: {{ output_dir }}/multi-filesystem-comparison-summary.html

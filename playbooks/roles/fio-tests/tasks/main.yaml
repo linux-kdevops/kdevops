@@ -1,104 +1,296 @@
 ---
+# Install distribution-specific dependencies
+- name: Install dependencies
+  include_tasks: install-deps/main.yml
+  tags: [ 'setup', 'deps' ]
+
+- include_role:
+    name: create_data_partition
+  tags: [ 'setup', 'data_partition' ]
+
+- include_role:
+    name: common
+  when:
+    - infer_uid_and_group|bool
+
+- name: Ensure data_dir has correct ownership
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+    recurse: yes
+    state: directory
+
+- name: Resolve per-host filesystem configuration
+  tags: [ 'setup' ]
+  set_fact:
+    # Extract filesystem type from hostname (e.g., debian13-fio-tests-xfs-16k -> xfs-16k)
+    host_fs_config: "{{ inventory_hostname | regex_replace('^.*-fio-tests-(.*)(-dev)?$', '\\1') }}"
+    # Set filesystem-specific variables based on hostname
+    fio_tests_fs_type: >-
+      {{
+        'xfs' if 'xfs' in inventory_hostname else
+        'ext4' if 'ext4' in inventory_hostname else
+        'btrfs' if 'btrfs' in inventory_hostname else
+        'xfs'
+      }}
+    fio_tests_fs_config: >-
+      {{
+        'xfs-16k' if 'xfs-16k' in inventory_hostname else
+        'ext4-bigalloc' if 'ext4-bigalloc' in inventory_hostname else
+        'btrfs-zstd' if 'btrfs-zstd' in inventory_hostname else
+        'xfs-4k'
+      }}
+
+- name: Set filesystem-specific mkfs and mount options
+  tags: [ 'setup' ]
+  set_fact:
+    fio_tests_mkfs_type: "{{ fio_tests_fs_type }}"
+    fio_tests_mkfs_cmd: >-
+      {{
+        '-f -b size=16k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1' if fio_tests_fs_config == 'xfs-16k' else
+        '-f -b size=4k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1' if fio_tests_fs_config == 'xfs-4k' else
+        '-F -O bigalloc -C 32k' if fio_tests_fs_config == 'ext4-bigalloc' else
+        '-f --features no-holes,free-space-tree' if fio_tests_fs_config == 'btrfs-zstd' else
+        '-f -b size=4k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1'
+      }}
+    fio_tests_mount_opts: >-
+      {{
+        'defaults,compress=zstd:3,space_cache=v2' if fio_tests_fs_config == 'btrfs-zstd' else
+        'defaults'
+      }}
+    # Ensure filesystem testing is enabled for multi-filesystem configurations
+    fio_tests_requires_mkfs_device: true
+    fio_tests_fs_device: "{{ fio_tests_fs_device | default('/dev/disk/by-id/virtio-kdevops2') }}"
+    fio_tests_fs_mount_point: "{{ fio_tests_fs_mount_point | default('/mnt/fio-tests') }}"
+    fio_tests_fs_label: "{{ fio_tests_fs_label | default('fio-tests') }}"
+
 - name: Set derived configuration variables
-  ansible.builtin.set_fact:
+  tags: [ 'setup' ]
+  set_fact:
     fio_tests_block_sizes: >-
       {{
-        (['4k'] if fio_tests_bs_4k else []) +
-        (['8k'] if fio_tests_bs_8k else []) +
-        (['16k'] if fio_tests_bs_16k else []) +
-        (['32k'] if fio_tests_bs_32k else []) +
-        (['64k'] if fio_tests_bs_64k else []) +
-        (['128k'] if fio_tests_bs_128k else [])
+        (['4k'] if fio_tests_bs_4k|default(true) else []) +
+        (['8k'] if fio_tests_bs_8k|default(true) else []) +
+        (['16k'] if fio_tests_bs_16k|default(true) else []) +
+        (['32k'] if fio_tests_bs_32k|default(true) else []) +
+        (['64k'] if fio_tests_bs_64k|default(true) else []) +
+        (['128k'] if fio_tests_bs_128k|default(true) else [])
+      }}
+    fio_tests_block_ranges: >-
+      {{
+        (['4k-16k'] if fio_tests_bs_range_4k_16k|default(false) else []) +
+        (['8k-32k'] if fio_tests_bs_range_8k_32k|default(false) else []) +
+        (['16k-64k'] if fio_tests_bs_range_16k_64k|default(false) else []) +
+        (['32k-128k'] if fio_tests_bs_range_32k_128k|default(false) else [])
       }}
     fio_tests_io_depths: >-
       {{
-        ([1] if fio_tests_iodepth_1 else []) +
-        ([4] if fio_tests_iodepth_4 else []) +
-        ([8] if fio_tests_iodepth_8 else []) +
-        ([16] if fio_tests_iodepth_16 else []) +
-        ([32] if fio_tests_iodepth_32 else []) +
-        ([64] if fio_tests_iodepth_64 else [])
+        ([1] if fio_tests_iodepth_1|default(true) else []) +
+        ([4] if fio_tests_iodepth_4|default(true) else []) +
+        ([8] if fio_tests_iodepth_8|default(true) else []) +
+        ([16] if fio_tests_iodepth_16|default(true) else []) +
+        ([32] if fio_tests_iodepth_32|default(true) else []) +
+        ([64] if fio_tests_iodepth_64|default(true) else [])
       }}
     fio_tests_num_jobs: >-
       {{
-        ([1] if fio_tests_numjobs_1 else []) +
-        ([2] if fio_tests_numjobs_2 else []) +
-        ([4] if fio_tests_numjobs_4 else []) +
-        ([8] if fio_tests_numjobs_8 else []) +
-        ([16] if fio_tests_numjobs_16 else [])
+        ([1] if fio_tests_numjobs_1|default(true) else []) +
+        ([2] if fio_tests_numjobs_2|default(true) else []) +
+        ([4] if fio_tests_numjobs_4|default(true) else []) +
+        ([8] if fio_tests_numjobs_8|default(true) else []) +
+        ([16] if fio_tests_numjobs_16|default(true) else [])
       }}
     fio_tests_patterns: >-
       {{
-        ([{'name': 'randread', 'rw': 'randread', 'rwmixread': 100}] if fio_tests_pattern_rand_read else []) +
-        ([{'name': 'randwrite', 'rw': 'randwrite', 'rwmixread': 0}] if fio_tests_pattern_rand_write else []) +
-        ([{'name': 'seqread', 'rw': 'read', 'rwmixread': 100}] if fio_tests_pattern_seq_read else []) +
-        ([{'name': 'seqwrite', 'rw': 'write', 'rwmixread': 0}] if fio_tests_pattern_seq_write else []) +
-        ([{'name': 'mixed_75_25', 'rw': 'randrw', 'rwmixread': 75}] if fio_tests_pattern_mixed_75_25 else []) +
-        ([{'name': 'mixed_50_50', 'rw': 'randrw', 'rwmixread': 50}] if fio_tests_pattern_mixed_50_50 else [])
+        ([{'name': 'randread', 'rw': 'randread', 'rwmixread': 100}] if fio_tests_pattern_rand_read|default(true) else []) +
+        ([{'name': 'randwrite', 'rw': 'randwrite', 'rwmixread': 0}] if fio_tests_pattern_rand_write|default(true) else []) +
+        ([{'name': 'seqread', 'rw': 'read', 'rwmixread': 100}] if fio_tests_pattern_seq_read|default(true) else []) +
+        ([{'name': 'seqwrite', 'rw': 'write', 'rwmixread': 0}] if fio_tests_pattern_seq_write|default(true) else []) +
+        ([{'name': 'mixed_75_25', 'rw': 'randrw', 'rwmixread': 75}] if fio_tests_pattern_mixed_75_25|default(true) else []) +
+        ([{'name': 'mixed_50_50', 'rw': 'randrw', 'rwmixread': 50}] if fio_tests_pattern_mixed_50_50|default(true) else [])
       }}
+    # Set effective block sizes based on whether ranges are enabled
+    fio_tests_effective_block_sizes: "{{ fio_tests_block_sizes }}"
 
-- name: Calculate total test combinations and timeout
-  ansible.builtin.set_fact:
-    fio_tests_total_combinations: >-
-      {{ fio_tests_block_sizes | length * fio_tests_io_depths | length *
-         fio_tests_num_jobs | length * fio_tests_patterns | length }}
-    fio_test_time_per_job: "{{ (fio_tests_runtime | int) + (fio_tests_ramp_time | int) }}"
+- name: Check if {{ fio_tests_fs_device }} is mounted
+  tags: [ 'setup', 'run_tests' ]
+  become: yes
+  become_method: sudo
+  command: findmnt --noheadings --output TARGET --source {{ fio_tests_fs_device }}
+  register: mountpoint_stat
+  failed_when: false
+  changed_when: false
+  when: fio_tests_requires_mkfs_device | bool
 
-- name: Calculate async timeout with safety margin
-  ansible.builtin.set_fact:
-    # Each test runs twice (JSON + normal), add 60s per test for overhead, add 30% margin
-    fio_tests_async_timeout: >-
-      {{ ((fio_tests_total_combinations | int * fio_test_time_per_job | int * 2) +
-          (fio_tests_total_combinations | int * 60) * 1.3) | int }}
+- name: Unmount {{ fio_tests_fs_device }} if mounted
+  tags: [ 'setup', 'run_tests' ]
+  become: yes
+  become_method: sudo
+  command: umount {{ fio_tests_fs_device }}
+  when:
+    - fio_tests_requires_mkfs_device | bool
+    - mountpoint_stat.stdout != ""
 
-- name: Display test configuration
-  ansible.builtin.debug:
-    msg: |
-      FIO Test Configuration:
-      - Total test combinations: {{ fio_tests_total_combinations }}
-      - Runtime per test: {{ fio_tests_runtime }}s
-      - Ramp time per test: {{ fio_tests_ramp_time }}s
-      - Estimated total time: {{ (fio_tests_total_combinations | int * fio_test_time_per_job | int * 2 / 60) | round(1) }} minutes
-      - Async timeout: {{ (fio_tests_async_timeout | int / 60) | round(1) }} minutes
-      {% if fio_tests_device == '/dev/null' %}
-      - Note: Using /dev/null - fsync_on_close and direct IO disabled automatically
-      {% endif %}
+- name: Create filesystem on {{ fio_tests_fs_device }}
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  command: >
+    mkfs.{{ fio_tests_mkfs_type }}
+    {{ fio_tests_mkfs_cmd }}
+    -L {{ fio_tests_fs_label }}
+    {{ fio_tests_fs_device }}
+  when: fio_tests_requires_mkfs_device | bool
 
-- name: Install fio and dependencies
-  ansible.builtin.include_tasks: install-deps/main.yml
-- name: Create results directory
+- name: Create mount point directory
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
   ansible.builtin.file:
+    path: "{{ fio_tests_fs_mount_point }}"
+    state: directory
+    mode: '0755'
+  when: fio_tests_requires_mkfs_device | bool
+
+- name: Mount filesystem
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  mount:
+    path: "{{ fio_tests_fs_mount_point }}"
+    src: "{{ fio_tests_fs_device }}"
+    fstype: "{{ fio_tests_mkfs_type }}"
+    opts: "{{ fio_tests_mount_opts }}"
+    state: mounted
+  when: fio_tests_requires_mkfs_device | bool
+
+- name: Set filesystem mount ownership
+  tags: [ 'setup' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ fio_tests_fs_mount_point }}"
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+    mode: '0755'
+  when: fio_tests_requires_mkfs_device | bool
+
+- name: Create results directory
+  tags: [ 'setup' ]
+  file:
     path: "{{ fio_tests_results_dir }}"
     state: directory
-    mode: "0755"
-  become: true
+    mode: '0755'
+  become: yes
 
 - name: Create fio job files directory
-  ansible.builtin.file:
+  tags: [ 'setup' ]
+  file:
     path: "{{ fio_tests_results_dir }}/jobs"
     state: directory
-    mode: "0755"
-  become: true
+    mode: '0755'
+  become: yes
+
+- name: Debug fio test parameters
+  tags: [ 'setup' ]
+  debug:
+    msg: |
+      fio_tests_patterns: {{ fio_tests_patterns }}
+      fio_tests_effective_block_sizes: {{ fio_tests_effective_block_sizes }}
+      fio_tests_io_depths: {{ fio_tests_io_depths }}
+      fio_tests_num_jobs: {{ fio_tests_num_jobs }}
+      fio_tests_block_sizes: {{ fio_tests_block_sizes }}
+      fio_tests_block_ranges: {{ fio_tests_block_ranges }}
+      fio_tests_enable_bs_ranges: {{ fio_tests_enable_bs_ranges|default(false) }}
+- name: Debug effective block sizes calculation
+  tags: [ 'setup' ]
+  debug:
+    msg: |
+      Calculating effective_block_sizes:
+      fio_tests_enable_bs_ranges = {{ fio_tests_enable_bs_ranges|default(false) }}
+      not fio_tests_enable_bs_ranges = {{ not (fio_tests_enable_bs_ranges|default(false)) }}
+      Should use block_sizes: {{ not (fio_tests_enable_bs_ranges|default(false)) }}
+      Result: {{ fio_tests_block_sizes if not (fio_tests_enable_bs_ranges|default(false)) else fio_tests_block_ranges }}
+
+- name: Ensure effective block sizes is set correctly
+  tags: [ 'setup' ]
+  set_fact:
+    fio_tests_effective_block_sizes: "{{ fio_tests_block_sizes }}"
+  when: fio_tests_effective_block_sizes|length == 0
 
 - name: Generate fio job files
-  ansible.builtin.template:
+  tags: [ 'setup' ]
+  template:
     src: fio-job.ini.j2
     dest: "{{ fio_tests_results_dir }}/jobs/{{ item.0.name }}_bs{{ item.1 }}_iodepth{{ item.2 }}_jobs{{ item.3 }}.ini"
-    mode: "0644"
+    mode: '0644'
   vars:
     pattern: "{{ item.0 }}"
     block_size: "{{ item.1 }}"
     io_depth: "{{ item.2 }}"
     num_jobs: "{{ item.3 }}"
+    test_directory: "{{ fio_tests_fs_mount_point if fio_tests_requires_mkfs_device else '' }}"
+    test_device: "{{ fio_tests_device if not fio_tests_requires_mkfs_device else '' }}"
   with_nested:
     - "{{ fio_tests_patterns }}"
-    - "{{ fio_tests_block_sizes }}"
+    - "{{ fio_tests_effective_block_sizes }}"
     - "{{ fio_tests_io_depths }}"
     - "{{ fio_tests_num_jobs }}"
-  become: true
+  become: yes
 
-- name: Run fio tests
+- name: Get kernel version
+  tags: [ 'setup', 'run_tests' ]
+  ansible.builtin.command: uname -r
+  register: kernel_version
+
+- name: Show kernel version
+  tags: [ 'setup', 'run_tests' ]
+  debug:
+    msg: "Kernel version on {{ inventory_hostname }} : {{ kernel_version.stdout }}"
+
+# XXX: add variability for the different options for the governor
+- name: Set CPU governor to performance
+  tags: [ 'run_tests' ]
+  become: yes
+  become_method: sudo
   ansible.builtin.shell: |
+    for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+      if [ -f "$cpu" ]; then
+        echo "performance" > "$cpu"
+      fi
+    done
+
+- name: Drop caches before test
+  tags: [ 'run_tests' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.shell: |
+    sync
+    echo 3 > /proc/sys/vm/drop_caches
+
+- name: Check if any job files were generated
+  tags: [ 'run_tests' ]
+  become: yes
+  become_method: sudo
+  shell: ls {{ fio_tests_results_dir }}/jobs/*.ini 2>/dev/null | wc -l
+  register: job_file_count
+  changed_when: false
+
+- name: Fail if no job files found
+  tags: [ 'run_tests' ]
+  fail:
+    msg: "No fio job files found in {{ fio_tests_results_dir }}/jobs/. Check test parameter configuration."
+  when: job_file_count.stdout|int == 0
+
+- name: Run fio tests in background
+  tags: [ 'run_tests' ]
+  become: yes
+  become_method: sudo
+  shell: |
     cd {{ fio_tests_results_dir }}/jobs
     for job_file in *.ini; do
       echo "Running test: $job_file"
@@ -113,63 +305,113 @@
       fio "$job_file" --output="{{ fio_tests_results_dir }}/results_${job_file%.ini}.txt" \
                       --output-format=normal
     done
-  become: true
-  async: "{{ fio_tests_async_timeout | default(7200) }}"
-  poll: 30
-  changed_when: true
+  async: 86400  # 24 hours
+  poll: 0
+  register: fio_job
 
-- name: Remove old fio-tests results archive if it exists
+- name: Wait for fio tests to complete
+  tags: [ 'run_tests' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.async_status:
+    jid: "{{ fio_job.ansible_job_id }}"
+  register: fio_status
+  until: fio_status.finished
+  retries: 1440    # 12 hours
+  delay: 60        # check every 60 seconds
+
+- name: Create local results directory
+  delegate_to: localhost
   ansible.builtin.file:
-    path: "{{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    path: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/"
+    state: directory
+    mode: '0755'
+  run_once: false
+  tags: ['results']
+
+- name: Ensure old fio-tests results archive is removed if it exists
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ data_path }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
     state: absent
-  tags: ["results"]
-  become: true
+  tags: [ 'results' ]
 
 - name: Archive fio-tests results directory on remote host
-  become: true
-  ansible.builtin.shell: |
-    cd {{ fio_tests_results_dir }}
-    tar czf /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz \
-      --exclude='*.tar.gz' \
-      results_*.json results_*.txt *.log jobs/ 2>/dev/null || true
-    mv /tmp/fio-tests-results-{{ inventory_hostname }}.tar.gz {{ fio_tests_results_dir }}/ || true
-  changed_when: true
-  tags: ["results"]
+  become: yes
+  become_method: sudo
+  command: >
+    tar czf {{ data_path }}/fio-tests-results-{{ inventory_hostname }}.tar.gz -C {{ fio_tests_results_dir }} .
+  args:
+    creates: "{{ data_path }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+  tags: [ 'results' ]
 
 - name: Remove previously fetched fio-tests results archive if it exists
-  become: false
+  become: no
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  tags: ["results"]
+  tags: [ 'results' ]
   with_items:
     - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
     - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
 
 - name: Copy fio-tests results
-  tags: ["results"]
-  become: true
+  tags: [ 'results' ]
+  become: yes
+  become_method: sudo
   ansible.builtin.fetch:
-    src: "{{ fio_tests_results_dir }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
+    src: "{{ data_path }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/"
-    flat: true
+    flat: yes
 
 - name: Ensure local fio-tests results extraction directory exists
-  become: false
+  become: no
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
     state: directory
-    mode: "0755"
-    recurse: true
-  tags: ["results"]
+    mode: '0755'
+    recurse: yes
+  tags: [ 'results' ]
 
 - name: Extract fio-tests results archive locally
-  become: false
+  become: no
   delegate_to: localhost
   ansible.builtin.unarchive:
     src: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}.tar.gz"
     dest: "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}/fio-tests-results-{{ inventory_hostname }}"
-    remote_src: false
-  tags: ["results"]
+    remote_src: no
+  tags: [ 'results' ]
+
+- name: Clean previous fio-tests results on DUTs
+  tags: [ 'clean' ]
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ fio_tests_results_dir }}"
+
+- name: Clean previous fio-tests results on localhost
+  tags: [ 'clean' ]
+  become: yes
+  become_method: sudo
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ topdir_path }}/workflows/fio-tests/results/{{ inventory_hostname }}"
+
+- name: Unmount filesystem after tests
+  tags: [ 'clean' ]
+  become: yes
+  become_method: sudo
+  mount:
+    path: "{{ fio_tests_fs_mount_point }}"
+    state: unmounted
+  when: fio_tests_requires_mkfs_device | bool
+  ignore_errors: yes

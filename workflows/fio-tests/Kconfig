@@ -1,6 +1,38 @@
+config FIO_TESTS_RUNTIME_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh FIO_TESTS_RUNTIME)
+
+config FIO_TESTS_RAMP_TIME_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh FIO_TESTS_RAMP_TIME)
+
+config FIO_TESTS_QUICK_TEST_SET_BY_CLI
+	bool
+	output yaml
+	default $(shell, scripts/check-cli-set-var.sh FIO_TESTS_QUICK_TEST)
+
 choice
 	prompt "What type of fio testing do you want to run?"
-	default FIO_TESTS_PERFORMANCE_ANALYSIS
+	default FIO_TESTS_PERFORMANCE_ANALYSIS if !FIO_TESTS_QUICK_TEST_SET_BY_CLI
+	default FIO_TESTS_QUICK_TEST if FIO_TESTS_QUICK_TEST_SET_BY_CLI
+
+config FIO_TESTS_QUICK_TEST
+	bool "Quick test (minimal runtime for CI/demo)"
+	output yaml
+	help
+	  Run minimal fio tests with reduced runtime and test matrix
+	  for quick validation, CI, or demonstration purposes.
+	  This limits test duration to about 1 minute total.
+
+	  Test matrix is automatically reduced to:
+	  - Single block size (4K)
+	  - Limited IO depths (1, 4)
+	  - Limited job counts (1, 2)
+	  - Essential patterns (rand_read, rand_write)
+	  - Runtime: 15 seconds
+	  - Ramp time: 3 seconds
 
 config FIO_TESTS_PERFORMANCE_ANALYSIS
 	bool "Performance analysis tests"
@@ -41,81 +73,221 @@ config FIO_TESTS_MIXED_WORKLOADS
 	  Test mixed read/write workloads with various ratios to
 	  simulate real-world application patterns.
 
+config FIO_TESTS_FILESYSTEM_TESTS
+	bool "Filesystem performance tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	select FIO_TESTS_REQUIRES_FILESYSTEM
+	output yaml
+	help
+	  Test filesystem performance characteristics using a dedicated
+	  filesystem mount rather than direct block device access.
+	  This allows testing of filesystem-specific optimizations,
+	  block size configurations, and I/O patterns.
+
+	  Tests are run against various filesystem configurations
+	  including XFS with different block sizes, ext4 with bigalloc,
+	  and btrfs with different features enabled.
+
+	  A/B testing is enabled to compare performance across different
+	  filesystem configurations and kernel versions.
+
+config FIO_TESTS_MULTI_FILESYSTEM
+	bool "Multi-filesystem comparison tests"
+	select KDEVOPS_BASELINE_AND_DEV
+	select FIO_TESTS_REQUIRES_FILESYSTEM
+	output yaml
+	help
+	  Test and compare performance across multiple filesystem
+	  configurations simultaneously. This creates separate VMs
+	  for each enabled filesystem configuration and runs
+	  identical workloads across all of them.
+
+	  Enables direct comparison between:
+	  - XFS with different block sizes (4K vs 16K vs 32K vs 64K)
+	  - Different filesystems (XFS vs ext4 vs btrfs)
+	  - Various filesystem features and optimizations
+
+	  Each configuration gets its own dedicated VM to ensure
+	  isolated testing environments. Results are aggregated
+	  for comprehensive performance comparison graphs.
+
+	  A/B testing infrastructure ensures fair comparisons
+	  across kernel versions and configurations.
+
 endchoice
 
 config FIO_TESTS_DEVICE
 	string "Device to use for fio testing"
 	output yaml
-	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
-	default "/dev/disk/by-id/virtio-kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
-	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/disk/by-id/virtio-kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops1" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
 	default "/dev/sdc" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
 	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
 	default "/dev/nvme2n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
 	default "/dev/nvme1n1" if TERRAFORM_GCE
 	default "/dev/sdd" if TERRAFORM_AZURE
 	default TERRAFORM_OCI_SPARSE_VOLUME_DEVICE_FILE_NAME if TERRAFORM_OCI
+	default "/dev/null"
 	help
 	  The block device to use for fio testing. For CI/testing
 	  purposes, /dev/null can be used as a simple target.
 
-config FIO_TESTS_QUICK_SET_BY_CLI
-	bool
-	output yaml
-	default $(shell, scripts/check-cli-set-var.sh FIO_QUICK)
-
-choice
-	prompt "FIO test runtime duration"
-	default FIO_TESTS_RUNTIME_DEFAULT if !FIO_TESTS_QUICK_SET_BY_CLI
-	default FIO_TESTS_RUNTIME_QUICK if FIO_TESTS_QUICK_SET_BY_CLI
-
-config FIO_TESTS_RUNTIME_DEFAULT
-	bool "Default runtime (60 seconds)"
-	help
-	  Use default runtime of 60 seconds per job for comprehensive
-	  performance testing.
-
-config FIO_TESTS_RUNTIME_QUICK
-	bool "Quick runtime (10 seconds)"
-	help
-	  Use quick runtime of 10 seconds per job for rapid testing
-	  or CI environments.
-
-config FIO_TESTS_RUNTIME_CUSTOM_HIGH
-	bool "Custom high runtime (300 seconds)"
-	help
-	  Use extended runtime of 300 seconds per job for thorough
-	  long-duration testing.
-
-config FIO_TESTS_RUNTIME_CUSTOM_LOW
-	bool "Custom low runtime (5 seconds)"
-	help
-	  Use minimal runtime of 5 seconds per job for very quick
-	  smoke testing.
-
-endchoice
-
 config FIO_TESTS_RUNTIME
 	string "Test runtime per job"
 	output yaml
-	default "60" if FIO_TESTS_RUNTIME_DEFAULT
-	default "10" if FIO_TESTS_RUNTIME_QUICK
-	default "300" if FIO_TESTS_RUNTIME_CUSTOM_HIGH
-	default "5" if FIO_TESTS_RUNTIME_CUSTOM_LOW
+	default $(shell, ./scripts/append-makefile-vars.sh $(FIO_TESTS_RUNTIME)) if FIO_TESTS_RUNTIME_SET_BY_CLI
+	default "15" if FIO_TESTS_QUICK_TEST
+	default "60" if !FIO_TESTS_RUNTIME_SET_BY_CLI && !FIO_TESTS_QUICK_TEST
 	help
-	  Runtime in seconds for each fio job.
+	  Runtime in seconds for each fio job. Default is 60 seconds
+	  for comprehensive testing, or 15 seconds for quick tests.
+	  Can be overridden via FIO_TESTS_RUNTIME environment variable.
 
 config FIO_TESTS_RAMP_TIME
 	string "Ramp time before measurements"
 	output yaml
-	default "10" if FIO_TESTS_RUNTIME_DEFAULT
-	default "2" if FIO_TESTS_RUNTIME_QUICK
-	default "30" if FIO_TESTS_RUNTIME_CUSTOM_HIGH
-	default "1" if FIO_TESTS_RUNTIME_CUSTOM_LOW
+	default $(shell, ./scripts/append-makefile-vars.sh $(FIO_TESTS_RAMP_TIME)) if FIO_TESTS_RAMP_TIME_SET_BY_CLI
+	default "3" if FIO_TESTS_QUICK_TEST
+	default "10" if !FIO_TESTS_RAMP_TIME_SET_BY_CLI && !FIO_TESTS_QUICK_TEST
 	help
 	  Time in seconds to ramp up before starting measurements.
-	  This allows the workload to stabilize before collecting
-	  performance data.
+	  Default is 10 seconds for comprehensive testing, or 3 seconds
+	  for quick tests. Can be overridden via FIO_TESTS_RAMP_TIME
+	  environment variable.
+
+config FIO_TESTS_REQUIRES_FILESYSTEM
+	bool
+
+if FIO_TESTS_REQUIRES_FILESYSTEM
+
+source "workflows/fio-tests/Kconfig.fs"
+
+config FIO_TESTS_FS_DEVICE
+	string "Device to use for filesystem creation"
+	output yaml
+	default "/dev/disk/by-id/virtio-kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_VIRTIO
+	default "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_NVME
+	default "/dev/disk/by-id/ata-QEMU_HARDDISK_kdevops2" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_IDE
+	default "/dev/sdd" if LIBVIRT && LIBVIRT_EXTRA_STORAGE_DRIVE_SCSI
+	default "/dev/nvme3n1" if TERRAFORM_AWS_INSTANCE_M5AD_2XLARGE
+	default "/dev/nvme3n1" if TERRAFORM_AWS_INSTANCE_M5AD_4XLARGE
+	default "/dev/nvme2n1" if TERRAFORM_GCE
+	default "/dev/sde" if TERRAFORM_AZURE
+	default "/dev/sdd"
+	help
+	  The block device to use for creating the filesystem for testing.
+	  This should be the third extra storage drive, separate from the
+	  main device used for raw block device testing.
+
+config FIO_TESTS_FS_MOUNT_POINT
+	string "Filesystem mount point"
+	output yaml
+	default "/mnt/fio-tests"
+	help
+	  The directory where the test filesystem will be mounted.
+	  Test files will be created in this directory.
+
+config FIO_TESTS_FS_LABEL
+	string "Filesystem label"
+	output yaml
+	default "fio-tests"
+	help
+	  The label to use when creating the filesystem.
+
+endif # FIO_TESTS_REQUIRES_FILESYSTEM
+
+# Multi-filesystem individual configuration options
+if FIO_TESTS_MULTI_FILESYSTEM
+
+menu "Multi-filesystem parallel testing configuration"
+
+comment "XFS filesystem block size configurations"
+comment "Each enabled option creates a separate VM for parallel testing"
+
+config FIO_TESTS_ENABLE_XFS_4K
+	bool "XFS 4K block size"
+	output yaml
+	default n
+	help
+	  Create a VM with XFS filesystem using 4K block size.
+	  Configuration: -f -b size=4k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1
+
+config FIO_TESTS_ENABLE_XFS_16K
+	bool "XFS 16K block size"
+	output yaml
+	default n
+	help
+	  Create a VM with XFS filesystem using 16K block size.
+	  Configuration: -f -b size=16k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1
+
+config FIO_TESTS_ENABLE_XFS_32K
+	bool "XFS 32K block size"
+	output yaml
+	default n
+	help
+	  Create a VM with XFS filesystem using 32K block size.
+	  Configuration: -f -b size=32k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1
+
+config FIO_TESTS_ENABLE_XFS_64K
+	bool "XFS 64K block size"
+	output yaml
+	default n
+	help
+	  Create a VM with XFS filesystem using 64K block size.
+	  Configuration: -f -b size=64k -s size=4k -m reflink=1,rmapbt=1 -i sparse=1
+
+comment "ext4 filesystem configurations"
+
+config FIO_TESTS_ENABLE_EXT4_STD
+	bool "ext4 standard configuration"
+	output yaml
+	default n
+	help
+	  Create a VM with standard ext4 filesystem.
+	  Configuration: -F
+
+config FIO_TESTS_ENABLE_EXT4_BIGALLOC
+	bool "ext4 with bigalloc (32K clusters)"
+	output yaml
+	default n
+	help
+	  Create a VM with ext4 filesystem using bigalloc feature.
+	  Configuration: -F -O bigalloc -C 32k
+
+comment "btrfs filesystem configurations"
+
+config FIO_TESTS_ENABLE_BTRFS_STD
+	bool "btrfs standard configuration"
+	output yaml
+	default n
+	help
+	  Create a VM with standard btrfs filesystem.
+	  Configuration: -f --features no-holes,free-space-tree
+
+config FIO_TESTS_ENABLE_BTRFS_ZSTD
+	bool "btrfs with zstd compression"
+	output yaml
+	default n
+	help
+	  Create a VM with btrfs filesystem using zstd compression.
+	  Configuration: -f --features no-holes,free-space-tree
+	  Mount options: defaults,compress=zstd:3,space_cache=v2
+
+endmenu
+
+config FIO_TESTS_MULTI_FS_COUNT
+	int
+	default 0
+	default 1 if FIO_TESTS_ENABLE_XFS_4K && !FIO_TESTS_ENABLE_XFS_16K && !FIO_TESTS_ENABLE_XFS_32K && !FIO_TESTS_ENABLE_XFS_64K && !FIO_TESTS_ENABLE_EXT4_STD && !FIO_TESTS_ENABLE_EXT4_BIGALLOC && !FIO_TESTS_ENABLE_BTRFS_STD && !FIO_TESTS_ENABLE_BTRFS_ZSTD
+	default 2 if (FIO_TESTS_ENABLE_XFS_4K && FIO_TESTS_ENABLE_XFS_16K && !FIO_TESTS_ENABLE_XFS_32K && !FIO_TESTS_ENABLE_XFS_64K && !FIO_TESTS_ENABLE_EXT4_STD && !FIO_TESTS_ENABLE_EXT4_BIGALLOC && !FIO_TESTS_ENABLE_BTRFS_STD && !FIO_TESTS_ENABLE_BTRFS_ZSTD) || (FIO_TESTS_ENABLE_XFS_4K && !FIO_TESTS_ENABLE_XFS_16K && FIO_TESTS_ENABLE_XFS_32K && !FIO_TESTS_ENABLE_XFS_64K && !FIO_TESTS_ENABLE_EXT4_STD && !FIO_TESTS_ENABLE_EXT4_BIGALLOC && !FIO_TESTS_ENABLE_BTRFS_STD && !FIO_TESTS_ENABLE_BTRFS_ZSTD)
+	default 3 if FIO_TESTS_ENABLE_XFS_16K && FIO_TESTS_ENABLE_EXT4_BIGALLOC && FIO_TESTS_ENABLE_BTRFS_ZSTD && !FIO_TESTS_ENABLE_XFS_4K && !FIO_TESTS_ENABLE_XFS_32K && !FIO_TESTS_ENABLE_XFS_64K && !FIO_TESTS_ENABLE_EXT4_STD && !FIO_TESTS_ENABLE_BTRFS_STD
+	default 8
+	help
+	  Number of enabled multi-filesystem configurations. This is used
+	  internally for validation and configuration generation.
+
+endif # FIO_TESTS_MULTI_FILESYSTEM
 
 menu "Block size configuration"
 
@@ -130,42 +302,84 @@ config FIO_TESTS_BS_4K
 config FIO_TESTS_BS_8K
 	bool "8K block size tests"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Enable 8K block size testing.
 
 config FIO_TESTS_BS_16K
 	bool "16K block size tests"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Enable 16K block size testing.
 
 config FIO_TESTS_BS_32K
 	bool "32K block size tests"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Enable 32K block size testing.
 
 config FIO_TESTS_BS_64K
 	bool "64K block size tests"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Enable 64K block size testing.
 
 config FIO_TESTS_BS_128K
 	bool "128K block size tests"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Enable 128K block size testing.
+
+config FIO_TESTS_ENABLE_BS_RANGES
+	bool "Enable block size ranges"
+	output yaml
+	default n
+	help
+	  Enable testing with block size ranges instead of fixed sizes.
+	  This allows fio to randomly select block sizes within specified
+	  ranges, providing more realistic workload patterns.
+
+if FIO_TESTS_ENABLE_BS_RANGES
+
+config FIO_TESTS_BS_RANGE_4K_16K
+	bool "4K-16K block size range"
+	output yaml
+	default y
+	help
+	  Enable testing with block sizes ranging from 4K to 16K.
+	  This simulates typical small random I/O patterns.
+
+config FIO_TESTS_BS_RANGE_8K_32K
+	bool "8K-32K block size range"
+	output yaml
+	default y
+	help
+	  Enable testing with block sizes ranging from 8K to 32K.
+	  This simulates mixed small to medium I/O patterns.
+
+config FIO_TESTS_BS_RANGE_16K_64K
+	bool "16K-64K block size range"
+	output yaml
+	default n
+	help
+	  Enable testing with block sizes ranging from 16K to 64K.
+	  This simulates medium to large I/O patterns.
+
+config FIO_TESTS_BS_RANGE_32K_128K
+	bool "32K-128K block size range"
+	output yaml
+	default n
+	help
+	  Enable testing with block sizes ranging from 32K to 128K.
+	  This simulates large I/O patterns typical of sequential workloads.
+
+endif # FIO_TESTS_ENABLE_BS_RANGES
 
 endmenu
 
@@ -181,40 +395,37 @@ config FIO_TESTS_IODEPTH_1
 config FIO_TESTS_IODEPTH_4
 	bool "IO depth 4"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y
 	help
 	  Test with IO depth of 4.
 
 config FIO_TESTS_IODEPTH_8
 	bool "IO depth 8"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Test with IO depth of 8.
 
 config FIO_TESTS_IODEPTH_16
 	bool "IO depth 16"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Test with IO depth of 16.
 
 config FIO_TESTS_IODEPTH_32
 	bool "IO depth 32"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Test with IO depth of 32.
 
 config FIO_TESTS_IODEPTH_64
 	bool "IO depth 64"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Test with IO depth of 64.
 
@@ -232,32 +443,29 @@ config FIO_TESTS_NUMJOBS_1
 config FIO_TESTS_NUMJOBS_2
 	bool "2 jobs"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y
 	help
 	  Test with 2 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_4
 	bool "4 jobs"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Test with 4 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_8
 	bool "8 jobs"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Test with 8 concurrent fio jobs.
 
 config FIO_TESTS_NUMJOBS_16
 	bool "16 jobs"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Test with 16 concurrent fio jobs.
 
@@ -275,40 +483,37 @@ config FIO_TESTS_PATTERN_RAND_READ
 config FIO_TESTS_PATTERN_RAND_WRITE
 	bool "Random write"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y
 	help
 	  Enable random write workload testing.
 
 config FIO_TESTS_PATTERN_SEQ_READ
 	bool "Sequential read"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Enable sequential read workload testing.
 
 config FIO_TESTS_PATTERN_SEQ_WRITE
 	bool "Sequential write"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default y if !FIO_TESTS_QUICK_TEST
+	default n if FIO_TESTS_QUICK_TEST
 	help
 	  Enable sequential write workload testing.
 
 config FIO_TESTS_PATTERN_MIXED_75_25
 	bool "Mixed 75% read / 25% write"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Enable mixed workload with 75% reads and 25% writes.
 
 config FIO_TESTS_PATTERN_MIXED_50_50
 	bool "Mixed 50% read / 50% write"
 	output yaml
-	default y if !FIO_TESTS_QUICK_SET_BY_CLI
-	default n if FIO_TESTS_QUICK_SET_BY_CLI
+	default n
 	help
 	  Enable mixed workload with 50% reads and 50% writes.
 
@@ -342,9 +547,6 @@ config FIO_TESTS_FSYNC_ON_CLOSE
 	help
 	  Call fsync() before closing files to ensure data is
 	  written to storage.
-
-	  Note: This is automatically disabled when using /dev/null
-	  as the test device since /dev/null doesn't support fsync.
 
 config FIO_TESTS_RESULTS_DIR
 	string "Results directory"

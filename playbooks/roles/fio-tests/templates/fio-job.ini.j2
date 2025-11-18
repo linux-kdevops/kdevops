@@ -1,29 +1,40 @@
 [global]
 ioengine={{ fio_tests_ioengine }}
-{% if fio_tests_device == '/dev/null' %}
-direct=0
-{% else %}
 direct={{ fio_tests_direct | int }}
-{% endif %}
-{% if fio_tests_device == '/dev/null' %}
-fsync_on_close=0
-{% else %}
 fsync_on_close={{ fio_tests_fsync_on_close | int }}
-{% endif %}
 group_reporting=1
 time_based=1
 runtime={{ fio_tests_runtime }}
 ramp_time={{ fio_tests_ramp_time }}
 
 [{{ pattern.name }}_bs{{ block_size }}_iodepth{{ io_depth }}_jobs{{ num_jobs }}]
-filename={{ fio_tests_device }}
-{% if fio_tests_device == '/dev/null' %}
+{% if test_directory %}
+# Filesystem testing - create files in mounted directory
+directory={{ test_directory }}
+filename_format=fio-test-$jobnum.$filenum
+{% if pattern.rw in ['read', 'randread'] %}
+# For read tests, use single 1GB file per job
+nrfiles=1
 size=1G
+{% else %}
+# For write tests, use multiple smaller files to avoid space issues
+nrfiles=4
+size=256M
+{% endif %}
+{% else %}
+# Block device testing - direct device access
+filename={{ test_device }}
 {% endif %}
 rw={{ pattern.rw }}
 {% if pattern.rwmixread is defined and pattern.rw in ['randrw', 'rw'] %}
 rwmixread={{ pattern.rwmixread }}
 {% endif %}
+{% if '-' in block_size %}
+# Block size range (e.g., "4k-16k")
+bsrange={{ block_size }}
+{% else %}
+# Fixed block size
 bs={{ block_size }}
+{% endif %}
 iodepth={{ io_depth }}
 numjobs={{ num_jobs }}
