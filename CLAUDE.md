@@ -204,6 +204,42 @@ make mmtests-compare  # Generate comparison reports
 - Python and shell scripts for advanced graph generation
 - Robust error handling and dependency management
 
+### fio-tests (Storage Performance Testing)
+- **Purpose**: Comprehensive storage performance analysis using fio
+- **Supports**: Block devices and filesystem testing with various configurations
+- **Features**:
+  - Configurable test matrices (block sizes, IO depths, job counts)
+  - Multiple workload patterns (random/sequential, read/write, mixed)
+  - Filesystem-specific testing (XFS, ext4, btrfs) with different configurations
+  - Block size ranges for realistic I/O patterns
+  - Performance visualization and graphing
+  - A/B testing for baseline vs development comparisons
+- **Location**: `workflows/fio-tests/`
+- **Config**: Enable fio-tests workflow in menuconfig
+
+#### fio-tests Filesystem Testing
+The fio-tests workflow supports both direct block device testing and filesystem-based testing:
+
+**Block Device Testing**: Direct I/O to storage devices for raw performance analysis
+**Filesystem Testing**: Tests against mounted filesystems to analyze filesystem-specific performance characteristics
+
+**Supported Filesystems**:
+- **XFS**: Various block sizes (4K-64K) with different sector sizes and features (reflink, rmapbt)
+- **ext4**: Standard and bigalloc configurations with different cluster sizes
+- **btrfs**: Modern features including no-holes, free-space-tree, and compression options
+
+**Key Configuration Options**:
+- Block size testing: Fixed sizes (4K-128K) or ranges (e.g., 4K-16K) for realistic workloads
+- Filesystem features: Enable specific filesystem optimizations and features
+- Test patterns: Random/sequential read/write, mixed workloads with configurable ratios
+- Performance tuning: IO engines (io_uring, libaio), direct I/O, fsync behavior
+
+**Example Defconfigs**:
+- `defconfig-fio-tests-fs-xfs`: XFS filesystem with 16K block size testing
+- `defconfig-fio-tests-fs-ext4-bigalloc`: ext4 with bigalloc and 32K clusters
+- `defconfig-fio-tests-fs-btrfs-zstd`: btrfs with zstd compression
+- `defconfig-fio-tests-fs-ranges`: Block size range testing with XFS
+
 ## Architecture Highlights
 
 ### Configuration System
@@ -393,6 +429,37 @@ make linux            # Build and install kernel
 make defconfig-blktests_nvme
 make bringup
 make blktests
+```
+
+### Storage Performance Testing with fio-tests
+
+#### XFS Filesystem Performance Testing
+```bash
+make defconfig-fio-tests-fs-xfs    # Configure for XFS 16K block size testing
+make bringup                       # Setup test environment with filesystem
+make fio-tests                     # Run comprehensive performance tests
+make fio-tests-results             # Collect and analyze results
+```
+
+#### ext4 with Bigalloc Testing
+```bash
+make defconfig-fio-tests-fs-ext4-bigalloc  # Configure ext4 with 32K clusters
+make bringup
+make fio-tests
+```
+
+#### btrfs with Compression Testing
+```bash
+make defconfig-fio-tests-fs-btrfs-zstd     # Configure btrfs with zstd compression
+make bringup
+make fio-tests
+```
+
+#### Block Size Range Testing
+```bash
+make defconfig-fio-tests-fs-ranges         # Configure XFS with block size ranges
+make bringup                               # Test realistic I/O patterns (4K-16K, etc.)
+make fio-tests
 ```
 
 ## Testing and Quality Assurance
@@ -683,6 +750,91 @@ config BOOTLINUX_SHALLOW_CLONE
 - `depends on !CONFIG_OPTION` - Prevent incompatible combinations
 - `default y if !OTHER_CONFIG` - Conditional defaults
 - Document why restrictions exist in help text
+
+#### CLI Override Patterns
+
+Environment variable override support enables runtime configuration changes without
+recompiling. This is essential for CI/demo scenarios where quick test execution
+is needed.
+
+**Basic CLI Override Detection**:
+```kconfig
+config FIO_TESTS_QUICK_TEST_SET_BY_CLI
+    bool
+    output yaml
+    default $(shell, scripts/check-cli-set-var.sh FIO_TESTS_QUICK_TEST)
+
+config FIO_TESTS_QUICK_TEST
+    bool "Enable quick test mode for CI/demo"
+    default y if FIO_TESTS_QUICK_TEST_SET_BY_CLI
+    help
+      Quick test mode reduces test matrix and runtime for rapid validation.
+      Can be enabled via environment variable: FIO_TESTS_QUICK_TEST=y
+```
+
+**Runtime Parameter Overrides**:
+```kconfig
+config FIO_TESTS_RUNTIME
+    string "Test runtime in seconds"
+    default "15" if FIO_TESTS_QUICK_TEST
+    default "300"
+    help
+      Runtime can be overridden via environment variable: FIO_TESTS_RUNTIME=60
+```
+
+**Best Practices for CLI Overrides**:
+- Create `*_SET_BY_CLI` detection variables using `scripts/check-cli-set-var.sh`
+- Use conditional defaults to automatically adjust configuration when CLI vars detected
+- Implement intelligent test matrix reduction for quick modes
+- Provide meaningful defaults that work in CI environments (e.g., `/dev/null` for I/O tests)
+- Document environment variable names in help text
+- Test both manual configuration and CLI override modes
+
+**Quick Test Implementation Pattern**:
+```kconfig
+# Enable quick mode detection
+config WORKFLOW_QUICK_TEST_SET_BY_CLI
+    bool
+    output yaml
+    default $(shell, scripts/check-cli-set-var.sh WORKFLOW_QUICK_TEST)
+
+# Quick mode configuration with automatic matrix reduction
+config WORKFLOW_QUICK_TEST
+    bool "Enable quick test mode"
+    default y if WORKFLOW_QUICK_TEST_SET_BY_CLI
+    help
+      Reduces test matrix and runtime for CI validation.
+      Environment variable: WORKFLOW_QUICK_TEST=y
+
+# Conditional parameter adjustment
+config WORKFLOW_DEVICE
+    string "Target device"
+    default "/dev/null" if WORKFLOW_QUICK_TEST
+    default "/dev/sdb"
+
+config WORKFLOW_PATTERN_COMPREHENSIVE
+    bool "Comprehensive test patterns"
+    default n if WORKFLOW_QUICK_TEST
+    default y
+    help
+      Full test pattern matrix. Disabled in quick mode for faster execution.
+```
+
+**CI Integration**:
+CLI overrides enable GitHub Actions workflows to run quick validation:
+```yaml
+- name: Run quick workflow validation
+  run: |
+    WORKFLOW_QUICK_TEST=y make defconfig-workflow-quick
+    make workflow
+```
+
+**Key Benefits**:
+- **Rapid iteration**: ~1 minute CI validation vs hours for full test suites
+- **Resource efficiency**: Use `/dev/null` or minimal targets in quick mode
+- **Configuration preservation**: Normal configurations remain unchanged
+- **A/B compatibility**: Works with baseline/dev testing infrastructure
+- **Pattern reusability**: Same patterns work across all workflows
 
 ### Git Repository Management
 
@@ -1114,6 +1266,255 @@ When developing features that involve per-node variables:
 
 This approach avoids the fragile `hostvars` access pattern and relies on
 configuration variables that are available in all execution contexts.
+
+## Filesystem Testing Implementation Validation
+
+When implementing filesystem testing features like the fio-tests filesystem support,
+follow this systematic validation approach:
+
+### 1. Configuration Validation
+```bash
+# Apply the defconfig and verify configuration generation
+make defconfig-fio-tests-fs-xfs
+grep "fio_tests.*fs" .config
+grep "fio_tests.*xfs" .config
+
+# Check variable resolution in YAML
+grep -A5 -B5 "fio_tests_mkfs" extra_vars.yaml
+grep "fio_tests_fs_device" extra_vars.yaml
+```
+
+### 2. Third Drive Integration Testing
+Validate that filesystem testing uses the correct storage device hierarchy:
+- `kdevops0`: Data partition (`/data`)
+- `kdevops1`: Block device testing (original fio-tests target)
+- `kdevops2`: Filesystem testing (new third drive usage)
+
+Check in `extra_vars.yaml`:
+```yaml
+# Expected device mapping
+fio_tests_device: "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops1"     # Block testing
+fio_tests_fs_device: "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_kdevops2"  # Filesystem testing
+```
+
+### 3. Template Engine Validation
+The fio job template should intelligently select between filesystem and block modes:
+```bash
+# Verify template handles both modes
+ansible-playbook --check playbooks/fio-tests.yml --tags debug
+```
+
+### 4. A/B Testing Infrastructure
+When using `CONFIG_KDEVOPS_BASELINE_AND_DEV=y`, verify:
+```bash
+# Both VMs should be created
+ls -la /xfs1/libvirt/kdevops/guestfs/debian13-fio-tests*
+# Should show: debian13-fio-tests and debian13-fio-tests-dev
+
+# Check hosts file generation
+cat hosts
+# Should include both [baseline] and [dev] groups
+```
+
+### 5. Kconfig Dependency Validation
+Filesystem testing properly sets dependencies:
+```bash
+# Should automatically enable these when filesystem testing is selected
+grep "CONFIG_FIO_TESTS_REQUIRES_MKFS_DEVICE=y" .config
+grep "CONFIG_FIO_TESTS_REQUIRES_FILESYSTEM=y" .config
+```
+
+### 6. Block Size Range Support
+Test both fixed and range configurations:
+```bash
+# Fixed block sizes (traditional)
+grep "fio_tests_bs_.*=.*True" extra_vars.yaml
+
+# Range configurations (when enabled)
+make defconfig-fio-tests-fs-ranges
+grep "fio_tests_enable_bs_ranges.*True" extra_vars.yaml
+```
+
+### 7. Filesystem-Specific Features
+Each filesystem type should generate appropriate mkfs commands:
+
+**XFS with reflink + rmapbt:**
+```yaml
+fio_tests_mkfs_cmd: "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=16k"
+```
+
+**ext4 with bigalloc:**
+```yaml
+fio_tests_mkfs_cmd: "-F -O bigalloc -C 32k"
+```
+
+**btrfs with compression:**
+```yaml
+fio_tests_mount_opts: "defaults,compress=zstd:3"
+```
+
+### 8. Known Issues and Solutions
+
+**VM Provisioning Timeouts:**
+- Initial `make bringup` can take 30+ minutes for package upgrades
+- VM disk creation succeeds even if provisioning times out
+- Check VM directories in `/xfs1/libvirt/kdevops/guestfs/` for progress
+
+**Configuration Dependencies:**
+- Use `CONFIG_KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS=y` not old `CONFIG_WORKFLOW_FIO_TESTS`
+- Always run `make style` before completion to catch formatting issues
+- Missing newlines in Kconfig files will cause syntax errors
+
+**Third Drive Device Selection:**
+- Infrastructure-specific defaults automatically select correct devices
+- libvirt uses NVMe: `nvme-QEMU_NVMe_Ctrl_kdevops2`
+- AWS/cloud providers use different device naming schemes
+
+### 9. Testing Best Practices
+
+**Start with Simple Configurations:**
+```bash
+make defconfig-fio-tests-fs-xfs    # Single filesystem, fixed block sizes
+make defconfig-fio-tests-fs-ranges # Block size ranges testing
+```
+
+**Incremental Validation:**
+1. Configuration generation (`make`)
+2. Variable resolution (`extra_vars.yaml`)
+3. VM creation (`make bringup`)
+4. Filesystem setup verification
+5. fio job execution
+
+**Debugging Techniques:**
+```bash
+# Check Ansible variable resolution
+ansible-playbook playbooks/fio-tests.yml --tags debug -v
+
+# Verify filesystem creation
+ansible all -m shell -a "lsblk"
+ansible all -m shell -a "mount | grep fio-tests"
+
+# Test fio job template generation
+ansible-playbook playbooks/fio-tests.yml --tags setup --check
+```
+
+This systematic approach ensures filesystem testing implementations are robust,
+properly integrated with existing kdevops infrastructure, and ready for
+production use.
+
+## Multi-Filesystem Testing Architecture
+
+The fio-tests workflow supports multi-filesystem performance comparison through
+a section-based approach similar to fstests. This enables comprehensive
+performance analysis across different filesystem configurations.
+
+### Multi-Filesystem Section Configuration
+
+Multi-filesystem testing creates separate VMs for each filesystem configuration,
+enabling isolated performance comparison:
+
+```bash
+# XFS block size comparison
+make defconfig-fio-tests-fs-xfs-4k-vs-16k
+make bringup                     # Creates VMs: demo-fio-tests-xfs-4k, demo-fio-tests-xfs-16k
+
+# Comprehensive XFS block size analysis
+make defconfig-fio-tests-fs-xfs-all-fsbs
+make bringup                     # Creates VMs for 4K, 16K, 32K, 64K block sizes
+
+# Cross-filesystem comparison
+make defconfig-fio-tests-fs-xfs-vs-ext4-vs-btrfs
+make bringup                     # Creates VMs: xfs-16k, ext4-bigalloc, btrfs-zstd
+```
+
+### Node Generation Architecture
+
+Multi-filesystem testing uses dynamic node generation based on enabled sections:
+
+1. **Section Detection**: Scans `.config` for `CONFIG_FIO_TESTS_SECTION_*=y` patterns
+2. **Node Creation**: Generates separate VM nodes for each enabled section
+3. **Host Groups**: Creates Ansible groups for each filesystem configuration
+4. **A/B Testing**: Supports baseline/dev comparisons across all configurations
+
+### Filesystem Configuration Mapping
+
+Each section maps to specific filesystem configurations defined in `workflows/fio-tests/sections.conf`:
+
+**XFS Configurations**:
+- `xfs-4k`: 4K block size, 4K sector, reflink + rmapbt
+- `xfs-16k`: 16K block size, 4K sector, reflink + rmapbt
+- `xfs-32k`: 32K block size, 4K sector, reflink + rmapbt
+- `xfs-64k`: 64K block size, 4K sector, reflink + rmapbt
+
+**Cross-Filesystem Configurations**:
+- `xfs-16k`: XFS with 16K blocks and modern features
+- `ext4-bigalloc`: ext4 with bigalloc and 32K clusters
+- `btrfs-zstd`: btrfs with zstd compression and modern features
+
+### Results Collection and Analysis
+
+Multi-filesystem results are collected and analyzed through specialized tooling:
+
+```bash
+make fio-tests                    # Run tests across all filesystem configurations
+make fio-tests-results           # Collect results from all VMs
+make fio-tests-multi-fs-compare  # Generate comparison graphs and analysis
+```
+
+**Generated Analysis**:
+- Performance overview across filesystems
+- Block size performance heatmaps
+- IO depth scaling analysis
+- Statistical summaries and CSV exports
+
+### Performance Tuning for Long Runs
+
+For comprehensive performance analysis (1+ hour runs):
+
+**Configuration Adjustments**:
+```kconfig
+CONFIG_FIO_TESTS_RUNTIME="3600"    # 1 hour per test
+CONFIG_FIO_TESTS_RAMP_TIME="30"    # Extended ramp time
+CONFIG_FIO_TESTS_LOG_AVG_MSEC=1000 # 1-second averaging for detailed logs
+```
+
+**Parallel Execution Benefits**:
+- Multiple VMs run simultaneously across different configurations
+- Results collection aggregated from all VMs at completion
+- A/B testing infrastructure ensures fair comparison baselines
+
+### CLI Override Patterns for Multi-Filesystem Testing
+
+Multi-filesystem testing supports all CLI override patterns:
+
+```bash
+# Quick validation across all filesystem configurations
+FIO_TESTS_QUICK_TEST=y make defconfig-fio-tests-fs-xfs-all-fsbs
+make bringup
+make fio-tests                    # ~1 minute per filesystem configuration
+
+# Extended analysis with custom runtime
+FIO_TESTS_RUNTIME=1800 make defconfig-fio-tests-fs-xfs-vs-ext4-vs-btrfs
+make bringup
+make fio-tests                    # 30 minutes per filesystem configuration
+```
+
+**Key Features**:
+- Intelligent test matrix reduction in quick mode
+- Consistent CLI override behavior across single and multi-filesystem modes
+- Automatic parameter adjustment based on configuration complexity
+
+### Integration with Existing Infrastructure
+
+Multi-filesystem testing integrates seamlessly with existing kdevops patterns:
+
+1. **Baseline Management**: Supports per-filesystem baseline tracking
+2. **A/B Testing**: Enables kernel version comparison across all filesystems
+3. **Results Infrastructure**: Uses existing result collection and graphing
+4. **Configuration System**: Follows kdevops Kconfig patterns and conventions
+
+This architecture enables comprehensive filesystem performance analysis while
+maintaining compatibility with existing kdevops workflows and infrastructure.
 
 ## Prompt Examples
 

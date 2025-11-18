@@ -240,6 +240,66 @@
     state: touch
     mode: "0755"
 
+- name: Load nodes from nodes file for multi-filesystem setup
+  include_vars:
+    file: "{{ topdir_path }}/{{ kdevops_nodes }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - ansible_hosts_template.stat.exists
+
+- name: Extract node names for multi-filesystem setup
+  set_fact:
+    fio_tests_node_names: "{{ guestfs_nodes | map(attribute='name') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - guestfs_nodes is defined
+    - ansible_hosts_template.stat.exists
+
+- name: Debug fio_tests_node_names
+  debug:
+    var: fio_tests_node_names
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - ansible_hosts_template.stat.exists
+
+- name: Generate the Ansible hosts file for a dedicated fio-tests setup (single filesystem)
+  tags: [ 'hosts' ]
+  vars:
+    all_generic_nodes: ["{{ kdevops_host_prefix }}-fio-tests"]
+  template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ ansible_cfg_inventory }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - ansible_hosts_template.stat.exists
+    - not fio_tests_multi_filesystem|default(false)|bool
+
+- name: Generate the Ansible hosts file for a dedicated fio-tests setup (multi-filesystem)
+  tags: [ 'hosts' ]
+  vars:
+    all_generic_nodes: "{{ fio_tests_node_names }}"
+  template:
+    src: "{{ kdevops_hosts_template }}"
+    dest: "{{ ansible_cfg_inventory }}"
+    force: yes
+    trim_blocks: True
+    lstrip_blocks: True
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - ansible_hosts_template.stat.exists
+    - fio_tests_multi_filesystem|default(false)|bool
+    - fio_tests_node_names is defined
+
 - name: Generate the Ansible hosts file for a dedicated MinIO setup
   tags: ['hosts']
   ansible.builtin.template:

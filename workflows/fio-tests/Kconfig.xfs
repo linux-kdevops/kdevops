@@ -1,0 +1,170 @@
+if FIO_TESTS_FS_XFS
+
+choice
+	prompt "XFS filesystem configuration to use"
+	default FIO_TESTS_FS_XFS_4K_4KS
+
+config FIO_TESTS_FS_XFS_4K_4KS
+	bool "XFS 4k LBS - 4k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_4K
+	select FIO_TESTS_XFS_SECTION_REFLINK_4K
+	output yaml
+	help
+	  XFS with 4k FSB with 4k sector size.
+
+config FIO_TESTS_FS_XFS_8K_4KS
+	bool "XFS 8k LBS - 4k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_4K
+	select FIO_TESTS_XFS_SECTION_REFLINK_8K
+	output yaml
+	help
+	  XFS with 8k FSB with 4k sector size.
+
+config FIO_TESTS_FS_XFS_16K_4KS
+	bool "XFS 16k LBS - 4k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_4K
+	select FIO_TESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 16k FSB with 4k sector size.
+
+config FIO_TESTS_FS_XFS_32K_4KS
+	bool "XFS 32k LBS - 4k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_4K
+	select FIO_TESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 4k sector size.
+
+config FIO_TESTS_FS_XFS_64K_4KS
+	bool "XFS 64k LBS - 4k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_4K
+	select FIO_TESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 4k sector size.
+
+config FIO_TESTS_FS_XFS_16K_16KS
+	bool "XFS 16k LBS - 16k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_16K
+	select FIO_TESTS_XFS_SECTION_REFLINK_16K
+	output yaml
+	help
+	  XFS with 16k FSB with 16k sector size.
+
+config FIO_TESTS_FS_XFS_32K_16KS
+	bool "XFS 32k LBS - 16k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_16K
+	select FIO_TESTS_XFS_SECTION_REFLINK_32K
+	output yaml
+	help
+	  XFS with 32k FSB with 16k sector size.
+
+config FIO_TESTS_FS_XFS_64K_16KS
+	bool "XFS 64k LBS - 16k sector size"
+	select FIO_TESTS_XFS_SECTOR_SIZE_16K
+	select FIO_TESTS_XFS_SECTION_REFLINK_64K
+	output yaml
+	help
+	  XFS with 64k FSB with 16k sector size.
+
+endchoice
+
+choice
+	prompt "XFS filesystem sector size to use"
+	default FIO_TESTS_XFS_SECTOR_SIZE_4K
+
+config FIO_TESTS_XFS_SECTOR_SIZE_512
+	bool "512 bytes"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_512
+	help
+	  Use 512 byte sector size.
+
+config FIO_TESTS_XFS_SECTOR_SIZE_4K
+	bool "4 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Use 4 KiB sector size.
+
+config FIO_TESTS_XFS_SECTOR_SIZE_16K
+	bool "16 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 16 KiB sector size.
+
+config FIO_TESTS_XFS_SECTOR_SIZE_32K
+	bool "32 KiB"
+	output yaml
+	depends on EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use 32 KiB sector size.
+
+endchoice
+
+config FIO_TESTS_XFS_SECTOR_SIZE
+	string
+	output yaml
+	default "512" if FIO_TESTS_XFS_SECTOR_SIZE_512
+	default "4k"  if FIO_TESTS_XFS_SECTOR_SIZE_4K
+	default "16k" if FIO_TESTS_XFS_SECTOR_SIZE_16K
+	default "32k" if FIO_TESTS_XFS_SECTOR_SIZE_32K
+
+config FIO_TESTS_XFS_SECTION_REFLINK_4K
+	bool
+
+config FIO_TESTS_XFS_SECTION_REFLINK_4K_CMD
+	string
+	depends on FIO_TESTS_XFS_SECTION_REFLINK_4K
+	default "-f -m reflink=1,rmapbt=1, -i sparse=1 -b size=4k"
+
+config FIO_TESTS_XFS_SECTION_REFLINK_8K
+	bool
+
+config FIO_TESTS_XFS_SECTION_REFLINK_8K_CMD
+	string
+	depends on FIO_TESTS_XFS_SECTION_REFLINK_8K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=8k"
+
+config FIO_TESTS_XFS_SECTION_REFLINK_16K
+	bool
+
+config FIO_TESTS_XFS_SECTION_REFLINK_16K_CMD
+	string
+	depends on FIO_TESTS_XFS_SECTION_REFLINK_16K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=16k"
+
+config FIO_TESTS_XFS_SECTION_REFLINK_32K
+	bool
+
+config FIO_TESTS_XFS_SECTION_REFLINK_32K_CMD
+	string
+	depends on FIO_TESTS_XFS_SECTION_REFLINK_32K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=32k"
+
+config FIO_TESTS_XFS_SECTION_REFLINK_64K
+	bool
+
+config FIO_TESTS_XFS_SECTION_REFLINK_64K_CMD
+	string
+	depends on FIO_TESTS_XFS_SECTION_REFLINK_64K
+	default "-f -m reflink=1,rmapbt=1 -i sparse=1 -b size=64k"
+
+config FIO_TESTS_XFS_CMD
+	string
+	default FIO_TESTS_XFS_SECTION_REFLINK_4K_CMD if FIO_TESTS_FS_XFS_4K_4KS
+	default FIO_TESTS_XFS_SECTION_REFLINK_8K_CMD if FIO_TESTS_XFS_SECTION_REFLINK_8K
+	default FIO_TESTS_XFS_SECTION_REFLINK_16K_CMD if FIO_TESTS_XFS_SECTION_REFLINK_16K
+	default FIO_TESTS_XFS_SECTION_REFLINK_32K_CMD if FIO_TESTS_XFS_SECTION_REFLINK_32K
+	default FIO_TESTS_XFS_SECTION_REFLINK_64K_CMD if FIO_TESTS_XFS_SECTION_REFLINK_64K
+
+config FIO_TESTS_XFS_MOUNT_OPTS
+	string
+	output yaml
+	default "defaults"
+	help
+	  Mount options for XFS filesystem.
+
+endif # FIO_TESTS_FS_XFS

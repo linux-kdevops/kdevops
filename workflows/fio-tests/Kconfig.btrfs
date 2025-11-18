@@ -1,0 +1,87 @@
+if FIO_TESTS_FS_BTRFS
+
+choice
+	prompt "Btrfs filesystem configuration to use"
+	default FIO_TESTS_FS_BTRFS_NOHOFSPACE
+
+config FIO_TESTS_FS_BTRFS_NOHOFSPACE
+	bool "btrfs no-holes + free-space-tree"
+	select FIO_TESTS_BTRFS_SECTION_NOHOFSPACE
+	output yaml
+	help
+	  Btrfs with both the no-holes and free space tree features enabled.
+	  This is the default modern configuration.
+
+config FIO_TESTS_FS_BTRFS_NOHOFSPACE_ZSTD
+	bool "btrfs no-holes + free-space-tree + zstd compression"
+	select FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_ZSTD
+	output yaml
+	help
+	  Btrfs with no-holes, free space tree, and zstd compression enabled.
+
+config FIO_TESTS_FS_BTRFS_FSPACE
+	bool "btrfs free-space-tree only"
+	select FIO_TESTS_BTRFS_SECTION_FSPACE
+	output yaml
+	help
+	  Btrfs with free space tree enabled but no-holes disabled.
+
+config FIO_TESTS_FS_BTRFS_SIMPLE
+	bool "btrfs simple profile"
+	select FIO_TESTS_BTRFS_SECTION_SIMPLE
+	output yaml
+	help
+	  Btrfs with simple profile for data and metadata.
+	  This profile is used to help ensure compatibility.
+
+endchoice
+
+config FIO_TESTS_BTRFS_SECTION_NOHOFSPACE
+	bool
+
+config FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_CMD
+	string
+	depends on FIO_TESTS_BTRFS_SECTION_NOHOFSPACE
+	default "-f -O no-holes,free-space-tree"
+
+config FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_ZSTD
+	bool
+
+config FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_ZSTD_CMD
+	string
+	depends on FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_ZSTD
+	default "-f -O no-holes,free-space-tree"
+
+config FIO_TESTS_BTRFS_SECTION_FSPACE
+	bool
+
+config FIO_TESTS_BTRFS_SECTION_FSPACE_CMD
+	string
+	depends on FIO_TESTS_BTRFS_SECTION_FSPACE
+	default "-f -O free-space-tree"
+
+config FIO_TESTS_BTRFS_SECTION_SIMPLE
+	bool
+
+config FIO_TESTS_BTRFS_SECTION_SIMPLE_CMD
+	string
+	depends on FIO_TESTS_BTRFS_SECTION_SIMPLE
+	default "-f"
+
+config FIO_TESTS_BTRFS_CMD
+	string
+	output yaml
+	default FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_CMD if FIO_TESTS_FS_BTRFS_NOHOFSPACE
+	default FIO_TESTS_BTRFS_SECTION_NOHOFSPACE_ZSTD_CMD if FIO_TESTS_FS_BTRFS_NOHOFSPACE_ZSTD
+	default FIO_TESTS_BTRFS_SECTION_FSPACE_CMD if FIO_TESTS_FS_BTRFS_FSPACE
+	default FIO_TESTS_BTRFS_SECTION_SIMPLE_CMD if FIO_TESTS_FS_BTRFS_SIMPLE
+
+config FIO_TESTS_BTRFS_MOUNT_OPTS
+	string
+	output yaml
+	default "compress=zstd" if FIO_TESTS_FS_BTRFS_NOHOFSPACE_ZSTD
+	default "defaults"
+	help
+	  Mount options for btrfs filesystem.
+
+endif # FIO_TESTS_FS_BTRFS
