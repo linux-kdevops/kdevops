@@ -547,38 +547,116 @@
     - kdevops_workflow_enable_sysbench
 
 
-- name: Generate the fio-tests kdevops nodes file using nodes file using template as jinja2 source template
-  tags: ["hosts"]
+- name: Generate the fio-tests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: [ 'hosts' ]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ [kdevops_host_prefix + '-fio-tests'] }}"
     all_generic_nodes: "{{ [kdevops_host_prefix + '-fio-tests'] }}"
-  ansible.builtin.template:
+  template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: true
-    mode: "0644"
+    force: yes
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_fio_tests
     - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+    - not fio_tests_multi_filesystem|default(false)|bool
 
-
-- name: Generate the fio-tests kdevops nodes file with dev hosts using nodes file using template as jinja2 source template
-  tags: ["hosts"]
+- name: Generate the fio-tests kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: [ 'hosts' ]
   vars:
     node_template: "{{ kdevops_nodes_template | basename }}"
     nodes: "{{ [kdevops_host_prefix + '-fio-tests', kdevops_host_prefix + '-fio-tests-dev'] }}"
     all_generic_nodes: "{{ [kdevops_host_prefix + '-fio-tests', kdevops_host_prefix + '-fio-tests-dev'] }}"
-  ansible.builtin.template:
+  template:
     src: "{{ node_template }}"
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: true
-    mode: "0644"
+    force: yes
   when:
     - kdevops_workflows_dedicated_workflow
     - kdevops_workflow_enable_fio_tests
     - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - not fio_tests_multi_filesystem|default(false)|bool
+
+- name: Infer enabled fio-tests multi-filesystem configurations (no dev)
+  vars:
+    kdevops_config_data: "{{ lookup('file', topdir_path + '/.config') }}"
+    # Map configuration options to filesystem node names
+    xfs_4k_enabled: "{{ 'xfs-4k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_4K=y$', multiline=True) else '' }}"
+    xfs_16k_enabled: "{{ 'xfs-16k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_16K=y$', multiline=True) else '' }}"
+    xfs_32k_enabled: "{{ 'xfs-32k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_32K=y$', multiline=True) else '' }}"
+    xfs_64k_enabled: "{{ 'xfs-64k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_64K=y$', multiline=True) else '' }}"
+    ext4_std_enabled: "{{ 'ext4-std' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_EXT4_STD=y$', multiline=True) else '' }}"
+    ext4_bigalloc_enabled: "{{ 'ext4-bigalloc' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_EXT4_BIGALLOC=y$', multiline=True) else '' }}"
+    btrfs_std_enabled: "{{ 'btrfs-std' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_BTRFS_STD=y$', multiline=True) else '' }}"
+    btrfs_zstd_enabled: "{{ 'btrfs-zstd' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_BTRFS_ZSTD=y$', multiline=True) else '' }}"
+    # Collect all enabled filesystem configurations
+    all_fs_configs: "{{ [xfs_4k_enabled, xfs_16k_enabled, xfs_32k_enabled, xfs_64k_enabled, ext4_std_enabled, ext4_bigalloc_enabled, btrfs_std_enabled, btrfs_zstd_enabled] | select | list }}"
+  set_fact:
+    fio_tests_enabled_section_types: "{{ [kdevops_host_prefix + '-fio-tests-'] | product(all_fs_configs) | map('join') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+
+- name: Infer enabled fio-tests multi-filesystem configurations with dev
+  vars:
+    kdevops_config_data: "{{ lookup('file', topdir_path + '/.config') }}"
+    # Map configuration options to filesystem node names
+    xfs_4k_enabled: "{{ 'xfs-4k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_4K=y$', multiline=True) else '' }}"
+    xfs_16k_enabled: "{{ 'xfs-16k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_16K=y$', multiline=True) else '' }}"
+    xfs_32k_enabled: "{{ 'xfs-32k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_32K=y$', multiline=True) else '' }}"
+    xfs_64k_enabled: "{{ 'xfs-64k' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_XFS_64K=y$', multiline=True) else '' }}"
+    ext4_std_enabled: "{{ 'ext4-std' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_EXT4_STD=y$', multiline=True) else '' }}"
+    ext4_bigalloc_enabled: "{{ 'ext4-bigalloc' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_EXT4_BIGALLOC=y$', multiline=True) else '' }}"
+    btrfs_std_enabled: "{{ 'btrfs-std' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_BTRFS_STD=y$', multiline=True) else '' }}"
+    btrfs_zstd_enabled: "{{ 'btrfs-zstd' if kdevops_config_data | regex_search('^CONFIG_FIO_TESTS_ENABLE_BTRFS_ZSTD=y$', multiline=True) else '' }}"
+    # Collect all enabled filesystem configurations
+    all_fs_configs: "{{ [xfs_4k_enabled, xfs_16k_enabled, xfs_32k_enabled, xfs_64k_enabled, ext4_std_enabled, ext4_bigalloc_enabled, btrfs_std_enabled, btrfs_zstd_enabled] | select | list }}"
+  set_fact:
+    fio_tests_expanded_configs: "{{ all_fs_configs }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+
+- name: Create fio-tests nodes for each filesystem configuration with dev hosts
+  vars:
+    filesystem_nodes: "{{ [kdevops_host_prefix + '-fio-tests-'] | product(fio_tests_expanded_configs | default([])) | map('join') | list }}"
+  set_fact:
+    fio_tests_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev
+    - fio_tests_expanded_configs is defined
+    - fio_tests_expanded_configs | length > 0
+
+- name: Generate the fio-tests multi-filesystem kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: [ 'hosts' ]
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ fio_tests_enabled_section_types | regex_replace('\\[') | regex_replace('\\]') | replace(\"'\", '') | split(', ') }}"
+    all_generic_nodes: "{{ fio_tests_enabled_section_types }}"
+  template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: yes
+  when:
+    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflow_enable_fio_tests
+    - fio_tests_multi_filesystem|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - fio_tests_enabled_section_types is defined
 
 
 - name: Infer enabled mmtests test section types

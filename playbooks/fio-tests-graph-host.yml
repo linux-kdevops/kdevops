@@ -1,0 +1,76 @@
+---
+# Process fio-tests results for a single host
+- name: Find JSON result files for {{ host_name }}
+  find:
+    paths: "{{ host_results_dir }}"
+    patterns: "results_*.json"
+    recurse: no
+  register: json_files
+
+- name: Display found JSON files for {{ host_name }}
+  debug:
+    msg: "Found {{ json_files.files | default([]) | length }} JSON result files for {{ host_name }}"
+
+- name: Skip host if no results found
+  debug:
+    msg: "No results found for {{ host_name }}. Skipping graph generation."
+  when: (json_files.files | default([]) | length) == 0
+
+- name: Create graphs directory for {{ host_name }}
+  file:
+    path: "{{ host_results_dir }}/graphs"
+    state: directory
+    mode: '0755'
+  when: 
+    - json_files.files | default([]) | length > 0
+
+- name: Check if required Python packages are installed
+  shell: |
+    {{ python_path }} -c "import pandas, matplotlib, numpy, seaborn" 2>&1
+  register: python_deps_check
+  failed_when: false
+  changed_when: false
+  run_once: true
+
+- name: Install required Python packages for graphing
+  package:
+    name:
+      - python3-pandas
+      - python3-matplotlib
+      - python3-numpy
+      - python3-seaborn
+    state: present
+  become: yes
+  run_once: true
+  when: 
+    - json_files.files | default([]) | length > 0
+    - python_deps_check.rc != 0
+
+- name: Generate performance graphs for {{ host_name }}
+  shell: |
+    {{ python_path }} {{ fio_plot_script }} \
+      {{ host_results_dir }} \
+      --output-dir {{ host_results_dir }}/graphs \
+      --prefix "{{ host_name }}_performance"
+  when: 
+    - json_files.files | default([]) | length > 0
+  register: graph_generation
+
+- name: Find generated graphs for {{ host_name }}
+  find:
+    paths: "{{ host_results_dir }}/graphs"
+    patterns: "*.png"
+    recurse: no
+  register: generated_graphs
+  when: 
+    - json_files.files | default([]) | length > 0
+
+- name: Display generated graphs for {{ host_name }}
+  debug:
+    msg: |
+      Generated {{ generated_graphs.files | default([]) | length }} graphs for {{ host_name }}:
+      {% for graph in generated_graphs.files | default([]) %}
+      - {{ graph.path | basename }}
+      {% endfor %}
+  when: 
+    - generated_graphs is defined

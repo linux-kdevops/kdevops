@@ -1,81 +1,121 @@
 ---
-- name: Generate performance graphs from fio test results
+- name: Generate fio-tests performance graphs
   hosts: localhost
-  become: false
+  gather_facts: yes
+  tags: [ 'fio_tests' ]
   vars:
-    ansible_ssh_pipelining: true
+    results_base_dir: "{{ topdir_path | default('.') }}/workflows/fio-tests/results"
+    python_path: "{{ ansible_python_interpreter | default('/usr/bin/python3') }}"
+    fio_plot_script: "{{ topdir_path | default('.') }}/playbooks/python/workflows/fio-tests/fio-plot.py"
   tasks:
-    - name: Ensure fio-tests results have been collected
-      ansible.builtin.stat:
-        path: "{{ topdir_path }}/workflows/fio-tests/results"
-      register: results_dir
-      tags: ["graph"]
+    - name: Check if results directory exists
+      stat:
+        path: "{{ results_base_dir }}"
+      register: results_dir_stat
 
     - name: Fail if results directory doesn't exist
-      ansible.builtin.fail:
-        msg: "Results directory not found. Please run 'make fio-tests-results' first to collect results from target nodes."
-      when: not results_dir.stat.exists
-      tags: ["graph"]
+      fail:
+        msg: "Results directory {{ results_base_dir }} does not exist. Run 'make fio-tests-results' first to collect results."
+      when: not results_dir_stat.stat.exists
 
-    - name: Find all collected result directories
-      ansible.builtin.find:
-        paths: "{{ topdir_path }}/workflows/fio-tests/results"
+    - name: Find all host result directories
+      find:
+        paths: "{{ results_base_dir }}"
         file_type: directory
-        recurse: false
-      register: result_dirs
-      tags: ["graph"]
+        recurse: no
+      register: host_dirs
 
-    - name: Generate performance graphs for each host
-      ansible.builtin.shell: |
-        host_dir="{{ item.path }}"
-        host_name="{{ item.path | basename }}"
-        results_subdir="${host_dir}/fio-tests-results-${host_name}"
+    - name: Display found host directories
+      debug:
+        msg: "Found results for {{ host_dirs.files | length }} hosts"
 
-        # Check if extracted results exist
-        if [[! -d "${results_subdir}"]]; then
-          echo "No extracted results found for ${host_name}"
-          exit 0
-        fi
+    - name: Process results for each host
+      include_tasks: fio-tests-graph-host.yml
+      vars:
+        host_name: "{{ item.path | basename }}"
+        host_results_dir: "{{ item.path }}"
+      loop: "{{ host_dirs.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      when: host_dirs.files | length > 0
 
-        # Create graphs directory
-        mkdir -p "${host_dir}/graphs"
+    - name: Create combined graphs directory
+      file:
+        path: "{{ results_base_dir }}/combined-graphs"
+        state: directory
+        mode: '0755'
+      when: host_dirs.files | length > 1
 
-        # Generate graphs using the fio-plot.py script
-        python3 {{ topdir_path }}/playbooks/python/workflows/fio-tests/fio-plot.py \
-          "${results_subdir}" \
-          --output-dir "${host_dir}/graphs" \
-          --prefix "${host_name}_performance"
+    - name: Create temporary directory for combined results
+      file:
+        path: "{{ results_base_dir }}/combined-graphs/temp"
+        state: directory
+        mode: '0755'
+      when: host_dirs.files | length > 1
 
-        echo "Generated graphs for ${host_name}"
-      loop: "{{ result_dirs.files }}"
-      when: item.isdir
-      tags: ["graph"]
-      register: graph_results
-      failed_when: false
-      changed_when: true
-
-    - name: Display graph generation results
-      ansible.builtin.debug:
-        msg: "{{ item.stdout_lines | default(['No output']) }}"
-      loop: "{{ graph_results.results }}"
-      when: graph_results is defined
-      tags: ["graph"]
-
-    - name: List all generated graphs
-      ansible.builtin.shell: |
-        for host_dir in {{ topdir_path }}/workflows/fio-tests/results/*/; do
-          if [[-d "${host_dir}/graphs"]]; then
-            host_name=$(basename "$host_dir")
-            echo "=== Graphs for ${host_name} ==="
-            ls -la "${host_dir}/graphs/" 2>/dev/null || echo "No graphs found"
-            echo ""
+    - name: Aggregate all JSON results using hard links
+      shell: |
+        cd {{ results_base_dir }}
+        # Use find to locate all valid JSON files and create hard links in temp directory
+        # This is much faster than copying files one by one
+        find . -type f -name "results_*.json" -size +100c ! -path "./combined-graphs/*" | \
+        while read -r json_file; do
+          # Skip the literal results_*.json file
+          if [[ "$(basename "$json_file")" == "results_*.json" ]]; then
+            continue
           fi
+          # Extract host name from path
+          host_name=$(echo "$json_file" | cut -d'/' -f2)
+          base_name=$(basename "$json_file")
+          # Create hard link with host prefix
+          ln -f "$json_file" "combined-graphs/temp/${host_name}_${base_name}" 2>/dev/null || \
+          cp "$json_file" "combined-graphs/temp/${host_name}_${base_name}"
         done
-      register: all_graphs
-      tags: ["graph"]
-      changed_when: false
 
-    - name: Display generated graphs summary
-      ansible.builtin.debug:
-        msg: "{{ all_graphs.stdout_lines }}"
-      tags: ["graph"]
+        # Report results
+        file_count=$(ls -1 combined-graphs/temp/*.json 2>/dev/null | wc -l)
+        echo "Aggregated $file_count JSON files in temp directory"
+
+        if [ $file_count -gt 0 ]; then
+          echo "Sample files:"
+          ls -la combined-graphs/temp/*.json 2>/dev/null | head -5
+        fi
+      when: host_dirs.files | length > 1
+      register: aggregate_result
+
+    - name: Display aggregation result
+      debug:
+        var: aggregate_result.stdout_lines
+      when:
+        - host_dirs.files | length > 1
+        - aggregate_result is defined
+
+    - name: Generate combined performance comparison graphs
+      shell: |
+        if [ -n "$(ls -A {{ results_base_dir }}/combined-graphs/temp/*.json 2>/dev/null)" ]; then
+          {{ python_path }} {{ fio_plot_script }} \
+            {{ results_base_dir }}/combined-graphs/temp \
+            --output-dir {{ results_base_dir }}/combined-graphs \
+            --prefix "combined_performance_comparison"
+        else
+          echo "No JSON files found in temp directory, skipping combined graph generation"
+        fi
+      when:
+        - host_dirs.files | length > 1
+      ignore_errors: yes
+
+    - name: Clean up temporary directory
+      file:
+        path: "{{ results_base_dir }}/combined-graphs/temp"
+        state: absent
+      when: host_dirs.files | length > 1
+
+    - name: Display final summary
+      debug:
+        msg: |
+          Graph generation completed!
+
+          Individual host graphs: {{ results_base_dir }}/<hostname>/graphs/
+          Combined comparison graphs: {{ results_base_dir }}/combined-graphs/
+
+          To view graphs, check the directories listed above.

@@ -4,6 +4,7 @@
     name:
       - fio
       - python3
+      - git
     state: present
   become: true
 
