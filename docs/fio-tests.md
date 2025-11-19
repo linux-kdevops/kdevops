@@ -24,6 +24,16 @@ by generating configurable test matrices across multiple dimensions:
 - **Workload patterns**: Random/sequential read/write, mixed workloads
 - **A/B testing**: Baseline vs development configuration comparison
 
+## Filesystem testing
+
+In addition to raw block device testing, fio-tests supports comprehensive
+filesystem-specific performance testing with different filesystem configurations.
+This enables analysis of filesystem-level optimizations, block size impacts,
+and feature interactions.
+
+For detailed information about filesystem testing capabilities, see
+[fio-tests filesystem testing documentation](fio-tests-fs.md).
+
 ## Quick start
 
 ### Basic configuration
