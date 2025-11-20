@@ -78,6 +78,21 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 [fio_tests:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 
+{# Add per-section groups for multi-filesystem testing #}
+{% if fio_tests_multi_filesystem|default(false)|bool %}
+{% for host in parsed_hosts %}
+{% set section = host | regex_replace('^.*-fio-tests-', '') | regex_replace('-dev$', '') %}
+{% if section != host %}
+[fio_tests_{{ section | replace('-', '_') }}]
+{{ host }}
+
+[fio_tests_{{ section | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
 {% elif kdevops_workflow_enable_fstests %}
 [fstests]
 {% for host in parsed_hosts %}
@@ -228,6 +243,32 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 [fstests_{{ section | replace('-', '_') }}:vars]
 ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
+{% endif %}
+
+{# For non-dedicated workflows (mix mode), add fio-tests group if enabled #}
+{% if kdevops_workflow_enable_fio_tests %}
+[fio_tests]
+{% for host in parsed_hosts %}
+{{ host }}
+{% endfor %}
+
+[fio_tests:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{# Add per-section groups for multi-filesystem testing #}
+{% if fio_tests_multi_filesystem|default(false)|bool %}
+{% for host in parsed_hosts %}
+{% set section = host | regex_replace('^.*-fio-tests-', '') | regex_replace('-dev$', '') %}
+{% if section != host %}
+[fio_tests_{{ section | replace('-', '_') }}]
+{{ host }}
+
+[fio_tests_{{ section | replace('-', '_') }}:vars]
+ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+
+{% endif %}
+{% endfor %}
+{% endif %}
 {% endif %}
 
 {% endif %}

@@ -219,7 +219,6 @@ config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 	bool "fio-tests"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
 	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 	help
 	  This will dedicate your configuration to running only the
