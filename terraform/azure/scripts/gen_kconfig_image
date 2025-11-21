@@ -452,15 +452,11 @@ def classify_offer_sku(
 				f"{major} {arch_display}"
 			)
 
-		# Add special notes for daily/backports variants
+		# Add special notes for daily/backports variants (but not gen2 - implementation detail)
 		if "daily" in offer_name.lower() or "daily" in sku_name.lower():
 			friendly_name += " (daily)"
 		elif "backports" in sku_name.lower():
 			friendly_name += " (backports)"
-		elif "gen2" in sku_name.lower() and "backports" not in sku_name.lower():
-			# Don't add gen2 suffix if it's already a backports variant
-			if arch == "x86_64":
-				friendly_name += " Gen2"
 
 		return (version_key, friendly_name, arch, offer_name, sku_name)
 
