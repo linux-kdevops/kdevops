@@ -44,6 +44,7 @@
         'btrfs-zstd' if 'btrfs-zstd' in inventory_hostname else
         'xfs-4k'
       }}
+  when: fio_tests_requires_filesystem | default(false) | bool
 
 - name: Set filesystem-specific mkfs and mount options
   tags: [ 'setup' ]
@@ -67,6 +68,7 @@
     fio_tests_fs_device: "{{ fio_tests_fs_device | default('/dev/disk/by-id/virtio-kdevops2') }}"
     fio_tests_fs_mount_point: "{{ fio_tests_fs_mount_point | default('/mnt/fio-tests') }}"
     fio_tests_fs_label: "{{ fio_tests_fs_label | default('fio-tests') }}"
+  when: fio_tests_requires_filesystem | default(false) | bool
 
 - name: Set derived configuration variables
   tags: [ 'setup' ]
@@ -124,7 +126,7 @@
   register: mountpoint_stat
   failed_when: false
   changed_when: false
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
 
 - name: Unmount {{ fio_tests_fs_device }} if mounted
   tags: [ 'setup', 'run_tests' ]
@@ -132,7 +134,7 @@
   become_method: sudo
   command: umount {{ fio_tests_fs_device }}
   when:
-    - fio_tests_requires_mkfs_device | bool
+    - fio_tests_requires_mkfs_device | default(false) | bool
     - mountpoint_stat.stdout != ""
 
 - name: Create filesystem on {{ fio_tests_fs_device }}
@@ -144,7 +146,7 @@
     {{ fio_tests_mkfs_cmd }}
     -L {{ fio_tests_fs_label }}
     {{ fio_tests_fs_device }}
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
 
 - name: Create mount point directory
   tags: [ 'setup' ]
@@ -154,7 +156,7 @@
     path: "{{ fio_tests_fs_mount_point }}"
     state: directory
     mode: '0755'
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
 
 - name: Mount filesystem
   tags: [ 'setup' ]
@@ -166,7 +168,7 @@
     fstype: "{{ fio_tests_mkfs_type }}"
     opts: "{{ fio_tests_mount_opts }}"
     state: mounted
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
 
 - name: Set filesystem mount ownership
   tags: [ 'setup' ]
@@ -177,7 +179,7 @@
     owner: "{{ data_user }}"
     group: "{{ data_group }}"
     mode: '0755'
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
 
 - name: Create results directory
   tags: [ 'setup' ]
@@ -233,8 +235,8 @@
     block_size: "{{ item.1 }}"
     io_depth: "{{ item.2 }}"
     num_jobs: "{{ item.3 }}"
-    test_directory: "{{ fio_tests_fs_mount_point if fio_tests_requires_mkfs_device else '' }}"
-    test_device: "{{ fio_tests_device if not fio_tests_requires_mkfs_device else '' }}"
+    test_directory: "{{ fio_tests_fs_mount_point if fio_tests_requires_mkfs_device | default(false) else '' }}"
+    test_device: "{{ fio_tests_device if not (fio_tests_requires_mkfs_device | default(false)) else '' }}"
   with_nested:
     - "{{ fio_tests_patterns }}"
     - "{{ fio_tests_effective_block_sizes }}"
@@ -413,5 +415,5 @@
   mount:
     path: "{{ fio_tests_fs_mount_point }}"
     state: unmounted
-  when: fio_tests_requires_mkfs_device | bool
+  when: fio_tests_requires_mkfs_device | default(false) | bool
   ignore_errors: yes

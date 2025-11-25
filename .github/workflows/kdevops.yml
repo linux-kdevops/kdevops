@@ -30,6 +30,10 @@ on:
           - blktests_scsi
           - blktests_srp
           - blktests_zbd
+          - fio-tests-quick
+          - fio-tests-fs-xfs
+          - fio-tests-fs-ext4-bigalloc
+          - fio-tests-fs-btrfs-zstd
           - lbs-xfs
           - lbs-xfs-bdev-large-nvme
           - lbs-xfs-bdev-nvme
