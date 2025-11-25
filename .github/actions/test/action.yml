@@ -47,6 +47,9 @@ runs:
             selftests*|*modules*|*kmod*|*firmware*|*mm*)
               TESTS="kmod/test_001"
               ;;
+            *fio-tests*)
+              TESTS="randread"
+              ;;
             *)
               TESTS="generic/003"
               ;;
@@ -74,6 +77,7 @@ runs:
           *ext4*) wpath="workflows/fstests" ;;
           tmpfs*) wpath="workflows/fstests" ;;
           *xfs*) wpath="workflows/fstests" ;;
+          *fio-tests*) wpath="workflows/fio-tests" ;;
           *) wpath="workflows/selftests" ;;
         esac
 
@@ -88,6 +92,39 @@ runs:
 
         # Workflow-specific result collection
         case "${{ inputs.ci_workflow }}" in
+          *fio-tests*)
+            # fio-tests workflows: Collect JSON results
+            echo "Collecting fio-tests results..." > ci.commit_extra
+
+            if [ -d "$wpath/results/last-run" ]; then
+              echo -e "\nfio-tests summary:" >> ci.commit_extra
+
+              # Count JSON result files
+              json_count=$(find "$wpath/results/last-run" -name "*.json" -type f | wc -l)
+              echo "Found $json_count fio result files" >> ci.commit_extra
+
+              # Extract basic metrics from first JSON file as sample
+              sample_json=$(find "$wpath/results/last-run" -name "*.json" -type f | head -1)
+              if [ -n "$sample_json" ] && [ -f "$sample_json" ]; then
+                echo -e "\nSample result:" >> ci.commit_extra
+                # Extract job name and basic IOPS/BW stats
+                python3 -c "import json; import sys; data=json.load(open('$sample_json')); print(f\"Job: {data['jobs'][0]['jobname']}\"); print(f\"IOPS: {data['jobs'][0]['read']['iops']:.2f} read, {data['jobs'][0]['write']['iops']:.2f} write\"); print(f\"BW: {data['jobs'][0]['read']['bw']:.2f} KB/s read, {data['jobs'][0]['write']['bw']:.2f} KB/s write\")" >> ci.commit_extra 2>/dev/null || echo "Could not parse JSON" >> ci.commit_extra
+              fi
+
+              # Success if we have at least one JSON result file
+              if [ $json_count -gt 0 ]; then
+                echo "ok" > ci.result
+              else
+                echo "no results found" > ci.result
+                echo "::warning::No fio-tests JSON results found"
+                exit 1
+              fi
+            else
+              echo "no results found" > ci.result
+              echo "::warning::No fio-tests results directory found"
+              exit 1
+            fi
+            ;;
           *xfs*|*btrfs*|*ext4*|tmpfs*|*fstests*)
             # fstests workflows: Use xunit_results.txt for rich summary
             echo "Collecting fstests results..."
