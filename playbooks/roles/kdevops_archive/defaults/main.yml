@@ -1,7 +1,7 @@
 ---
 kdevops_archive_data_count: 0
 kdevops_results: "{{ topdir_path }}/archive"
-kdevops_results_local: "{{ kdevops_results }}/{{ target_linux_ref }}/"
+kdevops_results_local: "{{ kdevops_results }}/{{ target_linux_ref | default(kdevops_workflow_name | default('workflow')) }}/"
 kdevops_results_repo_url_user: "git"
 kdevops_results_repo_url: "{{ kdevops_results_repo_url_user}}@github.com:linux-kdevops/kdevops-results-archive.git"
 kdevops_results_repo_url_demo: "{{ kdevops_results_repo_url_user}}@github.com:linux-kdevops/kdevops-results-archive-demo.git"
@@ -21,4 +21,4 @@ kdevops_archive_test_subject: "maple_tree: dump error message based on format"
 kdevops_archive_ci_subject_patchform_name: "maple_tree-dump-error-message-based-on-format"
 kdevops_archive_ci_test_result: "unknown"
 kdevops_archive_test_commit: "Elaborate here on test details."
-kdevops_archive_test_ref: "{{ target_linux_ref }}"
+kdevops_archive_test_ref: "{{ target_linux_ref | default(kdevops_workflow_name | default('workflow')) }}"
