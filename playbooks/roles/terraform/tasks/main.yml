@@ -86,6 +86,7 @@
 
 - name: Bring up terraform resources
   cloud.terraform.terraform:
+    binary_path: "{{ terraform_binary_path }}"
     force_init: true
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: present
@@ -94,6 +95,7 @@
 
 - name: Retrieve the controller_ip_map from terraform
   cloud.terraform.terraform_output:
+    binary_path: "{{ terraform_binary_path }}"
     format: json
     name: controller_ip_map
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
@@ -131,6 +133,7 @@
   block:
     - name: Retrieve the controller_ip_map from terraform
       cloud.terraform.terraform_output:
+        binary_path: "{{ terraform_binary_path }}"
         format: json
         name: controller_ip_map
         project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
@@ -165,6 +168,7 @@
 
 - name: Destroy terraform resources
   cloud.terraform.terraform:
+    binary_path: "{{ terraform_binary_path }}"
     force_init: true
     project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
     state: absent
