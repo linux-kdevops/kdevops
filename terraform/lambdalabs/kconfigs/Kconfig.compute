@@ -10,12 +10,80 @@ endif # TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
 # Include dynamically generated instance types when not using smart cheapest selection
 if !TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
 source "terraform/lambdalabs/kconfigs/Kconfig.compute.generated"
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GH200_OR_LESS
+	bool "GH200_OR_LESS - Best available up to GH200 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier single GPU available.
+	  Tries tiers in order: GH200 → H100-SXM → H100-PCIe → A100-SXM →
+	  A100 → A6000 → RTX6000 → A10.
+
+	  Use this for maximum single-GPU performance with automatic fallback
+	  when top-tier options are unavailable.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_H100_OR_LESS
+	bool "H100_OR_LESS - Best available up to H100 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier single GPU available.
+	  Tries tiers in order: H100-SXM → H100-PCIe → A100-SXM → A100 →
+	  A6000 → RTX6000 → A10.
+
+	  Use when you want the best available single GPU up to H100.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_A100_OR_LESS
+	bool "A100_OR_LESS - Best available up to A100 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier single GPU available.
+	  Tries tiers in order: A100-SXM → A100 → A6000 → RTX6000 → A10.
+
+	  Use for cost-effective GPU provisioning with A100 as the maximum tier.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_A6000_OR_LESS
+	bool "A6000_OR_LESS - Best available up to A6000 (tier-based)"
+	help
+	  Tier-based selection: provision the highest-tier single GPU available.
+	  Tries tiers in order: A6000 → RTX6000 → A10.
+
+	  Budget-friendly option with A6000 as maximum tier.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_B200_OR_LESS
+	bool "8X_B200_OR_LESS - Best available 8-GPU up to B200 (tier-based)"
+	help
+	  Tier-based selection for 8-GPU instances.
+	  Tries tiers in order: 8x B200 → 8x H100 → 8x A100-80 → 8x A100 → 8x V100.
+
+	  Use for maximum multi-GPU performance with automatic fallback.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_H100_OR_LESS
+	bool "8X_H100_OR_LESS - Best available 8-GPU up to H100 (tier-based)"
+	help
+	  Tier-based selection for 8-GPU instances.
+	  Tries tiers in order: 8x H100 → 8x A100-80 → 8x A100 → 8x V100.
+
+	  Use when you need 8 GPUs with H100 as the maximum tier.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_A100_OR_LESS
+	bool "8X_A100_OR_LESS - Best available 8-GPU up to A100 (tier-based)"
+	help
+	  Tier-based selection for 8-GPU instances.
+	  Tries tiers in order: 8x A100-80 → 8x A100 → 8x V100.
+
+	  Cost-effective 8-GPU option with A100 as maximum tier.
+
 endif
 
 config TERRAFORM_LAMBDALABS_INSTANCE_TYPE
 	string
 	output yaml
 	default $(shell, python3 scripts/lambdalabs_smart_inference.py instance) if TERRAFORM_LAMBDALABS_REGION_SMART_CHEAPEST
+	# Tier-based instance type mappings
+	default "GH200_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GH200_OR_LESS
+	default "H100_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_H100_OR_LESS
+	default "A100_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_A100_OR_LESS
+	default "A6000_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_A6000_OR_LESS
+	default "8X_B200_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_B200_OR_LESS
+	default "8X_H100_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_H100_OR_LESS
+	default "8X_A100_OR_LESS" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_8X_A100_OR_LESS
 	# Dynamically generated mappings for all instance types
 	default "cpu_4x_general" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_CPU_4X_GENERAL
 	default "gpu_1x_a10" if TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10
