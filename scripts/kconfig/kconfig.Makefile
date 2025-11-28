@@ -57,7 +57,25 @@ PHONY += $(simple-targets)
 $(simple-targets): $(KCONFIG_DIR)/conf Kconfig
 	$< --$@ Kconfig
 
+# Support merging config fragments with base defconfigs
+# Usage: make defconfig-<base>+<fragment>
+# Example: make defconfig-datacrunch-b200-or-less+myworkflow
+#
+# The fragment is looked up in defconfigs/configs/<fragment>.config
+# Multiple fragments can be chained: make defconfig-base+frag1+frag2
 defconfig-%:: $(KCONFIG_DIR)/conf include/config/project.release Kconfig
-	@$< --defconfig=defconfigs/$(@:defconfig-%=%) Kconfig
+	@STEM="$(@:defconfig-%=%)"; \
+	if echo "$$STEM" | grep -q '+'; then \
+		BASE=$$(echo "$$STEM" | cut -d'+' -f1); \
+		FRAGS=$$(echo "$$STEM" | cut -d'+' -f2- | tr '+' ' '); \
+		FRAG_FILES=""; \
+		for f in $$FRAGS; do \
+			FRAG_FILES="$$FRAG_FILES defconfigs/configs/$$f.config"; \
+		done; \
+		$(KCONFIG_DIR)/merge_config.sh -m -Q defconfigs/$$BASE $$FRAG_FILES && \
+		$< --defconfig=.config Kconfig; \
+	else \
+		$< --defconfig=defconfigs/$$STEM Kconfig; \
+	fi
 
 .PHONY: $(PHONY)
