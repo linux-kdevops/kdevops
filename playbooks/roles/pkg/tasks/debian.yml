@@ -2,6 +2,7 @@
 - name: Debian_libaio rename for buster
   ansible.builtin.set_fact:
     is_bookworm: '{{ ansible_distribution_release == "bookworm" }}'
+    is_bullseye: '{{ ansible_distribution_release == "bullseye" }}'
     is_buster: '{{ ansible_distribution_release == "buster" }}'
     is_trixie: '{{ ansible_distribution_release == "trixie" }}'
 
@@ -10,4 +11,5 @@
     pkg_libaio: "libaio1"
   when: >
     is_buster|bool or
+    is_bullseye|bool or
     is_bookworm|bool
