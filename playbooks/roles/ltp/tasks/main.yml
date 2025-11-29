@@ -99,6 +99,10 @@
   ansible.builtin.package:
     name: "{{ ltp_packages }}"
     state: present
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
 
 - name: Set the pathname of the build directory
   tags: ["build", "ltp"]
