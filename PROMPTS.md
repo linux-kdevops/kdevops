@@ -57,7 +57,7 @@ kdevops in-kernel and then in userspace. The in-kernel testing done requires
 using a loadable kernel module for each.
 
 We have support for bundling these two tests under the
-defconfigs/seltests-radix-tree defconfig and we use the
+defconfigs/selftests-radix-tree defconfig and we use the
 SELFTESTS_TEST_BUNDLE_RADIX_TREE to help us bundle all radix-tree related tests.
 We want to extend this with a new userspace only test. Its the vma tests on the
 Linux kernel. So it won't have a corresponding Linux kernel module load,

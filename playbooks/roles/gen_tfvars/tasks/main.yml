@@ -28,6 +28,37 @@
     path: "{{ topdir_path }}/{{ kdevops_terraform_tfvars }}"
   register: kdevops_tfvars_dest
 
+- name: Find dynamic Kconfig files for {{ kdevops_terraform_provider }}
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/kconfigs"
+    patterns: "Kconfig*.generated"
+  register: provider_kconfig_files
+  when:
+    - kdevops_enable_terraform
+
+- name: Check if any dynamic Kconfig files are empty
+  ansible.builtin.fail:
+    msg: |
+      ERROR: Dynamic cloud configuration not generated or incomplete.
+
+      Found {{ provider_kconfig_files.matched }} dynamic Kconfig file(s) for {{ kdevops_terraform_provider }},
+      but at least one is empty ({{ item.path }}).
+
+      Before running 'make' or 'make bringup', you must generate the
+      dynamic cloud configuration by running:
+
+          make cloud-config
+
+      For more information, run 'make help' and see the cloud-config
+      targets section.
+  when:
+    - kdevops_enable_terraform
+    - provider_kconfig_files.matched > 0
+    - item.size == 0
+  loop: "{{ provider_kconfig_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
 - name: Ensure proper permission on {{ kdevops_terraform_tfvars }}
   become: true
   become_flags: "su - -c"
