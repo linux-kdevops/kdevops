@@ -26,6 +26,7 @@ extra_vars.json
 .config.old
 
 ansible.cfg
+callback_plugins/__pycache__/
 
 scripts/kconfig/.mconf-cfg
 scripts/workflows/fstests/lib/__pycache__/
@@ -136,3 +137,6 @@ terraform/oci/scripts/__pycache__/
 
 scripts/__pycache__/
 docs/contrib/kdevops_contributions*
+__pycache__/
+
+.ansible

@@ -128,6 +128,16 @@ make fix-whitespace-last-commit # Fixes commit white space damage
 make mrproper           # Clean everything and restart from scratch
 ```
 
+### Ansible Callbacks
+
+kdevops supports multiple Ansible stdout callback plugins (dense, debug,
+diy, lucid, or custom). The default is dense.
+
+See [docs/ansible-callbacks.md](docs/ansible-callbacks.md) for:
+- Supported plugins and configuration
+- Command line override via `ANSIBLE_CFG_CALLBACK_PLUGIN`
+- Lucid plugin features and parameters
+
 ## Key Workflows
 
 ### fstests (Filesystem Testing)

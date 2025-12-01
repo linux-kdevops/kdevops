@@ -59,6 +59,23 @@ choice
 	default ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE if !ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
 	default ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM if ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
 
+config ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID
+	bool "Ansible Lucid Callback Plugin"
+	help
+	  Lucid: Modern, clean Ansible output with progressive verbosity levels.
+
+	  Features:
+	  - Clean, minimal output by default (shows only changes and errors)
+	  - Progressive verbosity: -v shows all tasks, -vv shows debug tasks
+	  - Dynamic live display for interactive terminals (BitBake/Yocto style)
+	  - Static output for CI/CD and piped output
+	  - Task-level output control via output_verbosity variable
+	  - Comprehensive logging (always max verbosity, independent of display)
+	  - Time tracking for tasks > 3 seconds
+
+	  Lucid is designed by kernel developers for kernel testing workflows
+	  where human-readable output and silent operation are essential.
+
 config ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	bool "Ansible Debug Callback Plugin"
 	help
@@ -93,6 +110,7 @@ endif # ANSIBLE_CFG_CALLBACK_PLUGIN_CUSTOM
 config ANSIBLE_CFG_CALLBACK_PLUGIN_STRING
 	string
 	output yaml
+	default "lucid" if ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID
 	default "debug" if ANSIBLE_CFG_CALLBACK_PLUGIN_DEBUG
 	default "dense" if ANSIBLE_CFG_CALLBACK_PLUGIN_DENSE
 	default "community.general.diy" if ANSIBLE_CFG_CALLBACK_PLUGIN_DIY
@@ -170,6 +188,62 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS
 	  and generates a "TASKS RECAP" section showing execution times.
 
 	  https://docs.ansible.com/ansible/latest/collections/ansible/posix/profile_tasks_callback.html
+
+if ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID
+
+choice
+	prompt "Lucid output display mode"
+	default ANSIBLE_CFG_LUCID_OUTPUT_MODE_AUTO
+
+config ANSIBLE_CFG_LUCID_OUTPUT_MODE_AUTO
+	bool "Auto (dynamic if interactive, static otherwise)"
+	help
+	  Automatically select output mode based on terminal detection.
+
+	  Uses dynamic live updating display (similar to BitBake/Yocto) when
+	  running in an interactive terminal with spinner animations, live
+	  task timers, and parallel task visualization.
+
+	  Automatically falls back to traditional static output for CI/CD,
+	  piped output, and non-TTY contexts.
+
+	  This is the recommended default for most use cases.
+
+config ANSIBLE_CFG_LUCID_OUTPUT_MODE_STATIC
+	bool "Static (always use traditional output)"
+	help
+	  Force static output mode regardless of terminal type.
+
+	  Always use traditional static output with no live updates or
+	  animations. Each task result is printed as it completes.
+
+	  Useful for users who prefer traditional Ansible output or when
+	  dynamic mode causes issues with specific terminal emulators.
+
+config ANSIBLE_CFG_LUCID_OUTPUT_MODE_DYNAMIC
+	bool "Dynamic (always attempt live display)"
+	help
+	  Force dynamic output mode even in non-interactive contexts.
+
+	  Always attempt to use live updating display with ANSI escape codes
+	  even if terminal detection suggests static mode should be used.
+
+	  Warning: May produce garbled output in CI/CD, piped contexts, or
+	  terminals that don't support ANSI escape sequences. Only use this
+	  if you know your environment supports dynamic output but the
+	  automatic detection fails.
+
+endchoice
+
+config ANSIBLE_CFG_LUCID_OUTPUT_MODE_STRING
+	string
+	output yaml
+	default "auto" if ANSIBLE_CFG_LUCID_OUTPUT_MODE_AUTO
+	default "static" if ANSIBLE_CFG_LUCID_OUTPUT_MODE_STATIC
+	default "dynamic" if ANSIBLE_CFG_LUCID_OUTPUT_MODE_DYNAMIC
+
+endif # ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID
+
 endmenu
 
 config ANSIBLE_CFG_VERBOSITY
