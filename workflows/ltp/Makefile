@@ -105,13 +105,13 @@ XARGS_ARGS := -I {} bash -c 'echo "{}:"; cat {}; echo;'
 endif
 
 ltp:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		--skip-tags run_tests,copy_results \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ltp.yml
 
 ltp-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
@@ -119,7 +119,7 @@ ltp-baseline:
 
 
 ltp-dev-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
@@ -127,7 +127,7 @@ ltp-dev-baseline:
 
 
 ltp-dev-reset:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml \

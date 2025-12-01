@@ -28,7 +28,7 @@ PHONY += extend-extra-args-nfsd
 ANSIBLE_EXTRA_ARGS += $(NFSD_EXTRA_ARGS)
 
 nfsd:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nfsd.yml
 

@@ -129,20 +129,20 @@ endif
 endif
 
 fstests: $(FSTESTS_BASELINE_EXTRA)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'localhost:baseline:dev' \
 		playbooks/fstests.yml \
 		--skip-tags run_tests,copy_results $(LIMIT_HOSTS)
 
 fstests-kdevops-setup: $(KDEVOPS_EXTRA_VARS) $(FSTESTS_BASELINE_EXTRA)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/fstests.yml \
 		--tags vars,kdevops_fstests_setup,gendisks \
 		$(LIMIT_HOSTS)
 
 fstests-baseline: $(FSTESTS_BASELINE_EXTRA)
-	$(Q)PYTHONUNBUFFERED=1 ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)PYTHONUNBUFFERED=1 ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
@@ -150,7 +150,7 @@ fstests-baseline: $(FSTESTS_BASELINE_EXTRA)
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags run_tests,copy_results \
@@ -161,7 +161,7 @@ fstests-baseline-skip-kdevops-update: $(KDEVOPS_EXTRA_VARS)
 		$(LIMIT_HOSTS)
 
 fstests-baseline-run-oscheck-only: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags run_tests,copy_results \
@@ -172,7 +172,7 @@ fstests-baseline-run-oscheck-only: $(KDEVOPS_EXTRA_VARS)
 		$(LIMIT_HOSTS)
 
 fstests-config: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags vars,generate-fstests-config \
@@ -180,14 +180,14 @@ fstests-config: $(KDEVOPS_EXTRA_VARS)
 		$(LIMIT_HOSTS)
 
 fstests-config-debug: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/fstests.yml \
 		-e 'fstests_debug_localhost=True' \
 		--tags vars,generate-fstests-config \
 		--extra-vars=@./extra_vars.yaml
 
 fstests-dev: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
@@ -196,7 +196,7 @@ fstests-dev: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-tests: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/fstests.yml \
 		--tags vars,run_tests,copy_results \
@@ -205,7 +205,7 @@ fstests-tests: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags vars,tfb \
@@ -215,7 +215,7 @@ fstests-baseline-results-tfb-ls: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-results-tfb-trim: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags vars,tfb \
@@ -225,7 +225,7 @@ fstests-baseline-results-tfb-trim: $(KDEVOPS_EXTRA_VARS)
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 fstests-baseline-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/fstests.yml \
 		--tags copy_results,print_results,tfb \
@@ -236,7 +236,7 @@ fstests-baseline-results: $(KDEVOPS_EXTRA_VARS)
 fstests-results: fstests-baseline-results
 
 fstests-dev-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		playbooks/fstests.yml \
 		--tags copy_results,print_results \
@@ -245,7 +245,7 @@ fstests-dev-results: $(KDEVOPS_EXTRA_VARS)
 		$(LIMIT_HOSTS)
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)

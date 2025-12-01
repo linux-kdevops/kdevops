@@ -2,55 +2,55 @@ MMTESTS_ARGS	:=
 
 
 mmtests:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml  \
 		--tags deps,setup
 		$(MMTESTS_ARGS)
 
 mmtests-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-l 'mmtests:&baseline' playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml  \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
 mmtests-dev:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-l 'mmtests:&dev' playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags run_tests \
 		$(MMTESTS_ARGS)
 
 mmtests-tests:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags run_tests,results \
 		$(MMTESTS_ARGS)
 
 mmtests-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags results \
 		$(MMTESTS_ARGS)
 
 mmtests-compare:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/mmtests-compare.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags deps,compare \
 		$(MMTESTS_ARGS)
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml \
 		$(MMTESTS_ARGS)
 
 mmtests-clean:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/mmtests.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags clean \

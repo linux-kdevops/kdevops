@@ -172,6 +172,26 @@ config ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS
 	  https://docs.ansible.com/ansible/latest/collections/ansible/posix/profile_tasks_callback.html
 endmenu
 
+config ANSIBLE_CFG_VERBOSITY
+	int "Ansible verbosity level"
+	output yaml
+	range 0 6
+	default 0
+	help
+	  Set the default verbosity level for Ansible output (0-6).
+
+	  Level 0: Normal output (only changes and errors)
+	  Level 1: -v equivalent, shows task results
+	  Level 2: -vv equivalent, shows task input
+	  Level 3: -vvv equivalent, shows connection debug
+	  Level 4-6: Increasingly verbose debugging information
+
+	  This sets the verbosity key in ansible.cfg [defaults] section.
+	  Can be overridden at runtime via ANSIBLE_VERBOSITY environment
+	  variable.
+
+	  https://docs.ansible.com/ansible/latest/reference_appendices/config.html#default-verbosity
+
 config ANSIBLE_CFG_DEPRECATION_WARNINGS
 	bool "deprecation_warnings"
 	output yaml

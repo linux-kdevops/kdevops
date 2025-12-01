@@ -54,7 +54,7 @@ rcloud-build: $(RCLOUD_WORKFLOW)/target/release/rcloud $(RCLOUD_DEPS)
 # Create base images with proper customization (networking, SSH, users, etc.)
 rcloud-base-images:
 	@echo "Creating base images with virt-builder customization..."
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'localhost' \
 		--extra-vars=@./extra_vars.yaml \
 		--tags network,pool,base_image \
@@ -64,7 +64,7 @@ rcloud-base-images:
 # Install rcloud (copy binary, setup systemd service, install Terraform provider)
 rcloud: rcloud-build rcloud-base-images
 	@echo "Installing rcloud..."
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars=@./extra_vars.yaml  \
 		-i inventory/hosts \
 		playbooks/rcloud.yml

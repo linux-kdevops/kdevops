@@ -73,7 +73,7 @@ help:
 	@echo
 	@echo "Variable options:"
 	@echo "make V=n [targets] 1:      verbose build (Makefile)"
-	@echo "make AV=n [targets] 0-6:   verbose build (Ansible)"
+	@echo "ANSIBLE_VERBOSITY=n make [targets] 0-6: verbose build (Ansible)"
 
 .PHONY: clean
 clean:

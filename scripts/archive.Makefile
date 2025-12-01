@@ -13,7 +13,7 @@ ARCHIVE_DYNAMIC_RUNTIME_VARS += \
 endif
 
 ci-archive:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/kdevops_archive.yml \
 		--extra-vars '{ $(ARCHIVE_DYNAMIC_RUNTIME_VARS) }' \
 		--extra-vars=@./extra_vars.yaml

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
 firstconfig:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars '{ kdevops_cli_install: True }' \
 		--tags vars_simple,firstconfig \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml

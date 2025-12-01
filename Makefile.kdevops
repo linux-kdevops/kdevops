@@ -8,28 +8,28 @@ kdevops_all: kdevops_deps
 PHONY := kdevops_all
 
 kdevops_terraform_deps:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--inventory localhost, \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_terraform.yml
 PHONY += kdevops_terraform_deps
 
 kdevops_install_libvirt:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_configuration=True"
 
 kdevops_configure_libvirt:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "skip_install=True" \
 		-e 'running_user=$(USER)'
 
 kdevops_verify_libvirt_user:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_user.yml -e "only_verify_user=True"
 
 PHONY += kdevops_verify_libvirt_user
 
 kdevops_libvirt_storage_pool_create:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/libvirt_storage_pool_create.yml
 
 PHONY += kdevops_libvirt_storage_pool_create

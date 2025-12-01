@@ -308,7 +308,7 @@ CI-specific optimizations:
 Enable verbose output:
 ```bash
 make V=1 fio-tests              # Verbose build output
-make AV=2 fio-tests             # Ansible verbose output
+ANSIBLE_VERBOSITY=2 make fio-tests  # Ansible verbose output
 ```
 
 ## Performance considerations

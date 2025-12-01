@@ -20,14 +20,14 @@ ANSIBLE_EXTRA_ARGS += devconfig_enable_systemd_timesyncd_ntp_google_debian='True
 endif
 
 timesyncd-client:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		--extra-vars '{ kdevops_cli_install: True }' \
 		--tags vars_simple,timesyncd \
 		$(KDEVOPS_PLAYBOOKS_DIR)/devconfig.yml
 
 timesyncd-server:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install_systemd_timesyncd.yml
 
 timesyncd-status:

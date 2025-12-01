@@ -57,12 +57,12 @@ extend-extra-args-blktests:
 	fi
 
 blktests:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/blktests.yml \
 		--skip-tags run_tests,copy_results $(LIMIT_HOSTS)
 
 blktests-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
 		--tags vars,run_tests,copy_results \
@@ -71,7 +71,7 @@ blktests-baseline:
 
 
 blktests-baseline-skip-kdevops-update:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
 		--tags vars,run_tests,copy_results --skip-tags git_update \
@@ -79,7 +79,7 @@ blktests-baseline-skip-kdevops-update:
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 blktests-baseline-run-oscheck-only:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
 		--tags vars,run_tests,copy_results \
@@ -88,7 +88,7 @@ blktests-baseline-run-oscheck-only:
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 blktests-dev:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		playbooks/blktests.yml \
 		--tags vars,run_tests,copy_results \
@@ -96,7 +96,7 @@ blktests-dev:
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 blktests-baseline-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/blktests.yml \
 		--tags copy_results,print_results \
@@ -106,7 +106,7 @@ blktests-baseline-results:
 blktests-results: blktests-baseline-results
 
 blktests-dev-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		playbooks/blktests.yml \
 		--tags copy_results,print_results \
@@ -114,7 +114,7 @@ blktests-dev-results:
 		--extra-vars=@./extra_vars.yaml $(LIMIT_HOSTS)
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)

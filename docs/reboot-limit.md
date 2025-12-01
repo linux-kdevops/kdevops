@@ -173,7 +173,7 @@ Enable verbose output for troubleshooting:
 
 ```bash
 # Ansible verbose mode
-make reboot-limit-baseline AV=3
+ANSIBLE_VERBOSITY=3 make reboot-limit-baseline
 
 # Check individual node status
 ansible baseline:dev:service -m shell -a "cat /data/reboot-limit/*/reboot-count.txt"

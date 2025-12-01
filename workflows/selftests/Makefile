@@ -29,26 +29,26 @@ include $(TOPDIR)/workflows/selftests/tests/Makefile.sysctl
 include $(TOPDIR)/workflows/selftests/tests/Makefile.xarray
 
 selftests:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/selftests.yml \
 		--skip-tags run_tests,copy_results,check_results \
 		$(LIMIT_HOSTS)
 
 selftests-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/selftests.yml \
 		--extra-vars '{ $(SELFTESTS_DYNAMIC_RUNTIME_VARS) }' \
 		--tags vars,run_tests,copy_results,check_results $(LIMIT_HOSTS)
 
 selftests-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/selftests.yml \
 		--tags vars,copy_results,check_results $(LIMIT_HOSTS)
 
 selftests-check-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/selftests.yml \
 		--tags vars,check_results $(LIMIT_HOSTS)

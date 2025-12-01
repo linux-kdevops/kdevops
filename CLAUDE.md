@@ -121,7 +121,7 @@ make mmtests-compare    # Compare baseline vs dev results (A/B testing)
 ```bash
 make help               # Show available targets
 make V=1 [target]       # Verbose build output
-make AV=1-6 [target]    # Ansible verbose output (levels 0-6)
+ANSIBLE_VERBOSITY=1-6 make [target]  # Ansible verbose output (levels 0-6)
 make dynconfig          # Generate dynamic configuration
 make style              # Check for whitespace issues - ALWAYS run before completing work
 make fix-whitespace-last-commit # Fixes commit white space damage
@@ -986,7 +986,7 @@ tasks complete, leading to variable access before they're properly set.
 
 ```bash
 # Run with verbose output to see variable resolution
-make target AV=3  # Ansible verbose level 3
+ANSIBLE_VERBOSITY=3 make target  # Ansible verbose level 3
 ```
 
 ### A/B Testing Variable Resolution Example
@@ -1045,7 +1045,7 @@ When developing features that involve per-node variables:
    grep "active_.*:" extra_vars.yaml
 
    # Verify node-specific settings
-   make target AV=2 | grep -A5 -B5 "Set.*fact"
+   ANSIBLE_VERBOSITY=2 make target | grep -A5 -B5 "Set.*fact"
    ```
 
 ### Common Patterns to Avoid

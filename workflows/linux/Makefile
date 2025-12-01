@@ -111,14 +111,14 @@ ifeq (y,$(CONFIG_BOOTLINUX_AB_DIFFERENT_REF))
 linux: linux-baseline linux-dev
 else
 linux: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 endif
 else
 linux: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
@@ -127,7 +127,7 @@ endif
 PHONY += linux-baseline
 ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 linux-baseline: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit baseline \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)"
@@ -140,7 +140,7 @@ endif
 PHONY += linux-dev
 ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 linux-dev: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit dev \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)"
@@ -152,7 +152,7 @@ endif
 
 PHONY += linux-mount
 linux-mount:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,9p_mount \
@@ -160,7 +160,7 @@ linux-mount:
 
 PHONY += linux-deploy
 linux-deploy:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
@@ -168,7 +168,7 @@ linux-deploy:
 
 PHONY += linux-build
 linux-build:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,saved,vars \
@@ -176,7 +176,7 @@ linux-build:
 
 PHONY += linux-install
 linux-install:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux \
@@ -184,7 +184,7 @@ linux-install:
 
 PHONY += linux-uninstall
 linux-uninstall:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags uninstall-linux,vars \
@@ -192,7 +192,7 @@ linux-uninstall:
 		$(LIMIT_HOSTS)
 
 linux-clone-clients: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) \
@@ -200,7 +200,7 @@ linux-clone-clients: $(KDEVOPS_NODES)
 
 PHONY += linux-clone-9p
 linux-clone-9p: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'localhost' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" \
@@ -211,14 +211,14 @@ linux-clone: $(KDEVOPS_NODES) $(LINUX_CLONE_DEFAULT_TYPE)
 
 PHONY += linux-grub-setup
 linux-grub-setup:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags manual-update-grub,saved,vars
 
 PHONY += linux-reboot
 linux-reboot:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS) --tags vars,reboot
@@ -232,7 +232,7 @@ uname:
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL))
 PHONY += linux-cxl
 linux-cxl: $(KDEVOPS_NODES)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags 'vars,cxl-build,cxl-install'                             \

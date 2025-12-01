@@ -2,6 +2,7 @@
 {% if ansible_cfg_callback_plugin_profile_tasks %}
 callbacks_enabled = ansible.posix.profile_tasks, {{ ansible_cfg_callback_plugin_string }}
 {% endif %}
+verbosity = {{ ansible_cfg_verbosity | default(0) }}
 deprecation_warnings = {{ ansible_cfg_deprecation_warnings }}
 stdout_callback = {{ ansible_cfg_callback_plugin_string }}
 check_mode_markers = {{ ansible_cfg_callback_plugin_check_mode_markers }}

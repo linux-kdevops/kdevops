@@ -3,49 +3,49 @@
 HELP_TARGETS += vllm-help-menu
 
 vllm:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags data_partition,vars,deps,docker-config,vllm-deploy \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-deploy:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags data_partition,vars,deps,docker-config,vllm-deploy \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-benchmark:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-benchmark \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-monitor:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-monitor \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-teardown:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-teardown \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-cleanup:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-cleanup \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-cleanup-full:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-cleanup \
@@ -53,7 +53,7 @@ vllm-cleanup-full:
 		--extra-vars='{"vllm_cleanup_remove_binaries": true}'
 
 vllm-cleanup-purge:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-cleanup \
@@ -61,14 +61,14 @@ vllm-cleanup-purge:
 		--extra-vars='{"vllm_cleanup_remove_binaries": true, "vllm_cleanup_remove_data": true}'
 
 vllm-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-results,vllm-visualize \
 		--extra-vars=@./extra_vars.yaml
 
 vllm-visualize-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		playbooks/vllm.yml \
 		--tags vars,vllm-visualize \

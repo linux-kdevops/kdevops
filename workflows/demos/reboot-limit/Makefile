@@ -121,7 +121,7 @@ endif # CONFIG_REBOOT_LIMIT_ENABLE_LOOP
 # The playbook reboot-limit.yml is used to run all tasks defined except those
 # with tags "run_tests" or "copy_results".
 reboot-limit: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/reboot-limit.yml \
 		--skip-tags run_tests,copy_results \
 		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
@@ -152,13 +152,13 @@ reboot-limit: $(KDEVOPS_EXTRA_VARS)
 # use the vars tag to ensure we get variables defined which we construct on the
 # fly.
 reboot-limit-baseline: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/reboot-limit.yml \
 		--tags vars,first_run,reset \
 		--extra-vars=@./extra_vars.yaml \
 		--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)"
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/reboot-limit.yml \
 		--tags vars,run_tests,copy_results \
@@ -178,7 +178,7 @@ reboot-limit-baseline-kotd:
 
 # Resets the boot counters so we start from scratch
 reboot-limit-baseline-reset:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		playbooks/reboot-limit.yml \
 		--tags vars,reset \
@@ -191,13 +191,13 @@ reboot-limit-tests: reboot-limit-baseline reboot-limit-dev
 # Check if dev group has hosts before running
 reboot-limit-dev: $(KDEVOPS_EXTRA_VARS)
 	$(Q)if grep -A1 '^\[dev\]' hosts | grep -qE '^[a-zA-Z0-9]'; then \
-		ansible-playbook $(ANSIBLE_VERBOSE) \
+		ansible-playbook \
 			--limit 'dev' \
 			playbooks/reboot-limit.yml \
 			--tags vars,first_run,reset \
 			--extra-vars=@./extra_vars.yaml \
 			--extra-vars="reboot_limit_max=$(REBOOT_LIMIT_MAX)" && \
-		ansible-playbook $(ANSIBLE_VERBOSE) \
+		ansible-playbook \
 			--limit 'dev' \
 			playbooks/reboot-limit.yml \
 			--tags vars,run_tests,copy_results \
@@ -214,7 +214,7 @@ reboot-limit-dev-kotd:
 	$(Q)$(REBOOT_LIMIT_LOOP_KOTD) dev
 
 reboot-limit-dev-reset:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		playbooks/reboot-limit.yml \
 		--tags vars,reset \

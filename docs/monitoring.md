@@ -232,7 +232,7 @@ grep -E "enable_monitoring|monitor_" .config
 
 2. **Check ansible output for monitoring tasks**:
 ```bash
-make fstests-tests AV=2 | grep -A5 -B5 monitoring
+ANSIBLE_VERBOSITY=2 make fstests-tests | grep -A5 -B5 monitoring
 ```
 
 3. **Look for error messages**:

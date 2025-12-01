@@ -30,7 +30,7 @@ export AI_ARGS_SEPARATED := $(subst $(space),$(comma),$(AI_ARGS))
 
 # Main AI workflow targets
 ai: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
@@ -44,7 +44,7 @@ ai-dev:
 
 # AI Testing/Benchmark targets
 ai-tests: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_tests.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
@@ -52,7 +52,7 @@ ai-tests: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
 	$(Q)$(MAKE) ai-results
 
 ai-tests-baseline: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-l baseline \
 		playbooks/ai_tests.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
@@ -60,7 +60,7 @@ ai-tests-baseline: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
 	$(Q)$(MAKE) ai-results-baseline
 
 ai-tests-dev: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-l dev \
 		playbooks/ai_tests.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
@@ -69,7 +69,7 @@ ai-tests-dev: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
 
 # Target to only run results analysis and graph generation
 ai-tests-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_tests.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
@@ -78,7 +78,7 @@ ai-tests-results:
 
 # Results collection targets
 ai-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_results.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
@@ -91,26 +91,26 @@ ai-results-dev:
 	$(Q)$(MAKE) ai-results HOSTS="dev"
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml
 
 ai-setup:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_setup.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
 		$(LIMIT_HOSTS)
 
 ai-uninstall:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_uninstall.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \
 		$(LIMIT_HOSTS)
 
 ai-destroy:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/ai_destroy.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--extra-vars="$(AI_ARGS) $(AI_MANUAL_ARGS)" \

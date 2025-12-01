@@ -16,7 +16,7 @@ docker-mirror-help:
 
 docker-mirror: $(KDEVOPS_EXTRA_VARS)
 	@echo "Setting up Docker registry mirror with automatic background updates..."
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--connection=local \
 		--tags docker-mirror \
 		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \
@@ -52,7 +52,7 @@ docker-mirror-status:
 docker-mirror-pull: $(KDEVOPS_EXTRA_VARS)
 	@echo "Manually triggering Docker image downloads..."
 	@echo "This may take several minutes depending on image sizes and network speed."
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--connection=local \
 		--tags docker-mirror-pull \
 		$(KDEVOPS_PLAYBOOKS_DIR)/docker-mirror.yml \

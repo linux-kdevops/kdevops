@@ -32,18 +32,18 @@ endif
 
 # Makefile for pynfs targets
 pynfs:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline:dev' \
 		--skip-tags run_tests,copy_results,clean_local_results \
 		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
 
 pynfs-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		--tags vars,first_run,reset \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'baseline' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
@@ -52,12 +52,12 @@ pynfs-baseline:
 
 # Below are the corresponding dev targets
 pynfs-dev-baseline:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		--tags vars,first_run,reset \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/pynfs.yml
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		--tags vars,run_tests,copy_results \
 		--extra-vars=@./extra_vars.yaml \
@@ -65,7 +65,7 @@ pynfs-dev-baseline:
 
 
 pynfs-dev-reset:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'dev' \
 		--tags vars,reset \
 		--extra-vars=@./extra_vars.yaml \

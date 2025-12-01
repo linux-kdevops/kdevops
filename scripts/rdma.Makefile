@@ -1,7 +1,7 @@
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_RDMA_SIW))
 
 siw:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/siw.yml
 
@@ -14,7 +14,7 @@ endif
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_RDMA_RXE))
 
 rxe:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/rxe.yml
 

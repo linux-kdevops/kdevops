@@ -42,7 +42,7 @@ KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_nixos
 	$(Q)make linux-clone
 
 libvirt_pcie_passthrough_permissions:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/libvirt_pcie_passthrough.yml
 
 $(KDEVOPS_PROVISIONED_SSH): $(KDEVOPS_HOSTS_PREFIX)
@@ -51,21 +51,21 @@ $(KDEVOPS_PROVISIONED_SSH): $(KDEVOPS_HOSTS_PREFIX)
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 install_nixos_deps:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'localhost' \
 		playbooks/nixos.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags install-deps
 
 generate_nixos_configs:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--limit 'localhost' \
 		playbooks/nixos.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags generate-configs
 
 bringup_nixos: $(NIXOS_BRINGUP_DEPS) generate_nixos_configs
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/nixos.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags build-vms,bringup,console
@@ -76,7 +76,7 @@ status_nixos:
 PHONY += status_nixos
 
 destroy_nixos:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/nixos.yml \
 		--extra-vars=@./extra_vars.yaml \
 		--tags destroy

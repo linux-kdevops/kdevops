@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
 rcloud-deps:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/install-rcloud-deps.yml \
 		-e 'kdevops_first_run=True'
 PHONY += rcloud-deps

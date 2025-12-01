@@ -25,46 +25,46 @@ TAGS_SYSBENCH_RESULTS += results
 
 # Target to set up sysbench (MySQL or PostgreSQL)
 sysbench:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--skip-tags $(subst $(space),$(comma),$(TAGS_SYSBENCH_RUN))
 
 # Target to run sysbench tests (including telemetry)
 sysbench-test:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--tags $(subst $(space),$(comma),$(TAGS_SYSBENCH_TEST))
 
 # Optional target to collect telemetry
 sysbench-telemetry:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--tags $(subst $(space),$(comma),$(TAGS_SYSBENCH_TELEMETRY))
 
 # Optional target to collect all results
 sysbench-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--tags $(subst $(space),$(comma),$(TAGS_SYSBENCH_RESULTS))
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml
 
 sysbench-clean:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--tags vars,clean
 
 # Optional in case you want to improve graphing
 sysbench-plot:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/sysbench.yml \
 		--tags vars,plot
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml \
 		$(LIMIT_HOSTS)

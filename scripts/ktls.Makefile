@@ -1,7 +1,7 @@
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_KTLS))
 
 ktls:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		--extra-vars=@./extra_vars.yaml \
 		$(KDEVOPS_PLAYBOOKS_DIR)/ktls.yml
 

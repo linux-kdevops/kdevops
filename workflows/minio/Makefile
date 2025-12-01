@@ -14,25 +14,25 @@ $(MINIO_DATA_TARGET): $(ANSIBLE_INVENTORY_FILE)
 	$(Q)$(MAKE) $(MINIO_DATA_TARGET_INSTALL)
 
 $(MINIO_DATA_TARGET_INSTALL): $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_install
 
 $(MINIO_DATA_TARGET_UNINSTALL): $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_uninstall
 
 $(MINIO_DATA_TARGET_DESTROY): $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_destroy
 
 $(MINIO_DATA_TARGET_RUN): $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		$(MINIO_PLAYBOOK) \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
 		--tags vars,minio_warp
@@ -51,7 +51,7 @@ $(MINIO_DATA_TARGET_RESULTS):
 	fi
 
 $(MINIO_DATA_TARGET_MONITOR): $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@./extra_vars.yaml
 

@@ -4,7 +4,7 @@ PHONY += monitor-results monitor-kill
 
 # Main build-linux workflow targets
 build-linux: $(KDEVOPS_NODES) $(ANSIBLE_INVENTORY_FILE)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-i hosts \
 		playbooks/build_linux.yml \
 		-f 10 \
@@ -23,7 +23,7 @@ build-linux-dev:
 
 # Results collection target
 build-linux-results:
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-i hosts \
 		playbooks/build_linux_results.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
@@ -65,12 +65,12 @@ build-linux-visualize:
 		exit 1)
 
 monitor-results: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		playbooks/monitor-results.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS)
 
 monitor-kill: $(KDEVOPS_EXTRA_VARS)
-	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+	$(Q)ansible-playbook \
 		-i hosts \
 		playbooks/monitor-kill.yml \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \
