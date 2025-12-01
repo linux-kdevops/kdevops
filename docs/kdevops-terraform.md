@@ -7,10 +7,13 @@ a Terraform plan.
 Terraform is used to deploy your development hosts on cloud virtual machines.
 Below are the list of clouds providers currently supported:
 
+**Traditional Cloud Providers:**
   * azure - Microsoft Azure
   * aws - Amazon Web Service
   * gce - Google Cloud Compute
   * oci - Oracle Cloud Infrastructure
+
+**Neoclouds (GPU-optimized):**
   * datacrunch - DataCrunch GPU Cloud
   * lambdalabs - Lambda Labs GPU Cloud
 
@@ -271,7 +274,18 @@ If your Ansible controller (where you run "make bringup") and your
 test instances operate inside the same subnet, you can disable the
 TERRAFORM_OCI_ASSIGN_PUBLIC_IP option for better network security.
 
-### DataCrunch - GPU Cloud Provider
+## Neoclouds
+
+A neocloud is a new type of specialized cloud provider that focuses on offering
+high-performance computing, particularly GPU-as-a-Service, to handle demanding
+AI and machine learning workloads. Unlike traditional, general-purpose cloud
+providers like AWS or Azure, neoclouds are purpose-built for AI with
+infrastructure optimized for raw speed, specialized hardware like dense GPU
+clusters, and tailored services like fast deployment and simplified pricing.
+
+kdevops supports the following neocloud providers:
+
+### DataCrunch
 
 kdevops supports DataCrunch, a cloud provider specialized in GPU computing
 with competitive pricing for NVIDIA A100, H100, B200, and B300 instances.
@@ -450,3 +464,20 @@ provider_installation {
 ```
 
 For more information, visit: https://datacrunch.io/
+
+### Lambda Labs
+
+kdevops supports Lambda Labs, a cloud provider focused on GPU instances for
+machine learning workloads with competitive pricing.
+
+For detailed documentation on Lambda Labs integration, including tier-based
+GPU selection, smart instance selection, and dynamic Kconfig generation, see:
+
+  * [Lambda Labs Dynamic Cloud Kconfig](dynamic-cloud-kconfig.md) - Dynamic configuration generation for Lambda Labs
+  * [Lambda Labs CLI Reference](lambda-cli.1) - Man page for the lambda-cli tool
+
+Lambda Labs offers various GPU instance types including A10, A100, and H100
+configurations. kdevops provides smart selection features that automatically
+choose the cheapest available instance type and region.
+
+For more information, visit: https://lambdalabs.com/
