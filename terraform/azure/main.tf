@@ -57,7 +57,7 @@ resource "azurerm_network_interface_security_group_association" "kdevops_sg_asso
 
 resource "azurerm_network_interface" "kdevops_nic" {
   count                          = local.kdevops_num_boxes
-  accelerated_networking_enabled = true
+  accelerated_networking_enabled = var.azure_accelerated_networking_enabled
   name                           = format("kdevops_nic_%02d", count.index + 1)
   location                       = var.azure_location
   resource_group_name            = azurerm_resource_group.kdevops_group.name

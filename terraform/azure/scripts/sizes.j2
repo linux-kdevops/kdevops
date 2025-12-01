@@ -1,0 +1,48 @@
+choice
+	prompt "Azure VM size"
+	default {{ default_config }}
+	help
+	  This option chooses the size of the virtual machine instances
+	  to be created for the kdevops target nodes.
+
+	  VM size availability varies by region. Not all sizes listed
+	  may be available in your selected region. You can query
+	  available VM sizes for a specific region using:
+
+	    az vm list-sizes --location <region> -o table
+
+	  For more information about Azure VM sizes and families:
+
+	    https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview
+
+{% for size in sizes %}
+config TERRAFORM_AZURE_VM_SIZE_{{ size['name'].upper().replace('.', '_').replace('-', '_') }}
+	bool "{{ size['name'] }}"
+{% if size['architecture'] == 'arm64' %}
+	depends on TARGET_ARCH_ARM64
+{% else %}
+	depends on TARGET_ARCH_X86_64
+{% endif %}
+	help
+	  This virtual machine size has {{ size['cores'] }} vCPU{{ 's' if size['cores'] > 1 else '' }} and {{ size['memory_gb']|round(1) }}GB of memory.
+{% if size['resource_disk_gb'] > 0 %}
+	  Includes {{ size['resource_disk_gb']|round(1) }}GB temporary storage.
+{% endif %}
+	  Supports up to {{ size['max_data_disks'] }} data disk{{ 's' if size['max_data_disks'] > 1 else '' }}.
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AZURE_VM_SIZE
+	string
+	output yaml
+{% for size in sizes %}
+	default "{{ size['name'] }}" if TERRAFORM_AZURE_VM_SIZE_{{ size['name'].upper().replace('.', '_').replace('-', '_') }}
+{% endfor %}
+
+config TERRAFORM_AZURE_ACCELERATED_NETWORKING_ENABLED
+	bool
+	output yaml
+{% for size in sizes %}
+	default {{ 'y' if size['accelerated_networking'] else 'n' }} if TERRAFORM_AZURE_VM_SIZE_{{ size['name'].upper().replace('.', '_').replace('-', '_') }}
+{% endfor %}

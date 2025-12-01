@@ -1,0 +1,776 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve VM image information from Azure. Use it to construct the "images"
+Kconfig menu.
+
+Azure VM images are OS templates that can be used to launch compute instances.
+This script queries the Azure API to discover available images and generates
+Kconfig menu entries for them.
+
+Publisher Definitions:
+	Publisher definitions (e.g., "Debian", "Red Hat") are maintained
+	in the publisher_definitions.yml file in the same directory as this
+	script. This makes it easier to update publisher information when
+	Microsoft adds new distributions or when you want to customize display
+	names and priorities.
+
+	To update publisher definitions:
+	1. Edit terraform/azure/scripts/publisher_definitions.yml
+	2. Add or modify entries following the existing format
+	3. Run this script to regenerate Kconfig.image
+
+	The YAML file contains detailed instructions for how to add new
+	publisher definitions. If the YAML file is not found, the script
+	falls back to dynamic publisher discovery by analyzing image names.
+
+Image Discovery:
+	By default, this script aggregates images from all Azure regions to
+	provide a comprehensive mapping of image URNs across regions.
+
+	This script focuses on well-known Linux distribution publishers.
+	The automated discovery identifies available offers and SKUs for
+	each publisher.
+
+Usage:
+	# Generate images Kconfig from default region
+	./gen_kconfig_image > ../kconfigs/Kconfig.image.generated
+
+	# List all available publishers
+	./gen_kconfig_image --publishers
+
+	# Get details for a specific publisher
+	./gen_kconfig_image debian
+
+	# Query specific region
+	./gen_kconfig_image --region eastus
+"""
+
+import sys
+import os
+import argparse
+import re
+from collections import defaultdict
+from functools import lru_cache
+
+from azure_common import (
+	get_default_region,
+	get_jinja2_environment,
+	get_all_regions,
+	get_region_kconfig_name,
+	get_all_offers_and_skus,
+)
+
+
+def load_yaml_config(filename, quiet=False):
+	"""
+	Load YAML configuration file from the same directory as this script.
+
+	Args:
+		filename (str): Name of the YAML file to load
+		quiet (bool): Suppress warning messages
+
+	Returns:
+		dict: Parsed YAML content, or None if file not found or parse error
+	"""
+	try:
+		import yaml
+	except ImportError:
+		if not quiet:
+			print(
+				"Warning: PyYAML not installed. Install with: pip install pyyaml",
+				file=sys.stderr,
+			)
+		return None
+
+	script_dir = os.path.dirname(os.path.abspath(__file__))
+	config_path = os.path.join(script_dir, filename)
+
+	if not os.path.exists(config_path):
+		if not quiet:
+			print(f"Warning: {filename} not found at {config_path}", file=sys.stderr)
+		return None
+
+	try:
+		with open(config_path, "r") as f:
+			return yaml.safe_load(f)
+	except yaml.YAMLError as e:
+		if not quiet:
+			print(f"Error parsing {filename}: {e}", file=sys.stderr)
+		return None
+	except Exception as e:
+		if not quiet:
+			print(f"Error reading {filename}: {e}", file=sys.stderr)
+		return None
+
+
+@lru_cache(maxsize=1)
+def get_known_publishers():
+	"""
+	Get dictionary of known OS image publishers in Azure.
+
+	Publisher definitions are loaded from publisher_definitions.yml to make
+	it easier to update when Microsoft adds new Linux distributions or when
+	you want to customize publisher priorities and naming.
+
+	The YAML file contains publisher information including:
+	- publisher_name: Display name for the publisher
+	- description: Full description used in Kconfig help text
+	- offer_patterns: List of regex patterns to match offer names
+	- priority: Display order (lower numbers appear first)
+
+	If the YAML file is not found or fails to parse, a minimal set of
+	hardcoded publishers is returned.
+
+	Results are cached using @lru_cache to avoid repeated file I/O.
+
+	To update the publisher definitions:
+	1. Edit terraform/azure/scripts/publisher_definitions.yml
+	2. Add or modify entries following the existing format
+	3. Regenerate Kconfig.image by running this script
+
+	See publisher_definitions.yml for detailed update instructions.
+
+	Returns:
+		dict: Dictionary mapping publisher keys to publisher information
+	"""
+	publishers = load_yaml_config("publisher_definitions.yml", quiet=True)
+	if not publishers:
+		print(
+			"Warning: publisher_definitions.yml not found or empty. "
+			"Using fallback publisher list.",
+			file=sys.stderr,
+		)
+		return get_fallback_publishers()
+
+	return publishers
+
+
+def get_fallback_publishers():
+	"""
+	Get minimal fallback set of known Azure publishers.
+
+	This is used when publisher_definitions.yml is not available.
+
+	Returns:
+		dict: Dictionary of publisher information
+	"""
+	return {
+		"debian": {
+			"publisher_id": "Debian",
+			"publisher_name": "Debian",
+			"description": "Debian GNU/Linux",
+			"priority": 10,
+		},
+		"redhat": {
+			"publisher_id": "RedHat",
+			"publisher_name": "Red Hat",
+			"description": "Red Hat Enterprise Linux",
+			"priority": 20,
+		},
+	}
+
+
+def score_sku_quality(sku_name):
+	"""
+	Score SKU by quality - higher score means better/more modern variant.
+
+	This helps automatically select the best SKU when multiple variants exist
+	for the same OS version. Prefers Gen2 VMs and LVM-based images.
+
+	Args:
+		sku_name (str): SKU name (e.g., "ol89-lvm-gen2", "79-gen2")
+
+	Returns:
+		int: Quality score (higher is better)
+	"""
+	sku_lower = sku_name.lower()
+	score = 0
+
+	# Prefer Gen2 (UEFI boot, larger VM sizes, better performance)
+	if "gen2" in sku_lower:
+		score += 100
+
+	# Prefer LVM (flexible disk partitioning)
+	if "lvm" in sku_lower:
+		score += 50
+
+	# Avoid CI variants (legacy cloud-init explicit variants, not needed for 7.7+)
+	if "ci" in sku_lower:
+		score -= 10
+
+	# Avoid underscore format (legacy naming convention)
+	if "_" in sku_name and not sku_name.startswith("ol"):
+		score -= 5
+
+	return score
+
+
+def supports_cloud_init(publisher_key, major, minor):
+	"""
+	Check if a distribution version supports cloud-init by default.
+
+	kdevops terraform provisioning depends on cloud-init. Only include
+	versions that have cloud-init support built-in.
+
+	Args:
+		publisher_key (str): Publisher key (e.g., "oracle", "redhat")
+		major (str): Major version number
+		minor (str): Minor version number
+
+	Returns:
+		bool: True if version supports cloud-init, False otherwise
+	"""
+	try:
+		major_int = int(major)
+		minor_int = int(minor)
+	except (ValueError, TypeError):
+		# If we can't parse the version, assume it's too old
+		return False
+
+	# Per Microsoft docs: Oracle Linux 7.7+, RHEL 7.7+ have cloud-init by default
+	# https://learn.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
+	if publisher_key in ("oracle", "redhat"):
+		if major_int > 7:
+			return True
+		if major_int == 7 and minor_int >= 7:
+			return True
+		return False
+
+	# Other distributions: assume modern versions have cloud-init
+	# (Debian, Ubuntu, SUSE, etc. have had cloud-init for longer)
+	return True
+
+
+def classify_offer_sku(
+	publisher_key, publisher_id, offer_name, sku_name, publisher_info
+):
+	"""
+	Classify an offer/SKU combination into a version and architecture.
+
+	Args:
+		publisher_key (str): Publisher key (e.g., "debian", "redhat")
+		publisher_id (str): Azure publisher ID (e.g., "Debian", "RedHat")
+		offer_name (str): Offer name (e.g., "debian-12", "RHEL")
+		sku_name (str): SKU name (e.g., "12", "12-arm64", "9_6")
+		publisher_info (dict): Publisher information from definitions
+
+	Returns:
+		tuple: (version_key, friendly_name, architecture, offer, sku)
+		or (None, None, None, None, None) if not classifiable
+	"""
+	# Detect architecture from SKU name
+	sku_lower = sku_name.lower()
+	if "arm64" in sku_lower or "aarch64" in sku_lower:
+		arch = "arm64"
+		arch_suffix = "_ARM64"
+		arch_display = "(arm64)"
+	else:
+		arch = "x86_64"
+		arch_suffix = "_X86"
+		arch_display = "(x86)"
+
+	# Extract version information
+	# Try to extract version from offer or SKU name
+	version_match = None
+
+	# Pattern 1: debian-12, debian-11
+	if re.match(r"^debian-\d+", offer_name, re.IGNORECASE):
+		version_match = re.search(r"(\d+)", offer_name)
+	# Pattern 2: debian-sid (Debian unstable)
+	elif publisher_key == "debian" and "sid" in offer_name.lower():
+		# Debian sid is the unstable rolling release
+		version_key = f"DEBIAN_SID{arch_suffix}"
+		friendly_name = f"Debian sid unstable {arch_display}"
+		if "daily" in offer_name.lower() or "daily" in sku_name.lower():
+			friendly_name += " (daily)"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 3: RHEL with flexible version and suffix handling
+	# Examples: "9_6" → 9.6, "810-gen2" → 8.10, "8-lvm-gen2" → 8.0, "7lvm-gen2" → 7.0
+	# Handles: underscore format, condensed versions, all suffix variants
+	elif publisher_key == "redhat":
+		# Flexible regex: version digits, optional underscore minor, optional suffix
+		# Handles both "9_6" and "810-gen2" and "7lvm-gen2" and "81gen2" patterns
+		match = re.match(r"^(\d{1,3})(?:_(\d+)|([a-z]+))?(?:-(.+)|(.+))?$", sku_name)
+		if match:
+			major_digits = match.group(1)
+			underscore_minor = match.group(2)
+			embedded_suffix = match.group(3)  # e.g., "lvm" in "7lvm-gen2"
+			hyphen_suffix = match.group(4)    # e.g., "gen2" in "810-gen2"
+			direct_suffix = match.group(5)    # e.g., "gen2" in "81gen2"
+
+			# Parse version into major.minor
+			if underscore_minor:
+				# Underscore format: 9_6 → 9.6, 10_1 → 10.1
+				major, minor = major_digits, underscore_minor
+			elif len(major_digits) == 1:
+				# Single digit: 8 → 8.0
+				major, minor = major_digits, "0"
+			elif len(major_digits) == 2:
+				# Two digits: 77 → 7.7, 81 → 8.1
+				major, minor = major_digits[0], major_digits[1]
+			elif major_digits.startswith("10"):
+				# Three digits starting with 10: 100 → 10.0
+				major, minor = "10", "0"
+			else:
+				# Three digits: 810 → 8.10
+				major, minor = major_digits[0], major_digits[1:]
+
+			version_key = f"{publisher_key.upper()}_{major}_{minor}{arch_suffix}"
+			# Clean friendly name without implementation details (gen2/lvm/sap/ci)
+			friendly_name = f"RHEL {major}.{minor} {arch_display}"
+
+			# Filter out versions without cloud-init support (kdevops requirement)
+			if not supports_cloud_init(publisher_key, major, minor):
+				return (None, None, None, None, None)
+
+			return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 3c: Oracle Linux with condensed version numbers
+	# Examples: "ol82-gen2" → 8.2, "77" → 7.7, "ol810-lvm" → 8.10, "79-gen2" → 7.9
+	# Handles: optional "ol" prefix, condensed versions, underscore format (ol8_2-gen2)
+	elif publisher_key == "oracle":
+		# Flexible regex: optional prefix, version digits, optional underscore minor, optional suffix
+		match = re.match(r"^(ol)?(\d{1,3})(?:_(\d+))?(?:-(.+))?$", sku_name)
+		if match:
+			major_digits = match.group(2)
+			underscore_minor = match.group(3)
+
+			# Parse version into major.minor
+			if underscore_minor:
+				# Underscore format: ol8_2 → 8.2
+				major, minor = major_digits, underscore_minor
+			elif len(major_digits) == 1:
+				# Single digit: 8 → 8.0, ol9 → 9.0
+				major, minor = major_digits, "0"
+			elif len(major_digits) == 2:
+				# Two digits: 77 → 7.7, ol82 → 8.2
+				major, minor = major_digits[0], major_digits[1]
+			elif major_digits.startswith("10"):
+				# Three digits starting with 10: ol100 → 10.0
+				major, minor = "10", "0"
+			else:
+				# Three digits: ol810 → 8.10
+				major, minor = major_digits[0], major_digits[1:]
+
+			version_key = f"{publisher_key.upper()}_{major}_{minor}{arch_suffix}"
+			# Clean friendly name without implementation details (gen2/lvm/ci)
+			friendly_name = f"Oracle Linux {major}.{minor} {arch_display}"
+
+			# Filter out versions without cloud-init support (kdevops requirement)
+			if not supports_cloud_init(publisher_key, major, minor):
+				return (None, None, None, None, None)
+
+			return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 4: Ubuntu LTS from offer name
+	# Examples: "ubuntu-22_04-lts" → 22.04, "ubuntu-24_04-lts-daily" → 24.04
+	# Skip ubuntu-pro SKUs as these are commercial support variants
+	elif publisher_key == "canonical" and re.match(r"^ubuntu-(\d+)_(\d+)-lts", offer_name):
+		if "ubuntu-pro" in sku_name.lower():
+			# Skip Ubuntu Pro SKUs - these are commercial variants
+			return (None, None, None, None, None)
+		version_match = re.match(r"^ubuntu-(\d+)_(\d+)-lts", offer_name)
+		major = version_match.group(1)
+		minor = version_match.group(2)
+		version_key = f"{publisher_key.upper()}_{major}_{minor}{arch_suffix}"
+		friendly_name = f"Ubuntu Linux {major}.{minor} {arch_display}"
+		if "daily" in offer_name.lower():
+			friendly_name += " (daily)"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 5: Ubuntu non-LTS from offer name
+	# Examples: "ubuntu-24_10" → 24.10, "ubuntu-25_04" → 25.04, "ubuntu-25_04-daily" → 25.04 (daily)
+	elif publisher_key == "canonical" and re.match(r"^ubuntu-(\d+)_(\d+)", offer_name):
+		version_match = re.match(r"^ubuntu-(\d+)_(\d+)", offer_name)
+		major = version_match.group(1)
+		minor = version_match.group(2)
+		version_key = f"{publisher_key.upper()}_{major}_{minor}{arch_suffix}"
+		friendly_name = f"Ubuntu Linux {major}.{minor} {arch_display}"
+		if "daily" in offer_name.lower():
+			friendly_name += " (daily)"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 6: openSUSE Leap from offer name
+	# Examples: "opensuse-leap-15-6" → 15.6, "opensuse-leap-15-6-arm64" → 15.6 (arm64)
+	# Also "openSUSE-Leap" with SKU "15-2" → 15.2
+	elif publisher_key == "suse" and re.match(r"^opensuse-leap", offer_name, re.IGNORECASE):
+		# Check if version is in offer name (e.g., opensuse-leap-15-6)
+		offer_version_match = re.match(r"^opensuse-leap-(\d+)-(\d+)", offer_name, re.IGNORECASE)
+		if offer_version_match:
+			major = offer_version_match.group(1)
+			minor = offer_version_match.group(2)
+		else:
+			# Version must be in SKU (e.g., openSUSE-Leap with SKU 15-2)
+			sku_version_match = re.match(r"^(\d+)-(\d+)$", sku_name)
+			if not sku_version_match:
+				return (None, None, None, None, None)
+			major = sku_version_match.group(1)
+			minor = sku_version_match.group(2)
+		version_key = f"OPENSUSE_LEAP_{major}_{minor}{arch_suffix}"
+		friendly_name = f"openSUSE Leap {major}.{minor} {arch_display}"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 7: SLE Micro from offer name (uses X-Y format, not SP)
+	# Examples: "sle-micro-5-1-byos" → 5.1, "sle-micro-6-0-byos" → 6.0
+	elif publisher_key == "suse" and re.match(r"^sle-micro-(\d+)-(\d+)", offer_name, re.IGNORECASE):
+		version_match = re.match(r"^sle-micro-(\d+)-(\d+)", offer_name, re.IGNORECASE)
+		major = version_match.group(1)
+		minor = version_match.group(2)
+		version_key = f"SLE_MICRO_{major}_{minor}{arch_suffix}"
+		friendly_name = f"SUSE Linux Enterprise Micro {major}.{minor} {arch_display}"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 8: SLES/SLE-HPC from offer name with SP (Service Pack)
+	# Examples: "sles-15-sp6" → 15 SP6, "sle-hpc-15-sp4-byos" → 15 SP4
+	elif publisher_key == "suse" and re.match(r"^(sles|sle-hpc)-(\d+)-sp(\d+)", offer_name, re.IGNORECASE):
+		version_match = re.match(r"^(sles|sle-hpc)-(\d+)-sp(\d+)", offer_name, re.IGNORECASE)
+		product_type = version_match.group(1).upper()
+		major = version_match.group(2)
+		sp = version_match.group(3)
+		version_key = f"SUSE_{major}_SP{sp}{arch_suffix}"
+		if "hpc" in product_type.lower():
+			friendly_name = f"SUSE Linux Enterprise HPC {major} SP{sp} {arch_display}"
+		else:
+			friendly_name = f"SUSE Linux Enterprise {major} SP{sp} {arch_display}"
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+	# Pattern 6: Generic version extraction
+	elif not version_match:
+		version_match = re.search(r"(\d+)(?:[_\.](\d+))?", sku_name)
+
+	if version_match:
+		if len(version_match.groups()) >= 2 and version_match.group(2):
+			# Has minor version
+			major = version_match.group(1)
+			minor = version_match.group(2)
+			version_key = f"{publisher_key.upper()}_{major}_{minor}{arch_suffix}"
+			friendly_name = (
+				f"{publisher_info.get('description', publisher_key)} "
+				f"{major}.{minor} {arch_display}"
+			)
+		else:
+			# Only major version
+			major = version_match.group(1)
+			version_key = f"{publisher_key.upper()}_{major}{arch_suffix}"
+			friendly_name = (
+				f"{publisher_info.get('description', publisher_key)} "
+				f"{major} {arch_display}"
+			)
+
+		# Add special notes for daily/backports variants (but not gen2 - implementation detail)
+		if "daily" in offer_name.lower() or "daily" in sku_name.lower():
+			friendly_name += " (daily)"
+		elif "backports" in sku_name.lower():
+			friendly_name += " (backports)"
+
+		return (version_key, friendly_name, arch, offer_name, sku_name)
+
+	return (None, None, None, None, None)
+
+
+def organize_images_by_publisher(publishers, region=None, quiet=False):
+	"""
+	Organize Azure images by publisher and version.
+
+	Args:
+		publishers (dict): Dictionary of publisher information
+		region (str): Azure region to query (default: get_default_region())
+		quiet (bool): Suppress debug messages
+
+	Returns:
+		dict: Organized structure {publisher: {version_key: {offer, sku, ...}}}
+	"""
+	if region is None:
+		region = get_default_region()
+
+	organized = defaultdict(lambda: defaultdict(dict))
+
+	for publisher_key, publisher_info in publishers.items():
+		publisher_id = publisher_info.get("publisher_id")
+		if not publisher_id:
+			continue
+
+		if not quiet:
+			print(f"\nProcessing {publisher_id}...", file=sys.stderr)
+
+		offers_dict = get_all_offers_and_skus(publisher_id, region, quiet)
+
+		# Get offer patterns for filtering (if defined)
+		offer_patterns = publisher_info.get("offer_patterns", [])
+		offer_regexes = [re.compile(pattern) for pattern in offer_patterns] if offer_patterns else []
+
+		for offer_name, skus in offers_dict.items():
+			# Skip offers that don't match any pattern (if patterns are defined)
+			if offer_regexes and not any(regex.match(offer_name) for regex in offer_regexes):
+				continue
+			for sku_name in skus:
+				(
+					version_key,
+					friendly_name,
+					arch,
+					offer,
+					sku,
+				) = classify_offer_sku(
+					publisher_key, publisher_id, offer_name, sku_name, publisher_info
+				)
+
+				if not version_key:
+					continue
+
+				# Store image information - select best SKU when multiple variants exist
+				# Use score_sku_quality() to prefer Gen2 and LVM variants
+				if version_key not in organized[publisher_key]:
+					# First occurrence for this version
+					organized[publisher_key][version_key] = {
+						"friendly_name": friendly_name,
+						"architecture": arch,
+						"offer": offer,
+						"sku": sku,
+						"publisher_id": publisher_id,
+						"_score": score_sku_quality(sku),
+					}
+				else:
+					# Multiple SKUs for same version - keep the better one
+					current_score = organized[publisher_key][version_key].get("_score", 0)
+					new_score = score_sku_quality(sku)
+					if new_score > current_score:
+						# This SKU is better, replace it
+						organized[publisher_key][version_key] = {
+							"friendly_name": friendly_name,
+							"architecture": arch,
+							"offer": offer,
+							"sku": sku,
+							"publisher_id": publisher_id,
+							"_score": new_score,
+						}
+
+	if not quiet:
+		print("\n--- Summary ---", file=sys.stderr)
+		for publisher, versions in organized.items():
+			print(f"Publisher '{publisher}': {len(versions)} versions", file=sys.stderr)
+
+	return organized
+
+
+def output_images_kconfig(organized_images, publishers):
+	"""
+	Output images menu in Kconfig format.
+
+	Args:
+		organized_images (dict): Organized images from organize_images_by_publisher()
+		publishers (dict): Dictionary of all publishers
+	"""
+	print("# This file was auto-generated by gen_kconfig_image")
+	print("#")
+	print("# To regenerate: cd terraform/azure/scripts && ./gen_kconfig_image")
+	print()
+
+	environment = get_jinja2_environment()
+
+	# Sort publishers by priority for consistent ordering
+	sorted_publishers = sorted(
+		[(k, v) for k, v in publishers.items() if k in organized_images],
+		key=lambda x: (x[1].get("priority", 100), x[0]),
+	)
+
+	# Output the top-level distribution choice menu
+	template = environment.get_template("image_distributions.j2")
+	print(
+		template.render(
+			publishers=[pub[0] for pub in sorted_publishers],
+		)
+	)
+	print()
+
+	def version_sort_key(version_item):
+		"""
+		Extract numeric version from version_key for proper chronological sorting.
+
+		Version keys are like: DEBIAN_12_X86, RHEL_9_6_ARM64
+		Sort by numeric version (oldest to newest), not alphabetic.
+		"""
+		version_key, version_data = version_item
+		parts = version_key.split("_")
+
+		# Remove publisher prefix
+		version_parts = parts[1:]
+
+		major = 0
+		minor = 0
+
+		# The last part is usually the architecture (X86, ARM64)
+		# Everything before that is version numbers
+		if len(version_parts) >= 2:
+			try:
+				major = int(version_parts[0])
+				# Try to parse second part as minor version
+				if len(version_parts) >= 3:
+					try:
+						minor = int(version_parts[1])
+					except ValueError:
+						# Second part is arch, no minor version
+						minor = 0
+			except ValueError:
+				pass
+
+		# Architecture preference: X86, ARM64 for consistent ordering
+		arch_order = {"X86": 0, "ARM64": 1}
+		arch = version_parts[-1] if version_parts else "X86"
+		arch_priority = arch_order.get(arch, 99)
+
+		return (major, minor, arch_priority)
+
+	# Output each publisher's images
+	template = environment.get_template("image_publisher.j2")
+	for publisher_key, publisher_info in sorted_publishers:
+		versions = organized_images.get(publisher_key, {})
+
+		# Sort versions numerically (oldest to newest)
+		sorted_versions = sorted(versions.items(), key=version_sort_key)
+
+		print(
+			template.render(
+				publisher_key=publisher_key,
+				publisher_name=publisher_info.get("publisher_name", publisher_key),
+				publisher_description=publisher_info.get("description", publisher_key),
+				versions=sorted_versions,
+			)
+		)
+		print()
+
+
+def output_publishers_raw(quiet=False):
+	"""Output available publishers in table format."""
+	publishers = get_known_publishers()
+
+	if not quiet:
+		print(f"Known OS image publishers ({len(publishers)}):\n")
+
+	print(f"{'Publisher Key':<15} {'Publisher Name':<20} {'Description':<30}")
+	print("-" * 70)
+
+	for key, info in publishers.items():
+		print(
+			f"{key:<15} "
+			f"{info['publisher_name']:<20} "
+			f"{info['description']:<30}"
+		)
+
+
+def output_publisher_raw(publisher_key, organized_images, quiet=False):
+	"""Output publisher image information in table format."""
+	publishers = get_known_publishers()
+	publisher_info = publishers.get(publisher_key, {})
+
+	if not quiet:
+		print(f"Images for {publisher_info.get('publisher_name', publisher_key)}")
+		print(f"Description: {publisher_info.get('description', '')}\n")
+
+	versions = organized_images.get(publisher_key, {})
+	if not versions:
+		print(f"No images found for publisher '{publisher_key}'.")
+		return
+
+	print(f"{'Version':<50} {'Offer':<20} {'SKU':<15}")
+	print("-" * 90)
+
+	for version_key, version_info in sorted(versions.items()):
+		print(
+			f"{version_info['friendly_name']:<50} "
+			f"{version_info['offer']:<20} "
+			f"{version_info['sku']:<15}"
+		)
+
+
+def parse_arguments():
+	"""Parse command line arguments."""
+	parser = argparse.ArgumentParser(
+		description="Get Azure VM image information and generate Kconfig",
+		formatter_class=argparse.RawDescriptionHelpFormatter,
+		epilog="""
+Examples:
+  # Generate Kconfig from default region
+  python %(prog)s > ../kconfigs/Kconfig.image.generated
+
+  # List available publishers
+  python %(prog)s --publishers
+
+  # Get details for a specific publisher
+  python %(prog)s debian --format raw
+
+  # Query specific region
+  python %(prog)s --region eastus
+		""",
+	)
+	parser.add_argument(
+		"publisher_key", nargs="?", help="Publisher key (e.g., debian, redhat)"
+	)
+
+	parser.add_argument(
+		"--publishers", action="store_true", help="List all known publishers"
+	)
+	parser.add_argument(
+		"--format",
+		"-f",
+		choices=["raw", "kconfig"],
+		default="kconfig",
+		help="Output format (default: kconfig)",
+	)
+	parser.add_argument(
+		"--quiet", "-q", action="store_true", help="Suppress informational messages"
+	)
+	parser.add_argument(
+		"--region",
+		"-r",
+		help="Query specific region (default: from Azure CLI config or westus)",
+	)
+	return parser.parse_args()
+
+
+def main():
+	"""Main function to run the program."""
+	args = parse_arguments()
+
+	if args.publishers:
+		output_publishers_raw(args.quiet)
+		return
+
+	publishers = get_known_publishers()
+
+	# Filter to specific publisher if requested
+	if args.publisher_key:
+		if args.publisher_key not in publishers:
+			print(
+				f"Error: Unknown publisher '{args.publisher_key}'. "
+				f"Use --publishers to list available publishers.",
+				file=sys.stderr,
+			)
+			sys.exit(1)
+		publishers = {args.publisher_key: publishers[args.publisher_key]}
+
+	# Determine region
+	region = args.region if args.region else get_default_region()
+
+	if not args.quiet:
+		print(f"Using region: {region}", file=sys.stderr)
+
+	# Organize images
+	organized_images = organize_images_by_publisher(publishers, region, args.quiet)
+
+	# Output based on format
+	if args.publisher_key:
+		if args.format == "raw":
+			output_publisher_raw(args.publisher_key, organized_images, args.quiet)
+		else:
+			print(
+				"Error: Kconfig format not supported for single publisher query",
+				file=sys.stderr,
+			)
+			sys.exit(1)
+	else:
+		if args.format == "kconfig":
+			output_images_kconfig(organized_images, publishers)
+		else:
+			# Raw format for all publishers
+			for publisher_key in sorted(organized_images.keys()):
+				output_publisher_raw(publisher_key, organized_images, args.quiet)
+				print()
+
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,52 @@
+choice
+	prompt "Azure resource location"
+	default TERRAFORM_AZURE_REGION_{{ default_region }}
+	help
+	  Choose the region and data center which will host your
+	  kdevops resources. The list below is dynamically generated
+	  from the Azure API and includes all regions available to
+	  your subscription.
+
+	  Azure automatically chooses availability zones for your
+	  resources. You can query available locations using:
+
+	    az account list-locations -o table
+
+	  For more information about Azure regions and geographies:
+
+	    https://azure.microsoft.com/en-us/explore/global-infrastructure/geographies/
+
+{% for region in regions %}
+config TERRAFORM_AZURE_REGION_{{ region['name'].upper().replace('-', '_') }}
+	bool "{{ region['friendly_name'] }}"
+	help
+	  This option selects the {{ region['friendly_name'] }} region.
+{% if region.get('metadata', {}).get('pairedRegion') %}
+	  This region is paired with {{ region['metadata']['pairedRegion'][0]['name'] }}.
+{% endif %}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_AZURE_LOCATION
+	string
+	output yaml
+{% for region in regions %}
+	default "{{ region['name'] }}" if TERRAFORM_AZURE_REGION_{{ region['name'].upper().replace('-', '_') }}
+{% endfor %}
+
+config TERRAFORM_AZURE_RESOURCE_GROUP_NAME
+	string "Azure resource group name"
+	output yaml
+	default "kdevops_resource_group"
+	help
+	  An Azure resource group is a container that holds related
+	  resources so they can be managed as a single unit. These
+	  resources share the same life cycle and are deployed,
+	  updated, and deleted together. Resource groups are global
+	  to your subscription.
+
+	  To run concurrent kdevops jobs in Azure, each run must
+	  have a unique resource group name.
+
+	  https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview#resource-groups

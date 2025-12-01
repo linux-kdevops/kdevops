@@ -1,0 +1,96 @@
+# Azure VM Image Publisher Definitions
+#
+# This file defines the known publishers of Azure VM images that kdevops
+# supports. It is used by the gen_kconfig_image script to generate the
+# Kconfig.image configuration file.
+#
+# To add a new publisher:
+# 1. Add a new entry with a unique key (lowercase, alphanumeric + underscores)
+# 2. Specify the Azure publisher_id (exact match from Azure API)
+# 3. Provide a user-friendly publisher_name and description
+# 4. Set a priority (lower numbers appear first in menus)
+# 5. Run: cd terraform/azure/scripts && ./gen_kconfig_image
+#
+# Fields:
+#   publisher_id: The exact publisher identifier used in Azure CLI
+#                 (e.g., "Debian", "RedHat", "Canonical")
+#                 Note: Some marketplace publishers have auto-generated IDs
+#   publisher_name: User-friendly display name
+#   description: Full description used in Kconfig help text
+#   priority: Display order (lower = higher priority, appears first)
+#
+# Note: The script will automatically discover offers and SKUs for each
+# publisher by querying the Azure API.
+#
+# To find the correct publisher_id for a new publisher, use:
+#   az vm image list-publishers --location westus -o json | grep -i <name>
+
+debian:
+  publisher_id: "Debian"
+  publisher_name: "Debian"
+  description: "Debian GNU/Linux"
+  priority: 10
+
+redhat:
+  publisher_id: "RedHat"
+  publisher_name: "Red Hat"
+  description: "Red Hat Enterprise Linux"
+  priority: 20
+  offer_patterns:
+    - "^RHEL$"
+    - "^rhel-arm64$"
+    - "^rh-rhel$"
+    - "^RHEL-HA$"
+    - "^RHEL-SAP$"
+    - "^RHEL-SAP-APPS$"
+    - "^RHEL-SAP-HA$"
+
+canonical:
+  publisher_id: "Canonical"
+  publisher_name: "Canonical"
+  description: "Ubuntu Linux"
+  priority: 30
+  offer_patterns:
+    - "^0001-com-ubuntu-server-.*$"
+    - "^ubuntu-[0-9]{2}_[0-9]{2}-lts.*$"
+    - "^ubuntu-[0-9]{2}_[0-9]{2}.*$"
+    - "^UbuntuServer$"
+    - "^ubuntu$"
+    - "^0001-com-ubuntu-minimal-.*$"
+
+oracle:
+  publisher_id: "Oracle"
+  publisher_name: "Oracle"
+  description: "Oracle Linux"
+  priority: 40
+  offer_patterns:
+    - "^Oracle-Linux$"
+
+suse:
+  publisher_id: "SUSE"
+  publisher_name: "SUSE"
+  description: "SUSE Linux Enterprise"
+  priority: 50
+  offer_patterns:
+    - "^sles-.*$"
+    - "^SLES.*$"
+    - "^opensuse-leap-.*$"
+    - "^openSUSE-Leap$"
+    - "^sle-hpc-.*$"
+    - "^sle-micro-.*$"
+
+# Note: AlmaLinux and Rocky Linux use marketplace publisher IDs which
+# include timestamps. These IDs may change over time as the publishers
+# update their marketplace presence.
+
+almalinux:
+  publisher_id: "almalinuxosfoundation1628089859865"
+  publisher_name: "AlmaLinux"
+  description: "AlmaLinux"
+  priority: 60
+
+rockylinux:
+  publisher_id: "erockyenterprisesoftwarefoundationinc1653071250513"
+  publisher_name: "Rocky Linux"
+  description: "Rocky Linux"
+  priority: 70

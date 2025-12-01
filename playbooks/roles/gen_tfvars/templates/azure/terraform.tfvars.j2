@@ -9,6 +9,7 @@ azure_image_sku = "{{ terraform_azure_image_sku }}"
 azure_managed_disks_per_instance = {{ terraform_azure_managed_disks_per_instance }}
 azure_managed_disks_size = {{ terraform_azure_managed_disks_size }}
 azure_managed_disks_tier = "{{ terraform_azure_managed_disks_tier }}"
+azure_accelerated_networking_enabled = {{ terraform_azure_accelerated_networking_enabled | lower }}
 
 ssh_config_pubkey_file = "{{ kdevops_terraform_ssh_config_pubkey_file }}"
 ssh_config_user = "{{ kdevops_terraform_ssh_config_user }}"

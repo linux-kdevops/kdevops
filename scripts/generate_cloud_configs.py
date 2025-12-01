@@ -147,6 +147,52 @@ def generate_aws_kconfig() -> bool:
     return all_success
 
 
+def generate_azure_kconfig() -> bool:
+    """
+    Generate Azure Kconfig files.
+    Returns True on success, False on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    azure_scripts_dir = os.path.join(project_root, "terraform", "azure", "scripts")
+    azure_kconfigs_dir = os.path.join(project_root, "terraform", "azure", "kconfigs")
+
+    # Define the script-to-output mapping
+    scripts_to_run = [
+        ("gen_kconfig_image", "Kconfig.image.generated"),
+        ("gen_kconfig_location", "Kconfig.location.generated"),
+        ("gen_kconfig_size", "Kconfig.size.generated"),
+    ]
+
+    all_success = True
+
+    for script_name, kconfig_file in scripts_to_run:
+        script_path = os.path.join(azure_scripts_dir, script_name)
+        output_path = os.path.join(azure_kconfigs_dir, kconfig_file)
+
+        # Run the script and capture its output
+        result = subprocess.run(
+            [script_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            # Write the output to the corresponding Kconfig file
+            try:
+                with open(output_path, "w") as f:
+                    f.write(result.stdout)
+            except IOError as e:
+                print(f"Error writing {kconfig_file}: {e}", file=sys.stderr)
+                all_success = False
+        else:
+            print(f"Error running {script_name}: {result.stderr}", file=sys.stderr)
+            all_success = False
+
+    return all_success
+
+
 def generate_oci_kconfig() -> bool:
     """
     Generate OCI Kconfig files.
@@ -222,8 +268,13 @@ def process_aws():
 
 
 def process_azure():
-    """Process Azure configuration (placeholder)."""
-    print("⚠ Azure: Dynamic configuration not yet implemented")
+    """Process Azure configuration."""
+    kconfig_generated = generate_azure_kconfig()
+    if kconfig_generated:
+        print("✓ Azure: Kconfig files generated successfully")
+    else:
+        print("⚠ Azure: Failed to generate Kconfig files - using defaults")
+    print()
 
 
 def process_gce():
