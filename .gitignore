@@ -132,6 +132,8 @@ terraform/azure/kconfigs/Kconfig.location.generated
 terraform/azure/kconfigs/Kconfig.size.generated
 terraform/azure/scripts/__pycache__/
 
+terraform/gce/scripts/__pycache__/
+
 terraform/oci/kconfigs/Kconfig.image.generated
 terraform/oci/kconfigs/Kconfig.location.generated
 terraform/oci/kconfigs/Kconfig.shape.generated
