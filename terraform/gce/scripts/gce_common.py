@@ -444,3 +444,143 @@ def get_machine_type_kconfig_name(machine_type: str) -> str:
         str: Kconfig constant name (e.g., 'N2_STANDARD_4', 'E2_MICRO')
     """
     return machine_type.upper().replace("-", "_")
+
+
+def list_images(
+    session: requests.Session, image_project: str, quiet: bool = False
+) -> list[dict]:
+    """
+    List all images from a GCE image project using the REST API.
+
+    GCE public images are organized by project. Each Linux distribution
+    has its own image project (e.g., 'debian-cloud', 'ubuntu-os-cloud').
+
+    Args:
+        session: Authenticated requests session
+        image_project: GCE image project (e.g., 'debian-cloud')
+        quiet: Suppress debug messages
+
+    Returns:
+        list: List of image dictionaries from the API
+    """
+    url = f"{GCE_COMPUTE_API}/projects/{image_project}/global/images"
+    # Request only fields needed for Kconfig generation to reduce network traffic
+    params = {
+        "fields": "items(name,family,architecture,deprecated,creationTimestamp),"
+        "nextPageToken"
+    }
+    all_images = []
+
+    while True:
+        response = session.get(url, params=params, timeout=GCE_API_TIMEOUT)
+        if response.status_code == 403:
+            if not quiet:
+                print(
+                    f"  Warning: Access denied for project {image_project}",
+                    file=sys.stderr,
+                )
+            return []
+        elif response.status_code == 404:
+            if not quiet:
+                print(
+                    f"  Warning: Project {image_project} not found",
+                    file=sys.stderr,
+                )
+            return []
+        response.raise_for_status()
+
+        data = response.json()
+        all_images.extend(data.get("items", []))
+
+        # Handle pagination
+        next_page_token = data.get("nextPageToken")
+        if not next_page_token:
+            break
+        params["pageToken"] = next_page_token
+
+    return all_images
+
+
+def get_image_families(
+    session: requests.Session, image_project: str, quiet: bool = False
+) -> dict[str, dict]:
+    """
+    Get image families from a GCE image project.
+
+    Image families group related images together. The latest non-deprecated
+    image in a family is used when specifying a family instead of a specific
+    image. This function returns information about each family including
+    the latest image details.
+
+    Args:
+        session: Authenticated requests session
+        image_project: GCE image project (e.g., 'debian-cloud')
+        quiet: Suppress debug messages
+
+    Returns:
+        dict: Dictionary mapping family names to family information:
+              {
+                  'family_name': {
+                      'latest_image': str,  # Name of latest image
+                      'architecture': str,  # 'X86_64' or 'ARM64'
+                      'deprecated': bool,   # True if family is deprecated
+                      'creation_timestamp': str,
+                  }
+              }
+    """
+    images = list_images(session, image_project, quiet)
+
+    # Group images by family and find the latest non-deprecated image
+    families = {}
+
+    for image in images:
+        family = image.get("family")
+        if not family:
+            continue
+
+        # Check if this image is deprecated
+        deprecated_state = image.get("deprecated", {})
+        is_deprecated = deprecated_state.get("state") == "DEPRECATED"
+
+        # Get architecture (default to X86_64 if not specified)
+        arch = image.get("architecture", "X86_64")
+
+        creation_timestamp = image.get("creationTimestamp", "")
+
+        # Track family information
+        if family not in families:
+            families[family] = {
+                "latest_image": image.get("name"),
+                "architecture": arch,
+                "deprecated": is_deprecated,
+                "creation_timestamp": creation_timestamp,
+            }
+        else:
+            # Update if this image is better: prefer non-deprecated, then newer
+            existing = families[family]
+            existing_deprecated = existing["deprecated"]
+
+            # Determine if we should replace the existing entry:
+            # 1. Current is non-deprecated, existing is deprecated -> replace
+            # 2. Both have same deprecation status -> replace if newer
+            # 3. Current is deprecated, existing is non-deprecated -> keep existing
+            should_replace = False
+            if not is_deprecated and existing_deprecated:
+                # Non-deprecated beats deprecated regardless of timestamp
+                should_replace = True
+            elif is_deprecated == existing_deprecated:
+                # Same deprecation status: compare timestamps.
+                # ISO 8601 timestamps from GCE sort correctly as strings.
+                if creation_timestamp > existing["creation_timestamp"]:
+                    should_replace = True
+            # else: current is deprecated, existing is not -> keep existing
+
+            if should_replace:
+                families[family] = {
+                    "latest_image": image.get("name"),
+                    "architecture": arch,
+                    "deprecated": is_deprecated,
+                    "creation_timestamp": creation_timestamp,
+                }
+
+    return families

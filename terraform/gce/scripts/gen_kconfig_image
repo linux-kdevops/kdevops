@@ -1,0 +1,631 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve OS image information from GCE. Use it to construct the "images"
+Kconfig menu.
+
+GCE images are OS templates that can be used to launch compute instances.
+This script queries the GCE API to discover available image families and
+generates Kconfig menu entries for them.
+
+Publisher Definitions:
+    Publisher definitions (e.g., "Debian", "Red Hat") are maintained
+    in the publisher_definitions.yml file in the same directory as this
+    script. This makes it easier to update publisher information when
+    Google adds new distributions or when you want to customize display
+    names and priorities.
+
+    To update publisher definitions:
+    1. Edit terraform/gce/scripts/publisher_definitions.yml
+    2. Add or modify entries following the existing format
+    3. Run this script to regenerate Kconfig.image
+
+    The YAML file contains detailed instructions for how to add new
+    publisher definitions.
+
+Image Discovery:
+    This script queries each publisher's image project (e.g., debian-cloud,
+    ubuntu-os-cloud) to discover available image families. Image families
+    group related images together - when you specify a family, GCE uses
+    the latest non-deprecated image in that family.
+
+Usage:
+    # Generate images Kconfig
+    ./gen_kconfig_image > ../kconfigs/Kconfig.image
+
+    # List all available publishers
+    ./gen_kconfig_image --publishers
+
+    # Get details for a specific publisher
+    ./gen_kconfig_image debian
+"""
+
+from __future__ import annotations
+
+import sys
+import argparse
+import re
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Optional
+
+import requests
+
+from gce_common import (
+    GceNotConfiguredError,
+    get_jinja2_environment,
+    load_yaml_config,
+    get_image_families,
+    require_gce_credentials,
+)
+
+
+def get_known_publishers() -> dict[str, Any]:
+    """
+    Get dictionary of known OS image publishers in GCE.
+
+    Publisher definitions are loaded from publisher_definitions.yml to make
+    it easier to update when Google adds new Linux distributions or when you
+    want to customize publisher priorities and naming.
+
+    Returns:
+        dict: Dictionary mapping publisher keys to publisher information
+    """
+    publishers = load_yaml_config("publisher_definitions.yml", quiet=True)
+    if not publishers:
+        print(
+            "Warning: publisher_definitions.yml not found or empty. "
+            "Using fallback publisher list.",
+            file=sys.stderr,
+        )
+        return get_fallback_publishers()
+
+    return publishers
+
+
+def get_fallback_publishers() -> dict[str, Any]:
+    """
+    Get minimal fallback set of known GCE image publishers.
+
+    This is used when publisher_definitions.yml is not available.
+
+    Returns:
+        dict: Dictionary of publisher information
+    """
+    return {
+        "debian": {
+            "project_id": "debian-cloud",
+            "publisher_name": "Debian",
+            "description": "Debian",
+            "priority": 30,
+            "default_disk_size": 10,
+            "family_patterns": ["debian-.*"],
+        },
+        "centos": {
+            "project_id": "centos-cloud",
+            "publisher_name": "CentOS",
+            "description": "CentOS",
+            "priority": 20,
+            "default_disk_size": 20,
+            "family_patterns": ["centos-.*"],
+        },
+    }
+
+
+def classify_family(
+    family_name: str, publisher_key: str, publisher_info: dict[str, Any], arch: str
+) -> tuple[Optional[str], Optional[str]]:
+    """
+    Classify an image family into a version key and friendly name.
+
+    Args:
+        family_name (str): Image family name (e.g., 'debian-12', 'rhel-9')
+        publisher_key (str): Publisher key (e.g., 'debian', 'redhat')
+        publisher_info (dict): Publisher information from definitions
+        arch (str): Architecture ('X86_64' or 'ARM64')
+
+    Returns:
+        tuple: (version_key, friendly_name) or (None, None) if not classifiable
+    """
+    family_lower = family_name.lower()
+    description = publisher_info.get("description", publisher_key.title())
+
+    # Normalize architecture suffix
+    arch_suffix = "_ARM64" if arch == "ARM64" else "_X86_64"
+    arch_display = "(arm64)" if arch == "ARM64" else "(x86)"
+
+    # Extract version from family name based on publisher
+    version = None
+    version_display = None
+
+    if publisher_key == "debian":
+        # debian-11, debian-12, debian-12-arm64
+        match = re.match(r"debian-(\d+)(?:-arm64)?$", family_lower)
+        if match:
+            version = match.group(1)
+            version_display = version
+
+    elif publisher_key == "centos":
+        # centos-stream-9, centos-stream-9-arm64
+        match = re.match(r"centos-stream-(\d+)(?:-arm64)?$", family_lower)
+        if match:
+            version = f"STREAM_{match.group(1)}"
+            version_display = f"Stream {match.group(1)}"
+        else:
+            # centos-7 (legacy)
+            match = re.match(r"centos-(\d+)$", family_lower)
+            if match:
+                version = match.group(1)
+                version_display = match.group(1)
+
+    elif publisher_key == "ubuntu":
+        # Skip minimal and generic 'minimal' family
+        if family_lower == "minimal":
+            return (None, None)
+
+        # ubuntu-2404-lts-amd64, ubuntu-2404-lts-arm64
+        match = re.match(
+            r"ubuntu-(?:minimal-)?(\d{2})(\d{2})-lts(?:-(?:amd64|arm64))?$",
+            family_lower,
+        )
+        if match:
+            major = match.group(1)
+            minor = match.group(2)
+            version = f"{major}_{minor}_LTS"
+            version_display = f"{major}.{minor} LTS"
+        else:
+            # ubuntu-2410-amd64, ubuntu-2410-arm64 (non-LTS newer format)
+            match = re.match(
+                r"ubuntu-(?:minimal-)?(\d{2})(\d{2})(?:-(?:amd64|arm64))?$",
+                family_lower,
+            )
+            if match:
+                major = match.group(1)
+                minor = match.group(2)
+                version = f"{major}_{minor}"
+                version_display = f"{major}.{minor}"
+        # Check for minimal variant
+        if "minimal" in family_lower and version:
+            version = f"MINIMAL_{version}"
+            version_display = f"Minimal {version_display}"
+
+    elif publisher_key == "redhat":
+        # rhel-9, rhel-8, rhel-9-arm64
+        match = re.match(r"rhel-(\d+)(?:-arm64)?$", family_lower)
+        if match:
+            version = match.group(1)
+            version_display = version
+
+    elif publisher_key == "rocky":
+        # rocky-linux-9, rocky-linux-9-arm64, rocky-linux-9-optimized-gcp
+        match = re.match(
+            r"rocky-linux-(\d+)(?:-optimized-gcp)?(?:-arm64)?$", family_lower
+        )
+        if match:
+            version = match.group(1)
+            version_display = match.group(1)
+            if "optimized-gcp" in family_lower:
+                version = f"{version}_OPTIMIZED"
+                version_display = f"{version_display} (GCP Optimized)"
+
+    elif publisher_key == "almalinux":
+        # almalinux-9, almalinux-9-arm64
+        match = re.match(r"almalinux-(\d+)(?:-arm64)?$", family_lower)
+        if match:
+            version = match.group(1)
+            version_display = match.group(1)
+
+    elif publisher_key == "fedora":
+        # fedora-cloud-42-x86-64, fedora-cloud-42-aarch64 (newer format)
+        match = re.match(r"fedora-cloud-(\d+)-(?:x86-64|aarch64)$", family_lower)
+        if match:
+            version = f"CLOUD_{match.group(1)}"
+            version_display = f"Cloud {match.group(1)}"
+        else:
+            # fedora-cloud-40 (older format without arch suffix)
+            match = re.match(r"fedora-cloud-(\d+)$", family_lower)
+            if match:
+                version = f"CLOUD_{match.group(1)}"
+                version_display = f"Cloud {match.group(1)}"
+            else:
+                # fedora-cloud-rawhide-x86-64, fedora-cloud-eln-aarch64
+                match = re.match(
+                    r"fedora-cloud-(rawhide|eln)-(?:x86-64|aarch64)$", family_lower
+                )
+                if match:
+                    channel = match.group(1).upper()
+                    version = f"CLOUD_{channel}"
+                    version_display = f"Cloud {match.group(1).title()}"
+
+    elif publisher_key == "opensuse":
+        # opensuse-leap, opensuse-leap-arm64 (no version number in family)
+        match = re.match(r"opensuse-leap(?:-arm64)?$", family_lower)
+        if match:
+            version = "LEAP"
+            version_display = "Leap"
+
+    elif publisher_key == "suse":
+        # sles-15-sp6, sles-15-sp6-arm64, sles-16-0-arm64, sles-16-0-x86-64
+        match = re.match(r"sles-(\d+)-sp(\d+)(?:-(?:arm64|x86-64))?$", family_lower)
+        if match:
+            major = match.group(1)
+            sp = match.group(2)
+            version = f"{major}_SP{sp}"
+            version_display = f"{major} SP{sp}"
+        else:
+            # sles-16-0-arm64, sles-16-0-x86-64 (new versioning)
+            match = re.match(r"sles-(\d+)-(\d+)(?:-(?:arm64|x86-64))?$", family_lower)
+            if match:
+                major = match.group(1)
+                minor = match.group(2)
+                version = f"{major}_{minor}"
+                version_display = f"{major}.{minor}"
+            else:
+                # sles-15, sles-12 (base versions)
+                match = re.match(r"sles-(\d+)(?:-arm64)?$", family_lower)
+                if match:
+                    version = match.group(1)
+                    version_display = match.group(1)
+
+    elif publisher_key == "oracle":
+        # oracle-linux-9, oracle-linux-8, oracle-linux-9-arm64
+        match = re.match(r"oracle-linux-(\d+)(?:-arm64)?$", family_lower)
+        if match:
+            version = match.group(1)
+            version_display = match.group(1)
+
+    if not version:
+        return (None, None)
+
+    version_key = f"{publisher_key.upper()}_{version}{arch_suffix}"
+    friendly_name = f"{description} {version_display} {arch_display}"
+
+    return (version_key, friendly_name)
+
+
+def organize_images_by_publisher(
+    session: requests.Session, publishers: dict[str, Any], quiet: bool = False
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """
+    Organize GCE images by publisher and version.
+
+    Args:
+        session: Authenticated requests session
+        publishers (dict): Dictionary of publisher information
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Organized structure {publisher: {version_key: {family, arch, ...}}}
+    """
+    organized = defaultdict(lambda: defaultdict(dict))
+
+    def process_publisher(
+        publisher_key: str, publisher_info: dict[str, Any]
+    ) -> tuple[str, dict[str, dict[str, Any]]]:
+        """Process a single publisher and return results."""
+        project_id = publisher_info.get("project_id")
+        if not project_id:
+            return publisher_key, {}
+
+        family_patterns = publisher_info.get("family_patterns", [])
+        family_regexes = (
+            [re.compile(p) for p in family_patterns] if family_patterns else []
+        )
+
+        families = get_image_families(session, project_id, quiet=True)
+
+        publisher_versions = {}
+        for family_name, family_info in families.items():
+            # Skip families that don't match any pattern (if patterns are defined)
+            if family_regexes and not any(
+                regex.match(family_name) for regex in family_regexes
+            ):
+                continue
+
+            arch = family_info.get("architecture", "X86_64")
+            version_key, friendly_name = classify_family(
+                family_name, publisher_key, publisher_info, arch
+            )
+
+            if not version_key:
+                continue
+
+            # Store image family information
+            publisher_versions[version_key] = {
+                "friendly_name": friendly_name,
+                "family": family_name,
+                "architecture": arch,
+                "deprecated": family_info.get("deprecated", False),
+            }
+
+        return publisher_key, publisher_versions
+
+    # Process publishers in parallel for better performance
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {
+            executor.submit(process_publisher, pub_key, pub_info): pub_key
+            for pub_key, pub_info in publishers.items()
+        }
+
+        for future in as_completed(futures):
+            publisher_key = futures[future]
+            try:
+                pub_key, versions = future.result()
+                if versions:
+                    organized[pub_key] = versions
+                    if not quiet:
+                        print(
+                            f"Publisher '{pub_key}': {len(versions)} image families",
+                            file=sys.stderr,
+                        )
+            except Exception as exc:
+                if not quiet:
+                    print(
+                        f"Error processing {publisher_key}: {exc}",
+                        file=sys.stderr,
+                    )
+
+    return organized
+
+
+def output_images_kconfig(
+    organized_images: dict[str, dict[str, dict[str, Any]]], publishers: dict[str, Any]
+) -> None:
+    """
+    Output images menu in Kconfig format.
+
+    Args:
+        organized_images (dict): Organized images from organize_images_by_publisher()
+        publishers (dict): Dictionary of all publishers
+    """
+    print("# This file was auto-generated by gen_kconfig_image")
+    print("#")
+    print("# To regenerate: cd terraform/gce/scripts && ./gen_kconfig_image")
+    print()
+
+    environment = get_jinja2_environment()
+
+    # Sort publishers by priority for consistent ordering
+    sorted_publishers = sorted(
+        [(k, v) for k, v in publishers.items() if k in organized_images],
+        key=lambda x: (x[1].get("priority", 100), x[0]),
+    )
+
+    # Build publisher names dict for the distributions template
+    publisher_names = {
+        k: v.get("publisher_name", k.title()) for k, v in publishers.items()
+    }
+
+    # Output the top-level distribution choice menu
+    template = environment.get_template("image_distributions.j2")
+    print(
+        template.render(
+            publishers=[pub[0] for pub in sorted_publishers],
+            publisher_names=publisher_names,
+        )
+    )
+    print()
+
+    def version_sort_key(
+        version_item: tuple[str, dict[str, Any]]
+    ) -> tuple[int, int, int]:
+        """
+        Extract numeric version from version_key for proper chronological sorting.
+
+        Version keys are like: DEBIAN_12_X86_64, RHEL_9_ARM64
+        Sort by numeric version (oldest to newest), not alphabetic.
+        """
+        version_key, version_data = version_item
+        parts = version_key.split("_")
+
+        # Remove publisher prefix and architecture suffix
+        # Could be: [major] or [major, minor] or [STREAM, major]
+        version_parts = parts[1:-1]  # Remove first (publisher) and last (arch)
+
+        major = 0
+        minor = 0
+
+        if len(version_parts) >= 1:
+            # Handle special prefixes like STREAM, LEAP, CLOUD
+            first_part = version_parts[0]
+            if first_part in ("STREAM", "LEAP", "CLOUD", "COREOS", "MINIMAL"):
+                if len(version_parts) >= 2:
+                    try:
+                        major = int(version_parts[1])
+                        if len(version_parts) >= 3:
+                            try:
+                                minor = int(version_parts[2])
+                            except ValueError:
+                                pass
+                    except ValueError:
+                        pass
+            else:
+                try:
+                    major = int(first_part)
+                    if len(version_parts) >= 2:
+                        try:
+                            minor = int(version_parts[1])
+                        except ValueError:
+                            pass
+                except ValueError:
+                    pass
+
+        # Architecture preference: X86_64, ARM64 for consistent ordering
+        arch_order = {"X86_64": 0, "ARM64": 1}
+        arch = parts[-1] if parts else "X86_64"
+        arch_priority = arch_order.get(arch, 99)
+
+        return (major, minor, arch_priority)
+
+    # Output each publisher's images
+    template = environment.get_template("image_publisher.j2")
+    for publisher_key, publisher_info in sorted_publishers:
+        versions = organized_images.get(publisher_key, {})
+
+        # Sort versions numerically (oldest to newest)
+        sorted_versions = sorted(versions.items(), key=version_sort_key)
+
+        # Check if there are any ARM64 images
+        has_arm64 = any("ARM64" in v[0] for v in sorted_versions)
+
+        print(
+            template.render(
+                publisher_key=publisher_key,
+                publisher_name=publisher_info.get("publisher_name", publisher_key),
+                publisher_description=publisher_info.get("description", publisher_key),
+                project_id=publisher_info.get("project_id", ""),
+                default_disk_size=publisher_info.get("default_disk_size", 20),
+                versions=sorted_versions,
+                has_arm64=has_arm64,
+            )
+        )
+        print()
+
+
+def output_publishers_raw(quiet: bool = False) -> None:
+    """Output available publishers in table format."""
+    publishers = get_known_publishers()
+
+    if not quiet:
+        print(f"Known OS image publishers ({len(publishers)}):\n")
+
+    print(f"{'Publisher Key':<15} {'Project ID':<25} {'Description':<30}")
+    print("-" * 75)
+
+    for key, info in sorted(
+        publishers.items(), key=lambda x: x[1].get("priority", 100)
+    ):
+        print(
+            f"{key:<15} "
+            f"{info.get('project_id', ''):<25} "
+            f"{info.get('description', ''):<30}"
+        )
+
+
+def output_publisher_raw(
+    publisher_key: str,
+    organized_images: dict[str, dict[str, dict[str, Any]]],
+    quiet: bool = False,
+) -> None:
+    """Output publisher image information in table format."""
+    publishers = get_known_publishers()
+    publisher_info = publishers.get(publisher_key, {})
+
+    if not quiet:
+        print(f"Images for {publisher_info.get('publisher_name', publisher_key)}")
+        print(f"Project: {publisher_info.get('project_id', '')}")
+        print(f"Description: {publisher_info.get('description', '')}\n")
+
+    versions = organized_images.get(publisher_key, {})
+    if not versions:
+        print(f"No images found for publisher '{publisher_key}'.")
+        return
+
+    print(f"{'Version Key':<40} {'Family':<30} {'Arch':<10}")
+    print("-" * 85)
+
+    for version_key, version_info in sorted(versions.items()):
+        print(
+            f"{version_key:<40} "
+            f"{version_info['family']:<30} "
+            f"{version_info['architecture']:<10}"
+        )
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get GCE OS image information and generate Kconfig",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate Kconfig
+  python %(prog)s > ../kconfigs/Kconfig.image
+
+  # List available publishers
+  python %(prog)s --publishers
+
+  # Get details for a specific publisher
+  python %(prog)s debian --format raw
+        """,
+    )
+    parser.add_argument(
+        "publisher_key", nargs="?", help="Publisher key (e.g., debian, redhat)"
+    )
+
+    parser.add_argument(
+        "--publishers", action="store_true", help="List all known publishers"
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    if args.publishers:
+        output_publishers_raw(args.quiet)
+        return
+
+    publishers = get_known_publishers()
+
+    # Filter to specific publisher if requested
+    if args.publisher_key:
+        if args.publisher_key not in publishers:
+            print(
+                f"Error: Unknown publisher '{args.publisher_key}'. "
+                f"Use --publishers to list available publishers.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        publishers = {args.publisher_key: publishers[args.publisher_key]}
+
+    # Allow make dynconfig to succeed without GCE credentials
+    try:
+        session, project = require_gce_credentials()
+    except GceNotConfiguredError:
+        if not args.quiet:
+            print("GCE not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
+    if not args.quiet:
+        print(f"Using project: {project}", file=sys.stderr)
+        print("Querying image families from GCE...", file=sys.stderr)
+
+    # Organize images
+    organized_images = organize_images_by_publisher(session, publishers, args.quiet)
+
+    if not organized_images:
+        print("Error: No images found", file=sys.stderr)
+        sys.exit(1)
+
+    # Output based on format
+    if args.publisher_key:
+        if args.format == "raw":
+            output_publisher_raw(args.publisher_key, organized_images, args.quiet)
+        else:
+            # For single publisher, still output full Kconfig
+            output_images_kconfig(organized_images, publishers)
+    else:
+        if args.format == "kconfig":
+            output_images_kconfig(organized_images, publishers)
+        else:
+            # Raw format for all publishers
+            for publisher_key in sorted(organized_images.keys()):
+                output_publisher_raw(publisher_key, organized_images, args.quiet)
+                print()
+
+
+if __name__ == "__main__":
+    main()
