@@ -357,3 +357,90 @@ def require_gce_credentials():
         raise GceNotConfiguredError(str(e)) from e
     except google.auth.exceptions.DefaultCredentialsError as e:
         raise GceNotConfiguredError("GCE credentials not found") from e
+
+
+# Fields needed for machine type Kconfig generation
+MACHINE_TYPE_FIELDS = (
+    "name,guestCpus,memoryMb,isSharedCpu,description,"
+    "maximumPersistentDisks,maximumPersistentDisksSizeGb"
+)
+
+
+def list_machine_types(
+    session: requests.Session, project: str, zone: str
+) -> list[dict]:
+    """
+    List all GCE machine types for a specific zone using the REST API.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        zone: GCE zone name (e.g., 'us-west2-a')
+
+    Returns:
+        list: List of machine type dictionaries from the API
+    """
+    url = f"{GCE_COMPUTE_API}/projects/{project}/zones/{zone}/machineTypes"
+    # Request only needed fields to reduce response size and latency
+    params = {"fields": f"items({MACHINE_TYPE_FIELDS})"}
+    response = session.get(url, params=params, timeout=GCE_API_TIMEOUT)
+    response.raise_for_status()
+
+    data = response.json()
+    return data.get("items", [])
+
+
+def list_machine_types_aggregated(
+    session: requests.Session, project: str
+) -> dict[str, list[dict]]:
+    """
+    List all GCE machine types across all zones using the aggregated API.
+
+    This is more efficient than querying each zone separately when we need
+    machine type information across multiple zones.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+
+    Returns:
+        dict: Dictionary mapping zone names to lists of machine type dicts
+    """
+    url = f"{GCE_COMPUTE_API}/projects/{project}/aggregated/machineTypes"
+    # Request only needed fields to reduce response size and latency
+    params = {"fields": f"items/*/machineTypes({MACHINE_TYPE_FIELDS}),nextPageToken"}
+    all_machine_types = {}
+
+    while True:
+        response = session.get(url, params=params, timeout=GCE_API_TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
+
+        for zone_key, zone_data in data.get("items", {}).items():
+            # zone_key is like "zones/us-west2-a"
+            if zone_key.startswith("zones/"):
+                zone_name = zone_key.split("/")[1]
+                machine_types = zone_data.get("machineTypes", [])
+                if machine_types:
+                    all_machine_types[zone_name] = machine_types
+
+        # Handle pagination
+        next_page = data.get("nextPageToken")
+        if not next_page:
+            break
+        params["pageToken"] = next_page
+
+    return all_machine_types
+
+
+def get_machine_type_kconfig_name(machine_type: str) -> str:
+    """
+    Convert GCE machine type name to Kconfig constant name.
+
+    Args:
+        machine_type (str): GCE machine type (e.g., 'n2-standard-4', 'e2-micro')
+
+    Returns:
+        str: Kconfig constant name (e.g., 'N2_STANDARD_4', 'E2_MICRO')
+    """
+    return machine_type.upper().replace("-", "_")
