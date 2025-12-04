@@ -193,6 +193,52 @@ def generate_azure_kconfig() -> bool:
     return all_success
 
 
+def generate_gce_kconfig() -> bool:
+    """
+    Generate GCE Kconfig files.
+    Returns True on success, False on failure.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    gce_scripts_dir = os.path.join(project_root, "terraform", "gce", "scripts")
+    gce_kconfigs_dir = os.path.join(project_root, "terraform", "gce", "kconfigs")
+
+    # Define the script-to-output mapping
+    scripts_to_run = [
+        ("gen_kconfig_image", "Kconfig.image.generated"),
+        ("gen_kconfig_location", "Kconfig.location.generated"),
+        ("gen_kconfig_machine", "Kconfig.machine.generated"),
+    ]
+
+    all_success = True
+
+    for script_name, kconfig_file in scripts_to_run:
+        script_path = os.path.join(gce_scripts_dir, script_name)
+        output_path = os.path.join(gce_kconfigs_dir, kconfig_file)
+
+        # Run the script and capture its output
+        result = subprocess.run(
+            [script_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            # Write the output to the corresponding Kconfig file
+            try:
+                with open(output_path, "w") as f:
+                    f.write(result.stdout)
+            except IOError as e:
+                print(f"Error writing {kconfig_file}: {e}", file=sys.stderr)
+                all_success = False
+        else:
+            print(f"Error running {script_name}: {result.stderr}", file=sys.stderr)
+            all_success = False
+
+    return all_success
+
+
 def generate_oci_kconfig() -> bool:
     """
     Generate OCI Kconfig files.
@@ -278,8 +324,13 @@ def process_azure():
 
 
 def process_gce():
-    """Process GCE configuration (placeholder)."""
-    print("⚠ GCE: Dynamic configuration not yet implemented")
+    """Process GCE configuration."""
+    kconfig_generated = generate_gce_kconfig()
+    if kconfig_generated:
+        print("✓ GCE: Kconfig files generated successfully")
+    else:
+        print("⚠ GCE: Failed to generate Kconfig files - using defaults")
+    print()
 
 
 def process_oci():

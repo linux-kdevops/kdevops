@@ -1,0 +1,1452 @@
+choice
+	prompt "GCE region"
+	default TERRAFORM_GCE_REGION_US_WEST2
+	help
+	  GCE regions are collections of co-located zones. Zones have
+	  high-bandwidth, low-latency network connections to other
+	  zones within the same region.
+
+	  For details:
+	  https://cloud.google.com/compute/docs/regions-zones/
+
+	  For guidance selecting a region to use, try:
+	  https://cloud.withgoogle.com/region-picker/
+
+config TERRAFORM_GCE_REGION_AFRICA_SOUTH1
+	bool "africa-south1"
+	help
+	  Johannesburg, South Africa
+
+config TERRAFORM_GCE_REGION_ASIA_EAST1
+	bool "asia-east1"
+	help
+	  Changhua County, Taiwan
+
+config TERRAFORM_GCE_REGION_ASIA_EAST2
+	bool "asia-east2"
+	help
+	  Hong Kong
+
+config TERRAFORM_GCE_REGION_ASIA_NORTHEAST1
+	bool "asia-northeast1"
+	help
+	  Tokyo, Japan
+
+config TERRAFORM_GCE_REGION_ASIA_NORTHEAST2
+	bool "asia-northeast2"
+	help
+	  Osaka, Japan
+
+config TERRAFORM_GCE_REGION_ASIA_NORTHEAST3
+	bool "asia-northeast3"
+	help
+	  Seoul, South Korea
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTH1
+	bool "asia-south1"
+	help
+	  Mumbai, India
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTH2
+	bool "asia-south2"
+	help
+	  Delhi, India
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTHEAST1
+	bool "asia-southeast1"
+	help
+	  Jurong West, Singapore
+
+config TERRAFORM_GCE_REGION_ASIA_SOUTHEAST2
+	bool "asia-southeast2"
+	help
+	  Jakarta, Indonesia
+
+config TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST1
+	bool "australia-southeast1"
+	help
+	  Sydney, Australia
+
+config TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST2
+	bool "australia-southeast2"
+	help
+	  Melbourne, Australia
+
+config TERRAFORM_GCE_REGION_EUROPE_CENTRAL2
+	bool "europe-central2"
+	help
+	  Warsaw, Poland
+
+config TERRAFORM_GCE_REGION_EUROPE_NORTH1
+	bool "europe-north1"
+	help
+	  Hamina, Finland
+
+config TERRAFORM_GCE_REGION_EUROPE_NORTH2
+	bool "europe-north2"
+	help
+	  Stockholm, Sweden
+
+config TERRAFORM_GCE_REGION_EUROPE_SOUTHWEST1
+	bool "europe-southwest1"
+	help
+	  Madrid, Spain
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST1
+	bool "europe-west1"
+	help
+	  St. Ghislain, Belgium
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST10
+	bool "europe-west10"
+	help
+	  Berlin, Germany
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST12
+	bool "europe-west12"
+	help
+	  Turin, Italy
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST2
+	bool "europe-west2"
+	help
+	  London, UK
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST3
+	bool "europe-west3"
+	help
+	  Frankfurt, Germany
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST4
+	bool "europe-west4"
+	help
+	  Eemshaven, Netherlands
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST6
+	bool "europe-west6"
+	help
+	  Zurich, Switzerland
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST8
+	bool "europe-west8"
+	help
+	  Milan, Italy
+
+config TERRAFORM_GCE_REGION_EUROPE_WEST9
+	bool "europe-west9"
+	help
+	  Paris, France
+
+config TERRAFORM_GCE_REGION_ME_CENTRAL1
+	bool "me-central1"
+	help
+	  Doha, Qatar
+
+config TERRAFORM_GCE_REGION_ME_CENTRAL2
+	bool "me-central2"
+	help
+	  Dammam, Saudi Arabia
+
+config TERRAFORM_GCE_REGION_ME_WEST1
+	bool "me-west1"
+	help
+	  Tel Aviv, Israel
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+	bool "northamerica-northeast1"
+	help
+	  Montreal, Quebec, Canada
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+	bool "northamerica-northeast2"
+	help
+	  Toronto, Ontario, Canada
+
+config TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
+	bool "northamerica-south1"
+	help
+	  Queretaro, Mexico
+
+config TERRAFORM_GCE_REGION_SOUTHAMERICA_EAST1
+	bool "southamerica-east1"
+	help
+	  Sao Paulo, Brazil
+
+config TERRAFORM_GCE_REGION_SOUTHAMERICA_WEST1
+	bool "southamerica-west1"
+	help
+	  Santiago, Chile
+
+config TERRAFORM_GCE_REGION_US_CENTRAL1
+	bool "us-central1"
+	help
+	  Council Bluffs, Iowa, USA
+
+config TERRAFORM_GCE_REGION_US_EAST1
+	bool "us-east1"
+	help
+	  Moncks Corner, South Carolina, USA
+
+config TERRAFORM_GCE_REGION_US_EAST4
+	bool "us-east4"
+	help
+	  Ashburn, Virginia, USA
+
+config TERRAFORM_GCE_REGION_US_EAST5
+	bool "us-east5"
+	help
+	  Columbus, Ohio, USA
+
+config TERRAFORM_GCE_REGION_US_SOUTH1
+	bool "us-south1"
+	help
+	  Dallas, Texas, USA
+
+config TERRAFORM_GCE_REGION_US_WEST1
+	bool "us-west1"
+	help
+	  The Dalles, Oregon, USA
+
+config TERRAFORM_GCE_REGION_US_WEST2
+	bool "us-west2"
+	help
+	  Los Angeles, California, USA
+
+config TERRAFORM_GCE_REGION_US_WEST3
+	bool "us-west3"
+	help
+	  Salt Lake City, Utah, USA
+
+config TERRAFORM_GCE_REGION_US_WEST4
+	bool "us-west4"
+	help
+	  Las Vegas, Nevada, USA
+
+endchoice
+
+config TERRAFORM_GCE_REGION
+	string
+	output yaml
+	default "africa-south1" if TERRAFORM_GCE_REGION_AFRICA_SOUTH1
+	default "asia-east1" if TERRAFORM_GCE_REGION_ASIA_EAST1
+	default "asia-east2" if TERRAFORM_GCE_REGION_ASIA_EAST2
+	default "asia-northeast1" if TERRAFORM_GCE_REGION_ASIA_NORTHEAST1
+	default "asia-northeast2" if TERRAFORM_GCE_REGION_ASIA_NORTHEAST2
+	default "asia-northeast3" if TERRAFORM_GCE_REGION_ASIA_NORTHEAST3
+	default "asia-south1" if TERRAFORM_GCE_REGION_ASIA_SOUTH1
+	default "asia-south2" if TERRAFORM_GCE_REGION_ASIA_SOUTH2
+	default "asia-southeast1" if TERRAFORM_GCE_REGION_ASIA_SOUTHEAST1
+	default "asia-southeast2" if TERRAFORM_GCE_REGION_ASIA_SOUTHEAST2
+	default "australia-southeast1" if TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST1
+	default "australia-southeast2" if TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST2
+	default "europe-central2" if TERRAFORM_GCE_REGION_EUROPE_CENTRAL2
+	default "europe-north1" if TERRAFORM_GCE_REGION_EUROPE_NORTH1
+	default "europe-north2" if TERRAFORM_GCE_REGION_EUROPE_NORTH2
+	default "europe-southwest1" if TERRAFORM_GCE_REGION_EUROPE_SOUTHWEST1
+	default "europe-west1" if TERRAFORM_GCE_REGION_EUROPE_WEST1
+	default "europe-west10" if TERRAFORM_GCE_REGION_EUROPE_WEST10
+	default "europe-west12" if TERRAFORM_GCE_REGION_EUROPE_WEST12
+	default "europe-west2" if TERRAFORM_GCE_REGION_EUROPE_WEST2
+	default "europe-west3" if TERRAFORM_GCE_REGION_EUROPE_WEST3
+	default "europe-west4" if TERRAFORM_GCE_REGION_EUROPE_WEST4
+	default "europe-west6" if TERRAFORM_GCE_REGION_EUROPE_WEST6
+	default "europe-west8" if TERRAFORM_GCE_REGION_EUROPE_WEST8
+	default "europe-west9" if TERRAFORM_GCE_REGION_EUROPE_WEST9
+	default "me-central1" if TERRAFORM_GCE_REGION_ME_CENTRAL1
+	default "me-central2" if TERRAFORM_GCE_REGION_ME_CENTRAL2
+	default "me-west1" if TERRAFORM_GCE_REGION_ME_WEST1
+	default "northamerica-northeast1" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+	default "northamerica-northeast2" if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+	default "northamerica-south1" if TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
+	default "southamerica-east1" if TERRAFORM_GCE_REGION_SOUTHAMERICA_EAST1
+	default "southamerica-west1" if TERRAFORM_GCE_REGION_SOUTHAMERICA_WEST1
+	default "us-central1" if TERRAFORM_GCE_REGION_US_CENTRAL1
+	default "us-east1" if TERRAFORM_GCE_REGION_US_EAST1
+	default "us-east4" if TERRAFORM_GCE_REGION_US_EAST4
+	default "us-east5" if TERRAFORM_GCE_REGION_US_EAST5
+	default "us-south1" if TERRAFORM_GCE_REGION_US_SOUTH1
+	default "us-west1" if TERRAFORM_GCE_REGION_US_WEST1
+	default "us-west2" if TERRAFORM_GCE_REGION_US_WEST2
+	default "us-west3" if TERRAFORM_GCE_REGION_US_WEST3
+	default "us-west4" if TERRAFORM_GCE_REGION_US_WEST4
+
+
+if TERRAFORM_GCE_REGION_AFRICA_SOUTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_A
+	bool "africa-south1-a"
+
+config TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_B
+	bool "africa-south1-b"
+
+config TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_C
+	bool "africa-south1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "africa-south1-a" if TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_A
+	default "africa-south1-b" if TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_B
+	default "africa-south1-c" if TERRAFORM_GCE_ZONE_AFRICA_SOUTH1_C
+
+endif # TERRAFORM_GCE_REGION_AFRICA_SOUTH1
+
+if TERRAFORM_GCE_REGION_ASIA_EAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_EAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST1_A
+	bool "asia-east1-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST1_B
+	bool "asia-east1-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST1_C
+	bool "asia-east1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-east1-a" if TERRAFORM_GCE_ZONE_ASIA_EAST1_A
+	default "asia-east1-b" if TERRAFORM_GCE_ZONE_ASIA_EAST1_B
+	default "asia-east1-c" if TERRAFORM_GCE_ZONE_ASIA_EAST1_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_EAST1
+
+if TERRAFORM_GCE_REGION_ASIA_EAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_EAST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST2_A
+	bool "asia-east2-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST2_B
+	bool "asia-east2-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_EAST2_C
+	bool "asia-east2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-east2-a" if TERRAFORM_GCE_ZONE_ASIA_EAST2_A
+	default "asia-east2-b" if TERRAFORM_GCE_ZONE_ASIA_EAST2_B
+	default "asia-east2-c" if TERRAFORM_GCE_ZONE_ASIA_EAST2_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_EAST2
+
+if TERRAFORM_GCE_REGION_ASIA_NORTHEAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_A
+	bool "asia-northeast1-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_B
+	bool "asia-northeast1-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_C
+	bool "asia-northeast1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-northeast1-a" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_A
+	default "asia-northeast1-b" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_B
+	default "asia-northeast1-c" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST1_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_NORTHEAST1
+
+if TERRAFORM_GCE_REGION_ASIA_NORTHEAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_A
+	bool "asia-northeast2-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_B
+	bool "asia-northeast2-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_C
+	bool "asia-northeast2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-northeast2-a" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_A
+	default "asia-northeast2-b" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_B
+	default "asia-northeast2-c" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST2_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_NORTHEAST2
+
+if TERRAFORM_GCE_REGION_ASIA_NORTHEAST3
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_A
+	bool "asia-northeast3-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_B
+	bool "asia-northeast3-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_C
+	bool "asia-northeast3-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-northeast3-a" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_A
+	default "asia-northeast3-b" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_B
+	default "asia-northeast3-c" if TERRAFORM_GCE_ZONE_ASIA_NORTHEAST3_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_NORTHEAST3
+
+if TERRAFORM_GCE_REGION_ASIA_SOUTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_SOUTH1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH1_A
+	bool "asia-south1-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH1_B
+	bool "asia-south1-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH1_C
+	bool "asia-south1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-south1-a" if TERRAFORM_GCE_ZONE_ASIA_SOUTH1_A
+	default "asia-south1-b" if TERRAFORM_GCE_ZONE_ASIA_SOUTH1_B
+	default "asia-south1-c" if TERRAFORM_GCE_ZONE_ASIA_SOUTH1_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_SOUTH1
+
+if TERRAFORM_GCE_REGION_ASIA_SOUTH2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_SOUTH2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH2_A
+	bool "asia-south2-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH2_B
+	bool "asia-south2-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTH2_C
+	bool "asia-south2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-south2-a" if TERRAFORM_GCE_ZONE_ASIA_SOUTH2_A
+	default "asia-south2-b" if TERRAFORM_GCE_ZONE_ASIA_SOUTH2_B
+	default "asia-south2-c" if TERRAFORM_GCE_ZONE_ASIA_SOUTH2_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_SOUTH2
+
+if TERRAFORM_GCE_REGION_ASIA_SOUTHEAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_A
+	bool "asia-southeast1-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_B
+	bool "asia-southeast1-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_C
+	bool "asia-southeast1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-southeast1-a" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_A
+	default "asia-southeast1-b" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_B
+	default "asia-southeast1-c" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST1_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_SOUTHEAST1
+
+if TERRAFORM_GCE_REGION_ASIA_SOUTHEAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_A
+	bool "asia-southeast2-a"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_B
+	bool "asia-southeast2-b"
+
+config TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_C
+	bool "asia-southeast2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "asia-southeast2-a" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_A
+	default "asia-southeast2-b" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_B
+	default "asia-southeast2-c" if TERRAFORM_GCE_ZONE_ASIA_SOUTHEAST2_C
+
+endif # TERRAFORM_GCE_REGION_ASIA_SOUTHEAST2
+
+if TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_A
+	bool "australia-southeast1-a"
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_B
+	bool "australia-southeast1-b"
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_C
+	bool "australia-southeast1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "australia-southeast1-a" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_A
+	default "australia-southeast1-b" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_B
+	default "australia-southeast1-c" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST1_C
+
+endif # TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST1
+
+if TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_A
+	bool "australia-southeast2-a"
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_B
+	bool "australia-southeast2-b"
+
+config TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_C
+	bool "australia-southeast2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "australia-southeast2-a" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_A
+	default "australia-southeast2-b" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_B
+	default "australia-southeast2-c" if TERRAFORM_GCE_ZONE_AUSTRALIA_SOUTHEAST2_C
+
+endif # TERRAFORM_GCE_REGION_AUSTRALIA_SOUTHEAST2
+
+if TERRAFORM_GCE_REGION_EUROPE_CENTRAL2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_A
+	bool "europe-central2-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_B
+	bool "europe-central2-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_C
+	bool "europe-central2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-central2-a" if TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_A
+	default "europe-central2-b" if TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_B
+	default "europe-central2-c" if TERRAFORM_GCE_ZONE_EUROPE_CENTRAL2_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_CENTRAL2
+
+if TERRAFORM_GCE_REGION_EUROPE_NORTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_NORTH1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH1_A
+	bool "europe-north1-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH1_B
+	bool "europe-north1-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH1_C
+	bool "europe-north1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-north1-a" if TERRAFORM_GCE_ZONE_EUROPE_NORTH1_A
+	default "europe-north1-b" if TERRAFORM_GCE_ZONE_EUROPE_NORTH1_B
+	default "europe-north1-c" if TERRAFORM_GCE_ZONE_EUROPE_NORTH1_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_NORTH1
+
+if TERRAFORM_GCE_REGION_EUROPE_NORTH2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_NORTH2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH2_A
+	bool "europe-north2-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH2_B
+	bool "europe-north2-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_NORTH2_C
+	bool "europe-north2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-north2-a" if TERRAFORM_GCE_ZONE_EUROPE_NORTH2_A
+	default "europe-north2-b" if TERRAFORM_GCE_ZONE_EUROPE_NORTH2_B
+	default "europe-north2-c" if TERRAFORM_GCE_ZONE_EUROPE_NORTH2_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_NORTH2
+
+if TERRAFORM_GCE_REGION_EUROPE_SOUTHWEST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_A
+	bool "europe-southwest1-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_B
+	bool "europe-southwest1-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_C
+	bool "europe-southwest1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-southwest1-a" if TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_A
+	default "europe-southwest1-b" if TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_B
+	default "europe-southwest1-c" if TERRAFORM_GCE_ZONE_EUROPE_SOUTHWEST1_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_SOUTHWEST1
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST1_B
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST1_B
+	bool "europe-west1-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST1_C
+	bool "europe-west1-c"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST1_D
+	bool "europe-west1-d"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west1-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST1_B
+	default "europe-west1-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST1_C
+	default "europe-west1-d" if TERRAFORM_GCE_ZONE_EUROPE_WEST1_D
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST1
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST10
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST10_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST10_A
+	bool "europe-west10-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST10_B
+	bool "europe-west10-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST10_C
+	bool "europe-west10-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west10-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST10_A
+	default "europe-west10-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST10_B
+	default "europe-west10-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST10_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST10
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST12
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST12_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST12_A
+	bool "europe-west12-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST12_B
+	bool "europe-west12-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST12_C
+	bool "europe-west12-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west12-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST12_A
+	default "europe-west12-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST12_B
+	default "europe-west12-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST12_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST12
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST2_A
+	bool "europe-west2-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST2_B
+	bool "europe-west2-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST2_C
+	bool "europe-west2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west2-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST2_A
+	default "europe-west2-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST2_B
+	default "europe-west2-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST2_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST2
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST3
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST3_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST3_A
+	bool "europe-west3-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST3_B
+	bool "europe-west3-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST3_C
+	bool "europe-west3-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west3-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST3_A
+	default "europe-west3-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST3_B
+	default "europe-west3-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST3_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST3
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST4
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST4_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST4_A
+	bool "europe-west4-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST4_B
+	bool "europe-west4-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST4_C
+	bool "europe-west4-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west4-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST4_A
+	default "europe-west4-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST4_B
+	default "europe-west4-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST4_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST4
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST6
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST6_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST6_A
+	bool "europe-west6-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST6_B
+	bool "europe-west6-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST6_C
+	bool "europe-west6-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west6-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST6_A
+	default "europe-west6-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST6_B
+	default "europe-west6-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST6_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST6
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST8
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST8_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST8_A
+	bool "europe-west8-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST8_B
+	bool "europe-west8-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST8_C
+	bool "europe-west8-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west8-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST8_A
+	default "europe-west8-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST8_B
+	default "europe-west8-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST8_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST8
+
+if TERRAFORM_GCE_REGION_EUROPE_WEST9
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_EUROPE_WEST9_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST9_A
+	bool "europe-west9-a"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST9_B
+	bool "europe-west9-b"
+
+config TERRAFORM_GCE_ZONE_EUROPE_WEST9_C
+	bool "europe-west9-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "europe-west9-a" if TERRAFORM_GCE_ZONE_EUROPE_WEST9_A
+	default "europe-west9-b" if TERRAFORM_GCE_ZONE_EUROPE_WEST9_B
+	default "europe-west9-c" if TERRAFORM_GCE_ZONE_EUROPE_WEST9_C
+
+endif # TERRAFORM_GCE_REGION_EUROPE_WEST9
+
+if TERRAFORM_GCE_REGION_ME_CENTRAL1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ME_CENTRAL1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL1_A
+	bool "me-central1-a"
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL1_B
+	bool "me-central1-b"
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL1_C
+	bool "me-central1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "me-central1-a" if TERRAFORM_GCE_ZONE_ME_CENTRAL1_A
+	default "me-central1-b" if TERRAFORM_GCE_ZONE_ME_CENTRAL1_B
+	default "me-central1-c" if TERRAFORM_GCE_ZONE_ME_CENTRAL1_C
+
+endif # TERRAFORM_GCE_REGION_ME_CENTRAL1
+
+if TERRAFORM_GCE_REGION_ME_CENTRAL2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ME_CENTRAL2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL2_A
+	bool "me-central2-a"
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL2_B
+	bool "me-central2-b"
+
+config TERRAFORM_GCE_ZONE_ME_CENTRAL2_C
+	bool "me-central2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "me-central2-a" if TERRAFORM_GCE_ZONE_ME_CENTRAL2_A
+	default "me-central2-b" if TERRAFORM_GCE_ZONE_ME_CENTRAL2_B
+	default "me-central2-c" if TERRAFORM_GCE_ZONE_ME_CENTRAL2_C
+
+endif # TERRAFORM_GCE_REGION_ME_CENTRAL2
+
+if TERRAFORM_GCE_REGION_ME_WEST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_ME_WEST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_ME_WEST1_A
+	bool "me-west1-a"
+
+config TERRAFORM_GCE_ZONE_ME_WEST1_B
+	bool "me-west1-b"
+
+config TERRAFORM_GCE_ZONE_ME_WEST1_C
+	bool "me-west1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "me-west1-a" if TERRAFORM_GCE_ZONE_ME_WEST1_A
+	default "me-west1-b" if TERRAFORM_GCE_ZONE_ME_WEST1_B
+	default "me-west1-c" if TERRAFORM_GCE_ZONE_ME_WEST1_C
+
+endif # TERRAFORM_GCE_REGION_ME_WEST1
+
+if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_A
+	bool "northamerica-northeast1-a"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_B
+	bool "northamerica-northeast1-b"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_C
+	bool "northamerica-northeast1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "northamerica-northeast1-a" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_A
+	default "northamerica-northeast1-b" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_B
+	default "northamerica-northeast1-c" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST1_C
+
+endif # TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST1
+
+if TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_A
+	bool "northamerica-northeast2-a"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_B
+	bool "northamerica-northeast2-b"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_C
+	bool "northamerica-northeast2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "northamerica-northeast2-a" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_A
+	default "northamerica-northeast2-b" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_B
+	default "northamerica-northeast2-c" if TERRAFORM_GCE_ZONE_NORTHAMERICA_NORTHEAST2_C
+
+endif # TERRAFORM_GCE_REGION_NORTHAMERICA_NORTHEAST2
+
+if TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_A
+	bool "northamerica-south1-a"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_B
+	bool "northamerica-south1-b"
+
+config TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_C
+	bool "northamerica-south1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "northamerica-south1-a" if TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_A
+	default "northamerica-south1-b" if TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_B
+	default "northamerica-south1-c" if TERRAFORM_GCE_ZONE_NORTHAMERICA_SOUTH1_C
+
+endif # TERRAFORM_GCE_REGION_NORTHAMERICA_SOUTH1
+
+if TERRAFORM_GCE_REGION_SOUTHAMERICA_EAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_A
+	bool "southamerica-east1-a"
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_B
+	bool "southamerica-east1-b"
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_C
+	bool "southamerica-east1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "southamerica-east1-a" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_A
+	default "southamerica-east1-b" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_B
+	default "southamerica-east1-c" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_EAST1_C
+
+endif # TERRAFORM_GCE_REGION_SOUTHAMERICA_EAST1
+
+if TERRAFORM_GCE_REGION_SOUTHAMERICA_WEST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_A
+	bool "southamerica-west1-a"
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_B
+	bool "southamerica-west1-b"
+
+config TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_C
+	bool "southamerica-west1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "southamerica-west1-a" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_A
+	default "southamerica-west1-b" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_B
+	default "southamerica-west1-c" if TERRAFORM_GCE_ZONE_SOUTHAMERICA_WEST1_C
+
+endif # TERRAFORM_GCE_REGION_SOUTHAMERICA_WEST1
+
+if TERRAFORM_GCE_REGION_US_CENTRAL1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_CENTRAL1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_CENTRAL1_A
+	bool "us-central1-a"
+
+config TERRAFORM_GCE_ZONE_US_CENTRAL1_B
+	bool "us-central1-b"
+
+config TERRAFORM_GCE_ZONE_US_CENTRAL1_C
+	bool "us-central1-c"
+
+config TERRAFORM_GCE_ZONE_US_CENTRAL1_F
+	bool "us-central1-f"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-central1-a" if TERRAFORM_GCE_ZONE_US_CENTRAL1_A
+	default "us-central1-b" if TERRAFORM_GCE_ZONE_US_CENTRAL1_B
+	default "us-central1-c" if TERRAFORM_GCE_ZONE_US_CENTRAL1_C
+	default "us-central1-f" if TERRAFORM_GCE_ZONE_US_CENTRAL1_F
+
+endif # TERRAFORM_GCE_REGION_US_CENTRAL1
+
+if TERRAFORM_GCE_REGION_US_EAST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_EAST1_B
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_EAST1_B
+	bool "us-east1-b"
+
+config TERRAFORM_GCE_ZONE_US_EAST1_C
+	bool "us-east1-c"
+
+config TERRAFORM_GCE_ZONE_US_EAST1_D
+	bool "us-east1-d"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-east1-b" if TERRAFORM_GCE_ZONE_US_EAST1_B
+	default "us-east1-c" if TERRAFORM_GCE_ZONE_US_EAST1_C
+	default "us-east1-d" if TERRAFORM_GCE_ZONE_US_EAST1_D
+
+endif # TERRAFORM_GCE_REGION_US_EAST1
+
+if TERRAFORM_GCE_REGION_US_EAST4
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_EAST4_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_EAST4_A
+	bool "us-east4-a"
+
+config TERRAFORM_GCE_ZONE_US_EAST4_B
+	bool "us-east4-b"
+
+config TERRAFORM_GCE_ZONE_US_EAST4_C
+	bool "us-east4-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-east4-a" if TERRAFORM_GCE_ZONE_US_EAST4_A
+	default "us-east4-b" if TERRAFORM_GCE_ZONE_US_EAST4_B
+	default "us-east4-c" if TERRAFORM_GCE_ZONE_US_EAST4_C
+
+endif # TERRAFORM_GCE_REGION_US_EAST4
+
+if TERRAFORM_GCE_REGION_US_EAST5
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_EAST5_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_EAST5_A
+	bool "us-east5-a"
+
+config TERRAFORM_GCE_ZONE_US_EAST5_B
+	bool "us-east5-b"
+
+config TERRAFORM_GCE_ZONE_US_EAST5_C
+	bool "us-east5-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-east5-a" if TERRAFORM_GCE_ZONE_US_EAST5_A
+	default "us-east5-b" if TERRAFORM_GCE_ZONE_US_EAST5_B
+	default "us-east5-c" if TERRAFORM_GCE_ZONE_US_EAST5_C
+
+endif # TERRAFORM_GCE_REGION_US_EAST5
+
+if TERRAFORM_GCE_REGION_US_SOUTH1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_SOUTH1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_SOUTH1_A
+	bool "us-south1-a"
+
+config TERRAFORM_GCE_ZONE_US_SOUTH1_B
+	bool "us-south1-b"
+
+config TERRAFORM_GCE_ZONE_US_SOUTH1_C
+	bool "us-south1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-south1-a" if TERRAFORM_GCE_ZONE_US_SOUTH1_A
+	default "us-south1-b" if TERRAFORM_GCE_ZONE_US_SOUTH1_B
+	default "us-south1-c" if TERRAFORM_GCE_ZONE_US_SOUTH1_C
+
+endif # TERRAFORM_GCE_REGION_US_SOUTH1
+
+if TERRAFORM_GCE_REGION_US_WEST1
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_WEST1_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_WEST1_A
+	bool "us-west1-a"
+
+config TERRAFORM_GCE_ZONE_US_WEST1_B
+	bool "us-west1-b"
+
+config TERRAFORM_GCE_ZONE_US_WEST1_C
+	bool "us-west1-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-west1-a" if TERRAFORM_GCE_ZONE_US_WEST1_A
+	default "us-west1-b" if TERRAFORM_GCE_ZONE_US_WEST1_B
+	default "us-west1-c" if TERRAFORM_GCE_ZONE_US_WEST1_C
+
+endif # TERRAFORM_GCE_REGION_US_WEST1
+
+if TERRAFORM_GCE_REGION_US_WEST2
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_WEST2_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_WEST2_A
+	bool "us-west2-a"
+
+config TERRAFORM_GCE_ZONE_US_WEST2_B
+	bool "us-west2-b"
+
+config TERRAFORM_GCE_ZONE_US_WEST2_C
+	bool "us-west2-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-west2-a" if TERRAFORM_GCE_ZONE_US_WEST2_A
+	default "us-west2-b" if TERRAFORM_GCE_ZONE_US_WEST2_B
+	default "us-west2-c" if TERRAFORM_GCE_ZONE_US_WEST2_C
+
+endif # TERRAFORM_GCE_REGION_US_WEST2
+
+if TERRAFORM_GCE_REGION_US_WEST3
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_WEST3_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_WEST3_A
+	bool "us-west3-a"
+
+config TERRAFORM_GCE_ZONE_US_WEST3_B
+	bool "us-west3-b"
+
+config TERRAFORM_GCE_ZONE_US_WEST3_C
+	bool "us-west3-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-west3-a" if TERRAFORM_GCE_ZONE_US_WEST3_A
+	default "us-west3-b" if TERRAFORM_GCE_ZONE_US_WEST3_B
+	default "us-west3-c" if TERRAFORM_GCE_ZONE_US_WEST3_C
+
+endif # TERRAFORM_GCE_REGION_US_WEST3
+
+if TERRAFORM_GCE_REGION_US_WEST4
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_US_WEST4_A
+	help
+	  A zone is a deployment area within a region.
+
+config TERRAFORM_GCE_ZONE_US_WEST4_A
+	bool "us-west4-a"
+
+config TERRAFORM_GCE_ZONE_US_WEST4_B
+	bool "us-west4-b"
+
+config TERRAFORM_GCE_ZONE_US_WEST4_C
+	bool "us-west4-c"
+
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+	default "us-west4-a" if TERRAFORM_GCE_ZONE_US_WEST4_A
+	default "us-west4-b" if TERRAFORM_GCE_ZONE_US_WEST4_B
+	default "us-west4-c" if TERRAFORM_GCE_ZONE_US_WEST4_C
+
+endif # TERRAFORM_GCE_REGION_US_WEST4
