@@ -47,27 +47,949 @@ config TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
 	help
 	  General purpose computing on Intel Emerald Rapids CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_E2_HIGHCPU
+	bool "E2 High CPU family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Cost-effective computing on Intel/AMD EPYC processors.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_E2_STANDARD
+	bool "E2 Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Cost-effective computing on Intel/AMD EPYC processors.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_N1_HIGHCPU
+	bool "N1 High CPU family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Balanced performance and cost-effectiveness. Intel CPUs.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_C3_STANDARD
+	bool "C3 Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  High performance on Intel Sapphire Rapids CPUs.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_C3D_STANDARD
+	bool "C3D Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  High performance on AMD EPYC Genoa CPUs.
+
 config TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
 	bool "C4 Standard family"
 	depends on TARGET_ARCH_X86_64
 	help
 	  Consistently high performance on Intel Emerald Rapids CPUs.
 
+config TERRAFORM_GCE_MACHINE_FAMILY_C4A_STANDARD
+	bool "C4A Standard family"
+	depends on TARGET_ARCH_ARM64
+	help
+	  High performance on Google Axion Arm-based processors.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_C4D_STANDARD
+	bool "C4D Standard family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  High performance on AMD EPYC Turin CPUs.
+
+config TERRAFORM_GCE_MACHINE_FAMILY_A2_HIGHGPU
+	bool "A2 High GPU family"
+	depends on TARGET_ARCH_X86_64
+	help
+	  GPU-accelerated computing with NVIDIA A100 GPUs.
+
 endchoice
 
-source "terraform/gce/kconfigs/machines/Kconfig.e2-highcpu"
-source "terraform/gce/kconfigs/machines/Kconfig.e2-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.n1-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.n1-highcpu"
-source "terraform/gce/kconfigs/machines/Kconfig.n2-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.n2-highcpu"
-source "terraform/gce/kconfigs/machines/Kconfig.n2d-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.n2d-highcpu"
-source "terraform/gce/kconfigs/machines/Kconfig.n4-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.n4-highcpu"
-source "terraform/gce/kconfigs/machines/Kconfig.c3-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.c3d-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.c4-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.c4a-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.c4d-standard"
-source "terraform/gce/kconfigs/machines/Kconfig.a2-standard"
+if TERRAFORM_GCE_MACHINE_FAMILY_E2_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_E2_HIGHCPU_8
+	help
+	  The E2 machine series offers both Intel and AMD EPYC
+	  processors, selected for you at the time of VM creation.
+	  Machine types in this series are available in all regions
+	  and zones and support a virtio memory balloon device.
+
+config TERRAFORM_GCE_MACHINE_E2_HIGHCPU_2
+	bool "e2-highcpu-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_HIGHCPU_4
+	bool "e2-highcpu-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_HIGHCPU_8
+	bool "e2-highcpu-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_HIGHCPU_16
+	bool "e2-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_HIGHCPU_32
+	bool "e2-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 32GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "e2-highcpu-2" if TERRAFORM_GCE_MACHINE_E2_HIGHCPU_2
+	default "e2-highcpu-4" if TERRAFORM_GCE_MACHINE_E2_HIGHCPU_4
+	default "e2-highcpu-8" if TERRAFORM_GCE_MACHINE_E2_HIGHCPU_8
+	default "e2-highcpu-16" if TERRAFORM_GCE_MACHINE_E2_HIGHCPU_16
+	default "e2-highcpu-32" if TERRAFORM_GCE_MACHINE_E2_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_E2_HIGHCPU
+
+if TERRAFORM_GCE_MACHINE_FAMILY_E2_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	help
+	  The E2 machine series offers both Intel and AMD EPYC
+	  processors, selected for you at the time of VM creation.
+	  Machine types in this series are available in all regions
+	  and zones and support a virtio memory balloon device.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_2
+	bool "e2-standard-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_4
+	bool "e2-standard-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	bool "e2-standard-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_16
+	bool "e2-standard-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_E2_STANDARD_32
+	bool "e2-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "e2-standard-2" if TERRAFORM_GCE_MACHINE_E2_STANDARD_2
+	default "e2-standard-4" if TERRAFORM_GCE_MACHINE_E2_STANDARD_4
+	default "e2-standard-8" if TERRAFORM_GCE_MACHINE_E2_STANDARD_8
+	default "e2-standard-16" if TERRAFORM_GCE_MACHINE_E2_STANDARD_16
+	default "e2-standard-32" if TERRAFORM_GCE_MACHINE_E2_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_E2_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	help
+	  The N1 machine series is Compute Engine's first generation
+	  general-purpose machine series available on Intel Skylake,
+	  Broadwell, Haswell, Sandy Bridge, and Ivy Bridge CPU
+	  platforms.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	bool "n1-standard-1"
+	help
+	  1 vCPU and 3.75GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_2
+	bool "n1-standard-2"
+	help
+	  2 vCPUs (1 core) and 7.5GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_4
+	bool "n1-standard-4"
+	help
+	  4 vCPUs (2 cores) and 15GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	bool "n1-standard-8"
+	help
+	  8 vCPUs (4 cores) and 30GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_16
+	bool "n1-standard-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 60GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_STANDARD_32
+	bool "n1-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 120GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n1-standard-1" if TERRAFORM_GCE_MACHINE_N1_STANDARD_1
+	default "n1-standard-2" if TERRAFORM_GCE_MACHINE_N1_STANDARD_2
+	default "n1-standard-4" if TERRAFORM_GCE_MACHINE_N1_STANDARD_4
+	default "n1-standard-8" if TERRAFORM_GCE_MACHINE_N1_STANDARD_8
+	default "n1-standard-16" if TERRAFORM_GCE_MACHINE_N1_STANDARD_16
+	default "n1-standard-32" if TERRAFORM_GCE_MACHINE_N1_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N1_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N1_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	help
+	  The N1 machine series is Compute Engine's first generation
+	  general-purpose machine series available on Intel Skylake,
+	  Broadwell, Haswell, Sandy Bridge, and Ivy Bridge CPU
+	  platforms.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_2
+	bool "n1-highcpu-2"
+	help
+	  2 vCPUs (1 core) and 1.8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_4
+	bool "n1-highcpu-4"
+	help
+	  4 vCPUs (2 cores) and 3.6GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	bool "n1-highcpu-8"
+	help
+	  8 vCPUs (4 cores) and 7.2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_16
+	bool "n1-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 14.4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N1_HIGHCPU_32
+	bool "n1-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 28.8GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n1-highcpu-2" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_2
+	default "n1-highcpu-4" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_4
+	default "n1-highcpu-8" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_8
+	default "n1-highcpu-16" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_16
+	default "n1-highcpu-32" if TERRAFORM_GCE_MACHINE_N1_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N1_HIGHCPU
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N2_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N2_STANDARD_8
+	help
+	  The N2 machine series can run on either Intel Cascade Lake
+	  (on smaller configurations) or Intel Ice Lake.
+
+config TERRAFORM_GCE_MACHINE_N2_STANDARD_2
+	bool "n2-standard-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_STANDARD_4
+	bool "n2-standard-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_STANDARD_8
+	bool "n2-standard-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_STANDARD_16
+	bool "n2-standard-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_STANDARD_32
+	bool "n2-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n2-standard-2" if TERRAFORM_GCE_MACHINE_N2_STANDARD_2
+	default "n2-standard-4" if TERRAFORM_GCE_MACHINE_N2_STANDARD_4
+	default "n2-standard-8" if TERRAFORM_GCE_MACHINE_N2_STANDARD_8
+	default "n2-standard-16" if TERRAFORM_GCE_MACHINE_N2_STANDARD_16
+	default "n2-standard-32" if TERRAFORM_GCE_MACHINE_N2_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N2_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	help
+	  The N2 machine series can run on either Intel Cascade Lake
+	  (on smaller configurations) or Intel Ice Lake.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_2
+	bool "n2-highcpu-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	bool "n2-highcpu-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_8
+	bool "n2-highcpu-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
+	bool "n2-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
+	bool "n2-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 32GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n2-highcpu-2" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_2
+	default "n2-highcpu-4" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_4
+	default "n2-highcpu-8" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_8
+	default "n2-highcpu-16" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_16
+	default "n2-highcpu-32" if TERRAFORM_GCE_MACHINE_N2_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N2_HIGHCPU
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N2D_STANDARD
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N2D_STANDARD_4
+	help
+	  The N2D machine series can run on either AMD EPYC Milan or
+	  AMD EPYC Rome processors. The third generation AMD EPYC
+	  Milan processor is available only in specific regions and zones.
+
+config TERRAFORM_GCE_MACHINE_N2D_STANDARD_2
+	bool "n2d-standard-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_STANDARD_4
+	bool "n2d-standard-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_STANDARD_8
+	bool "n2d-standard-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_STANDARD_16
+	bool "n2d-standard-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_STANDARD_32
+	bool "n2d-standard-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n2d-standard-2" if TERRAFORM_GCE_MACHINE_N2D_STANDARD_2
+	default "n2d-standard-4" if TERRAFORM_GCE_MACHINE_N2D_STANDARD_4
+	default "n2d-standard-8" if TERRAFORM_GCE_MACHINE_N2D_STANDARD_8
+	default "n2d-standard-16" if TERRAFORM_GCE_MACHINE_N2D_STANDARD_16
+	default "n2d-standard-32" if TERRAFORM_GCE_MACHINE_N2D_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N2D_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N2D_HIGHCPU
+
+choice
+	prompt "GCE Machine type"
+	default TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_4
+	help
+	  The N2D machine series can run on either AMD EPYC Milan or
+	  AMD EPYC Rome processors. The third generation AMD EPYC
+	  Milan processor is available only in specific regions and zones.
+
+config TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_2
+	bool "n2d-highcpu-2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2 vCPUs (1 core) and 2GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_4
+	bool "n2d-highcpu-4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  4 vCPUs (2 cores) and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_8
+	bool "n2d-highcpu-8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  8 vCPUs (4 cores) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_16
+	bool "n2d-highcpu-16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  16 vCPUs (8 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_32
+	bool "n2d-highcpu-32"
+	depends on TARGET_ARCH_X86_64
+	help
+	  32 vCPUs (16 cores) and 32GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n2d-highcpu-2" if TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_2
+	default "n2d-highcpu-4" if TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_4
+	default "n2d-highcpu-8" if TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_8
+	default "n2d-highcpu-16" if TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_16
+	default "n2d-highcpu-32" if TERRAFORM_GCE_MACHINE_N2D_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N2D_HIGHCPU
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N4_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	help
+	  N4 VMs are powered by the 5th generation Intel Xeon Scalable
+	  processors (code-named Emerald Rapids) and Titanium.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_2
+	bool "n4-standard-2"
+	help
+	  2 vCPUs (1 core) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	bool "n4-standard-4"
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_8
+	bool "n4-standard-8"
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_16
+	bool "n4-standard-16"
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_STANDARD_32
+	bool "n4-standard-32"
+	help
+	  32 vCPUs (16 cores) and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n4-standard-2" if TERRAFORM_GCE_MACHINE_N4_STANDARD_2
+	default "n4-standard-4" if TERRAFORM_GCE_MACHINE_N4_STANDARD_4
+	default "n4-standard-8" if TERRAFORM_GCE_MACHINE_N4_STANDARD_8
+	default "n4-standard-16" if TERRAFORM_GCE_MACHINE_N4_STANDARD_16
+	default "n4-standard-32" if TERRAFORM_GCE_MACHINE_N4_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N4_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_N4_HIGHCPU_4
+	help
+	  N4 VMs are powered by the 5th generation Intel Xeon Scalable
+	  processors (code-named Emerald Rapids) and Titanium.
+
+config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_2
+	bool "n4-highcpu-2"
+	help
+	  2 vCPUs (1 core) and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_4
+	bool "n4-highcpu-4"
+	help
+	  4 vCPUs (2 cores) and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_8
+	bool "n4-highcpu-8"
+	help
+	  8 vCPUs (4 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_16
+	bool "n4-highcpu-16"
+	help
+	  16 vCPUs (8 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_N4_HIGHCPU_32
+	bool "n4-highcpu-32"
+	help
+	  32 vCPUs (16 cores) and 64GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "n4-highcpu-2" if TERRAFORM_GCE_MACHINE_N4_HIGHCPU_2
+	default "n4-highcpu-4" if TERRAFORM_GCE_MACHINE_N4_HIGHCPU_4
+	default "n4-highcpu-8" if TERRAFORM_GCE_MACHINE_N4_HIGHCPU_8
+	default "n4-highcpu-16" if TERRAFORM_GCE_MACHINE_N4_HIGHCPU_16
+	default "n4-highcpu-32" if TERRAFORM_GCE_MACHINE_N4_HIGHCPU_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_N4_HIGHCPU
+
+if TERRAFORM_GCE_MACHINE_FAMILY_C3_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C3_STANDARD_4
+	help
+	  C3 VMs are powered by the 4th generation Intel Xeon
+	  Scalable processors (code-named Sapphire Rapids), DDR5
+	  memory, and Titanium, enabling higher levels of networking
+	  performance, isolation and security.
+
+config TERRAFORM_GCE_MACHINE_C3_STANDARD_4
+	bool "c3-standard-4"
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3_STANDARD_8
+	bool "c3-standard-8"
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3_STANDARD_22
+	bool "c3-standard-22"
+	help
+	  22 vCPUs (11 cores) and 88GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c3-standard-4" if TERRAFORM_GCE_MACHINE_C3_STANDARD_4
+	default "c3-standard-8" if TERRAFORM_GCE_MACHINE_C3_STANDARD_8
+	default "c3-standard-22" if TERRAFORM_GCE_MACHINE_C3_STANDARD_22
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C3_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_C3D_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	help
+	  C3D VMs are powered by the 4th-gen AMD EPYC (Genoa)
+	  processor. C3D uses Titanium, enabling higher levels
+	  of networking performance, isolation and security.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	bool "c3d-standard-4"
+	help
+	  4 vCPUs (2 cores) and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_8
+	bool "c3d-standard-8"
+	help
+	  8 vCPUs (4 cores) and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_16
+	bool "c3d-standard-16"
+	help
+	  16 vCPUs (8 cores) and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C3D_STANDARD_30
+	bool "c3d-standard-30"
+	help
+	  30 vCPUs (15 cores) and 120GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c3d-standard-4" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_4
+	default "c3d-standard-8" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_8
+	default "c3d-standard-16" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_16
+	default "c3d-standard-30" if TERRAFORM_GCE_MACHINE_C3D_STANDARD_30
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C3D_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C4_STANDARD_4
+	help
+	  C4 VMs are powered by 6th generation (code-named Granite
+	  Rapids) or 5th generation (code-named Emerald Rapids)
+	  Intel Xeon Scalable processors and Titanium.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_2
+	bool "c4-standard-2"
+	help
+	  2 vCPUs (1 core) and 7GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_4
+	bool "c4-standard-4"
+	help
+	  4 vCPUs (2 cores) and 15GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_8
+	bool "c4-standard-8"
+	help
+	  8 vCPUs (4 cores) and 30GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_16
+	bool "c4-standard-16"
+	help
+	  16 vCPUs (8 cores) and 60GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_24
+	bool "c4-standard-24"
+	help
+	  24 vCPUs (12 cores) and 90GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4_STANDARD_32
+	bool "c4-standard-32"
+	help
+	  32 vCPUs (16 cores) and 120GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c4-standard-2" if TERRAFORM_GCE_MACHINE_C4_STANDARD_2
+	default "c4-standard-4" if TERRAFORM_GCE_MACHINE_C4_STANDARD_4
+	default "c4-standard-8" if TERRAFORM_GCE_MACHINE_C4_STANDARD_8
+	default "c4-standard-16" if TERRAFORM_GCE_MACHINE_C4_STANDARD_16
+	default "c4-standard-24" if TERRAFORM_GCE_MACHINE_C4_STANDARD_24
+	default "c4-standard-32" if TERRAFORM_GCE_MACHINE_C4_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_C4A_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C4A_STANDARD_4
+	help
+	  C4A VMs are powered by Google's first Arm-based Axion™
+	  processor, DDR5 memory, and local Titanium SSDs.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_1
+	bool "c4a-standard-1"
+	help
+	  1 vCPU and 4GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_2
+	bool "c4a-standard-2"
+	help
+	  2 vCPUs and 8GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_4
+	bool "c4a-standard-4"
+	help
+	  4 vCPUs and 16GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_8
+	bool "c4a-standard-8"
+	help
+	  8 vCPUs and 32GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_16
+	bool "c4a-standard-16"
+	help
+	  16 vCPUs and 64GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4A_STANDARD_32
+	bool "c4a-standard-32"
+	help
+	  32 vCPUs and 128GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c4a-standard-1" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_1
+	default "c4a-standard-2" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_2
+	default "c4a-standard-4" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_4
+	default "c4a-standard-8" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_8
+	default "c4a-standard-16" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_16
+	default "c4a-standard-32" if TERRAFORM_GCE_MACHINE_C4A_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C4A_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_C4D_STANDARD
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	help
+	  C4D VMs are powered by the fifth generation AMD EPYC Turin
+	  processor and Titanium.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_2
+	bool "c4d-standard-2"
+	help
+	  2 vCPUs (1 core) and 7GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	bool "c4d-standard-4"
+	help
+	  4 vCPUs (2 cores) and 15GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_8
+	bool "c4d-standard-8"
+	help
+	  8 vCPUs (4 cores) and 31GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_16
+	bool "c4d-standard-16"
+	help
+	  16 vCPUs (8 cores) and 62GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_24
+	bool "c4d-standard-24"
+	help
+	  24 vCPUs (12 cores) and 93GB of memory.
+
+config TERRAFORM_GCE_MACHINE_C4D_STANDARD_32
+	bool "c4d-standard-32"
+	help
+	  32 vCPUs (16 cores) and 124GB of memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "c4d-standard-2" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_2
+	default "c4d-standard-4" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_4
+	default "c4d-standard-8" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_8
+	default "c4d-standard-16" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_16
+	default "c4d-standard-24" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_24
+	default "c4d-standard-32" if TERRAFORM_GCE_MACHINE_C4D_STANDARD_32
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "hyperdisk-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_C4D_STANDARD
+
+if TERRAFORM_GCE_MACHINE_FAMILY_A2_HIGHGPU
+
+choice
+	prompt "GCE Machine Type"
+	default TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	help
+	  A2 High GPU machine types have a fixed number of A100
+	  40GB GPUs.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	bool "a2-highgpu-1g"
+	help
+	  12 vCPUs, 85GB of memory, and 1 GPU with 40GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_2G
+	bool "a2-highgpu-2g"
+	help
+	  24 vCPUs, 170GB of memory, and 2 GPUs with 80GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_4G
+	bool "a2-highgpu-4g"
+	help
+	  48 vCPUs, 340GB of memory, and 4 GPUs with 160GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_8G
+	bool "a2-highgpu-8g"
+	help
+	  96 vCPUs, 680GB of memory, and 8 GPUs with 320GB of GPU
+	  memory.
+
+config TERRAFORM_GCE_MACHINE_A2_HIGHGPU_16G
+	bool "a2-highgpu-16g"
+	help
+	  96 vCPUs, 1360GB of memory, and 16 GPUs with 640GB of GPU
+	  memory.
+
+endchoice
+
+config TERRAFORM_GCE_MACHINE_TYPE
+	string
+	output yaml
+	default "a2-highgpu-1g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_1G
+	default "a2-highgpu-2g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_2G
+	default "a2-highgpu-4g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_4G
+	default "a2-highgpu-8g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_8G
+	default "a2-highgpu-16g" if TERRAFORM_GCE_MACHINE_A2_HIGHGPU_16G
+
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "pd-balanced"
+
+endif # TERRAFORM_GCE_MACHINE_FAMILY_A2_HIGHGPU
