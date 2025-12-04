@@ -1,0 +1,37 @@
+choice
+	prompt "OS Distributor"
+	default TERRAFORM_GCE_DISTRO_DEBIAN
+	help
+	  Select the Linux distribution for the OS base image of the
+	  instances to be created.
+
+config TERRAFORM_GCE_DISTRO_CENTOS
+	bool "CentOS"
+
+config TERRAFORM_GCE_DISTRO_DEBIAN
+	bool "Debian"
+
+config TERRAFORM_GCE_DISTRO_OL
+	bool "Oracle Linux"
+
+config TERRAFORM_GCE_DISTRO_OPENSUSE
+	bool "OpenSUSE"
+
+config TERRAFORM_GCE_DISTRO_RHEL
+	bool "Red Hat Enterprise Linux"
+
+config TERRAFORM_GCE_DISTRO_ROCKY
+	bool "Rocky Linux"
+
+config TERRAFORM_GCE_DISTRO_SLES
+	bool "SUSE Enterprise Linux Server"
+
+endchoice
+
+source "terraform/gce/kconfigs/images/Kconfig.centos"
+source "terraform/gce/kconfigs/images/Kconfig.debian"
+source "terraform/gce/kconfigs/images/Kconfig.oracle"
+source "terraform/gce/kconfigs/images/Kconfig.opensuse"
+source "terraform/gce/kconfigs/images/Kconfig.rhel"
+source "terraform/gce/kconfigs/images/Kconfig.rocky"
+source "terraform/gce/kconfigs/images/Kconfig.sles"

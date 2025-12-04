@@ -4,7 +4,10 @@ menu "Resource Location"
 source "terraform/gce/kconfigs/Kconfig.location"
 endmenu
 menu "Compute"
-source "terraform/gce/kconfigs/Kconfig.compute"
+comment "Machine selection"
+source "terraform/gce/kconfigs/Kconfig.machine"
+comment "OS image selection"
+source "terraform/gce/kconfigs/Kconfig.image"
 endmenu
 menu "Storage"
 source "terraform/gce/kconfigs/Kconfig.storage"
