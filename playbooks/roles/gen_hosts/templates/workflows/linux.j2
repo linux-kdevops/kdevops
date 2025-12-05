@@ -1,12 +1,12 @@
 {# Template for the kernel builder workflow #}
 [all]
 localhost ansible_connection=local
-{{ kdevops_hosts_prefix }}-builder
+{{ kdevops_host_prefix }}-builder
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
 [baseline]
-{{ kdevops_hosts_prefix }}-builder
+{{ kdevops_host_prefix }}-builder
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
