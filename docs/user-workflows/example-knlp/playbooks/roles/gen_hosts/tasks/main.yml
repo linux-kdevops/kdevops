@@ -1,0 +1,17 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private gen_hosts tasks for KNLP workflow
+
+- name: Generate the Ansible hosts file for user-private KNLP setup
+  tags: ['hosts']
+  ansible.builtin.template:
+    src: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/gen_hosts/templates/knlp.j2"
+    dest: "{{ ansible_cfg_inventory }}"
+    force: true
+    trim_blocks: True
+    lstrip_blocks: True
+    mode: '0644'
+  when:
+    - kdevops_user_workflow_knlp|default(false)|bool
+    - not kdevops_use_declared_hosts|default(false)|bool

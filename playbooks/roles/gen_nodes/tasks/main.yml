@@ -1247,3 +1247,22 @@
     index_var: idx
   when:
     - kdevops_enable_guestfs|bool
+
+# User-private workflow nodes
+# Allows users to define custom node generation tasks in their private config directory
+
+- name: Check for user-private gen_nodes tasks
+  ansible.builtin.stat:
+    path: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/gen_nodes/tasks/main.yml"
+  register: user_gen_nodes_tasks
+  when:
+    - kdevops_user_config_enable|default(false)|bool
+    - kdevops_user_config_dir_expanded is defined
+
+- name: Include user-private gen_nodes tasks
+  ansible.builtin.include_tasks:
+    file: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/gen_nodes/tasks/main.yml"
+  when:
+    - kdevops_user_config_enable|default(false)|bool
+    - kdevops_user_config_dir_expanded is defined
+    - user_gen_nodes_tasks.stat.exists|default(false)

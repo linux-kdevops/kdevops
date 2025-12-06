@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private workflow configuration
+#
+# This allows users to maintain private workflows in their home directory
+# without modifying the main kdevops repository.
+#
+# Expected directory structure:
+#   ~/.config/kdevops/
+#   ├── Kconfig                    # User Kconfig (sourced below)
+#   ├── Makefile                   # User Makefile (included by workflows/Makefile)
+#   ├── defconfigs/                # User defconfigs
+#   │   └── configs/               # User config fragments
+#   └── playbooks/
+#       └── roles/
+#           ├── gen_nodes/tasks/   # User node generation tasks
+#           ├── gen_hosts/
+#           │   ├── tasks/         # User hosts generation tasks
+#           │   └── templates/     # User hosts templates
+#           └── <workflow>/        # User workflow roles
+
+config KDEVOPS_USER_CONFIG_ENABLE
+	bool "Enable user-private workflows"
+	default n
+	output yaml
+	help
+	  Enable support for user-private workflows stored in
+	  ~/.config/kdevops/ (or a custom path). This allows you to
+	  maintain custom workflows without modifying the kdevops
+	  repository.
+
+	  When enabled, kdevops will:
+	  - Source user Kconfig files from the user config directory
+	  - Include user Makefiles for custom make targets
+	  - Load user Ansible roles and tasks for node/host generation
+
+	  If unsure, say N unless you have user workflows to load.
+
+if KDEVOPS_USER_CONFIG_ENABLE
+
+config KDEVOPS_USER_CONFIG_DIR
+	string "User configuration directory"
+	default "~/.config/kdevops"
+	output yaml
+	help
+	  The directory where user-private workflow configurations are
+	  stored. The default is ~/.config/kdevops.
+
+	  This directory should contain:
+	  - Kconfig: Sourced for additional workflow options
+	  - Makefile: Included for custom make targets
+	  - playbooks/roles/: Ansible roles for user workflows
+
+config KDEVOPS_USER_CONFIG_DIR_EXPANDED
+	string
+	output yaml
+	default "$(shell, echo $HOME/.config/kdevops)"
+
+endif # KDEVOPS_USER_CONFIG_ENABLE
+
+# Source user Kconfig - uses script to return valid path or stub
+source "$(shell, scripts/get_user_kconfig.sh)"
+
+# Plugin system configuration
+config KDEVOPS_PLUGINS_INSTALLED
+	bool
+	output yaml
+	default $(shell, scripts/kdevops-plugin.sh --has-plugins)
+	help
+	  Automatically set to 'y' when plugins are installed via the
+	  kdevops plugin system. This is a hidden option that tracks
+	  whether any plugins are currently installed.
+
+config KDEVOPS_PLUGINS_TAINTED
+	bool "Configuration uses third-party plugins (tainted)"
+	default y if KDEVOPS_PLUGINS_INSTALLED
+	output yaml
+	help
+	  This configuration uses third-party plugins installed via the
+	  kdevops plugin system. Plugin configurations are maintained
+	  externally and are not validated by kdevops maintainers.
+
+	  This is a taint flag that indicates the configuration includes
+	  community or user-developed plugins. The flag is automatically
+	  set when plugins are installed.
+
+	  Use 'make kdevops-plugin-list' to see installed plugins.
+
+# Source installed plugins Kconfig
+source "$(shell, scripts/get_plugins_kconfig.sh)"

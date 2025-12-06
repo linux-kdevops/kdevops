@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private Kconfig for kdevops workflows
+#
+# This file is sourced by kdevops when KDEVOPS_USER_CONFIG_ENABLE=y
+# and placed at ~/.config/kdevops/Kconfig
+#
+# Source your workflow Kconfigs here:
+
+source "$(shell, echo $HOME/.config/kdevops/workflows/knlp/Kconfig)"

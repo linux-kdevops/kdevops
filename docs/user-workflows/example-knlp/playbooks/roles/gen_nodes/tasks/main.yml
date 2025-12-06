@@ -1,0 +1,36 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private gen_nodes tasks for KNLP workflow
+
+- name: Generate the KNLP kdevops nodes file
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-knlp'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-knlp'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: "0644"
+  when:
+    - kdevops_user_workflow_knlp|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - not kdevops_baseline_and_dev
+
+- name: Generate the KNLP kdevops nodes file with dev hosts
+  tags: ['hosts']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    nodes: "{{ [kdevops_host_prefix + '-knlp', kdevops_host_prefix + '-knlp-dev'] }}"
+    all_generic_nodes: "{{ [kdevops_host_prefix + '-knlp', kdevops_host_prefix + '-knlp-dev'] }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+    mode: "0644"
+  when:
+    - kdevops_user_workflow_knlp|default(false)|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_baseline_and_dev

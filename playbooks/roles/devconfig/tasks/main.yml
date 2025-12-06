@@ -746,3 +746,22 @@
   when:
     - devconfig_enable_kotd|bool
   tags: ["kotd"]
+
+- name: Check if user-private devconfig tasks exist
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.stat:
+    path: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/devconfig/tasks/main.yml"
+  register: user_devconfig_tasks
+  when:
+    - kdevops_user_config_enable is defined
+    - kdevops_user_config_enable|bool
+
+- name: Include user-private devconfig tasks
+  ansible.builtin.include_tasks: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/devconfig/tasks/main.yml"
+  when:
+    - kdevops_user_config_enable is defined
+    - kdevops_user_config_enable|bool
+    - user_devconfig_tasks.stat is defined
+    - user_devconfig_tasks.stat.exists
+  tags: ["user-workflows"]

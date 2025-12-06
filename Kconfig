@@ -71,3 +71,7 @@ endmenu
 menu "Kdevops configuration"
 source "kconfigs/Kconfig.kdevops"
 endmenu
+
+menu "User-private workflows"
+source "kconfigs/Kconfig.user_workflows"
+endmenu

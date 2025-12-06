@@ -1,0 +1,14 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private devconfig tasks
+#
+# These tasks are included by kdevops devconfig role when
+# KDEVOPS_USER_CONFIG_ENABLE=y
+
+- name: Setup KNLP ML research workflow
+  ansible.builtin.include_tasks: knlp.yml
+  when:
+    - kdevops_user_workflow_knlp is defined
+    - kdevops_user_workflow_knlp|bool
+  tags: ["knlp", "ml"]

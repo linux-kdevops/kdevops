@@ -285,6 +285,33 @@ clusters, and tailored services like fast deployment and simplified pricing.
 
 kdevops supports the following neocloud providers:
 
+### Custom AI Workflows on Neoclouds
+
+Neoclouds are ideal for custom and proprietary AI workflows. kdevops makes it
+easy to combine neocloud providers with user-private workflows, allowing you
+to maintain custom AI/ML workflows outside the main kdevops repository.
+
+**Quick Demo - Custom Workflow on GPU Cloud:**
+
+```bash
+# DataCrunch with custom knlp workflow on H100 or lower tier GPU
+make defconfig-datacrunch-h100-pytorch-or-less+knlp KDEVOPS_HOSTS_PREFIX="1"
+make bringup
+# Creates host: 1-knlp with PyTorch environment and your custom workflow
+
+# Lambda Labs with custom workflow on H100 or lower tier GPU
+make defconfig-lambdalabs-h100-or-less+knlp KDEVOPS_HOSTS_PREFIX="ml"
+make bringup
+# Creates host: ml-knlp with your custom workflow
+```
+
+The `+<workflow>` suffix appends a defconfig fragment from your user-private
+config directory (`~/.config/kdevops/defconfigs/configs/<workflow>.config`),
+automatically enabling user-private workflows and your custom configuration.
+
+For detailed instructions on creating your own custom AI workflows, see:
+  * [User-Private Workflows Documentation](user-workflows/README.md)
+
 ### DataCrunch
 
 kdevops supports DataCrunch, a cloud provider specialized in GPU computing
@@ -325,17 +352,21 @@ make defconfig-datacrunch-4x-b300         # 4x B300 (Blackwell architecture)
 
 #### Using Defconfigs with Workflows
 
-DataCrunch defconfigs can be combined with workflow CLI parameters.
-For example, to enable the knlp ML research workflow:
+DataCrunch defconfigs can be combined with user-private workflow fragments
+using the `+<workflow>` syntax:
 
 ```bash
-make defconfig-datacrunch-a100 KNLP=1
+# Combine DataCrunch H100 with custom knlp workflow
+make defconfig-datacrunch-h100-pytorch-or-less+knlp KDEVOPS_HOSTS_PREFIX="dev"
 make bringup
 ```
 
-This automatically configures a DataCrunch A100 instance with the knlp
-workflow enabled, setting up the ML research environment with kernel
-development methodologies.
+This automatically configures a DataCrunch instance with your custom workflow
+enabled, setting up the ML research environment. The tier-based selection
+(`h100-pytorch-or-less`) automatically selects the best available GPU.
+
+For creating your own custom AI workflows, see
+[User-Private Workflows](user-workflows/README.md).
 
 #### Instance Types
 
@@ -470,11 +501,28 @@ For more information, visit: https://datacrunch.io/
 kdevops supports Lambda Labs, a cloud provider focused on GPU instances for
 machine learning workloads with competitive pricing.
 
+#### Using Lambda Labs with Custom Workflows
+
+Lambda Labs defconfigs support user-private workflow fragments:
+
+```bash
+# Combine Lambda Labs H100 tier with custom knlp workflow
+make defconfig-lambdalabs-h100-or-less+knlp KDEVOPS_HOSTS_PREFIX="ml"
+make bringup
+```
+
+The tier-based selection (`h100-or-less`) automatically finds the cheapest
+available GPU instance across all regions. For creating your own custom AI
+workflows, see [User-Private Workflows](user-workflows/README.md).
+
+#### Documentation
+
 For detailed documentation on Lambda Labs integration, including tier-based
 GPU selection, smart instance selection, and dynamic Kconfig generation, see:
 
-  * [Lambda Labs Dynamic Cloud Kconfig](dynamic-cloud-kconfig.md) - Dynamic configuration generation for Lambda Labs
+  * [Lambda Labs Dynamic Cloud Kconfig](dynamic-cloud-kconfig.md) - Dynamic configuration generation
   * [Lambda Labs CLI Reference](lambda-cli.1) - Man page for the lambda-cli tool
+  * [User-Private Workflows](user-workflows/README.md) - Creating custom AI workflows
 
 Lambda Labs offers various GPU instance types including A10, A100, and H100
 configurations. kdevops provides smart selection features that automatically
