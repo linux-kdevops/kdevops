@@ -1,0 +1,7 @@
+# DataCrunch datacenter location configuration
+
+# Include dynamically generated locations
+source "terraform/datacrunch/kconfigs/Kconfig.location.generated"
+
+# This string config is defined in the generated file with proper defaults
+# based on the chosen location option

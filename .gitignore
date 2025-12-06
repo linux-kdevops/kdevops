@@ -140,3 +140,4 @@ docs/contrib/kdevops_contributions*
 __pycache__/
 
 .ansible
+cloud-bill
