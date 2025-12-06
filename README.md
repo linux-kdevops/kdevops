@@ -526,7 +526,7 @@ Below are sections which get into technical details of how kdevops works.
   * [Linux distribution support](docs/linux-distro-support.md)
   * [Overriding all Ansible role options with one file](docs/ansible-override.md)
   * [kdevops Vagrant support](docs/kdevops-vagrant.md)
-  * [kdevops terraform support - cloud setup with kdevops](docs/kdevops-terraform.md)
+  * [kdevops terraform and cloud provider support](docs/kdevops-terraform.md) - AWS, Azure, GCE, OCI, Lambda Labs, DataCrunch
   * [kdevops local Ansible roles](docs/ansible-roles.md)
   * [Tutorial on building your own custom Vagrant boxes](docs/custom-vagrant-boxes.md)
 
