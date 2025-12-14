@@ -25,13 +25,17 @@ def check_availability(instance_type=None, json_output=False, pick_first=False):
     if not api_key:
         sys.stderr.write("Error: Lambda Labs API key not found\n")
         sys.stderr.write("Set LAMBDALABS_API_KEY or create ~/.lambdalabs/credentials\n")
-        sys.exit(1)
+        return 1
 
-    instance_data, capacity_map = get_instance_types_with_capacity(api_key)
+    try:
+        _, capacity_map = get_instance_types_with_capacity(api_key)
+    except Exception as e:
+        sys.stderr.write(f"Error: Failed to fetch instance availability: {e}\n")
+        return 1
 
     if not capacity_map:
         sys.stderr.write("Error: Could not fetch instance availability\n")
-        sys.exit(1)
+        return 1
 
     if instance_type:
         # Check specific instance type
