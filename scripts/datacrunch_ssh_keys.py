@@ -181,6 +181,28 @@ def generate_ssh_key_pair(key_path: Path, passphrase: str = "") -> bool:
         return False
 
 
+def get_default_key_file() -> str:
+    """
+    Get the default SSH key file path with directory-based checksum.
+
+    The filename includes an 8-character hash of the project directory
+    to ensure different kdevops installations use separate keys.
+    """
+    # Get git repository root, or fall back to current directory
+    try:
+        project_path = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        project_path = os.getcwd()
+
+    # Create SHA256 hash of directory path (matching Kconfig shell command)
+    dir_hash = hashlib.sha256(project_path.encode()).hexdigest()[:8]
+    return str(Path.home() / ".ssh" / f"kdevops_terraform_{dir_hash}")
+
+
 def setup_ssh_key(
     key_name: Optional[str] = None, key_file: Optional[str] = None
 ) -> bool:
@@ -189,7 +211,7 @@ def setup_ssh_key(
 
     Args:
         key_name: Name for the SSH key (default: auto-generated unique name)
-        key_file: Path to private key file (default: ~/.ssh/kdevops_terraform)
+        key_file: Path to private key file (default: ~/.ssh/kdevops_terraform_<hash>)
 
     Returns:
         True if successful, False otherwise
@@ -198,7 +220,7 @@ def setup_ssh_key(
         key_name = generate_unique_key_name()
 
     if key_file is None:
-        key_file = str(Path.home() / ".ssh" / "kdevops_terraform")
+        key_file = get_default_key_file()
 
     key_path = Path(key_file)
     pub_key_path = Path(str(key_file) + ".pub")
@@ -278,7 +300,8 @@ def main():
         "--name", help="Name for the SSH key (default: auto-generated)"
     )
     setup_parser.add_argument(
-        "--keyfile", help="Path to private key file (default: ~/.ssh/kdevops_terraform)"
+        "--keyfile",
+        help="Path to private key file (default: ~/.ssh/kdevops_terraform_<hash>)",
     )
 
     # Cleanup command

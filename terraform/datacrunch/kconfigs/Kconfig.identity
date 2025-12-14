@@ -73,10 +73,14 @@ config TERRAFORM_DATACRUNCH_SSH_KEY_AUTO_CREATE
 
 config TERRAFORM_DATACRUNCH_SSH_KEY_FILE
 	string "Path to SSH private key"
-	default "~/.ssh/kdevops_terraform"
+	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8)"
 	help
 	  Path to the private SSH key file that corresponds to the public
 	  key uploaded to DataCrunch.
+
+	  The filename includes an 8-character hash of the current
+	  directory path, allowing multiple kdevops installations to
+	  use separate SSH keys without conflicts.
 
 	  If using automatic key creation, this key will be generated
 	  if it doesn't exist.
