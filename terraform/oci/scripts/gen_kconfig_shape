@@ -31,11 +31,10 @@ Usage:
 """
 
 import sys
-import os
 import argparse
 
 import oci
-from oci.exceptions import ServiceError, ConfigFileNotFound
+from oci.exceptions import ServiceError
 
 from oci_common import (
     get_default_region,
@@ -44,6 +43,8 @@ from oci_common import (
     get_jinja2_environment,
     load_yaml_config,
     create_compute_client,
+    require_oci_config,
+    OciNotConfiguredError,
 )
 
 
@@ -82,12 +83,6 @@ def get_all_shapes(compartment_ocid, regions=None, quiet=False):
             if not quiet:
                 print(f"  Found {len(shapes)} shapes in {region}", file=sys.stderr)
 
-        except ConfigFileNotFound:
-            print(
-                "Error: OCI config file not found. Please configure OCI CLI.",
-                file=sys.stderr,
-            )
-            return []
         except ServiceError as e:
             print(f"  Warning: Could not query {region}: {e.message}", file=sys.stderr)
             continue
@@ -886,6 +881,14 @@ Examples:
 def main():
     """Main function to run the program."""
     args = parse_arguments()
+
+    # Allow make dynconfig to succeed without OCI credentials
+    try:
+        require_oci_config()
+    except OciNotConfiguredError:
+        if not args.quiet:
+            print("OCI not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
 
     compartment_ocid = get_default_compartment()
     if not compartment_ocid:

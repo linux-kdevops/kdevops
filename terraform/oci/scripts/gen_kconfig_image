@@ -50,7 +50,6 @@ Usage:
 """
 
 import sys
-import os
 import argparse
 import re
 from collections import defaultdict
@@ -65,6 +64,8 @@ from oci_common import (
     create_compute_client,
     get_all_region_keys,
     get_region_kconfig_name,
+    require_oci_config,
+    OciNotConfiguredError,
 )
 
 # Cache for loaded publisher definitions (loaded once per script execution)
@@ -239,7 +240,7 @@ def get_all_images(compartment_ocid, regions=None, quiet=False):
             - all_publishers: Combined dictionary of known and discovered publishers
     """
     # Lazy import of OCI exceptions - only needed when actually using OCI API
-    from oci.exceptions import ServiceError, ConfigFileNotFound
+    from oci.exceptions import ServiceError
 
     if regions is None:
         regions = [get_default_region()]
@@ -273,12 +274,6 @@ def get_all_images(compartment_ocid, regions=None, quiet=False):
                         image, "listing_type", None
                     )
 
-        except ConfigFileNotFound:
-            print(
-                "Error: OCI config file not found. Please configure OCI CLI.",
-                file=sys.stderr,
-            )
-            return {}, {}
         except ServiceError as e:
             print(f"  Warning: Could not query {region}: {e.message}", file=sys.stderr)
             continue
@@ -749,6 +744,14 @@ def main():
         else:
             output_publishers_raw(args.quiet)
         return
+
+    # Allow make dynconfig to succeed without OCI credentials
+    try:
+        require_oci_config()
+    except OciNotConfiguredError:
+        if not args.quiet:
+            print("OCI not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
 
     compartment_ocid = get_default_compartment()
     if not compartment_ocid:
