@@ -19,6 +19,17 @@ sys.path.insert(0, SCRIPT_DIR)
 from lambdalabs_api import get_api_key, get_instance_types_with_capacity
 
 
+def _build_region_map(gpu_instances):
+    """Build a mapping from regions to available instance types."""
+    region_map = {}
+    for inst_type, regions in gpu_instances.items():
+        for region in regions:
+            if region not in region_map:
+                region_map[region] = []
+            region_map[region].append(inst_type)
+    return region_map
+
+
 def check_availability(instance_type=None, json_output=False, pick_first=False):
     """Check instance availability across all regions."""
     api_key = get_api_key()
@@ -67,12 +78,7 @@ def check_availability(instance_type=None, json_output=False, pick_first=False):
         if json_output:
             # Format for tier selection script compatibility
             # Group by region for consistency with DataCrunch format
-            region_map = {}
-            for inst_type, regions in gpu_instances.items():
-                for region in regions:
-                    if region not in region_map:
-                        region_map[region] = []
-                    region_map[region].append(inst_type)
+            region_map = _build_region_map(gpu_instances)
 
             results = [
                 {"location": region, "instances": instances}
@@ -83,12 +89,7 @@ def check_availability(instance_type=None, json_output=False, pick_first=False):
             print("GPU Instance Availability:\n")
 
             # Group by region
-            region_map = {}
-            for inst_type, regions in gpu_instances.items():
-                for region in regions:
-                    if region not in region_map:
-                        region_map[region] = []
-                    region_map[region].append(inst_type)
+            region_map = _build_region_map(gpu_instances)
 
             for region in sorted(region_map.keys()):
                 print(f"📍 {region}:")
