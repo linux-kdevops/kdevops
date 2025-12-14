@@ -22,9 +22,16 @@ if [ ! -f "$KDEVOPS_ROOT/.config" ]; then
 	exit 1
 fi
 
+# shellcheck source=/dev/null
+source "$KDEVOPS_ROOT/.config"
+
 # Get configuration values
-KEEP_VOLUMES=$(grep -E "^CONFIG_TERRAFORM_DATACRUNCH_KEEP_VOLUMES=y" "$KDEVOPS_ROOT/.config" >/dev/null 2>&1 && echo "yes" || echo "no")
-HOST_PREFIX=$(grep "^CONFIG_KDEVOPS_HOSTS_PREFIX=" "$KDEVOPS_ROOT/.config" | cut -d'"' -f2)
+if [ "${CONFIG_TERRAFORM_DATACRUNCH_KEEP_VOLUMES:-n}" = "y" ]; then
+	KEEP_VOLUMES="yes"
+else
+	KEEP_VOLUMES="no"
+fi
+HOST_PREFIX="${CONFIG_KDEVOPS_HOSTS_PREFIX:-}"
 
 if [ -z "$HOST_PREFIX" ]; then
 	echo "Error: Could not determine KDEVOPS_HOSTS_PREFIX from .config"
