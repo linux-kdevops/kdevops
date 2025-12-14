@@ -93,6 +93,9 @@ def cmd_delete(args):
         if save_cache(args.prefix, mappings):
             print(f"Deleted mapping for {args.hostname}")
             return 0
+        else:
+            print(f"Failed to save cache for {args.hostname}", file=sys.stderr)
+            return 1
     else:
         print(f"No mapping found for {args.hostname}", file=sys.stderr)
         return 1
