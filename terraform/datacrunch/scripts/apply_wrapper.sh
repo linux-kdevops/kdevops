@@ -56,13 +56,13 @@ if [ $apply_status -eq 0 ] && [ "$KEEP_VOLUMES" = "yes" ]; then
 	# Get terraform output
 	if ! terraform_output=$(terraform output -json 2>&1); then
 		echo "Warning: Could not get terraform output to cache volume IDs"
-		echo "  $terraform_output" >&2
-	else
-		# Extract and save volume IDs
-		echo "$terraform_output" | python3 -c "
+		exit $apply_status
+	fi
+
+	# Extract volume IDs from terraform output
+	volume_data=$(echo "$terraform_output" | python3 -c "
 import sys
 import json
-import subprocess
 
 output = json.load(sys.stdin)
 if 'instance_details' not in output or 'value' not in output['instance_details']:
@@ -72,15 +72,20 @@ instances = output['instance_details']['value']
 for hostname, details in instances.items():
     if 'os_volume_id' in details and details['os_volume_id']:
         volume_id = details['os_volume_id']
-        cmd = ['python3', '$VOLUME_CACHE', 'save', '$HOST_PREFIX', hostname, volume_id]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            print(f'  Saved: {hostname} -> {volume_id}')
-        else:
-            print(f'  Warning: Failed to save {hostname}: {result.stderr}', file=sys.stderr)
-"
-		echo "Volume cache updated successfully"
+        print(f'{hostname}\t{volume_id}')
+")
+
+	# Save each volume ID using properly quoted shell arguments
+	if [ -n "$volume_data" ]; then
+		echo "$volume_data" | while IFS=$'\t' read -r hostname volume_id; do
+			if python3 "$VOLUME_CACHE" save "$HOST_PREFIX" "$hostname" "$volume_id"; then
+				echo "  Saved: $hostname -> $volume_id"
+			else
+				echo "  Warning: Failed to save $hostname" >&2
+			fi
+		done
 	fi
+	echo "Volume cache updated successfully"
 fi
 
 exit $apply_status
