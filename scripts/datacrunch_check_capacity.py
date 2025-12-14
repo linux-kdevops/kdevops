@@ -122,12 +122,12 @@ def check_availability(token, instance_type=None, location=None, on_demand=False
             if instance_type:
                 # Check if specific instance type exists
                 if instance_type in all_instance_types:
-                    # Instance type exists - report as available in first location
+                    # Instance type exists - report as available in all locations
                     # (actual availability determined at deploy time)
-                    if location_codes:
+                    for loc_code in location_codes:
                         results.append(
                             {
-                                "location": location_codes[0],
+                                "location": loc_code,
                                 "instance_type": instance_type,
                                 "available": True,
                             }
@@ -135,23 +135,17 @@ def check_availability(token, instance_type=None, location=None, on_demand=False
             else:
                 # Show all H100 instances (or all instances for capacity map)
                 # Return results grouped by location like spot does
-                if location_codes:
-                    h100_instances = [it for it in all_instance_types if "H100" in it]
-                    if h100_instances:
-                        results.append(
-                            {
-                                "location": location_codes[0],
-                                "instances": h100_instances,
-                            }
-                        )
-                    else:
-                        # Return all instance types for capacity map building
-                        results.append(
-                            {
-                                "location": location_codes[0],
-                                "instances": all_instance_types,
-                            }
-                        )
+                h100_instances = [it for it in all_instance_types if "H100" in it]
+                instances_to_report = (
+                    h100_instances if h100_instances else all_instance_types
+                )
+                for loc_code in location_codes:
+                    results.append(
+                        {
+                            "location": loc_code,
+                            "instances": instances_to_report,
+                        }
+                    )
 
             return results
 
