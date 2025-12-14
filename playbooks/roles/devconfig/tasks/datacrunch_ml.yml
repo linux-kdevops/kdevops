@@ -31,10 +31,24 @@
     - ansible_facts['os_family']|lower == 'debian'
 
 - name: Install uv Python package manager
-  ansible.builtin.shell: |
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-  args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+  vars:
+    uv_version: "0.9.17"
+    uv_installer_sha256: "57dc1fb1828ed9743579af01fa8e6e641660c03411f099d2eaafa4845a62ab0e"
+  block:
+    - name: Download uv installer script
+      ansible.builtin.get_url:
+        url: "https://github.com/astral-sh/uv/releases/download/{{ uv_version }}/uv-installer.sh"
+        dest: /tmp/uv-installer.sh
+        checksum: "sha256:{{ uv_installer_sha256 }}"
+        mode: '0755'
+    - name: Execute uv installer
+      ansible.builtin.command:
+        cmd: sh /tmp/uv-installer.sh
+        creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+    - name: Remove uv installer script
+      ansible.builtin.file:
+        path: /tmp/uv-installer.sh
+        state: absent
 
 - name: Create Python virtual environment
   ansible.builtin.command:
