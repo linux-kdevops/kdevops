@@ -47,13 +47,12 @@ if [ $apply_status -eq 0 ] && [ "$KEEP_VOLUMES" = "yes" ]; then
 	echo "Saving volume IDs to cache..."
 
 	# Get terraform output
-	if ! terraform_output=$(terraform output -json 2>/dev/null); then
+	if ! terraform_output=$(terraform output -json 2>&1); then
 		echo "Warning: Could not get terraform output to cache volume IDs"
-		exit $apply_status
-	fi
-
-	# Extract and save volume IDs
-	echo "$terraform_output" | python3 -c "
+		echo "  $terraform_output" >&2
+	else
+		# Extract and save volume IDs
+		echo "$terraform_output" | python3 -c "
 import sys
 import json
 import subprocess
@@ -73,7 +72,8 @@ for hostname, details in instances.items():
         else:
             print(f'  Warning: Failed to save {hostname}: {result.stderr}', file=sys.stderr)
 "
-	echo "Volume cache updated successfully"
+		echo "Volume cache updated successfully"
+	fi
 fi
 
 exit $apply_status
