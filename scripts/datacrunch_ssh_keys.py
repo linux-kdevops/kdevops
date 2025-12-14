@@ -8,11 +8,15 @@ Provides functions to list, add, and delete SSH keys through the DataCrunch API.
 
 import json
 import os
+import socket
 import sys
 import subprocess
 import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional
+
+# Default timeout for API requests in seconds
+DEFAULT_TIMEOUT = 30
 
 # Import our API module
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -110,7 +114,7 @@ def delete_ssh_key(key_name_or_id: str) -> bool:
 
     try:
         req = urllib.request.Request(url, headers=headers, method="DELETE")
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as response:
             print(f"✓ Successfully deleted SSH key '{key_name_or_id}'", file=sys.stderr)
             return True
     except urllib.error.HTTPError as e:
@@ -120,6 +124,9 @@ def delete_ssh_key(key_name_or_id: str) -> bool:
             print(f"Error details: {error_body}", file=sys.stderr)
         except Exception:
             pass
+        return False
+    except (socket.timeout, urllib.error.URLError) as e:
+        print(f"Connection error deleting SSH key: {e}", file=sys.stderr)
         return False
     except Exception as e:
         print(f"Error deleting SSH key: {e}", file=sys.stderr)

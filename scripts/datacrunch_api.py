@@ -10,11 +10,15 @@ Used by datacrunch-cli and other kdevops components.
 
 import json
 import os
+import socket
 import sys
 import urllib.request
 import urllib.error
 import urllib.parse
 from typing import Dict, List, Optional, Tuple
+
+# Default timeout for API requests in seconds
+DEFAULT_TIMEOUT = 30
 
 # Import our credentials module
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -83,7 +87,7 @@ def get_access_token(
                 "User-Agent": "kdevops/1.0",
             },
         )
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as response:
             token_data = json.loads(response.read().decode())
             access_token = token_data.get("access_token")
             if access_token:
@@ -93,6 +97,8 @@ def get_access_token(
         print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
         if e.code == 401:
             print("Invalid API key (client secret)", file=sys.stderr)
+    except (socket.timeout, urllib.error.URLError) as e:
+        print(f"Connection error getting access token: {e}", file=sys.stderr)
     except Exception as e:
         print(f"Error getting access token: {e}", file=sys.stderr)
 
@@ -127,7 +133,7 @@ def make_api_request(
 
     try:
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as response:
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
         print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
@@ -140,10 +146,15 @@ def make_api_request(
                         url,
                         headers={**headers, "Authorization": f"Bearer {access_token}"},
                     )
-                    with urllib.request.urlopen(req) as response:
+                    with urllib.request.urlopen(
+                        req, timeout=DEFAULT_TIMEOUT
+                    ) as response:
                         return json.loads(response.read().decode())
                 except Exception:
                     pass
+        return None
+    except (socket.timeout, urllib.error.URLError) as e:
+        print(f"Connection error making API request: {e}", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Error making API request: {e}", file=sys.stderr)
@@ -182,7 +193,7 @@ def make_api_post(
         req = urllib.request.Request(
             url, data=json_data, headers=headers, method="POST"
         )
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as response:
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
         print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
@@ -191,6 +202,9 @@ def make_api_post(
             print(f"Error body: {error_body}", file=sys.stderr)
         except Exception:
             pass
+        return None
+    except (socket.timeout, urllib.error.URLError) as e:
+        print(f"Connection error making API POST request: {e}", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Error making API request: {e}", file=sys.stderr)
