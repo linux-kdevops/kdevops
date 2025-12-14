@@ -36,7 +36,7 @@ variable "datacrunch_ssh_key_id" {
 variable "ssh_config_name" {
   description = "The name of your ssh_config file"
   type        = string
-  default     = "../.ssh/config"
+  default     = "~/.ssh/config"
 }
 
 variable "ssh_config_use" {
