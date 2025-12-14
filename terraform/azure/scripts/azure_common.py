@@ -17,6 +17,12 @@ from configparser import ConfigParser
 from jinja2 import Environment, FileSystemLoader
 
 
+class AzureNotConfiguredError(Exception):
+    """Raised when Azure credentials are not available."""
+
+    pass
+
+
 def get_default_region():
     """
     Get the default Azure region from Azure configuration.
@@ -371,3 +377,45 @@ def exit_on_empty_result(result, context, quiet=False):
             )
             print("Run 'az login' to authenticate with Azure.", file=sys.stderr)
         sys.exit(1)
+
+
+def require_azure_credentials():
+    """
+    Require Azure credentials, raising an exception if not configured.
+
+    This function should be called early in main() to validate Azure
+    credentials. If Azure is not configured, it raises AzureNotConfiguredError
+    to let the caller decide how to handle it.
+
+    This centralizes the handling of missing Azure credentials and avoids
+    TOCTOU race conditions from manual file existence checks.
+
+    Returns:
+        str: Subscription ID if credentials are valid
+
+    Raises:
+        AzureNotConfiguredError: If Azure credentials are not found
+    """
+    try:
+        from azure.common.credentials import get_cli_profile
+
+        profile = get_cli_profile()
+        credentials, subscription_id, _ = profile.get_login_credentials(
+            resource="https://management.azure.com"
+        )
+        return subscription_id
+    except ImportError as e:
+        raise AzureNotConfiguredError("Azure SDK not installed") from e
+    except Exception as e:
+        # Only treat as "not configured" if it looks like an auth/login issue
+        error_msg = str(e).lower()
+        auth_indicators = [
+            "login",
+            "logged in",
+            "authenticate",
+            "credential",
+            "az login",
+        ]
+        if any(phrase in error_msg for phrase in auth_indicators):
+            raise AzureNotConfiguredError("Azure credentials not found") from e
+        raise

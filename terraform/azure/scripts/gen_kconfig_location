@@ -26,11 +26,12 @@ import sys
 import argparse
 
 from azure_common import (
+    AzureNotConfiguredError,
     get_default_region,
     get_all_regions,
     get_jinja2_environment,
     get_region_kconfig_name,
-    exit_on_empty_result,
+    require_azure_credentials,
 )
 
 
@@ -191,11 +192,18 @@ def main():
     """Main function to run the program."""
     args = parse_arguments()
 
+    # Allow make dynconfig to succeed without Azure credentials
+    try:
+        require_azure_credentials()
+    except AzureNotConfiguredError:
+        if not args.quiet:
+            print("Azure not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
     if not args.quiet:
         print("Fetching list of all Azure regions...", file=sys.stderr)
 
     regions = get_all_regions(args.quiet)
-    exit_on_empty_result(regions, "Azure region query", args.quiet)
 
     if args.regions:
         if args.format == "kconfig":
