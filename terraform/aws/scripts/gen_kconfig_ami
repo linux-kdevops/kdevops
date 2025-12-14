@@ -14,15 +14,15 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError
 
 from aws_common import (
+    AwsNotConfiguredError,
     get_default_region,
     get_jinja2_environment,
     create_ec2_client,
     handle_aws_client_error,
-    handle_aws_credentials_error,
+    require_aws_credentials,
 )
 
 
@@ -257,9 +257,6 @@ def discover_ami_patterns(
 
         return discovered_patterns
 
-    except NoCredentialsError:
-        handle_aws_credentials_error(quiet)
-        return {}
     except ClientError as e:
         handle_aws_client_error(e, f"discovering AMI patterns for {owner_name}", quiet)
         return {}
@@ -821,6 +818,14 @@ def main():
         else:
             output_owners_raw(owners, args.quiet)
         return
+
+    # Allow make dynconfig to succeed without AWS credentials
+    try:
+        require_aws_credentials()
+    except AwsNotConfiguredError:
+        if not args.quiet:
+            print("AWS not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
 
     if args.region:
         region = args.region

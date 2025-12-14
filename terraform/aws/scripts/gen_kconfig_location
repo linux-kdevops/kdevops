@@ -10,17 +10,15 @@ import sys
 import argparse
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from botocore.exceptions import ClientError, NoCredentialsError
 
 from aws_common import (
+    AwsNotConfiguredError,
     get_default_region,
     get_all_regions,
     get_region_availability_zones,
     get_jinja2_environment,
     get_region_kconfig_name,
-    create_ec2_client,
-    handle_aws_client_error,
-    handle_aws_credentials_error,
+    require_aws_credentials,
 )
 
 
@@ -213,6 +211,14 @@ Examples:
 def main():
     """Main function to run the program."""
     args = parse_arguments()
+
+    # Allow make dynconfig to succeed without AWS credentials
+    try:
+        require_aws_credentials()
+    except AwsNotConfiguredError:
+        if not args.quiet:
+            print("AWS not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
 
     if not args.quiet:
         print("Fetching list of all AWS regions...", file=sys.stderr)

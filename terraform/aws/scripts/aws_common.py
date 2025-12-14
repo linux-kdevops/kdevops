@@ -18,6 +18,12 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
 
+class AwsNotConfiguredError(Exception):
+    """Raised when AWS credentials are not available."""
+
+    pass
+
+
 def get_default_region():
     """
     Get the default AWS region from the ~/.aws/config file.
@@ -126,6 +132,30 @@ def handle_aws_credentials_error(quiet=False):
         print("  Run: aws configure", file=sys.stderr)
 
     return False
+
+
+def require_aws_credentials():
+    """
+    Require AWS credentials, raising an exception if not configured.
+
+    This function should be called early in main() to validate AWS
+    credentials. If AWS is not configured, it raises AwsNotConfiguredError
+    to let the caller decide how to handle it.
+
+    This centralizes the handling of missing AWS credentials and avoids
+    TOCTOU race conditions from manual file existence checks.
+
+    Returns:
+        dict: Caller identity information if credentials are valid
+
+    Raises:
+        AwsNotConfiguredError: If AWS credentials are not found
+    """
+    try:
+        sts = boto3.client("sts")
+        return sts.get_caller_identity()
+    except NoCredentialsError as e:
+        raise AwsNotConfiguredError("AWS credentials not found") from e
 
 
 def get_all_regions(quiet=False):
