@@ -92,8 +92,13 @@ ifeq (y,$(CONFIG_TERRAFORM_SSH_CONFIG_GENKEY_OVERWRITE))
 DEFAULT_DEPS += remove-ssh-key
 endif
 
+DEFAULT_DEPS += ssh-key-migration-check
 DEFAULT_DEPS += $(KDEVOPS_SSH_PRIVKEY)
 endif # CONFIG_TERRAFORM_SSH_CONFIG_GENKEY
+
+PHONY += ssh-key-migration-check
+ssh-key-migration-check:
+	$(Q)$(TOPDIR)/scripts/check-ssh-key-migration.sh $(TOPDIR_PATH)
 
 ANSIBLE_EXTRA_ARGS += $(TERRAFORM_EXTRA_VARS)
 

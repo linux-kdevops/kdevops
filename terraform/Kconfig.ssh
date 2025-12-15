@@ -21,13 +21,16 @@ config TERRAFORM_SSH_CONFIG_USER
 
 config TERRAFORM_SSH_CONFIG_PUBKEY_FILE
 	string "File containing Ansible's ssh public key"
-	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8).pub" if TERRAFORM_LAMBDALABS
-	default "~/.ssh/kdevops_terraform.pub"
+	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8).pub"
 	help
 	  The filename of the file containing an ssh public key
 	  Ansible is to use to manage its target nodes. The
 	  matching private key should be located in a file using
 	  the same basename (without the ".pub").
+
+	  The filename includes an 8-character hash of the current
+	  directory path, allowing multiple kdevops installations to
+	  use separate SSH keys without conflicts.
 
 config TERRAFORM_SSH_CONFIG_GENKEY
 	bool "Should we create a new random key for you?"

@@ -20,6 +20,12 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 
+class OciNotConfiguredError(Exception):
+    """Raised when OCI configuration is not available."""
+
+    pass
+
+
 def get_default_region() -> str:
     """
     Get the default OCI region from the ~/.oci/config file.
@@ -172,6 +178,33 @@ def get_oci_config(region: Optional[str] = None) -> dict[str, Any]:
     if region:
         config["region"] = region
     return config
+
+
+def require_oci_config() -> dict[str, Any]:
+    """
+    Require OCI configuration, raising an exception if not configured.
+
+    This function should be called early in main() to validate OCI
+    configuration. If OCI is not configured, it raises OciNotConfiguredError
+    to let the caller decide how to handle it.
+
+    This centralizes the handling of missing OCI configuration and avoids
+    TOCTOU race conditions from manual file existence checks.
+
+    Returns:
+        dict: OCI configuration dictionary if available
+
+    Raises:
+        OciNotConfiguredError: If OCI configuration file is not found
+    """
+    # Lazy import - only load OCI SDK when actually needed
+    import oci
+    from oci.exceptions import ConfigFileNotFound
+
+    try:
+        return oci.config.from_file()
+    except ConfigFileNotFound as e:
+        raise OciNotConfiguredError("OCI configuration not found") from e
 
 
 def create_identity_client(region: Optional[str] = None) -> oci.identity.IdentityClient:

@@ -55,11 +55,12 @@ from collections import defaultdict
 from functools import lru_cache
 
 from azure_common import (
+	AzureNotConfiguredError,
 	get_default_region,
 	get_jinja2_environment,
-	get_all_regions,
 	get_region_kconfig_name,
 	get_all_offers_and_skus,
+	require_azure_credentials,
 )
 
 
@@ -729,6 +730,14 @@ def main():
 	if args.publishers:
 		output_publishers_raw(args.quiet)
 		return
+
+	# Allow make dynconfig to succeed without Azure credentials
+	try:
+		require_azure_credentials()
+	except AzureNotConfiguredError:
+		if not args.quiet:
+			print("Azure not configured - skipping (optional)", file=sys.stderr)
+		sys.exit(0)
 
 	publishers = get_known_publishers()
 
