@@ -91,11 +91,126 @@
     - destroy
     - status
 
+- name: Auto-select Lambda Labs instance type for tier-based wildcards
+  ansible.builtin.shell:
+    cmd: |
+      case "{{ terraform_lambdalabs_instance_type }}" in
+        GH200_OR_LESS|H100_OR_LESS|A100_OR_LESS|A6000_OR_LESS)
+          # Use tier-based selection script for single GPU
+          tier_group=$(echo "{{ terraform_lambdalabs_instance_type }}" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          {{ topdir_path }}/scripts/lambdalabs_select_tier.py "$tier_group" --verbose
+          ;;
+        8X_B200_OR_LESS|8X_H100_OR_LESS|8X_A100_OR_LESS)
+          # Use tier-based selection script for 8x GPU
+          tier_group=$(echo "{{ terraform_lambdalabs_instance_type }}" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          {{ topdir_path }}/scripts/lambdalabs_select_tier.py "$tier_group" --verbose
+          ;;
+        *)
+          echo "Unknown wildcard type: {{ terraform_lambdalabs_instance_type }}"
+          exit 1
+          ;;
+      esac
+  register: lambdalabs_auto_instance_type
+  failed_when: false
+  changed_when: false
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+  tags:
+    - bringup
+
+- name: Fail if no Lambda Labs instances available for wildcard selection
+  ansible.builtin.fail:
+    msg: |
+      No GPU instances available for {{ terraform_lambdalabs_instance_type }}
+
+      {{ lambdalabs_auto_instance_type.stderr }}
+
+      Try:
+        - Wait and retry (capacity changes frequently)
+        - Check Lambda Labs dashboard: https://cloud.lambdalabs.com
+        - Use a different tier group via menuconfig
+        - Check capacity manually: scripts/lambdalabs_check_capacity.py
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc != 0
+  tags:
+    - bringup
+
+- name: Validate Lambda Labs tier selection output format
+  ansible.builtin.assert:
+    that:
+      - lambdalabs_auto_instance_type.stdout.split() | length == 2
+    fail_msg: |
+      Invalid output from tier selection script.
+      Expected format: "instance_type region"
+      Got: "{{ lambdalabs_auto_instance_type.stdout }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Parse Lambda Labs auto-selected instance type and region
+  set_fact:
+    lambdalabs_auto_selected_instance: "{{ lambdalabs_auto_instance_type.stdout.split()[0] }}"
+    lambdalabs_auto_selected_region: "{{ lambdalabs_auto_instance_type.stdout.split()[1] }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Report Lambda Labs auto-selected instance type for wildcards
+  ansible.builtin.debug:
+    msg: "Auto-selected instance type: {{ lambdalabs_auto_selected_instance }} in region: {{ lambdalabs_auto_selected_region }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Update Lambda Labs terraform vars with auto-selected instance type
+  ansible.builtin.lineinfile:
+    path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/terraform.tfvars"
+    regexp: '^lambdalabs_instance_type\s*='
+    line: 'lambdalabs_instance_type = "{{ lambdalabs_auto_selected_instance }}"'
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Update Lambda Labs terraform vars with auto-selected region
+  ansible.builtin.lineinfile:
+    path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/terraform.tfvars"
+    regexp: '^lambdalabs_region\s*='
+    line: 'lambdalabs_region = "{{ lambdalabs_auto_selected_region }}"'
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Set Lambda Labs resolved instance type for subsequent tasks
+  set_fact:
+    lambdalabs_resolved_instance_type: "{{ lambdalabs_auto_selected_instance if (terraform_lambdalabs_instance_type in ['GH200_OR_LESS', 'H100_OR_LESS', 'A100_OR_LESS', 'A6000_OR_LESS', '8X_B200_OR_LESS', '8X_H100_OR_LESS', '8X_A100_OR_LESS'] and lambdalabs_auto_instance_type.rc == 0) else terraform_lambdalabs_instance_type }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+  tags:
+    - bringup
+
 - name: Check Lambda Labs capacity before provisioning (if using Lambda Labs)
   ansible.builtin.shell:
     cmd: |
       {{ topdir_path }}/scripts/lambda-cli --output json check-availability \
-        {{ terraform_lambdalabs_instance_type }} {{ terraform_lambdalabs_region }} | \
+        {{ lambdalabs_resolved_instance_type | default(terraform_lambdalabs_instance_type) }} {{ lambdalabs_auto_selected_region | default(terraform_lambdalabs_region) }} | \
       python3 -c "
       import sys, json
       data = json.load(sys.stdin)
@@ -113,6 +228,7 @@
   changed_when: false
   when:
     - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type not in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
   tags:
     - bringup
 
@@ -121,6 +237,8 @@
     msg: "{{ capacity_check.stdout }}"
   when:
     - kdevops_terraform_provider == "lambdalabs"
+    - capacity_check is defined
+    - capacity_check.rc is defined
     - capacity_check.rc != 0
   tags:
     - bringup
