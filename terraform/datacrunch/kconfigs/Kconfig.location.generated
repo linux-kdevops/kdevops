@@ -1,0 +1,49 @@
+# DataCrunch locations (dynamically generated)
+
+choice
+	prompt "DataCrunch datacenter location"
+	default TERRAFORM_DATACRUNCH_LOCATION_AUTO
+	help
+	  Select the datacenter location for your deployment.
+	  These options are dynamically generated from the DataCrunch API.
+
+config TERRAFORM_DATACRUNCH_LOCATION_AUTO
+	bool "AUTO - Pick first available location"
+	help
+	  Automatically select the first datacenter location where the
+	  configured instance type is available. This is determined
+	  dynamically at provisioning time by querying the DataCrunch API.
+
+config TERRAFORM_DATACRUNCH_LOCATION_FIN_01
+	bool "FIN-01 - Finland 1, "
+	help
+	  DataCrunch datacenter in Finland 1, .
+
+config TERRAFORM_DATACRUNCH_LOCATION_FIN_02
+	bool "FIN-02 - Finland 2, "
+	help
+	  DataCrunch datacenter in Finland 2, .
+
+config TERRAFORM_DATACRUNCH_LOCATION_FIN_03
+	bool "FIN-03 - Finland 3, "
+	help
+	  DataCrunch datacenter in Finland 3, .
+
+config TERRAFORM_DATACRUNCH_LOCATION_ICE_01
+	bool "ICE-01 - Iceland 1, "
+	help
+	  DataCrunch datacenter in Iceland 1, .
+
+endchoice
+
+config TERRAFORM_DATACRUNCH_LOCATION
+	string "DataCrunch location code"
+	output yaml
+	default "AUTO" if TERRAFORM_DATACRUNCH_LOCATION_AUTO
+	default "FIN-01" if TERRAFORM_DATACRUNCH_LOCATION_FIN_01
+	default "FIN-02" if TERRAFORM_DATACRUNCH_LOCATION_FIN_02
+	default "FIN-03" if TERRAFORM_DATACRUNCH_LOCATION_FIN_03
+	default "ICE-01" if TERRAFORM_DATACRUNCH_LOCATION_ICE_01
+	help
+	  The actual location code to use for provisioning.
+

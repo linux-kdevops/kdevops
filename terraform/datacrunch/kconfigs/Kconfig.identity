@@ -1,0 +1,86 @@
+# DataCrunch identity and access configuration
+
+# SSH Key Security Model
+# ======================
+# For security, each kdevops project directory should use its own SSH key.
+# This prevents key sharing between different projects and environments.
+#
+# Two modes are supported:
+# 1. Unique keys per directory (recommended) - Each project gets its own key
+# 2. Shared key (manual) - Use a common key name across projects
+
+choice
+	prompt "DataCrunch SSH key management strategy"
+	default TERRAFORM_DATACRUNCH_SSH_KEY_UNIQUE
+	help
+	  Choose how SSH keys are managed for DataCrunch instances.
+
+	  Unique keys (recommended): Each project directory gets its own SSH key,
+	  preventing key sharing between projects. The key name includes a hash
+	  of the directory path for uniqueness.
+
+	  Manual key: Specify an existing SSH key name in your DataCrunch account.
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_UNIQUE
+	bool "Use unique SSH key per project directory (recommended)"
+	help
+	  Generate a unique SSH key name for each kdevops project directory.
+	  This improves security by ensuring projects don't share SSH keys.
+
+	  The key name will be generated based on the directory path, like:
+	  "kdevops-datacrunch-6c707244"
+
+	  The key will be automatically created and uploaded to DataCrunch
+	  when you run 'make bringup' if it doesn't already exist.
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_MANUAL
+	bool "Use manual SSH key name"
+	help
+	  Use a fixed SSH key name that you specify. This key must already
+	  exist in your DataCrunch account before running 'make bringup'.
+
+	  You'll need to ensure the key exists in DataCrunch at:
+	  https://cloud.datacrunch.io/dashboard/ssh-keys
+
+endchoice
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_NAME_CUSTOM
+	string "Custom SSH key name (only for manual mode)"
+	default "kdevops-datacrunch"
+	depends on TERRAFORM_DATACRUNCH_SSH_KEY_MANUAL
+	help
+	  Specify the custom SSH key name to use when in manual mode.
+	  This key must already exist in your DataCrunch account.
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_NAME
+	string
+	output yaml
+	default $(shell, python3 scripts/datacrunch_ssh_key_name.py 2>/dev/null || echo "kdevops-datacrunch") if TERRAFORM_DATACRUNCH_SSH_KEY_UNIQUE
+	default TERRAFORM_DATACRUNCH_SSH_KEY_NAME_CUSTOM if TERRAFORM_DATACRUNCH_SSH_KEY_MANUAL
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_AUTO_CREATE
+	bool "Automatically create and upload SSH key if missing"
+	default y if TERRAFORM_DATACRUNCH_SSH_KEY_UNIQUE
+	default n if TERRAFORM_DATACRUNCH_SSH_KEY_MANUAL
+	help
+	  When enabled, kdevops will automatically:
+	  1. Generate a new SSH key pair if it doesn't exist
+	  2. Upload the public key to DataCrunch if not already there
+	  3. Clean up the key when destroying infrastructure
+
+	  This is enabled by default for unique keys mode and disabled
+	  for manual key mode.
+
+config TERRAFORM_DATACRUNCH_SSH_KEY_FILE
+	string "Path to SSH private key"
+	default "~/.ssh/kdevops_terraform_$(shell, echo $(TOPDIR_PATH) | sha256sum | cut -c1-8)"
+	help
+	  Path to the private SSH key file that corresponds to the public
+	  key uploaded to DataCrunch.
+
+	  The filename includes an 8-character hash of the current
+	  directory path, allowing multiple kdevops installations to
+	  use separate SSH keys without conflicts.
+
+	  If using automatic key creation, this key will be generated
+	  if it doesn't exist.

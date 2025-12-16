@@ -27,6 +27,15 @@ ifdef DECLARE_HOSTS
 export DECLARED_HOSTS := $(DECLARE_HOSTS)
 endif
 
+# Export workflow CLI overrides
+ifdef KNLP
+export KNLP
+endif
+
+ifdef KEEP
+export KEEP
+endif
+
 include scripts/refs.Makefile
 
 KDEVOPS_NODES_ROLE_TEMPLATE_DIR :=		$(KDEVOPS_PLAYBOOKS_DIR)/roles/gen_nodes/templates

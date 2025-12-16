@@ -1,0 +1,45 @@
+if TERRAFORM_DATACRUNCH
+
+menu "Compute"
+source "terraform/datacrunch/kconfigs/Kconfig.compute"
+endmenu
+
+menu "OS Image"
+source "terraform/datacrunch/kconfigs/Kconfig.images"
+endmenu
+
+menu "Identity & Access"
+source "terraform/datacrunch/kconfigs/Kconfig.identity"
+endmenu
+
+config TERRAFORM_DATACRUNCH_KEEP_VOLUMES
+	bool "Keep OS-NVMe volumes on destroy for faster reprovisioning"
+	default $(shell, test -n "$KEEP" && echo y || echo n)
+	help
+	  When enabled, OS-NVMe volumes are preserved after instance destruction
+	  and cached for reuse on subsequent bringups. This significantly speeds
+	  up provisioning by skipping OS installation and configuration.
+
+	  DataCrunch charges $0.01370/h (~$10/month) for stored volumes.
+
+	  Volume mappings are stored in:
+	  ~/.cache/kdevops/datacrunch/$KDEVOPS_HOSTS_PREFIX.yml
+
+	  When disabled (default), volumes are actively deleted on destroy to
+	  avoid ongoing charges.
+
+	  You can enable this via CLI:
+	  make defconfig-datacrunch-a100 KEEP=1
+
+config TERRAFORM_DATACRUNCH_API_KEY_FILE
+	string "Path to DataCrunch API credentials file"
+	default "~/.datacrunch/credentials"
+	help
+	  Path to the file containing your DataCrunch API client secret.
+	  The file should be in INI format with a [default] section containing
+	  datacrunch_api_key = your_client_secret_here
+
+	  You can create this file with:
+	  python3 scripts/datacrunch_credentials.py set <your_api_key>
+
+endif # TERRAFORM_DATACRUNCH

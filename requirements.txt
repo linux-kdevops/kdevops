@@ -1,0 +1,18 @@
+# Python requirements for kdevops cloud provider integrations
+# Install with: pip install -r requirements.txt
+
+# YAML parsing for configuration files
+PyYAML>=6.0.3
+
+# Cloud provider SDKs
+boto3>=1.40.0          # AWS SDK
+oci>=2.163.0           # Oracle Cloud Infrastructure SDK
+
+# Template engine for dynamic configuration generation
+Jinja2>=3.1.0
+
+# Additional dependencies that may be needed
+# (these are typically pulled in as dependencies of the above packages)
+# certifi>=2024.0.0    # SSL certificates
+# cryptography>=40.0.0 # Cryptographic operations
+# python-dateutil>=2.8.0  # Date/time utilities
