@@ -8,6 +8,7 @@ This directory contains the Terraform configuration for deploying kdevops infras
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Dynamic Configuration](#dynamic-configuration)
+- [Tier-Based GPU Selection](#tier-based-gpu-selection)
 - [SSH Key Security](#ssh-key-security)
 - [Configuration Options](#configuration-options)
 - [Provider Limitations](#provider-limitations)
@@ -111,6 +112,101 @@ scripts/lambda-cli --output json pricing list
 
 For more details on the dynamic configuration system, see [Dynamic Cloud Kconfig Documentation](../../docs/dynamic-cloud-kconfig.md).
 
+## Tier-Based GPU Selection
+
+Lambda Labs supports tier-based GPU selection with automatic fallback. Instead of specifying
+a single instance type, you can specify a maximum tier and kdevops will automatically select
+the highest available GPU within that tier.
+
+### How It Works
+
+1. **Specify Maximum Tier**: Choose a tier group like `H100_OR_LESS`
+2. **Capacity Check**: The system queries Lambda Labs API for available instances
+3. **Tier Fallback**: Tries each tier from highest to lowest until one is available
+4. **Auto-Provision**: Deploys to the first region with available capacity
+
+### Single GPU Tier Groups
+
+| Tier Group | Fallback Order | Use Case |
+|------------|----------------|----------|
+| `GH200_OR_LESS` | GH200 → H100-SXM → H100-PCIe → A100-SXM → A100 → A6000 → RTX6000 → A10 | Maximum performance |
+| `H100_OR_LESS` | H100-SXM → H100-PCIe → A100-SXM → A100 → A6000 → RTX6000 → A10 | High performance |
+| `A100_OR_LESS` | A100-SXM → A100 → A6000 → RTX6000 → A10 | Cost-effective |
+| `A6000_OR_LESS` | A6000 → RTX6000 → A10 | Budget-friendly |
+
+### Multi-GPU (8x) Tier Groups
+
+| Tier Group | Fallback Order | Use Case |
+|------------|----------------|----------|
+| `8X_B200_OR_LESS` | 8x B200 → 8x H100 → 8x A100-80 → 8x A100 → 8x V100 | Maximum multi-GPU |
+| `8X_H100_OR_LESS` | 8x H100 → 8x A100-80 → 8x A100 → 8x V100 | High-end multi-GPU |
+| `8X_A100_OR_LESS` | 8x A100-80 → 8x A100 → 8x V100 | Cost-effective multi-GPU |
+
+### Quick Start with Tier Selection
+
+```bash
+# Single GPU - best available up to H100
+make defconfig-lambdalabs-h100-or-less
+make bringup
+
+# Single GPU - best available up to GH200
+make defconfig-lambdalabs-gh200-or-less
+make bringup
+
+# 8x GPU - best available up to H100
+make defconfig-lambdalabs-8x-h100-or-less
+make bringup
+```
+
+### Checking Capacity
+
+Before deploying, you can check current GPU availability:
+
+```bash
+# Check all available GPU instances
+python3 scripts/lambdalabs_check_capacity.py
+
+# Check specific instance type
+python3 scripts/lambdalabs_check_capacity.py --instance-type gpu_1x_h100_sxm5
+
+# JSON output for scripting
+python3 scripts/lambdalabs_check_capacity.py --json
+```
+
+### Tier Selection Script
+
+The tier selection script finds the best available GPU:
+
+```bash
+# Find best single GPU up to H100
+python3 scripts/lambdalabs_select_tier.py h100-or-less --verbose
+
+# Find best 8x GPU up to H100
+python3 scripts/lambdalabs_select_tier.py 8x-h100-or-less --verbose
+
+# List all available tier groups
+python3 scripts/lambdalabs_select_tier.py --list-tiers
+```
+
+Example output:
+```
+Checking tier group: h100-or-less
+Tiers to check (highest to lowest): h100-sxm, h100-pcie, a100-sxm, a100, a6000, rtx6000, a10
+
+Checking tier 'h100-sxm': gpu_1x_h100_sxm5
+  Checking gpu_1x_h100_sxm5... ✓ AVAILABLE in us-west-1
+
+Selected: gpu_1x_h100_sxm5 in us-west-1 (tier: h100-sxm)
+gpu_1x_h100_sxm5 us-west-1
+```
+
+### Benefits of Tier-Based Selection
+
+- **Higher Success Rate**: Automatically falls back to available GPUs
+- **No Manual Intervention**: System handles capacity changes
+- **Best Performance**: Always gets the highest tier available
+- **Simple Configuration**: One defconfig covers multiple GPU types
+
 ## SSH Key Security
 
 ### Automatic Unique Keys (Default - Recommended)
@@ -168,6 +264,11 @@ The default configuration automatically:
 |--------|-------------|----------|
 | `defconfig-lambdalabs` | Smart instance + unique SSH keys | Production (recommended) |
 | `defconfig-lambdalabs-shared-key` | Smart instance + shared SSH key | Legacy/testing |
+| `defconfig-lambdalabs-gh200-or-less` | Best single GPU up to GH200 | Maximum performance |
+| `defconfig-lambdalabs-h100-or-less` | Best single GPU up to H100 | High performance |
+| `defconfig-lambdalabs-a100-or-less` | Best single GPU up to A100 | Cost-effective |
+| `defconfig-lambdalabs-8x-b200-or-less` | Best 8-GPU up to B200 | Maximum multi-GPU |
+| `defconfig-lambdalabs-8x-h100-or-less` | Best 8-GPU up to H100 | High-end multi-GPU |
 
 ### Manual Configuration
 
@@ -274,6 +375,8 @@ The Lambda Labs Terraform provider (elct9620/lambdalabs v0.3.0) has significant 
 |--------|---------|
 | `lambdalabs_api.py` | Main API integration, generates Kconfig |
 | `lambdalabs_smart_inference.py` | Smart instance/region selection |
+| `lambdalabs_check_capacity.py` | Check GPU availability across regions |
+| `lambdalabs_select_tier.py` | Tier-based GPU selection with fallback |
 | `lambdalabs_ssh_keys.py` | SSH key management |
 | `lambdalabs_list_instances.py` | List running instances |
 | `lambdalabs_credentials.py` | Manage API credentials |
