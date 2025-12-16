@@ -138,6 +138,21 @@
   tags:
     - bringup
 
+- name: Validate Lambda Labs tier selection output format
+  ansible.builtin.assert:
+    that:
+      - lambdalabs_auto_instance_type.stdout.split() | length == 2
+    fail_msg: |
+      Invalid output from tier selection script.
+      Expected format: "instance_type region"
+      Got: "{{ lambdalabs_auto_instance_type.stdout }}"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+    - terraform_lambdalabs_instance_type in ["GH200_OR_LESS", "H100_OR_LESS", "A100_OR_LESS", "A6000_OR_LESS", "8X_B200_OR_LESS", "8X_H100_OR_LESS", "8X_A100_OR_LESS"]
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
 - name: Parse Lambda Labs auto-selected instance type and region
   set_fact:
     lambdalabs_auto_selected_instance: "{{ lambdalabs_auto_instance_type.stdout.split()[0] }}"
