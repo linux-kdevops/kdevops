@@ -36,6 +36,11 @@ AZURE_KCONFIG_IMAGE := $(AZURE_KCONFIG_DIR)/Kconfig.image.generated
 AZURE_KCONFIG_LOCATION := $(AZURE_KCONFIG_DIR)/Kconfig.location.generated
 AZURE_KCONFIG_SIZE := $(AZURE_KCONFIG_DIR)/Kconfig.size.generated
 
+# Azure default files (tracked in git, provide sensible defaults)
+AZURE_KCONFIG_IMAGE_DEFAULT := $(AZURE_KCONFIG_DIR)/Kconfig.image.default
+AZURE_KCONFIG_LOCATION_DEFAULT := $(AZURE_KCONFIG_DIR)/Kconfig.location.default
+AZURE_KCONFIG_SIZE_DEFAULT := $(AZURE_KCONFIG_DIR)/Kconfig.size.default
+
 AZURE_KCONFIGS := $(AZURE_KCONFIG_LOCATION) $(AZURE_KCONFIG_SIZE) $(AZURE_KCONFIG_IMAGE)
 
 # OCI dynamic configuration
@@ -63,9 +68,12 @@ dynamic_aws_kconfig_touch:
 	$(Q)test -f $(AWS_KCONFIG_INSTANCE) || cp $(AWS_KCONFIG_INSTANCE_DEFAULT) $(AWS_KCONFIG_INSTANCE)
 	$(Q)test -f $(AWS_KCONFIG_LOCATION) || cp $(AWS_KCONFIG_LOCATION_DEFAULT) $(AWS_KCONFIG_LOCATION)
 
-# Touch Azure generated files so Kconfig can source them
+# Ensure Azure generated files exist with sensible defaults
+# Copies from .default files if .generated files don't exist
 dynamic_azure_kconfig_touch:
-	$(Q)touch $(AZURE_KCONFIGS)
+	$(Q)test -f $(AZURE_KCONFIG_IMAGE) || cp $(AZURE_KCONFIG_IMAGE_DEFAULT) $(AZURE_KCONFIG_IMAGE)
+	$(Q)test -f $(AZURE_KCONFIG_LOCATION) || cp $(AZURE_KCONFIG_LOCATION_DEFAULT) $(AZURE_KCONFIG_LOCATION)
+	$(Q)test -f $(AZURE_KCONFIG_SIZE) || cp $(AZURE_KCONFIG_SIZE_DEFAULT) $(AZURE_KCONFIG_SIZE)
 
 # Touch OCI generated files so Kconfig can source them
 dynamic_oci_kconfig_touch:

@@ -1,0 +1,454 @@
+choice
+	prompt "Azure resource location"
+	default TERRAFORM_AZURE_REGION_WESTUS
+	help
+	  Choose the region and data center which will host your
+	  kdevops resources. The list below is dynamically generated
+	  from the Azure API and includes all regions available to
+	  your subscription.
+
+	  Azure automatically chooses availability zones for your
+	  resources. You can query available locations using:
+
+	    az account list-locations -o table
+
+	  For more information about Azure regions and geographies:
+
+	    https://azure.microsoft.com/en-us/explore/global-infrastructure/geographies/
+
+config TERRAFORM_AZURE_REGION_AUSTRALIACENTRAL
+	bool "Australia Central (Canberra)"
+	help
+	  This option selects the Australia Central (Canberra) region.
+	  This region is paired with australiacentral2.
+
+config TERRAFORM_AZURE_REGION_AUSTRALIACENTRAL2
+	bool "Australia Central 2 (Canberra)"
+	help
+	  This option selects the Australia Central 2 (Canberra) region.
+	  This region is paired with australiacentral.
+
+config TERRAFORM_AZURE_REGION_AUSTRALIAEAST
+	bool "Australia East (New South Wales)"
+	help
+	  This option selects the Australia East (New South Wales) region.
+	  This region is paired with australiasoutheast.
+
+config TERRAFORM_AZURE_REGION_AUSTRALIASOUTHEAST
+	bool "Australia Southeast (Victoria)"
+	help
+	  This option selects the Australia Southeast (Victoria) region.
+	  This region is paired with australiaeast.
+
+config TERRAFORM_AZURE_REGION_AUSTRIAEAST
+	bool "Austria East (Vienna)"
+	help
+	  This option selects the Austria East (Vienna) region.
+
+config TERRAFORM_AZURE_REGION_BELGIUMCENTRAL
+	bool "Belgium Central (Brussels)"
+	help
+	  This option selects the Belgium Central (Brussels) region.
+
+config TERRAFORM_AZURE_REGION_BRAZILSOUTH
+	bool "Brazil South (Sao Paulo State)"
+	help
+	  This option selects the Brazil South (Sao Paulo State) region.
+	  This region is paired with southcentralus.
+
+config TERRAFORM_AZURE_REGION_BRAZILSOUTHEAST
+	bool "Brazil Southeast (Rio)"
+	help
+	  This option selects the Brazil Southeast (Rio) region.
+	  This region is paired with brazilsouth.
+
+config TERRAFORM_AZURE_REGION_CANADACENTRAL
+	bool "Canada Central (Toronto)"
+	help
+	  This option selects the Canada Central (Toronto) region.
+	  This region is paired with canadaeast.
+
+config TERRAFORM_AZURE_REGION_CANADAEAST
+	bool "Canada East (Quebec)"
+	help
+	  This option selects the Canada East (Quebec) region.
+	  This region is paired with canadacentral.
+
+config TERRAFORM_AZURE_REGION_CENTRALINDIA
+	bool "Central India (Pune)"
+	help
+	  This option selects the Central India (Pune) region.
+	  This region is paired with southindia.
+
+config TERRAFORM_AZURE_REGION_CENTRALUS
+	bool "Central US (Iowa)"
+	help
+	  This option selects the Central US (Iowa) region.
+	  This region is paired with eastus2.
+
+config TERRAFORM_AZURE_REGION_CENTRALUSEUAP
+	bool "Central US EUAP"
+	help
+	  This option selects the Central US EUAP region.
+	  This region is paired with eastus2euap.
+
+config TERRAFORM_AZURE_REGION_CHILECENTRAL
+	bool "Chile Central (Santiago)"
+	help
+	  This option selects the Chile Central (Santiago) region.
+
+config TERRAFORM_AZURE_REGION_EASTASIA
+	bool "East Asia (Hong Kong)"
+	help
+	  This option selects the East Asia (Hong Kong) region.
+	  This region is paired with southeastasia.
+
+config TERRAFORM_AZURE_REGION_EASTUS
+	bool "East US (Virginia)"
+	help
+	  This option selects the East US (Virginia) region.
+	  This region is paired with westus.
+
+config TERRAFORM_AZURE_REGION_EASTUS2
+	bool "East US 2 (Virginia)"
+	help
+	  This option selects the East US 2 (Virginia) region.
+	  This region is paired with centralus.
+
+config TERRAFORM_AZURE_REGION_EASTUS2EUAP
+	bool "East US 2 EUAP"
+	help
+	  This option selects the East US 2 EUAP region.
+	  This region is paired with centraluseuap.
+
+config TERRAFORM_AZURE_REGION_EASTUSSTG
+	bool "East US STG (Virginia)"
+	help
+	  This option selects the East US STG (Virginia) region.
+	  This region is paired with southcentralusstg.
+
+config TERRAFORM_AZURE_REGION_FRANCECENTRAL
+	bool "France Central (Paris)"
+	help
+	  This option selects the France Central (Paris) region.
+	  This region is paired with francesouth.
+
+config TERRAFORM_AZURE_REGION_FRANCESOUTH
+	bool "France South (Marseille)"
+	help
+	  This option selects the France South (Marseille) region.
+	  This region is paired with francecentral.
+
+config TERRAFORM_AZURE_REGION_GERMANYNORTH
+	bool "Germany North (Berlin)"
+	help
+	  This option selects the Germany North (Berlin) region.
+	  This region is paired with germanywestcentral.
+
+config TERRAFORM_AZURE_REGION_GERMANYWESTCENTRAL
+	bool "Germany West Central (Frankfurt)"
+	help
+	  This option selects the Germany West Central (Frankfurt) region.
+	  This region is paired with germanynorth.
+
+config TERRAFORM_AZURE_REGION_INDONESIACENTRAL
+	bool "Indonesia Central (Jakarta)"
+	help
+	  This option selects the Indonesia Central (Jakarta) region.
+
+config TERRAFORM_AZURE_REGION_ISRAELCENTRAL
+	bool "Israel Central (Israel)"
+	help
+	  This option selects the Israel Central (Israel) region.
+
+config TERRAFORM_AZURE_REGION_ITALYNORTH
+	bool "Italy North (Milan)"
+	help
+	  This option selects the Italy North (Milan) region.
+
+config TERRAFORM_AZURE_REGION_JAPANEAST
+	bool "Japan East (Tokyo, Saitama)"
+	help
+	  This option selects the Japan East (Tokyo, Saitama) region.
+	  This region is paired with japanwest.
+
+config TERRAFORM_AZURE_REGION_JAPANWEST
+	bool "Japan West (Osaka)"
+	help
+	  This option selects the Japan West (Osaka) region.
+	  This region is paired with japaneast.
+
+config TERRAFORM_AZURE_REGION_JIOINDIACENTRAL
+	bool "Jio India Central (Nagpur)"
+	help
+	  This option selects the Jio India Central (Nagpur) region.
+	  This region is paired with jioindiawest.
+
+config TERRAFORM_AZURE_REGION_JIOINDIAWEST
+	bool "Jio India West (Jamnagar)"
+	help
+	  This option selects the Jio India West (Jamnagar) region.
+	  This region is paired with jioindiacentral.
+
+config TERRAFORM_AZURE_REGION_KOREACENTRAL
+	bool "Korea Central (Seoul)"
+	help
+	  This option selects the Korea Central (Seoul) region.
+	  This region is paired with koreasouth.
+
+config TERRAFORM_AZURE_REGION_KOREASOUTH
+	bool "Korea South (Busan)"
+	help
+	  This option selects the Korea South (Busan) region.
+	  This region is paired with koreacentral.
+
+config TERRAFORM_AZURE_REGION_MALAYSIAWEST
+	bool "Malaysia West (Kuala Lumpur)"
+	help
+	  This option selects the Malaysia West (Kuala Lumpur) region.
+
+config TERRAFORM_AZURE_REGION_MEXICOCENTRAL
+	bool "Mexico Central (Querétaro State)"
+	help
+	  This option selects the Mexico Central (Querétaro State) region.
+
+config TERRAFORM_AZURE_REGION_NEWZEALANDNORTH
+	bool "New Zealand North (Auckland)"
+	help
+	  This option selects the New Zealand North (Auckland) region.
+
+config TERRAFORM_AZURE_REGION_NORTHCENTRALUS
+	bool "North Central US (Illinois)"
+	help
+	  This option selects the North Central US (Illinois) region.
+	  This region is paired with southcentralus.
+
+config TERRAFORM_AZURE_REGION_NORTHEUROPE
+	bool "North Europe (Ireland)"
+	help
+	  This option selects the North Europe (Ireland) region.
+	  This region is paired with westeurope.
+
+config TERRAFORM_AZURE_REGION_NORWAYEAST
+	bool "Norway East (Norway)"
+	help
+	  This option selects the Norway East (Norway) region.
+	  This region is paired with norwaywest.
+
+config TERRAFORM_AZURE_REGION_NORWAYWEST
+	bool "Norway West (Norway)"
+	help
+	  This option selects the Norway West (Norway) region.
+	  This region is paired with norwayeast.
+
+config TERRAFORM_AZURE_REGION_POLANDCENTRAL
+	bool "Poland Central (Warsaw)"
+	help
+	  This option selects the Poland Central (Warsaw) region.
+
+config TERRAFORM_AZURE_REGION_QATARCENTRAL
+	bool "Qatar Central (Doha)"
+	help
+	  This option selects the Qatar Central (Doha) region.
+
+config TERRAFORM_AZURE_REGION_SOUTHAFRICANORTH
+	bool "South Africa North (Johannesburg)"
+	help
+	  This option selects the South Africa North (Johannesburg) region.
+	  This region is paired with southafricawest.
+
+config TERRAFORM_AZURE_REGION_SOUTHAFRICAWEST
+	bool "South Africa West (Cape Town)"
+	help
+	  This option selects the South Africa West (Cape Town) region.
+	  This region is paired with southafricanorth.
+
+config TERRAFORM_AZURE_REGION_SOUTHCENTRALUS
+	bool "South Central US (Texas)"
+	help
+	  This option selects the South Central US (Texas) region.
+	  This region is paired with northcentralus.
+
+config TERRAFORM_AZURE_REGION_SOUTHCENTRALUSSTG
+	bool "South Central US STG (Texas)"
+	help
+	  This option selects the South Central US STG (Texas) region.
+	  This region is paired with eastusstg.
+
+config TERRAFORM_AZURE_REGION_SOUTHEASTASIA
+	bool "Southeast Asia (Singapore)"
+	help
+	  This option selects the Southeast Asia (Singapore) region.
+	  This region is paired with eastasia.
+
+config TERRAFORM_AZURE_REGION_SOUTHINDIA
+	bool "South India (Chennai)"
+	help
+	  This option selects the South India (Chennai) region.
+	  This region is paired with centralindia.
+
+config TERRAFORM_AZURE_REGION_SPAINCENTRAL
+	bool "Spain Central (Madrid)"
+	help
+	  This option selects the Spain Central (Madrid) region.
+
+config TERRAFORM_AZURE_REGION_SWEDENCENTRAL
+	bool "Sweden Central (Gävle)"
+	help
+	  This option selects the Sweden Central (Gävle) region.
+	  This region is paired with swedensouth.
+
+config TERRAFORM_AZURE_REGION_SWITZERLANDNORTH
+	bool "Switzerland North (Zurich)"
+	help
+	  This option selects the Switzerland North (Zurich) region.
+	  This region is paired with switzerlandwest.
+
+config TERRAFORM_AZURE_REGION_SWITZERLANDWEST
+	bool "Switzerland West (Geneva)"
+	help
+	  This option selects the Switzerland West (Geneva) region.
+	  This region is paired with switzerlandnorth.
+
+config TERRAFORM_AZURE_REGION_UAECENTRAL
+	bool "UAE Central (Abu Dhabi)"
+	help
+	  This option selects the UAE Central (Abu Dhabi) region.
+	  This region is paired with uaenorth.
+
+config TERRAFORM_AZURE_REGION_UAENORTH
+	bool "UAE North (Dubai)"
+	help
+	  This option selects the UAE North (Dubai) region.
+	  This region is paired with uaecentral.
+
+config TERRAFORM_AZURE_REGION_UKSOUTH
+	bool "UK South (London)"
+	help
+	  This option selects the UK South (London) region.
+	  This region is paired with ukwest.
+
+config TERRAFORM_AZURE_REGION_UKWEST
+	bool "UK West (Cardiff)"
+	help
+	  This option selects the UK West (Cardiff) region.
+	  This region is paired with uksouth.
+
+config TERRAFORM_AZURE_REGION_WESTCENTRALUS
+	bool "West Central US (Wyoming)"
+	help
+	  This option selects the West Central US (Wyoming) region.
+	  This region is paired with westus2.
+
+config TERRAFORM_AZURE_REGION_WESTEUROPE
+	bool "West Europe (Netherlands)"
+	help
+	  This option selects the West Europe (Netherlands) region.
+	  This region is paired with northeurope.
+
+config TERRAFORM_AZURE_REGION_WESTINDIA
+	bool "West India (Mumbai)"
+	help
+	  This option selects the West India (Mumbai) region.
+	  This region is paired with southindia.
+
+config TERRAFORM_AZURE_REGION_WESTUS
+	bool "West US (California)"
+	help
+	  This option selects the West US (California) region.
+	  This region is paired with eastus.
+
+config TERRAFORM_AZURE_REGION_WESTUS2
+	bool "West US 2 (Washington)"
+	help
+	  This option selects the West US 2 (Washington) region.
+	  This region is paired with westcentralus.
+
+config TERRAFORM_AZURE_REGION_WESTUS3
+	bool "West US 3 (Phoenix)"
+	help
+	  This option selects the West US 3 (Phoenix) region.
+	  This region is paired with eastus.
+
+endchoice
+
+config TERRAFORM_AZURE_LOCATION
+	string
+	output yaml
+	default "australiacentral" if TERRAFORM_AZURE_REGION_AUSTRALIACENTRAL
+	default "australiacentral2" if TERRAFORM_AZURE_REGION_AUSTRALIACENTRAL2
+	default "australiaeast" if TERRAFORM_AZURE_REGION_AUSTRALIAEAST
+	default "australiasoutheast" if TERRAFORM_AZURE_REGION_AUSTRALIASOUTHEAST
+	default "austriaeast" if TERRAFORM_AZURE_REGION_AUSTRIAEAST
+	default "belgiumcentral" if TERRAFORM_AZURE_REGION_BELGIUMCENTRAL
+	default "brazilsouth" if TERRAFORM_AZURE_REGION_BRAZILSOUTH
+	default "brazilsoutheast" if TERRAFORM_AZURE_REGION_BRAZILSOUTHEAST
+	default "canadacentral" if TERRAFORM_AZURE_REGION_CANADACENTRAL
+	default "canadaeast" if TERRAFORM_AZURE_REGION_CANADAEAST
+	default "centralindia" if TERRAFORM_AZURE_REGION_CENTRALINDIA
+	default "centralus" if TERRAFORM_AZURE_REGION_CENTRALUS
+	default "centraluseuap" if TERRAFORM_AZURE_REGION_CENTRALUSEUAP
+	default "chilecentral" if TERRAFORM_AZURE_REGION_CHILECENTRAL
+	default "eastasia" if TERRAFORM_AZURE_REGION_EASTASIA
+	default "eastus" if TERRAFORM_AZURE_REGION_EASTUS
+	default "eastus2" if TERRAFORM_AZURE_REGION_EASTUS2
+	default "eastus2euap" if TERRAFORM_AZURE_REGION_EASTUS2EUAP
+	default "eastusstg" if TERRAFORM_AZURE_REGION_EASTUSSTG
+	default "francecentral" if TERRAFORM_AZURE_REGION_FRANCECENTRAL
+	default "francesouth" if TERRAFORM_AZURE_REGION_FRANCESOUTH
+	default "germanynorth" if TERRAFORM_AZURE_REGION_GERMANYNORTH
+	default "germanywestcentral" if TERRAFORM_AZURE_REGION_GERMANYWESTCENTRAL
+	default "indonesiacentral" if TERRAFORM_AZURE_REGION_INDONESIACENTRAL
+	default "israelcentral" if TERRAFORM_AZURE_REGION_ISRAELCENTRAL
+	default "italynorth" if TERRAFORM_AZURE_REGION_ITALYNORTH
+	default "japaneast" if TERRAFORM_AZURE_REGION_JAPANEAST
+	default "japanwest" if TERRAFORM_AZURE_REGION_JAPANWEST
+	default "jioindiacentral" if TERRAFORM_AZURE_REGION_JIOINDIACENTRAL
+	default "jioindiawest" if TERRAFORM_AZURE_REGION_JIOINDIAWEST
+	default "koreacentral" if TERRAFORM_AZURE_REGION_KOREACENTRAL
+	default "koreasouth" if TERRAFORM_AZURE_REGION_KOREASOUTH
+	default "malaysiawest" if TERRAFORM_AZURE_REGION_MALAYSIAWEST
+	default "mexicocentral" if TERRAFORM_AZURE_REGION_MEXICOCENTRAL
+	default "newzealandnorth" if TERRAFORM_AZURE_REGION_NEWZEALANDNORTH
+	default "northcentralus" if TERRAFORM_AZURE_REGION_NORTHCENTRALUS
+	default "northeurope" if TERRAFORM_AZURE_REGION_NORTHEUROPE
+	default "norwayeast" if TERRAFORM_AZURE_REGION_NORWAYEAST
+	default "norwaywest" if TERRAFORM_AZURE_REGION_NORWAYWEST
+	default "polandcentral" if TERRAFORM_AZURE_REGION_POLANDCENTRAL
+	default "qatarcentral" if TERRAFORM_AZURE_REGION_QATARCENTRAL
+	default "southafricanorth" if TERRAFORM_AZURE_REGION_SOUTHAFRICANORTH
+	default "southafricawest" if TERRAFORM_AZURE_REGION_SOUTHAFRICAWEST
+	default "southcentralus" if TERRAFORM_AZURE_REGION_SOUTHCENTRALUS
+	default "southcentralusstg" if TERRAFORM_AZURE_REGION_SOUTHCENTRALUSSTG
+	default "southeastasia" if TERRAFORM_AZURE_REGION_SOUTHEASTASIA
+	default "southindia" if TERRAFORM_AZURE_REGION_SOUTHINDIA
+	default "spaincentral" if TERRAFORM_AZURE_REGION_SPAINCENTRAL
+	default "swedencentral" if TERRAFORM_AZURE_REGION_SWEDENCENTRAL
+	default "switzerlandnorth" if TERRAFORM_AZURE_REGION_SWITZERLANDNORTH
+	default "switzerlandwest" if TERRAFORM_AZURE_REGION_SWITZERLANDWEST
+	default "uaecentral" if TERRAFORM_AZURE_REGION_UAECENTRAL
+	default "uaenorth" if TERRAFORM_AZURE_REGION_UAENORTH
+	default "uksouth" if TERRAFORM_AZURE_REGION_UKSOUTH
+	default "ukwest" if TERRAFORM_AZURE_REGION_UKWEST
+	default "westcentralus" if TERRAFORM_AZURE_REGION_WESTCENTRALUS
+	default "westeurope" if TERRAFORM_AZURE_REGION_WESTEUROPE
+	default "westindia" if TERRAFORM_AZURE_REGION_WESTINDIA
+	default "westus" if TERRAFORM_AZURE_REGION_WESTUS
+	default "westus2" if TERRAFORM_AZURE_REGION_WESTUS2
+	default "westus3" if TERRAFORM_AZURE_REGION_WESTUS3
+
+config TERRAFORM_AZURE_RESOURCE_GROUP_NAME
+	string "Azure resource group name"
+	output yaml
+	default "kdevops_resource_group"
+	help
+	  An Azure resource group is a container that holds related
+	  resources so they can be managed as a single unit. These
+	  resources share the same life cycle and are deployed,
+	  updated, and deleted together. Resource groups are global
+	  to your subscription.
+
+	  To run concurrent kdevops jobs in Azure, each run must
+	  have a unique resource group name.
+
+	  https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview#resource-groups
