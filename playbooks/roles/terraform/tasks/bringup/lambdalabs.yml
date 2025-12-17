@@ -1,0 +1,222 @@
+---
+# Lambda Labs provider bringup tasks
+# API key validation, tier-based instance selection, capacity checking
+
+- name: Define Lambda Labs tier wildcards list
+  ansible.builtin.set_fact:
+    lambdalabs_tier_wildcards:
+      - GH200_OR_LESS
+      - H100_OR_LESS
+      - A100_OR_LESS
+      - A6000_OR_LESS
+      - 8X_B200_OR_LESS
+      - 8X_H100_OR_LESS
+      - 8X_A100_OR_LESS
+  tags:
+    - bringup
+
+- name: Check Lambda Labs API key configuration
+  ansible.builtin.command:
+    cmd: "python3 {{ topdir_path }}/scripts/lambdalabs_credentials.py check"
+  register: api_key_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Report Lambda Labs API key configuration status
+  ansible.builtin.fail:
+    msg: |
+      ERROR: Lambda Labs API key is not configured!
+
+      To fix this, configure your Lambda Labs API key using one of these methods:
+
+      Use the kdevops credentials management tool:
+        python3 scripts/lambdalabs_credentials.py set 'your-actual-api-key-here'
+
+      Or manually create the credentials file:
+        mkdir -p ~/.lambdalabs
+        echo "[default]" > ~/.lambdalabs/credentials
+        echo "lambdalabs_api_key=your-actual-api-key-here" >> ~/.lambdalabs/credentials
+        chmod 600 ~/.lambdalabs/credentials
+
+      Get your API key from: https://cloud.lambdalabs.com
+  when:
+    - api_key_check.rc != 0
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Display Lambda Labs API key configuration status
+  ansible.builtin.debug:
+    msg: "{{ api_key_check.stdout }}"
+  when:
+    - api_key_check.rc == 0
+  tags:
+    - bringup
+    - destroy
+    - status
+
+- name: Auto-select Lambda Labs instance type for tier-based wildcards
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      case "{{ terraform_lambdalabs_instance_type }}" in
+        GH200_OR_LESS|H100_OR_LESS|A100_OR_LESS|A6000_OR_LESS)
+          # Use tier-based selection script for single GPU
+          tier_group=$(echo "{{ terraform_lambdalabs_instance_type }}" | \
+            tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          {{ topdir_path }}/scripts/lambdalabs_select_tier.py "$tier_group" --verbose
+          ;;
+        8X_B200_OR_LESS|8X_H100_OR_LESS|8X_A100_OR_LESS)
+          # Use tier-based selection script for 8x GPU
+          tier_group=$(echo "{{ terraform_lambdalabs_instance_type }}" | \
+            tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          {{ topdir_path }}/scripts/lambdalabs_select_tier.py "$tier_group" --verbose
+          ;;
+        *)
+          echo "Unknown wildcard type: {{ terraform_lambdalabs_instance_type }}"
+          exit 1
+          ;;
+      esac
+  register: lambdalabs_auto_instance_type
+  failed_when: false
+  changed_when: false
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+  tags:
+    - bringup
+
+- name: Fail if no Lambda Labs instances available for wildcard selection
+  ansible.builtin.fail:
+    msg: |
+      No GPU instances available for {{ terraform_lambdalabs_instance_type }}
+
+      {{ lambdalabs_auto_instance_type.stderr }}
+
+      Try:
+        - Wait and retry (capacity changes frequently)
+        - Check Lambda Labs dashboard: https://cloud.lambdalabs.com
+        - Use a different tier group via menuconfig
+        - Check capacity manually: scripts/lambdalabs_check_capacity.py
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc != 0
+  tags:
+    - bringup
+
+- name: Validate Lambda Labs tier selection output format
+  ansible.builtin.assert:
+    that:
+      - lambdalabs_auto_instance_type.stdout.split() | length == 2
+    fail_msg: |
+      Invalid output from tier selection script.
+      Expected format: "instance_type region"
+      Got: "{{ lambdalabs_auto_instance_type.stdout }}"
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Parse Lambda Labs auto-selected instance type and region
+  ansible.builtin.set_fact:
+    lambdalabs_auto_selected_instance: "{{ lambdalabs_auto_instance_type.stdout.split()[0] }}"
+    lambdalabs_auto_selected_region: "{{ lambdalabs_auto_instance_type.stdout.split()[1] }}"
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Report Lambda Labs auto-selected instance type for wildcards
+  ansible.builtin.debug:
+    msg: >-
+      Auto-selected instance type: {{ lambdalabs_auto_selected_instance }}
+      in region: {{ lambdalabs_auto_selected_region }}
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Update Lambda Labs terraform vars with auto-selected instance type
+  ansible.builtin.lineinfile:
+    path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/terraform.tfvars"
+    regexp: '^lambdalabs_instance_type\s*='
+    line: 'lambdalabs_instance_type = "{{ lambdalabs_auto_selected_instance }}"'
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Update Lambda Labs terraform vars with auto-selected region
+  ansible.builtin.lineinfile:
+    path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/terraform.tfvars"
+    regexp: '^lambdalabs_region\s*='
+    line: 'lambdalabs_region = "{{ lambdalabs_auto_selected_region }}"'
+  when:
+    - terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+    - lambdalabs_auto_instance_type.rc == 0
+  tags:
+    - bringup
+
+- name: Set Lambda Labs resolved instance type for subsequent tasks
+  ansible.builtin.set_fact:
+    lambdalabs_resolved_instance_type: >-
+      {{ lambdalabs_auto_selected_instance
+         if (terraform_lambdalabs_instance_type in lambdalabs_tier_wildcards
+             and lambdalabs_auto_instance_type.rc == 0)
+         else terraform_lambdalabs_instance_type }}
+  tags:
+    - bringup
+
+- name: Check Lambda Labs capacity before provisioning
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      {{ topdir_path }}/scripts/lambda-cli --output json check-availability \
+        {{ lambdalabs_resolved_instance_type | default(terraform_lambdalabs_instance_type) }} \
+        {{ lambdalabs_auto_selected_region | default(terraform_lambdalabs_region) }} | \
+      python3 -c "
+      import sys, json
+      data = json.load(sys.stdin)
+      if data.get('available'):
+          print(data.get('message', 'Instance available'))
+          sys.exit(0)
+      else:
+          print(data.get('error', 'Instance not available'))
+          if 'available_regions' in data:
+              print(f'  Available in: ' + ', '.join(data['available_regions']))
+          sys.exit(1)
+      "
+  register: capacity_check
+  failed_when: false
+  changed_when: false
+  when:
+    - terraform_lambdalabs_instance_type not in lambdalabs_tier_wildcards
+  tags:
+    - bringup
+
+- name: Report Lambda Labs capacity check result
+  ansible.builtin.fail:
+    msg: "{{ capacity_check.stdout }}"
+  when:
+    - capacity_check is defined
+    - capacity_check.rc is defined
+    - capacity_check.rc != 0
+  tags:
+    - bringup
+
+- name: Bring up terraform resources (Lambda Labs)
+  cloud.terraform.terraform:
+    binary_path: "{{ terraform_binary_path }}"
+    force_init: true
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    state: present
+  tags:
+    - bringup

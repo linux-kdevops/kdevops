@@ -1,0 +1,27 @@
+---
+# Terraform bringup orchestration
+# Includes provider-specific tasks based on kdevops_terraform_provider
+
+- name: Include Lambda Labs bringup tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/bringup/lambdalabs.yml"
+  when:
+    - kdevops_terraform_provider == "lambdalabs"
+  tags:
+    - bringup
+
+- name: Include DataCrunch bringup tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/bringup/datacrunch.yml"
+  when:
+    - kdevops_terraform_provider == "datacrunch"
+  tags:
+    - bringup
+
+- name: Include generic bringup tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/bringup/generic.yml"
+  when:
+    - kdevops_terraform_provider not in ["lambdalabs", "datacrunch"]
+  tags:
+    - bringup

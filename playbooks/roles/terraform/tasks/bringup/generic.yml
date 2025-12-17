@@ -1,0 +1,12 @@
+---
+# Generic terraform bringup for providers without special handling
+# Used for: AWS, Azure, GCE, OCI, and other standard providers
+
+- name: Bring up terraform resources
+  cloud.terraform.terraform:
+    binary_path: "{{ terraform_binary_path }}"
+    force_init: true
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    state: present
+  tags:
+    - bringup

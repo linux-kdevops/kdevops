@@ -1,0 +1,26 @@
+---
+# Terraform destroy orchestration
+# Includes provider-specific tasks based on kdevops_terraform_provider
+
+- name: Remove the ephemeral ssh config file on the control host
+  ansible.builtin.file:
+    path: "{{ kdevops_ssh_config }}"
+    state: absent
+  tags:
+    - destroy
+
+- name: Include DataCrunch destroy tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/destroy/datacrunch.yml"
+  when:
+    - kdevops_terraform_provider == "datacrunch"
+  tags:
+    - destroy
+
+- name: Include generic destroy tasks
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/destroy/generic.yml"
+  when:
+    - kdevops_terraform_provider != "datacrunch"
+  tags:
+    - destroy
