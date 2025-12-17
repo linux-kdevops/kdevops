@@ -74,6 +74,7 @@ endif # WORKFLOW_LINUX_PACKAGED
 
 config WORKFLOWS_TESTS
 	bool "Enable selection of test workflows"
+	depends on !BOOTLINUX_BUILDER
 	default n
 
 if WORKFLOWS_TESTS
