@@ -10,6 +10,11 @@ LAMBDALABS_KCONFIG_COMPUTE := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.compute.generate
 LAMBDALABS_KCONFIG_LOCATION := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.location.generated
 LAMBDALABS_KCONFIG_IMAGES := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.images.generated
 
+# Lambda Labs default files (tracked in git, provide sensible defaults)
+LAMBDALABS_KCONFIG_COMPUTE_DEFAULT := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.compute.default
+LAMBDALABS_KCONFIG_LOCATION_DEFAULT := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.location.default
+LAMBDALABS_KCONFIG_IMAGES_DEFAULT := $(LAMBDALABS_KCONFIG_DIR)/Kconfig.images.default
+
 LAMBDALABS_KCONFIGS := $(LAMBDALABS_KCONFIG_COMPUTE) $(LAMBDALABS_KCONFIG_LOCATION) $(LAMBDALABS_KCONFIG_IMAGES)
 
 # AWS dynamic configuration
@@ -39,10 +44,12 @@ OCI_KCONFIGS := $(OCI_KCONFIG_IMAGE) $(OCI_KCONFIG_LOCATION) $(OCI_KCONFIG_SHAPE
 # Add generated files to mrproper clean list
 KDEVOPS_MRPROPER += $(LAMBDALABS_KCONFIGS) $(AWS_KCONFIGS) $(AZURE_KCONFIGS) $(OCI_KCONFIGS)
 
-# Touch Lambda Labs generated files so Kconfig can source them
-# This ensures the files exist (even if empty) before Kconfig runs
+# Ensure Lambda Labs generated files exist with sensible defaults
+# Copies from .default files if .generated files don't exist
 dynamic_lambdalabs_kconfig_touch:
-	$(Q)touch $(LAMBDALABS_KCONFIGS)
+	$(Q)test -f $(LAMBDALABS_KCONFIG_COMPUTE) || cp $(LAMBDALABS_KCONFIG_COMPUTE_DEFAULT) $(LAMBDALABS_KCONFIG_COMPUTE)
+	$(Q)test -f $(LAMBDALABS_KCONFIG_LOCATION) || cp $(LAMBDALABS_KCONFIG_LOCATION_DEFAULT) $(LAMBDALABS_KCONFIG_LOCATION)
+	$(Q)test -f $(LAMBDALABS_KCONFIG_IMAGES) || cp $(LAMBDALABS_KCONFIG_IMAGES_DEFAULT) $(LAMBDALABS_KCONFIG_IMAGES)
 
 # Touch AWS generated files so Kconfig can source them
 dynamic_aws_kconfig_touch:
@@ -57,6 +64,10 @@ dynamic_oci_kconfig_touch:
 	$(Q)touch $(OCI_KCONFIGS)
 
 DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_azure_kconfig_touch dynamic_oci_kconfig_touch
+
+# User-facing target to populate cloud kconfigs with defaults
+# This is called automatically before menuconfig, but can be run manually
+default-cloud-kconfigs: dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_azure_kconfig_touch dynamic_oci_kconfig_touch
 
 # Lambda Labs targets use --provider argument for efficiency
 cloud-config-lambdalabs:
@@ -94,7 +105,8 @@ DYNAMIC_CLOUD_KCONFIG += cloud-config-lambdalabs cloud-config-aws cloud-config-a
 
 cloud-config-help:
 	@echo "Cloud-specific dynamic kconfig targets:"
-	@echo "cloud-config            - generates all cloud provider dynamic kconfig content"
+	@echo "default-cloud-kconfigs  - populate cloud kconfigs with defaults (auto-runs before menuconfig)"
+	@echo "cloud-config            - regenerate cloud kconfigs from live API data"
 	@echo "cloud-config-lambdalabs - generates Lambda Labs dynamic kconfig content"
 	@echo "cloud-config-aws        - generates AWS dynamic kconfig content"
 	@echo "cloud-config-azure      - generates Azure dynamic kconfig content"
@@ -114,7 +126,7 @@ cloud-list-all:
 	$(Q)chmod +x scripts/cloud_list_all.sh
 	$(Q)scripts/cloud_list_all.sh
 
-PHONY += cloud-config clean-cloud-config cloud-config-help cloud-list-all
+PHONY += cloud-config clean-cloud-config cloud-config-help cloud-list-all default-cloud-kconfigs
 PHONY += cloud-config-aws clean-cloud-config-aws
 PHONY += cloud-config-azure clean-cloud-config-azure
 PHONY += cloud-config-lambdalabs clean-cloud-config-lambdalabs

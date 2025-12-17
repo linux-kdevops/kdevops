@@ -1,0 +1,70 @@
+# Lambda Labs instance types (default configuration)
+#
+# This file provides sensible defaults for Lambda Labs instance types.
+# Run 'make cloud-configs' to regenerate with live API data.
+
+choice
+	prompt "Lambda Labs instance type"
+	default TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10
+	help
+	  Select the Lambda Labs instance type for your deployment.
+	  Run 'make cloud-configs' to update with current availability.
+	  Prices shown are on-demand hourly rates in USD.
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A10
+	bool "gpu_1x_a10 - 1x NVIDIA A10 GPU ($0.75/hr)"
+	help
+	  Single NVIDIA A10 GPU instance with 24GB VRAM.
+	  Good for development and testing workloads.
+	  Price: $0.75 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A100
+	bool "gpu_1x_a100 - 1x NVIDIA A100 GPU ($1.29/hr)"
+	help
+	  Single NVIDIA A100 GPU instance with 40GB VRAM.
+	  High-performance option for training and inference.
+	  Price: $1.29 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_A6000
+	bool "gpu_1x_a6000 - 1x NVIDIA A6000 GPU ($0.80/hr)"
+	help
+	  Single NVIDIA RTX A6000 GPU instance with 48GB VRAM.
+	  Good balance of performance and cost.
+	  Price: $0.80 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_RTX6000
+	bool "gpu_1x_rtx6000 - 1x NVIDIA RTX 6000 GPU ($0.50/hr)"
+	help
+	  Single NVIDIA RTX 6000 GPU instance.
+	  Budget-friendly option for lighter workloads.
+	  Price: $0.50 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_1X_H100_PCIE
+	bool "gpu_1x_h100_pcie - 1x NVIDIA H100 PCIe GPU ($2.49/hr)"
+	help
+	  Single NVIDIA H100 PCIe GPU instance with 80GB VRAM.
+	  Latest generation high-performance GPU.
+	  Price: $2.49 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_A100_80GB_SXM4
+	bool "gpu_8x_a100_80gb_sxm4 - 8x NVIDIA A100 80GB SXM ($14.32/hr)"
+	help
+	  Eight NVIDIA A100 GPUs with 80GB VRAM each (SXM4 form factor).
+	  High-performance multi-GPU training.
+	  Price: $14.32 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_H100_SXM5
+	bool "gpu_8x_h100_sxm5 - 8x NVIDIA H100 SXM GPU ($23.92/hr)"
+	help
+	  Eight NVIDIA H100 SXM GPUs with 80GB VRAM each.
+	  Maximum performance for large-scale training.
+	  Price: $23.92 per hour (on-demand)
+
+config TERRAFORM_LAMBDALABS_INSTANCE_TYPE_GPU_8X_V100
+	bool "gpu_8x_v100 - 8x NVIDIA V100 GPU ($4.40/hr)"
+	help
+	  Eight NVIDIA V100 GPUs.
+	  Cost-effective multi-GPU option.
+	  Price: $4.40 per hour (on-demand)
+
+endchoice
