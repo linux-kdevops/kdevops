@@ -23,6 +23,11 @@ AWS_KCONFIG_AMI := $(AWS_KCONFIG_DIR)/Kconfig.ami.generated
 AWS_KCONFIG_INSTANCE := $(AWS_KCONFIG_DIR)/Kconfig.instance.generated
 AWS_KCONFIG_LOCATION := $(AWS_KCONFIG_DIR)/Kconfig.location.generated
 
+# AWS default files (tracked in git, provide sensible defaults)
+AWS_KCONFIG_AMI_DEFAULT := $(AWS_KCONFIG_DIR)/Kconfig.ami.default
+AWS_KCONFIG_INSTANCE_DEFAULT := $(AWS_KCONFIG_DIR)/Kconfig.instance.default
+AWS_KCONFIG_LOCATION_DEFAULT := $(AWS_KCONFIG_DIR)/Kconfig.location.default
+
 AWS_KCONFIGS := $(AWS_KCONFIG_AMI) $(AWS_KCONFIG_INSTANCE) $(AWS_KCONFIG_LOCATION)
 
 # Azure dynamic configuration
@@ -51,9 +56,12 @@ dynamic_lambdalabs_kconfig_touch:
 	$(Q)test -f $(LAMBDALABS_KCONFIG_LOCATION) || cp $(LAMBDALABS_KCONFIG_LOCATION_DEFAULT) $(LAMBDALABS_KCONFIG_LOCATION)
 	$(Q)test -f $(LAMBDALABS_KCONFIG_IMAGES) || cp $(LAMBDALABS_KCONFIG_IMAGES_DEFAULT) $(LAMBDALABS_KCONFIG_IMAGES)
 
-# Touch AWS generated files so Kconfig can source them
+# Ensure AWS generated files exist with sensible defaults
+# Copies from .default files if .generated files don't exist
 dynamic_aws_kconfig_touch:
-	$(Q)touch $(AWS_KCONFIGS)
+	$(Q)test -f $(AWS_KCONFIG_AMI) || cp $(AWS_KCONFIG_AMI_DEFAULT) $(AWS_KCONFIG_AMI)
+	$(Q)test -f $(AWS_KCONFIG_INSTANCE) || cp $(AWS_KCONFIG_INSTANCE_DEFAULT) $(AWS_KCONFIG_INSTANCE)
+	$(Q)test -f $(AWS_KCONFIG_LOCATION) || cp $(AWS_KCONFIG_LOCATION_DEFAULT) $(AWS_KCONFIG_LOCATION)
 
 # Touch Azure generated files so Kconfig can source them
 dynamic_azure_kconfig_touch:
