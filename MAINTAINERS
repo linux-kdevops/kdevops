@@ -99,7 +99,7 @@ F:	scripts/refs.Makefile
 F:	workflows/linux/refs/*
 
 TERRAFORM
-M:	Chuck Lever <chuck.lever@oracle.com>
+M:	Chuck Lever <cel@kernel.org>
 R:	Luis Chamberlain <mcgrof@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
@@ -112,7 +112,7 @@ F:	scripts/terraform.Makefile
 F:	terraform/
 
 GITR WORKFLOW
-M:	Chuck Lever <chuck.lever@oracle.com>
+M:	Chuck Lever <cel@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
@@ -120,7 +120,7 @@ F:	workflows/gitr/
 F:	playbooks/roles/gitr/
 
 LTP WORKFLOW
-M:	Chuck Lever <chuck.lever@oracle.com>
+M:	Chuck Lever <cel@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
@@ -128,7 +128,7 @@ F:	workflows/ltp/
 F:	playbooks/roles/ltp/
 
 NFSTEST WORKFLOW
-M:	Chuck Lever <chuck.lever@oracle.com>
+M:	Chuck Lever <cel@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
@@ -136,7 +136,7 @@ F:	workflows/nfstest/
 F:	playbooks/roles/nfstest/
 
 PYNFS WORKFLOW
-M:	Chuck Lever <chuck.lever@oracle.com>
+M:	Chuck Lever <cel@kernel.org>
 L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
