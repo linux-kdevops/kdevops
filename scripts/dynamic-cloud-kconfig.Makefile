@@ -49,6 +49,11 @@ OCI_KCONFIG_IMAGE := $(OCI_KCONFIG_DIR)/Kconfig.image.generated
 OCI_KCONFIG_LOCATION := $(OCI_KCONFIG_DIR)/Kconfig.location.generated
 OCI_KCONFIG_SHAPE := $(OCI_KCONFIG_DIR)/Kconfig.shape.generated
 
+# OCI default files (tracked in git, provide sensible defaults)
+OCI_KCONFIG_IMAGE_DEFAULT := $(OCI_KCONFIG_DIR)/Kconfig.image.default
+OCI_KCONFIG_LOCATION_DEFAULT := $(OCI_KCONFIG_DIR)/Kconfig.location.default
+OCI_KCONFIG_SHAPE_DEFAULT := $(OCI_KCONFIG_DIR)/Kconfig.shape.default
+
 OCI_KCONFIGS := $(OCI_KCONFIG_IMAGE) $(OCI_KCONFIG_LOCATION) $(OCI_KCONFIG_SHAPE)
 
 # Add generated files to mrproper clean list
@@ -75,9 +80,12 @@ dynamic_azure_kconfig_touch:
 	$(Q)test -f $(AZURE_KCONFIG_LOCATION) || cp $(AZURE_KCONFIG_LOCATION_DEFAULT) $(AZURE_KCONFIG_LOCATION)
 	$(Q)test -f $(AZURE_KCONFIG_SIZE) || cp $(AZURE_KCONFIG_SIZE_DEFAULT) $(AZURE_KCONFIG_SIZE)
 
-# Touch OCI generated files so Kconfig can source them
+# Ensure OCI generated files exist with sensible defaults
+# Copies from .default files if .generated files don't exist
 dynamic_oci_kconfig_touch:
-	$(Q)touch $(OCI_KCONFIGS)
+	$(Q)test -f $(OCI_KCONFIG_IMAGE) || cp $(OCI_KCONFIG_IMAGE_DEFAULT) $(OCI_KCONFIG_IMAGE)
+	$(Q)test -f $(OCI_KCONFIG_LOCATION) || cp $(OCI_KCONFIG_LOCATION_DEFAULT) $(OCI_KCONFIG_LOCATION)
+	$(Q)test -f $(OCI_KCONFIG_SHAPE) || cp $(OCI_KCONFIG_SHAPE_DEFAULT) $(OCI_KCONFIG_SHAPE)
 
 DYNAMIC_KCONFIG += dynamic_lambdalabs_kconfig_touch dynamic_aws_kconfig_touch dynamic_azure_kconfig_touch dynamic_oci_kconfig_touch
 
