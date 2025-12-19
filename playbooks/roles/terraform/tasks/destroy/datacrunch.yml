@@ -1,0 +1,67 @@
+---
+# DataCrunch provider destroy tasks
+# Handles dev_overrides workaround for external provider initialization
+
+- name: Initialize external provider for DataCrunch before destroy
+  ansible.builtin.shell:
+    cmd: |
+      # Hide all terraform files that reference datacrunch resources
+      # so that terraform init only sees the external provider requirement
+      for file in provider.tf main.tf output.tf vars.tf nodes.tf; do
+        if [ -f "$file" ]; then
+          mv "$file" "$file.bak"
+        fi
+      done
+
+      # Create minimal terraform config with only external provider
+      cat > provider_init.tf << 'EOF'
+      terraform {
+        required_version = ">= 1.0"
+        required_providers {
+          external = {
+            source = "hashicorp/external"
+            version = "~> 2.3"
+          }
+        }
+      }
+      EOF
+
+      # Initialize to get external provider and generate lock file
+      terraform init
+
+      # Preserve the generated lock file for the external provider
+      if [ -f .terraform.lock.hcl ]; then
+        cp .terraform.lock.hcl .terraform.lock.hcl.generated
+      fi
+
+      # Clean up temporary file and restore original terraform files
+      rm provider_init.tf
+      for file in provider.tf main.tf output.tf vars.tf nodes.tf; do
+        if [ -f "$file.bak" ]; then
+          mv "$file.bak" "$file"
+        fi
+      done
+
+      # Restore the lock file after putting all files back
+      if [ -f .terraform.lock.hcl.generated ]; then
+        mv .terraform.lock.hcl.generated .terraform.lock.hcl
+      fi
+    chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+  changed_when: false
+  tags:
+    - destroy
+
+- name: Destroy terraform resources (DataCrunch with dev overrides)
+  ansible.builtin.command:
+    cmd: terraform destroy -auto-approve -no-color
+    chdir: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+  changed_when: true
+  tags:
+    - destroy
+
+- name: Remove terraform lock file for DataCrunch after destroy
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}/.terraform.lock.hcl"
+    state: absent
+  tags:
+    - destroy

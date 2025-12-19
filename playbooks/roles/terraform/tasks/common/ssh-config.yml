@@ -1,0 +1,37 @@
+---
+# SSH configuration generation for terraform-provisioned nodes
+# This is common to all terraform providers
+
+- name: Retrieve the controller_ip_map from terraform
+  cloud.terraform.terraform_output:
+    binary_path: "{{ terraform_binary_path }}"
+    format: json
+    name: controller_ip_map
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+  register: terraform_output
+  tags:
+    - ssh
+
+- name: Add each target node's ssh Host entry on the control host
+  ansible.builtin.blockinfile:
+    block: "{{ lookup('template', 'ssh_config.j2') }}"
+    create: true
+    dest: "{{ kdevops_ssh_config }}"
+    insertafter: "EOF"
+    marker: "# {mark} host configuration for {{ item.key }}"
+    mode: "u=rw,g=r,o=r"
+  loop: "{{ terraform_output.value | dict2items }}"
+  tags:
+    - ssh
+
+- name: Ensure the Include directive is present on the controller
+  ansible.builtin.blockinfile:
+    path: "{{ sshconfig }}"
+    insertbefore: BOF
+    append_newline: true
+    create: true
+    marker: "# {mark} Managed by kdevops"
+    mode: "u=rw,g=r,o=r"
+    block: "Include {{ kdevops_ssh_config_prefix }}*"
+  tags:
+    - ssh

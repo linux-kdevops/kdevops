@@ -1,0 +1,12 @@
+---
+# Generic terraform destroy for providers without special handling
+# Used for: AWS, Azure, GCE, OCI, Lambda Labs, and other standard providers
+
+- name: Destroy terraform resources
+  cloud.terraform.terraform:
+    binary_path: "{{ terraform_binary_path }}"
+    force_init: true
+    project_path: "{{ topdir_path }}/terraform/{{ kdevops_terraform_provider }}"
+    state: absent
+  tags:
+    - destroy
