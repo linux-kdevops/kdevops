@@ -1,0 +1,6 @@
+---
+# Default variables for dhclient_cache role
+dhclient_cache_enabled: true
+dhclient_cache_timeout: 3600
+dhclient_cache_retry_interval: 10
+dhclient_cache_max_retries: 30

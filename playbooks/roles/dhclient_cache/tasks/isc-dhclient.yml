@@ -1,0 +1,66 @@
+---
+# ISC dhclient persistent DHCP caching implementation
+# Used by: Debian, Ubuntu, older RHEL/CentOS/Fedora
+
+- name: Detect primary network interface
+  ansible.builtin.set_fact:
+    primary_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+
+- name: Create dhclient enter hook for persistent lease caching
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: isc-dhclient-enter-hook.j2
+    dest: /etc/dhcp/dhclient-enter-hooks.d/kdevops-persistent-cache
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create dhclient exit hook for persistent lease caching
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: isc-dhclient-exit-hook.j2
+    dest: /etc/dhcp/dhclient-exit-hooks.d/kdevops-persistent-cache
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Update dhclient configuration for aggressive retry
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.lineinfile:
+    path: /etc/dhcp/dhclient.conf
+    regexp: "^{{ item.key }}\\s+"
+    line: "{{ item.key }} {{ item.value }};"
+    create: false
+  loop:
+    - { key: "timeout", value: "{{ dhclient_cache_timeout }}" }
+    - { key: "retry", value: "{{ dhclient_cache_retry_interval }}" }
+
+- name: Ensure lease cache directory exists
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: /var/lib/dhcp/cache
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create initial cached lease from current lease
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.shell: |
+    if [ -f /var/lib/dhcp/dhclient.{{ primary_interface }}.leases ]; then
+      cp -a /var/lib/dhcp/dhclient.{{ primary_interface }}.leases \
+            /var/lib/dhcp/cache/dhclient.{{ primary_interface }}.cached-lease
+      chmod 644 /var/lib/dhcp/cache/dhclient.{{ primary_interface }}.cached-lease
+    fi
+  args:
+    creates: /var/lib/dhcp/cache/dhclient.{{ primary_interface }}.cached-lease

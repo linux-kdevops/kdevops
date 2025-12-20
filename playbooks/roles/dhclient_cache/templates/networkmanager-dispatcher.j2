@@ -1,0 +1,68 @@
+#!/bin/bash
+# Persistent DHCP caching - NetworkManager dispatcher script
+# This script saves successful DHCP configuration and restores on failure
+# Managed by kdevops - dhclient_cache role
+
+INTERFACE="$1"
+ACTION="$2"
+CACHE_DIR="/var/lib/NetworkManager/cache"
+CACHE_FILE="${CACHE_DIR}/${INTERFACE}.cached-config"
+CACHE_TIMEOUT={{ dhclient_cache_timeout }}
+
+# Ensure cache directory exists
+mkdir -p "${CACHE_DIR}"
+
+case "${ACTION}" in
+    up|dhcp4-change)
+        # Save current network configuration to cache
+        IP4_ADDRESS=$(nmcli -t -f IP4.ADDRESS device show "${INTERFACE}" 2>/dev/null | cut -d: -f2)
+        IP4_GATEWAY=$(nmcli -t -f IP4.GATEWAY device show "${INTERFACE}" 2>/dev/null | cut -d: -f2)
+        IP4_DNS=$(nmcli -t -f IP4.DNS device show "${INTERFACE}" 2>/dev/null | cut -d: -f2 | tr '\n' ' ')
+
+        if [ -n "${IP4_ADDRESS}" ]; then
+            {
+                echo "# Cached NetworkManager DHCP configuration for ${INTERFACE}"
+                echo "# Cached at: $(date)"
+                echo "# Cache timeout: ${CACHE_TIMEOUT} seconds"
+                echo "IP4_ADDRESS=\"${IP4_ADDRESS}\""
+                echo "IP4_GATEWAY=\"${IP4_GATEWAY}\""
+                echo "IP4_DNS=\"${IP4_DNS}\""
+                echo "cache_timestamp=\"$(date +%s)\""
+            } > "${CACHE_FILE}"
+            chmod 644 "${CACHE_FILE}"
+            logger -t kdevops-dhcp-cache "Saved NetworkManager DHCP config to cache for ${INTERFACE}: ${IP4_ADDRESS}"
+        fi
+        ;;
+
+    connectivity-change)
+        # Check if we have connectivity, if not try to restore from cache
+        CONNECTIVITY=$(nmcli -t -f CONNECTIVITY general status)
+        if [ "${CONNECTIVITY}" = "none" ] || [ "${CONNECTIVITY}" = "limited" ]; then
+            if [ -f "${CACHE_FILE}" ]; then
+                source "${CACHE_FILE}"
+
+                # Check if cache is still valid
+                current_timestamp=$(date +%s)
+                cache_age=$((current_timestamp - cache_timestamp))
+
+                if [ ${cache_age} -lt ${CACHE_TIMEOUT} ]; then
+                    logger -t kdevops-dhcp-cache "NetworkManager connectivity ${CONNECTIVITY} for ${INTERFACE}, restoring from cache (age: ${cache_age}s)"
+
+                    # Apply cached configuration using nmcli
+                    if [ -n "${IP4_ADDRESS}" ]; then
+                        nmcli connection modify "${INTERFACE}" ipv4.method manual \
+                            ipv4.addresses "${IP4_ADDRESS}" \
+                            ipv4.gateway "${IP4_GATEWAY}" \
+                            ipv4.dns "${IP4_DNS}"
+                        nmcli connection up "${INTERFACE}"
+                        logger -t kdevops-dhcp-cache "Successfully restored cached NetworkManager configuration: ${IP4_ADDRESS}"
+                    fi
+                else
+                    logger -t kdevops-dhcp-cache "Cached config for ${INTERFACE} expired (age: ${cache_age}s > ${CACHE_TIMEOUT}s)"
+                fi
+            else
+                logger -t kdevops-dhcp-cache "No cached config found for ${INTERFACE} after connectivity change"
+            fi
+        fi
+        ;;
+esac

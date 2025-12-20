@@ -62,9 +62,14 @@ config TERRAFORM_USE_OPENTOFU
 endchoice
 
 config TERRAFORM_BINARY_PATH
-	string
-	default "/usr/local/bin/terraform" if TERRAFORM_USE_TERRAFORM
+	string "Path to Terraform or OpenTofu binary"
+	default "/usr/bin/terraform" if TERRAFORM_USE_TERRAFORM
 	default "/usr/local/bin/tofu" if TERRAFORM_USE_OPENTOFU
 	output yaml
+	help
+	  Specify the path to the Terraform or OpenTofu binary. The default
+	  is set based on your Infrastructure as Code tool choice above.
+	  Override this if your binary is installed in a different location,
+	  such as /usr/bin/terraform or /usr/bin/tofu.
 
 endif # TERRAFORM

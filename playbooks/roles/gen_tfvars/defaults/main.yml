@@ -28,6 +28,10 @@ terraform_aws_ebs_volumes_per_instance: "0"
 terraform_aws_ebs_volume_size: 0
 terraform_aws_ebs_volume_type: "gp3"
 
+# Azure defaults - prevent undefined variable errors for hidden bool configs
+# that default to 'n' (kconfig doesn't output these to yaml)
+terraform_azure_accelerated_networking_enabled: false
+
 terraform_oci_assign_public_ip: false
 terraform_oci_use_existing_vcn: false
 

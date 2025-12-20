@@ -220,6 +220,9 @@ $(KDEVOPS_PROVISIONED_SSH):
 	$(Q)ansible \
 		baseline:dev:service \
 		-m wait_for_connection
+	$(Q)ansible-playbook $(ANSIBLE_VERBOSE) \
+		-i hosts playbooks/dhclient_cache.yml \
+		--extra-vars=@./extra_vars.yaml
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 	$(Q)ansible-playbook \
 		-i hosts playbooks/extra_volumes.yml \
