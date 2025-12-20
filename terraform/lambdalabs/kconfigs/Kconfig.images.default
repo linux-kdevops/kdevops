@@ -1,0 +1,22 @@
+# Lambda Labs OS images configuration
+
+# NOTE: The Lambda Labs terraform provider (elct9620/lambdalabs v0.3.0) does NOT support
+# OS image selection. Lambda Labs automatically deploys Ubuntu 22.04 LTS by default.
+#
+# The provider only supports these attributes for instances:
+# - name (instance name)
+# - region_name (deployment region)
+# - instance_type_name (GPU type)
+# - ssh_key_names (SSH keys)
+#
+# What's NOT supported:
+# - OS/distribution selection
+# - Custom user creation
+# - User data/cloud-init scripts
+# - Storage configuration
+#
+# SSH User: Always "ubuntu" (the OS default user)
+#
+# This file is kept as a placeholder for future provider updates.
+
+# No configuration options available - provider doesn't support OS selection

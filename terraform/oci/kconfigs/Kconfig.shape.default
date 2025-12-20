@@ -1,0 +1,587 @@
+choice
+	prompt "OCI shape family"
+	default TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	help
+	  This option selects the class of virtual hardware (CPUs and
+	  memory) to provision for each target node. Most CPU
+	  architectures, including x86, run two threads per physical
+	  core, so one OCPU is the equal of two vCPUs for x86-based
+	  compute.
+
+	  Which shapes are available is limited by your subscription
+	  and what hardware has been deployed in your selected region.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+	bool "Generic shapes"
+	help
+	  These shapes are recommended for developers who do not
+	  require a specific model of CPU for their workflows.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+	bool "Flex shapes"
+	help
+	  A flexible shape is a virtual machine that lets you
+	  customize the number of OCPUs and the amount of memory
+	  per instance. The network bandwidth and number of VNICs
+	  scale proportionately with the number of OCPUs.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_FIXED
+	bool "Fixed shapes"
+	help
+	  A fixed shape is a virtual machine with a predetermined
+	  number of OCPUs and amount of memory. These shapes offer
+	  consistent performance characteristics with configurations
+	  optimized for common workload patterns.
+
+config TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+	bool "Bare metal"
+	help
+	  A bare metal shape is a whole physical machine without
+	  virtualization. This gives deterministic performance
+	  characteristics but is less configurable than a flex
+	  shape.
+
+endchoice
+
+if TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance.
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+	bool "VM.Standard.x86.Generic"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Generic x86 shape that lets you customize CPU and memory
+	  without choosing a specific CPU generation.
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "VM.Standard.x86.Generic" if TERRAFORM_OCI_SHAPE_VM_STANDARD_X86_GENERIC
+
+config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
+	int "Instance CPU count"
+	output yaml
+	default 2
+	help
+	  An Oracle CPU (OCPU) represents a physical CPU core and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, run two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
+
+config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
+	int "Instance memory size"
+	output yaml
+	default 4
+	help
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUs in each
+	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_GENERIC
+
+if TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more detail, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#flexible
+
+config TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
+	bool "VM.Optimized3.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  3.0 GHz Intel® Xeon® Gold 6354 (Ice Lake)
+
+	  Architecture: x86_64
+	  Network: 4.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_A1_FLEX
+	bool "VM.Standard.A1.Flex"
+	depends on TARGET_ARCH_ARM64
+	help
+	  3.0 GHz Ampere® Altra™
+
+	  Architecture: arm64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_A2_FLEX
+	bool "VM.Standard.A2.Flex"
+	depends on TARGET_ARCH_ARM64
+	help
+	  3.0 GHz Ampere® AmpereOne™ (Siryn™)
+
+	  Architecture: arm64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_A4_FLEX
+	bool "VM.Standard.A4.Flex"
+	depends on TARGET_ARCH_ARM64
+	help
+	  3.6 GHz Ampere® AmpereOne-M™ (Banshee 12™)
+
+	  Architecture: arm64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E3_FLEX
+	bool "VM.Standard.E3.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2.25 GHz AMD EPYC™ 7742 (Rome)
+
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E4_FLEX
+	bool "VM.Standard.E4.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2.55 GHz AMD EPYC™ 7J13 (Milan)
+
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E5_FLEX
+	bool "VM.Standard.E5.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2.3 GHz AMD EPYC™ 9J14 (Genoa)
+
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E6_FLEX
+	bool "VM.Standard.E6.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2.7 GHz AMD EPYC™ 9J45 (Turin)
+
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+	bool "VM.Standard3.Flex"
+	depends on TARGET_ARCH_X86_64
+	help
+	  2.6 GHz Intel® Xeon® Platinum 8358 (Ice Lake)
+
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "VM.Optimized3.Flex" if TERRAFORM_OCI_SHAPE_VM_OPTIMIZED3_FLEX
+	default "VM.Standard.A1.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_A1_FLEX
+	default "VM.Standard.A2.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_A2_FLEX
+	default "VM.Standard.A4.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_A4_FLEX
+	default "VM.Standard.E3.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E3_FLEX
+	default "VM.Standard.E4.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E4_FLEX
+	default "VM.Standard.E5.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E5_FLEX
+	default "VM.Standard.E6.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E6_FLEX
+	default "VM.Standard3.Flex" if TERRAFORM_OCI_SHAPE_VM_STANDARD3_FLEX
+
+config TERRAFORM_OCI_INSTANCE_FLEX_OCPUS
+	int "Instance CPU count"
+	output yaml
+	default 2
+	help
+	  The Oracle CPU (OCPU) represents physical CPU cores and is
+	  the unit of measurement for CPUs on x86 CPUs (AMD and
+	  Intel) and Arm CPUs (OCI Ampere Compute). A virtual CPU
+	  (vCPU), the industry-standard for measuring compute
+	  resources, represents one execution thread of a physical
+	  CPU core.
+
+	  Most CPU architectures, including x86, run two threads
+	  per physical core, so one OCPU is the equal of two vCPUs
+	  for x86-based compute. For OCI Compute, the minimum unit
+	  of provisioning starts from one OCPU on both X86 (Intel
+	  and AMD) and OCI Ampere Compute processors.
+
+config TERRAFORM_OCI_INSTANCE_FLEX_MEMORY_IN_GBS
+	int "Instance memory size"
+	output yaml
+	default 4
+	help
+	  Memory per instance, in GiBs. The minimum value for this
+	  setting is a multiple of the number of OCPUs in each
+	  instance.
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FLEX
+
+if TERRAFORM_OCI_SHAPE_FAMILY_FIXED
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_1
+	help
+	  Select the specific shape configuration. Fixed shapes have
+	  predetermined OCPU and memory configurations optimized for
+	  common workload patterns. For more details, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_1
+	bool "VM.Standard.E2.1"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz AMD EPYC™ 7551 (Naples)
+
+	  OCPU count: 1.0
+	  Memory: 8.0 GB
+	  Architecture: x86_64
+	  Network: 0.7 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_2
+	bool "VM.Standard.E2.2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz AMD EPYC™ 7551 (Naples)
+
+	  OCPU count: 2.0
+	  Memory: 16.0 GB
+	  Architecture: x86_64
+	  Network: 1.4 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_4
+	bool "VM.Standard.E2.4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz AMD EPYC™ 7551 (Naples)
+
+	  OCPU count: 4.0
+	  Memory: 32.0 GB
+	  Architecture: x86_64
+	  Network: 2.8 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_8
+	bool "VM.Standard.E2.8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz AMD EPYC™ 7551 (Naples)
+
+	  OCPU count: 8.0
+	  Memory: 64.0 GB
+	  Architecture: x86_64
+	  Network: 5.6 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD1_1
+	bool "VM.Standard1.1"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 1.0
+	  Memory: 7.0 GB
+	  Architecture: x86_64
+	  Network: 0.6 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD1_16
+	bool "VM.Standard1.16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 16.0
+	  Memory: 112.0 GB
+	  Architecture: x86_64
+	  Network: 4.8 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD1_2
+	bool "VM.Standard1.2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 2.0
+	  Memory: 14.0 GB
+	  Architecture: x86_64
+	  Network: 1.2 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD1_4
+	bool "VM.Standard1.4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 4.0
+	  Memory: 28.0 GB
+	  Architecture: x86_64
+	  Network: 1.2 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD1_8
+	bool "VM.Standard1.8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 8.0
+	  Memory: 56.0 GB
+	  Architecture: x86_64
+	  Network: 2.4 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_1
+	bool "VM.Standard2.1"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 1.0
+	  Memory: 15.0 GB
+	  Architecture: x86_64
+	  Network: 1.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_16
+	bool "VM.Standard2.16"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 16.0
+	  Memory: 240.0 GB
+	  Architecture: x86_64
+	  Network: 16.4 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_2
+	bool "VM.Standard2.2"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 2.0
+	  Memory: 30.0 GB
+	  Architecture: x86_64
+	  Network: 2.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_24
+	bool "VM.Standard2.24"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 24.0
+	  Memory: 320.0 GB
+	  Architecture: x86_64
+	  Network: 24.6 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_4
+	bool "VM.Standard2.4"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 4.0
+	  Memory: 60.0 GB
+	  Architecture: x86_64
+	  Network: 4.1 Gbps
+
+config TERRAFORM_OCI_SHAPE_VM_STANDARD2_8
+	bool "VM.Standard2.8"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 8.0
+	  Memory: 120.0 GB
+	  Architecture: x86_64
+	  Network: 8.2 Gbps
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "VM.Standard.E2.1" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_1
+	default "VM.Standard.E2.2" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_2
+	default "VM.Standard.E2.4" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_4
+	default "VM.Standard.E2.8" if TERRAFORM_OCI_SHAPE_VM_STANDARD_E2_8
+	default "VM.Standard1.1" if TERRAFORM_OCI_SHAPE_VM_STANDARD1_1
+	default "VM.Standard1.16" if TERRAFORM_OCI_SHAPE_VM_STANDARD1_16
+	default "VM.Standard1.2" if TERRAFORM_OCI_SHAPE_VM_STANDARD1_2
+	default "VM.Standard1.4" if TERRAFORM_OCI_SHAPE_VM_STANDARD1_4
+	default "VM.Standard1.8" if TERRAFORM_OCI_SHAPE_VM_STANDARD1_8
+	default "VM.Standard2.1" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_1
+	default "VM.Standard2.16" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_16
+	default "VM.Standard2.2" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_2
+	default "VM.Standard2.24" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_24
+	default "VM.Standard2.4" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_4
+	default "VM.Standard2.8" if TERRAFORM_OCI_SHAPE_VM_STANDARD2_8
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_FIXED
+
+if TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+
+choice
+	prompt "OCI shape"
+	default TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3_36
+	help
+	  Select the basic hardware capabilities that are in each
+	  instance. For more details, see:
+
+	  https://docs.oracle.com/en-us/iaas/Content/Compute/References/computeshapes.htm#baremetalshapes
+
+config TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3_36
+	bool "BM.Optimized3.36"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 3.0 GHz Intel® Xeon® Gold 6354 (Ice Lake)
+
+	  OCPU count: 36.0
+	  Memory: 512.0 GB
+	  Architecture: x86_64
+	  Network: 100.0 Gbps
+	  Local storage: 3840.0 GB local storage (1 disks)
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_A1_160
+	bool "BM.Standard.A1.160"
+	depends on TARGET_ARCH_ARM64
+	help
+	  Processor: 3.0 GHz Ampere® Altra™
+
+	  OCPU count: 160.0
+	  Memory: 1024.0 GB
+	  Architecture: arm64
+	  Network: 100.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_A4_48
+	bool "BM.Standard.A4.48"
+	depends on TARGET_ARCH_ARM64
+	help
+	  Processor: 3.6 GHz Ampere® AmpereOne-M™ (Banshee 12™)
+
+	  OCPU count: 48.0
+	  Memory: 768.0 GB
+	  Architecture: arm64
+	  Network: 200.0 Gbps
+	  Local storage: 3840.0 GB local storage (1 disks)
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E2_64
+	bool "BM.Standard.E2.64"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz AMD EPYC™ 7551 (Naples)
+
+	  OCPU count: 64.0
+	  Memory: 512.0 GB
+	  Architecture: x86_64
+	  Network: 50.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E3_128
+	bool "BM.Standard.E3.128"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.25 GHz AMD EPYC™ 7742 (Rome)
+
+	  OCPU count: 128.0
+	  Memory: 2048.0 GB
+	  Architecture: x86_64
+	  Network: 100.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E4_128
+	bool "BM.Standard.E4.128"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.55 GHz AMD EPYC™ 7J13 (Milan)
+
+	  OCPU count: 128.0
+	  Memory: 2048.0 GB
+	  Architecture: x86_64
+	  Network: 100.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E5_192
+	bool "BM.Standard.E5.192"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz AMD EPYC™ 9J14 (Genoa)
+
+	  OCPU count: 192.0
+	  Memory: 2304.0 GB
+	  Architecture: x86_64
+	  Network: 100.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD_E6_256
+	bool "BM.Standard.E6.256"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.7 GHz AMD EPYC™ 9J45 (Turin)
+
+	  OCPU count: 256.0
+	  Memory: 3072.0 GB
+	  Architecture: x86_64
+	  Network: 200.0 Gbps
+	  Local storage: 1920.0 GB local storage (2 disks)
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD1_36
+	bool "BM.Standard1.36"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)
+
+	  OCPU count: 36.0
+	  Memory: 256.0 GB
+	  Architecture: x86_64
+	  Network: 10.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD2_52
+	bool "BM.Standard2.52"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake)
+
+	  OCPU count: 52.0
+	  Memory: 768.0 GB
+	  Architecture: x86_64
+	  Network: 50.0 Gbps
+
+config TERRAFORM_OCI_SHAPE_BM_STANDARD3_64
+	bool "BM.Standard3.64"
+	depends on TARGET_ARCH_X86_64
+	help
+	  Processor: 2.6 GHz Intel® Xeon® Platinum 8358 (Ice Lake)
+
+	  OCPU count: 64.0
+	  Memory: 1024.0 GB
+	  Architecture: x86_64
+	  Network: 100.0 Gbps
+
+endchoice
+
+config TERRAFORM_OCI_SHAPE
+	string
+	output yaml
+	default "BM.Optimized3.36" if TERRAFORM_OCI_SHAPE_BM_OPTIMIZED3_36
+	default "BM.Standard.A1.160" if TERRAFORM_OCI_SHAPE_BM_STANDARD_A1_160
+	default "BM.Standard.A4.48" if TERRAFORM_OCI_SHAPE_BM_STANDARD_A4_48
+	default "BM.Standard.E2.64" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E2_64
+	default "BM.Standard.E3.128" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E3_128
+	default "BM.Standard.E4.128" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E4_128
+	default "BM.Standard.E5.192" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E5_192
+	default "BM.Standard.E6.256" if TERRAFORM_OCI_SHAPE_BM_STANDARD_E6_256
+	default "BM.Standard1.36" if TERRAFORM_OCI_SHAPE_BM_STANDARD1_36
+	default "BM.Standard2.52" if TERRAFORM_OCI_SHAPE_BM_STANDARD2_52
+	default "BM.Standard3.64" if TERRAFORM_OCI_SHAPE_BM_STANDARD3_64
+
+endif # TERRAFORM_OCI_SHAPE_FAMILY_BARE_METAL
+

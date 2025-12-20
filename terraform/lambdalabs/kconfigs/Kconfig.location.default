@@ -1,0 +1,93 @@
+# Lambda Labs regions (default configuration)
+#
+# This file provides sensible defaults for Lambda Labs regions.
+# Run 'make cloud-configs' to regenerate with live capacity data.
+
+choice
+	prompt "Lambda Labs region"
+	default TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	help
+	  Select the Lambda Labs region for deployment.
+	  Run 'make cloud-configs' to see current capacity per region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_TX_1
+	bool "us-tx-1 - Texas, USA"
+	help
+	  Lambda Labs datacenter in Texas, USA.
+
+config TERRAFORM_LAMBDALABS_REGION_US_MIDWEST_1
+	bool "us-midwest-1 - Midwest, USA"
+	help
+	  Lambda Labs datacenter in the US Midwest.
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_1
+	bool "us-west-1 - California, USA"
+	help
+	  Lambda Labs datacenter in California, USA.
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_2
+	bool "us-west-2 - US West 2"
+	help
+	  Lambda Labs datacenter in US West region 2.
+
+config TERRAFORM_LAMBDALABS_REGION_US_WEST_3
+	bool "us-west-3 - US West 3"
+	help
+	  Lambda Labs datacenter in US West region 3.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_1
+	bool "us-south-1 - US South"
+	help
+	  Lambda Labs datacenter in US South region.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_2
+	bool "us-south-2 - US South 2"
+	help
+	  Lambda Labs datacenter in US South region 2.
+
+config TERRAFORM_LAMBDALABS_REGION_US_SOUTH_3
+	bool "us-south-3 - US South 3"
+	help
+	  Lambda Labs datacenter in US South region 3.
+
+config TERRAFORM_LAMBDALABS_REGION_US_EAST_1
+	bool "us-east-1 - Virginia, USA"
+	help
+	  Lambda Labs datacenter in Virginia, USA.
+
+config TERRAFORM_LAMBDALABS_REGION_US_EAST_3
+	bool "us-east-3 - US East 3"
+	help
+	  Lambda Labs datacenter in US East region 3.
+
+config TERRAFORM_LAMBDALABS_REGION_EU_CENTRAL_1
+	bool "europe-central-1 - Europe Central"
+	help
+	  Lambda Labs datacenter in Central Europe.
+
+config TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_1
+	bool "asia-northeast-1 - Asia Northeast"
+	help
+	  Lambda Labs datacenter in Northeast Asia.
+
+config TERRAFORM_LAMBDALABS_REGION_ASIA_NORTHEAST_2
+	bool "asia-northeast-2 - Asia Northeast 2"
+	help
+	  Lambda Labs datacenter in Northeast Asia region 2.
+
+config TERRAFORM_LAMBDALABS_REGION_ASIA_SOUTH_1
+	bool "asia-south-1 - Asia South"
+	help
+	  Lambda Labs datacenter in South Asia.
+
+config TERRAFORM_LAMBDALABS_REGION_ME_WEST_1
+	bool "me-west-1 - Middle East West"
+	help
+	  Lambda Labs datacenter in the Middle East.
+
+config TERRAFORM_LAMBDALABS_REGION_AUSTRALIA_EAST_1
+	bool "australia-east-1 - Australia East"
+	help
+	  Lambda Labs datacenter in Eastern Australia.
+
+endchoice

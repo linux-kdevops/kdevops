@@ -112,6 +112,10 @@ archive/
 nixos/generated/
 
 # Dyanmic cloud kconfig files
+terraform/datacrunch/kconfigs/Kconfig.compute.generated
+terraform/datacrunch/kconfigs/Kconfig.images.generated
+terraform/datacrunch/kconfigs/Kconfig.location.generated
+
 terraform/lambdalabs/kconfigs/Kconfig.compute.generated
 terraform/lambdalabs/kconfigs/Kconfig.compute.mappings
 terraform/lambdalabs/kconfigs/Kconfig.images.generated
