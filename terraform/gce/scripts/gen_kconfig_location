@@ -1,0 +1,565 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve region and zone information from GCE. Use it to construct
+the "locations" Kconfig menu.
+
+This script queries the GCE API to dynamically generate a Kconfig file
+containing all available GCE regions and their zones. It uses the REST
+API directly with google-auth and requests rather than the
+google-cloud-compute SDK. See gce_common.py for details on why this
+approach was chosen.
+
+Region Friendly Names:
+    Region friendly names (e.g., "Los Angeles, California, USA") are maintained
+    in the region_friendly_names.yml file in the same directory as this script.
+    This makes it easier to update the friendly names when Google adds new
+    regions or when you want to customize the display names.
+
+    To update region friendly names:
+    1. Edit terraform/gce/scripts/region_friendly_names.yml
+    2. Add or modify entries following the existing format
+    3. Run this script to regenerate Kconfig.location
+
+    The YAML file contains detailed instructions for how to find and add
+    new region information. If a region is not found in the YAML file,
+    the script will auto-generate a friendly name from the region identifier.
+
+Usage:
+    # Generate complete Kconfig.location file
+    ./gen_kconfig_location > ../kconfigs/Kconfig.location
+
+    # List all available regions
+    ./gen_kconfig_location --regions
+
+    # Get details for a specific region
+    ./gen_kconfig_location us-west2
+"""
+
+from __future__ import annotations
+
+import sys
+import argparse
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Optional
+
+from google.auth.transport.requests import AuthorizedSession
+
+from gce_common import (
+    GceNotConfiguredError,
+    get_default_region,
+    get_jinja2_environment,
+    get_region_kconfig_name,
+    get_zone_kconfig_name,
+    load_yaml_config,
+    list_regions,
+    list_zones,
+    exit_on_empty_result,
+    require_gce_credentials,
+)
+
+
+def load_region_friendly_names() -> dict[str, str]:
+    """
+    Load region friendly names from the YAML configuration file.
+
+    The friendly names are maintained in region_friendly_names.yml to make
+    it easier to update when Google adds new regions. The YAML file contains
+    the canonical mapping from GCE region identifiers to human-readable
+    display names.
+
+    To update the friendly names:
+    1. Edit terraform/gce/scripts/region_friendly_names.yml
+    2. Add or modify entries following the existing format
+    3. Regenerate Kconfig.location by running this script
+
+    See region_friendly_names.yml for detailed update instructions.
+
+    Returns:
+        dict: Dictionary mapping region names to friendly display names
+    """
+    return load_yaml_config("region_friendly_names.yml")
+
+
+def get_region_friendly_name(
+    region_name: str, friendly_names: Optional[dict[str, str]] = None
+) -> str:
+    """
+    Get a friendly display name for a region.
+
+    Region friendly names are loaded from region_friendly_names.yml.
+    If a region is not found in the YAML file, an auto-generated name
+    is returned.
+
+    The YAML file can be updated to add new regions or customize names.
+    See load_region_friendly_names() for update instructions.
+
+    Args:
+        region_name (str): GCE region name (e.g., 'us-west2')
+        friendly_names (dict): Optional pre-loaded friendly names dict.
+                               If None, names will be loaded from YAML.
+
+    Returns:
+        str: Friendly name (e.g., 'Los Angeles, California, USA')
+    """
+    # Load friendly names from YAML if not provided
+    if friendly_names is None:
+        friendly_names = load_region_friendly_names()
+
+    # Look up the friendly name in the loaded data
+    if region_name in friendly_names:
+        return friendly_names[region_name]
+
+    # Auto-generate if not in map
+    # Convert region name to title case with proper formatting
+    return region_name.replace("-", " ").title()
+
+
+def get_all_regions(
+    session: AuthorizedSession, project: str, quiet: bool = False
+) -> list[dict[str, Any]]:
+    """
+    Retrieve the list of all GCE regions using the REST API.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        quiet: Suppress progress messages
+
+    Returns:
+        list: Sorted list of dictionaries each containing region information
+    """
+    if not quiet:
+        print("Querying GCE for available regions...", file=sys.stderr)
+
+    try:
+        api_regions = list_regions(session, project)
+
+        # Load friendly names once for efficiency
+        friendly_names = load_region_friendly_names()
+
+        regions = []
+        for region in api_regions:
+            region_name = region["name"]
+            # Count zones from the zones list in the API response
+            zone_count = len(region.get("zones", []))
+            regions.append(
+                {
+                    "region_name": region_name,
+                    "kconfig_name": get_region_kconfig_name(region_name),
+                    "friendly_name": get_region_friendly_name(
+                        region_name, friendly_names
+                    ),
+                    "status": region.get("status", "UP"),
+                    "zone_count": zone_count,
+                }
+            )
+
+        if not quiet:
+            print(f"Found {len(regions)} GCE regions", file=sys.stderr)
+
+        return sorted(regions, key=lambda x: x["region_name"])
+
+    except Exception as e:
+        if not quiet:
+            print(f"Error retrieving GCE regions: {e}", file=sys.stderr)
+        return []
+
+
+def get_all_zones_by_region(
+    session: AuthorizedSession, project: str, quiet: bool = False
+) -> dict[str, list[dict[str, Any]]]:
+    """
+    Get all zones grouped by region in a single API call.
+
+    This is more efficient than querying zones per-region when we need
+    zone information for all regions.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary mapping region names to lists of zone dictionaries
+    """
+    if not quiet:
+        print("Querying all GCE zones...", file=sys.stderr)
+
+    try:
+        api_zones = list_zones(session, project)
+
+        zones_by_region = {}
+        for zone in api_zones:
+            zone_name = zone["name"]
+            # Extract region from zone name (e.g., "us-west2-a" -> "us-west2")
+            # Zone format is region-letter, so rsplit on last hyphen
+            region_name = zone_name.rsplit("-", 1)[0]
+
+            if region_name not in zones_by_region:
+                zones_by_region[region_name] = []
+
+            zones_by_region[region_name].append(
+                {
+                    "zone_name": zone_name,
+                    "kconfig_name": get_zone_kconfig_name(zone_name),
+                    "status": zone.get("status", "UP"),
+                }
+            )
+
+        # Sort zones within each region
+        for region_name in zones_by_region:
+            zones_by_region[region_name].sort(key=lambda x: x["zone_name"])
+
+        if not quiet:
+            total_zones = sum(len(z) for z in zones_by_region.values())
+            print(
+                f"Found {total_zones} zones across {len(zones_by_region)} regions",
+                file=sys.stderr,
+            )
+
+        return zones_by_region
+
+    except Exception as e:
+        if not quiet:
+            print(f"Error retrieving zones: {e}", file=sys.stderr)
+        return {}
+
+
+def get_region_zones(
+    session: AuthorizedSession, project: str, region_name: str, quiet: bool = False
+) -> list[dict[str, Any]]:
+    """
+    Get all zones for a specific region.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        region_name (str): GCE region name (e.g., 'us-west2')
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        list: List of zone dictionaries, or empty list on error
+    """
+    if not quiet:
+        print(
+            f"Querying zones for region {region_name}...",
+            file=sys.stderr,
+        )
+
+    try:
+        api_zones = list_zones(session, project)
+
+        zones = []
+        for zone in api_zones:
+            zone_name = zone["name"]
+            # Filter to zones in the specified region
+            # Zone names are like "us-west2-a", region is "us-west2"
+            if zone_name.rsplit("-", 1)[0] == region_name:
+                zones.append(
+                    {
+                        "zone_name": zone_name,
+                        "kconfig_name": get_zone_kconfig_name(zone_name),
+                        "status": zone.get("status", "UP"),
+                    }
+                )
+
+        if not quiet:
+            print(
+                f"Found {len(zones)} zones in {region_name}",
+                file=sys.stderr,
+            )
+
+        return sorted(zones, key=lambda x: x["zone_name"])
+
+    except Exception as e:
+        if not quiet:
+            print(f"Error retrieving zones for {region_name}: {e}", file=sys.stderr)
+        return []
+
+
+def get_region_info(
+    session: AuthorizedSession,
+    project: str,
+    regions: list[dict[str, Any]],
+    region_name: str,
+    quiet: bool = False,
+) -> Optional[dict[str, Any]]:
+    """
+    Get detailed information about a specific region including zones.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        regions (list): List of all available regions
+        region_name (str): GCE region name (e.g., 'us-west2')
+        quiet (bool): Suppress debug messages
+
+    Returns:
+        dict: Dictionary containing region information and zones
+    """
+    if not quiet:
+        print(f"Querying information for region {region_name}...", file=sys.stderr)
+
+    region_info = next((r for r in regions if r["region_name"] == region_name), None)
+
+    if not region_info:
+        if not quiet:
+            print(f"Region {region_name} was not found", file=sys.stderr)
+        return None
+
+    # Get zones for this region
+    zones = get_region_zones(session, project, region_name, quiet)
+
+    result = {
+        "region_name": region_info["region_name"],
+        "kconfig_name": region_info["kconfig_name"],
+        "friendly_name": region_info["friendly_name"],
+        "status": region_info["status"],
+        "zone_count": len(zones),
+        "zones": zones,
+    }
+
+    return result
+
+
+def output_region_kconfig(region_info: dict[str, Any]) -> None:
+    """Output region information in Kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("zone.j2")
+
+    # Determine default zone (first zone alphabetically)
+    default_zone = (
+        region_info["zones"][0]["kconfig_name"] if region_info["zones"] else ""
+    )
+
+    print(
+        template.render(
+            region_kconfig_name=region_info["kconfig_name"],
+            default_zone=default_zone,
+            zones=region_info["zones"],
+        )
+    )
+
+
+def output_region_raw(region_info: dict[str, Any], quiet: bool = False) -> None:
+    """Output region information in table format."""
+    if not quiet:
+        print(f"Region:        {region_info['region_name']}")
+        print(f"Friendly Name: {region_info['friendly_name']}")
+        print(f"Status:        {region_info['status']}")
+        print(f"Zones:         {region_info['zone_count']}")
+
+    print(f"{'Zone Name':<20} {'Status':<10}")
+    print("-" * 30)
+
+    for zone in region_info["zones"]:
+        print(f"{zone['zone_name']:<20} {zone['status']:<10}")
+
+
+def output_regions_kconfig(regions: list[dict[str, Any]]) -> None:
+    """Output available regions in Kconfig format."""
+    environment = get_jinja2_environment()
+    template = environment.get_template("regions.j2")
+
+    default_region = get_region_kconfig_name(get_default_region())
+
+    print(
+        template.render(
+            default_region=default_region,
+            regions=regions,
+        )
+    )
+
+
+def output_regions_raw(regions: list[dict[str, Any]], quiet: bool = False) -> None:
+    """Output available regions in table format."""
+    if not quiet:
+        print(f"Available GCE regions ({len(regions)}):\n")
+        print(f"{'Region Name':<30} {'Status':<10} {'Zones':<8}")
+        print("-" * 50)
+
+    for region in regions:
+        print(
+            f"{region['region_name']:<30} {region['status']:<10} "
+            f"{region['zone_count']:<8}"
+        )
+
+
+def output_locations_kconfig(
+    session: AuthorizedSession,
+    project: str,
+    regions: list[dict[str, Any]],
+    quiet: bool = False,
+    zones_by_region: Optional[dict[str, list[dict[str, Any]]]] = None,
+) -> None:
+    """
+    Output the complete locations menu in Kconfig format.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        regions (list): List of all regions
+        quiet (bool): Suppress progress messages
+        zones_by_region: Optional pre-fetched zones dict (for parallel fetching)
+    """
+    environment = get_jinja2_environment()
+
+    # Output the region choice menu
+    template = environment.get_template("regions.j2")
+    default_region = get_region_kconfig_name(get_default_region())
+
+    print(
+        template.render(
+            default_region=default_region,
+            regions=regions,
+        )
+    )
+
+    # Use pre-fetched zones if provided, otherwise fetch now
+    if zones_by_region is None:
+        zones_by_region = get_all_zones_by_region(session, project, quiet)
+
+    # Output zone configuration for each region
+    template = environment.get_template("zone.j2")
+    for region in regions:
+        region_name = region["region_name"]
+        zones = zones_by_region.get(region_name, [])
+
+        if zones:
+            # Determine default zone (first zone alphabetically)
+            default_zone = zones[0]["kconfig_name"]
+            print()
+            print(
+                template.render(
+                    region_kconfig_name=region["kconfig_name"],
+                    default_zone=default_zone,
+                    zones=zones,
+                )
+            )
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Get GCE region and zone information",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python %(prog)s --regions
+  python %(prog)s us-west2
+  python %(prog)s asia-south1 --quiet
+  python %(prog)s > ../kconfigs/Kconfig.location
+        """,
+    )
+    parser.add_argument(
+        "region_name",
+        nargs="?",
+        help="GCE region name (e.g., us-west2, asia-south1)",
+    )
+
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--regions", action="store_true", help="List all available GCE regions"
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    # Allow make dynconfig to succeed without GCE credentials
+    try:
+        session, project = require_gce_credentials()
+    except GceNotConfiguredError:
+        if not args.quiet:
+            print("GCE not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
+    if not args.quiet:
+        print(f"Using project: {project}", file=sys.stderr)
+
+    # For the default case (full Kconfig generation), fetch regions and zones
+    # in parallel to reduce wall-clock time
+    if not args.regions and not args.region_name:
+        if not args.quiet:
+            print("Querying GCE regions and zones...", file=sys.stderr)
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_regions = executor.submit(
+                get_all_regions, session, project, args.quiet
+            )
+            future_zones = executor.submit(
+                get_all_zones_by_region, session, project, args.quiet
+            )
+            try:
+                regions = future_regions.result()
+                zones_by_region = future_zones.result()
+            except Exception as e:
+                # Cancel any pending futures
+                future_regions.cancel()
+                future_zones.cancel()
+                print(
+                    f"Error during parallel GCE API queries: {e}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+        exit_on_empty_result(zones_by_region, "GCE zones query", args.quiet)
+
+        if not args.quiet:
+            total_zones = sum(len(z) for z in zones_by_region.values())
+            print(
+                f"Found {len(regions)} regions and {total_zones} zones",
+                file=sys.stderr,
+            )
+
+        output_locations_kconfig(
+            session, project, regions, args.quiet, zones_by_region
+        )
+        return
+
+    # For other cases, fetch only what's needed
+    regions = get_all_regions(session, project, args.quiet)
+    exit_on_empty_result(regions, "GCE region query", args.quiet)
+
+    if args.regions:
+        if args.format == "kconfig":
+            output_regions_kconfig(regions)
+        else:
+            output_regions_raw(regions, args.quiet)
+        return
+
+    if args.region_name:
+        region_info = get_region_info(
+            session, project, regions, args.region_name, args.quiet
+        )
+        if region_info:
+            if args.format == "kconfig":
+                output_region_kconfig(region_info)
+            else:
+                output_region_raw(region_info, args.quiet)
+        else:
+            print(
+                f"Could not retrieve information for region '{args.region_name}'.",
+                file=sys.stderr,
+            )
+            print(
+                "Try running with --regions to see available regions.", file=sys.stderr
+            )
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

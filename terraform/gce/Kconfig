@@ -1,10 +1,13 @@
 if TERRAFORM_GCE
 
 menu "Resource Location"
-source "terraform/gce/kconfigs/Kconfig.location"
+source "terraform/gce/kconfigs/Kconfig.location.generated"
 endmenu
 menu "Compute"
-source "terraform/gce/kconfigs/Kconfig.compute"
+comment "Machine selection"
+source "terraform/gce/kconfigs/Kconfig.machine.generated"
+comment "OS image selection"
+source "terraform/gce/kconfigs/Kconfig.image.generated"
 endmenu
 menu "Storage"
 source "terraform/gce/kconfigs/Kconfig.storage"

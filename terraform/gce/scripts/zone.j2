@@ -1,0 +1,23 @@
+if TERRAFORM_GCE_REGION_{{ region_kconfig_name }}
+
+choice
+	prompt "GCE zone"
+	default TERRAFORM_GCE_ZONE_{{ default_zone }}
+	help
+	  A zone is a deployment area within a region.
+
+{% for zone in zones %}
+config TERRAFORM_GCE_ZONE_{{ zone['kconfig_name'] }}
+	bool "{{ zone['zone_name'] }}"
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_GCE_ZONE
+	string
+	output yaml
+{% for zone in zones %}
+	default "{{ zone['zone_name'] }}" if TERRAFORM_GCE_ZONE_{{ zone['kconfig_name'] }}
+{% endfor %}
+
+endif # TERRAFORM_GCE_REGION_{{ region_kconfig_name }}

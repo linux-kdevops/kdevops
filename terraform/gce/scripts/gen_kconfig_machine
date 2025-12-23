@@ -1,0 +1,961 @@
+#!/usr/bin/env python3
+# ex: set filetype=python:
+
+"""
+Retrieve machine type information from GCE. Use it to construct the
+"machine types" Kconfig menu.
+
+GCE machine types represent compute instance configurations with varying
+combinations of CPU, memory, and capabilities. This script queries the GCE
+API to discover available machine types and generates Kconfig menu entries
+for them.
+
+Machine Type Series:
+    GCE machine types are organized into series by combining family and
+    workload type:
+    - n2-standard: General purpose balanced (Intel)
+    - n2-highcpu: General purpose compute-optimized (Intel)
+    - n2-highmem: General purpose memory-optimized (Intel)
+    - n2d-standard: General purpose balanced (AMD)
+    - e2-standard: Cost-optimized balanced
+    - c2-standard: Compute-optimized
+    - etc.
+
+    This script organizes machine types by series and generates a two-level
+    Kconfig menu: first select the series, then select the specific machine
+    type within that series.
+
+Usage:
+    # Generate complete Kconfig.compute file
+    ./gen_kconfig_machine > ../kconfigs/Kconfig.compute
+
+    # List all available machine type series
+    ./gen_kconfig_machine --series
+
+    # Get details for a specific series
+    ./gen_kconfig_machine n2-standard
+"""
+
+from __future__ import annotations
+
+import sys
+import argparse
+import re
+
+import requests
+import requests.exceptions
+
+from gce_common import (
+    GceNotConfiguredError,
+    get_default_zone,
+    get_jinja2_environment,
+    get_machine_type_kconfig_name,
+    list_machine_types,
+    list_machine_types_aggregated,
+    exit_on_empty_result,
+    require_gce_credentials,
+)
+
+
+# Series metadata for help text
+SERIES_METADATA = {
+    "a2-highgpu": {
+        "description": "A2 High GPU",
+        "help_text": "GPU-enabled machine types with NVIDIA A100 GPUs for ML and HPC workloads.",
+        "architecture": "x86_64",
+    },
+    "a2-megagpu": {
+        "description": "A2 Mega GPU",
+        "help_text": "GPU-enabled machine types with multiple NVIDIA A100 GPUs.",
+        "architecture": "x86_64",
+    },
+    "a2-ultragpu": {
+        "description": "A2 Ultra GPU",
+        "help_text": "GPU-enabled machine types with NVIDIA A100 80GB GPUs.",
+        "architecture": "x86_64",
+    },
+    "a3-highgpu": {
+        "description": "A3 High GPU",
+        "help_text": "GPU-enabled machine types with NVIDIA H100 GPUs.",
+        "architecture": "x86_64",
+    },
+    "a3-megagpu": {
+        "description": "A3 Mega GPU",
+        "help_text": "GPU-enabled machine types with multiple NVIDIA H100 GPUs.",
+        "architecture": "x86_64",
+    },
+    "c2-standard": {
+        "description": "C2 Standard",
+        "help_text": "Compute-optimized with 3.8 GHz sustained all-core turbo on Intel Cascade Lake.",
+        "architecture": "x86_64",
+    },
+    "c2d-highcpu": {
+        "description": "C2D High CPU",
+        "help_text": "Compute-optimized high CPU with AMD EPYC Milan processors.",
+        "architecture": "x86_64",
+    },
+    "c2d-highmem": {
+        "description": "C2D High Memory",
+        "help_text": "Compute-optimized high memory with AMD EPYC Milan processors.",
+        "architecture": "x86_64",
+    },
+    "c2d-standard": {
+        "description": "C2D Standard",
+        "help_text": "Compute-optimized balanced with AMD EPYC Milan processors.",
+        "architecture": "x86_64",
+    },
+    "c3-highcpu": {
+        "description": "C3 High CPU",
+        "help_text": "Third generation compute-optimized high CPU with Intel Sapphire Rapids.",
+        "architecture": "x86_64",
+    },
+    "c3-highmem": {
+        "description": "C3 High Memory",
+        "help_text": "Third generation compute-optimized high memory with Intel Sapphire Rapids.",
+        "architecture": "x86_64",
+    },
+    "c3-standard": {
+        "description": "C3 Standard",
+        "help_text": "Third generation compute-optimized balanced with Intel Sapphire Rapids.",
+        "architecture": "x86_64",
+    },
+    "c3d-highcpu": {
+        "description": "C3D High CPU",
+        "help_text": "Third generation compute-optimized high CPU with AMD EPYC Genoa.",
+        "architecture": "x86_64",
+    },
+    "c3d-highmem": {
+        "description": "C3D High Memory",
+        "help_text": "Third generation compute-optimized high memory with AMD EPYC Genoa.",
+        "architecture": "x86_64",
+    },
+    "c3d-standard": {
+        "description": "C3D Standard",
+        "help_text": "Third generation compute-optimized balanced with AMD EPYC Genoa.",
+        "architecture": "x86_64",
+    },
+    "c4-highcpu": {
+        "description": "C4 High CPU",
+        "help_text": "Fourth generation compute-optimized high CPU with Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "c4-highmem": {
+        "description": "C4 High Memory",
+        "help_text": "Fourth generation compute-optimized high memory with Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "c4-standard": {
+        "description": "C4 Standard",
+        "help_text": "Fourth generation compute-optimized balanced with Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "c4a-highcpu": {
+        "description": "C4A High CPU",
+        "help_text": "Fourth generation compute-optimized high CPU with Arm-based Axion processors.",
+        "architecture": "arm64",
+    },
+    "c4a-highmem": {
+        "description": "C4A High Memory",
+        "help_text": "Fourth generation compute-optimized high memory with Arm-based Axion processors.",
+        "architecture": "arm64",
+    },
+    "c4a-standard": {
+        "description": "C4A Standard",
+        "help_text": "Fourth generation compute-optimized balanced with Arm-based Axion processors.",
+        "architecture": "arm64",
+    },
+    "e2-highcpu": {
+        "description": "E2 High CPU",
+        "help_text": "Cost-optimized compute-intensive on Intel or AMD processors.",
+        "architecture": "x86_64",
+    },
+    "e2-highmem": {
+        "description": "E2 High Memory",
+        "help_text": "Cost-optimized memory-intensive on Intel or AMD processors.",
+        "architecture": "x86_64",
+    },
+    "e2-medium": {
+        "description": "E2 Medium",
+        "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 4 GB memory.",
+        "architecture": "x86_64",
+    },
+    "e2-micro": {
+        "description": "E2 Micro",
+        "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 1 GB memory.",
+        "architecture": "x86_64",
+    },
+    "e2-small": {
+        "description": "E2 Small",
+        "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 2 GB memory.",
+        "architecture": "x86_64",
+    },
+    "e2-standard": {
+        "description": "E2 Standard",
+        "help_text": "Cost-optimized balanced on Intel or AMD processors.",
+        "architecture": "x86_64",
+    },
+    "f1-micro": {
+        "description": "F1 Micro",
+        "help_text": "Legacy shared-core machine type. Consider using e2-micro instead.",
+        "architecture": "x86_64",
+    },
+    "g1-small": {
+        "description": "G1 Small",
+        "help_text": "Legacy shared-core machine type. Consider using e2-small instead.",
+        "architecture": "x86_64",
+    },
+    "g2-standard": {
+        "description": "G2 Standard",
+        "help_text": "GPU-enabled machine types with NVIDIA L4 GPUs.",
+        "architecture": "x86_64",
+    },
+    "h3-standard": {
+        "description": "H3 Standard",
+        "help_text": "HPC-optimized with Intel Sapphire Rapids for tightly-coupled HPC workloads.",
+        "architecture": "x86_64",
+    },
+    "m1-megamem": {
+        "description": "M1 Mega Memory",
+        "help_text": "Memory-optimized with up to 1.4 TB of memory.",
+        "architecture": "x86_64",
+    },
+    "m1-ultramem": {
+        "description": "M1 Ultra Memory",
+        "help_text": "Memory-optimized with up to 3.8 TB of memory.",
+        "architecture": "x86_64",
+    },
+    "m2-megamem": {
+        "description": "M2 Mega Memory",
+        "help_text": "Second generation memory-optimized with up to 6 TB of memory.",
+        "architecture": "x86_64",
+    },
+    "m2-hypermem": {
+        "description": "M2 Hyper Memory",
+        "help_text": "Second generation memory-optimized with high memory-to-CPU ratio.",
+        "architecture": "x86_64",
+    },
+    "m2-ultramem": {
+        "description": "M2 Ultra Memory",
+        "help_text": "Second generation memory-optimized with up to 12 TB of memory.",
+        "architecture": "x86_64",
+    },
+    "m3-megamem": {
+        "description": "M3 Mega Memory",
+        "help_text": "Third generation memory-optimized with Intel Ice Lake.",
+        "architecture": "x86_64",
+    },
+    "m3-ultramem": {
+        "description": "M3 Ultra Memory",
+        "help_text": "Third generation memory-optimized with Intel Ice Lake.",
+        "architecture": "x86_64",
+    },
+    "n1-highcpu": {
+        "description": "N1 High CPU",
+        "help_text": "First generation compute-intensive on Intel Haswell/Broadwell/Skylake.",
+        "architecture": "x86_64",
+    },
+    "n1-highmem": {
+        "description": "N1 High Memory",
+        "help_text": "First generation memory-intensive on Intel Haswell/Broadwell/Skylake.",
+        "architecture": "x86_64",
+    },
+    "n1-megamem": {
+        "description": "N1 Mega Memory",
+        "help_text": "First generation very high memory on Intel Skylake.",
+        "architecture": "x86_64",
+    },
+    "n1-standard": {
+        "description": "N1 Standard",
+        "help_text": "First generation balanced on Intel Haswell/Broadwell/Skylake.",
+        "architecture": "x86_64",
+    },
+    "n1-ultramem": {
+        "description": "N1 Ultra Memory",
+        "help_text": "First generation ultra-high memory on Intel Broadwell E7.",
+        "architecture": "x86_64",
+    },
+    "n2-highcpu": {
+        "description": "N2 High CPU",
+        "help_text": "Second generation compute-intensive on Intel Cascade Lake or Ice Lake.",
+        "architecture": "x86_64",
+    },
+    "n2-highmem": {
+        "description": "N2 High Memory",
+        "help_text": "Second generation memory-intensive on Intel Cascade Lake or Ice Lake.",
+        "architecture": "x86_64",
+    },
+    "n2-standard": {
+        "description": "N2 Standard",
+        "help_text": "Second generation balanced on Intel Cascade Lake or Ice Lake.",
+        "architecture": "x86_64",
+    },
+    "n2d-highcpu": {
+        "description": "N2D High CPU",
+        "help_text": "Second generation compute-intensive on AMD EPYC Rome or Milan.",
+        "architecture": "x86_64",
+    },
+    "n2d-highmem": {
+        "description": "N2D High Memory",
+        "help_text": "Second generation memory-intensive on AMD EPYC Rome or Milan.",
+        "architecture": "x86_64",
+    },
+    "n2d-standard": {
+        "description": "N2D Standard",
+        "help_text": "Second generation balanced on AMD EPYC Rome or Milan.",
+        "architecture": "x86_64",
+    },
+    "n4-highcpu": {
+        "description": "N4 High CPU",
+        "help_text": "Fourth generation compute-intensive on Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "n4-highmem": {
+        "description": "N4 High Memory",
+        "help_text": "Fourth generation memory-intensive on Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "n4-standard": {
+        "description": "N4 Standard",
+        "help_text": "Fourth generation balanced on Intel Emerald Rapids.",
+        "architecture": "x86_64",
+    },
+    "t2a-standard": {
+        "description": "T2A Standard",
+        "help_text": "Arm-based machines with Ampere Altra processors. Cost-effective for scale-out.",
+        "architecture": "arm64",
+    },
+    "t2d-standard": {
+        "description": "T2D Standard",
+        "help_text": "Scale-out optimized on AMD EPYC Milan. Good for web and containerized workloads.",
+        "architecture": "x86_64",
+    },
+    "z3-highmem": {
+        "description": "Z3 High Memory",
+        "help_text": "Storage-optimized with large local SSD capacity for databases and analytics.",
+        "architecture": "x86_64",
+    },
+    "z3-standard": {
+        "description": "Z3 Standard",
+        "help_text": "Storage-optimized with local SSD capacity for databases and analytics.",
+        "architecture": "x86_64",
+    },
+}
+
+
+def extract_machine_series(machine_type_name: str) -> str:
+    """
+    Extract machine series from the machine type name.
+
+    The series includes both family and workload type:
+    - n2-standard-4 -> n2-standard
+    - e2-highmem-8 -> e2-highmem
+    - c2d-highcpu-112 -> c2d-highcpu
+    - e2-micro -> e2-micro (single machine in series)
+    - c3-standard-176-lssd -> c3-standard (lssd = local SSD variant)
+    - c3-highcpu-192-metal -> c3-highcpu (metal = bare metal variant)
+    - a2-highgpu-1g -> a2-highgpu (1g = GPU count variant)
+
+    Args:
+        machine_type_name (str): GCE machine type name
+
+    Returns:
+        str: Series name (e.g., 'n2-standard', 'e2-highmem')
+    """
+    parts = machine_type_name.split("-")
+
+    # Handle special single-machine series (e2-micro, e2-small, etc.)
+    # and any other two-part names
+    if len(parts) == 2:
+        return machine_type_name
+
+    # Known workload types that form the series
+    workload_types = {
+        "standard",
+        "highcpu",
+        "highmem",
+        "megamem",
+        "ultramem",
+        "hypermem",
+        "highgpu",
+        "megagpu",
+        "ultragpu",
+        "edgegpu",
+    }
+
+    # Find the workload type component
+    for i, part in enumerate(parts):
+        if part in workload_types:
+            # Series is family + workload type
+            return "-".join(parts[: i + 1])
+
+    # Fallback: try to extract series by removing trailing numeric/variant parts
+    if len(parts) >= 2:
+        # Remove trailing parts that are numeric or variant suffixes
+        variant_suffixes = {"lssd", "metal", "nolssd"}
+        result_parts = []
+        for part in parts:
+            if part.isdigit():
+                break
+            if part in variant_suffixes:
+                break
+            # Handle GPU size indicators like "1g", "2g", "8g", "16g"
+            if re.match(r"^\d+g$", part):
+                break
+            result_parts.append(part)
+
+        if result_parts:
+            return "-".join(result_parts)
+
+    return machine_type_name
+
+
+def extract_machine_family(machine_type_name: str) -> str:
+    """
+    Extract machine family from the machine type name.
+
+    Examples:
+    - n2-standard-4 -> n2
+    - e2-micro -> e2
+    - c2d-highcpu-8 -> c2d
+
+    Args:
+        machine_type_name (str): GCE machine type name
+
+    Returns:
+        str: Family name (e.g., 'n2', 'e2', 'c2d')
+    """
+    parts = machine_type_name.split("-")
+    return parts[0] if parts else machine_type_name
+
+
+def parse_all_machine_series(machine_types: list[dict]) -> dict[str, dict]:
+    """
+    Extract machine series from the list of machine types.
+
+    Args:
+        machine_types: List of machine type dictionaries
+
+    Returns:
+        Dictionary with series info including count of types per series
+    """
+    series_dict = {}
+    seen_types = set()
+
+    for machine_type in machine_types:
+        type_name = machine_type.get("name")
+        if not type_name:
+            continue
+
+        # Skip duplicate machine type names
+        if type_name in seen_types:
+            continue
+        seen_types.add(type_name)
+
+        # Skip custom machine types
+        if type_name.startswith("custom-") or "custom" in type_name:
+            continue
+
+        # Parse machine series from name
+        series = extract_machine_series(type_name)
+        family = extract_machine_family(type_name)
+
+        if series not in series_dict:
+            # Get metadata for this series
+            metadata = SERIES_METADATA.get(
+                series,
+                {
+                    "description": series.replace("-", " ").title(),
+                    "help_text": f"Virtual machines in the {series} series.",
+                    "architecture": "x86_64",
+                },
+            )
+
+            series_dict[series] = {
+                "series_name": series,
+                "family": family,
+                "type_count": 0,
+                "min_vcpus": None,
+                "max_vcpus": 0,
+                "min_memory_gb": None,
+                "max_memory_gb": 0,
+                "description": metadata["description"],
+                "help_text": metadata["help_text"],
+                "architecture": metadata["architecture"],
+            }
+
+        series_dict[series]["type_count"] += 1
+
+        # Track min/max vCPUs and memory
+        vcpus = machine_type.get("guestCpus", 0)
+        memory_gb = machine_type.get("memoryMb", 0) / 1024.0
+
+        if vcpus > 0:
+            current_min = series_dict[series]["min_vcpus"]
+            if current_min is None or vcpus < current_min:
+                series_dict[series]["min_vcpus"] = vcpus
+            series_dict[series]["max_vcpus"] = max(
+                series_dict[series]["max_vcpus"], vcpus
+            )
+        if memory_gb > 0:
+            current_min = series_dict[series]["min_memory_gb"]
+            if current_min is None or memory_gb < current_min:
+                series_dict[series]["min_memory_gb"] = memory_gb
+            series_dict[series]["max_memory_gb"] = max(
+                series_dict[series]["max_memory_gb"], memory_gb
+            )
+
+    return series_dict
+
+
+def get_machine_series_info(
+    series_name: str, machine_types: list[dict], quiet: bool = False
+) -> list[dict]:
+    """
+    Get machine type information for a specific series.
+
+    Args:
+        series_name: Machine series name (e.g., 'n2-standard', 'e2-highcpu')
+        machine_types: List of all machine types
+        quiet: Suppress debug messages
+
+    Returns:
+        List of dictionaries containing machine type information
+    """
+    series_types = []
+
+    for machine_type in machine_types:
+        type_name = machine_type["name"]
+        type_series = extract_machine_series(type_name)
+
+        # Skip custom machine types
+        if type_name.startswith("custom-") or "custom" in type_name:
+            continue
+
+        # Match types that belong to this series
+        if type_series == series_name:
+            series_types.append(machine_type)
+
+    if not series_types:
+        if not quiet:
+            print(f"No machine types found in series '{series_name}'.", file=sys.stderr)
+        return []
+
+    if not quiet:
+        print(
+            f"Found {len(series_types)} machine types in series '{series_name}'",
+            file=sys.stderr,
+        )
+
+    # Extract detailed information
+    type_info = []
+    seen_types = set()
+
+    for machine_type in series_types:
+        type_name = machine_type["name"]
+
+        # Skip duplicates
+        if type_name in seen_types:
+            continue
+        seen_types.add(type_name)
+
+        vcpus = machine_type.get("guestCpus", 0)
+        memory_mb = machine_type.get("memoryMb", 0)
+        memory_gb = memory_mb / 1024.0
+
+        # Determine if this is a shared-core machine
+        is_shared_cpu = machine_type.get("isSharedCpu", False)
+
+        type_info.append(
+            {
+                "name": type_name,
+                "kconfig_name": get_machine_type_kconfig_name(type_name),
+                "vcpus": vcpus,
+                "memory_gb": memory_gb,
+                "memory_mb": memory_mb,
+                "series": series_name,
+                "is_shared_cpu": is_shared_cpu,
+                "description": machine_type.get("description", ""),
+                "max_persistent_disks": machine_type.get("maximumPersistentDisks", 0),
+                "max_persistent_disks_size_gb": machine_type.get(
+                    "maximumPersistentDisksSizeGb", 0
+                ),
+            }
+        )
+
+    # Sort by vCPUs, then memory
+    type_info.sort(key=lambda x: (x["vcpus"], x["memory_gb"]))
+
+    return type_info
+
+
+def natural_sort_key(machine_type_name: str) -> tuple:
+    """
+    Generate a sort key for natural (numeric) ordering of machine type names.
+
+    Converts names like n2-standard-16 into a tuple that sorts naturally:
+    n2-standard-1, n2-standard-2, ..., n2-standard-16 instead of alphabetic.
+
+    Args:
+        machine_type_name: GCE machine type name
+
+    Returns:
+        Sort key tuple with string and integer components
+    """
+    parts = re.split(r"(\d+)", machine_type_name)
+    key = []
+    for part in parts:
+        if part.isdigit():
+            key.append(int(part))
+        else:
+            key.append(part)
+    return tuple(key)
+
+
+def get_all_machine_types(
+    session: requests.Session,
+    project: str,
+    zone: str | None = None,
+    quiet: bool = False,
+) -> list[dict]:
+    """
+    Get all available machine types.
+
+    If zone is specified, queries that zone only. Otherwise uses the
+    aggregated API to get machine types across all zones and deduplicates.
+
+    Args:
+        session: Authenticated requests session
+        project: GCE project ID
+        zone: Optional zone to query (if None, queries all zones)
+        quiet: Suppress progress messages
+
+    Returns:
+        List of unique machine type dictionaries
+    """
+    if zone:
+        if not quiet:
+            print(f"Querying machine types in zone {zone}...", file=sys.stderr)
+        try:
+            return list_machine_types(session, project, zone)
+        except requests.exceptions.RequestException as e:
+            if not quiet:
+                print(f"Error retrieving machine types: {e}", file=sys.stderr)
+            return []
+
+    if not quiet:
+        print("Querying machine types across all zones...", file=sys.stderr)
+
+    try:
+        types_by_zone = list_machine_types_aggregated(session, project)
+
+        # Deduplicate by machine type name (same type available in multiple zones)
+        all_types = {}
+        for zone_name, zone_types in types_by_zone.items():
+            for machine_type in zone_types:
+                type_name = machine_type["name"]
+                if type_name not in all_types:
+                    all_types[type_name] = machine_type
+
+        result = list(all_types.values())
+        if not quiet:
+            print(f"Found {len(result)} unique machine types", file=sys.stderr)
+
+        return result
+
+    except requests.exceptions.RequestException as e:
+        if not quiet:
+            print(f"Error retrieving machine types: {e}", file=sys.stderr)
+        return []
+
+
+def output_series_kconfig(
+    series_dict: dict[str, dict], default_series: str = "n2-standard"
+) -> None:
+    """
+    Output machine series in Kconfig format.
+
+    Args:
+        series_dict: Dictionary of series information
+        default_series: Default series to select
+    """
+    environment = get_jinja2_environment()
+    template = environment.get_template("series.j2")
+
+    sorted_series = sorted(series_dict.values(), key=lambda x: x["series_name"])
+    default_kconfig = (
+        f"TERRAFORM_GCE_MACHINE_FAMILY_{default_series.upper().replace('-', '_')}"
+    )
+
+    print(
+        template.render(
+            series_list=sorted_series,
+            default_series_config=default_kconfig,
+        )
+    )
+
+
+def output_machine_types_kconfig(
+    machine_types: list[dict], default_type: str = "n2-standard-8"
+) -> None:
+    """
+    Output complete machine types menu in Kconfig format.
+
+    This generates a two-level menu: first select series, then select
+    specific machine type within the series.
+
+    Args:
+        machine_types: List of all machine types
+        default_type: Default machine type to select
+    """
+    series_dict = parse_all_machine_series(machine_types)
+    environment = get_jinja2_environment()
+
+    # Determine default series from default type
+    default_series = extract_machine_series(default_type)
+
+    # Output the series selection menu
+    template = environment.get_template("series.j2")
+    sorted_series = sorted(series_dict.values(), key=lambda x: x["series_name"])
+    default_series_config = (
+        f"TERRAFORM_GCE_MACHINE_FAMILY_{default_series.upper().replace('-', '_')}"
+    )
+
+    print(
+        template.render(
+            series_list=sorted_series,
+            default_series_config=default_series_config,
+        )
+    )
+    print()
+
+    # Output machine type selection for each series
+    template = environment.get_template("machine_type.j2")
+    for series in sorted_series:
+        series_types = get_machine_series_info(
+            series["series_name"], machine_types, quiet=True
+        )
+        if not series_types:
+            continue
+
+        # Sort by natural order
+        series_types.sort(key=lambda x: natural_sort_key(x["name"]))
+
+        # Determine default for this series
+        series_default = None
+        for t in series_types:
+            if t["name"] == default_type:
+                series_default = t["kconfig_name"]
+                break
+        if not series_default:
+            series_default = series_types[0]["kconfig_name"]
+
+        print(
+            template.render(
+                series_name=series["series_name"],
+                series_kconfig_name=series["series_name"].upper().replace("-", "_"),
+                default_type_config=f"TERRAFORM_GCE_MACHINE_{series_default}",
+                machine_types=series_types,
+                help_text=series["help_text"],
+                architecture=series["architecture"],
+            )
+        )
+        print()
+
+
+def output_series_raw(series_dict: dict[str, dict], quiet: bool = False) -> None:
+    """Output available machine series in table format."""
+    if not quiet:
+        print(f"Available machine type series ({len(series_dict)}):\n")
+
+    print(
+        f"{'Series':<20} {'Count':<8} {'vCPUs Range':<15} "
+        f"{'Memory Range (GB)':<20} {'Description':<30}"
+    )
+    print("-" * 95)
+
+    sorted_series = sorted(series_dict.values(), key=lambda x: x["series_name"])
+    for series in sorted_series:
+        min_vcpus = series["min_vcpus"] if series["min_vcpus"] is not None else 0
+        min_memory_gb = (
+            series["min_memory_gb"] if series["min_memory_gb"] is not None else 0
+        )
+        vcpus_range = f"{min_vcpus}-{series['max_vcpus']}"
+        memory_range = f"{min_memory_gb:.1f}-{series['max_memory_gb']:.1f}"
+
+        print(
+            f"{series['series_name']:<20} "
+            f"{series['type_count']:<8} "
+            f"{vcpus_range:<15} "
+            f"{memory_range:<20} "
+            f"{series['description']:<30}"
+        )
+
+
+def output_series_types_raw(types: list[dict], quiet: bool = False) -> None:
+    """Output machine type series information in table format."""
+    if not quiet:
+        print(f"Found {len(types)} machine types:\n")
+
+    print(f"{'Machine Type':<25} {'vCPUs':<8} {'Memory (GB)':<15} {'Series':<20}")
+    print("-" * 70)
+
+    for t in types:
+        print(
+            f"{t['name']:<25} "
+            f"{t['vcpus']:<8} "
+            f"{t['memory_gb']:<15.1f} "
+            f"{t['series']:<20}"
+        )
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    default_zone = get_default_zone()
+    parser = argparse.ArgumentParser(
+        description="Get GCE machine type information",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Examples:
+  # Generate Kconfig for machine types (uses default zone: {default_zone})
+  python %(prog)s > ../kconfigs/Kconfig.machine
+
+  # Generate Kconfig with all machine types from all zones (slower)
+  python %(prog)s --all-zones > ../kconfigs/Kconfig.machine
+
+  # List all available series
+  python %(prog)s --series
+
+  # Query specific machine type series
+  python %(prog)s n2-standard
+
+  # Query a different zone
+  python %(prog)s --zone us-central1-a --series
+        """,
+    )
+    parser.add_argument(
+        "series_name",
+        nargs="?",
+        help="Machine type series name (e.g., n2-standard, e2-highcpu, c2d-standard)",
+    )
+
+    parser.add_argument(
+        "--series",
+        action="store_true",
+        help="List all available machine type series",
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["raw", "kconfig"],
+        default="kconfig",
+        help="Output format (default: kconfig)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress informational messages"
+    )
+    parser.add_argument(
+        "--zone",
+        "-z",
+        default=default_zone,
+        help=f"Query specific zone (default: {default_zone})",
+    )
+    parser.add_argument(
+        "--all-zones",
+        action="store_true",
+        help="Query all zones for complete machine type coverage (slower)",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Main function to run the program."""
+    args = parse_arguments()
+
+    # Allow make dynconfig to succeed without GCE credentials
+    try:
+        session, project = require_gce_credentials()
+    except GceNotConfiguredError:
+        if not args.quiet:
+            print("GCE not configured - skipping (optional)", file=sys.stderr)
+        sys.exit(0)
+
+    if not args.quiet:
+        print(f"Using project: {project}", file=sys.stderr)
+
+    # Determine zone to query: use all zones only if explicitly requested
+    zone = None if args.all_zones else args.zone
+
+    if not args.quiet:
+        if zone:
+            print(f"Querying zone: {zone}", file=sys.stderr)
+        else:
+            print("Querying all zones (this may take a while)...", file=sys.stderr)
+
+    # Get machine types
+    machine_types = get_all_machine_types(session, project, zone, args.quiet)
+    exit_on_empty_result(machine_types, "GCE machine type query", args.quiet)
+
+    if args.series:
+        series_dict = parse_all_machine_series(machine_types)
+        if args.format == "kconfig":
+            output_series_kconfig(series_dict)
+        else:
+            output_series_raw(series_dict, args.quiet)
+        return
+
+    if args.series_name:
+        if not args.quiet:
+            print(
+                f"Fetching information for the {args.series_name} series...",
+                file=sys.stderr,
+            )
+
+        series_types = get_machine_series_info(
+            args.series_name, machine_types, args.quiet
+        )
+
+        if not series_types:
+            print(
+                f"No machine types found for series '{args.series_name}'.",
+                file=sys.stderr,
+            )
+            print(
+                "Try running with --series to see available series.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if args.format == "kconfig":
+            environment = get_jinja2_environment()
+            template = environment.get_template("machine_type.j2")
+            series_types.sort(key=lambda x: natural_sort_key(x["name"]))
+
+            # Get series metadata
+            metadata = SERIES_METADATA.get(
+                args.series_name,
+                {
+                    "help_text": f"Virtual machines in the {args.series_name} series.",
+                    "architecture": "x86_64",
+                },
+            )
+
+            print(
+                template.render(
+                    series_name=args.series_name,
+                    series_kconfig_name=args.series_name.upper().replace("-", "_"),
+                    default_type_config=f"TERRAFORM_GCE_MACHINE_{series_types[0]['kconfig_name']}",
+                    machine_types=series_types,
+                    help_text=metadata["help_text"],
+                    architecture=metadata["architecture"],
+                )
+            )
+        else:
+            output_series_types_raw(series_types, args.quiet)
+        return
+
+    # Output complete Kconfig
+    output_machine_types_kconfig(machine_types)
+
+
+if __name__ == "__main__":
+    main()

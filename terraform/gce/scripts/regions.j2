@@ -1,0 +1,29 @@
+choice
+	prompt "GCE region"
+	default TERRAFORM_GCE_REGION_{{ default_region }}
+	help
+	  GCE regions are collections of co-located zones. Zones have
+	  high-bandwidth, low-latency network connections to other
+	  zones within the same region.
+
+	  For details:
+	  https://cloud.google.com/compute/docs/regions-zones/
+
+	  For guidance selecting a region to use, try:
+	  https://cloud.withgoogle.com/region-picker/
+
+{% for region in regions %}
+config TERRAFORM_GCE_REGION_{{ region['kconfig_name'] }}
+	bool "{{ region['region_name'] }}"
+	help
+	  {{ region['friendly_name'] }}
+
+{% endfor %}
+endchoice
+
+config TERRAFORM_GCE_REGION
+	string
+	output yaml
+{% for region in regions %}
+	default "{{ region['region_name'] }}" if TERRAFORM_GCE_REGION_{{ region['kconfig_name'] }}
+{% endfor %}

@@ -1,0 +1,123 @@
+# Publisher definitions for GCE OS images
+#
+# This file defines the Linux distribution publishers whose images are
+# available on Google Compute Engine. Each publisher entry specifies:
+#
+# - project_id: The GCE image project (e.g., "debian-cloud")
+# - publisher_name: Display name for the publisher
+# - description: Full description used in Kconfig help text
+# - priority: Display order in menus (lower = higher priority)
+# - default_disk_size: Default boot disk size in GB for this distribution
+# - family_patterns: Regex patterns to match image family names
+#
+# To add a new publisher:
+# 1. Find the GCE image project ID (use `gcloud compute images list`)
+# 2. Add an entry with all required fields
+# 3. Run gen_kconfig_image to regenerate Kconfig.image
+#
+# Google Cloud public image documentation:
+# https://cloud.google.com/compute/docs/images
+
+# AlmaLinux - Community-maintained RHEL derivative
+almalinux:
+  project_id: "almalinux-cloud"
+  publisher_name: "AlmaLinux"
+  description: "AlmaLinux"
+  priority: 10
+  default_disk_size: 20
+  family_patterns:
+    - "almalinux-.*"
+
+# CentOS - Red Hat-sponsored community Linux
+centos:
+  project_id: "centos-cloud"
+  publisher_name: "CentOS"
+  description: "CentOS"
+  priority: 20
+  default_disk_size: 20
+  family_patterns:
+    - "centos-stream-.*"
+    - "centos-.*"
+
+# Debian - Universal operating system
+debian:
+  project_id: "debian-cloud"
+  publisher_name: "Debian"
+  description: "Debian"
+  priority: 30
+  default_disk_size: 10
+  family_patterns:
+    - "debian-.*"
+
+# Fedora - Cutting-edge community Linux
+fedora:
+  project_id: "fedora-cloud"
+  publisher_name: "Fedora"
+  description: "Fedora Linux"
+  priority: 40
+  default_disk_size: 20
+  family_patterns:
+    - "fedora-cloud-.*"
+    - "fedora-.*"
+
+# openSUSE - Community SUSE distribution
+opensuse:
+  project_id: "opensuse-cloud"
+  publisher_name: "openSUSE"
+  description: "openSUSE"
+  priority: 50
+  default_disk_size: 10
+  family_patterns:
+    - "opensuse-leap-.*"
+    - "opensuse-.*"
+
+# Oracle Linux - Oracle's enterprise Linux
+oracle:
+  project_id: "oracle-linux-cloud"
+  publisher_name: "Oracle"
+  description: "Oracle Linux"
+  priority: 60
+  default_disk_size: 20
+  family_patterns:
+    - "oracle-linux-.*"
+
+# Red Hat Enterprise Linux - Enterprise Linux distribution
+redhat:
+  project_id: "rhel-cloud"
+  publisher_name: "Red Hat"
+  description: "Red Hat Enterprise Linux"
+  priority: 70
+  default_disk_size: 20
+  family_patterns:
+    - "rhel-.*"
+
+# Rocky Linux - RHEL-compatible community distribution
+rocky:
+  project_id: "rocky-linux-cloud"
+  publisher_name: "Rocky Linux"
+  description: "Rocky Linux"
+  priority: 80
+  default_disk_size: 20
+  family_patterns:
+    - "rocky-linux-.*"
+
+# SUSE Linux Enterprise Server - Enterprise SUSE distribution
+suse:
+  project_id: "suse-cloud"
+  publisher_name: "SUSE"
+  description: "SUSE Linux Enterprise Server"
+  priority: 90
+  default_disk_size: 10
+  family_patterns:
+    - "sles-.*"
+    - "sle-.*"
+
+# Ubuntu - Popular Debian-based distribution
+ubuntu:
+  project_id: "ubuntu-os-cloud"
+  publisher_name: "Canonical"
+  description: "Ubuntu"
+  priority: 100
+  default_disk_size: 10
+  family_patterns:
+    - "ubuntu-.*"

@@ -1,0 +1,75 @@
+{#
+  This template is rendered by gen_kconfig_image script.
+
+  Template variables:
+  - publisher_key: str (e.g., 'debian', 'redhat')
+  - publisher_name: str (e.g., 'Debian')
+  - publisher_description: str (full description)
+  - project_id: str (GCE project ID, e.g., 'debian-cloud')
+  - default_disk_size: int (default disk size in GB)
+  - versions: list of (version_key, version_info) tuples (pre-sorted)
+  - has_arm64: bool (whether ARM64 images exist for this publisher)
+#}
+{% macro arch_image_config(arch_name, arch_filter) %}
+if TARGET_ARCH_{{ arch_name }}
+
+{% set ns = namespace(has_valid=false) %}
+{% for version_key, version_info in versions %}
+{% if arch_filter in version_key and not version_info.get('deprecated') %}
+{% set ns.has_valid = true %}
+{% endif %}
+{% endfor %}
+{% if ns.has_valid %}
+choice
+	prompt "OS image to use"
+{% set ns = namespace(found_default=false) %}
+{% for version_key, version_info in versions | reverse %}
+{% if arch_filter in version_key and not version_info.get('deprecated') and not ns.found_default %}
+	default TERRAFORM_GCE_IMAGE_{{ version_key }}
+{% set ns.found_default = true %}
+{% endif %}
+{% endfor %}
+
+{% for version_key, version_info in versions %}
+{% if arch_filter in version_key %}
+config TERRAFORM_GCE_IMAGE_{{ version_key }}
+	bool "{{ version_info['friendly_name'] }}"
+{% if version_info.get('deprecated') %}
+	help
+	  This image family is deprecated.
+{% endif %}
+
+{% endif %}
+{% endfor %}
+endchoice
+
+config TERRAFORM_GCE_IMAGE_FAMILY
+	string
+	output yaml
+{% for version_key, version_info in versions %}
+{% if arch_filter in version_key %}
+	default "{{ version_info['family'] }}" if TERRAFORM_GCE_IMAGE_{{ version_key }}
+{% endif %}
+{% endfor %}
+
+{% endif %}
+endif # TARGET_ARCH_{{ arch_name }}
+
+{% endmacro %}
+if TERRAFORM_GCE_DISTRO_{{ publisher_key | upper }}
+
+config TERRAFORM_GCE_IMAGE_PROJECT
+	string
+	output yaml
+	default "{{ project_id }}"
+
+config TERRAFORM_GCE_IMAGE_SIZE
+	int
+	output yaml
+	default {{ default_disk_size }}
+
+{{ arch_image_config("X86_64", "X86_64") -}}
+{% if has_arm64 %}
+{{ arch_image_config("ARM64", "ARM64") -}}
+{% endif %}
+endif # TERRAFORM_GCE_DISTRO_{{ publisher_key | upper }}

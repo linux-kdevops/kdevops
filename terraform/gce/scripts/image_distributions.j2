@@ -1,0 +1,21 @@
+choice
+	prompt "OS Distributor"
+{% if 'debian' in publishers %}
+	default TERRAFORM_GCE_DISTRO_DEBIAN
+{% elif 'centos' in publishers %}
+	default TERRAFORM_GCE_DISTRO_CENTOS
+{% elif 'ubuntu' in publishers %}
+	default TERRAFORM_GCE_DISTRO_UBUNTU
+{% elif publishers %}
+	default TERRAFORM_GCE_DISTRO_{{ publishers[0] | upper }}
+{% endif %}
+	help
+	  Select the Linux distribution for the OS base image of the
+	  instances to be created.
+
+{% for publisher_key in publishers %}
+config TERRAFORM_GCE_DISTRO_{{ publisher_key | upper }}
+	bool "{{ publisher_names[publisher_key] }}"
+
+{% endfor %}
+endchoice
