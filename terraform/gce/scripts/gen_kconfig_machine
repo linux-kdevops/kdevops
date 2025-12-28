@@ -57,287 +57,349 @@ from gce_common import (
 )
 
 
+# Boot disk type requirements per machine family
+# C4, C4A, N4 series require Hyperdisk (do not support Persistent Disk)
+# C3, C3D and older series support Persistent Disk (pd-balanced)
+BOOT_DISK_TYPE_HYPERDISK = "hyperdisk-balanced"
+BOOT_DISK_TYPE_PD = "pd-balanced"
+
 # Series metadata for help text
 SERIES_METADATA = {
     "a2-highgpu": {
         "description": "A2 High GPU",
         "help_text": "GPU-enabled machine types with NVIDIA A100 GPUs for ML and HPC workloads.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "a2-megagpu": {
         "description": "A2 Mega GPU",
         "help_text": "GPU-enabled machine types with multiple NVIDIA A100 GPUs.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "a2-ultragpu": {
         "description": "A2 Ultra GPU",
         "help_text": "GPU-enabled machine types with NVIDIA A100 80GB GPUs.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "a3-highgpu": {
         "description": "A3 High GPU",
         "help_text": "GPU-enabled machine types with NVIDIA H100 GPUs.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "a3-megagpu": {
         "description": "A3 Mega GPU",
         "help_text": "GPU-enabled machine types with multiple NVIDIA H100 GPUs.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c2-standard": {
         "description": "C2 Standard",
         "help_text": "Compute-optimized with 3.8 GHz sustained all-core turbo on Intel Cascade Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c2d-highcpu": {
         "description": "C2D High CPU",
         "help_text": "Compute-optimized high CPU with AMD EPYC Milan processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c2d-highmem": {
         "description": "C2D High Memory",
         "help_text": "Compute-optimized high memory with AMD EPYC Milan processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c2d-standard": {
         "description": "C2D Standard",
         "help_text": "Compute-optimized balanced with AMD EPYC Milan processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3-highcpu": {
         "description": "C3 High CPU",
         "help_text": "Third generation compute-optimized high CPU with Intel Sapphire Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3-highmem": {
         "description": "C3 High Memory",
         "help_text": "Third generation compute-optimized high memory with Intel Sapphire Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3-standard": {
         "description": "C3 Standard",
         "help_text": "Third generation compute-optimized balanced with Intel Sapphire Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3d-highcpu": {
         "description": "C3D High CPU",
         "help_text": "Third generation compute-optimized high CPU with AMD EPYC Genoa.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3d-highmem": {
         "description": "C3D High Memory",
         "help_text": "Third generation compute-optimized high memory with AMD EPYC Genoa.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c3d-standard": {
         "description": "C3D Standard",
         "help_text": "Third generation compute-optimized balanced with AMD EPYC Genoa.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "c4-highcpu": {
         "description": "C4 High CPU",
         "help_text": "Fourth generation compute-optimized high CPU with Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "c4-highmem": {
         "description": "C4 High Memory",
         "help_text": "Fourth generation compute-optimized high memory with Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "c4-standard": {
         "description": "C4 Standard",
         "help_text": "Fourth generation compute-optimized balanced with Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "c4a-highcpu": {
         "description": "C4A High CPU",
         "help_text": "Fourth generation compute-optimized high CPU with Arm-based Axion processors.",
         "architecture": "arm64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "c4a-highmem": {
         "description": "C4A High Memory",
         "help_text": "Fourth generation compute-optimized high memory with Arm-based Axion processors.",
         "architecture": "arm64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "c4a-standard": {
         "description": "C4A Standard",
         "help_text": "Fourth generation compute-optimized balanced with Arm-based Axion processors.",
         "architecture": "arm64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "e2-highcpu": {
         "description": "E2 High CPU",
         "help_text": "Cost-optimized compute-intensive on Intel or AMD processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "e2-highmem": {
         "description": "E2 High Memory",
         "help_text": "Cost-optimized memory-intensive on Intel or AMD processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "e2-medium": {
         "description": "E2 Medium",
         "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 4 GB memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "e2-micro": {
         "description": "E2 Micro",
         "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 1 GB memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "e2-small": {
         "description": "E2 Small",
         "help_text": "Cost-optimized shared-core machine with 2 vCPUs and 2 GB memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "e2-standard": {
         "description": "E2 Standard",
         "help_text": "Cost-optimized balanced on Intel or AMD processors.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "f1-micro": {
         "description": "F1 Micro",
         "help_text": "Legacy shared-core machine type. Consider using e2-micro instead.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "g1-small": {
         "description": "G1 Small",
         "help_text": "Legacy shared-core machine type. Consider using e2-small instead.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "g2-standard": {
         "description": "G2 Standard",
         "help_text": "GPU-enabled machine types with NVIDIA L4 GPUs.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "h3-standard": {
         "description": "H3 Standard",
         "help_text": "HPC-optimized with Intel Sapphire Rapids for tightly-coupled HPC workloads.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m1-megamem": {
         "description": "M1 Mega Memory",
         "help_text": "Memory-optimized with up to 1.4 TB of memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m1-ultramem": {
         "description": "M1 Ultra Memory",
         "help_text": "Memory-optimized with up to 3.8 TB of memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m2-megamem": {
         "description": "M2 Mega Memory",
         "help_text": "Second generation memory-optimized with up to 6 TB of memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m2-hypermem": {
         "description": "M2 Hyper Memory",
         "help_text": "Second generation memory-optimized with high memory-to-CPU ratio.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m2-ultramem": {
         "description": "M2 Ultra Memory",
         "help_text": "Second generation memory-optimized with up to 12 TB of memory.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m3-megamem": {
         "description": "M3 Mega Memory",
         "help_text": "Third generation memory-optimized with Intel Ice Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "m3-ultramem": {
         "description": "M3 Ultra Memory",
         "help_text": "Third generation memory-optimized with Intel Ice Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n1-highcpu": {
         "description": "N1 High CPU",
         "help_text": "First generation compute-intensive on Intel Haswell/Broadwell/Skylake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n1-highmem": {
         "description": "N1 High Memory",
         "help_text": "First generation memory-intensive on Intel Haswell/Broadwell/Skylake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n1-megamem": {
         "description": "N1 Mega Memory",
         "help_text": "First generation very high memory on Intel Skylake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n1-standard": {
         "description": "N1 Standard",
         "help_text": "First generation balanced on Intel Haswell/Broadwell/Skylake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n1-ultramem": {
         "description": "N1 Ultra Memory",
         "help_text": "First generation ultra-high memory on Intel Broadwell E7.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2-highcpu": {
         "description": "N2 High CPU",
         "help_text": "Second generation compute-intensive on Intel Cascade Lake or Ice Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2-highmem": {
         "description": "N2 High Memory",
         "help_text": "Second generation memory-intensive on Intel Cascade Lake or Ice Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2-standard": {
         "description": "N2 Standard",
         "help_text": "Second generation balanced on Intel Cascade Lake or Ice Lake.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2d-highcpu": {
         "description": "N2D High CPU",
         "help_text": "Second generation compute-intensive on AMD EPYC Rome or Milan.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2d-highmem": {
         "description": "N2D High Memory",
         "help_text": "Second generation memory-intensive on AMD EPYC Rome or Milan.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n2d-standard": {
         "description": "N2D Standard",
         "help_text": "Second generation balanced on AMD EPYC Rome or Milan.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "n4-highcpu": {
         "description": "N4 High CPU",
         "help_text": "Fourth generation compute-intensive on Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "n4-highmem": {
         "description": "N4 High Memory",
         "help_text": "Fourth generation memory-intensive on Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "n4-standard": {
         "description": "N4 Standard",
         "help_text": "Fourth generation balanced on Intel Emerald Rapids.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_HYPERDISK,
     },
     "t2a-standard": {
         "description": "T2A Standard",
         "help_text": "Arm-based machines with Ampere Altra processors. Cost-effective for scale-out.",
         "architecture": "arm64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "t2d-standard": {
         "description": "T2D Standard",
         "help_text": "Scale-out optimized on AMD EPYC Milan. Good for web and containerized workloads.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "z3-highmem": {
         "description": "Z3 High Memory",
         "help_text": "Storage-optimized with large local SSD capacity for databases and analytics.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
     "z3-standard": {
         "description": "Z3 Standard",
         "help_text": "Storage-optimized with local SSD capacity for databases and analytics.",
         "architecture": "x86_64",
+        "boot_disk_type": BOOT_DISK_TYPE_PD,
     },
 }
 
@@ -467,6 +529,7 @@ def parse_all_machine_series(machine_types: list[dict]) -> dict[str, dict]:
                     "description": series.replace("-", " ").title(),
                     "help_text": f"Virtual machines in the {series} series.",
                     "architecture": "x86_64",
+                    "boot_disk_type": BOOT_DISK_TYPE_PD,
                 },
             )
 
@@ -481,6 +544,7 @@ def parse_all_machine_series(machine_types: list[dict]) -> dict[str, dict]:
                 "description": metadata["description"],
                 "help_text": metadata["help_text"],
                 "architecture": metadata["architecture"],
+                "boot_disk_type": metadata["boot_disk_type"],
             }
 
         series_dict[series]["type_count"] += 1
@@ -757,6 +821,7 @@ def output_machine_types_kconfig(
                 machine_types=series_types,
                 help_text=series["help_text"],
                 architecture=series["architecture"],
+                boot_disk_type=series["boot_disk_type"],
             )
         )
         print()
@@ -936,6 +1001,7 @@ def main() -> None:
                 {
                     "help_text": f"Virtual machines in the {args.series_name} series.",
                     "architecture": "x86_64",
+                    "boot_disk_type": BOOT_DISK_TYPE_PD,
                 },
             )
 
@@ -947,6 +1013,7 @@ def main() -> None:
                     machine_types=series_types,
                     help_text=metadata["help_text"],
                     architecture=metadata["architecture"],
+                    boot_disk_type=metadata["boot_disk_type"],
                 )
             )
         else:

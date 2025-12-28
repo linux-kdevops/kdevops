@@ -882,7 +882,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
 	output yaml
-	default "pd-balanced"
+	default "hyperdisk-balanced"
 
 endif # TERRAFORM_GCE_MACHINE_FAMILY_C4_HIGHCPU
 
@@ -966,7 +966,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
 	output yaml
-	default "pd-balanced"
+	default "hyperdisk-balanced"
 
 endif # TERRAFORM_GCE_MACHINE_FAMILY_C4_STANDARD
 
@@ -1050,7 +1050,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
 	output yaml
-	default "pd-balanced"
+	default "hyperdisk-balanced"
 
 endif # TERRAFORM_GCE_MACHINE_FAMILY_C4A_HIGHCPU
 
@@ -1183,7 +1183,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
 	output yaml
-	default "pd-balanced"
+	default "hyperdisk-balanced"
 
 endif # TERRAFORM_GCE_MACHINE_FAMILY_C4A_HIGHMEM
 
@@ -1316,7 +1316,7 @@ config TERRAFORM_GCE_MACHINE_TYPE
 config TERRAFORM_GCE_IMAGE_TYPE
 	string
 	output yaml
-	default "pd-balanced"
+	default "hyperdisk-balanced"
 
 endif # TERRAFORM_GCE_MACHINE_FAMILY_C4A_STANDARD
 
