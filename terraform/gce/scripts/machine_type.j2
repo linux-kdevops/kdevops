@@ -30,4 +30,9 @@ config TERRAFORM_GCE_MACHINE_TYPE
 	default "{{ machine.name }}" if TERRAFORM_GCE_MACHINE_{{ machine.kconfig_name }}
 {% endfor %}
 
+config TERRAFORM_GCE_IMAGE_TYPE
+	string
+	output yaml
+	default "{{ boot_disk_type }}"
+
 endif # TERRAFORM_GCE_MACHINE_FAMILY_{{ series_kconfig_name }}
