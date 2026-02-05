@@ -1573,13 +1573,43 @@
     - failed_tests.matched > 0
     - item.stat.exists
 
+- name: Look for xunit result files copied to localhost
+  ansible.builtin.find:
+    paths: "{{ fstests_results_target }}"
+    recurse: true
+    patterns: "result.xml"
+  delegate_to: localhost
+  run_once: true
+  register: local_xunit_files
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+
+- name: Look for failed test files copied to localhost
+  ansible.builtin.find:
+    paths: "{{ fstests_results_target }}"
+    recurse: true
+    patterns: "*.out.bad"
+  delegate_to: localhost
+  run_once: true
+  register: local_failed_tests
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+
+- name: Look for check.time files copied to localhost
+  ansible.builtin.find:
+    paths: "{{ fstests_results_target }}"
+    recurse: true
+    patterns: "check.time"
+  delegate_to: localhost
+  run_once: true
+  register: local_checktime_files
+  tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
+
 - name: Print fstests results to xunit_results.txt on localhost if xunit xml file was found
   ansible.builtin.command: ./python/workflows/fstests/gen_results_summary --results_file result.xml  --print_section --output_file {{ fstests_results_target }}/{{
     last_kernel }}/xunit_results.txt {{ fstests_results_target }}/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
-    - xunit_files.matched > 0
+    - local_xunit_files.matched > 0
   run_once: true
 
 - name: Print fstests bad results for {{ fstests_fstyp }} to bad_results.txt on localhost
@@ -1587,7 +1617,7 @@
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
-    - failed_tests.matched > 0
+    - local_failed_tests.matched > 0
   run_once: true
 
 - name: Create check.time.distribution files for {{ fstests_results_target }}/results
@@ -1596,7 +1626,7 @@
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   run_once: true
   when:
-    - checktime_files.matched > 0
+    - local_checktime_files.matched > 0
 
 - name: Augment expunge list for {{ fstests_fstyp }}, just run git diff after this to see new failures found
   ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
