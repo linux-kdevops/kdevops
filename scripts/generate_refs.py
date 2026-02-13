@@ -8,6 +8,7 @@ import argparse
 import time
 import yaml
 import json
+import urllib.error
 import urllib.request
 import socket
 import re
@@ -322,18 +323,21 @@ def kreleases(args) -> None:
                 "User-Agent": f"{args.pname}/{args.pversion} (kdevops@lists.linux.dev)"
             },
         )
-        with urllib.request.urlopen(req) as url:
-            data = json.load(url)
+        try:
+            with urllib.request.urlopen(req) as url:
+                data = json.load(url)
 
-            for release in data["releases"]:
-                if release["moniker"] == args.moniker:
-                    # Check if release.json is aa.bb.cc type
-                    if re.compile(r"^\d+\.\d+(\.\d+|-rc\d+)?$").match(
-                        release["version"]
-                    ):
-                        reflist.append("v" + release["version"])
-                    else:
-                        reflist.append(release["version"])
+                for release in data["releases"]:
+                    if release["moniker"] == args.moniker:
+                        # Check if release.json is aa.bb.cc type
+                        if re.compile(r"^\d+\.\d+(\.\d+|-rc\d+)?$").match(
+                            release["version"]
+                        ):
+                            reflist.append("v" + release["version"])
+                        else:
+                            reflist.append(release["version"])
+        except urllib.error.URLError as e:
+            logging.warning(f"Failed to fetch {_url}: {e}")
 
     ref_generator(args, reflist, _get_extraconfs(args))
 
