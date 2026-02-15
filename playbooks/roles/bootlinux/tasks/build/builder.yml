@@ -251,7 +251,7 @@
         jobs: "{{ ansible_facts['processor_nproc'] }}"
         target: "binrpm-pkg"
         params:
-          RPMOPTS: "--without devel"
+          RPMOPTS: "--without devel --without debuginfo"
       when:
         - bootlinux_compiler_gcc|bool
 
@@ -261,7 +261,7 @@
         jobs: "{{ ansible_facts['processor_nproc'] }}"
         target: "binrpm-pkg"
         params:
-          RPMOPTS: "--without devel"
+          RPMOPTS: "--without devel --without debuginfo"
           LLVM: 1
       when:
         - bootlinux_compiler_clang|bool
