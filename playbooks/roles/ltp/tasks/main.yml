@@ -189,26 +189,15 @@
     mode: "u=rwx,g=rwx,o=rwxt"
     state: directory
 
-- name: Remove /opt
+- name: Replace /opt with a symlink to the ltp install directory
   tags: ["build", "ltp"]
   become: true
   become_flags: "su - -c"
   become_method: ansible.builtin.sudo
-  ansible.builtin.file:
-    path: "/opt"
-    state: absent
-
-- name: Replace /opt with a symlink
-  tags: ["build", "ltp"]
-  become: true
-  become_flags: "su - -c"
-  become_method: ansible.builtin.sudo
-  ansible.builtin.file:
-    src: "{{ ltp_install_dir }}"
-    dest: "/opt"
-    owner: "root"
-    group: "root"
-    state: link
+  ansible.builtin.shell:
+    cmd: "rm -rf /opt && ln -s {{ ltp_install_dir }} /opt"
+  args:
+    creates: "/opt/ltp"
 
 - name: Install ltp on the test systems
   tags: ["ltp"]
