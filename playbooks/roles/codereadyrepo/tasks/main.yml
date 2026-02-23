@@ -24,29 +24,22 @@
       when:
         - ansible_facts['distribution'] == 'CentOS'
 
-    - name: Select the AWS RHEL CodeReady Builder repo
-      ansible.builtin.set_fact:
-        codeready_repo: "codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-rhui-rpms"
+    - name: Query available RHUI repositories
+      ansible.builtin.command:
+        cmd: dnf repolist --all
+      register: codeready_discovery
+      changed_when: false
       when:
         - ansible_facts['distribution'] == 'RedHat'
         - kdevops_enable_terraform|bool
-        - kdevops_terraform_provider == "aws"
 
-    - name: Select the Azure RHEL CodeReady Builder repo
+    - name: Select the discovered RHUI CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rhui-rpms"
+        codeready_repo: "{{ codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*rhui') | first }}"
       when:
-        - ansible_facts['distribution'] == 'RedHat'
-        - kdevops_enable_terraform|bool
-        - kdevops_terraform_provider == "azure"
-
-    - name: Select the Google Cloud RHEL CodeReady Builder repo
-      ansible.builtin.set_fact:
-        codeready_repo: "rhui-codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rhui-rpms"
-      when:
-        - ansible_facts['distribution'] == 'RedHat'
-        - kdevops_enable_terraform|bool
-        - kdevops_terraform_provider == "gce"
+        - codeready_discovery is defined
+        - codeready_discovery is not skipped
+        - codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*rhui') | list | length > 0
 
     - name: The distribution/provisioner combo isn't recognized
       ansible.builtin.fail:
