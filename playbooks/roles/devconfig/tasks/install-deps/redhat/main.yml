@@ -109,6 +109,12 @@
       - net-snmp
       - trace-cmd
       - perf
+      - strace
+      - lsof
+      - git
+      - wireshark-cli
+      - rsync
+      - time
   when:
     - devconfig_try_install_kdevtools|bool
 
