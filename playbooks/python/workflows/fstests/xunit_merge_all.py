@@ -14,13 +14,18 @@ from junitparser import JUnitXml, TestSuite
 
 def get_test_suite(filename):
     try:
-        ts = JUnitXml.fromfile(filename)
+        xml = JUnitXml.fromfile(filename)
     except IOError as e:
         sys.exit("Couldn't open %s: %s" % (filename, e[1]))
 
-    if type(ts) != TestSuite:
+    # junitparser 4.0+ always returns a JUnitXml container,
+    # even when the XML root is a single <testsuite>. Unwrap
+    # so callers get a TestSuite as this module has always
+    # assumed.
+    suites = list(xml) if isinstance(xml, JUnitXml) else [xml]
+    if len(suites) != 1 or not isinstance(suites[0], TestSuite):
         sys.exit("%s is not a xUnit report file" % filename)
-    return ts
+    return suites[0]
 
 
 def merge_ts(old_ts, new_ts):

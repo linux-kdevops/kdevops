@@ -257,7 +257,14 @@ def gen_results_summary(
     out_f = sys.stdout
 
     for filename in get_results(results_dir, results_file):
-        reports.append(JUnitXml.fromfile(filename))
+        xml = JUnitXml.fromfile(filename)
+        # junitparser 4.0+ always returns a JUnitXml container,
+        # even when the XML root is a single <testsuite>. Unwrap
+        # so the rest of this module sees TestSuite objects.
+        if isinstance(xml, JUnitXml):
+            reports.extend(xml)
+        else:
+            reports.append(xml)
 
     if len(reports) == 0:
         return 0
