@@ -155,9 +155,16 @@
   tasks:
     - name: Build per-node NixOS disk image via the flake
       ansible.builtin.command:
-        cmd: "{{ playbook_dir }}/../scripts/nixos_build_image.sh {{ nixos_config_dir }}/{{ item }}"
+        argv:
+          - nix
+          - build
+          - "path:{{ nixos_config_dir }}/{{ item }}#image"
+          - --out-link
+          - "{{ nixos_config_dir }}/{{ item }}/result"
+        creates: "{{ nixos_config_dir }}/{{ item }}/result"
       environment:
-        NIXOS_MIRROR_URL: "{{ nixos_mirror_url | default('') if (nixos_use_local_mirror | default(false) | bool) else '' }}"
+        PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+        NIX_CONFIG: "{{ ('substituters = ' ~ nixos_mirror_url ~ ' https://cache.nixos.org') if (nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url | default('') | length > 0)) else omit }}"
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
       loop_control:
         label: "{{ item }}"
