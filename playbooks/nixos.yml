@@ -153,149 +153,25 @@
     - "{{ playbook_dir }}/../extra_vars.yaml"
   tags: build-vms
   tasks:
-    - name: Create disk image configuration
-      ansible.builtin.copy:
-        content: |
-          { config, lib, pkgs, ... }:
-
-          {
-            imports = [
-              ./configuration.nix
-            ];
-
-            # Ensure proper boot configuration for disk image
-            boot.loader.grub.device = lib.mkForce "/dev/vda";
-            boot.loader.grub.enable = lib.mkForce true;
-
-            fileSystems."/" = lib.mkForce {
-              device = "/dev/disk/by-label/nixos";
-              fsType = "ext4";
-              autoResize = true;
-            };
-          }
-        dest: "{{ nixos_generation_dir }}/disk-image.nix"
-
-    - name: Check if NixOS disk image already exists
-      ansible.builtin.stat:
-        path: "{{ nixos_storage_dir }}/nixos-image-result"
-      register: disk_image_exists
-
-    - name: Build NixOS disk image
-      ansible.builtin.shell: |
-        # Source nix profile and set PATH
-        export PATH="/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-        if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix.sh ]; then
-          . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
-        fi
-
-        # Configure Nix to use local mirror if available
-        {% if nixos_use_local_mirror is defined and nixos_use_local_mirror %}
-        # Dynamically detect mirror URL if not provided
-        {% if nixos_mirror_url is not defined or nixos_mirror_url == "" %}
-        DETECTED_MIRROR=$(bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL)
-        if [ -n "$DETECTED_MIRROR" ]; then
-          export NIX_CONFIG="substituters = $DETECTED_MIRROR https://cache.nixos.org"
-          echo "Using detected local Nix cache mirror: $DETECTED_MIRROR"
-        fi
-        {% else %}
-        export NIX_CONFIG="substituters = {{ nixos_mirror_url }} https://cache.nixos.org"
-        echo "Using configured local Nix cache mirror: {{ nixos_mirror_url }}"
-        {% endif %}
-        {% endif %}
-
-        cd {{ nixos_generation_dir }}
-
-        # Build a QCOW2 disk image with NixOS installed
-        echo "Building NixOS disk image (this may take a while)..."
-
-        # Create a wrapper expression for make-disk-image.nix
-        cat > make-image.nix <<'EOF'
-        let
-          pkgs = import <nixpkgs> {};
-          lib = pkgs.lib;
-
-          # Build a complete NixOS system configuration
-          nixosSystem = import "${pkgs.path}/nixos" {
-            configuration = {
-              imports = [
-                ./configuration.nix
-                ./disk-image.nix
-              ];
-
-              # Ensure we have a bootable system
-              boot.loader.grub.enable = lib.mkForce true;
-              boot.loader.grub.device = lib.mkForce "/dev/vda";
-              boot.loader.grub.configurationLimit = 1;
-
-              # Critical: ensure the system can boot
-              boot.kernelModules = [ "virtio_pci" "virtio_blk" "virtio_net" ];
-              boot.initrd.availableKernelModules = [ "virtio_pci" "virtio_blk" "virtio_net" ];
-
-              # Ensure networking works
-              networking.useDHCP = lib.mkDefault true;
-
-              # Make sure we have a working system
-              system.stateVersion = "24.05";
-
-              # Ensure SSH starts
-              systemd.services.sshd.wantedBy = [ "multi-user.target" ];
-            };
-          };
-        in
-        import "${pkgs.path}/nixos/lib/make-disk-image.nix" {
-          inherit pkgs lib;
-          config = nixosSystem.config;
-          diskSize = 20480;
-          format = "qcow2";
-          partitionTableType = "legacy";
-          # Important: include the bootloader!
-          installBootLoader = true;
-        }
-        EOF
-
-        # Force rebuild by clearing any cached result
-        rm -f {{ nixos_storage_dir }}/nixos-image-result
-
-        nix-build make-image.nix \
-          --no-out-link \
-          --arg forceRebuild true \
-          -o {{ nixos_storage_dir }}/nixos-image-result
-
-        # Return the path to the disk image
-        readlink -f {{ nixos_storage_dir }}/nixos-image-result/nixos.qcow2
-      register: build_result
-      changed_when: "'Building NixOS disk image' in build_result.stdout"
-      when: not disk_image_exists.stat.exists
-
-    - name: Get existing disk image path
-      ansible.builtin.shell: |
-        readlink -f {{ nixos_storage_dir }}/nixos-image-result/nixos.qcow2
-      register: existing_image_path
-      when: disk_image_exists.stat.exists
-
-    - name: Store disk image path
-      ansible.builtin.set_fact:
-        nixos_disk_image_path: >-
-          {{
-            build_result.stdout_lines | last | trim
-            if (build_result.stdout_lines is defined)
-            else existing_image_path.stdout | trim
-          }}
-
-    - name: Copy NixOS disk image for each VM
-      ansible.builtin.shell: |
-        SOURCE_IMAGE="{{ nixos_disk_image_path | default(nixos_storage_dir + '/nixos-image-result/nixos.qcow2') }}"
-        TARGET_IMAGE="{{ nixos_storage_dir }}/{{ item }}.qcow2"
-
-        # Remove target if it exists and copy fresh
-        if [ -f "$TARGET_IMAGE" ]; then
-          rm -f "$TARGET_IMAGE"
-        fi
-
-        cp "$SOURCE_IMAGE" "$TARGET_IMAGE"
-        chmod u+w "$TARGET_IMAGE"
+    - name: Build per-node NixOS disk image via the flake
+      ansible.builtin.command:
+        cmd: "{{ playbook_dir }}/../scripts/nixos_build_image.sh {{ nixos_config_dir }}/{{ item }}"
+      environment:
+        NIXOS_MIRROR_URL: "{{ nixos_mirror_url | default('') if (nixos_use_local_mirror | default(false) | bool) else '' }}"
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-      when: nixos_disk_image_path is defined
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Copy per-node NixOS disk image into libvirt storage
+      ansible.builtin.shell: |
+        SRC="{{ nixos_config_dir }}/{{ item }}/result/nixos.qcow2"
+        DST="{{ nixos_storage_dir }}/{{ item }}.qcow2"
+        rm -f "$DST"
+        cp -- "$SRC" "$DST"
+        chmod u+w "$DST"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        label: "{{ item }}"
 
     - name: Generate VM wrapper scripts
       ansible.builtin.template:
