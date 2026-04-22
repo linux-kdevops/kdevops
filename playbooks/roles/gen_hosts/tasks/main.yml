@@ -37,9 +37,6 @@
   register: kdevops_hosts_dest
 
 - name: Ensure proper permission on the inventory file
-  become: true
-  become_flags: "su - -c"
-  become_method: sudo
   ansible.builtin.file:
     path: "{{ ansible_cfg_inventory }}"
     owner: "{{ my_user.stdout }}"
