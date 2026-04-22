@@ -1,0 +1,85 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Tear everything down: libvirt domains, wrapper scripts, SSH
+# config entries, disk images, per-node generated configurations,
+# and the cached NixOS disk images in the Nix store.
+
+- name: Shut down VMs via libvirt
+  ansible.builtin.command: virsh destroy "{{ item }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+- name: Remove VM definitions from libvirt
+  ansible.builtin.command: virsh undefine "{{ item }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+- name: Stop VMs using wrapper scripts
+  ansible.builtin.command: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh stop"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+
+- name: Remove SSH config entries for NixOS VMs
+  ansible.builtin.command: |
+    python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py remove \
+      {{ item }} \
+      '' \
+      '' \
+      '' \
+      {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+      '' \
+      'NixOS VM'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  when: nixos_update_ssh_config | default(true) | bool
+  failed_when: false
+
+- name: Remove VM disk images
+  ansible.builtin.file:
+    path: "{{ nixos_storage_dir }}/{{ item }}.qcow2"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove VM wrapper scripts
+  ansible.builtin.file:
+    path: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove NixOS disk image symlink
+  ansible.builtin.file:
+    path: "{{ nixos_storage_dir }}/nixos-image-result"
+    state: absent
+
+- name: Remove extra drive directories
+  ansible.builtin.file:
+    path: "{{ nixos_storage_dir }}/extra-drives"
+    state: absent
+
+- name: Clean up per-node generated NixOS configurations
+  ansible.builtin.file:
+    path: "{{ nixos_config_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Garbage collect cached NixOS disk images from Nix store
+  ansible.builtin.shell: |
+    if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix.sh ]; then
+      . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+    fi
+
+    NIX_COLLECT_GARBAGE=$(which nix-collect-garbage 2>/dev/null || find /nix -name "nix-collect-garbage" -type f 2>/dev/null | head -1)
+
+    if [ -n "$NIX_COLLECT_GARBAGE" ]; then
+      echo "Running Nix garbage collection to remove cached disk images..."
+      sudo $NIX_COLLECT_GARBAGE -d 2>&1 | grep -E "(deleting|freed|store paths)" || true
+    else
+      echo "Warning: nix-collect-garbage not found, cached images may remain"
+    fi
+  register: gc_result
+  failed_when: false
+  changed_when: "'freed' in gc_result.stdout"

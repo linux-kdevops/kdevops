@@ -1,0 +1,49 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Define and start the per-node libvirt domain. Runs against each
+# guest host in the baseline/dev inventory groups, but every task
+# delegates to localhost because libvirt lives on the control
+# node. Only used by the libvirt backend path.
+
+- name: Check if VM already exists
+  ansible.builtin.shell: virsh domstate "{{ inventory_hostname }}"
+  register: vm_status
+  failed_when: false
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+- name: Provision VM with libvirt
+  when: vm_status.rc != 0 or 'shut off' in vm_status.stdout
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+  block:
+    - name: Generate libvirt XML for VM
+      ansible.builtin.template:
+        src: vm-libvirt.xml.j2
+        dest: "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
+      vars:
+        vm_name: "{{ inventory_hostname }}"
+        vm_memory: "{{ nixos_vm_memory_mb | default(4096) }}"
+        vm_vcpus: "{{ nixos_vm_vcpus | default(4) }}"
+        vm_disk: "{{ nixos_storage_dir }}/{{ inventory_hostname }}.qcow2"
+
+    - name: Define VM in libvirt
+      ansible.builtin.shell: virsh define "{{ nixos_storage_dir }}/{{ inventory_hostname }}.xml"
+      failed_when: false
+
+    - name: Start VM
+      ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+      failed_when: false
+
+- name: Ensure VM is running
+  ansible.builtin.shell: virsh start "{{ inventory_hostname }}"
+  register: start_result
+  failed_when:
+    - start_result.rc != 0
+    - "'already active' not in start_result.stderr"
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"

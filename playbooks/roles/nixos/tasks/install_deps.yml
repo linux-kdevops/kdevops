@@ -1,0 +1,49 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Localhost dependencies for the NIXOS bringup method: Nix itself
+# and the libvirt client/daemon tooling. Runs under the
+# install-deps tag.
+
+- name: Check if nix is installed
+  ansible.builtin.command: which nix
+  register: nix_check
+  failed_when: false
+  changed_when: false
+
+- name: Install nix package manager
+  become: true
+  when: nix_check.rc != 0
+  block:
+    - name: Download nix installer
+      ansible.builtin.get_url:
+        url: https://nixos.org/nix/install
+        dest: /tmp/install-nix.sh
+        mode: '0755'
+
+    - name: Install nix
+      ansible.builtin.shell: |
+        sh /tmp/install-nix.sh --daemon --yes
+      args:
+        creates: /nix
+
+- name: Ensure libvirt is installed
+  become: true
+  ansible.builtin.package:
+    name:
+      - libvirt0
+      - qemu-kvm
+      - libvirt-daemon-system
+      - libvirt-clients
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure libvirt is installed (RedHat)
+  become: true
+  ansible.builtin.package:
+    name:
+      - libvirt
+      - qemu-kvm
+      - libvirt-daemon
+    state: present
+  when: ansible_os_family == "RedHat"

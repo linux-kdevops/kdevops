@@ -1,0 +1,23 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Final status banner printed at the end of a successful bringup.
+
+- name: Display VM access information
+  ansible.builtin.debug:
+    msg: |
+      NixOS VMs are running and accessible via libvirt.
+
+      SSH Access:
+      {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+      - {{ vm }}: ssh {{ vm }}
+      {% endfor %}
+
+      VM Management:
+      {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+      - {{ vm }}: virsh {start|shutdown|destroy} {{ vm }}
+      {% endfor %}
+
+      VM Status:
+      - Check status: virsh list --all
+      - Get IP: virsh domifaddr <vm_name>
