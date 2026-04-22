@@ -10,12 +10,7 @@ config NIXOS_STORAGE_DIR
 config NIXOS_CONFIG_DIR
 	string
 	output yaml
-	default "{{ topdir_path }}/nixos"
-
-config NIXOS_GENERATION_DIR
-	string
-	output yaml
-	default "{{ nixos_config_dir }}/generated"
+	default "{{ topdir_path }}/scripts/nixos-qemu/configurations"
 
 config NIXOS_USE_FLAKES
 	bool "Use Nix flakes for configuration"

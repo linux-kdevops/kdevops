@@ -57,15 +57,21 @@
     - "{{ playbook_dir }}/../extra_vars.yaml"
   tags: generate-configs
   tasks:
-    - name: Create NixOS directories
+    - name: Create top-level NixOS directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         mode: '0755'
       loop:
         - "{{ nixos_config_dir }}"
-        - "{{ nixos_generation_dir }}"
         - "{{ nixos_storage_dir }}"
+
+    - name: Create per-node configuration directories
+      ansible.builtin.file:
+        path: "{{ nixos_config_dir }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
     - name: Ensure SSH key exists for configuration
       block:
@@ -110,41 +116,33 @@
         - detected_mirror_url.stdout is defined
         - detected_mirror_url.stdout | trim != ""
 
-    - name: Template base NixOS configuration
-      ansible.builtin.template:
-        src: nixos/configuration.nix.j2
-        dest: "{{ nixos_generation_dir }}/configuration.nix"
-        mode: '0644'
-
-    - name: Template hardware configuration
-      ansible.builtin.template:
-        src: nixos/hardware-configuration.nix.j2
-        dest: "{{ nixos_generation_dir }}/hardware-configuration.nix"
-        mode: '0644'
-
-    - name: Generate workflow dependencies configuration
-      ansible.builtin.template:
-        src: nixos/workflow-deps.nix.j2
-        dest: "{{ nixos_generation_dir }}/workflow-deps.nix"
-        mode: '0644'
-      when: nixos_enable_workflow_deps | bool
-
     - name: Debug SSH key path
       ansible.builtin.debug:
         msg: "Using SSH key: {{ hostvars['localhost']['nixos_ssh_key_path'] | default('NOT SET') }}"
 
-    - name: Generate VM definitions
-      ansible.builtin.template:
-        src: nixos/vms.nix.j2
-        dest: "{{ nixos_generation_dir }}/vms.nix"
+    - name: Copy nixos-qemu libvirt template flake to each per-node directory
+      ansible.builtin.copy:
+        src: "{{ topdir_path }}/scripts/nixos-qemu/templates/libvirt/flake.nix"
+        dest: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
+        remote_src: true
         mode: '0644'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
-    - name: Generate flake.nix if enabled
+    - name: Point nixos-qemu input at the local subtree in each per-node flake
+      ansible.builtin.replace:
+        path: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
+        regexp: '^(\s*)nixos-qemu\.url = "path:/path/to/nixos-qemu";'
+        replace: '\1nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Render per-node default.nix
       ansible.builtin.template:
-        src: nixos/flake.nix.j2
-        dest: "{{ nixos_config_dir }}/flake.nix"
+        src: nixos/default.nix.j2
+        dest: "{{ nixos_config_dir }}/{{ item }}/default.nix"
         mode: '0644'
-      when: nixos_use_flakes | bool
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      vars:
+        vm_name: "{{ item }}"
 
 # The setup phase is integrated into generate-configs to ensure SSH keys are available
 
@@ -528,10 +526,11 @@
         path: "{{ nixos_storage_dir }}/extra-drives"
         state: absent
 
-    - name: Clean up generated NixOS configuration
+    - name: Clean up per-node generated NixOS configurations
       ansible.builtin.file:
-        path: "{{ nixos_generation_dir }}"
+        path: "{{ nixos_config_dir }}/{{ item }}"
         state: absent
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
     - name: Garbage collect cached NixOS disk images from Nix store
       ansible.builtin.shell: |
