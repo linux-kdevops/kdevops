@@ -9,7 +9,6 @@ export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 
 NIXOS_ARGS += nixos_path='$(TOPDIR_PATH)/nixos'
 NIXOS_ARGS += data_home_dir=/home/kdevops
-NIXOS_ARGS += nixos_channel=$(CONFIG_NIXOS_CHANNEL)
 
 NIXOS_ARGS += libvirt_provider=True
 
