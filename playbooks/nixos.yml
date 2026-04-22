@@ -471,6 +471,20 @@
     - "{{ playbook_dir }}/../extra_vars.yaml"
   tags: [destroy, never]
   tasks:
+    - name: Shut down VMs via libvirt
+      ansible.builtin.command: virsh destroy "{{ item }}"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: Remove VM definitions from libvirt
+      ansible.builtin.command: virsh undefine "{{ item }}"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
     - name: Stop VMs using wrapper scripts
       ansible.builtin.command: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh stop"
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
