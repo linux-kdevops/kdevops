@@ -1,12 +1,23 @@
-{# Template for the kernel builder workflow #}
+{# Template for the bootlinux workflow.
+
+   When bootlinux_builder is set, a dedicated build node carries the
+   -builder suffix (matching gen_nodes' builder_nodes list). Otherwise
+   the node takes the generic prefix-only name that gen_nodes emits
+   as generic_nodes.
+#}
+{% if bootlinux_builder | default(false) %}
+{% set node_name = kdevops_host_prefix + '-builder' %}
+{% else %}
+{% set node_name = kdevops_host_prefix %}
+{% endif %}
 [all]
 localhost ansible_connection=local
-{{ kdevops_host_prefix }}-builder
+{{ node_name }}
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
 [baseline]
-{{ kdevops_host_prefix }}-builder
+{{ node_name }}
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_baseline_python_interpreter }}"
 
