@@ -87,7 +87,6 @@ clean_nixos_cache: destroy_nixos
 	$(Q)sudo /nix/store/*/bin/nix-collect-garbage -d 2>/dev/null || \
 		sudo nix-collect-garbage -d 2>/dev/null || \
 		echo "Warning: Could not run nix garbage collection"
-	$(Q)rm -rf nixos/generated nixos/result nixos/*.qcow2 2>/dev/null || true
 	$(Q)rm -rf /xfs1/libvirt/kdevops/nixos/nixos-image-* 2>/dev/null || true
 	$(Q)echo "NixOS cache cleaned"
 PHONY += clean_nixos_cache

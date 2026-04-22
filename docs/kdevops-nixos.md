@@ -200,9 +200,11 @@ scripts/status_nixos.sh
 ### Key Configuration Files
 
 - `kconfigs/Kconfig.nixos`: NixOS-specific options
-- `nixos/flake.nix`: Nix flake for reproducible builds
-- `nixos/generated/`: Generated NixOS configurations
-- `playbooks/nixos.yml`: Ansible playbook for VM management
+- `scripts/nixos-qemu/`: Nix flake subtree with reusable NixOS modules
+  (libvirt and imageless backends, shares, storage, devel, workflows)
+- `scripts/nixos-qemu/configurations/<host>/default.nix`: per-node
+  NixOS configuration rendered by the role from the subtree's flake
+- `playbooks/roles/nixos/`: Ansible role that drives NIXOS bringup
 
 ### Configuration Options
 

@@ -108,9 +108,6 @@ Kconfig.passthrough_libvirt.generated
 
 archive/
 
-# NixOS generated files
-nixos/generated/
-
 # Dyanmic cloud kconfig files
 terraform/datacrunch/kconfigs/Kconfig.compute.generated
 terraform/datacrunch/kconfigs/Kconfig.images.generated
