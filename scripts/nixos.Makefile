@@ -44,9 +44,10 @@ libvirt_pcie_passthrough_permissions:
 	$(Q)ansible-playbook \
 		playbooks/libvirt_pcie_passthrough.yml
 
+# SSH connectivity is verified during NixOS VM provisioning: VMs get
+# DHCP IPs and SSH is tested directly in the playbook. The marker
+# below just records that the provisioning reached that point.
 $(KDEVOPS_PROVISIONED_SSH): $(KDEVOPS_HOSTS_PREFIX)
-	$(Q)# The SSH connectivity is verified during NixOS VM provisioning
-	$(Q)# VMs get DHCP IPs and SSH is tested directly in the playbook
 	$(Q)touch $(KDEVOPS_PROVISIONED_SSH)
 
 install_nixos_deps:
