@@ -4,16 +4,20 @@
 # Ensure the libvirt default network is active before trying to
 # start any NixOS VM. Only used by the libvirt backend path.
 
-- name: Check if default network exists and is active
-  ansible.builtin.shell: virsh net-info default
-  register: default_network_info
-  failed_when: false
-  environment:
-    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+- name: Localhost libvirt network
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Check if default network exists and is active
+      ansible.builtin.shell: virsh net-info default
+      register: default_network_info
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
 
-- name: Start default network if not active
-  ansible.builtin.shell: virsh net-start default
-  when: default_network_info.rc != 0 or 'Active:' not in default_network_info.stdout or 'yes' not in default_network_info.stdout.split('Active:')[1].split('\n')[0]
-  failed_when: false
-  environment:
-    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+    - name: Start default network if not active
+      ansible.builtin.shell: virsh net-start default
+      when: default_network_info.rc != 0 or 'Active:' not in default_network_info.stdout or 'yes' not in default_network_info.stdout.split('Active:')[1].split('\n')[0]
+      failed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"

@@ -4,6 +4,8 @@
 # Final status banner printed at the end of a successful bringup.
 
 - name: Display VM access information
+  delegate_to: localhost
+  run_once: true
   ansible.builtin.debug:
     msg: |
       NixOS VMs are running and accessible via libvirt.

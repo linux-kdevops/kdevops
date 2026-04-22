@@ -6,43 +6,47 @@
 # imageless backend will have a sibling imageless_build.yml that
 # produces a closure plus kernel and initrd instead of a qcow2.
 
-- name: Build per-node NixOS disk image via the flake
-  ansible.builtin.command:
-    argv:
-      - nix
-      - build
-      - "path:{{ nixos_config_dir }}/{{ item }}#image"
-      - --out-link
-      - "{{ nixos_config_dir }}/{{ item }}/result"
-    creates: "{{ nixos_config_dir }}/{{ item }}/result"
-  environment:
-    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
-    NIX_CONFIG: "{{ ('substituters = ' ~ nixos_mirror_url ~ ' https://cache.nixos.org') if (nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url | default('') | length > 0)) else omit }}"
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  loop_control:
-    label: "{{ item }}"
+- name: Localhost libvirt build
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Build per-node NixOS disk image via the flake
+      ansible.builtin.command:
+        argv:
+          - nix
+          - build
+          - "path:{{ nixos_config_dir }}/{{ item }}#image"
+          - --out-link
+          - "{{ nixos_config_dir }}/{{ item }}/result"
+        creates: "{{ nixos_config_dir }}/{{ item }}/result"
+      environment:
+        PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+        NIX_CONFIG: "{{ ('substituters = ' ~ nixos_mirror_url ~ ' https://cache.nixos.org') if (nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url | default('') | length > 0)) else omit }}"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        label: "{{ item }}"
 
-- name: Copy per-node NixOS disk image into libvirt storage
-  ansible.builtin.shell: |
-    SRC="{{ nixos_config_dir }}/{{ item }}/result/nixos.qcow2"
-    DST="{{ nixos_storage_dir }}/{{ item }}.qcow2"
-    rm -f "$DST"
-    cp -- "$SRC" "$DST"
-    chmod u+w "$DST"
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  loop_control:
-    label: "{{ item }}"
+    - name: Copy per-node NixOS disk image into libvirt storage
+      ansible.builtin.shell: |
+        SRC="{{ nixos_config_dir }}/{{ item }}/result/nixos.qcow2"
+        DST="{{ nixos_storage_dir }}/{{ item }}.qcow2"
+        rm -f "$DST"
+        cp -- "$SRC" "$DST"
+        chmod u+w "$DST"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        label: "{{ item }}"
 
-- name: Generate VM wrapper scripts
-  ansible.builtin.template:
-    src: run-vm-wrapper.sh.j2
-    dest: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
-    mode: '0755'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  loop_control:
-    index_var: vm_idx
-  vars:
-    vm_name: "{{ item }}"
-    vm_index: "{{ vm_idx }}"
-    vm_memory: "{{ nixos_vm_memory_mb | default(4096) }}"
-    vm_vcpus: "{{ nixos_vm_vcpus | default(4) }}"
+    - name: Generate VM wrapper scripts
+      ansible.builtin.template:
+        src: run-vm-wrapper.sh.j2
+        dest: "{{ nixos_storage_dir }}/run-{{ item }}-wrapper.sh"
+        mode: '0755'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        index_var: vm_idx
+      vars:
+        vm_name: "{{ item }}"
+        vm_index: "{{ vm_idx }}"
+        vm_memory: "{{ nixos_vm_memory_mb | default(4096) }}"
+        vm_vcpus: "{{ nixos_vm_vcpus | default(4) }}"

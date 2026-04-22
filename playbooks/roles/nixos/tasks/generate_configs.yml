@@ -7,24 +7,26 @@
 # phase 9 lands), rewrites the nixos-qemu.url input to resolve at
 # the checked-in subtree, and renders the per-node default.nix.
 
-- name: Create top-level NixOS directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-  loop:
-    - "{{ nixos_config_dir }}"
-    - "{{ nixos_storage_dir }}"
-
-- name: Create per-node configuration directories
-  ansible.builtin.file:
-    path: "{{ nixos_config_dir }}/{{ item }}"
-    state: directory
-    mode: '0755'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-
-- name: Ensure SSH key exists for configuration
+- name: Localhost generate-configs
+  delegate_to: localhost
+  run_once: true
   block:
+    - name: Create top-level NixOS directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ nixos_config_dir }}"
+        - "{{ nixos_storage_dir }}"
+
+    - name: Create per-node configuration directories
+      ansible.builtin.file:
+        path: "{{ nixos_config_dir }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
     - name: Determine SSH key path based on directory
       ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
       register: ssh_key_path_result
@@ -51,45 +53,45 @@
       ansible.builtin.set_fact:
         nixos_ssh_authorized_key: "{{ ssh_public_key['content'] | b64decode | trim }}"
 
-- name: Detect local Nix cache mirror URL if enabled
-  ansible.builtin.shell: |
-    bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL
-  register: detected_mirror_url
-  when: nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url is not defined or nixos_mirror_url == "")
-  changed_when: false
+    - name: Detect local Nix cache mirror URL if enabled
+      ansible.builtin.shell: |
+        bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL
+      register: detected_mirror_url
+      when: nixos_use_local_mirror | default(false) | bool and (nixos_mirror_url is not defined or nixos_mirror_url == "")
+      changed_when: false
 
-- name: Set detected mirror URL
-  ansible.builtin.set_fact:
-    nixos_mirror_url: "{{ detected_mirror_url.stdout | trim }}"
-  when:
-    - detected_mirror_url is defined
-    - detected_mirror_url.stdout is defined
-    - detected_mirror_url.stdout | trim != ""
+    - name: Set detected mirror URL
+      ansible.builtin.set_fact:
+        nixos_mirror_url: "{{ detected_mirror_url.stdout | trim }}"
+      when:
+        - detected_mirror_url is defined
+        - detected_mirror_url.stdout is defined
+        - detected_mirror_url.stdout | trim != ""
 
-- name: Debug SSH key path
-  ansible.builtin.debug:
-    msg: "Using SSH key: {{ hostvars['localhost']['nixos_ssh_key_path'] | default('NOT SET') }}"
+    - name: Debug SSH key path
+      ansible.builtin.debug:
+        msg: "Using SSH key: {{ nixos_ssh_key_path | default('NOT SET') }}"
 
-- name: Copy nixos-qemu libvirt template flake to each per-node directory
-  ansible.builtin.copy:
-    src: "{{ topdir_path }}/scripts/nixos-qemu/templates/libvirt/flake.nix"
-    dest: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
-    remote_src: true
-    mode: '0644'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+    - name: Copy nixos-qemu libvirt template flake to each per-node directory
+      ansible.builtin.copy:
+        src: "{{ topdir_path }}/scripts/nixos-qemu/templates/libvirt/flake.nix"
+        dest: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
+        remote_src: true
+        mode: '0644'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
-- name: Point nixos-qemu input at the local subtree in each per-node flake
-  ansible.builtin.replace:
-    path: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
-    regexp: '^(\s*)nixos-qemu\.url = "path:/path/to/nixos-qemu";'
-    replace: '\1nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+    - name: Point nixos-qemu input at the local subtree in each per-node flake
+      ansible.builtin.replace:
+        path: "{{ nixos_config_dir }}/{{ item }}/flake.nix"
+        regexp: '^(\s*)nixos-qemu\.url = "path:/path/to/nixos-qemu";'
+        replace: '\1nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
-- name: Render per-node default.nix
-  ansible.builtin.template:
-    src: default.nix.j2
-    dest: "{{ nixos_config_dir }}/{{ item }}/default.nix"
-    mode: '0644'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  vars:
-    vm_name: "{{ item }}"
+    - name: Render per-node default.nix
+      ansible.builtin.template:
+        src: default.nix.j2
+        dest: "{{ nixos_config_dir }}/{{ item }}/default.nix"
+        mode: '0644'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      vars:
+        vm_name: "{{ item }}"

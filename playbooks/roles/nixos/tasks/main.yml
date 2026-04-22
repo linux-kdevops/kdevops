@@ -1,0 +1,63 @@
+---
+# nixos role entry point. Orchestrates install-deps,
+# generate-configs, libvirt build, libvirt network, per-VM libvirt
+# provision, ssh_access, console, and destroy via tag-gated
+# include_tasks. Localhost-only phases run with delegate_to +
+# run_once inside their task files so --limit localhost is not
+# required from the caller.
+
+- name: Gather localhost facts
+  ansible.builtin.setup:
+  delegate_to: localhost
+  run_once: true
+  tags: always
+
+- name: Include install_deps tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/install_deps.yml"
+  tags:
+    - install-deps
+
+- name: Include generate_configs tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/generate_configs.yml"
+  tags:
+    - generate-configs
+
+- name: Include libvirt_build tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/libvirt_build.yml"
+  tags:
+    - build-vms
+
+- name: Include libvirt_network tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/libvirt_network.yml"
+  tags:
+    - bringup
+
+- name: Include libvirt_provision tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/libvirt_provision.yml"
+  tags:
+    - bringup
+  when: inventory_hostname != 'localhost'
+
+- name: Include ssh_access tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/ssh_access.yml"
+  tags:
+    - bringup
+
+- name: Include console tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/console.yml"
+  tags:
+    - console
+
+- name: Include destroy tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/destroy.yml"
+  tags:
+    - destroy
+    - never

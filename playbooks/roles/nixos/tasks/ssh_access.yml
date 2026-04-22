@@ -7,50 +7,54 @@
 # paths; qsu will populate nixos_vm_ips differently but the
 # downstream wait_for and ssh-config update are reusable.
 
-- name: Wait for VMs to get IP addresses from DHCP
-  ansible.builtin.shell: |
-    for i in {1..90}; do
-      IP=$(virsh domifaddr {{ item }} --source lease 2>/dev/null | awk '/192\.168\.122\./ {print $4}' | cut -d'/' -f1)
-      if [ -n "$IP" ]; then
-        echo "$IP"
-        exit 0
-      fi
-      sleep 3
-    done
-    exit 1
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  register: vm_ips
-  retries: 2
-  delay: 10
-  environment:
-    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+- name: Localhost ssh_access
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Wait for VMs to get IP addresses from DHCP
+      ansible.builtin.shell: |
+        for i in {1..90}; do
+          IP=$(virsh domifaddr {{ item }} --source lease 2>/dev/null | awk '/192\.168\.122\./ {print $4}' | cut -d'/' -f1)
+          if [ -n "$IP" ]; then
+            echo "$IP"
+            exit 0
+          fi
+          sleep 3
+        done
+        exit 1
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      register: vm_ips
+      retries: 2
+      delay: 10
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
 
-- name: Set VM IP facts
-  ansible.builtin.set_fact:
-    nixos_vm_ips: "{{ dict(groups['all'] | reject('equalto', 'localhost') | list | zip(vm_ips.results | map(attribute='stdout'))) }}"
+    - name: Set VM IP facts
+      ansible.builtin.set_fact:
+        nixos_vm_ips: "{{ dict(groups['all'] | reject('equalto', 'localhost') | list | zip(vm_ips.results | map(attribute='stdout'))) }}"
 
-- name: Determine SSH key path for SSH config update
-  ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
-  register: ssh_key_path_for_config
-  changed_when: false
+    - name: Determine SSH key path for SSH config update
+      ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
+      register: ssh_key_path_for_config
+      changed_when: false
 
-- name: Wait for SSH to be available on VMs
-  ansible.builtin.wait_for:
-    host: "{{ nixos_vm_ips[item] }}"
-    port: 22
-    delay: 10
-    timeout: 300
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+    - name: Wait for SSH to be available on VMs
+      ansible.builtin.wait_for:
+        host: "{{ nixos_vm_ips[item] }}"
+        port: 22
+        delay: 10
+        timeout: 300
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
-- name: Update SSH config for NixOS VMs
-  ansible.builtin.command: |
-    python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py update \
-      {{ item }} \
-      {{ nixos_vm_ips[item] }} \
-      {{ ansible_cfg_ssh_port }} \
-      kdevops \
-      {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
-      {{ ssh_key_path_for_config.stdout | trim }} \
-      'NixOS VM'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-  when: nixos_update_ssh_config | default(true) | bool
+    - name: Update SSH config for NixOS VMs
+      ansible.builtin.command: |
+        python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py update \
+          {{ item }} \
+          {{ nixos_vm_ips[item] }} \
+          {{ ansible_cfg_ssh_port }} \
+          kdevops \
+          {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+          {{ ssh_key_path_for_config.stdout | trim }} \
+          'NixOS VM'
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      when: nixos_update_ssh_config | default(true) | bool
