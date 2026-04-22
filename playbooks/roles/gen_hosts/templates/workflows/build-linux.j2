@@ -18,7 +18,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {% if kdevops_baseline_and_dev %}
 [dev]
@@ -29,7 +29,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 {% endif %}
 
 [build-linux]
@@ -38,7 +38,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [build-linux:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {# Create filesystem-specific groups #}
 {% if build_linux_multifs_xfs_4k_4ks|default(false)|bool %}
@@ -49,7 +49,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-xfs-4k-4ks:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_xfs_8k_4ks|default(false)|bool %}
@@ -60,7 +60,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-xfs-8k-4ks:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_xfs_16k_4ks|default(false)|bool %}
@@ -71,7 +71,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-xfs-16k-4ks:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_xfs_32k_4ks|default(false)|bool %}
@@ -82,7 +82,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-xfs-32k-4ks:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_xfs_64k_4ks|default(false)|bool %}
@@ -93,7 +93,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-xfs-64k-4ks:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_ext4_4k|default(false)|bool %}
@@ -104,7 +104,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-ext4-4k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_ext4_16k_bigalloc|default(false)|bool %}
@@ -115,7 +115,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-ext4-16k-bigalloc:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 build_linux_ext4_mkfs_opts = "-F -O bigalloc -C 16384"
 {% endif %}
 
@@ -127,7 +127,7 @@ build_linux_ext4_mkfs_opts = "-F -O bigalloc -C 16384"
 {% endif %}
 
 [build-linux-btrfs:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% if build_linux_multifs_tmpfs_default|default(false)|bool %}
@@ -138,7 +138,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux-tmpfs:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}
 
 {% else %}
@@ -157,14 +157,14 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {{ kdevops_host_prefix }}-build-linux
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {% if kdevops_baseline_and_dev %}
 [dev]
 {{ kdevops_host_prefix }}-build-linux-dev
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 
 {% endif %}
 [build-linux]
@@ -174,5 +174,5 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [build-linux:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}

@@ -18,7 +18,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {% if kdevops_baseline_and_dev %}
 [dev]
@@ -29,7 +29,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 {% endif %}
 
 [minio]
@@ -38,7 +38,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [minio:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {# Create filesystem-specific groups #}
 {% if minio_multifs_xfs_4k_4ks|default(false)|bool %}
@@ -49,7 +49,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [minio-xfs-4k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "xfs"
 minio_xfs_blocksize = 4096
 minio_xfs_sectorsize = 4096
@@ -63,7 +63,7 @@ minio_xfs_sectorsize = 4096
 {% endif %}
 
 [minio-xfs-16k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "xfs"
 minio_xfs_blocksize = 16384
 minio_xfs_sectorsize = 4096
@@ -77,7 +77,7 @@ minio_xfs_sectorsize = 4096
 {% endif %}
 
 [minio-xfs-32k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "xfs"
 minio_xfs_blocksize = 32768
 minio_xfs_sectorsize = 4096
@@ -91,7 +91,7 @@ minio_xfs_sectorsize = 4096
 {% endif %}
 
 [minio-xfs-64k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "xfs"
 minio_xfs_blocksize = 65536
 minio_xfs_sectorsize = 4096
@@ -105,7 +105,7 @@ minio_xfs_sectorsize = 4096
 {% endif %}
 
 [minio-ext4-4k:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "ext4"
 minio_ext4_mkfs_opts = "-F"
 {% endif %}
@@ -118,7 +118,7 @@ minio_ext4_mkfs_opts = "-F"
 {% endif %}
 
 [minio-ext4-16k-bigalloc:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "ext4"
 minio_ext4_mkfs_opts = "-F -O bigalloc -C 16384"
 {% endif %}
@@ -131,7 +131,7 @@ minio_ext4_mkfs_opts = "-F -O bigalloc -C 16384"
 {% endif %}
 
 [minio-btrfs:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 minio_fstype = "btrfs"
 minio_btrfs_mkfs_opts = "-f"
 {% endif %}
@@ -152,14 +152,14 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {{ kdevops_host_prefix }}-minio
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {% if kdevops_baseline_and_dev %}
 [dev]
 {{ kdevops_host_prefix }}-minio-dev
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 
 {% endif %}
 [minio]
@@ -169,5 +169,5 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [minio:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 {% endif %}

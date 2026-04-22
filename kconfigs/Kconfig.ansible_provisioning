@@ -127,6 +127,39 @@ config KDEVOPS_PYTHON_OLD_INTERPRETER
 	  KDEVOPSPYTHONOLDINTERPRETER value on your hosts.in file on old
 	  systems so that this gets properly placed.
 
+config KDEVOPS_BASELINE_PYTHON_INTERPRETER
+	string "Python interpreter for the [baseline] host group"
+	output yaml
+	default "/run/current-system/sw/bin/python3" if NIXOS
+	default KDEVOPS_PYTHON_INTERPRETER
+	help
+	  Python interpreter emitted under [baseline:vars] in the generated
+	  Ansible inventory. When NIXOS is the bringup method, guests run
+	  NixOS and their system python lives at
+	  /run/current-system/sw/bin/python3; otherwise this follows
+	  KDEVOPS_PYTHON_INTERPRETER so the group tracks whatever the host
+	  default is for other backends.
+
+config KDEVOPS_DEV_PYTHON_INTERPRETER
+	string "Python interpreter for the [dev] host group"
+	output yaml
+	default "/run/current-system/sw/bin/python3" if NIXOS
+	default KDEVOPS_PYTHON_INTERPRETER
+	help
+	  Python interpreter emitted under [dev:vars] in the generated
+	  Ansible inventory. See KDEVOPS_BASELINE_PYTHON_INTERPRETER for
+	  the same rationale applied to the [dev] group.
+
+config KDEVOPS_SERVICE_PYTHON_INTERPRETER
+	string "Python interpreter for the [service] host group"
+	output yaml
+	default "/run/current-system/sw/bin/python3" if NIXOS
+	default KDEVOPS_PYTHON_INTERPRETER
+	help
+	  Python interpreter emitted under [service:vars] in the generated
+	  Ansible inventory. See KDEVOPS_BASELINE_PYTHON_INTERPRETER for
+	  the same rationale applied to the [service] group.
+
 config DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE
 	bool "Set up remote systemd-journal-remote"
 	default n

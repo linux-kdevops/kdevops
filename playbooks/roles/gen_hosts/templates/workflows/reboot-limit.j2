@@ -13,14 +13,14 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {{ kdevops_host_prefix }}-reboot-limit
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 {% if kdevops_baseline_and_dev %}
 [dev]
 {{ kdevops_host_prefix }}-reboot-limit-dev
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 
 {% endif %}
 [reboot-limit]
@@ -30,4 +30,4 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [reboot-limit:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"

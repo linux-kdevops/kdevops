@@ -7,26 +7,26 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [baseline]
 {{ kdevops_hosts_prefix }}-nfsd
 [baseline:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_baseline_python_interpreter }}"
 
 [dev]
 {% if kdevops_baseline_and_dev %}
 {{ kdevops_host_prefix }}-nfsd-dev
 {% endif %}
 [dev:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_dev_python_interpreter }}"
 
 [iscsi]
 {% if kdevops_enable_iscsi %}
 {{ kdevops_hosts_prefix }}-iscsi
 {% endif %}
 [iscsi:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_service_python_interpreter }}"
 
 [nfsd]
 {{ kdevops_hosts_prefix }}-nfsd
 [nfsd:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_service_python_interpreter }}"
 
 [service]
 {% if kdevops_enable_iscsi %}
@@ -34,4 +34,4 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 {% endif %}
 {{ kdevops_hosts_prefix }}-nfsd
 [service:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_service_python_interpreter }}"

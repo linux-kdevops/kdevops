@@ -17,7 +17,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 [dev]
 {% if kdevops_baseline_and_dev %}
@@ -27,7 +27,7 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endif %}
 
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 
 [ltp]
 {% for host in ltp_enabled_hosts %}
@@ -38,8 +38,8 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 {% endfor %}
 
 [ltp:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 
 [service]
 [service:vars]
-ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter =  "{{ kdevops_service_python_interpreter }}"

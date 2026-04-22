@@ -9,20 +9,20 @@ ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
 [baseline]
 {{ kdevops_host_prefix }}-fio-tests
 [baseline:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 [dev]
 {% if kdevops_baseline_and_dev %}
 {{ kdevops_host_prefix }}-fio-tests-dev
 {% endif %}
 [dev:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_dev_python_interpreter }}"
 [fio_tests]
 {{ kdevops_host_prefix }}-fio-tests
 {% if kdevops_baseline_and_dev %}
 {{ kdevops_host_prefix }}-fio-tests-dev
 {% endif %}
 [fio_tests:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_baseline_python_interpreter }}"
 [service]
 [service:vars]
-ansible_python_interpreter = "{{ kdevops_python_interpreter }}"
+ansible_python_interpreter = "{{ kdevops_service_python_interpreter }}"
