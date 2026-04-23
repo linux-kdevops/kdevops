@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+if QEMU_SYSTEM_UNITS
+
+config QEMU_SYSTEM_UNITS_VARS_DIR
+	string
+	output yaml
+	default "{{ topdir_path }}/scripts/qemu-system-units/vars"
+	help
+	  Where kdevops renders per-VM qemu-system-units vars files.
+	  qemu-system-units' own .gitignore already excludes everything
+	  under vars/ except the upstream example, so kdevops-generated
+	  artefacts there never leak back upstream through a subtree
+	  push.
+
+config QEMU_SYSTEM_UNITS_QEMU_BINARY
+	string "QEMU system emulator binary"
+	output yaml
+	default "/usr/bin/qemu-system-x86_64"
+	help
+	  Absolute path to the QEMU system emulator binary for the
+	  guest architecture. The qsu templates invoke this as the
+	  ExecStart= binary path.
+
+config QEMU_SYSTEM_UNITS_CPU
+	string "Guest CPU model"
+	output yaml
+	default "host"
+	help
+	  Passed to QEMU as -cpu. "host" passes host CPU features
+	  through to the guest and requires KVM. Use "max" with TCG.
+
+config QEMU_SYSTEM_UNITS_ACCEL
+	string "QEMU accelerator"
+	output yaml
+	default "kvm"
+	help
+	  Passed to QEMU as -accel. "kvm" on Linux hosts with hardware
+	  virtualization, "tcg" for pure software emulation.
+
+config QEMU_SYSTEM_UNITS_RAM
+	int "Guest RAM (MB)"
+	output yaml
+	default 4096
+
+config QEMU_SYSTEM_UNITS_CPUS
+	int "Guest vCPU count"
+	output yaml
+	default 4
+
+config QEMU_SYSTEM_UNITS_MACHINE_TYPE
+	string "QEMU machine type"
+	output yaml
+	default "q35"
+	help
+	  Passed to QEMU as -machine type=. q35 for modern x86 guests,
+	  microvm for minimal boot, virt for aarch64.
+
+config QEMU_SYSTEM_UNITS_SSH_PORT_BASE
+	int "SSH host port forwarding base"
+	output yaml
+	default 10022
+	help
+	  qsu uses QEMU user-mode networking, so each guest's port 22
+	  is forwarded to a unique host port. The role computes guest N's
+	  host port as ssh_port_base + N from the inventory index.
+
+config QEMU_SYSTEM_UNITS_VSOCK_CID_BASE
+	int "VSOCK Context ID base"
+	output yaml
+	default 100
+	help
+	  Each guest's vsock_cid is vsock_cid_base + N from the inventory
+	  index. Valid range is 3 to 4294967295 (0 is the hypervisor, 1
+	  is local, 2 is the host). Used by qsu's graceful shutdown
+	  ExecStop= which targets root@vsock/<cid>.
+
+choice
+	prompt "Default SSH transport for `ssh <vm>` alias"
+	default QEMU_SYSTEM_UNITS_SSH_DEFAULT_VSOCK
+	help
+	  kdevops renders three ssh_config stanzas per qsu VM:
+	  <name>-vsock via systemd-ssh-proxy over AF_VSOCK,
+	  <name>-net via TCP SLIRP hostfwd, and the bare <name>
+	  which groups with one of them. This knob picks which.
+
+	  vsock has zero TCP/SLIRP overhead and uses the guest's
+	  sshd-vsock.socket that systemd-ssh-generator emits when
+	  CONFIG_VIRTIO_VSOCKETS is built in.
+
+	  tcp is the legacy path; prefer it when the host lacks
+	  vhost-vsock, runs in a container that cannot create
+	  AF_VSOCK, or when systemd-ssh-proxy's machine/* resolver
+	  behaves poorly on the installed systemd version.
+
+config QEMU_SYSTEM_UNITS_SSH_DEFAULT_VSOCK
+	bool "vsock"
+	output yaml
+
+config QEMU_SYSTEM_UNITS_SSH_DEFAULT_TCP
+	bool "tcp"
+	output yaml
+
+endchoice
+
+endif # QEMU_SYSTEM_UNITS
