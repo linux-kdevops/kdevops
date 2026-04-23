@@ -5,6 +5,13 @@
       - "{{ role_path }}/templates/config-kdevops"
       - "{{ role_path }}/templates/{{ target_linux_config }}"
 
+- name: Prefer the imageless qsu config under controller + QEMU_SYSTEM_UNITS
+  ansible.builtin.set_fact:
+    search_list: "{{ [role_path ~ '/templates/config-qsu'] + search_list }}"
+  when:
+    - bootlinux_controller | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
+
 - name: Find all linux-next kernel config files
   delegate_to: localhost
   run_once: true
@@ -38,6 +45,7 @@
   when:
     - bootlinux_clean_before_build|default(false)|bool
     - not bootlinux_9p|bool
+    - not bootlinux_controller|default(false)|bool
 
 - name: Set the .config file for building the test kernel
   ansible.builtin.set_fact:
