@@ -130,7 +130,7 @@ config KDEVOPS_PYTHON_OLD_INTERPRETER
 config KDEVOPS_BASELINE_PYTHON_INTERPRETER
 	string "Python interpreter for the [baseline] host group"
 	output yaml
-	default "/run/current-system/sw/bin/python3" if NIXOS
+	default "/run/current-system/sw/bin/python3" if NIXOS || QEMU_SYSTEM_UNITS
 	default KDEVOPS_PYTHON_INTERPRETER
 	help
 	  Python interpreter emitted under [baseline:vars] in the generated
@@ -143,7 +143,7 @@ config KDEVOPS_BASELINE_PYTHON_INTERPRETER
 config KDEVOPS_DEV_PYTHON_INTERPRETER
 	string "Python interpreter for the [dev] host group"
 	output yaml
-	default "/run/current-system/sw/bin/python3" if NIXOS
+	default "/run/current-system/sw/bin/python3" if NIXOS || QEMU_SYSTEM_UNITS
 	default KDEVOPS_PYTHON_INTERPRETER
 	help
 	  Python interpreter emitted under [dev:vars] in the generated
@@ -153,7 +153,7 @@ config KDEVOPS_DEV_PYTHON_INTERPRETER
 config KDEVOPS_SERVICE_PYTHON_INTERPRETER
 	string "Python interpreter for the [service] host group"
 	output yaml
-	default "/run/current-system/sw/bin/python3" if NIXOS
+	default "/run/current-system/sw/bin/python3" if NIXOS || QEMU_SYSTEM_UNITS
 	default KDEVOPS_PYTHON_INTERPRETER
 	help
 	  Python interpreter emitted under [service:vars] in the generated
