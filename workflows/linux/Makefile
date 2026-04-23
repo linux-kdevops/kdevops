@@ -79,6 +79,13 @@ ifeq (y,$(CONFIG_KDEVOPS_SETUP_NFSD))
 BOOTLINUX_LIMIT := baseline:dev:nfsd
 endif
 
+# Controller mode builds and installs on the control node before any
+# target VM exists, so it must run against localhost instead of reaching
+# baseline:dev guests that have no sshd yet.
+ifeq (y,$(CONFIG_BOOTLINUX_CONTROLLER))
+BOOTLINUX_LIMIT := localhost
+endif
+
 PHONY +=  linux-help-menu
 linux-help-menu:
 	@echo "Linux git kernel development options"

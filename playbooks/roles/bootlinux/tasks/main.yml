@@ -194,6 +194,7 @@
     name: create_data_partition
   when:
     - not workflow_linux_packaged|bool
+    - not bootlinux_controller|default(false)|bool
 
 - name: Mount bootlinux 9p on each target node
   become: true
@@ -242,6 +243,17 @@
     file: "{{ role_path }}/tasks/build/builder.yml"
   when:
     - bootlinux_builder|bool
+
+- name: Build the Linux kernel on the controller with destdir install
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/build/controller.yml"
+  when:
+    - bootlinux_controller|bool
+
+- name: End the play after controller mode has built and installed to destdir
+  ansible.builtin.meta: end_play
+  when:
+    - bootlinux_controller|bool
 
 - name: Run uname before
   ansible.builtin.command: "uname -r"

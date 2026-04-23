@@ -36,6 +36,7 @@ endif # HAVE_SUPPORTS_PURE_IOMAP
 
 choice
 	prompt "Kernel build location"
+	default BOOTLINUX_CONTROLLER if QEMU_SYSTEM_UNITS
 	default BOOTLINUX_TARGETS if !LIBVIRT || GUESTFS_LACKS_9P
 	default BOOTLINUX_9P if LIBVIRT && !GUESTFS_LACKS_9P
 	help
@@ -90,6 +91,25 @@ config BOOTLINUX_BUILDER
 
 	  This choice is best when the test runners are resource-
 	  limited or vastly different than the controller host.
+
+config BOOTLINUX_CONTROLLER
+	bool "Controller node (destdir install)"
+	output yaml
+	help
+	  Choosing this option clones and builds the test kernel on
+	  the Ansible controller node using an out-of-tree build
+	  directory, then runs make install and make modules_install
+	  into a local destdir on the controller. The kernel image
+	  and modules tree are not copied to any target node; a
+	  bringup backend that boots with an external kernel (for
+	  example qemu-system-units with the nixos-qemu imageless
+	  module) consumes them in place, typically by passing the
+	  kernel image as -kernel and sharing the modules tree with
+	  the guest over virtiofs.
+
+	  This choice is best when the target node runs with an
+	  external kernel supplied by the controller rather than an
+	  in-guest bootloader.
 
 endchoice
 
@@ -150,6 +170,41 @@ config BOOTLINUX_9P_MOUNT_TAG
 endmenu
 
 endif # BOOTLINUX_9P
+
+if BOOTLINUX_CONTROLLER
+
+config BOOTLINUX_CONTROLLER_TREE_PATH
+	string "Linux source tree path on the controller"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux"
+	help
+	  Absolute path on the control node where the Linux source
+	  tree is cloned and made available to make. Defaults to a
+	  linux/ subdirectory of KDEVOPS_CONTROLLER_DATA_PATH so it
+	  sits alongside the other controller-side artefacts
+	  kdevops produces (build/, destdir/, and future per-workflow
+	  scratch directories).
+
+config BOOTLINUX_CONTROLLER_BUILDDIR
+	string "Out-of-tree build directory"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux-build"
+	help
+	  Absolute path to the kernel out-of-tree build directory,
+	  passed to make as O=. Defaults to a sibling of the linux
+	  source tree under KDEVOPS_CONTROLLER_DATA_PATH.
+
+config BOOTLINUX_CONTROLLER_DESTDIR
+	string "Install destdir"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux-destdir"
+	help
+	  Absolute path where make install and make modules_install
+	  place the kernel image and modules tree. Consumers locate
+	  the kernel at <destdir>/boot/vmlinuz-<release> and the
+	  matching module tree at <destdir>/lib/modules/<release>.
+
+endif # BOOTLINUX_CONTROLLER
 
 choice
 	prompt "Compiler to use to build the kernel"
