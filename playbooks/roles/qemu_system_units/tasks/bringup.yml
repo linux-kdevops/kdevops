@@ -1,0 +1,87 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Start each imageless VM through systemd user mode, wait for
+# sshd on the forwarded port, and register the guest in
+# ~/.ssh/config so subsequent Ansible plays reach it by
+# inventory name rather than by raw port number.
+
+- name: Reload user systemd so new unit files and drop-ins are visible
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+
+# qsu docs/usage.md "Upgrading templates": daemon-reload does not
+# restart running sockets, so after re-deploying virtiofsd@.service
+# or virtiofsd@.socket, or after a reload that re-observes them,
+# systemd marks any loaded instance "Unit configuration changed ...
+# no socket file descriptors are open" - a zombie listener that
+# QEMU's later connect sees as refused. Enumerate the per-share env
+# files (one per VM x share, rendered in imageless_build_per_vm.yml)
+# to recover the <vm>-<tag> instance names, and restart each matching
+# socket right before starting the VMs. No-op on the first run and on
+# runs where nothing was re-rendered: restart of an already-healthy
+# socket is cheap.
+- name: Locate deployed virtiofsd per-share env files
+  ansible.builtin.find:
+    paths: "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd"
+    patterns: "*.env"
+    file_type: file
+  register: qsu_virtiofsd_envs
+
+- name: Restart virtiofsd sockets so QEMU connects to fresh listeners
+  ansible.builtin.systemd_service:
+    name: "virtiofsd@{{ item.path | basename | splitext | first }}.socket"
+    state: restarted
+    scope: user
+  loop: "{{ qsu_virtiofsd_envs.files }}"
+  loop_control:
+    label: "virtiofsd@{{ item.path | basename | splitext | first }}.socket"
+
+- name: Start qemu-system@<vm> instances
+  ansible.builtin.systemd_service:
+    name: "qemu-system@{{ item }}.service"
+    state: started
+    scope: user
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Determine SSH key path
+  ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
+  register: qsu_ssh_key_path_result
+  changed_when: false
+
+- name: Wait for sshd to greet on each VM's forwarded port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+    search_regex: "^SSH-2\\.0"
+    delay: 5
+    timeout: 300
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    loop_var: qsu_vm_name
+    index_var: qsu_vm_idx
+    label: "{{ qsu_vm_name }}:{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+
+- name: Update SSH config for qsu VMs
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ playbook_dir }}/../scripts/update_ssh_config_nixos.py"
+      - update
+      - "{{ qsu_vm_name }}"
+      - 127.0.0.1
+      - "{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+      - root
+      - "{{ ansible_facts.env.HOME }}/.ssh/config"
+      - "{{ qsu_ssh_key_path_result.stdout | trim }}"
+      - qsu imageless NixOS
+      - --vsock-cid
+      - "{{ qemu_system_units_vsock_cid_base | int + qsu_vm_idx }}"
+      - --default-transport
+      - "{{ 'tcp' if qemu_system_units_ssh_default_tcp | default(false) | bool else 'vsock' }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    loop_var: qsu_vm_name
+    index_var: qsu_vm_idx
+    label: "{{ qsu_vm_name }}"

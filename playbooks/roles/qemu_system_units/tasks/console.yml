@@ -1,0 +1,23 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Final status banner listing SSH, VSOCK, and console access for
+# each imageless VM plus the common systemctl and machinectl
+# commands.
+
+- name: Display qsu VM access information
+  ansible.builtin.debug:
+    msg: |
+      qemu-system-units imageless NixOS VMs are running.
+
+      {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+      {% set idx = loop.index0 %}
+      {{ vm }}:
+        ssh:     ssh {{ vm }}  (or ssh -p {{ qemu_system_units_ssh_port_base | int + idx }} root@127.0.0.1)
+        vsock:   ssh root@vsock/{{ qemu_system_units_vsock_cid_base | int + idx }}
+        console: socat -,raw,echo=0,escape=0x1d UNIX-CONNECT:$XDG_RUNTIME_DIR/qemu-system/{{ vm }}/console.sock
+      {% endfor %}
+
+      Status: systemctl --user status qemu-system@<vm>
+      Logs:   journalctl --user-unit=qemu-system@<vm>.service
+      List:   machinectl --user list

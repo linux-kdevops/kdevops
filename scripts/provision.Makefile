@@ -64,6 +64,10 @@ ifeq (y,$(CONFIG_NIXOS))
 include scripts/nixos.Makefile
 endif
 
+ifeq (y,$(CONFIG_QEMU_SYSTEM_UNITS))
+include scripts/qemu_system_units.Makefile
+endif
+
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_DEVCONFIG)
 

@@ -1,0 +1,102 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-VM imageless closure build and qsu artefact render. Included
+# from imageless_build.yml with qsu_vm_name (VM name) and
+# qsu_vm_idx (inventory index) as loop variables.
+
+- name: Build the imageless NixOS closure for {{ qsu_vm_name }}
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}#toplevel"
+      - --out-link
+      - "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}/result"
+    creates: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+
+- name: Read bootspec from the built closure for {{ qsu_vm_name }}
+  ansible.builtin.slurp:
+    src: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}/result/boot.json"
+  register: qsu_bootspec_raw
+
+- name: Extract init and initrd paths from bootspec for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    qsu_init: "{{ (qsu_bootspec_raw.content | b64decode | from_json)['org.nixos.bootspec.v1'].init }}"
+    qsu_initrd: "{{ (qsu_bootspec_raw.content | b64decode | from_json)['org.nixos.bootspec.v1'].initrd }}"
+
+- name: Ensure qsu per-VM directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/user/qemu-system@{{ qsu_vm_name }}.service.d"
+
+- name: Render vm.env for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/vm.env.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system/{{ qsu_vm_name }}.env"
+    mode: '0644'
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    qemu_binary: "{{ qemu_system_units_qemu_binary }}"
+    cpu: "{{ qemu_system_units_cpu }}"
+    accel: "{{ qemu_system_units_accel }}"
+    ram: "{{ qemu_system_units_ram }}"
+    cpus: "{{ qemu_system_units_cpus }}"
+    machine_type: "{{ qemu_system_units_machine_type }}"
+    ssh_port: "{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+    vsock_cid: "{{ qemu_system_units_vsock_cid_base | int + qsu_vm_idx }}"
+    kernel:
+      image: "{{ qsu_kernel_image }}"
+      initrd: "{{ qsu_initrd }}"
+      append: "console=ttyS0,115200 console=hvc0 init={{ qsu_init }}"
+    shares:
+      - tag: store
+        dir: /nix/store
+        mount: /nix/store
+      - tag: modules
+        dir: "{{ qsu_modules_dir }}"
+        mount: /lib/modules
+
+- name: Render per-VM service drop-in override.conf for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/qemu-system-override.conf.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/user/qemu-system@{{ qsu_vm_name }}.service.d/override.conf"
+    mode: '0644'
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    service_scope: user
+    qemu_binary: "{{ qemu_system_units_qemu_binary }}"
+    ram: "{{ qemu_system_units_ram }}"
+    machine_type: "{{ qemu_system_units_machine_type }}"
+    vsock_cid: "{{ qemu_system_units_vsock_cid_base | int + qsu_vm_idx }}"
+    shares:
+      - tag: store
+        dir: /nix/store
+        mount: /nix/store
+      - tag: modules
+        dir: "{{ qsu_modules_dir }}"
+        mount: /lib/modules
+
+- name: Render virtiofsd env files for the imageless shares of {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/virtiofsd.env.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd/{{ qsu_vm_name }}-{{ item.tag }}.env"
+    mode: '0644'
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    share_tag: "{{ item.tag }}"
+    shares:
+      - tag: "{{ item.tag }}"
+        dir: "{{ item.dir }}"
+  loop:
+    - { tag: store, dir: /nix/store }
+    - { tag: modules, dir: "{{ qsu_modules_dir }}" }
+  loop_control:
+    label: "{{ qsu_vm_name }}-{{ item.tag }}"

@@ -1,0 +1,7 @@
+---
+- name: Manage imageless NixOS VMs with qemu-system-units
+  hosts: localhost
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  roles:
+    - role: qemu_system_units

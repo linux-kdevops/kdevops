@@ -1,0 +1,32 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Build the per-node imageless NixOS closure and render qsu's
+# per-VM env files using its own upstream templates, so systemd
+# can start each VM against a freshly built closure and the
+# controller-installed kernel from bootlinux.
+
+- name: Resolve controller-built kernel release from the linux build tree
+  community.general.make:
+    chdir: "{{ bootlinux_controller_tree_path }}"
+    target: kernelrelease
+    params:
+      O: "{{ bootlinux_controller_builddir }}"
+  environment:
+    LOCALVERSION: "{{ target_linux_localversion | default('', true) }}"
+  register: qsu_kernelrelease_make
+  changed_when: false
+
+- name: Derive the controller-built kernel artefact paths
+  ansible.builtin.set_fact:
+    qsu_kernel_release: "{{ qsu_kernelrelease_make.stdout_lines[-1] }}"
+    qsu_kernel_image: "{{ bootlinux_controller_destdir }}/boot/vmlinuz-{{ qsu_kernelrelease_make.stdout_lines[-1] }}"
+    qsu_modules_dir: "{{ bootlinux_controller_destdir }}/lib/modules"
+
+- name: Prepare qsu imageless artefacts per VM
+  ansible.builtin.include_tasks: imageless_build_per_vm.yml
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    loop_var: qsu_vm_name
+    index_var: qsu_vm_idx
+    label: "{{ qsu_vm_name }}"

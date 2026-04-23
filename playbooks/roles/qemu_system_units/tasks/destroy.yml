@@ -1,0 +1,68 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Stop any running qsu VMs and remove the shared units plus the
+# QMP powerdown helper. Per-VM env files and override drop-ins
+# are cleaned in a later task file once those renderings exist.
+
+- name: Stop qemu-system@<vm> instances
+  ansible.builtin.systemd_service:
+    name: "qemu-system@{{ item }}.service"
+    state: stopped
+    scope: user
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+
+- name: Remove SSH config entries for qsu VMs
+  ansible.builtin.command: |
+    python3 {{ playbook_dir }}/../scripts/update_ssh_config_nixos.py remove \
+      {{ item }} \
+      '' \
+      '' \
+      '' \
+      {{ ansible_facts.env.HOME }}/.ssh/config \
+      '' \
+      'qsu imageless NixOS'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+
+- name: Clean up per-node generated imageless configurations
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-VM vm.env files
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system/{{ item }}.env"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-VM service drop-in directories
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.config/systemd/user/qemu-system@{{ item }}.service.d"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-share virtiofsd env files
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd/{{ item.0 }}-{{ item.1 }}.env"
+    state: absent
+  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(['store', 'modules']) | list }}"
+  loop_control:
+    label: "{{ item.0 }}-{{ item.1 }}"
+
+- name: Remove qsu shared units and helper
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/user/qemu-system@.service"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/user/virtiofsd@.service"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/user/virtiofsd@.socket"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system/qmp-powerdown"
+
+- name: Reload user systemd after removal
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user

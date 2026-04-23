@@ -1,0 +1,74 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-node imageless configuration generation. Creates one
+# directory per guest under $QEMU_SYSTEM_UNITS_CONFIG_DIR, seeds
+# an SSH keypair for the guest user, copies the nixos-qemu
+# imageless template flake into it, rewrites the nixos-qemu.url
+# input to resolve at the checked-in subtree, and renders the
+# per-node default.nix.
+
+- name: Create top-level qsu configuration directory
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/scripts/nixos-qemu/configurations"
+    state: directory
+    mode: '0755'
+
+- name: Create per-node configuration directories
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Ensure SSH key exists for configuration
+  block:
+    - name: Determine SSH key path based on directory
+      ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixos_ssh_key_name.py --path
+      register: ssh_key_path_result
+      changed_when: false
+
+    - name: Set SSH key path
+      ansible.builtin.set_fact:
+        qemu_system_units_ssh_key_path: "{{ ssh_key_path_result.stdout | trim }}"
+
+    - name: Generate SSH key for imageless VMs if not exists
+      openssh_keypair:
+        path: "{{ qemu_system_units_ssh_key_path }}"
+        type: rsa
+        size: 2048
+        comment: "kdevops@qsu"
+        force: false
+
+    - name: Read SSH public key
+      ansible.builtin.slurp:
+        src: "{{ qemu_system_units_ssh_key_path }}.pub"
+      register: ssh_public_key
+
+    - name: Set SSH key in fact
+      ansible.builtin.set_fact:
+        qemu_system_units_ssh_authorized_key: "{{ ssh_public_key['content'] | b64decode | trim }}"
+
+- name: Copy nixos-qemu imageless template flake into each per-node directory
+  ansible.builtin.copy:
+    src: "{{ topdir_path }}/scripts/nixos-qemu/templates/imageless/flake.nix"
+    dest: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}/flake.nix"
+    remote_src: true
+    mode: '0644'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Point nixos-qemu input at the local subtree in each per-node flake
+  ansible.builtin.replace:
+    path: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}/flake.nix"
+    regexp: '^(\s*)nixos-qemu\.url = "path:/path/to/nixos-qemu";'
+    replace: '\1nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Render per-node default.nix
+  ansible.builtin.template:
+    src: default.nix.j2
+    dest: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}/default.nix"
+    mode: '0644'
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  vars:
+    vm_name: "{{ item }}"

@@ -1,0 +1,55 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Deploy the three qemu-system-units template units (qemu-system@,
+# virtiofsd@.service, virtiofsd@.socket) and the QMP powerdown
+# script that qemu-system@.service's ExecStop= pipes into the VM.
+# These files are shared across all VMs on the host; per-VM state
+# lives in %E/systemd/qemu-system/<vm>.env and is rendered in a
+# later task file.
+
+- name: Ensure user systemd and qsu config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/user"
+    - "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system"
+
+- name: Render qemu-system@.service
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/qemu-system@.service.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/user/qemu-system@.service"
+    mode: '0644'
+  vars:
+    qemu_binary: "{{ qemu_system_units_qemu_binary }}"
+    service_scope: user
+
+- name: Render virtiofsd@.service
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/virtiofsd@.service.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/user/virtiofsd@.service"
+    mode: '0644'
+  vars:
+    service_scope: user
+
+- name: Render virtiofsd@.socket
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/virtiofsd@.socket.j2"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/user/virtiofsd@.socket"
+    mode: '0644'
+  vars:
+    service_scope: user
+
+- name: Install QMP powerdown helper for qemu-system@.service ExecStop=
+  ansible.builtin.copy:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/files/qmp-powerdown"
+    dest: "{{ ansible_facts.env.HOME }}/.config/systemd/qemu-system/qmp-powerdown"
+    remote_src: true
+    mode: '0644'
+
+- name: Reload user systemd so the rendered units are visible
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user

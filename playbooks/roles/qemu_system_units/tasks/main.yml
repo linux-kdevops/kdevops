@@ -1,0 +1,49 @@
+---
+# qemu_system_units role entry point. Orchestrates install-deps,
+# generate-configs (shared units plus per-node nixos-qemu flakes),
+# build-vms (imageless closure and per-VM envs), bringup
+# (systemctl start and SSH access), console (access banner), and
+# destroy via tag-gated include_tasks.
+
+- name: Include install_deps tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/install_deps.yml"
+  tags:
+    - install-deps
+
+- name: Include render_units tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/render_units.yml"
+  tags:
+    - generate-configs
+
+- name: Include generate_configs tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/generate_configs.yml"
+  tags:
+    - generate-configs
+
+- name: Include imageless_build tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/imageless_build.yml"
+  tags:
+    - build-vms
+
+- name: Include bringup tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/bringup.yml"
+  tags:
+    - bringup
+
+- name: Include console tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/console.yml"
+  tags:
+    - console
+
+- name: Include destroy tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/destroy.yml"
+  tags:
+    - destroy
+    - never

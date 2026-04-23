@@ -1,0 +1,31 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Host dependencies for the QEMU_SYSTEM_UNITS bringup method: the
+# QEMU system emulator, virtiofsd, socat for QMP graceful shutdown,
+# and systemd-container for machinectl. Nix is handled by the
+# existing nixos-qemu path when the imageless guest image is built.
+
+- name: Ensure qsu dependencies are installed (Debian)
+  become: true
+  ansible.builtin.package:
+    name:
+      - qemu-system-x86
+      - qemu-utils
+      - socat
+      - systemd-container
+      - virtiofsd
+    state: present
+  when: ansible_facts.os_family == "Debian"
+
+- name: Ensure qsu dependencies are installed (RedHat)
+  become: true
+  ansible.builtin.package:
+    name:
+      - qemu-kvm
+      - qemu-img
+      - socat
+      - systemd-container
+      - virtiofsd
+    state: present
+  when: ansible_facts.os_family == "RedHat"
