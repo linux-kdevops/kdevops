@@ -9,6 +9,10 @@ config KDEVOPS_ENABLE_NIXOS
 	bool
 	output yaml
 
+config KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS
+	bool
+	output yaml
+
 config CLOUD_INITIALIZED
 	bool
 	default $(shell, test -f .cloud.initialized && echo y || echo n) = "y"
@@ -69,6 +73,19 @@ config NIXOS
 	  NixOS will automatically infer the libvirt session type (system vs
 	  user) based on your distribution's defaults, similar to guestfs.
 
+config QEMU_SYSTEM_UNITS
+	bool "qemu-system-units via systemd user units (imageless NixOS)"
+	select KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS
+	select KDEVOPS_ENABLE_NIXOS
+	help
+	  Drive VM lifecycle through systemd user units rendered from
+	  scripts/qemu-system-units/, with nixos-qemu's imageless module as
+	  the guest image (tmpfs root, virtiofs /nix/store, external
+	  kernel). No libvirt daemon, no libguestfs, no sudo on the host.
+	  The guest is NixOS so KDEVOPS_ENABLE_NIXOS is selected too,
+	  letting existing Ansible roles pick the /run/current-system/sw/
+	  bash and python interpreter paths instead of /bin defaults.
+
 config SKIP_BRINGUP
 	bool "Skip bring up - bare metal or existing nodes"
 	select EXTRA_STORAGE_SUPPORTS_512
@@ -95,3 +112,4 @@ source "kconfigs/Kconfig.declared_hosts"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"
 endif
+source "kconfigs/Kconfig.qemu_system_units"

@@ -1,16 +1,24 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
+if KDEVOPS_ENABLE_NIXOS
+
+# Host-side path where per-node Nix configurations live (flake +
+# default.nix rendered by the active backend). Shared between the
+# libvirt-backed NIXOS choice and the imageless QEMU_SYSTEM_UNITS
+# choice; both consume nixos-qemu modules from the same subtree.
+config NIXOS_CONFIG_DIR
+	string
+	output yaml
+	default "{{ topdir_path }}/scripts/nixos-qemu/configurations"
+
+endif # KDEVOPS_ENABLE_NIXOS
+
 if NIXOS
 
 config NIXOS_STORAGE_DIR
 	string
 	output yaml
 	default "{{ kdevops_storage_pool_path }}/nixos"
-
-config NIXOS_CONFIG_DIR
-	string
-	output yaml
-	default "{{ topdir_path }}/scripts/nixos-qemu/configurations"
 
 config NIXOS_USE_FLAKES
 	bool "Use Nix flakes for configuration"
