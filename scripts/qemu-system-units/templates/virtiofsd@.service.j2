@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# virtiofsd service for QEMU VM instance (socket-activated)
+# Rendered from: templates/virtiofsd@.service.j2
+#
+# Instance name encodes VM and share: virtiofsd@<vm>-<tag>.service
+# Example: virtiofsd@test-home.service
+#
+# Default shared directory is the user's home (%h specifier). Non-home
+# shares get a rendered env file (from templates/virtiofsd.env.j2) that
+# overrides VIRTIOFSD_SHARED_DIR.
+#
+# Default sandbox is namespace with UID/GID mapping (%U/%G specifiers).
+# This provides PID, mount, network, and user namespace isolation.
+# Shares with translate_uid add --translate-uid via VIRTIOFSD_EXTRA_OPTS
+# (both mechanisms coexist: namespace maps virtiofsd's process identity,
+# translate-uid maps file ownership to the guest).
+# Override VIRTIOFSD_SANDBOX_ARGS in the env file for --sandbox=none.
+#
+# This service is started by systemd socket activation when QEMU connects
+# to the virtiofsd socket. Do not start it directly; start the .socket
+# unit instead.
+
+[Unit]
+Description=virtiofsd for %i
+
+[Service]
+Type=simple
+ConfigurationDirectory=systemd/virtiofsd
+Environment="VIRTIOFSD_SANDBOX_ARGS=--sandbox=namespace --uid-map :0:%U:1: --gid-map :0:%G:1:"
+Environment=VIRTIOFSD_SHARED_DIR=%h
+Environment=VIRTIOFSD_EXTRA_OPTS=
+EnvironmentFile=-%E/systemd/virtiofsd/%i.env
+ExecStart={{ virtiofsd_binary | default('/usr/libexec/virtiofsd') }} \
+    $VIRTIOFSD_SANDBOX_ARGS \
+    --shared-dir=${VIRTIOFSD_SHARED_DIR} \
+    --fd=3 \
+    --xattr \
+    --no-announce-submounts \
+    $VIRTIOFSD_EXTRA_OPTS

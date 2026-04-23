@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# VFIO PCI device binding service
+# Rendered from: templates/vfio-bind@.service.j2
+#
+# Deploy:   mkdir --parents ~/.config/systemd/user && cp <rendered> ~/.config/systemd/user/vfio-bind@.service
+# Usage:    systemctl --user start vfio-bind@0000:2d:00.0
+# Requires: udev rules deployed (templates/vfio-udev.rules.j2), vfio-pci module loaded
+
+[Unit]
+Description=VFIO PCI bind for %I
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=sh -c 'echo vfio-pci > /sys/bus/pci/devices/%I/driver_override'
+ExecStart=-sh -c 'echo %I > /sys/bus/pci/devices/%I/driver/unbind'
+ExecStart=sh -c 'echo %I > /sys/bus/pci/drivers_probe'
+ExecStop=sh -c 'echo > /sys/bus/pci/devices/%I/driver_override'
+ExecStop=-sh -c 'echo %I > /sys/bus/pci/devices/%I/driver/unbind'
+ExecStop=sh -c 'echo %I > /sys/bus/pci/drivers_probe'

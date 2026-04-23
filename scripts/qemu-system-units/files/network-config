@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Cloud-init network config (NoCloud datasource, version 2).
+# Matches both predictable names (enp0s2) and classic names (eth0).
+# Custom kernels without full PCI sysfs support or with net.ifnames=0
+# leave interfaces as eth0. Both patterns are needed.
+# See: https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html
+network:
+    version: 2
+    ethernets:
+        all-en:
+            match:
+                name: en*
+            dhcp4: true
+        all-eth:
+            match:
+                name: eth*
+            dhcp4: true

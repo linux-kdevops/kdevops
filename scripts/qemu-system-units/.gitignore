@@ -1,0 +1,11 @@
+# User vars files (copy vars/example.yaml to start)
+vars/*
+!vars/example.yaml
+
+# Rendered output
+*.env
+
+# Editor swap files
+*.swp
+*.swo
+*~

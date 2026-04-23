@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# virtiofsd socket for QEMU VM instance
+# Rendered from: templates/virtiofsd@.socket.j2
+#
+# Instance name encodes VM and share: virtiofsd@<vm>-<tag>.socket
+# Example: virtiofsd@test-home.socket
+#
+{% if service_scope | default('user') == 'system' %}
+# Deploy:   sudo cp <rendered> /etc/systemd/system/virtiofsd@.socket
+{% else %}
+# Deploy:   cp <rendered> ~/.config/systemd/user/virtiofsd@.socket
+{% endif %}
+
+[Unit]
+Description=virtiofsd socket for %i
+
+[Socket]
+ListenStream=%t/virtiofsd/%i/virtiofsd.sock
+SocketMode=0660
+RuntimeDirectory=virtiofsd/%i
+
+[Install]
+WantedBy=sockets.target

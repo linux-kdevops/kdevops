@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# QEMU VM template service
+# Rendered from: templates/qemu-system@.service.j2
+#
+# Scope: {{ service_scope | default('user') }}
+{% if service_scope | default('user') == 'system' %}
+# Deploy:   sudo cp <rendered> /etc/systemd/system/qemu-system@.service
+# Usage:    sudo systemctl start qemu-system@<name>
+# Logs:     journalctl --unit=qemu-system@<name>.service
+{% else %}
+# Deploy:   mkdir --parents ~/.config/systemd/user && cp <rendered> ~/.config/systemd/user/qemu-system@.service
+# Usage:    systemctl --user start qemu-system@<name>
+# Logs:     journalctl --user-unit=qemu-system@<name>.service
+{% endif %}
+
+[Unit]
+Description=QEMU System Virtual Machine %i
+PartOf=machines.target
+Before=machines.target
+{% if service_scope | default('user') == 'system' %}
+After=network.target
+{% endif %}
+
+[Service]
+Type=simple
+ConfigurationDirectory=systemd/qemu-system
+RuntimeDirectory=qemu-system/%i
+EnvironmentFile=%E/systemd/qemu-system/%i.env
+Environment=QEMU_EXTRA_ARGS=
+ExecStart={{ qemu_binary }} $QEMU_ARGS $QEMU_EXTRA_ARGS \
+    $KERNEL_ARGS \
+    -qmp unix:%t/qemu-system/%i/qmp.sock,server=on,wait=off
+{# Register with machined over Varlink. See docs/design-decisions.md
+   "machined registration" for why Varlink (and not busctl). The
+   shared template registers without vSockCid because it does not
+   know per-VM values; the per-VM drop-in in
+   templates/qemu-system-override.conf.j2 overrides this when
+   vsock_cid is set in the vars file. #}
+{% if service_scope | default("user") == "user" %}
+{% set varlink_socket = "/run/user/%U/systemd/machine/io.systemd.Machine" %}
+{% else %}
+{% set varlink_socket = "/run/systemd/machine/io.systemd.Machine" %}
+{% endif %}
+ExecStartPost=-varlinkctl call \
+    {{ varlink_socket }} \
+    io.systemd.Machine.Register \
+    "{\"name\":\"%i\",\"class\":\"vm\",\"service\":\"qemu-system\",\"leader\":${MAINPID}}"
+ExecStop=-socat OPEN:%E/systemd/qemu-system/qmp-powerdown!!OPEN:/dev/null,wronly UNIX-CONNECT:%t/qemu-system/%i/qmp.sock
+KillSignal=SIGCONT
+KillMode=mixed
+TimeoutSec=2min
+Slice=machine.slice
+
+[Install]
+WantedBy=machines.target

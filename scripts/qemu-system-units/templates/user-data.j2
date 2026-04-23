@@ -1,0 +1,44 @@
+{# SPDX-License-Identifier: copyleft-next-0.3.1 #}
+#cloud-config
+locale: {{ cloud_init.locale | default('en_US.UTF-8') if cloud_init is defined else 'en_US.UTF-8' }}
+disable_root: false
+ssh_pwauth: true
+{% if cloud_init is defined and cloud_init.users is defined and cloud_init.users | length > 0 %}
+users:
+{% for u in cloud_init.users %}
+  - name: {{ u.name }}
+    lock_passwd: false
+    plain_text_passwd: {{ u.password | default(u.name) }}
+{% if u.groups is defined %}
+    groups: {{ u.groups }}
+{% endif %}
+{% if u.sudo is defined %}
+    sudo: {{ u.sudo }}
+{% endif %}
+{% if u.shell is defined %}
+    shell: {{ u.shell }}
+{% endif %}
+{% if cloud_init.ssh_pubkey is defined %}
+    ssh_authorized_keys:
+      - {{ cloud_init.ssh_pubkey }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if shares | default([]) | length > 0 %}
+mounts:
+{% for share in shares %}
+{% if share_transport | default('virtiofs') == '9p' %}
+  - [ "{{ share.tag }}", "{{ share.mount }}", "9p", "trans=virtio,version=9p2000.L,nofail", "0", "0" ]
+{% else %}
+  - [ "{{ share.tag }}", "{{ share.mount }}", "virtiofs", "defaults,nofail", "0", "0" ]
+{% endif %}
+{% endfor %}
+{% endif %}
+write_files:
+  - path: /etc/ssh/sshd_config.d/99-permit-root-login.conf
+    permissions: '0600'
+    content: |
+      PermitRootLogin yes
+      PasswordAuthentication yes
+runcmd:
+  - touch /etc/cloud/cloud-init.disabled

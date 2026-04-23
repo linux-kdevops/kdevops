@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+# VFIO device node permissions, allow kvm group access
+# Rendered from: templates/vfio-udev.rules.j2
+# Deploy: sudo tee /etc/udev/rules.d/10-vfio-kvm.rules
+# Reload: sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=pci
+SUBSYSTEM=="vfio", OWNER="root", GROUP="kvm", MODE="0660"
+{% for dev in pci_passthrough | default([]) %}
+
+# Per-device sysfs permissions for unprivileged VFIO binding: {{ dev.addr }}
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="{{ dev.addr }}", \
+    RUN+="/bin/sh -c '\
+        chgrp kvm /sys/bus/pci/devices/{{ dev.addr }}/driver_override; \
+        chmod 664 /sys/bus/pci/devices/{{ dev.addr }}/driver_override; \
+        chgrp kvm /sys/bus/pci/drivers_probe; \
+        chmod 220 /sys/bus/pci/drivers_probe'"
+ACTION=="bind", SUBSYSTEM=="pci", KERNEL=="{{ dev.addr }}", \
+    RUN+="/bin/sh -c '\
+        chgrp kvm /sys/bus/pci/devices/{{ dev.addr }}/driver/unbind; \
+        chmod 220 /sys/bus/pci/devices/{{ dev.addr }}/driver/unbind'"
+{% endfor %}

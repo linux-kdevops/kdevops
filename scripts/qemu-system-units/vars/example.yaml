@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# VM configuration. See docs/vars.md for field reference.
+
+vm_name: test
+service_scope: user
+
+# QEMU
+qemu_binary: /usr/bin/qemu-system-x86_64
+cpu: host
+accel: kvm
+ram: 2048
+cpus: 2
+machine_type: q35
+# gdb: true
+# autostart: false
+# iommu: intel-iommu
+
+# Firmware (UEFI boot; omit for SeaBIOS default)
+# firmware:
+#   code: /usr/share/OVMF/OVMF_CODE_4M.fd
+#   vars: images/test-ovmf-vars.fd
+#   vars_format: raw
+
+# Root disk
+image:
+  file: images/test.qcow2
+  format: qcow2
+  # cache: none
+  # aio: native
+  # discard: unmap
+  # detect-zeroes: unmap
+
+# Extra drives (virtio-blk)
+# drives:
+#   - file: images/data.qcow2
+#     format: qcow2
+#     discard: unmap
+#   - file: images/scratch.raw
+#     format: raw
+
+# Networking
+ssh_port: 10022
+# vsock_cid: 100
+# ssh_private_key: ~/.ssh/id_ed25519
+
+# Direct kernel boot
+# kernel:
+#   image: /home/user/kernel/destdir/boot/vmlinuz-6.x.y
+#   append: root=/dev/vda1 console=ttyS0,115200 rw
+#   initrd: /home/user/kernel/destdir/boot/initramfs-6.x.y.img
+
+# File sharing (virtiofs default, 9P fallback)
+shares:
+  - tag: home
+    mount: /mnt/home
+#  - tag: modules
+#    dir: /home/user/kernel/destdir/lib/modules
+#    mount: /lib/modules
+# virtiofsd_binary: /usr/libexec/virtiofsd
+# share_transport: 9p
+
+# Cloud-init (omit entire section for mkosi or imageless boot)
+# cloud_init:
+#   seed: images/seed.iso
+#   locale: en_US.UTF-8
+#   ssh_pubkey: ssh-ed25519 AAAA... user@host
+#   users:
+#     - name: root
+#       password: root
+#     - name: user
+#       password: user
+#       groups: sudo
+#       sudo: ALL=(ALL) NOPASSWD:ALL
+
+# PCIe passthrough via VFIO
+# pci_passthrough:
+#   - addr: "0000:2d:00.0"
+#   - addr: "0000:03:00.0"
+#     opts: "rombar=0"
+
+# NVMe emulated drives
+# nvme:
+#   drives:
+#     - file: images/nvme0.qcow2
+#     - file: images/nvme1.qcow2
+#       format: qcow2
+#       serial: data-drive
+#   subsystems:
+#     - nqn: subsys0
+#       controllers:
+#         - serial: path-a
+#         - serial: path-b
+#       namespaces:
+#         - file: images/shared.raw
+#           format: raw
+#           shared: true
+
+# [Service] section overrides
+# service:
+#   CPUQuota: 200%
+#   MemoryMax: 4G
+#   TasksMax: 512
+#   TimeoutSec: 5min
+#   WorkingDirectory: /home/user/machines

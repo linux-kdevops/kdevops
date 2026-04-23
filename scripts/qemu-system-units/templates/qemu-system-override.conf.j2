@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-instance drop-in for qemu-system@{{ vm_name }}.service
+# Rendered from: templates/qemu-system-override.conf.j2
+#
+# Deploy:
+#   mkdir --parents ~/.config/systemd/user/qemu-system@{{ vm_name }}.service.d
+#   cp <rendered> ~/.config/systemd/user/qemu-system@{{ vm_name }}.service.d/override.conf
+
+[Unit]
+{% if share_transport | default('virtiofs') != '9p' %}
+{% for share in shares | default([]) %}
+Requires=virtiofsd@%i-{{ share.tag }}.socket
+After=virtiofsd@%i-{{ share.tag }}.socket
+BindsTo=virtiofsd@%i-{{ share.tag }}.service
+{% endfor %}
+{% endif %}
+{% for dev in pci_passthrough | default([]) %}
+Requires=vfio-bind@{{ dev.addr }}.service
+After=vfio-bind@{{ dev.addr }}.service
+{% endfor %}
+
+[Service]
+{% if qemu_binary is defined %}
+ExecStart=
+ExecStart={{ qemu_binary }} $QEMU_ARGS $QEMU_EXTRA_ARGS \
+    $KERNEL_ARGS \
+    -qmp unix:%t/qemu-system/%i/qmp.sock,server=on,wait=off
+{% endif %}
+{# QEMU_EXTRA_ARGS: single-line output, {{- " " }} injects spaces between flags #}
+{% set has_virtiofs = shares | default([]) | length > 0 and share_transport | default('virtiofs') != '9p' %}
+{% set microvm = "microvm" in machine_type %}
+Environment="QEMU_EXTRA_ARGS=
+{%- if has_virtiofs -%}
+{{- " " }}-object memory-backend-memfd,id=mem,size={{ ram }}M,share=on
+{{- " " }}-machine memory-backend=mem
+{%- for share in shares -%}
+{{- " " }}-chardev socket,id=virtiofs_{{ share.tag }},path=%t/virtiofsd/%i-{{ share.tag }}/virtiofsd.sock
+{{- " " }}-device {{ "vhost-user-fs-device" if microvm else "vhost-user-fs-pci" }},queue-size=1024,chardev=virtiofs_{{ share.tag }},tag={{ share.tag }}
+{%- endfor -%}
+{%- endif -%}
+{{- " " }}-device {{ "virtio-serial-device" if microvm else "virtio-serial-pci" }}
+{{- " " }}-chardev socket,id=console0,path=%t/qemu-system/%i/console.sock,server=on,wait=off
+{{- " " }}-device virtconsole,chardev=console0
+{%- if gdb | default(false) -%}
+{{- " " }}-gdb unix:%t/qemu-system/%i/gdb.sock
+{%- endif -%}
+{%- if not autostart | default(true) -%}
+{{- " " }}-S
+{%- endif -%}
+"
+{# Override the base registration with one that carries vSockCid.
+   See docs/design-decisions.md "machined registration". #}
+{% if vsock_cid is defined %}
+{% if service_scope | default("user") == "user" %}
+{% set varlink_socket = "/run/user/%U/systemd/machine/io.systemd.Machine" %}
+{% else %}
+{% set varlink_socket = "/run/systemd/machine/io.systemd.Machine" %}
+{% endif %}
+ExecStartPost=
+ExecStartPost=-varlinkctl call \
+    {{ varlink_socket }} \
+    io.systemd.Machine.Register \
+    "{\"name\":\"%i\",\"class\":\"vm\",\"service\":\"qemu-system\",\"leader\":${MAINPID},\"vSockCid\":{{ vsock_cid }}}"
+{% endif %}
+{# Empty ExecStop= clears base, then SSH (clean) + QMP (fallback) #}
+{% if ssh_private_key is defined %}
+ExecStop=
+ExecStop=-ssh -o ConnectTimeout=5 \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    -o IdentitiesOnly=yes \
+    -i ${SSH_KEY_PATH} \
+    root@vsock/${VSOCK_CID} \
+    systemctl poweroff
+ExecStop=-socat OPEN:%E/systemd/qemu-system/qmp-powerdown!!OPEN:/dev/null,wronly UNIX-CONNECT:%t/qemu-system/%i/qmp.sock
+{% endif %}
+{% if pci_passthrough is defined %}
+LimitMEMLOCK={{ ram + 256 }}M
+{% endif %}
+{% for key, value in service | default({}) | items %}
+{{ key }}={{ value }}
+{% endfor %}

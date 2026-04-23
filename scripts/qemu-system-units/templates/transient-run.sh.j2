@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Interactive QEMU session for {{ vm_name }}.
+# Rendered from: templates/transient-run.sh.j2
+#
+# Render and run:
+#   minijinja-cli --trim-blocks \
+#       --output /tmp/run-{{ vm_name }}.sh \
+#       templates/transient-run.sh.j2 vars/{{ vm_name }}.yaml
+#   bash /tmp/run-{{ vm_name }}.sh
+#
+# Disconnect: press Ctrl-] three times within 1 second.
+# The VM terminates when the session disconnects.
+#
+# Do not pipe through bash (| bash). The pipe steals stdin from the
+# terminal, which systemd-run --pty needs for interactive console.
+
+set -euo pipefail
+
+unit=qemu-{{ vm_name }}-interactive
+
+# Stop the persistent service if running (same ports, same shares).
+if systemctl --user is-active --quiet qemu-system@{{ vm_name }}.service 2>/dev/null; then
+    echo "Stopping persistent service qemu-system@{{ vm_name }}..." >&2
+    systemctl --user stop qemu-system@{{ vm_name }}.service
+fi
+
+# Stop a previous interactive session if still running.
+if systemctl --user is-active --quiet "$unit".service 2>/dev/null; then
+    echo "Stopping previous interactive session $unit..." >&2
+    systemctl --user stop "$unit".service
+fi
+
+{% set has_virtiofs = shares | default([]) | length > 0 and share_transport | default('virtiofs') != '9p' %}
+{#- QEMU_EXTRA_ARGS is built in the shell, not in Environment=, because
+    systemd does not expand %t or $XDG_RUNTIME_DIR in Environment=
+    directives of transient units. The shell resolves $XDG_RUNTIME_DIR
+    at exec time. -#}
+{% if has_virtiofs %}
+QEMU_EXTRA_ARGS="
+{%- for share in shares -%}
+{%- if not loop.first %} {% endif %}-chardev socket,id=virtiofs_{{ share.tag }},path=$XDG_RUNTIME_DIR/virtiofsd/{{ vm_name }}-{{ share.tag }}/virtiofsd.sock
+{{- " " }}-device {{ "vhost-user-fs-device" if "microvm" in machine_type else "vhost-user-fs-pci" }},queue-size=1024,chardev=virtiofs_{{ share.tag }},tag={{ share.tag }}
+{%- endfor -%}
+{{- " " }}-object memory-backend-memfd,id=mem,size={{ ram }}M,share=on
+{{- " " }}-machine memory-backend=mem"
+{% else %}
+QEMU_EXTRA_ARGS=""
+{% endif %}
+export QEMU_EXTRA_ARGS
+
+exec systemd-run --user --pty --collect \
+    --unit="$unit" \
+    --property=EnvironmentFile="$HOME"/.config/systemd/qemu-system/{{ vm_name }}.env \
+    --property=PassEnvironment=QEMU_EXTRA_ARGS \
+{% if has_virtiofs %}
+{% for share in shares %}
+    --property=Requires=virtiofsd@{{ vm_name }}-{{ share.tag }}.socket \
+    --property=After=virtiofsd@{{ vm_name }}-{{ share.tag }}.socket \
+    --property=BindsTo=virtiofsd@{{ vm_name }}-{{ share.tag }}.service \
+{% endfor %}
+{% endif %}
+{% if gdb | default(false) %}
+    --property="Environment=QEMU_GDB_ARGS=-gdb unix:$XDG_RUNTIME_DIR/qemu-system/{{ vm_name }}/gdb.sock" \
+{% endif %}
+{% if pci_passthrough is defined %}
+    --property=LimitMEMLOCK={{ ram + 256 }}M \
+{% endif %}
+{% if service is defined and service.WorkingDirectory is defined %}
+    --property=WorkingDirectory={{ service.WorkingDirectory }} \
+{% endif %}
+    sh -c 'eval exec $QEMU_BINARY $QEMU_ARGS $QEMU_EXTRA_ARGS ${QEMU_GDB_ARGS:-} $KERNEL_ARGS'
