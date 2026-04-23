@@ -53,7 +53,7 @@
           {{ nixos_vm_ips[item] }} \
           {{ ansible_cfg_ssh_port }} \
           kdevops \
-          {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+          {{ nixos_ssh_config_file | default(ansible_facts.env.HOME + '/.ssh/config') }} \
           {{ ssh_key_path_for_config.stdout | trim }} \
           'NixOS VM'
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"

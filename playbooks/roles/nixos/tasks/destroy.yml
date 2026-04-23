@@ -35,7 +35,7 @@
           '' \
           '' \
           '' \
-          {{ nixos_ssh_config_file | default(ansible_env.HOME + '/.ssh/config') }} \
+          {{ nixos_ssh_config_file | default(ansible_facts.env.HOME + '/.ssh/config') }} \
           '' \
           'NixOS VM'
       loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
