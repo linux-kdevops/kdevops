@@ -77,6 +77,21 @@ config KDEVOPS_CUSTOM_SSH_KEXALGORITHMS
 	  Some distributions, such as older distributions, may require a custom
 	  ssh configuration entry for the KexAlgorithms parameter.
 
+config KDEVOPS_CONTROLLER_DATA_PATH
+	string "Controller-side data path"
+	output yaml
+	default "$(TOPDIR_PATH)/data"
+	help
+	  Absolute path on the control node where kdevops places
+	  controller-side artefacts: source trees for local builds
+	  (bootlinux controller mode clones Linux under here),
+	  out-of-tree build directories, install destdirs, and
+	  workflow scratch space. This is the controller-side parallel
+	  of data_path, which is the target-guest view of the same
+	  concept. Defaults to a data/ sibling of the kdevops checkout
+	  so kdevops does not assume a distro-wide /data mount on the
+	  control host.
+
 config KDEVOPS_MAKE_VERBOSE
 	bool "Enable verbose make output (V=1)"
 	default n
