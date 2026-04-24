@@ -28,6 +28,6 @@ PHONY += bringup_qemu_system_units
 destroy_qemu_system_units:
 	$(Q)ansible-playbook \
 		playbooks/qemu_system_units.yml \
-		--extra-vars=@./extra_vars.yaml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
 		--tags destroy
 PHONY += destroy_qemu_system_units
