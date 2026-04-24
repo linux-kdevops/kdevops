@@ -648,6 +648,46 @@ class CallbackModule(CallbackBase):
         """Host unreachable"""
         self._handle_result(result, "unreachable")
 
+    def v2_runner_on_async_poll(self, result):
+        """Async task polled and has not yet finished.
+
+        Async tasks fire this hook repeatedly between dispatch and
+        completion. It is noisy by design, so we only emit on screen
+        at -vv or higher and always route through the log with a
+        consistent ASYNC POLL: prefix so post-hoc debugging can
+        reconstruct the polling cadence.
+        """
+        host = result._host.name
+        ajid = result._result.get("ansible_job_id", "")
+        msg = f"ASYNC POLL: [{host}] job {ajid}"
+        if self._display.verbosity >= 2:
+            with self.output_lock:
+                self._display.display(msg, color=C.COLOR_VERBOSE)
+        self._write_to_log(msg)
+
+    def v2_runner_on_async_ok(self, result):
+        """Async task finished successfully.
+
+        Routing through _handle_result treats async completion the
+        same as a sync ok: the running-task map clears, the dynamic
+        display updates, and failed_items / logging behave
+        identically. Without this, lucid would show async tasks as
+        perpetually running because the normal on_ok never fires
+        for them.
+        """
+        changed = result._result.get("changed", False)
+        status = "changed" if changed else "ok"
+        self._handle_result(result, status)
+
+    def v2_runner_on_async_failed(self, result):
+        """Async task finished with a failure.
+
+        Same routing as on_async_ok, but lands in the failed branch
+        of _handle_result so the dynamic display freezes and output
+        is surfaced the way a sync failure would be.
+        """
+        self._handle_result(result, "failed")
+
     def v2_runner_item_on_ok(self, result):
         """Loop item succeeded — log per-item command and output"""
         self._log_item_result(result)
