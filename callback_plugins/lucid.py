@@ -30,7 +30,6 @@ DOCUMENTATION = """
     name: lucid
     type: stdout
     short_description: Clean, minimal Ansible output with dynamic display
-    version_added: "2.10"
     description:
         - Provides clean, minimal output by default
         - Progressive verbosity levels (-v, -vv, -vvv)
@@ -38,6 +37,11 @@ DOCUMENTATION = """
         - Comprehensive logging independent of display verbosity
         - Dynamic live display for interactive terminals
         - Static output for CI/CD environments
+    author:
+        - Daniel Gomez (@dagmcr) <da.gomez@samsung.com>
+    extends_documentation_fragment:
+        - default_callback
+        - result_format_callback
     requirements:
         - Ansible 2.10+
         - Python 3.8+
