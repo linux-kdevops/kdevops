@@ -412,7 +412,8 @@ class CallbackModule(CallbackBase):
         self._create_log_file(playbook_name)
 
         msg = f"PLAYBOOK: {playbook_name}"
-        self._display_message(msg, C.COLOR_HIGHLIGHT)
+        with self.output_lock:
+            self._display.banner(msg, color=C.COLOR_HIGHLIGHT, cows=False)
         self._write_to_log(msg)
 
         # Show log file path early so user can tail -f
@@ -472,7 +473,10 @@ class CallbackModule(CallbackBase):
             header = self.pending_play_header
             self.pending_play_header = None
         if header and not self.dynamic_mode:
-            self._display_message(header, C.COLOR_HIGHLIGHT)
+            with self.output_lock:
+                self._display.banner(
+                    header, color=C.COLOR_HIGHLIGHT, cows=False
+                )
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         """Task started"""
@@ -1121,7 +1125,10 @@ class CallbackModule(CallbackBase):
 
     def _display_recap(self, stats):
         """Display final statistics"""
-        self._display_message("\nPLAY RECAP", C.COLOR_HIGHLIGHT)
+        with self.output_lock:
+            self._display.banner(
+                "PLAY RECAP", color=C.COLOR_HIGHLIGHT, cows=False
+            )
 
         hosts = sorted(stats.processed.keys())
         for host in hosts:
