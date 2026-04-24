@@ -48,9 +48,32 @@
   ansible.builtin.file:
     path: "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd/{{ item.0 }}-{{ item.1 }}.env"
     state: absent
-  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(['store', 'modules']) | list }}"
+  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(['store', 'modules', 'data-configs', 'data-results', 'kdevops-fstests']) | list }}"
   loop_control:
     label: "{{ item.0 }}-{{ item.1 }}"
+
+# `true` as the third default() arg so an empty XDG_STATE_HOME
+# falls through to $HOME/.local/state rather than producing a
+# bogus "/qemu-system/<vm>" path.
+- name: Resolve systemd state root for destroy
+  ansible.builtin.set_fact:
+    qsu_state_root: "{{ ansible_facts.env.XDG_STATE_HOME | default(ansible_facts.env.HOME ~ '/.local/state', true) }}/qemu-system"
+
+# Workloads may leave entries with restrictive modes inside the
+# per-VM /data tree. Restore owner traversal so the following
+# state: absent task can finish.
+- name: Make per-VM state directories traversable before removal
+  ansible.builtin.command:
+    cmd: "chmod -R u+rwX {{ qsu_state_root }}/{{ item }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+  changed_when: false
+
+- name: Remove per-VM systemd state directories
+  ansible.builtin.file:
+    path: "{{ qsu_state_root }}/{{ item }}"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
 
 - name: Remove qsu shared units and helper
   ansible.builtin.file:
