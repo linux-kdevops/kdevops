@@ -44,4 +44,32 @@
   users.users.root.openssh.authorizedKeys.keys = [ "{{ qemu_system_units_ssh_authorized_key }}" ];
   users.users.kdevops.openssh.authorizedKeys.keys = [ "{{ qemu_system_units_ssh_authorized_key }}" ];
 {% endif %}
+
+{% if kdevops_workflow_enable_fstests is defined and kdevops_workflow_enable_fstests %}
+  # /data is split by lifecycle: configs land under the VM
+  # StateDirectory (ephemeral, wiped by `make destroy`);
+  # results land in the kdevops workflow tree (persistent,
+  # survives destroy, watchable live as the guest writes).
+  fileSystems."/data/configs" = {
+    device = "data-configs";
+    fsType = "virtiofs";
+  };
+
+  fileSystems."/data/results" = {
+    device = "data-results";
+    fsType = "virtiofs";
+  };
+
+  # Controller's workflows/fstests tree exposed read-only via
+  # virtiofs at the FHS 3.0 locally-installed-support-files path,
+  # nested under kdevops/ so sibling workflows land adjacent.
+  # Guests exec /usr/local/lib/kdevops/fstests/scripts/oscheck.sh
+  # against /usr/lib/xfstests (the nixpkgs xfstests tree set up
+  # by the nixos-qemu fstests module).
+  fileSystems."/usr/local/lib/kdevops/fstests" = {
+    device = "kdevops-fstests";
+    fsType = "virtiofs";
+    options = [ "ro" ];
+  };
+{% endif %}
 }
