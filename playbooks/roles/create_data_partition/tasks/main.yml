@@ -38,7 +38,7 @@
         - data_volume_id in item.value.links.ids
       loop_control:
         label: "Adding block device: /dev/{{ item.key }}"
-      with_dict: "{{ ansible_devices }}"
+      with_dict: "{{ ansible_facts.devices }}"
 
 - name: Create data partition if not created yet
   ansible.builtin.include_role:
