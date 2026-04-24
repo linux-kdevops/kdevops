@@ -65,5 +65,14 @@
   systemd.tmpfiles.rules = [
     "L+ /bin/bash     - - - - ${pkgs.bash}/bin/bash"
     "L+ /usr/bin/awk  - - - - ${pkgs.gawk}/bin/awk"
+
+    # Expose the xfstests tree at a stable, FHS-standard path so
+    # driver scripts and external tools can cd into it without
+    # resolving the nixpkgs store hash at runtime. Matches what
+    # distribution packages of xfstests conventionally install
+    # under /usr/lib/xfstests (Debian, Fedora, nixpkgs via the
+    # libexec→/usr/lib translation) and gives the consumer a
+    # predictable path the kdevops oscheck.sh flow can use as CWD.
+    "L+ /usr/lib/xfstests - - - - ${pkgs.xfstests}/lib/xfstests"
   ];
 }
