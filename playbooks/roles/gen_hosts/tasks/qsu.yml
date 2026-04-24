@@ -1,0 +1,70 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Fast path for the QEMU_SYSTEM_UNITS bringup backend. qsu needs
+# only the rendered inventory file; every other gen_hosts task
+# (declared-hosts parsing, fstests config-file resolution,
+# libvirt / terraform / guestfs backend branches) either skips
+# on qsu or resolves to values the qsu role does not read.
+#
+# hosts.j2 includes a per-workflow sub-template that consumes
+# <workflow>_enabled_test_types to emit one host per test
+# section (qsu-xfs-crc, qsu-xfs-reflink, qsu-btrfs-raid1, ...).
+# Parse .config to populate those lists before the render, so
+# multi-host workflows get the section-expanded inventory the
+# main role produces without running any of the libvirt-oriented
+# logic around it.
+
+- name: Infer enabled fstests test section types
+  vars:
+    fs: "{{ fstests_fstyp | default('xfs') | upper }}"
+    config_prefix: "CONFIG_FSTESTS_{{ fs }}_SECTION_"
+  ansible.builtin.set_fact:
+    fstests_enabled_test_types: >-
+      {{
+        lookup('file', topdir_path + '/.config')
+        | regex_findall('^' + config_prefix + '(.*)=y$', multiline=True)
+        | reject('match', '.*_ENABLED$')
+        | map('lower')
+        | map('regex_replace', '_', '-')
+        | map('regex_replace', '^', fstests_fstyp | default('xfs') + '-')
+        | list
+      }}
+  when:
+    - kdevops_workflows_dedicated_workflow | default(false) | bool
+    - kdevops_workflow_enable_fstests | default(false) | bool
+
+- name: Infer enabled blktests test section types
+  ansible.builtin.set_fact:
+    blktests_enabled_test_types: >-
+      {{
+        lookup('file', topdir_path + '/.config')
+        | regex_findall('^CONFIG_BLKTESTS_SECTION_(.*)=y$', multiline=True)
+        | map('lower')
+        | list
+      }}
+  when:
+    - kdevops_workflows_dedicated_workflow | default(false) | bool
+    - kdevops_workflow_enable_blktests | default(false) | bool
+
+- name: Infer enabled selftests test section types
+  ansible.builtin.set_fact:
+    selftests_enabled_test_types: >-
+      {{
+        lookup('file', topdir_path + '/.config')
+        | regex_findall('^CONFIG_SELFTESTS_SECTION_(.*)=y$', multiline=True)
+        | map('lower')
+        | list
+      }}
+  when:
+    - kdevops_workflows_dedicated_workflow | default(false) | bool
+    - kdevops_workflow_enable_selftests | default(false) | bool
+
+- name: Render the ansible inventory (hosts)
+  ansible.builtin.template:
+    src: "{{ kdevops_hosts_template | default('hosts.j2') }}"
+    dest: "{{ ansible_cfg_inventory }}"
+    mode: '0644'
+
+- name: End the gen_hosts play after rendering the inventory
+  ansible.builtin.meta: end_play

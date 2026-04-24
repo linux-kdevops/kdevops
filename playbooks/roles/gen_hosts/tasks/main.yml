@@ -10,6 +10,13 @@
       skip: true
   tags: vars
 
+# Fast path for QEMU_SYSTEM_UNITS: render the inventory and stop.
+# The rest of this role (declared-hosts, fstests, libvirt/terraform
+# branches) does work qsu does not use.
+- name: Include qsu fast path
+  ansible.builtin.include_tasks: qsu.yml
+  when: kdevops_enable_qemu_system_units | default(false) | bool
+
 - name: Parse declared hosts list when using declared hosts
   set_fact:
     kdevops_declared_hosts: >-
