@@ -1,0 +1,13 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests setup phase for the qsu (imageless NixOS) bringup
+# path. No-op: the qemu_system_units role already wires every
+# piece this phase would install (xfstests via the nixos-qemu
+# fstests module, kdevops driver scripts via virtiofs, per-VM
+# /data state directories). This file stays as an extension
+# point for future qsu-path setup tasks.
+
+- name: No-op for qsu fstests setup
+  ansible.builtin.meta: noop
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup"]

@@ -1,0 +1,78 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests config phase for the qsu (imageless NixOS) bringup
+# path. Discovers the kdevops-serial NVMe namespaces qsu
+# attaches, renders the per-host fstests config into the per-VM
+# /data virtiofs share, and creates the mount points oscheck.sh
+# will consume at run time.
+
+- name: Discover qsu NVMe namespaces (serial=kdevops*, nsid=1)
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  ansible.builtin.find:
+    paths: /dev/disk/by-id
+    patterns: "nvme-QEMU_NVMe_Ctrl_kdevops*_1"
+    file_type: link
+  register: qsu_kdevops_nvme_syms
+
+- name: Fail if fewer than two kdevops NVMe namespaces are present
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  ansible.builtin.fail:
+    msg: >-
+      Expected at least two NVMe drives named nvme-QEMU_NVMe_Ctrl_kdevops*_1
+      on {{ inventory_hostname }} (one for TEST_DEV, at least one for
+      SCRATCH_DEV_POOL). Found {{ qsu_kdevops_nvme_syms.files | length }}.
+      Check CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_COUNT and rerun
+      `make destroy && make bringup`.
+  when: qsu_kdevops_nvme_syms.files | length < 2
+
+- name: Ensure fstests mount points exist on the guest
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ fstests_test_dir }}"
+    - "{{ fstests_scratch_mnt }}"
+
+- name: Check if a host-specific fstests config exists on the controller
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ inventory_hostname }}.config"
+  register: host_specific_fstests_config
+
+- name: Render host-specific fstests config to /data/configs
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  vars:
+    nvme_paths: "{{ (qsu_kdevops_nvme_syms.files | map(attribute='path') | list) | sort }}"
+    fstests_test_dev: "{{ nvme_paths[0] }}"
+    fstests_scratch_devpool: "{{ nvme_paths[1:] | join(' ') }}"
+    fstests_logwrites_dev: "{{ nvme_paths[-1] }}"
+    fstests_result_base: "/data/results"
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ inventory_hostname }}.config"
+    dest: "/data/configs/{{ inventory_hostname }}.config"
+    mode: '0644'
+    force: true
+  when:
+    - not fstests_debug_localhost | default(false) | bool
+    - host_specific_fstests_config.stat.exists
+
+- name: Render the {{ fstests_fstyp }} fstests config to /data/configs
+  tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  vars:
+    nvme_paths: "{{ (qsu_kdevops_nvme_syms.files | map(attribute='path') | list) | sort }}"
+    fstests_test_dev: "{{ nvme_paths[0] }}"
+    fstests_scratch_devpool: "{{ nvme_paths[1:] | join(' ') }}"
+    fstests_logwrites_dev: "{{ nvme_paths[-1] }}"
+    fstests_result_base: "/data/results"
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "/data/configs/{{ inventory_hostname }}.config"
+    mode: '0644'
+    force: true
+  when:
+    - not fstests_debug_localhost | default(false) | bool
+    - not host_specific_fstests_config.stat.exists

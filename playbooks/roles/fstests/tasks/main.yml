@@ -1,18 +1,13 @@
 ---
 # SPDX-License-Identifier: copyleft-next-0.3.1
 #
-# fstests role orchestrator. Phase task files split the role by
-# lifecycle stage:
-#
-#   setup.yml    Install distro dependencies, build xfsprogs
-#                and fstests on the guest.
-#   config.yml   Render the per-host <fstyp>.config, discover
-#                NVMe drives, partition and lay out the test and
-#                scratch pools, prepare NFS and CIFS exports.
-#   run.yml      Reboot, load loopback modules, verify
-#                dependencies, invoke oscheck.sh.
-#   results.yml  Fetch check.time, check.log, xunit XML, .bad,
-#                dmesg, TFB artefacts; summarise and archive.
+# fstests role orchestrator. Each lifecycle phase has a distro
+# and a qsu (imageless NixOS) variant gated on
+# kdevops_enable_qemu_system_units. include_tasks (not
+# import_tasks) ensures distro-only task names that dereference
+# variables set earlier in the distro chain never render on a
+# qsu run; tags: always lets --tags filter children normally
+# without skipping the include itself.
 
 - name: Import optional extra_args file
   ansible.builtin.include_vars: "{{ item }}"
@@ -27,12 +22,37 @@
 
 - ansible.builtin.include_role:
     name: create_data_partition
+  when: not (kdevops_enable_qemu_system_units | default(false) | bool)
   tags: ["oscheck", "data_partition"]
 
-- ansible.builtin.import_tasks: setup.yml
+- ansible.builtin.include_tasks: setup-qsu.yml
+  when: kdevops_enable_qemu_system_units | default(false) | bool
+  tags: always
 
-- ansible.builtin.import_tasks: config.yml
+- ansible.builtin.include_tasks: setup.yml
+  when: not (kdevops_enable_qemu_system_units | default(false) | bool)
+  tags: always
 
-- ansible.builtin.import_tasks: run.yml
+- ansible.builtin.include_tasks: config-qsu.yml
+  when: kdevops_enable_qemu_system_units | default(false) | bool
+  tags: always
 
-- ansible.builtin.import_tasks: results.yml
+- ansible.builtin.include_tasks: config.yml
+  when: not (kdevops_enable_qemu_system_units | default(false) | bool)
+  tags: always
+
+- ansible.builtin.include_tasks: run-qsu.yml
+  when: kdevops_enable_qemu_system_units | default(false) | bool
+  tags: always
+
+- ansible.builtin.include_tasks: run.yml
+  when: not (kdevops_enable_qemu_system_units | default(false) | bool)
+  tags: always
+
+- ansible.builtin.include_tasks: results-qsu.yml
+  when: kdevops_enable_qemu_system_units | default(false) | bool
+  tags: always
+
+- ansible.builtin.include_tasks: results.yml
+  when: not (kdevops_enable_qemu_system_units | default(false) | bool)
+  tags: always

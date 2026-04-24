@@ -1,0 +1,75 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests run phase for the qsu (imageless NixOS) bringup
+# path. Invokes oscheck.sh against the nixpkgs xfstests tree at
+# /usr/lib/xfstests with all run-time parameters passed as env.
+# Everything runs as root over SSH (no sudo, no reboot) against
+# a guest the qemu_system_units role already brought up with
+# the required userland on PATH.
+
+- name: Render fstests section name from inventory hostname
+  ansible.builtin.set_fact:
+    fstests_section: "{{ inventory_hostname | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+
+# data-results is mounted from the kdevops workflow tree and
+# persists across runs. Clear the section's subtree on the
+# controller before each invocation so stale .full/.dmesg/
+# check.* from a previous run don't mingle with the new one.
+- name: Clear stale results for section {{ fstests_section }}
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ topdir_path }}/workflows/fstests/results/last-run/{{ inventory_hostname }}/{{ fstests_section }}"
+    state: absent
+  tags: ["oscheck", "fstests", "run_tests"]
+
+# Replicate the relevant bits of distro run.yml's LIMIT_TESTS
+# resolution here since run.yml is gated off on qsu. The env
+# var is populated by kdevops' top-level Makefile when the
+# caller runs `make fstests-baseline TESTS='…'`; the Kconfig
+# fallback applies when TESTS= is absent.
+- name: Resolve LIMIT_TESTS from env or FSTESTS_RUN_CUSTOM_TESTS
+  ansible.builtin.set_fact:
+    all_limit_tests: >-
+      {{
+        lookup('env', 'LIMIT_TESTS')
+        if (lookup('env', 'LIMIT_TESTS') | length > 0)
+        else (limit_tests | default('', true))
+      }}
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Run fstests via oscheck.sh on {{ inventory_hostname }}
+  vars:
+    initial_baseline_expunges: "{{ fstests_initial_baseline_args | default('') | trim }}"
+    skip_tests_args: "{{ fstests_skip_tests_args | default('') | trim }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+  ansible.builtin.command: |
+    /usr/local/lib/kdevops/fstests/scripts/oscheck.sh
+      --print-start
+      --print-done
+      --journal {{ fstests_journal | default('no') }}
+      --test-section
+      {{ fstests_section }}
+      {{ oscheck_extra_args | default('') }}
+      {{ all_limit_tests | default('') }}
+      {{ initial_baseline_expunges }}
+      {{ skip_tests_args }}
+  args:
+    chdir: /usr/lib/xfstests
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+    HOST_OPTIONS: "/data/configs/{{ inventory_hostname }}.config"
+    RESULT_BASE: "/data/results"
+    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion | default('') }}"
+    FSTESTS_RUN_LARGE_DISK_TESTS: "{{ run_large_disk_tests | default('') }}"
+    FSTESTS_RUN_AUTO_GROUP_TESTS: "{{ run_auto_group_tests | default('') }}"
+    FSTESTS_RUN_CUSTOM_GROUP_TESTS: "{{ run_custom_group_tests | default('') }}"
+    FSTESTS_EXCLUDE_TEST_GROUPS: "{{ exclude_test_groups | default('') }}"
+    LIMIT_TESTS: "{{ all_limit_tests | default('') }}"
+    TEST_DEV: "{{ fstests_test_dev }}"
+    TEST_DIR: "{{ fstests_test_dir }}"
+    KEEP_DMESG: "yes"
+  ignore_errors: true
+  when:
+    - kdevops_run_fstests | default(false) | bool

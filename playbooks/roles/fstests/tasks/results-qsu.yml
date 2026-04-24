@@ -1,0 +1,54 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests results phase for the qsu (imageless NixOS) bringup
+# path. Results already live in workflows/fstests/results/
+# last-run/<vm>/ by virtue of the data-results virtiofs share
+# the qemu_system_units role composes, so this phase only has
+# to resolve the kernel release and archive the live tree.
+
+- name: Resolve workflow results location for kdevops archiving
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    fstests_results_full_path: "{{ topdir_path }}/workflows/fstests/results"
+    fstests_workflow_dir: "{{ topdir_path }}/workflows/fstests"
+  tags: ["oscheck", "fstests", "copy_results"]
+
+- name: Get used target kernel version from the controller kernel build
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.command:
+    chdir: "{{ bootlinux_controller_tree_path }}"
+    argv:
+      - make
+      - --silent
+      - O={{ bootlinux_controller_builddir }}
+      - kernelrelease
+  environment:
+    LOCALVERSION: "{{ target_linux_localversion | default('', true) }}"
+  register: qsu_kernelrelease_make
+  changed_when: false
+  tags: ["oscheck", "fstests", "copy_results"]
+
+- name: Store last kernel variable
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    last_kernel: "{{ qsu_kernelrelease_make.stdout | trim }}"
+  tags: ["oscheck", "fstests", "copy_results"]
+
+- name: Archive last-run under the kernel release
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.command:
+    chdir: "{{ fstests_results_full_path }}"
+    argv:
+      - tar
+      - --create
+      - --xz
+      - --file
+      - "{{ last_kernel }}.tar.xz"
+      - "last-run"
+  changed_when: true
+  tags: ["oscheck", "fstests", "copy_results"]
