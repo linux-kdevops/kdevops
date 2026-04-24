@@ -558,8 +558,8 @@ class CallbackModule(CallbackBase):
         # Display based on mode
         if self.dynamic_mode:
             # Dynamic mode will update on next refresh
-            # Freeze display and show output for failed tasks (not ignored)
-            if status == "failed" and not ignore_errors:
+            # Freeze display and show output for failed/unreachable tasks (not ignored)
+            if status in ("failed", "unreachable") and not ignore_errors:
                 self._freeze_and_show_output(result_data)
         else:
             # Static mode - display immediately
