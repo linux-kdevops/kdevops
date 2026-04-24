@@ -1,10 +1,5 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-HOSTS_PREFIX:=$(subst ",,$(CONFIG_KDEVOPS_HOSTS_PREFIX))
-
-KDEVOPS_NODES_TEMPLATE :=	$(KDEVOPS_NODES_ROLE_TEMPLATE_DIR)/qemu_system_units_nodes.j2
-KDEVOPS_NODES :=		scripts/qemu-system-units/vars/$(HOSTS_PREFIX).yaml
-
 export KDEVOPS_PROVISIONED_SSH := $(KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD)
 
 KDEVOPS_PROVISION_METHOD		:= bringup_qemu_system_units
