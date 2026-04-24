@@ -109,6 +109,7 @@ class CallbackModule(CallbackBase):
         self.update_thread: Optional[threading.Thread] = None
         self.update_thread_stop: Optional[threading.Event] = None
         self.task_lock = threading.Lock()
+        self.output_lock = threading.Lock()
 
         # Failed loop items for display on task failure
         self.failed_items: List[dict] = []
@@ -371,10 +372,11 @@ class CallbackModule(CallbackBase):
 
     def _display_message(self, message: str, color=None):
         """Display message with optional color"""
-        if color:
-            self._display.display(message, color=color)
-        else:
-            self._display.display(message)
+        with self.output_lock:
+            if color:
+                self._display.display(message, color=color)
+            else:
+                self._display.display(message)
 
     # ========================================================================
     # Ansible v2 Callback Methods
@@ -393,7 +395,8 @@ class CallbackModule(CallbackBase):
 
         # Show log file path early so user can tail -f
         if self.log_file_path:
-            self._display.display(f"Log: {self.log_file_path}")
+            with self.output_lock:
+                self._display.display(f"Log: {self.log_file_path}")
 
     def v2_playbook_on_play_start(self, play):
         """Play started"""
@@ -681,7 +684,8 @@ class CallbackModule(CallbackBase):
                 # Truncate very long commands
                 if len(command) > 200:
                     command = command[:197] + "..."
-                self._display.display(f"    $ {command}", color=C.COLOR_VERBOSE)
+                with self.output_lock:
+                    self._display.display(f"    $ {command}", color=C.COLOR_VERBOSE)
 
         # Show output if conditions met
         if show_output:
@@ -713,7 +717,8 @@ class CallbackModule(CallbackBase):
             output.append(f"\nEXCEPTION:\n{res['exception']}")
 
         if output:
-            self._display.display("".join(output))
+            with self.output_lock:
+                self._display.display("".join(output))
 
     def _log_result(self, result, status: str, duration: float):
         """Write result to log file (always max verbosity)"""
@@ -895,12 +900,12 @@ class CallbackModule(CallbackBase):
                 lines.append(self._truncate_line(recent_line, term_width))
             lines.append("")
 
-        # Display all lines
+        # Display all lines atomically
         if lines:
             output = "\n".join(lines)
-            # Write directly to avoid extra newlines
-            sys.stdout.write(output)
-            sys.stdout.flush()
+            with self.output_lock:
+                sys.stdout.write(output)
+                sys.stdout.flush()
             # Count actual lines printed (number of newlines + 1 for the last line)
             self.display_lines = output.count("\n") + 1
         else:
@@ -909,27 +914,28 @@ class CallbackModule(CallbackBase):
     def _clear_display(self):
         """Clear dynamic display using ANSI escape codes"""
         if self.display_lines > 0:
-            # Clear current line first
-            sys.stdout.write("\r\033[2K")
-            # Move up and clear remaining lines
+            # Build full escape sequence then write atomically under lock
+            buf = "\r\033[2K"
             for _ in range(self.display_lines - 1):
-                sys.stdout.write("\033[1A")  # Move cursor up one line
-                sys.stdout.write("\033[2K")  # Clear entire line
-            sys.stdout.flush()
+                buf += "\033[1A\033[2K"
+            with self.output_lock:
+                sys.stdout.write(buf)
+                sys.stdout.flush()
             self.display_lines = 0
 
     def _display_failed_items(self):
         """Display collected per-item failures and clear the list"""
-        for fi in self.failed_items:
-            label = fi["item"]
-            if fi["cmd"]:
-                self._display.display(f"  [{label}] $ {fi['cmd']}", color=C.COLOR_VERBOSE)
-            if fi["stderr"]:
-                self._display.display(f"  [{label}] stderr: {fi['stderr']}", color=C.COLOR_ERROR)
-            if fi["stdout"]:
-                self._display.display(f"  [{label}] stdout: {fi['stdout']}")
-            if fi["msg"] and not fi["stdout"]:
-                self._display.display(f"  [{label}] msg: {fi['msg']}", color=C.COLOR_ERROR)
+        with self.output_lock:
+            for fi in self.failed_items:
+                label = fi["item"]
+                if fi["cmd"]:
+                    self._display.display(f"  [{label}] $ {fi['cmd']}", color=C.COLOR_VERBOSE)
+                if fi["stderr"]:
+                    self._display.display(f"  [{label}] stderr: {fi['stderr']}", color=C.COLOR_ERROR)
+                if fi["stdout"]:
+                    self._display.display(f"  [{label}] stdout: {fi['stdout']}")
+                if fi["msg"] and not fi["stdout"]:
+                    self._display.display(f"  [{label}] msg: {fi['msg']}", color=C.COLOR_ERROR)
         self.failed_items = []
 
     def _freeze_and_show_output(self, result_data):
