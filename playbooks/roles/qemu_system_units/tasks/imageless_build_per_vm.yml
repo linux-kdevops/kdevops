@@ -159,6 +159,30 @@
     nvme:
       drives: "{{ qsu_nvme_drives }}"
 
+- name: Render qsu debug vars snapshot for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: debug-vars.yaml.j2
+    dest: "{{ qemu_system_units_vars_dir }}/{{ qsu_vm_name }}.yaml"
+    mode: '0644'
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    service_scope: user
+    qemu_binary: "{{ qemu_system_units_qemu_binary }}"
+    cpu: "{{ qemu_system_units_cpu }}"
+    accel: "{{ qemu_system_units_accel }}"
+    ram: "{{ qemu_system_units_ram }}"
+    cpus: "{{ qemu_system_units_cpus }}"
+    machine_type: "{{ qemu_system_units_machine_type }}"
+    ssh_port: "{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+    vsock_cid: "{{ qemu_system_units_vsock_cid_base | int + qsu_vm_idx }}"
+    kernel:
+      image: "{{ qsu_kernel_image }}"
+      initrd: "{{ qsu_initrd }}"
+      append: "console=ttyS0,115200 console=hvc0 init={{ qsu_init }}"
+    shares: "{{ qsu_shares }}"
+    nvme:
+      drives: "{{ qsu_nvme_drives }}"
+
 - name: Render per-VM service drop-in override.conf for {{ qsu_vm_name }}
   ansible.builtin.template:
     src: "{{ topdir_path }}/scripts/qemu-system-units/templates/qemu-system-override.conf.j2"

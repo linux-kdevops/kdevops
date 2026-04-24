@@ -25,6 +25,12 @@
     qsu_kernel_image: "{{ bootlinux_controller_destdir }}/boot/vmlinuz-{{ qsu_kernelrelease_make.stdout | trim }}"
     qsu_modules_dir: "{{ bootlinux_controller_destdir }}/lib/modules"
 
+- name: Ensure the qsu vars directory exists for debug snapshots
+  ansible.builtin.file:
+    path: "{{ qemu_system_units_vars_dir }}"
+    state: directory
+    mode: '0755'
+
 - name: Prepare qsu imageless artefacts per VM
   ansible.builtin.include_tasks: imageless_build_per_vm.yml
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
