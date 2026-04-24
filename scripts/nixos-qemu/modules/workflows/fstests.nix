@@ -61,7 +61,40 @@
     psmisc
     which
     util-linux
+
+    # Build toolchain that xfstests' ./check and the kdevops
+    # oscheck.sh wrapper expect. oscheck.sh's check_reqs() bails
+    # early on `which {gcc,make,git,automake}` coming up empty,
+    # and several tests rebuild helper binaries (e.g. src/*.c)
+    # on the fly via a plain `make` in the xfstests tree. The
+    # nixpkgs xfstests derivation ships its helpers pre-built,
+    # but check_reqs() still insists the toolchain is present so
+    # the test scripts can invoke make/gcc themselves when they
+    # regenerate fixtures. Ship gcc + gnumake + git + automake
+    # so both paths work.
+    gcc
+    gnumake
+    git
+    automake
   ];
+
+  # xfstests convention: most tests run as an unprivileged user
+  # named `fsgqa` in group `fsgqa`, and a few tests (xfs/106 in
+  # particular) explicitly check that fsgqa's primary group is
+  # fsgqa. oscheck.sh's check_reqs() fails the whole run if the
+  # user or group is missing, and NixOS' default user database
+  # ships neither. Declare both here, scoped to the fstests
+  # module so consumers that opt out don't carry an extra user.
+  # The `sys` group is a second xfstests convention (some tests
+  # set group ownership to `sys`); nixpkgs' default `sys` is only
+  # created if a service declares it, so declare it explicitly.
+  users.groups.fsgqa = {};
+  users.groups.sys = {};
+  users.users.fsgqa = {
+    isSystemUser = true;
+    group = "fsgqa";
+    description = "xfstests unprivileged test user";
+  };
 
   services.nfs.server.enable = lib.mkDefault true;
   services.rpcbind.enable = lib.mkDefault true;
