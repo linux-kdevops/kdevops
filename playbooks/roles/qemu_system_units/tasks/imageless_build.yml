@@ -7,11 +7,13 @@
 # controller-installed kernel from bootlinux.
 
 - name: Resolve controller-built kernel release from the linux build tree
-  community.general.make:
+  ansible.builtin.command:
     chdir: "{{ bootlinux_controller_tree_path }}"
-    target: kernelrelease
-    params:
-      O: "{{ bootlinux_controller_builddir }}"
+    argv:
+      - make
+      - --silent
+      - O={{ bootlinux_controller_builddir }}
+      - kernelrelease
   environment:
     LOCALVERSION: "{{ target_linux_localversion | default('', true) }}"
   register: qsu_kernelrelease_make
@@ -19,8 +21,8 @@
 
 - name: Derive the controller-built kernel artefact paths
   ansible.builtin.set_fact:
-    qsu_kernel_release: "{{ qsu_kernelrelease_make.stdout_lines[-1] }}"
-    qsu_kernel_image: "{{ bootlinux_controller_destdir }}/boot/vmlinuz-{{ qsu_kernelrelease_make.stdout_lines[-1] }}"
+    qsu_kernel_release: "{{ qsu_kernelrelease_make.stdout | trim }}"
+    qsu_kernel_image: "{{ bootlinux_controller_destdir }}/boot/vmlinuz-{{ qsu_kernelrelease_make.stdout | trim }}"
     qsu_modules_dir: "{{ bootlinux_controller_destdir }}/lib/modules"
 
 - name: Prepare qsu imageless artefacts per VM
