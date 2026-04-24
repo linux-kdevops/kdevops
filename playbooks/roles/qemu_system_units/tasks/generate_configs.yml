@@ -49,20 +49,14 @@
       ansible.builtin.set_fact:
         qemu_system_units_ssh_authorized_key: "{{ ssh_public_key['content'] | b64decode | trim }}"
 
-- name: Copy nixos-qemu imageless template flake into each per-node directory
-  ansible.builtin.copy:
-    src: "{{ topdir_path }}/scripts/nixos-qemu/templates/imageless/flake.nix"
+- name: Render per-node flake.nix
+  ansible.builtin.template:
+    src: flake.nix.j2
     dest: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}/flake.nix"
-    remote_src: true
     mode: '0644'
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
-
-- name: Point nixos-qemu input at the local subtree in each per-node flake
-  ansible.builtin.replace:
-    path: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}/flake.nix"
-    regexp: '^(\s*)nixos-qemu\.url = "path:/path/to/nixos-qemu";'
-    replace: '\1nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";'
-  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  vars:
+    vm_name: "{{ item }}"
 
 - name: Render per-node default.nix
   ansible.builtin.template:

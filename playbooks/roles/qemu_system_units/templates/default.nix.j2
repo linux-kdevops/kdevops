@@ -71,5 +71,22 @@
     fsType = "virtiofs";
     options = [ "ro" ];
   };
+
+{% if fstests_git is defined and fstests_git %}
+  # Override the nixpkgs xfstests package's src with the flake
+  # input wired by flake.nix from CONFIG_FSTESTS_GIT and
+  # CONFIG_FSTESTS_GIT_VERSION. lib.mkAfter ensures this runs
+  # after nixos-qemu.overlays.default (which pins the nixpkgs
+  # xfstests to a current snapshot) — otherwise the snapshot
+  # overlay re-runs last and replaces our src.
+  nixpkgs.overlays = lib.mkAfter [
+    (final: prev: {
+      xfstests = prev.xfstests.overrideAttrs (_: {
+        src = inputs.xfstests-src;
+        version = "kdevops-${inputs.xfstests-src.shortRev or "local"}";
+      });
+    })
+  ];
+{% endif %}
 {% endif %}
 }

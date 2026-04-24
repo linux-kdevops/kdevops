@@ -1,0 +1,52 @@
+{# SPDX-License-Identifier: copyleft-next-0.3.1 -#}
+{# Per-VM flake.nix for the qsu imageless bringup, rendered by
+   kdevops. nixos-qemu.url is pinned at the kdevops subtree so
+   the guest evaluates against the nixos-qemu commit kdevops
+   shipped; xfstests-src is added when the fstests workflow is
+   enabled so CONFIG_FSTESTS_GIT/CONFIG_FSTESTS_GIT_VERSION
+   override the xfstests source used to build the guest's
+   xfstests package. -#}
+{%- set fstests_enabled = kdevops_workflow_enable_fstests | default(false) -%}
+{%- if fstests_enabled -%}
+{%- if fstests_git.startswith('/') or fstests_git.startswith('file:') -%}
+{%- set xfstests_nix_url = 'path:' ~ (fstests_git | regex_replace('^file://', '')) -%}
+{%- elif fstests_git.startswith('http') -%}
+{%- set xfstests_nix_url = 'git+' ~ fstests_git -%}
+{%- else -%}
+{%- set xfstests_nix_url = fstests_git -%}
+{%- endif -%}
+{%- endif %}
+{
+  inputs = {
+    nixos-qemu.url = "path:{{ topdir_path }}/scripts/nixos-qemu";
+    nixpkgs.follows = "nixos-qemu/nixpkgs";
+{% if fstests_enabled %}
+
+    xfstests-src = {
+      url = "{{ xfstests_nix_url }}{% if not xfstests_nix_url.startswith('path:') %}?ref={{ fstests_git_version }}{% endif %}";
+      flake = false;
+    };
+{% endif %}
+  };
+
+  outputs = { self, nixpkgs, nixos-qemu, ... }@inputs:
+  let
+    system = "x86_64-linux";
+  in {
+    nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = { inherit inputs nixos-qemu; };
+      modules = [
+        nixos-qemu.nixosModules.imageless
+        nixos-qemu.nixosModules.user
+        { nixpkgs.overlays = [ nixos-qemu.overlays.default ]; }
+        ./default.nix
+      ];
+    };
+
+    # nix build .#toplevel builds the system closure virtiofsd
+    # serves to the guest at /nix/store.
+    packages.${system}.toplevel =
+      self.nixosConfigurations.vm.config.system.build.toplevel;
+  };
+}
