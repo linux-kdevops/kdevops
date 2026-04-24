@@ -34,6 +34,15 @@
     # NFS and SMB clients for the network filesystem fstests variants
     nfs-utils
     cifs-utils
+
+    # The xfstests-dev test harness. The overlay in overlays/xfstests.nix
+    # bumps the nixpkgs version (2023.05.14 broken with modern GCC) to
+    # a current upstream snapshot. Installing it here puts `check` on
+    # the guest's PATH via /run/current-system/sw/bin, so consumers
+    # that skip the in-guest clone-and-build path (e.g. kdevops qsu
+    # bringup) can drive the same binary kdevops otherwise builds from
+    # source.
+    xfstests
   ];
 
   services.nfs.server.enable = lib.mkDefault true;
