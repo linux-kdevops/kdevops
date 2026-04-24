@@ -43,6 +43,24 @@
     # bringup) can drive the same binary kdevops otherwise builds from
     # source.
     xfstests
+
+    # Runtime deps xfstests ./check (and the individual test scripts
+    # under tests/*) invoke. nixpkgs' xfstests-check wrapper embeds
+    # an explicit PATH with these store paths before exec'ing ./check;
+    # when downstream consumers drive ./check directly (e.g. via
+    # kdevops' oscheck.sh), we need the same tools reachable via
+    # /run/current-system/sw/bin. Keeping the list here alongside
+    # xfstests mirrors the wrapper's intent and keeps the dependency
+    # relationship explicit rather than relying on nixpkgs'
+    # propagatedBuildInputs (which only affect build-time closure).
+    perl
+    bc
+    keyutils
+    libcap
+    lvm2
+    psmisc
+    which
+    util-linux
   ];
 
   services.nfs.server.enable = lib.mkDefault true;
