@@ -541,6 +541,53 @@ class CallbackModule(CallbackBase):
                 self._display.display(msg, color=C.COLOR_SKIP)
         self._write_to_log(msg)
 
+    def v2_playbook_on_notify(self, handler, host):
+        """A task triggered a notify on a host.
+
+        Well-written playbooks fan out many notifications, most of
+        which never translate to a handler run if nothing changed.
+        We log each notification unconditionally (the log is the
+        audit trail) but only surface them on screen at -v or
+        higher, matching the reference default callback's quiet
+        default so lucid doesn't drown the user in pending-handler
+        chatter.
+        """
+        handler_name = handler.get_name()
+        host_name = host.get_name() if hasattr(host, "get_name") else str(host)
+        msg = f"NOTIFY: {handler_name} on {host_name}"
+        if self._display.verbosity >= 1:
+            with self.output_lock:
+                self._display.display(msg, color=C.COLOR_VERBOSE)
+        self._write_to_log(msg)
+
+    def v2_playbook_on_no_hosts_matched(self):
+        """A play's hosts pattern matched zero inventory hosts.
+
+        This is almost always a user error (typo in the pattern,
+        wrong inventory loaded, stale group name), so we always
+        display it regardless of verbosity. Coloring matches the
+        reference default callback's skip palette so the line reads
+        as a skipped play rather than a failure.
+        """
+        msg = "skipping: no hosts matched"
+        with self.output_lock:
+            self._display.display(msg, color=C.COLOR_SKIP)
+        self._write_to_log(msg)
+
+    def v2_playbook_on_no_hosts_remaining(self):
+        """All hosts have been removed from the active set.
+
+        Fires when any_errors_fatal or max_fail_percentage escalates
+        a failure out of scope and there is nothing left to run
+        against. Always displayed in error color because the
+        playbook is about to end prematurely and the user needs to
+        see why.
+        """
+        msg = "NO MORE HOSTS LEFT"
+        with self.output_lock:
+            self._display.display(msg, color=C.COLOR_ERROR)
+        self._write_to_log(msg)
+
     def v2_playbook_on_handler_task_start(self, task):
         """A notified handler task is beginning to run.
 
