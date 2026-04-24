@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # OS wrapper for check.sh
 
 DRY_RUN="false"

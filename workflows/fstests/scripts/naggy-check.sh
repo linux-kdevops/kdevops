@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Runs xfstests check.sh in a loop until a failure occurs, tells you
 # how many runs are needed before a failure occurs.
 #

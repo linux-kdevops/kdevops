@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Gets the the list of known failed tests.
 
 TEST_ARG_SECTION=""
