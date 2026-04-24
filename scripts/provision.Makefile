@@ -71,8 +71,16 @@ endif
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
+# devconfig is a no-op on the qsu / imageless NixOS path: the 7 tasks
+# that would change state (hostname, gitconfig copy, vimrc copy, bash
+# hacks source) either duplicate what networking.hostName and the
+# nixos-qemu imageless module already set, or edit files on a tmpfs
+# root that gets wiped at the next VM boot. Skip the playbook entirely
+# under CONFIG_QEMU_SYSTEM_UNITS; still touch the stamp so the
+# downstream $(KDEVOPS_PROVISIONED_DEVCONFIG) dependency resolves.
 $(KDEVOPS_PROVISIONED_DEVCONFIG):
-	$(Q)if [[ "$(CONFIG_KDEVOPS_ANSIBLE_PROVISION_PLAYBOOK)" != "" ]]; then \
+	$(Q)if [[ "$(CONFIG_QEMU_SYSTEM_UNITS)" != "y" && \
+	          "$(CONFIG_KDEVOPS_ANSIBLE_PROVISION_PLAYBOOK)" != "" ]]; then \
 		ansible-playbook \
 			$(KDEVOPS_PLAYBOOKS_DIR)/$(KDEVOPS_ANSIBLE_PROVISION_PLAYBOOK) ;\
 	fi
