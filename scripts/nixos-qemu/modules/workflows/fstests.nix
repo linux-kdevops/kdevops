@@ -47,4 +47,23 @@
 
   services.nfs.server.enable = lib.mkDefault true;
   services.rpcbind.enable = lib.mkDefault true;
+
+  # xfstests ./check and the kdevops wrapper scripts that drive
+  # it (oscheck.sh, gendisks.sh, naggy-check.sh) all start with
+  # `#!/bin/bash`, and ld-version.sh uses `#!/usr/bin/awk -f`.
+  # NixOS only ships /bin/sh (pointing at bash) and /usr/bin/env
+  # out of the box, so the kernel's shebang resolver fails with
+  # ENOENT on those interpreters and the scripts refuse to exec
+  # with a misleading "No such file or directory" on the script
+  # itself. Patching every shebang in the xfstests tree is
+  # intractable, and redirecting through `env` in a wrapper only
+  # shifts the problem. Declare the two additional compat
+  # symlinks here so the unmodified upstream scripts run
+  # on qsu guests. Scoped to this module so consumers that opt
+  # out of the fstests workflow don't carry the FHS bits they
+  # don't need.
+  systemd.tmpfiles.rules = [
+    "L+ /bin/bash     - - - - ${pkgs.bash}/bin/bash"
+    "L+ /usr/bin/awk  - - - - ${pkgs.gawk}/bin/awk"
+  ];
 }
