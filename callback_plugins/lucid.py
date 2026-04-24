@@ -630,6 +630,10 @@ class CallbackModule(CallbackBase):
                 msg_text = json.dumps(msg_text, indent=2)
             output.append(f"\nMSG:\n{msg_text}")
 
+        # exception (Python traceback from module failures)
+        if "exception" in res and res["exception"]:
+            output.append(f"\nEXCEPTION:\n{res['exception']}")
+
         if output:
             self._display.display("".join(output))
 
