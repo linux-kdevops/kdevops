@@ -19,7 +19,7 @@ import sys
 import time
 import threading
 from datetime import datetime
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any
 from collections import deque
 
 from ansible.plugins.callback import CallbackBase
@@ -96,8 +96,8 @@ class CallbackModule(CallbackBase):
         )  # (host, task_uuid) -> task_info
         self.completed_tasks = deque(maxlen=3)  # Keep last 3 completed
         self.current_task_name: str = ""
-        self.current_task_hosts: list[str] = []
-        self.play_hosts: list[str] = []  # All hosts in current play
+        self.current_task_hosts: List[str] = []
+        self.play_hosts: List[str] = []  # All hosts in current play
         self.pending_play_header: Optional[str] = None  # Deferred play banner
         self.current_play_name: str = ""  # Current play name for dynamic display
 
@@ -111,7 +111,7 @@ class CallbackModule(CallbackBase):
         self.task_lock = threading.Lock()
 
         # Failed loop items for display on task failure
-        self.failed_items: list[dict] = []
+        self.failed_items: List[dict] = []
 
         # Will be set in set_options()
         self.output_mode = "auto"
