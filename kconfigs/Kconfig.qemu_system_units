@@ -103,4 +103,27 @@ config QEMU_SYSTEM_UNITS_SSH_DEFAULT_TCP
 
 endchoice
 
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_COUNT
+	int "Extra NVMe drives per guest"
+	output yaml
+	default 4
+	help
+	  Number of qemu-img qcow2 backing files to create per VM, each
+	  attached as a separate NVMe controller with one namespace.
+	  Guest device paths are /dev/nvme0n1 .. /dev/nvme<N-1>n1;
+	  stable symlinks live under
+	  /dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_nvme<N-1>_1. Set to 0 to
+	  skip extra drive creation. The fstests workflow uses one
+	  TEST_DEV plus eight SCRATCH_DEV_POOL devices by default, so
+	  fstests defconfigs override this to 9.
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_SIZE_GB
+	int "Extra NVMe drive size (GB)"
+	output yaml
+	default 20
+	help
+	  Size in GiB passed to `qemu-img create -f qcow2`. qcow2 only
+	  allocates host space on write, so large virtual sizes are
+	  cheap at rest.
+
 endif # QEMU_SYSTEM_UNITS
