@@ -15,7 +15,6 @@ from __future__ import annotations
 import atexit
 import json
 import os
-import shutil
 import sys
 import time
 import threading
@@ -89,9 +88,6 @@ class CallbackModule(CallbackBase):
         "skipped": C.COLOR_SKIP,
         "unreachable": C.COLOR_UNREACHABLE,
     }
-
-    # Default terminal width when detection fails
-    DEFAULT_TERMINAL_WIDTH = 80
 
     def __init__(self):
         super(CallbackModule, self).__init__()
@@ -361,18 +357,10 @@ class CallbackModule(CallbackBase):
             or (res.get("msg") and not res.get("stdout"))
         )
 
-    def _get_terminal_width(self) -> int:
-        """Get current terminal width, with fallback to default"""
-        try:
-            size = shutil.get_terminal_size(fallback=(self.DEFAULT_TERMINAL_WIDTH, 24))
-            return size.columns
-        except Exception:
-            return self.DEFAULT_TERMINAL_WIDTH
-
     def _truncate_line(self, line: str, max_width: Optional[int] = None) -> str:
         """Truncate line to fit terminal width, adding ellipsis if needed"""
         if max_width is None:
-            max_width = self._get_terminal_width()
+            max_width = getattr(self._display, "columns", 80)
 
         if len(line) <= max_width:
             return line
@@ -1203,7 +1191,7 @@ class CallbackModule(CallbackBase):
         self._clear_display()
 
         # Get terminal width once for all lines
-        term_width = self._get_terminal_width()
+        term_width = getattr(self._display, "columns", 80)
 
         # Build new display
         lines = []
