@@ -26,6 +26,8 @@ After=network.target
 Type=simple
 ConfigurationDirectory=systemd/qemu-system
 RuntimeDirectory=qemu-system/%i
+StateDirectory=qemu-system/%i
+WorkingDirectory=%S/qemu-system/%i
 EnvironmentFile=%E/systemd/qemu-system/%i.env
 Environment=QEMU_EXTRA_ARGS=
 ExecStart={{ qemu_binary }} $QEMU_ARGS $QEMU_EXTRA_ARGS \
