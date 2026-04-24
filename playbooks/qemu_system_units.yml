@@ -5,3 +5,18 @@
     - "{{ playbook_dir }}/../extra_vars.yaml"
   roles:
     - role: qemu_system_units
+
+- name: nixos-rebuild test on running qsu guests
+  hosts: baseline:dev
+  gather_facts: false
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tasks:
+    - ansible.builtin.include_role:
+        name: qemu_system_units
+        tasks_from: rebuild_test
+        apply:
+          tags:
+            - rebuild-test
+      tags:
+        - rebuild-test

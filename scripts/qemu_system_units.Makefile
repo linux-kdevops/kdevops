@@ -31,3 +31,24 @@ destroy_qemu_system_units:
 		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
 		--tags destroy
 PHONY += destroy_qemu_system_units
+
+rebuild-test:
+	$(Q)ansible-playbook \
+		playbooks/qemu_system_units.yml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
+		--tags rebuild-test
+PHONY += rebuild-test
+
+rebuild-boot:
+	$(Q)ansible-playbook \
+		playbooks/qemu_system_units.yml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
+		--tags rebuild-boot
+PHONY += rebuild-boot
+
+rebuild-switch:
+	$(Q)ansible-playbook \
+		playbooks/qemu_system_units.yml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
+		--tags rebuild-boot,rebuild-test
+PHONY += rebuild-switch

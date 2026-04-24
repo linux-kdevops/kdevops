@@ -1,0 +1,24 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Re-render per-VM artefacts so the next start of
+# qemu-system@<vm>.service boots from the latest closure. No
+# hot activation. See README.md.
+
+- name: Refresh xfstests-src flake input for each VM
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+      - xfstests-src
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  when:
+    - fstests_git | default('') | length > 0
+  changed_when: true
+
+- ansible.builtin.import_tasks: imageless_build.yml

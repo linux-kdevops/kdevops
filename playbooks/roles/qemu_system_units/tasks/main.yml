@@ -41,6 +41,12 @@
   tags:
     - console
 
+- name: Include rebuild_boot tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/rebuild_boot.yml"
+  tags:
+    - rebuild-boot
+
 - name: Include destroy tasks
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/destroy.yml"

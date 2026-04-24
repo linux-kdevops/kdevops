@@ -1,0 +1,51 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Rebuild the per-VM imageless NixOS closure on the controller
+# and activate it on the running guest. See README.md.
+
+- name: Refresh xfstests-src flake input for {{ inventory_hostname }} on the controller
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ inventory_hostname }}"
+      - xfstests-src
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  when:
+    - fstests_git | default('') | length > 0
+  changed_when: true
+
+- name: Rebuild imageless NixOS toplevel for {{ inventory_hostname }} on the controller
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ inventory_hostname }}#toplevel"
+      - --out-link
+      - "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ inventory_hostname }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
+
+- name: Resolve new toplevel store path for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - readlink
+      - -f
+      - "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ inventory_hostname }}/result"
+  register: qsu_new_toplevel
+  changed_when: false
+
+- name: Activate new toplevel on the running guest {{ inventory_hostname }}
+  ansible.builtin.command:
+    cmd: "{{ qsu_new_toplevel.stdout }}/bin/switch-to-configuration test"
+  register: qsu_activate_result
+  failed_when: qsu_activate_result.rc not in [0, 4, 100]
+  changed_when: qsu_activate_result.rc in [0, 4, 100]
