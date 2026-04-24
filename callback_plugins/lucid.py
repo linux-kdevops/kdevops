@@ -615,6 +615,43 @@ class CallbackModule(CallbackBase):
                 msg = json.dumps(msg, indent=2)
             self._write_to_log(f"  [{item}] msg: {msg}")
 
+    def v2_on_file_diff(self, result):
+        """Render task diff output when --diff is enabled.
+
+        Ansible populates result._result['diff'] with before/after
+        structures when the user runs with --diff. The default callback
+        renders these via _get_diff, but lucid previously did not
+        implement this hook at all, so --diff was silently dropped. We
+        wire it in using CallbackBase._get_diff so the formatting honors
+        the same result_format / pretty_results / result_indentation
+        options the rest of the result rendering does. On-screen display
+        is gated behind verbosity >= 1 so lucid stays silent at the
+        default verbosity; the log always captures the diff regardless
+        so post-hoc debugging has the full picture.
+        """
+        diff_data = result._result.get("diff")
+        if not diff_data:
+            return
+
+        # Handle loop tasks: diffs can be nested under results[*].diff.
+        if isinstance(diff_data, list) and diff_data and all(
+            isinstance(d, dict) for d in diff_data
+        ):
+            diffs_to_render = diff_data
+        elif isinstance(diff_data, dict):
+            diffs_to_render = [diff_data]
+        else:
+            diffs_to_render = diff_data
+
+        diff_text = self._get_diff(diffs_to_render)
+        if not diff_text:
+            return
+
+        if self._display.verbosity >= 1:
+            with self.output_lock:
+                self._display.display(diff_text)
+        self._write_to_log(f"DIFF:\n{diff_text}")
+
     def v2_runner_retry(self, result):
         """Task is being retried after failure"""
         host = result._host.name
