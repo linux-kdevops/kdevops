@@ -521,6 +521,48 @@ class CallbackModule(CallbackBase):
 
         self._write_to_log(f"TASK: {display_name}")
 
+    def v2_playbook_on_include(self, included_file):
+        """Include/import tasks file has been loaded.
+
+        Fires when include_tasks or import_tasks actually pulls in a
+        file. CallbackBase leaves this as a no-op, so lucid used to
+        stay silent on includes even though they frequently change
+        the branch of tasks about to run. We log unconditionally and
+        mirror the log line to the terminal at -v or higher, using
+        the same skip/included color as the reference default
+        callback so visually the line reads as flow control rather
+        than a task result.
+        """
+        filename = included_file._filename
+        hosts = ",".join(h.name for h in included_file._hosts)
+        msg = f"INCLUDED: {filename} for {hosts}"
+        if self._display.verbosity >= 1:
+            with self.output_lock:
+                self._display.display(msg, color=C.COLOR_SKIP)
+        self._write_to_log(msg)
+
+    def v2_playbook_on_handler_task_start(self, task):
+        """A notified handler task is beginning to run.
+
+        Handlers are load-bearing: they encode the state-change side
+        effects of an otherwise-successful play. Inherited as a
+        no-op from CallbackBase, lucid had no way to distinguish a
+        silent handler run from no handler run at all. We emit the
+        task name with a HANDLER: prefix so log consumers can grep
+        for state transitions, and feed the dynamic display with the
+        same current_task_name pipeline regular tasks use.
+        """
+        task_name = task.get_name().strip()
+        with self.task_lock:
+            self.current_task_name = task_name
+            self.failed_items = []
+            self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
+
+        if not self.dynamic_mode:
+            msg = f"HANDLER: {task_name}"
+            self._display_message(msg, C.COLOR_HIGHLIGHT)
+        self._write_to_log(f"HANDLER: {task_name}")
+
     def v2_runner_on_start(self, host, task):
         """Task started on a host (for dynamic tracking)"""
         key = (host.name, task._uuid)
