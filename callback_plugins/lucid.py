@@ -434,8 +434,18 @@ class CallbackModule(CallbackBase):
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         """Task started"""
+        task_name = task.get_name().strip()
+
+        # Suppress empty arg spec validation tasks injected by Ansible for
+        # every role regardless of tag filtering (ansible/ansible#82505).
+        # Still flush the play header in case real tasks follow.
+        is_empty_argspec = task_name == "Validating arguments against arg spec None"
+        if is_empty_argspec:
+            self._write_to_log(f"TASK: {task_name}")
+            return
+
         self._flush_play_header()
-        self.current_task_name = task.get_name().strip()
+        self.current_task_name = task_name
         # Initialize with play hosts so display is stable from the start
         self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
 
