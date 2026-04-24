@@ -1,0 +1,406 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests setup phase. Installs distro dependencies, optionally
+# builds custom xfsprogs and xfsdump, clones kdevops and fstests
+# on the guest, builds fstests, installs it under
+# fstests_data_prefix, drops the kdevops_fstests_setup stub, and
+# symlinks the kdevops scripts fstests run-time expects.
+
+# Distro specific
+- name: Install dependencies
+  ansible.builtin.include_tasks: install-deps/main.yml
+- name: Check if there's an existing xfsprogs directory
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ fstests_xfs_xfsprogs_data }}"
+  register: xfsprogs_dir
+  tags: ["oscheck", "git", "fstests"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Set up an iSCSI initiator on target nodes
+  ansible.builtin.include_role:
+    name: iscsi
+    tasks_from: add_initiator
+  when:
+    - fstests_nfs_section_pnfs|bool
+
+- ansible.builtin.include_role:
+    name: common
+  when:
+    - infer_uid_and_group|bool
+
+- name: Get nproc
+  tags: ["oscheck", "fstests", "build"]
+  ansible.builtin.command: "nproc"
+  register: nproc
+
+- name: Ensure xfsprogs is not root owned
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ fstests_xfs_xfsprogs_data }}"
+    state: directory
+    recurse: true
+    follow: false
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+  tags: ["oscheck", "git", "fstests"]
+  when:
+    - fstests_xfs_build_custom_xfsprogs|bool
+    - xfsprogs_dir.stat.exists
+
+- name: Clean old xfsprogs build
+  ansible.builtin.command: "git clean -f -x -d"
+  args:
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+  tags: ["oscheck", "git", "fstests"]
+  when:
+    - fstests_xfs_build_custom_xfsprogs|bool
+    - xfsprogs_dir.stat.exists
+
+- name: Clone xfsprogs git repository
+  ansible.builtin.git:
+    repo: "{{ fstests_xfs_xfsprogs_git }}"
+    dest: "{{ fstests_xfs_xfsprogs_data }}"
+    update: true
+    version: "{{ fstests_xfs_xfsprogs_commit }}"
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  tags: ["oscheck", "git", "fstests"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Configure xfsprogs
+  community.general.make:
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+    target: configure
+  tags: ["oscheck", "fstests", "build"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Build xfsprogs
+  community.general.make:
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+    jobs: "{{ nproc.stdout }}"
+  tags: ["oscheck", "fstests", "build"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Install xfsprogs
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.make:
+    target: install
+    params:
+      DIST_ROOT: "{{ fstests_xfs_xfsprogs_install_path }}"
+    chdir: "{{ fstests_xfs_xfsprogs_data }}"
+  tags: ["oscheck", "fstests", "build"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Check if there's an existing xfsdump directory
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ fstests_xfsdump_data }}"
+  register: xfdump_dir
+  tags: ["oscheck", "git", "fstests"]
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Ensure xfsdump is not root owned
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ fstests_xfsdump_data }}"
+    recurse: true
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+  tags: ["fstests", "deps"]
+  when:
+    - fstests_xfsdump_build|bool
+    - xfdump_dir.stat.exists
+
+- name: Clean old xfsdump build
+  ansible.builtin.command: "git clean -f -x -d"
+  args:
+    chdir: "{{ fstests_xfsdump_data }}"
+  tags: ["oscheck", "git", "fstests"]
+  when:
+    - fstests_xfsdump_build|bool
+    - xfdump_dir.stat.exists
+
+- name: Git clone xfsdump
+  ansible.builtin.git:
+    repo: "{{ fstests_xfsdump_git }}"
+    dest: "{{ fstests_xfsdump_data }}"
+    update: true
+    version: "{{ fstests_xfsdump_commit }}"
+  tags: ["fstests", "deps"]
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Build xfsdump
+  tags: ["fstests", "deps"]
+  community.general.make:
+    chdir: "{{ fstests_xfsdump_data }}"
+    jobs: "{{ nproc.stdout }}"
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Install xfsdump
+  become: true
+  become_method: sudo
+  tags: ["fstests", "deps"]
+  community.general.make:
+    chdir: "{{ fstests_xfsdump_data }}"
+    target: install
+  when:
+    - fstests_xfsdump_build|bool
+
+- name: Setup $PATH environment variable to access custom xfsprogs binaries
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.lineinfile:
+    path: "/root/.bashrc"
+    line: "export PATH={{ fstests_xfs_xfsprogs_install_path }}/usr/sbin/:$PATH"
+    state: present
+  tags: ["oscheck", "fstests", "build"]
+  when: "fstests_xfs_build_custom_xfsprogs|bool"
+
+- name: Create {{ truncated_path }} if needed
+  ansible.builtin.include_role:
+    name: create_partition
+  vars:
+    disk_setup_device: "{{ sparsefiles_device }}"
+    disk_setup_fstype: "{{ sparsefiles_fstype }}"
+    disk_setup_label: "{{ sparsefiles_label }}"
+    disk_setup_fs_opts: "{{ sparsefiles_fs_opts }}"
+    disk_setup_path: "{{ sparsefiles_path }}"
+    disk_setup_user: "{{ data_user }}"
+    disk_setup_group: "{{ data_group }}"
+  tags: ["oscheck", "sparse_partition"]
+  when:
+    - fstests_testdev_sparsefile_generation|bool
+
+- name: Git clone kdevops
+  environment:
+    GIT_SSL_NO_VERIFY: true
+  ansible.builtin.git:
+    repo: "{{ kdevops_git }}"
+    dest: "{{ kdevops_data }}"
+    version: "{{ kdevops_git_version }}"
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  tags: ["oscheck", "install", "git"]
+
+- name: Copy over our .config
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../.config"
+    dest: "{{ kdevops_dir }}"
+  tags: ["oscheck", "install", "root", "config"]
+
+- name: Install kdevops as root
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+  ansible.builtin.command: "{{  make }} install"
+  tags: ["oscheck", "install", "root"]
+  args:
+    chdir: "{{ kdevops_dir }}"
+
+# We do this *after* the /data/ partition is set up so
+# we can house the dbench source code there and so that
+# we don't have to bother with the setup of that partition
+# in the dbench role.
+- name: Compile dbench from source if needed by the distribution
+  ansible.builtin.include_role:
+    name: compile_dbench
+  vars:
+    dbench_data: "{{ data_path }}/dbench"
+    dbench_git: "https://github.com/linux-kdevops/dbench.git"
+  tags: ["oscheck", "git", "dbench"]
+
+- name: Remove any old fstests and install directories
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ fstests_data }}"
+    - "{{ fstests_data_prefix }}"
+    - "{{ fstests_data_target }}"
+  tags: ["oscheck", "git", "fstests", "build"]
+
+- name: Git clone fstests
+  ansible.builtin.git:
+    repo: "{{ fstests_git }}"
+    dest: "{{ fstests_data }}"
+    version: "{{ fstests_git_version }}"
+    update: true
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  tags: ["oscheck", "git", "fstests"]
+
+- name: Create {{ fstests_data_prefix }} if it does not exist
+  tags: ["oscheck", "fstests", "install", "root"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ fstests_data_prefix }}"
+    state: directory
+
+- name: Build the configure file for fstests
+  tags: ["oscheck", "fstests", "build"]
+  ansible.builtin.command: "make configure"
+  args:
+    chdir: "{{ fstests_data }}"
+
+- name: Configure fstests
+  tags: ["oscheck", "fstests", "build"]
+  ansible.builtin.command: "./configure --prefix={{ fstests_data_prefix }}"
+  args:
+    chdir: "{{ fstests_data }}"
+
+- name: Get nproc
+  tags: ["oscheck", "fstests", "build"]
+  ansible.builtin.command: "nproc"
+  register: nproc
+
+- name: Build fstests
+  tags: ["oscheck", "fstests", "build"]
+  community.general.make:
+    chdir: "{{ fstests_data }}"
+    jobs: "{{ nproc.stdout }}"
+
+- name: Copy udev rules for zoned
+  become: true
+  become_method: sudo
+  ansible.builtin.template:
+    src: "64-btrfs-zoned.rules"
+    dest: "/usr/lib/udev/rules.d/"
+    owner: "{{ data_user }}"
+    group: "{{ data_group }}"
+  tags: ["oscheck", "fstests"]
+  when:
+    - fstests_zns_enabled == "y"
+    - fstests_fstyp == "btrfs"
+
+- name: Git pull latest kdevops to ensure expunge lists and scripts are up to date
+  environment:
+    GIT_SSL_NO_VERIFY: true
+  ansible.builtin.git:
+    repo: "{{ kdevops_git }}"
+    dest: "{{ kdevops_data }}"
+    version: "{{ kdevops_git_version }}"
+    update: true
+  retries: 3
+  delay: 5
+  register: result
+  until: not result.failed
+  tags: ["oscheck", "install", "git", "git_update", "fstests", "run_tests"]
+
+- name: Install fstests
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: "{{  make }} install"
+  tags: ["oscheck", "fstests", "install", "root"]
+  args:
+    chdir: "{{ fstests_data }}"
+
+- name: Add symlink for old fstests directory
+  tags: ["oscheck", "fstests", "install", "root"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    src: "{{ fstests_data_prefix }}/xfstests"
+    dest: "{{ fstests_data_target }}"
+    state: link
+
+- name: Install root generated .kdevops_fstests_setup
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: "{{ kdevops_fstests_setup }}"
+    dest: "/root/{{ kdevops_fstests_setup }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: Source .kdevops_fstests_setup for root if it is not already done
+  vars:
+    dev_bash_config: ".bashrc"
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install"]
+  ansible.builtin.shell: |
+    SOURCE_KDEVOPS_FSTESTS_SETUP="test -s ~/{{ kdevops_fstests_setup }} && . ~/{{ kdevops_fstests_setup }} || true"
+    if [ -f {{ dev_bash_config }} ]; then
+      if ! grep "{{ kdevops_fstests_setup_name }}" {{ dev_bash_config }}  2>&1 > /dev/null ; then
+        echo "$SOURCE_KDEVOPS_FSTESTS_SETUP" >> {{ dev_bash_config }}
+      fi
+    else
+      echo "#!/bin/bash" >> {{ dev_bash_config }}
+      echo "$SOURCE_KDEVOPS_FSTESTS_SETUP" >> {{ dev_bash_config }}
+      chmod 755 {{ dev_bash_config }}
+    fi
+  args:
+    executable: /bin/bash
+
+- name: Add symlinks for kdevops scripts for fstests
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    src: "{{ kdevops_data }}/workflows/fstests/scripts/{{ item }}"
+    dest: "{{ fstests_data_target }}/{{ item }}"
+    state: link
+  with_items:
+    - gendisks.sh
+    - oscheck.sh
+    - naggy-check.sh
+
+- name: Create a few directories which kdevops uses for fstests if they do not exist
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ sparsefiles_path }}"
+  when:
+    - fstests_testdev_sparsefile_generation|bool
+
+- name: Create a few directories which kdevops uses for fstests if they do not exist
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ fstests_data_target }}/configs"

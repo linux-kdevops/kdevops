@@ -1,0 +1,468 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests config-generation phase. Renders the per-host
+# <fstyp>.config, discovers NVMe drives by EUI or model/serial,
+# partitions the first NVMe drive when
+# fstests_testdev_nvme_partition_euis is set, and builds NFS and
+# CIFS exports when those transports are selected.
+
+- name: Check if there's a host specific fstests at {{ fstests_fstyp }}/{{ inventory_hostname }}.config configuration
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ inventory_hostname }}.config"
+  register: host_specific_fstests_config
+
+- name: Generate filesystem configuration file for debugging purposes using host specific config {{ target_config }}
+  tags: ["generate-fstests-config"]
+  vars:
+    target_config: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ ansible_host }}.config"
+    dest: "{{ target_config }}"
+    force: true
+  when:
+    - fstests_generate_simple_config_enable|bool
+    - fstests_debug_localhost|bool
+    - host_specific_fstests_config.stat.exists
+
+- name: Generate filesystem configuration file for debugging purposes using generic config {{ target_config }}
+  tags: ["generate-fstests-config"]
+  vars:
+    target_config: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}/{{ fstests_fstyp }}.config.generated"
+    force: true
+  when:
+    - fstests_generate_simple_config_enable|bool
+    - fstests_debug_localhost|bool
+    - not host_specific_fstests_config.stat.exists
+
+- name: Copy and force overwrite of the host specific fstests configuration
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/workflows/fstests/{{ fstests_fstyp }}//{{ ansible_host }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_generate_simple_config_enable|bool
+    - not fstests_debug_localhost|bool
+    - host_specific_fstests_config.stat.exists
+
+- name: Copy and force overwrite of the target filesystem fstests configuration
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_generate_simple_config_enable|bool
+    - not fstests_debug_localhost|bool
+    - not host_specific_fstests_config.stat.exists
+
+- name: Try to see if NVMe EUIs exist on /dev/disk/by-id/nvme-eui.*
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.find:
+    paths: /dev/disk/by-id/
+    file_type: "link"
+    patterns: "nvme-eui.*"
+  register: real_nvme_euis
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  when:
+    - fstests_generate_nvme_live_config_enable|bool
+
+- name: End if no NVMe EUIs found per node and no fallback mechanism is provided
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.fail:
+    msg:
+      - "You need at least one NVMe drive with its EUI defined per node, try enabling CONFIG_FSTESTS_TESTDEV_NVME_FALLBACK_MODEL_SERIAL"
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - not fstests_testdev_nvme_fallback_model_serial|bool
+    - real_nvme_euis is success
+    - real_nvme_euis.files is defined
+    - real_nvme_euis.files | length == 0
+
+- name: Set real nvmes if one is found from EUI list
+  ansible.builtin.set_fact:
+    nvmes: "{{ real_nvme_euis }}"
+  when:
+    - fstests_generate_nvme_live_config_enable|bool
+    - real_nvme_euis is success
+    - real_nvme_euis.files is defined
+    - real_nvme_euis.files | length > 0
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+
+- name: Fallback look for NVMe drive by model and serial number /dev/disk/by-id/nvme-$(model)-$(serial)
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.find:
+    paths: /dev/disk/by-id/
+    file_type: "link"
+    patterns: "nvme-*"
+    excludes: "nvme-QEMU*,nvme-nvme*"
+  register: fallback_nvmes
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  when:
+    - real_nvme_euis is success
+    - real_nvme_euis.files is defined
+    - real_nvme_euis.files | length == 0
+    - fstests_generate_nvme_live_config_enable|bool
+    - fstests_testdev_nvme_fallback_model_serial|bool
+
+- name: Set real nvmes to fallback list if one found
+  ansible.builtin.set_fact:
+    nvmes: "{{ fallback_nvmes }}"
+  when:
+    - fstests_generate_nvme_live_config_enable|bool
+    - real_nvme_euis is success
+    - real_nvme_euis.files is defined
+    - real_nvme_euis.files | length == 0
+    - fstests_testdev_nvme_fallback_model_serial|bool
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+
+- name: Get NVMe drives we can use for testing
+  ansible.builtin.set_fact:
+    nvme_symlinks: |
+      {%- set x = [] -%}
+      {%- for f in nvmes.files %}
+      {{ x.append(f.path) }}
+      {%- endfor -%}
+      {{ x }}
+  when:
+    - fstests_generate_nvme_live_config_enable|bool
+    - nvmes is defined
+    - nvmes is success
+    - nvmes.files is defined
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+
+- name: Read existing partition information for first NVMe drive with an EUI
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.parted:
+    device: "{{ nvme_symlinks[0] }}"
+    unit: MiB
+  register: nvme_info
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+
+- name: Remove all partitions from the first real NVMe drive with an EUI
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.parted:
+    device: "{{ nvme_symlinks[0] }}"
+    number: "{{ item.num }}"
+    state: absent
+  loop: "{{ nvme_info.partitions }}"
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length > 1
+    - nvme_info.partitions | length != 13
+
+- name: Create extended partition on sigle NVMe drive
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  community.general.parted:
+    device: "{{ nvme_symlinks[0] }}"
+    number: 1
+    state: present
+    part_type: "extended"
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+    - nvme_info.partitions | length < 13
+
+- name: Create 12 logical partitions on sigle NVMe drive
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    test_partsize: 60
+    fuzz: 1
+  community.general.parted:
+    device: "{{ nvme_symlinks[0] }}"
+    number: "{{ item }}"
+    state: present
+    part_type: "logical"
+    part_start: "{{ ((item - 5) * test_partsize) + 1 }}GiB"
+    part_end: "{{ ((item - 4) * test_partsize) }}GiB"
+  loop: "{{ range(5, 17) | list }}"
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+    - nvme_info.partitions | length < 13
+
+- name: Try to see if new logical NVMe partition exist on /dev/disk/by-id/nvme-*.id.part*
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    nvme_main: "{{ nvme_symlinks[0] | basename }}"
+  ansible.builtin.find:
+    paths: /dev/disk/by-id/
+    file_type: "link"
+    patterns: "{{ nvme_main }}-part*"
+  register: part_symlinks
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+
+- name: Get new partition NVMe symlinks
+  ansible.builtin.set_fact:
+    nvme_parts: |
+      {%- set x = [] -%}
+      {%- for f in part_symlinks.files %}
+      {{ x.append(f.path) }}
+      {%- endfor -%}
+      {{ x }}
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - part_symlinks is success
+    - part_symlinks.files is defined
+    - nvme_symlinks | length >= 1
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+
+- name: End if 13 paritions NVMe EUIs not found per node one extended 12 logical
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.fail:
+    msg:
+      - "You need at least one extended partition and 12 logical partitions NVMe drives per guest. Detected {{ nvme_parts | length }} NVMe drives. Bailing test."
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+    - nvme_parts | length < 13
+
+- name: Copy and force overwrite of the target filesystem fstests configuration using NVMe partition euis
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    fstests_test_dev: "{{ nvme_symlinks[0] }}-part16"
+    fstests_logwrites_dev: "{{ nvme_symlinks[0] }}-part15"
+    fstests_scratch_devpool: >-
+      {{ nvme_symlinks[0] }}-part5
+      {{ nvme_symlinks[0] }}-part6
+      {{ nvme_symlinks[0] }}-part7
+      {{ nvme_symlinks[0] }}-part8
+      {{ nvme_symlinks[0] }}-part9
+      {{ nvme_symlinks[0] }}-part10
+      {{ nvme_symlinks[0] }}-part11
+      {{ nvme_symlinks[0] }}-part12
+    fstests_scratch_logdev: "{{ nvme_symlinks[0] }}-part15"
+    fstests_scratch_rtdev: "{{ nvme_symlinks[0] }}-part14"
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_testdev_nvme_partition_euis|bool
+    - nvme_symlinks | length >= 1
+    - nvme_parts | length >= 13
+
+# fstests sparsefile generation uses 11 loop drives, we'll aim for 7
+# if you are using straight a drive per target disk to test.
+- name: End running if 7 NVMe EUIs not found per node
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.fail:
+    msg:
+      - "You need at least 7 NVMe drives per guest. Detected {{ nvme_symlinks | length }} NVMe drives. Bailing test."
+  when:
+    - fstests_testdev_nvme_euis|bool
+    - nvme_symlinks | length < 7
+
+- name: Copy and force overwrite of the target filesystem fstests configuration using NVMe euis
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    fstests_test_dev: "{{ nvme_symlinks[0] }}"
+    fstests_logwrites_dev: "{{ nvme_symlinks[1] }}"
+    fstests_scratch_devpool: >-
+      {{ nvme_symlinks[2] }}
+      {{ nvme_symlinks[3] }}
+      {{ nvme_symlinks[4] }}
+      {{ nvme_symlinks[5] }}
+      {{ nvme_symlinks[6] }}
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_testdev_nvme_euis|bool
+    - nvme_symlinks | length >= 7
+
+- name: Set the export volname prefix
+  tags: vars
+  ansible.builtin.set_fact:
+    volname_prefix: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') }}-fs"
+  when:
+    - fstests_fstyp == "nfs" or fstests_fstyp == "cifs"
+
+- name: Set the NFS export's fstype
+  tags: vars
+  ansible.builtin.set_fact:
+    fstests_nfs_export_fstype: "{{ nfsd_export_fstype }}"
+  when:
+    - not fstests_nfs_section_pnfs|bool
+
+- name: Set the NFS export's fstype
+  tags: vars
+  ansible.builtin.set_fact:
+    fstests_nfs_export_fstype: "xfs"
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_section_pnfs|bool
+
+- name: Create NFS export for test vol
+  ansible.builtin.include_role:
+    name: nfsd_add_export
+  vars:
+    server_host: "{{ fstests_nfs_server_host }}"
+    export_volname: "{{ volname_prefix }}-t"
+    export_options: "{{ nfsd_export_options }}"
+    export_fstype: "{{ fstests_nfs_export_fstype }}"
+    export_size: 20g
+    export_pnfs: false
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_use_kdevops_nfsd|bool
+
+- name: Create NFS export for scratch vol
+  ansible.builtin.include_role:
+    name: nfsd_add_export
+  vars:
+    server_host: "{{ fstests_nfs_server_host }}"
+    export_volname: "{{ volname_prefix }}-s"
+    export_options: "{{ nfsd_export_options }}"
+    export_fstype: "{{ fstests_nfs_export_fstype }}"
+    export_size: 30g
+    export_pnfs: false
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_use_kdevops_nfsd|bool
+
+- name: Copy and force overwrite of the target filesystem fstests configuration for NFS
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    fstests_nfs_test_dev: "{{ fstests_nfs_server_host }}:{{ nfsd_export_path }}/{{ volname_prefix }}-t"
+    fstests_nfs_scratch_devpool: "{{ fstests_nfs_server_host }}:{{ nfsd_export_path }}/{{ volname_prefix }}-s"
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_fstyp == "nfs"
+
+- name: Check to see if /etc/nfsmount.conf exists
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: /etc/nfsmount.conf
+  register: nfsmount_conf
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_auth_flavor is defined
+    - fstests_nfs_auth_flavor
+
+- name: Create /etc/nfsmount.conf
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/nfsmount.conf"
+    dest: /etc/nfsmount.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_auth_flavor is defined
+    - fstests_nfs_auth_flavor
+    - not nfsmount_conf.stat.exists
+
+- name: Set auth flavor for NFS
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.lineinfile:
+    path: /etc/nfsmount.conf
+    regexp: "^# Sec="
+    line: "Sec={{ fstests_nfs_auth_flavor }}"
+  when:
+    - fstests_fstyp == "nfs"
+    - fstests_nfs_auth_flavor is defined
+    - fstests_nfs_auth_flavor
+
+- name: Create SMB share for test vol
+  ansible.builtin.include_role:
+    name: smbd_add_share
+  vars:
+    server_host: "{{ fstests_smb_server_host }}"
+    share_volname: "{{ volname_prefix }}-t"
+    share_fstype: "{{ smbd_share_fstype }}"
+    share_size: 20g
+  when:
+    - fstests_fstyp == "cifs"
+    - fstests_cifs_use_kdevops_smbd|bool
+
+- name: Create SMB share for scratch vol
+  ansible.builtin.include_role:
+    name: smbd_add_share
+  vars:
+    server_host: "{{ fstests_smb_server_host }}"
+    share_volname: "{{ volname_prefix }}-s"
+    share_fstype: "{{ smbd_share_fstype }}"
+    share_size: 30g
+  when:
+    - fstests_fstyp == "cifs"
+    - fstests_cifs_use_kdevops_smbd|bool
+
+- name: Copy and force overwrite of the target filesystem fstests configuration for CIFS
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  vars:
+    fstests_cifs_test_dev: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-t"
+    fstests_cifs_scratch_devpool: "//{{ fstests_smb_server_host }}/{{ volname_prefix }}-s"
+  ansible.builtin.template:
+    src: "{{ fstests_fstyp }}/{{ fstests_fstyp }}.config"
+    dest: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    force: true
+  when:
+    - fstests_fstyp == "cifs"

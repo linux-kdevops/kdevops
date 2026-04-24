@@ -1,0 +1,440 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# fstests run phase. Reboots the guest, loads the loop driver,
+# creates fstests users and groups, sets up the sparse-file
+# loopback disks, verifies the run-time dependency list, and
+# invokes oscheck.sh with the target section. Stops the
+# monitor_collect helper at the end of the run. Skipped entirely
+# when kdevops_run_fstests is unset.
+
+- name: Reboot system before our test so we know everything is sane
+  tags: ["oscheck", "fstests", "run_tests", "reboot"]
+  become: true
+  become_method: sudo
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+
+- name: Make sure loop device support is loaded
+  tags: ["oscheck", "fstests", "run_tests"]
+  become: true
+  become_method: sudo
+  ansible.builtin.command: "modprobe loop"
+  when:
+    - kdevops_run_fstests|bool
+
+- name: Add missing groups for fstests
+  tags: ["oscheck", "fstests", "install", "root"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - sys
+  loop_control:
+    label: "Ensuring that group {{ item }} exists"
+
+- name: Add missing users for fstests
+  tags: ["oscheck", "fstests", "install", "root"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: "useradd {{ badname_arg }} -d /home/{{ item }} -U {{ item }}"
+  with_items:
+    - 123456-fsgqa
+    - fsgqa
+    - fsgqa2
+    - daemon
+    - nobody
+  loop_control:
+    label: "Ensuring that user and group {{ item }} exists"
+  register: useradd_result
+  failed_when: useradd_result.rc != 0 and useradd_result.rc != 9
+
+- name: Verify section name {{ fstests_section }} exists on fstests config file
+  vars:
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+  tags: ["oscheck", "fstests", "run_tests", "section"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  register: section_grep
+  failed_when: not section_grep.changed
+  ansible.builtin.lineinfile:
+    path: "{{ fstests_data_target }}/configs/{{ ansible_host }}.config"
+    regexp: "\\[{{ fstests_section }}\\]$"
+    line: ""
+  check_mode: true
+  when:
+    - kdevops_run_fstests|bool
+    - fstests_section != "all"
+
+# We have to set the environment variables explicitly because some distros
+# or systems might have on /etc/sudoers env_reset enabled, which gives us
+# as root a clean slate of variables.
+- name: Generate loopback disks using sparefiles with gendisk.sh
+  tags: ["oscheck", "fstests", "run_tests", "gendisks"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: "./gendisks.sh -d -m"
+  register: gendisk_cmd
+  args:
+    chdir: "{{ fstests_data_target }}"
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+    FSTESTS_SPARSE_FILE_PATH: "{{ sparsefiles_path }}"
+    FSTESTS_SETUP_SYSTEM: "{{ fstests_setup_system }}"
+    FSTESTS_TESTDEV_SPARSEFILE_GENERATION: "{{ sparsefiles_generation }}"
+    FSTESTS_SPARSE_FILE_SIZE: "{{ sparsefiles_size }}"
+    FSTESTS_SPARSE_FILENAME_PREFIX: "{{ sparsefiles_filename_prefix }}"
+    TEST_DEV: "{{ fstests_test_dev }}"
+    TEST_DIR: "{{ fstests_test_dir }}"
+  when:
+    - fstests_testdev_sparsefile_generation|bool
+
+- name: Capture gendisk output
+  tags: ["oscheck", "fstests", "run_tests", "gendisks"]
+  ansible.builtin.debug:
+    msg: "{{ gendisk_cmd.stdout_lines }}"
+  when:
+    - kdevops_run_fstests|bool
+    - fstests_debug|bool
+    - fstests_testdev_sparsefile_generation|bool
+
+- name: Check and verify fstests dependencies are met prior to running fstests
+  vars:
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: |
+    ./oscheck.sh
+      --check-deps
+      --journal {{ fstests_journal }}
+      --test-section {{ fstests_section }}
+  args:
+    chdir: "{{ fstests_data_target }}"
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+    FSTESTS_SPARSE_FILE_PATH: "{{ sparsefiles_path }}"
+    FSTESTS_SETUP_SYSTEM: "{{ fstests_setup_system }}"
+    FSTESTS_TESTDEV_SPARSEFILE_GENERATION: "{{ sparsefiles_generation }}"
+    FSTESTS_SPARSE_FILE_SIZE: "{{ sparsefiles_size }}"
+    FSTESTS_SPARSE_FILENAME_PREFIX: "{{ sparsefiles_filename_prefix }}"
+    TEST_DEV: "{{ fstests_test_dev }}"
+    TEST_DIR: "{{ fstests_test_dir }}"
+  when:
+    - kdevops_run_fstests|bool
+    - fstests_testdev_sparsefile_generation|bool
+
+- name: Set the path where we collect our fstests results
+  ansible.builtin.set_fact:
+    fstests_results_full_path: "{{ topdir_path }}/workflows/fstests/results"
+    fstests_workflow_dir: "../workflows/fstests"
+    fstests_results_target: "../workflows/fstests/results/last-run/"
+  tags: ["oscheck", "fstests", "run_tests", "checktime", "augment_expunge_list", "copy_results", "print_results"]
+
+- name: Look for prior check.time files on {{ fstests_data_target }}
+  tags: ["oscheck", "fstests", "run_tests", "checktime"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.find:
+    paths: "{{ fstests_data_target }}"
+    recurse: true
+    patterns: "check.time"
+  register: checktime_files
+
+- name: Copy prior check.time files from {{ fstests_data_target }}
+  tags: ["oscheck", "fstests", "run_tests", "checktime"]
+  ansible.builtin.fetch:
+    src: "{{ item.path }}"
+    dest: "{{ fstests_workflow_dir }}/{{ item.path | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
+    flat: true
+    validate_checksum: false
+  with_items: "{{ checktime_files.files }}"
+  loop_control:
+    label: "{{ item.path | regex_replace(fstests_data_target | regex_escape()) | regex_replace('^/', '') }}"
+  when:
+    - checktime_files.matched > 0
+
+- name: Use check.time files as expunge variables to help with initial baseline
+  vars:
+    expunge_file: "-E "
+    space: " "
+  ansible.builtin.set_fact:
+    fstests_initial_baseline_args: |
+      {%- set x = [] -%}
+      {%- for f in checktime_files.files %}
+      {{ x.append(expunge_file + f.path + space) }}
+      {%- endfor -%}
+      {{ x | join() | trim() }}
+  when:
+    - checktime_files is success
+    - checktime_files.files is defined
+    - checktime_files.files | length > 0
+    - fstests_initial_baseline|bool
+  tags: ["oscheck", "fstests", "run_tests", "checktime"]
+
+- name: Expand tests to skip for initial baseline
+  ansible.builtin.set_fact:
+    fstests_initial_baseline_args: "--start-after {{ fstests_start_after_test }}"
+  when:
+    - fstests_start_after|bool
+  tags: ["oscheck", "fstests", "run_tests", "checktime"]
+
+- name: Expand tests to skip tests dynamically passed on the command line
+  ansible.builtin.set_fact:
+    fstests_skip_tests_args: "-e {{ fstests_skip_tests }}"
+  when:
+    - fstests_skip_tests_enable|bool
+  tags: ["oscheck", "fstests", "run_tests", "checktime"]
+
+- name: Verify use of START_AFTER
+  tags: ["oscheck", "fstests", "run_tests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
+  ansible.builtin.fail:
+    msg:
+      - "You used START_AFTER={{ fstests_start_after_test }} and it must not be empty"
+  when:
+    - fstests_start_after|bool
+    - fstests_start_after_test == ""
+
+- name: Clear out old results directory
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.file:
+    state: absent
+    path: "{{ fstests_data_target }}/results/"
+  tags: ["oscheck", "fstests", "run_tests", "clean_results"]
+  when:
+    - not fstests_initial_baseline|bool
+
+- name: Print uname for each host
+  tags: ["oscheck", "fstests", "run_tests"]
+  ansible.builtin.debug:
+    var: ansible_kernel
+- name: Clean up our localhost results/last-run directory
+  ansible.builtin.file:
+    path: "{{ fstests_results_target }}/"
+    state: absent
+  delegate_to: localhost
+  run_once: true
+  tags: ["oscheck", "fstests", "copy_results", "clean_local_results"]
+
+- name: Create empty last-run directory
+  ansible.builtin.file:
+    path: "{{ fstests_results_target }}/"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+  tags: ["oscheck", "fstests", "copy_results", "clean_local_results"]
+
+- name: Get used target kernel version
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+  ansible.builtin.command: "uname -r"
+  register: uname_cmd
+
+- name: Store last kernel variable
+  ansible.builtin.set_fact:
+    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+  run_once: true
+
+- name: Document used target kernel version
+  ansible.builtin.shell: echo {{ last_kernel }} > {{ fstests_results_target }}/../last-kernel.txt
+  delegate_to: localhost
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+  run_once: true
+
+- name: Ensure systemd-journal-remote.service is running on the server
+  tags: ["oscheck", "fstests", "run_tests"]
+  delegate_to: localhost
+  become_method: sudo
+  become: true
+  become_flags: "su - -c"
+  ansible.builtin.systemd_service:
+    name: systemd-journal-remote.service
+    state: started
+  when:
+    - devconfig_enable_systemd_journal_remote|bool
+
+- name: Ensure systemd-journal-upload.service is running
+  tags: ["oscheck", "fstests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: systemd-journal-upload.service
+    state: started
+  when:
+    - devconfig_enable_systemd_journal_remote|bool
+    - "'nfsd' not in group_names"
+
+- name: Hint to watchdog tests are about to kick off
+  ansible.builtin.file:
+    path: "{{ fstests_workflow_dir }}/.begin"
+    state: touch
+  delegate_to: localhost
+  tags: ["oscheck", "fstests", "run_tests"]
+  when:
+    - kdevops_run_fstests|bool
+  run_once: true
+
+- name: Enable low-level messages on console
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: sysctl kernel.printk="8 8 1 7"
+- name: Check to see if dynamic test limit scope was set
+  ansible.builtin.set_fact:
+    dynamic_limit_tests: "{{ lookup('ansible.builtin.env', 'LIMIT_TESTS') }}"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - not run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+
+- name: Set test limit scope from CONFIG_FSTESTS_RUN_CUSTOM_TESTS, this may be empty
+  ansible.builtin.set_fact:
+    all_limit_tests: "{{ limit_tests }}"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - not run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+    - limit_tests is defined
+    - limit_tests != None
+
+- name: Allow dynamic test override
+  ansible.builtin.set_fact:
+    all_limit_tests: "{{ dynamic_limit_tests }}"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - not run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+    - dynamic_limit_tests is defined
+    - dynamic_limit_tests != None
+    - dynamic_limit_tests | length > 0
+
+- name: Empty out test limit if None is set
+  ansible.builtin.set_fact:
+    all_limit_tests: ""
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - not run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+    - all_limit_tests is defined
+    - all_limit_tests == None
+
+- name: Run oscheck-get-failures.sh to get list of known failed tests
+  vars:
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+  ansible.builtin.command: "{{ kdevops_data }}/workflows/fstests/scripts/oscheck-get-failures.sh --test-section {{ fstests_section }}"
+  args:
+    chdir: "{{ fstests_data_target }}"
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion | default('') }}"
+    KEEP_DMESG: "yes"
+  register: failed_tests_limit
+  when:
+    - run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+
+- name: Inform user no failures are known
+  ansible.builtin.fail:
+    msg: "No known failures for this run! Go find bugs!"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+    - failed_tests_limit.stdout | replace('\n', ' ') | length == 0
+
+- name: Set test limit to known failed tests
+  ansible.builtin.set_fact:
+    all_limit_tests: "{{ failed_tests_limit.stdout | replace('\n', ' ') }}"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - run_tests_on_failures|bool
+    - kdevops_run_fstests|bool
+
+- name: Print test list limits for this run
+  ansible.builtin.debug:
+    msg: "all_limit_tests: {{ all_limit_tests }}"
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - kdevops_run_fstests|bool
+    - all_limit_tests is defined
+    - all_limit_tests != None
+    - all_limit_tests | length > 0
+
+- name: Stop fstests if we're debbugging limit_tests
+  ansible.builtin.meta: end_play
+  tags: ["oscheck", "fstests", "run_tests", "vars", "limit-tests"]
+  when:
+    - fstests_skip_run|bool
+
+# Start monitoring services before running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - kdevops_run_fstests|bool
+    - enable_monitoring|default(false)|bool
+  tags: ["oscheck", "fstests", "run_tests", "monitoring", "monitor_run"]
+
+# Recent environments runs are showing that environment variables
+# set below are not propagated. So best to stuff what you need
+# into the .kdevops_fstests_setup file which is sourced by root.
+- name: Run fstests using ./oscheck.sh --print-start --journal {{ fstests_journal }} --print-done --test-section {{ fstests_section }} {{ oscheck_extra_args }} {{
+    all_limit_tests }}
+  vars:
+    fstests_section: "{{ (ansible_host | default(inventory_hostname)) | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
+    initial_baseline_expunges: "{{ fstests_initial_baseline_args | trim }}"
+    skip_tests_args: "{{ fstests_skip_tests_args | trim }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+  become: true
+  become_flags: "su - -c"
+  become_method: sudo
+  ansible.builtin.command: |
+    ./oscheck.sh
+      --print-start
+      --print-done
+      --journal {{ fstests_journal }}
+      --test-section
+      {{ fstests_section }}
+      {{ oscheck_extra_args }}
+      {{ all_limit_tests }}
+      {{ initial_baseline_expunges }}
+      {{ skip_tests_args }}
+  ignore_errors: true
+  no_log: true
+  args:
+    chdir: "{{ fstests_data_target }}"
+  environment:
+    FSTYP: "{{ fstests_fstyp }}"
+    FSTESTS_SPARSE_FILE_PATH: "{{ sparsefiles_path }}"
+    FSTESTS_SETUP_SYSTEM: "{{ fstests_setup_system }}"
+    FSTESTS_LINUX_LOCALVERSION: "{{ target_linux_localversion | default('') }}"
+    FSTESTS_TESTDEV_SPARSEFILE_GENERATION: "{{ sparsefiles_generation }}"
+    FSTESTS_SPARSE_FILE_SIZE: "{{ sparsefiles_size }}"
+    FSTESTS_SPARSE_FILENAME_PREFIX: "{{ sparsefiles_filename_prefix }}"
+    FSTESTS_RUN_LARGE_DISK_TESTS: "{{ run_large_disk_tests | default('') }}"
+    FSTESTS_RUN_AUTO_GROUP_TESTS: "{{ run_auto_group_tests }}"
+    FSTESTS_RUN_CUSTOM_GROUP_TESTS: "{{ run_custom_group_tests }}"
+    FSTESTS_EXCLUDE_TEST_GROUPS: "{{ exclude_test_groups }}"
+    LIMIT_TESTS: "{{ all_limit_tests }}"
+    TEST_DEV: "{{ fstests_test_dev }}"
+    TEST_DIR: "{{ fstests_test_dir }}"
+    KEEP_DMESG: "yes"
+  when:
+    - kdevops_run_fstests|bool
+
+# Stop monitoring services and collect data after running tests
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - kdevops_run_fstests|bool
+    - enable_monitoring|default(false)|bool
+  tags: ["oscheck", "fstests", "run_tests", "monitoring", "monitor_collect"]
