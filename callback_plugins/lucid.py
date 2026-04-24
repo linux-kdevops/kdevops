@@ -652,10 +652,11 @@ class CallbackModule(CallbackBase):
         log_line = f"  {symbol} [{host_display}] ({time_str})"
         self._write_to_log(log_line)
 
-        # Log command for supported modules
-        command = self._get_task_command(result)
-        if command:
-            self._write_to_log(f"\n$ {command}")
+        # Log command for supported modules (skip for skipped/unreachable — no resolved command)
+        if status not in ("skipped", "unreachable"):
+            command = self._get_task_command(result)
+            if command:
+                self._write_to_log(f"\n$ {command}")
 
         # Always log full output
         if "stdout" in res and res["stdout"]:
