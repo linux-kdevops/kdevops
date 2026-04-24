@@ -688,6 +688,37 @@ class CallbackModule(CallbackBase):
         """
         self._handle_result(result, "failed")
 
+    def v2_playbook_on_vars_prompt(
+        self,
+        varname,
+        private=True,
+        prompt=None,
+        encrypt=None,
+        confirm=False,
+        salt_size=None,
+        salt=None,
+        default=None,
+        unsafe=None,
+    ):
+        """A play is about to block for interactive vars_prompt input.
+
+        vars_prompt is one of the few places Ansible hands the tty
+        over to a readline loop for user input. Lucid's background
+        update thread racing against that readline produces a
+        garbled prompt and occasionally eats the user's keystrokes.
+        We clear any pending dynamic frame under the output lock so
+        the terminal is in a known state, then stay off the tty
+        entirely while Ansible's input layer owns it. The log still
+        records the prompt so the audit trail is complete, and the
+        next redraw cycle rebuilds the dynamic frame from scratch
+        because _clear_display resets display_lines to zero.
+        """
+        if self.dynamic_mode and self.display_lines > 0:
+            with self.output_lock:
+                self._clear_display()
+        prompt_text = prompt or f"enter value for {varname}"
+        self._write_to_log(f"VARS_PROMPT: {prompt_text}")
+
     def v2_runner_item_on_ok(self, result):
         """Loop item succeeded — log per-item command and output"""
         self._log_item_result(result)
