@@ -12,6 +12,7 @@ A modern stdout callback plugin providing:
 
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import shutil
@@ -221,8 +222,22 @@ class CallbackModule(CallbackBase):
     def _start_update_thread(self):
         """Start background thread for live display updates"""
         self.update_thread_stop = threading.Event()
-        self.update_thread = threading.Thread(target=self._update_loop, daemon=True)
+        self.update_thread = threading.Thread(target=self._update_loop)
         self.update_thread.start()
+        atexit.register(self._cleanup)
+
+    def _cleanup(self):
+        """Clean up display thread and reset terminal state"""
+        if self.update_thread_stop:
+            self.update_thread_stop.set()
+        if self.update_thread:
+            self.update_thread.join(timeout=2.0)
+        # Reset terminal state
+        if self.dynamic_mode and self.display_lines > 0:
+            self._clear_display()
+        with self.output_lock:
+            sys.stdout.write("\033[?25h")  # Ensure cursor visible
+            sys.stdout.flush()
 
     def _update_loop(self):
         """Update display every 0.5 seconds in dynamic mode"""
@@ -974,10 +989,3 @@ class CallbackModule(CallbackBase):
         self.dynamic_mode = False
         if self.update_thread_stop:
             self.update_thread_stop.set()
-
-    def __del__(self):
-        """Cleanup when plugin is destroyed"""
-        if self.update_thread_stop:
-            self.update_thread_stop.set()
-        if self.update_thread:
-            self.update_thread.join(timeout=1.0)
