@@ -8,21 +8,22 @@
 # backend consumes in place (for example through -kernel and a
 # virtiofs share of the modules directory).
 #
-# Idempotency strategy: always clone, copy the .config, and run
-# olddefconfig so the build tree reflects the intended config,
-# then ask make what the kernel release for that config would be
-# and check whether the matching vmlinuz + modules tree already
-# live under destdir. If they do, skip make + make install + make
-# modules_install; otherwise run the full pipeline. This way a
-# seed .config swap (for example CONFIG_LOCALVERSION_AUTO flip, a
-# new CONFIG_LOCALVERSION, a new git HEAD) invalidates the cache
-# on its own, without asking the operator to rm destdir first.
+# No playbook-side cache: olddefconfig + syncconfig + make + make
+# install + make modules_install run on every invocation. Make's
+# source-level dependency tracking is the cache. A no-op rebuild
+# walks the dep graph and exits in seconds; a real source change
+# rebuilds only what actually changed. A config-only cache
+# (sha256 of .config) cannot see source edits and silently
+# skipped the build for the iteration case this path exists to
+# serve.
 
 - name: Compose the controller-mode build environment
   ansible.builtin.set_fact:
     bootlinux_controller_build_environment: "{{ bootlinux_build_environment | combine({'LOCALVERSION': target_linux_localversion | default('', true)}) }}"
   run_once: true
   delegate_to: localhost
+  tags:
+    - always
 
 - name: Install dependencies to build the Linux kernel
   delegate_to: localhost
@@ -40,6 +41,8 @@
     - "{{ bootlinux_controller_destdir }}"
   run_once: true
   delegate_to: localhost
+  tags:
+    - always
 
 - name: Git clone {{ target_linux_tree }} on the control node
   ansible.builtin.git:
@@ -50,7 +53,8 @@
     force: "{{ target_linux_force_checkout | default(false) }}"
   run_once: true
   delegate_to: localhost
-  tags: ["clone"]
+  tags:
+    - clone
 
 - name: Copy configuration for {{ target_linux_tree }} to the build directory
   ansible.builtin.copy:
@@ -59,6 +63,8 @@
     mode: '0644'
   run_once: true
   delegate_to: localhost
+  tags:
+    - build-linux
 
 - name: Resolve .config against the tree with olddefconfig
   community.general.make:
@@ -69,7 +75,8 @@
   environment: "{{ bootlinux_controller_build_environment }}"
   run_once: true
   delegate_to: localhost
-  tags: ["build-linux"]
+  tags:
+    - build-linux
 
 - name: Sync include/config/auto.conf to the refreshed .config
   community.general.make:
@@ -80,7 +87,8 @@
   environment: "{{ bootlinux_controller_build_environment }}"
   run_once: true
   delegate_to: localhost
-  tags: ["build-linux"]
+  tags:
+    - build-linux
 
 - name: Compute the expected kernel release from the resolved build tree
   community.general.make:
@@ -93,61 +101,16 @@
   changed_when: false
   run_once: true
   delegate_to: localhost
+  tags:
+    - build-linux
 
 - name: Record the expected kernel release
   ansible.builtin.set_fact:
     bootlinux_controller_kernel_release: "{{ bootlinux_controller_kernelrelease_make.stdout_lines[-1] }}"
   run_once: true
   delegate_to: localhost
-
-- name: Probe destdir for a kernel image matching the expected release
-  ansible.builtin.stat:
-    path: "{{ bootlinux_controller_destdir }}/boot/vmlinuz-{{ bootlinux_controller_kernel_release }}"
-  register: bootlinux_controller_vmlinuz_stat
-  run_once: true
-  delegate_to: localhost
-
-- name: Probe destdir for the modules tree matching the expected release
-  ansible.builtin.stat:
-    path: "{{ bootlinux_controller_destdir }}/lib/modules/{{ bootlinux_controller_kernel_release }}/modules.dep"
-  register: bootlinux_controller_modules_dep
-  run_once: true
-  delegate_to: localhost
-
-- name: Checksum the resolved build .config
-  ansible.builtin.stat:
-    path: "{{ bootlinux_controller_builddir }}/.config"
-    checksum_algorithm: sha256
-  register: bootlinux_controller_builddir_config_stat
-  run_once: true
-  delegate_to: localhost
-
-- name: Checksum the installed config-<release> snapshot
-  ansible.builtin.stat:
-    path: "{{ bootlinux_controller_destdir }}/boot/config-{{ bootlinux_controller_kernel_release }}"
-    checksum_algorithm: sha256
-  register: bootlinux_controller_destdir_config_stat
-  run_once: true
-  delegate_to: localhost
-
-- name: Flag the controller build as already cached
-  ansible.builtin.set_fact:
-    bootlinux_controller_already_built: >-
-      {{ bootlinux_controller_vmlinuz_stat.stat.exists
-         and bootlinux_controller_modules_dep.stat.exists
-         and bootlinux_controller_destdir_config_stat.stat.exists
-         and bootlinux_controller_builddir_config_stat.stat.checksum ==
-             bootlinux_controller_destdir_config_stat.stat.checksum }}
-  run_once: true
-  delegate_to: localhost
-
-- name: Report the cached controller build we will reuse
-  ansible.builtin.debug:
-    msg: "Reusing existing controller build: vmlinuz-{{ bootlinux_controller_kernel_release }}"
-  when:
-    - bootlinux_controller_already_built | bool
-  run_once: true
-  delegate_to: localhost
+  tags:
+    - build-linux
 
 - name: Get nproc on the control node
   ansible.builtin.command: nproc
@@ -155,9 +118,8 @@
   changed_when: false
   run_once: true
   delegate_to: localhost
-  tags: ["build-linux"]
-  when:
-    - not bootlinux_controller_already_built | bool
+  tags:
+    - build-linux
 
 - name: Build {{ target_linux_tree }} on the control node using {{ nproc_controller.stdout | default('nproc') }} threads
   community.general.make:
@@ -167,9 +129,8 @@
   environment: "{{ bootlinux_controller_build_environment }}"
   run_once: true
   delegate_to: localhost
-  tags: ["build-linux"]
-  when:
-    - not bootlinux_controller_already_built | bool
+  tags:
+    - build-linux
 
 - name: Install the kernel image into <destdir>/boot
   community.general.make:
@@ -181,9 +142,8 @@
   environment: "{{ bootlinux_controller_build_environment }}"
   run_once: true
   delegate_to: localhost
-  tags: ["install-linux"]
-  when:
-    - not bootlinux_controller_already_built | bool
+  tags:
+    - install-linux
 
 - name: Install kernel modules into <destdir>/lib/modules
   community.general.make:
@@ -195,9 +155,8 @@
   environment: "{{ bootlinux_controller_build_environment }}"
   run_once: true
   delegate_to: localhost
-  tags: ["install-linux"]
-  when:
-    - not bootlinux_controller_already_built | bool
+  tags:
+    - install-linux
 
 - name: Publish controller-install facts for downstream roles
   ansible.builtin.set_fact:
@@ -205,3 +164,5 @@
     bootlinux_controller_modules_dir: "{{ bootlinux_controller_destdir }}/lib/modules/{{ bootlinux_controller_kernel_release }}"
   run_once: true
   delegate_to: localhost
+  tags:
+    - install-linux
