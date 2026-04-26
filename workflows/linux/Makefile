@@ -188,6 +188,11 @@ linux-install:
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
+	$(Q)ansible-playbook \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu_system_units.yml \
+		--tags rebuild-boot
+endif
 
 PHONY += linux-uninstall
 linux-uninstall:
