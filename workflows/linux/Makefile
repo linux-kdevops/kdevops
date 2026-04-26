@@ -166,12 +166,19 @@ linux-mount:
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-deploy
+ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
+linux-deploy: linux-install
+	$(Q)ansible-playbook \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu_system_units.yml \
+		--tags restart-vms
+else
 linux-deploy:
 	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+endif
 
 PHONY += linux-build
 linux-build:
