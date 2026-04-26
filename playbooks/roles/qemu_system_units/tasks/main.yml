@@ -47,6 +47,12 @@
   tags:
     - rebuild-boot
 
+- name: Include restart_vms tasks
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/restart_vms.yml"
+  tags:
+    - restart-vms
+
 - name: Include destroy tasks
   ansible.builtin.import_tasks:
     file: "{{ role_path }}/tasks/destroy.yml"

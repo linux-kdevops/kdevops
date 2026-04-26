@@ -1,0 +1,16 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Restart each qemu-system@<vm>.service so QEMU re-execs and
+# re-reads vm.env. Use after rebuild-boot to make a freshly
+# rendered kernel path (or any other vm.env change) take effect
+# on a running guest. The QEMU process is the kernel host: a
+# kernel change cannot be hot-activated, only re-execed. See
+# README.md.
+
+- name: Restart qemu-system@<vm> instances
+  ansible.builtin.systemd_service:
+    name: "qemu-system@{{ item }}.service"
+    state: restarted
+    scope: user
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
