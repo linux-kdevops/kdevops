@@ -67,6 +67,24 @@ def main():
         help="The directory where to generate the expunge lists to",
     )
     parser.add_argument(
+        "--hostname",
+        type=str,
+        default=None,
+        help=(
+            "Host (VM) name to key the expunge directory under. When "
+            "set, expunges land at <outputdir>/<hostname>/<filesystem>/, "
+            "decoupling the directory layout from the result-tree path "
+            "depth. When omitted, the script falls back to picking the "
+            "third-from-last path component of each .bad/.dmesg file as "
+            "the directory key — that path-position heuristic happened "
+            "to match the VM name in the kdevops libvirt layout "
+            "(last-run/<vm>/<section>/<group>/<bad>) but lands on the "
+            "kernel name in the qsu Phase B layout "
+            "(<vm>/<kernel>/<section>/<group>/<bad>), so the new path "
+            "needs --hostname to keep expunge files keyed per-VM."
+        ),
+    )
+    parser.add_argument(
         "--verbose",
         const=True,
         default=False,
@@ -121,15 +139,30 @@ def main():
         # This is like for example generic/xxx where xxx are digits
         test_failure_line = test_group + "/" + bad_file_test_number
 
-        # now to stuff this into expunge files such as:
-        # path/4.19.17/xfs/unassigned/xfs_nocrc.txt
-        expunge_kernel_dir = args.outputdir + "/" + kernel + "/" + args.filesystem + "/"
+        # Expunge files are keyed by host (VM) so a single file
+        # per (host, filesystem, section) accumulates failures
+        # across kernel revisions — the persistent record of "this
+        # test is expected-broken on this VM under this fs" is
+        # cross-kernel by design. When --hostname is supplied (the
+        # qsu Phase B layout passes it) we honour it directly;
+        # otherwise we fall back to the third-from-last path
+        # component, which matches the kdevops libvirt layout
+        # where that slot is the VM name.
+        expunge_key = args.hostname if args.hostname else kernel
+        expunge_kernel_dir = args.outputdir + "/" + expunge_key + "/" + args.filesystem + "/"
         output_dir = expunge_kernel_dir + "unassigned/"
         output_file = output_dir + section + ".txt"
 
-        base_kernel = kernel
+        # base_* paths are only used by a downstream "fall back to
+        # the +-stripped key's expunge dir if the primary one is
+        # missing" branch; initialize to None so the elif below can
+        # check them whether or not the +-stripped path applies.
+        base_expunge_kernel_dir = None
+        base_output_dir = None
+        base_output_file = None
+        base_kernel = expunge_key
         if base_kernel.endswith("+"):
-            base_kernel = kernel.replace("+", "")
+            base_kernel = expunge_key.replace("+", "")
             base_expunge_kernel_dir = (
                 args.outputdir + "/" + base_kernel + "/" + args.filesystem + "/"
             )
@@ -226,7 +259,7 @@ def main():
                 output_dir = shortcut_dir
                 output_file = shortcut_file
                 expunge_kernel_dir = shortcut_kernel_dir
-            elif base_kernel != kernel and os.path.isdir(base_output_dir):
+            elif base_output_dir and base_kernel != expunge_key and os.path.isdir(base_output_dir):
                 sys.stdout.write(
                     "<== expunges for %s not found but found base kernel %s expunge directory ==>\n"
                     % (kernel, base_kernel)

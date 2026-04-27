@@ -127,7 +127,7 @@
   changed_when: true
 
 - name: Augment expunge list for {{ fstests_fstyp }} on {{ inventory_hostname }}
-  ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ qsu_run_root }}/ {{ fstests_workflow_dir }}/expunges/
+  ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py --hostname {{ inventory_hostname }} {{ fstests_fstyp }} {{ qsu_run_root }}/ {{ fstests_workflow_dir }}/expunges/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   changed_when: true
