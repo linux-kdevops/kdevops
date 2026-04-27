@@ -1,0 +1,40 @@
+---
+# system_metrics collect: stop monitor-sysstat.service so its
+# ExecStopPost runs sadf -j against the binary recording. Data
+# already lives on the host via the data-monitor virtiofs share;
+# nothing to fetch.
+
+- name: Stop monitor-sysstat.service on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: monitor-sysstat.service
+    state: stopped
+  when:
+    - monitor_system_metrics | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
+
+- name: Locate sysstat outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/sysstat"
+    patterns: "sa-current*"
+    file_type: file
+  register: sysstat_outputs
+  when:
+    - monitor_system_metrics | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
+
+- name: Report system_metrics collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      system_metrics output for {{ inventory_hostname }}:
+      {% for f in sysstat_outputs.files | default([]) %}
+        - {{ f.path }} ({{ (f.size | int / 1024) | round(1) }} KiB)
+      {% endfor %}
+  when:
+    - monitor_system_metrics | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool

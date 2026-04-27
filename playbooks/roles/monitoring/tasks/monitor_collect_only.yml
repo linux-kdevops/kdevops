@@ -18,6 +18,12 @@
   when:
     - monitor_nvme_ocp_smart|default(false)|bool
 
+# Import system_metrics interim collection (sadf -j on the live
+# .sa file without stopping the recorder).
+- ansible.builtin.include_tasks: monitors/system_metrics/collect_only.yml
+  when:
+    - monitor_system_metrics|default(false)|bool
+
 - name: Check if fragmentation tracker is running
   become: true
   become_method: sudo

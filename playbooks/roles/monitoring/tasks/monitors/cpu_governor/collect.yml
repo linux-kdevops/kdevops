@@ -1,0 +1,38 @@
+---
+# cpu_governor collect: stop the oneshot unit so its ExecStop
+# writes end.json. Output already lives on the host via virtiofs.
+
+- name: Stop monitor-cpu-governor.service on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: monitor-cpu-governor.service
+    state: stopped
+  when:
+    - monitor_cpu_governor | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
+
+- name: Locate cpu_governor outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/cpu_governor"
+    patterns: "*.json"
+    file_type: file
+  register: governor_outputs
+  when:
+    - monitor_cpu_governor | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
+
+- name: Report cpu_governor collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      cpu_governor outputs for {{ inventory_hostname }}:
+      {% for f in governor_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_cpu_governor | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool

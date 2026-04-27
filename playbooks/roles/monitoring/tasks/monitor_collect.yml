@@ -17,6 +17,17 @@
   when:
     - monitor_nvme_ocp_smart|default(false)|bool
 
+# Import system_metrics collection tasks (stop sadc, ExecStopPost
+# converts to JSON; data is on the controller via virtiofs).
+- ansible.builtin.include_tasks: monitors/system_metrics/collect.yml
+  when:
+    - monitor_system_metrics|default(false)|bool
+
+# Import cpu_governor collection tasks (stop oneshot writes end.json)
+- ansible.builtin.include_tasks: monitors/cpu_governor/collect.yml
+  when:
+    - monitor_cpu_governor|default(false)|bool
+
 # Plot-fragmentation collection tasks
 - name: Check if fragmentation monitoring was started
   become: true

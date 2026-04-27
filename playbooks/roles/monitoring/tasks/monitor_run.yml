@@ -12,6 +12,16 @@
   when:
     - monitor_nvme_ocp_smart|default(false)|bool
 
+# Import system_metrics monitoring tasks (sysstat sadc recorder)
+- ansible.builtin.include_tasks: monitors/system_metrics/run.yml
+  when:
+    - monitor_system_metrics|default(false)|bool
+
+# Import cpu_governor monitoring tasks (start snapshot)
+- ansible.builtin.include_tasks: monitors/cpu_governor/run.yml
+  when:
+    - monitor_cpu_governor|default(false)|bool
+
 # Fragmentation monitoring tasks
 - name: Create fragmentation scripts directory
   become: true

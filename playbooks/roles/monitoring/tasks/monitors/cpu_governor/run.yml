@@ -1,0 +1,25 @@
+---
+# cpu_governor monitor: snapshot governor + scaling driver per CPU
+# at workflow start. The unit is Type=oneshot RemainAfterExit=true,
+# so `state: started` runs ExecStart (writes start.json) and the
+# unit stays "active" until collect.yml stops it.
+
+- name: Confirm qemu-system-units backend for cpu_governor
+  ansible.builtin.assert:
+    that:
+      - kdevops_enable_qemu_system_units | default(false) | bool
+    fail_msg: |
+      cpu_governor monitor only supports the qemu-system-units
+      backend at this time. Disable MONITOR_CPU_GOVERNOR or run
+      under qsu.
+  when:
+    - monitor_cpu_governor | default(false) | bool
+
+- name: Start monitor-cpu-governor.service on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: monitor-cpu-governor.service
+    state: started
+  when:
+    - monitor_cpu_governor | default(false) | bool

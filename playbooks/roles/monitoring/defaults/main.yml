@@ -13,6 +13,15 @@ monitor_folio_migration: false
 # Folio migration monitoring interval in seconds
 monitor_folio_migration_interval: 60
 
+# Enable system_metrics monitoring (sysstat sadc time series)
+monitor_system_metrics: false
+
+# system_metrics sadc sample interval in seconds
+monitor_system_metrics_interval: 5
+
+# Enable cpu_governor snapshot at workflow start and end
+monitor_cpu_governor: false
+
 # Base path to store monitoring results on the control host
 # Workflows can override by setting monitoring_results_base_path
 monitoring_results_base_path: "{{ topdir_path }}/workflows/fstests/results/monitoring"

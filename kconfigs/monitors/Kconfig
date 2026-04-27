@@ -161,11 +161,55 @@ config MONITOR_NVME_OCP_SMART_DEVICES
 
 	  Manual specification: "/dev/nvme0n1 /dev/nvme1n1"
 
+config MONITOR_SYSTEM_METRICS
+	bool "Monitor system-wide CPU/memory/IO/scheduler time series (sysstat)"
+	output yaml
+	default n
+	help
+	  Enable workflow-bracketed sysstat (sadc) recording on the
+	  guest. Captures CPU (global + per-CPU + virtualization),
+	  memory, hugepages, swap, paging, IO (global + per-device),
+	  interrupts, network (DEV + IP/TCP/UDP/ICMP + IPv6), NFS,
+	  sockets, run queue + load, softnet, kernel tables, USB,
+	  filesystem util, power (CPU freq, temp, fans, voltage),
+	  and pressure-stall (PSI).
+
+	  Output is binary sa-current under
+	  /data/monitor/sysstat/ inside the guest, converted to
+	  sa-current.json (sadf -j) when the recorder stops. On the
+	  qemu-system-units backend this path is a virtiofs share
+	  written through to the controller at
+	  workflows/<workflow>/results/monitoring/<vm>/sysstat/.
+
+config MONITOR_SYSTEM_METRICS_INTERVAL
+	int "system_metrics sample interval (seconds)"
+	output yaml
+	default 5
+	depends on MONITOR_SYSTEM_METRICS
+	range 1 600
+	help
+	  How often sadc samples /proc and /sys, in seconds. Lower
+	  values produce finer-grained time series at the cost of
+	  more data and slightly higher overhead. Default 5 seconds
+	  is fine-grained enough to catch test transitions without
+	  bloating the .sa file on multi-hour runs.
+
+config MONITOR_CPU_GOVERNOR
+	bool "Snapshot CPU governor at workflow start and end"
+	output yaml
+	default n
+	help
+	  Read /sys/devices/system/cpu/cpuN/cpufreq/scaling_governor
+	  for every CPU at the start and end of the workload window
+	  and write the per-CPU governor mapping as JSON to
+	  /data/monitor/cpu_governor/{start,end}.json on the guest.
+
+	  Useful to verify test conditions and detect governor
+	  changes mid-run that would skew comparisons.
+
 # Future monitoring options can be added here
 # Examples:
 # - Memory pressure monitoring
-# - CPU utilization tracking
-# - I/O statistics collection
 # - Network traffic monitoring
 # - Custom perf event monitoring
 

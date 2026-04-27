@@ -1,0 +1,31 @@
+---
+# system_metrics monitor: workflow-bracketed sysstat (sadc) on the
+# guest. On the qemu-system-units backend the daemon is the
+# monitor-sysstat.service unit that the nixos-qemu monitoring
+# module declares; this task starts it. Output lands on the host
+# at workflows/<workflow>/results/monitoring/<vm>/sysstat/ via the
+# data-monitor virtiofs share, so no fetch step is needed.
+#
+# Distro/libvirt support is intentionally absent here; add a
+# parallel branch (nohup sadc + pid file) when libvirt monitoring
+# is wired up.
+
+- name: Confirm qemu-system-units backend for system_metrics
+  ansible.builtin.assert:
+    that:
+      - kdevops_enable_qemu_system_units | default(false) | bool
+    fail_msg: |
+      system_metrics monitor only supports the qemu-system-units
+      backend at this time. Disable MONITOR_SYSTEM_METRICS or run
+      under qsu.
+  when:
+    - monitor_system_metrics | default(false) | bool
+
+- name: Start monitor-sysstat.service on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.systemd_service:
+    name: monitor-sysstat.service
+    state: started
+  when:
+    - monitor_system_metrics | default(false) | bool

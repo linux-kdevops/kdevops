@@ -1,0 +1,17 @@
+---
+# system_metrics interim collection: emit a JSON snapshot of the
+# in-flight binary recording without stopping the daemon. Useful
+# while a long-running workflow is mid-test.
+
+- name: Convert in-flight sa-current to JSON snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: |
+    out=/data/monitor/sysstat
+    if [ -f "$out/sa-current" ]; then
+      sadf -j "$out/sa-current" > "$out/sa-current-snapshot.json" || true
+    fi
+  changed_when: false
+  when:
+    - monitor_system_metrics | default(false) | bool
+    - kdevops_enable_qemu_system_units | default(false) | bool
