@@ -98,6 +98,24 @@ h1 {
 }
 .toc a:hover { color: #667eea; border-bottom-color: #667eea; }
 .toc-l1 { font-weight: 600; color: #2d3748; }
+.back-to-toc {
+    text-align: right;
+    margin-top: 24px;
+    font-size: 0.9em;
+}
+.back-to-toc a {
+    color: #667eea;
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    background: #f7fafc;
+}
+.back-to-toc a:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
 .chart-container {
     margin: 20px 0;
     padding: 16px;
@@ -248,7 +266,7 @@ def _render_toc(entries: list[tuple[int, str, str]]) -> str:
         return ""
 
     parts: list[str] = []
-    parts.append('<nav class="toc">')
+    parts.append('<nav class="toc" id="contents">')
     parts.append('<div class="toc-title">📋 Contents</div>')
     parts.append("<ul>")
 
@@ -318,6 +336,9 @@ def render(report: Report) -> str:
             f'<div class="section" id="{sec_slug}">'
             f'<h2 class="section-title">{escape(s.title)}</h2>'
             f'{new_body}'
+            '<div class="back-to-toc">'
+            '<a href="#contents">↑ Back to contents</a>'
+            '</div>'
             '</div>'
         )
 
