@@ -4,7 +4,7 @@
 Layout convention written by playbooks/roles/monitoring/ and by the
 nixos-qemu monitoring module:
 
-    workflows/<workflow>/results/monitoring/<host>/
+    workflows/<workflow>/results/<vm>/<kernel>/monitoring/
     ├── sysstat/
     │   ├── sa-current           (binary sadc recording)
     │   └── sa-current.json      (sadf -j -- -A output)
@@ -21,6 +21,11 @@ nixos-qemu monitoring module:
     └── fragmentation/
         ├── fragmentation_data.json
         └── fragmentation_plot.png
+
+The <vm>/last-run -> <kernel> symlink at the per-VM root resolves
+to the most-recent run, so a default-mode adapter can always walk
+<vm>/last-run/monitoring/ to get the latest data without knowing
+the kernel name.
 
 This module knows how to walk that tree and produce HTML sections.
 sysstat is the workhorse: its sa-current.json contains 14 metric
@@ -72,12 +77,10 @@ _BLOCKDEV_ABI_SURFACES = {
 }
 
 
-def has_data(monitoring_dir: Path) -> bool:
-    """True iff at least one host subdir under monitoring_dir is non-empty."""
-    if not monitoring_dir.is_dir():
-        return False
-    for host_dir in monitoring_dir.iterdir():
-        if host_dir.is_dir() and any(host_dir.iterdir()):
+def has_data(host_monitoring_dirs: dict[str, Path]) -> bool:
+    """True iff at least one (host, monitoring_dir) entry has data."""
+    for d in host_monitoring_dirs.values():
+        if d.is_dir() and any(d.iterdir()):
             return True
     return False
 
@@ -576,7 +579,7 @@ def render_host_section(
 
 
 def render_section(
-    monitoring_dir: Path,
+    host_monitoring_dirs: dict[str, Path],
     host_test_timelines: Optional[
         dict[str, list[tuple[str, float, float, str]]]
     ] = None,
@@ -584,31 +587,42 @@ def render_section(
 ) -> Optional[str]:
     """Render the whole monitoring section (per-host blocks). None if empty.
 
+    ``host_monitoring_dirs`` maps a host name (kdevops VM name) to
+    its monitoring directory — typically
+    ``<results>/<vm>/last-run/monitoring/`` for the most recent
+    run, or ``<results>/<vm>/<kernel>/monitoring/`` when an adapter
+    is rendering a specific historical kernel. Each monitoring dir
+    contains the per-monitor subdirs (sysstat/, cpu_governor/,
+    blockdev/, …); the per-VM scoping comes from the dict, not from
+    a per-host subdir under one shared root, because the monitoring
+    framework's output now lives next to the test artifacts of the
+    same run.
+
     ``host_test_timelines`` is an optional mapping from host name to
     test-interval tuples. Adapters that know the workflow's test
     schedule (e.g. fstests parsing the xunit XML) build this and pass
     it in so each per-host block gets a matching timeline chart.
 
-    ``allowed_hosts`` is an optional whitelist; when set, host
-    subdirectories whose name is not in the set are skipped so the
-    monitoring section narrows down to the same hosts the rest of
-    the report renders for.
+    ``allowed_hosts`` is an optional whitelist; hosts not in the set
+    are skipped so the monitoring section narrows down to the same
+    hosts the rest of the report renders for.
     """
-    if not has_data(monitoring_dir):
+    if not has_data(host_monitoring_dirs):
         return None
     timelines = host_test_timelines or {}
     chunks: list[str] = []
-    for host_dir in sorted(monitoring_dir.iterdir()):
-        if not host_dir.is_dir():
+    for host_name in sorted(host_monitoring_dirs.keys()):
+        if allowed_hosts is not None and host_name not in allowed_hosts:
             continue
-        if allowed_hosts is not None and host_dir.name not in allowed_hosts:
+        host_dir = host_monitoring_dirs[host_name]
+        if not host_dir.is_dir():
             continue
         host_block = render_host_section(
             host_dir,
-            test_timeline=timelines.get(host_dir.name),
+            test_timeline=timelines.get(host_name),
         )
         if not host_block:
             continue
-        chunks.append(f'<h3>{escape(host_dir.name)}</h3>')
+        chunks.append(f'<h3>{escape(host_name)}</h3>')
         chunks.append(host_block)
     return "\n".join(chunks) if chunks else None

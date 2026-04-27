@@ -51,24 +51,57 @@
       - "{{ qsu_state_dir }}"
       - "{{ qsu_state_dir }}/data"
       - "{{ qsu_state_dir }}/data/configs"
-    # fstests splits its /data share: configs/ stays ephemeral
-    # under the VM StateDirectory (wiped by `make destroy`);
-    # results land in the kdevops workflow tree so they survive
-    # destroy and so downstream tooling can walk last-run/<vm>/
-    # live while tests run.
+    # data-configs stays ephemeral under the VM StateDirectory
+    # (wiped by `make destroy`).
+    #
+    # Per-(VM, kernel) results layout: the data-results virtiofs
+    # share for qsu-xfs-crc on kernel 7.0.0-gABCDE backs onto
+    # workflows/fstests/results/qsu-xfs-crc/7.0.0-gABCDE/. A new
+    # kernel from linux-deploy gets a new directory next to the
+    # old one, so two builds (A vs B) don't clobber each other and
+    # the report tooling can index runs by (vm, kernel) without an
+    # archive step. The current run is also reachable via the
+    # qsu-xfs-crc/last-run -> 7.0.0-gABCDE symlink updated below.
     qsu_per_vm_dirs_fstests: >-
       {{
-        [topdir_path ~ '/workflows/fstests/results/last-run/' ~ qsu_vm_name]
+        [topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name,
+         topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release]
         if (kdevops_workflow_enable_fstests | default(false) | bool)
         else []
       }}
     qsu_per_vm_dirs_monitor: >-
       {{
-        [topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/monitoring/' ~ qsu_vm_name]
+        [topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release ~ '/monitoring']
         if (enable_monitoring | default(false) | bool)
         else []
       }}
     qsu_per_vm_dirs: "{{ qsu_per_vm_dirs_base + qsu_per_vm_dirs_fstests + qsu_per_vm_dirs_monitor }}"
+
+# The <vm>/last-run symlink always points at the kernel that
+# qsu vm.env is currently rendered for. It is the discoverable
+# "current run" anchor: tooling that reads
+# workflows/fstests/results/<vm>/last-run/ resolves to the
+# directory virtiofsd is right now sharing into the guest. The
+# linux-deploy chain re-renders this VM's vm.env after a kernel
+# install; that re-render lands in this same task during the
+# rebuild-boot tag, so the symlink follows the new kernel
+# without a separate update step.
+- name: Update last-run symlink for {{ qsu_vm_name }}
+  ansible.builtin.file:
+    src: "{{ qsu_kernel_release }}"
+    dest: "{{ topdir_path }}/workflows/fstests/results/{{ qsu_vm_name }}/last-run"
+    state: link
+    force: true
+  when:
+    - kdevops_workflow_enable_fstests | default(false) | bool
+
+- name: Update last-kernel.txt for {{ qsu_vm_name }}
+  ansible.builtin.copy:
+    content: "{{ qsu_kernel_release }}\n"
+    dest: "{{ topdir_path }}/workflows/fstests/results/{{ qsu_vm_name }}/last-kernel.txt"
+    mode: '0644'
+  when:
+    - kdevops_workflow_enable_fstests | default(false) | bool
 
 - name: Create per-VM NVMe qcow2 backing files for {{ qsu_vm_name }}
   ansible.builtin.command:
@@ -108,16 +141,20 @@
 # store + modules: read-only bytes from the controller.
 # data-configs (opt-in): ephemeral per-host config rendered
 # under the VM StateDirectory; wiped by `make destroy`.
-# data-results (opt-in): persistent results tree in the
-# kdevops workflow dir; survives `make destroy` and lets
-# downstream tooling walk last-run/<vm>/ live as tests run.
+# data-results (opt-in): per-(VM, kernel) results tree under
+# workflows/fstests/results/<vm>/<kernel>/; survives `make
+# destroy` and is the canonical home for fstests artifacts.
+# A new kernel deploy re-renders this share dir at a new
+# subpath so the previous run's data is preserved next door.
+# The same path is reachable as <vm>/last-run via the
+# symlink the per-VM dir-creation step writes above.
 # kdevops-fstests (opt-in): the controller's workflows/fstests
 # tree exposed read-only at /usr/local/lib/kdevops/fstests so
 # the guest can exec oscheck.sh without copying scripts in.
-# data-monitor (opt-in): persistent per-monitor data tree in
-# the kdevops workflow dir; the guest's nixos-qemu.monitoring
-# systemd services write here, controller-side tooling reads
-# them live.
+# data-monitor (opt-in): per-(VM, kernel) monitoring tree at
+# <vm>/<kernel>/monitoring/; co-located with the test data so
+# a reviewer comparing kernel A and kernel B reads both runs
+# from a single subtree.
 - name: Compose per-VM virtiofs shares for {{ qsu_vm_name }}
   ansible.builtin.set_fact:
     qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests + qsu_shares_monitor }}"
@@ -136,7 +173,7 @@
            'dir': qsu_state_dir ~ '/data/configs',
            'mount': '/data/configs'},
           {'tag': 'data-results',
-           'dir': topdir_path ~ '/workflows/fstests/results/last-run/' ~ qsu_vm_name,
+           'dir': topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release,
            'mount': '/data/results'},
           {'tag': 'kdevops-fstests',
            'dir': topdir_path ~ '/workflows/fstests',
@@ -149,7 +186,7 @@
       {{
         [
           {'tag': 'data-monitor',
-           'dir': topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/monitoring/' ~ qsu_vm_name,
+           'dir': topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release ~ '/monitoring',
            'mount': '/data/monitor'}
         ]
         if (enable_monitoring | default(false) | bool)

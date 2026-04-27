@@ -2,19 +2,31 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 #
 # fstests results phase for the qsu (imageless NixOS) bringup
-# path. Results already live in workflows/fstests/results/
-# last-run/<vm>/ by virtue of the data-results virtiofs share
-# the qemu_system_units role composes, so this phase runs the
-# same controller-side summary pipeline as the libvirt path
-# (gen_results_summary, bad_files_summary, augment_expunge_list,
-# get_new_expunge_files) directly against the live tree, plus
-# qsu's own tar.xz of the whole last-run/ for full-tree archive.
-# The kernel release comes from `uname -r` on the guest so the
-# archive is named after the kernel that actually produced the
-# results. The build tree's `make kernelrelease` would diverge
-# whenever an install ran without a guest restart, when A/B
-# testing puts different refs on baseline vs dev, or when no
-# controller-mode kernel build exists at all.
+# path. Results already live in workflows/fstests/results/<vm>/
+# <kernel>/ by virtue of the data-results virtiofs share the
+# qemu_system_units role composes per (VM, kernel) — the guest
+# writes /data/results/<section>/result.xml and that lands at
+# workflows/fstests/results/<vm>/<kernel>/<section>/result.xml on
+# the controller. This phase runs the controller-side summary
+# pipeline (gen_results_summary, bad_files_summary,
+# fstests-checktime-distribution, augment_expunge_list,
+# get_new_expunge_files) against that per-(VM, kernel) tree so
+# each VM's run gets its own xunit_results.txt + bad_results.txt
+# alongside the result.xml files.
+#
+# Per-VM scoping (instead of one combined scan root) is what
+# makes A/B comparison work: in an A/B run baseline can be on
+# kernel X and dev on kernel Y, and the summaries then naturally
+# segregate by (VM, kernel) without any mixing.
+#
+# The kernel release is read from the live guest's `uname -r`
+# rather than the controller's build tree. Phase 4d argued for
+# that already (kernelrelease against the build tree would
+# diverge whenever an install ran without a guest restart, in
+# A/B testing where two refs are on baseline vs dev, or when no
+# controller-mode build tree exists at all). With Phase A's
+# CONFIG_LOCALVERSION_AUTO=y, the value comes back as
+# 7.0.0-gABCDE and pins the per-VM result subdirectory uniquely.
 
 - name: Resolve workflow results location for kdevops archiving
   run_once: true
@@ -22,124 +34,126 @@
   ansible.builtin.set_fact:
     fstests_results_full_path: "{{ topdir_path }}/workflows/fstests/results"
     fstests_workflow_dir: "{{ topdir_path }}/workflows/fstests"
-    fstests_results_target: "{{ topdir_path }}/workflows/fstests/results/last-run/"
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
 
-- name: Get used target kernel version
+- name: Get used target kernel version for {{ inventory_hostname }}
   ansible.builtin.command: "uname -r"
   register: uname_cmd
   changed_when: false
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
 
-- name: Store last kernel variable
+- name: Store last kernel variable for {{ inventory_hostname }}
   ansible.builtin.set_fact:
-    last_kernel: "{{ uname_cmd.stdout_lines | regex_replace('\\]') | regex_replace('\\[') | replace(\"'\", '') }}"
-  run_once: true
+    last_kernel: "{{ uname_cmd.stdout | trim }}"
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
 
-- name: Document used target kernel version
-  ansible.builtin.shell: echo {{ last_kernel }} > {{ fstests_results_full_path }}/last-kernel.txt
+# Compute the per-(VM, kernel) result root once per host. Every
+# subsequent task uses this path so the same logic that runs on
+# qsu-xfs-crc against kernel A also runs on qsu-xfs-reflink
+# against kernel B without cross-talk between summaries.
+- name: Resolve per-(VM, kernel) result root for {{ inventory_hostname }}
+  ansible.builtin.set_fact:
+    qsu_run_root: "{{ fstests_results_full_path }}/{{ inventory_hostname }}/{{ last_kernel }}"
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+
+- name: Document used target kernel version for {{ inventory_hostname }}
+  ansible.builtin.copy:
+    content: "{{ last_kernel }}\n"
+    dest: "{{ fstests_results_full_path }}/{{ inventory_hostname }}/last-kernel.txt"
+    mode: '0644'
   delegate_to: localhost
-  run_once: true
   changed_when: true
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
 
-- name: Look for xunit results files under {{ fstests_results_target }}
+- name: Refresh last-run symlink for {{ inventory_hostname }}
+  ansible.builtin.file:
+    src: "{{ last_kernel }}"
+    dest: "{{ fstests_results_full_path }}/{{ inventory_hostname }}/last-run"
+    state: link
+    force: true
   delegate_to: localhost
-  run_once: true
+  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
+
+- name: Look for xunit results files under {{ qsu_run_root }}
+  delegate_to: localhost
   ansible.builtin.find:
-    paths: "{{ fstests_results_target }}"
+    paths: "{{ qsu_run_root }}"
     recurse: true
     patterns: "result.xml"
   register: xunit_files
   tags: ["oscheck", "fstests", "copy_results", "xunit"]
 
-- name: Look for tests which failed under {{ fstests_results_target }}
+- name: Look for tests which failed under {{ qsu_run_root }}
   delegate_to: localhost
-  run_once: true
   ansible.builtin.find:
-    paths: "{{ fstests_results_target }}"
+    paths: "{{ qsu_run_root }}"
     recurse: true
     patterns: "*.out.bad"
   register: failed_tests
   tags: ["oscheck", "fstests", "copy_results", "failed_tests"]
 
-- name: Look for the check.time files under {{ fstests_results_target }}
+- name: Look for the check.time files under {{ qsu_run_root }}
   delegate_to: localhost
-  run_once: true
   ansible.builtin.find:
-    paths: "{{ fstests_results_target }}"
+    paths: "{{ qsu_run_root }}"
     recurse: true
     patterns: "check.time"
   register: checktime_files
   tags: ["oscheck", "fstests", "copy_results", "checktime"]
 
-- name: Ensure last-run kernel-named subdirectory exists for the summary output
-  ansible.builtin.file:
-    path: "{{ fstests_results_target }}/{{ last_kernel }}"
-    state: directory
-    mode: '0755'
-  delegate_to: localhost
-  run_once: true
-  tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
-  when:
-    - xunit_files.matched > 0
-
-- name: Print fstests results to xunit_results.txt on localhost if xunit xml file was found
-  ansible.builtin.command: ./python/workflows/fstests/gen_results_summary --results_file result.xml --print_section --output_file {{ fstests_results_target }}/{{
-    last_kernel }}/xunit_results.txt {{ fstests_results_target }}/
+- name: Print fstests results to xunit_results.txt for {{ inventory_hostname }}
+  ansible.builtin.command: ./python/workflows/fstests/gen_results_summary --results_file result.xml --print_section --output_file {{ qsu_run_root }}/xunit_results.txt {{
+    qsu_run_root }}/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
     - xunit_files.matched > 0
-  run_once: true
+  changed_when: true
 
-- name: Print fstests bad results for {{ fstests_fstyp }} to bad_results.txt on localhost
-  ansible.builtin.shell: ./python/workflows/fstests/bad_files_summary.py {{ fstests_fstyp }} {{ fstests_results_target }}/ > {{ fstests_results_target }}/bad_results.txt
+- name: Print fstests bad results for {{ fstests_fstyp }} to bad_results.txt for {{ inventory_hostname }}
+  ansible.builtin.shell: ./python/workflows/fstests/bad_files_summary.py {{ fstests_fstyp }} {{ qsu_run_root }}/ > {{ qsu_run_root }}/bad_results.txt
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
   when:
     - failed_tests.matched > 0
-  run_once: true
+  changed_when: true
 
-- name: Create check.time.distribution files for {{ fstests_results_target }}
-  ansible.builtin.command: ./python/workflows/fstests/fstests-checktime-distribution.py {{ fstests_results_target }}
+- name: Create check.time.distribution files under {{ qsu_run_root }}
+  ansible.builtin.command: ./python/workflows/fstests/fstests-checktime-distribution.py {{ qsu_run_root }}
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  run_once: true
   when:
     - checktime_files.matched > 0
+  changed_when: true
 
-- name: Augment expunge list for {{ fstests_fstyp }}, just run git diff after this to see new failures found
-  ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ fstests_results_target }}/ {{ fstests_workflow_dir }}/expunges/
+- name: Augment expunge list for {{ fstests_fstyp }} on {{ inventory_hostname }}
+  ansible.builtin.command: ./python/workflows/fstests/augment_expunge_list.py {{ fstests_fstyp }} {{ qsu_run_root }}/ {{ fstests_workflow_dir }}/expunges/
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  run_once: true
+  changed_when: true
 
-- name: Print fstests new expunge files for {{ fstests_fstyp }} which are not yet committed
-  ansible.builtin.shell: ./python/workflows/fstests/get_new_expunge_files.py {{ fstests_fstyp }} {{ fstests_workflow_dir }}/expunges/ > {{ fstests_results_target
+- name: Print new expunge files for {{ fstests_fstyp }} on {{ inventory_hostname }}
+  ansible.builtin.shell: ./python/workflows/fstests/get_new_expunge_files.py {{ fstests_fstyp }} {{ fstests_workflow_dir }}/expunges/ > {{ qsu_run_root
     }}/new_expunge_files.txt
   delegate_to: localhost
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
-  run_once: true
+  changed_when: true
 
-- name: Get stat of new files not yet committed, ie, new expunge files
+- name: Get stat of new files not yet committed for {{ inventory_hostname }}
   ansible.builtin.stat:
-    path: "{{ fstests_results_target }}/new_expunge_files.txt"
+    path: "{{ qsu_run_root }}/new_expunge_files.txt"
   delegate_to: localhost
   register: new_expunge_files_stat
-  run_once: true
   tags: ["oscheck", "fstests", "copy_results", "print_results", "augment_expunge_list"]
 
-- name: Inform user if new expunge files have been found
-  run_once: true
+- name: Inform user if new expunge files have been found for {{ inventory_hostname }}
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   ansible.builtin.debug:
-    msg: "New expunge files found in: {{ fstests_results_target }}new_expunge_files.txt"
+    msg: "New expunge files found in: {{ qsu_run_root }}/new_expunge_files.txt"
   when:
     - new_expunge_files_stat.stat.size != 0
 
-- name: Inform user if no failures have been found
+- name: Inform user if no failures have been found for {{ inventory_hostname }}
   tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
   ansible.builtin.debug:
     msg: No *.bad or xunit xml files were found
@@ -148,35 +162,21 @@
     - xunit_files.matched == 0
     - new_expunge_files_stat.stat.size == 0
 
-- name: Verify last-run kernel directory exists
-  tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  delegate_to: localhost
-  run_once: true
-  ansible.builtin.stat:
-    path: "{{ fstests_results_full_path }}/last-run/{{ last_kernel }}"
-  register: last_run_kernel_dir
-
-- name: Copy over the last-run summary into the results directory for kernel-named lookup
-  ansible.builtin.copy:
-    src: "{{ fstests_results_full_path }}/last-run/{{ last_kernel }}/"
-    dest: "{{ fstests_results_full_path }}/{{ last_kernel }}/"
-  run_once: true
-  tags: ["oscheck", "fstests", "copy_results", "augment_expunge_list"]
-  delegate_to: localhost
-  when:
-    - last_run_kernel_dir.stat.exists
-
-- name: Archive last-run under the kernel release
-  run_once: true
+# Long-term archive: tar.xz of the per-(VM, kernel) tree, sibling
+# of the extracted dir under the per-VM root. The extracted form
+# stays the canonical home the report reads from; the tarball is
+# the cheap-via-virtiofs backup useful for moving runs off the
+# controller (rsync, attach to email).
+- name: Archive {{ inventory_hostname }}/{{ last_kernel }} tree
   delegate_to: localhost
   ansible.builtin.command:
-    chdir: "{{ fstests_results_full_path }}"
+    chdir: "{{ fstests_results_full_path }}/{{ inventory_hostname }}"
     argv:
       - tar
       - --create
       - --xz
       - --file
       - "{{ last_kernel }}.tar.xz"
-      - "last-run"
+      - "{{ last_kernel }}"
   changed_when: true
   tags: ["oscheck", "fstests", "copy_results"]

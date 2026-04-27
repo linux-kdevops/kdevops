@@ -267,13 +267,46 @@ fstests-report:
 
 PHONY += fstests-results-clean
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
+# Phase B layout: workflows/fstests/results/<vm>/{<kernel>/,
+# last-run -> <kernel>, last-kernel.txt, <kernel>.tar.xz}.
+# The "live" run is the kernel <vm>/last-run resolves to and is the
+# directory virtiofsd is sharing into the guest right now — wiping
+# it would yank the mount source. Every other <kernel>/ subdir is
+# free to remove because virtiofsd doesn't hold them.
+#
+# Default behaviour: walk each <vm>/, remove every <kernel>/ dir
+# that is NOT the last-run symlink target. Keeps the live mount
+# source intact. Top-of-<vm> archives (<kernel>.tar.xz) are also
+# kept.
+#
+# KERNEL=<name> targets a single archived run for removal (rejected
+# if it matches the live one).
+# ALL=y also wipes the live kernel's contents — caller is expected
+# to have stopped the VM, otherwise virtiofsd will have stale fds.
 fstests-results-clean:
 	@echo "Cleaning workflows/fstests/results/ ..."
-	$(Q)rm -f workflows/fstests/results/*.tar.xz
-	$(Q)rm -f workflows/fstests/results/last-kernel.txt
-	$(Q)find workflows/fstests/results/last-run/ -mindepth 2 -delete 2>/dev/null || true
-	$(Q)find workflows/fstests/results/last-run/ -maxdepth 1 -type f -delete 2>/dev/null || true
-	@echo "Done. Per-VM directories under last-run/ preserved as virtiofs share sources."
+	$(Q)for vm_dir in workflows/fstests/results/*/; do \
+		[ -d "$$vm_dir" ] || continue; \
+		live=""; \
+		[ -L "$$vm_dir/last-run" ] && live=$$(readlink "$$vm_dir/last-run"); \
+		if [ -n "$(KERNEL)" ]; then \
+			target="$$vm_dir$(KERNEL)"; \
+			if [ "$$live" = "$(KERNEL)" ] && [ "$(ALL)" != "y" ]; then \
+				echo "  $$vm_dir: skipping $(KERNEL) (live mount source); pass ALL=y to override"; \
+			else \
+				rm -rf "$$target" "$$target.tar.xz" 2>/dev/null || true; \
+			fi; \
+		else \
+			for sub in "$$vm_dir"*/; do \
+				kname=$$(basename "$$sub"); \
+				[ "$$kname" = "$$live" ] && [ "$(ALL)" != "y" ] && continue; \
+				rm -rf "$$sub" 2>/dev/null || true; \
+			done; \
+			[ "$(ALL)" = "y" ] && rm -f "$$vm_dir"*.tar.xz "$$vm_dir/last-kernel.txt" "$$vm_dir/last-run" 2>/dev/null || true; \
+		fi; \
+	done
+	$(Q)rm -f workflows/fstests/results/fstests-report*.html
+	@echo "Done."
 else
 fstests-results-clean:
 	@echo "fstests-results-clean is qemu-system-units specific."

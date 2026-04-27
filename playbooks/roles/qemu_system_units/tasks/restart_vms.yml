@@ -7,6 +7,37 @@
 # on a running guest. The QEMU process is the kernel host: a
 # kernel change cannot be hot-activated, only re-execed. See
 # README.md.
+#
+# data-results and data-monitor virtiofsd services are restarted
+# alongside the VM because their env files (rendered by
+# imageless_build_per_vm.yml) carry a per-(VM, kernel) share
+# directory: workflows/fstests/results/<vm>/<kernel>/ for
+# data-results, .../monitoring/ for data-monitor. A new kernel
+# from linux-deploy points the env file at a new directory, but
+# the running virtiofsd has the old directory bound from its
+# previous start; without an explicit restart it would keep
+# writing into the old kernel's tree. Stopping virtiofsd here
+# forces socket-activated re-spawn on the next QEMU connection,
+# which reads the freshly-rendered env file and binds the new
+# share directory.
+#
+# qsu-xfs-crc-data-results.socket stays "listening" through the
+# stop/start cycle so qemu's connection on restart triggers the
+# socket-activated respawn cleanly.
+
+- name: Stop data-results and data-monitor virtiofsd services for re-bind
+  ansible.builtin.systemd_service:
+    name: "virtiofsd@{{ item.0 }}-{{ item.1 }}.service"
+    state: stopped
+    scope: user
+  loop: "{{ vms | product(virtiofsd_per_kernel_shares) | list }}"
+  loop_control:
+    label: "virtiofsd@{{ item.0 }}-{{ item.1 }}.service"
+  vars:
+    vms: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+    virtiofsd_per_kernel_shares:
+      - data-results
+      - data-monitor
 
 - name: Restart qemu-system@<vm> instances
   ansible.builtin.systemd_service:

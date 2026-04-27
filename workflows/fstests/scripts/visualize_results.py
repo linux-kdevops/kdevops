@@ -125,14 +125,28 @@ def _parse_iso(stamp: Optional[str]) -> Optional[datetime]:
         return None
 
 
-def _gather_run(last_run: Path) -> dict:
-    """Walk last_run/<vm>/<section>/result.xml and collect everything.
+def _gather_run(results_dir: Path) -> dict:
+    """Walk <results>/<vm>/last-run/<section>/result.xml.
+
+    The new (Phase B) layout puts each run under its kernel name
+    inside the per-VM directory, with a ``last-run`` symlink at
+    that VM's root pointing to the most recent kernel:
+
+        results_dir/qsu-xfs-crc/last-run -> 7.0.0-gABCDE
+        results_dir/qsu-xfs-crc/7.0.0-gABCDE/xfs_crc/result.xml
+
+    Walking ``<vm>/last-run/`` resolves the symlink so the gather
+    sees the most recent run for each VM; switching to a specific
+    kernel is just changing the symlink target (or pointing the
+    walker at ``<vm>/<kernel>/`` directly via the upcoming
+    ``--kernel`` flag).
 
     Returns a dict shaped like:
         {
             "kernel": "<from xunit KERNEL property>",
             "vms": {
                 "<vm>": {
+                    "kernel": "<from <vm>/last-kernel.txt>",
                     "sections": {
                         "<section>": {
                             "properties": {KEY: VAL, ...},
@@ -154,19 +168,38 @@ def _gather_run(last_run: Path) -> dict:
         "totals": {"pass": 0, "fail": 0, "skip": 0, "tests": 0},
     }
 
-    if not last_run.is_dir():
+    if not results_dir.is_dir():
         return run
 
-    for vm_dir in sorted(last_run.iterdir()):
+    for vm_dir in sorted(results_dir.iterdir()):
         if not vm_dir.is_dir():
             continue
-        # Skip kernel-named summary subdirs at this level.
-        if vm_dir.name and vm_dir.name[0].isdigit():
+        # Skip top-level files (last-kernel.txt at root, fstests-report*.html)
+        # and any non-VM-named entries. A real VM dir has a last-run symlink
+        # or at least one <kernel> subdir.
+        last_run_dir = vm_dir / "last-run"
+        if not last_run_dir.is_dir():
             continue
-        vm_data = run["vms"].setdefault(vm_dir.name, {"sections": {}})
 
-        for section_dir in sorted(vm_dir.iterdir()):
+        # Per-VM kernel record (from <vm>/last-kernel.txt) so the
+        # report can show which kernel each VM used.
+        per_vm_kernel = None
+        last_kernel_file = vm_dir / "last-kernel.txt"
+        if last_kernel_file.is_file():
+            per_vm_kernel = last_kernel_file.read_text().strip() or None
+
+        vm_data = run["vms"].setdefault(
+            vm_dir.name,
+            {"kernel": per_vm_kernel, "sections": {}},
+        )
+
+        for section_dir in sorted(last_run_dir.iterdir()):
             if not section_dir.is_dir():
+                continue
+            # The monitoring/ subdir is a sibling of the section dirs
+            # under <vm>/<kernel>/; skip it here, the monitoring
+            # adapter renders it separately.
+            if section_dir.name == "monitoring":
                 continue
             xml_path = section_dir / "result.xml"
             if not xml_path.is_file():
@@ -373,21 +406,45 @@ def _detail_section_html(run: dict) -> str:
 
 
 def _summary_text_section(results_dir: Path) -> Optional[str]:
-    """Embed last-run/<kernel>/xunit_results.txt if present."""
-    last_run = results_dir / "last-run"
-    for path in last_run.glob("*/xunit_results.txt"):
+    """Embed each VM's last-run xunit_results.txt if any are present.
+
+    The Phase 4d summary pipeline (now per-(VM, kernel)) writes
+    xunit_results.txt at <vm>/<kernel>/. For default-mode reports
+    this lives at <vm>/last-run/xunit_results.txt thanks to the
+    symlink. Concatenate all VMs' summaries with a small heading
+    per VM so a reviewer scanning the top of the report sees what
+    each profile produced.
+    """
+    chunks: list[str] = []
+    for vm_dir in sorted(results_dir.iterdir()):
+        if not vm_dir.is_dir():
+            continue
+        path = vm_dir / "last-run" / "xunit_results.txt"
+        if not path.is_file():
+            continue
         content = _read_capped(path)
-        if content:
-            return (
-                f'<pre style="background:#f7fafc;padding:14px;'
-                'border-radius:6px;overflow-x:auto;">'
-                f'{escape(content)}</pre>'
-            )
-    return None
+        if not content:
+            continue
+        chunks.append(
+            f'<h4>{escape(vm_dir.name)}</h4>'
+            f'<pre style="background:#f7fafc;padding:14px;'
+            'border-radius:6px;overflow-x:auto;">'
+            f'{escape(content)}</pre>'
+        )
+    return "\n".join(chunks) if chunks else None
+
+
+def _host_monitoring_dir(results_dir: Path, vm_name: str) -> Path:
+    """Per-VM monitoring directory for the most recent run.
+
+    Resolves <results>/<vm>/last-run/monitoring/ via the symlink
+    that the qsu role keeps pointing at the current kernel's run.
+    """
+    return results_dir / vm_name / "last-run" / "monitoring"
 
 
 def _build_test_timelines(
-    run: dict, monitoring_dir: Path,
+    run: dict, results_dir: Path,
 ) -> dict[str, list[tuple[str, float, float, str]]]:
     """Compute per-host test intervals aligned to the sysstat x-axis.
 
@@ -399,7 +456,7 @@ def _build_test_timelines(
     """
     timelines: dict[str, list[tuple[str, float, float, str]]] = {}
     for vm_name, vm in run["vms"].items():
-        host_dir = monitoring_dir / vm_name
+        host_dir = _host_monitoring_dir(results_dir, vm_name)
         first_sample = monitoring.first_sample_timestamp(host_dir)
         if first_sample is None:
             continue
@@ -439,10 +496,7 @@ def build_report(
     workflow under two different mkfs/mount setups by rendering one
     report per host).
     """
-    last_run = results_dir / "last-run"
-    monitoring_dir = results_dir / "monitoring"
-
-    run = _gather_run(last_run)
+    run = _gather_run(results_dir)
 
     if hosts:
         run["vms"] = {k: v for k, v in run["vms"].items() if k in hosts}
@@ -472,9 +526,13 @@ def build_report(
 
     report.add_section("Pass / fail by section", _pass_fail_chart_html(run))
 
-    test_timelines = _build_test_timelines(run, monitoring_dir)
+    test_timelines = _build_test_timelines(run, results_dir)
+    host_monitoring_dirs = {
+        vm_name: _host_monitoring_dir(results_dir, vm_name)
+        for vm_name in run["vms"].keys()
+    }
     monitoring_html = monitoring.render_section(
-        monitoring_dir,
+        host_monitoring_dirs,
         host_test_timelines=test_timelines,
         allowed_hosts=hosts,
     )
