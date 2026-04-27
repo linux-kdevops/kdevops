@@ -13,9 +13,9 @@
       - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}#toplevel"
       - --out-link
       - "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}/result"
-    creates: "{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ qsu_vm_name }}/result"
   environment:
     PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
 
 - name: Read bootspec from the built closure for {{ qsu_vm_name }}
   ansible.builtin.slurp:
