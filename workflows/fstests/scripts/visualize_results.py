@@ -292,6 +292,270 @@ def _stat_cards(report: html.Report, run: dict) -> None:
     report.add_card("Sections", str(section_count))
 
 
+# ---- A/B comparison ------------------------------------------------------
+
+
+def _compute_ab_diff(run_a: dict, run_b: dict) -> dict:
+    """Per-test status diff between two runs of the same workflow.
+
+    Returns:
+        {
+            "tests": [
+                {"vm", "section", "name", "a", "b", "kind"},
+                ...
+            ],   # only entries where a != b OR one side is missing
+            "summary": {
+                "regressions": int,    # pass on A, fail on B
+                "fixes": int,          # fail on A, pass on B
+                "new_skips": int,      # ran on A, skipped on B
+                "now_running": int,    # skipped on A, ran on B
+                "only_a": int,         # absent on B
+                "only_b": int,         # absent on A
+                "same": int,           # same outcome (count of unchanged)
+            },
+        }
+
+    The rendering layer turns ``summary`` into stat cards and
+    ``tests`` into a diff table at the top of the report.
+    """
+    summary = {
+        "regressions": 0, "fixes": 0,
+        "new_skips": 0, "now_running": 0,
+        "only_a": 0, "only_b": 0,
+        "same": 0,
+    }
+    diff_rows: list[dict] = []
+    all_vms = set(run_a["vms"]) | set(run_b["vms"])
+    for vm in sorted(all_vms):
+        sec_a = run_a["vms"].get(vm, {}).get("sections", {})
+        sec_b = run_b["vms"].get(vm, {}).get("sections", {})
+        all_sections = set(sec_a) | set(sec_b)
+        for section in sorted(all_sections):
+            tests_a = {t["name"]: t for t in sec_a.get(section, {}).get("tests", [])}
+            tests_b = {t["name"]: t for t in sec_b.get(section, {}).get("tests", [])}
+            all_names = set(tests_a) | set(tests_b)
+            for name in sorted(all_names):
+                ta = tests_a.get(name)
+                tb = tests_b.get(name)
+                a_status = ta["status"] if ta else None
+                b_status = tb["status"] if tb else None
+
+                if a_status is None:
+                    summary["only_b"] += 1
+                    kind = "only_b"
+                elif b_status is None:
+                    summary["only_a"] += 1
+                    kind = "only_a"
+                elif a_status == b_status:
+                    summary["same"] += 1
+                    continue  # don't list unchanged in the diff table
+                elif a_status == "pass" and b_status == "fail":
+                    summary["regressions"] += 1
+                    kind = "regression"
+                elif a_status == "fail" and b_status == "pass":
+                    summary["fixes"] += 1
+                    kind = "fix"
+                elif b_status == "skip" and a_status != "skip":
+                    summary["new_skips"] += 1
+                    kind = "new_skip"
+                elif a_status == "skip" and b_status != "skip":
+                    summary["now_running"] += 1
+                    kind = "now_running"
+                else:
+                    kind = "other"
+
+                diff_rows.append({
+                    "vm": vm, "section": section, "name": name,
+                    "a": a_status, "b": b_status, "kind": kind,
+                })
+    return {"tests": diff_rows, "summary": summary}
+
+
+def _ab_stat_cards(
+    report: html.Report,
+    run_a: dict,
+    run_b: dict,
+    kernels: list[str],
+    diff: dict,
+) -> None:
+    """Stat cards for A/B mode: per-kernel totals + diff highlights.
+
+    Highlights what a reviewer is most likely to need to know first:
+    regressions (pass→fail) get the failure colour; fixes (fail→pass)
+    are the positive signal; new_skips and tests only on one side
+    flag a coverage shift across the kernels rather than a
+    correctness shift.
+    """
+    s = diff["summary"]
+    report.add_card(f"A: {kernels[0]}", f"{run_a['totals']['tests']} tests")
+    report.add_card(f"B: {kernels[1]}", f"{run_b['totals']['tests']} tests")
+    report.add_card("Regressions (A→B)", str(s["regressions"]))
+    report.add_card("Fixes (A→B)", str(s["fixes"]))
+    report.add_card("New skips on B", str(s["new_skips"]))
+    report.add_card(
+        "Coverage diff",
+        f"only A: {s['only_a']} / only B: {s['only_b']}",
+    )
+
+
+def _ab_diff_section_html(diff: dict, kernels: list[str]) -> str:
+    """Top-of-report table listing every test where A and B disagree.
+
+    Sorted by ``kind`` (regressions first, then new_skips, then
+    fixes, then coverage shifts) so a reviewer reading top-down
+    sees the most attention-worthy outcomes first.
+    """
+    if not diff["tests"]:
+        return (
+            '<div class="no-data" style="padding:12px;">'
+            'No per-test outcome differences between '
+            f'<code>{escape(kernels[0])}</code> and '
+            f'<code>{escape(kernels[1])}</code>. Both kernels ran the '
+            'same set of tests with the same pass/fail/skip outcomes.'
+            '</div>'
+        )
+
+    kind_label = {
+        "regression": "regression",
+        "fix": "fix",
+        "new_skip": "new skip",
+        "now_running": "now running",
+        "only_a": "only on A",
+        "only_b": "only on B",
+        "other": "changed",
+    }
+    kind_class = {
+        "regression": "failure",
+        "fix": "success",
+        "new_skip": "",
+        "now_running": "success",
+        "only_a": "",
+        "only_b": "",
+        "other": "",
+    }
+    kind_order = {
+        "regression": 0, "new_skip": 1, "now_running": 2,
+        "fix": 3, "only_a": 4, "only_b": 5, "other": 6,
+    }
+    rows: list[str] = []
+    for entry in sorted(
+        diff["tests"],
+        key=lambda e: (kind_order.get(e["kind"], 9), e["vm"], e["section"], e["name"]),
+    ):
+        a = (entry["a"] or "—").upper()
+        b = (entry["b"] or "—").upper()
+        klass = kind_class.get(entry["kind"], "")
+        rows.append(
+            "<tr>"
+            f'<td><code>{escape(entry["vm"])}</code></td>'
+            f'<td><code>{escape(entry["section"])}</code></td>'
+            f'<td><code>{escape(entry["name"])}</code></td>'
+            f'<td>{escape(a)}</td>'
+            f'<td>{escape(b)}</td>'
+            f'<td class="{klass}">{escape(kind_label[entry["kind"]])}</td>'
+            "</tr>"
+        )
+    return (
+        "<table><thead><tr>"
+        "<th>VM</th><th>Section</th><th>Test</th>"
+        f"<th>A · {escape(kernels[0])}</th>"
+        f"<th>B · {escape(kernels[1])}</th>"
+        "<th>Change</th>"
+        "</tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+    )
+
+
+def _ab_section_block(
+    vm_name: str,
+    section: str,
+    sec_a: Optional[dict],
+    sec_b: Optional[dict],
+    kernels: list[str],
+) -> str:
+    """Per-(VM, section) detail block in A/B mode.
+
+    Tests table grows two status columns (A and B) with
+    classed cells highlighting regressions and fixes. Only tests
+    that exist on at least one side are listed; rows where both
+    sides match render in neutral styling so the eye is drawn to
+    the divergent ones.
+    """
+    parts: list[str] = []
+    parts.append(f'<h3>{escape(vm_name)} / {escape(section)}</h3>')
+
+    tests_a = {t["name"]: t for t in (sec_a or {}).get("tests", [])} if sec_a else {}
+    tests_b = {t["name"]: t for t in (sec_b or {}).get("tests", [])} if sec_b else {}
+    all_names = sorted(set(tests_a) | set(tests_b))
+
+    rows: list[str] = []
+    for name in all_names:
+        ta = tests_a.get(name)
+        tb = tests_b.get(name)
+        a_status = ta["status"] if ta else None
+        b_status = tb["status"] if tb else None
+        a_dur = f"{ta['duration']:.2f}s" if ta else "—"
+        b_dur = f"{tb['duration']:.2f}s" if tb else "—"
+        a_msg = ta["status_msg"] if ta else ""
+        b_msg = tb["status_msg"] if tb else ""
+
+        # Highlight regression on B's cell; fix on A's cell.
+        a_klass = "failure" if a_status == "fail" else (
+            "success" if a_status == "pass" else "")
+        b_klass = "failure" if b_status == "fail" else (
+            "success" if b_status == "pass" else "")
+        if a_status == "pass" and b_status == "fail":
+            b_klass = "failure"
+        elif a_status == "fail" and b_status == "pass":
+            a_klass = "failure"
+
+        a_label = (a_status.upper() if a_status else "—")
+        b_label = (b_status.upper() if b_status else "—")
+        rows.append(
+            "<tr>"
+            f"<td><code>{escape(name)}</code></td>"
+            f'<td class="{a_klass}">{escape(a_label)}</td>'
+            f"<td>{escape(a_dur)}</td>"
+            f'<td class="{b_klass}">{escape(b_label)}</td>'
+            f"<td>{escape(b_dur)}</td>"
+            f"<td>{escape(a_msg or b_msg)}</td>"
+            "</tr>"
+        )
+
+    parts.append("<h4>Tests</h4>")
+    parts.append(
+        "<table><thead><tr>"
+        "<th>Test</th>"
+        f"<th>A · {escape(kernels[0])}</th><th>A duration</th>"
+        f"<th>B · {escape(kernels[1])}</th><th>B duration</th>"
+        "<th>Reason</th>"
+        f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+    )
+    return "\n".join(parts)
+
+
+def _ab_detail_section_html(
+    run_a: dict, run_b: dict, kernels: list[str],
+    hosts: Optional[set[str]] = None,
+) -> str:
+    chunks: list[str] = []
+    all_vms = set(run_a["vms"]) | set(run_b["vms"])
+    if hosts:
+        all_vms &= hosts
+    for vm in sorted(all_vms):
+        sec_a = run_a["vms"].get(vm, {}).get("sections", {})
+        sec_b = run_b["vms"].get(vm, {}).get("sections", {})
+        all_sections = sorted(set(sec_a) | set(sec_b))
+        for section in all_sections:
+            chunks.append(_ab_section_block(
+                vm, section,
+                sec_a.get(section), sec_b.get(section),
+                kernels,
+            ))
+    return "\n".join(chunks) if chunks else (
+        '<div class="no-data">No sections found for the requested kernels</div>'
+    )
+
+
 def _pass_fail_chart_html(run: dict) -> str:
     labels: list[str] = []
     passed: list[int] = []
@@ -494,6 +758,56 @@ def _build_test_timelines(
     return timelines
 
 
+def build_ab_report(
+    results_dir: Path,
+    kernels: list[str],
+    hosts: Optional[set[str]] = None,
+) -> html.Report:
+    """Build an A/B comparison report between exactly two kernels.
+
+    Reads ``<vm>/<kernels[0]>/...`` as run A and
+    ``<vm>/<kernels[1]>/...`` as run B for every VM that has both
+    runs available. The top of the page surfaces the per-test diff
+    (regressions, fixes, new skips, coverage shifts) so a reviewer
+    sees what changed at-a-glance; below that, per-section detail
+    tables grow two status columns (A and B) with regressions on
+    B's column highlighted in the failure colour and fixes on A's
+    column likewise — the eye is drawn to the divergent rows.
+
+    Monitoring overlay (CPU/memory/run-queue/disk-I/O charts with
+    both kernels' lines on a shared axis) lands as a follow-on
+    commit; this commit covers the test-outcome side of the A/B
+    comparison.
+    """
+    run_a = _gather_run(results_dir, kernel=kernels[0])
+    run_b = _gather_run(results_dir, kernel=kernels[1])
+    if hosts:
+        run_a["vms"] = {k: v for k, v in run_a["vms"].items() if k in hosts}
+        run_b["vms"] = {k: v for k, v in run_b["vms"].items() if k in hosts}
+
+    diff = _compute_ab_diff(run_a, run_b)
+
+    title_bits = [f"{kernels[0]} vs {kernels[1]}"]
+    if hosts:
+        title_bits.append(", ".join(sorted(hosts)))
+    report = html.Report(
+        title=f"fstests A/B Report — {' / '.join(title_bits)}",
+        timestamp=datetime.now(),
+    )
+    _ab_stat_cards(report, run_a, run_b, kernels, diff)
+
+    report.add_section(
+        f"A/B summary — {kernels[0]} vs {kernels[1]}",
+        _ab_diff_section_html(diff, kernels),
+    )
+
+    report.add_section(
+        "Per-section detail",
+        _ab_detail_section_html(run_a, run_b, kernels, hosts=hosts),
+    )
+    return report
+
+
 def build_report(
     results_dir: Path,
     hosts: Optional[set[str]] = None,
@@ -598,13 +912,15 @@ def main() -> int:
     parser.add_argument(
         "--kernel",
         default=None,
-        metavar="KERNEL",
+        metavar="KERNEL[,KERNEL]",
         help=(
             "Render the run archived under <vm>/<KERNEL>/ instead "
-            "of following each VM's last-run symlink. Useful for "
-            "regenerating a report against an older run without "
-            "changing what last-run points at. VMs that don't have "
-            "the named kernel directory are silently skipped."
+            "of following each VM's last-run symlink. Pass two "
+            "comma-separated kernels (KERNEL_A,KERNEL_B) to render "
+            "an A/B comparison report — regressions and fixes "
+            "land at the top, per-section tables grow A/B status "
+            "columns. VMs that don't have all requested kernel "
+            "directories are silently skipped."
         ),
     )
     args = parser.parse_args()
@@ -624,12 +940,41 @@ def main() -> int:
             if h:
                 hosts.add(h)
 
-    report = build_report(
-        results_dir, hosts=hosts or None, kernel=args.kernel,
-    )
-    suffix_parts: list[str] = []
+    # --kernel accepts the same comma-separated form. One kernel
+    # picks an archived single run; two kernels switch the report
+    # to A/B mode; >2 is rejected because the diff/overlay model
+    # is built around a 2-way comparison and a richer matrix view
+    # would be a separate design.
+    kernels: list[str] = []
     if args.kernel:
-        suffix_parts.append(args.kernel)
+        for k in args.kernel.split(","):
+            k = k.strip()
+            if k:
+                kernels.append(k)
+    if len(kernels) > 2:
+        print(
+            f"--kernel takes at most 2 values for A/B mode, got {len(kernels)}: "
+            + ", ".join(kernels),
+            file=sys.stderr,
+        )
+        return 1
+
+    if len(kernels) == 2:
+        report = build_ab_report(
+            results_dir, kernels=kernels, hosts=hosts or None,
+        )
+    else:
+        report = build_report(
+            results_dir,
+            hosts=hosts or None,
+            kernel=kernels[0] if kernels else None,
+        )
+
+    suffix_parts: list[str] = []
+    if len(kernels) == 2:
+        suffix_parts.append(f"{kernels[0]}-vs-{kernels[1]}")
+    elif kernels:
+        suffix_parts.append(kernels[0])
     if hosts:
         suffix_parts.append("_".join(sorted(hosts)))
     suffix = ("-" + "-".join(suffix_parts)) if suffix_parts else ""
