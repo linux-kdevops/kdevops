@@ -424,14 +424,44 @@ def _build_test_timelines(
     return timelines
 
 
-def build_report(results_dir: Path) -> html.Report:
+def build_report(
+    results_dir: Path,
+    hosts: Optional[set[str]] = None,
+) -> html.Report:
+    """Build an HTML report from the fstests results tree.
+
+    ``hosts`` is an optional whitelist of host (VM) names. When set,
+    only those hosts are rendered — the per-section detail tables,
+    the pass/fail chart, the system-monitoring host blocks, and the
+    aggregate totals at the top of the page all narrow down to the
+    selected set. Useful when several profiles share a results tree
+    and a reviewer only cares about one (e.g. comparing the same
+    workflow under two different mkfs/mount setups by rendering one
+    report per host).
+    """
     last_run = results_dir / "last-run"
     monitoring_dir = results_dir / "monitoring"
 
     run = _gather_run(last_run)
 
+    if hosts:
+        run["vms"] = {k: v for k, v in run["vms"].items() if k in hosts}
+        # Recompute run-wide totals from the filtered set so the
+        # stat cards at the top reflect what the report actually
+        # shows, not the unfiltered baseline.
+        totals = {"pass": 0, "fail": 0, "skip": 0, "tests": 0}
+        for vm in run["vms"].values():
+            for sec in vm["sections"].values():
+                for k, v in sec["totals"].items():
+                    totals[k] += v
+                totals["tests"] += sum(sec["totals"].values())
+        run["totals"] = totals
+
+    report_title = "fstests Run Report"
+    if hosts:
+        report_title += f" — {', '.join(sorted(hosts))}"
     report = html.Report(
-        title="fstests Run Report",
+        title=report_title,
         timestamp=datetime.now(),
     )
     _stat_cards(report, run)
@@ -446,6 +476,7 @@ def build_report(results_dir: Path) -> html.Report:
     monitoring_html = monitoring.render_section(
         monitoring_dir,
         host_test_timelines=test_timelines,
+        allowed_hosts=hosts,
     )
     if monitoring_html:
         report.add_section("System monitoring", monitoring_html)
@@ -468,6 +499,17 @@ def main() -> int:
         default=None,
         help="Output HTML path (default: <results_dir>/fstests-report.html)",
     )
+    parser.add_argument(
+        "--host",
+        action="append",
+        default=[],
+        metavar="HOST",
+        help=(
+            "Restrict the report to one host (VM) name; repeat the "
+            "flag or pass a comma-separated list to include several. "
+            "When unset all hosts under last-run/ are rendered."
+        ),
+    )
     args = parser.parse_args()
 
     results_dir = Path(args.results_dir).resolve()
@@ -475,8 +517,22 @@ def main() -> int:
         print(f"results_dir not found: {results_dir}", file=sys.stderr)
         return 1
 
-    report = build_report(results_dir)
-    out_path = Path(args.output) if args.output else (results_dir / "fstests-report.html")
+    # Accept "--host a,b" as a shortcut for "--host a --host b" so a
+    # caller can pass a single argv entry (Makefile-friendly) and the
+    # flag still feels natural when written by hand.
+    hosts: set[str] = set()
+    for raw in args.host:
+        for h in raw.split(","):
+            h = h.strip()
+            if h:
+                hosts.add(h)
+
+    report = build_report(results_dir, hosts=hosts or None)
+    suffix = "-" + "_".join(sorted(hosts)) if hosts else ""
+    out_path = (
+        Path(args.output) if args.output
+        else (results_dir / f"fstests-report{suffix}.html")
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html.render(report))
 

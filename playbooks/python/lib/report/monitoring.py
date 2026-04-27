@@ -60,10 +60,14 @@ _BLOCKDEV_ABI_SURFACES = {
     },
     "sysfs-class-nvme": {
         "path": "/sys/class/nvme/<ctrl>/",
-        "doc": (
-            "https://www.kernel.org/doc/Documentation/ABI/stable/"
-            "sysfs-class-nvme"
-        ),
+        # /sys/class/nvme/<ctrl>/* is not covered by anything under
+        # Documentation/ABI/{stable,testing}/. The attrs (model,
+        # serial, firmware_rev, transport, ...) are documented only
+        # in driver code (drivers/nvme/host/), so there is no stable
+        # URL to link to and a constructed sysfs-class-nvme link
+        # would 404. Keep the surface heading (it matches the
+        # sysfs-class-<bus> naming convention) but skip the doc link.
+        "doc": None,
     },
 }
 
@@ -409,9 +413,12 @@ def _blockdev_surface(abi_name: str, devices: dict[str, dict]) -> str:
     head += '</h5>'
     parts.append(head)
 
+    # All blocks default closed — a 50-attr Common table on every
+    # host pushes the rest of the report off-screen. The headings
+    # alone are enough to scan; expanding is one click away.
     if common:
         parts.append(
-            '<details open><summary><strong>Common</strong> '
+            '<details><summary><strong>Common</strong> '
             f'<span style="color:#718096;font-weight:normal;">'
             f'(identical across all {n} device(s) in this surface)'
             '</span></summary>'
@@ -420,7 +427,7 @@ def _blockdev_surface(abi_name: str, devices: dict[str, dict]) -> str:
         parts.append('</details>')
     if differing:
         parts.append(
-            '<details open><summary><strong>Differing</strong> '
+            '<details><summary><strong>Differing</strong> '
             f'<span style="color:#718096;font-weight:normal;">'
             f'({len(differing)} attribute(s) vary across devices)'
             '</span></summary>'
@@ -573,6 +580,7 @@ def render_section(
     host_test_timelines: Optional[
         dict[str, list[tuple[str, float, float, str]]]
     ] = None,
+    allowed_hosts: Optional[set[str]] = None,
 ) -> Optional[str]:
     """Render the whole monitoring section (per-host blocks). None if empty.
 
@@ -580,6 +588,11 @@ def render_section(
     test-interval tuples. Adapters that know the workflow's test
     schedule (e.g. fstests parsing the xunit XML) build this and pass
     it in so each per-host block gets a matching timeline chart.
+
+    ``allowed_hosts`` is an optional whitelist; when set, host
+    subdirectories whose name is not in the set are skipped so the
+    monitoring section narrows down to the same hosts the rest of
+    the report renders for.
     """
     if not has_data(monitoring_dir):
         return None
@@ -587,6 +600,8 @@ def render_section(
     chunks: list[str] = []
     for host_dir in sorted(monitoring_dir.iterdir()):
         if not host_dir.is_dir():
+            continue
+        if allowed_hosts is not None and host_dir.name not in allowed_hosts:
             continue
         host_block = render_host_section(
             host_dir,

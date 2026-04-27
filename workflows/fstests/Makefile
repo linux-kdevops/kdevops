@@ -256,9 +256,14 @@ fstests-show-results:
 		| sed '$${/^$$/d;}'
 
 PHONY += fstests-report
+# Pass HOST=<vm> (or HOST="vm1,vm2") to narrow the report to one or
+# more hosts; default renders every host under last-run/. The output
+# filename gets a -<host> suffix when filtered so multiple per-host
+# reports can sit side-by-side without overwriting each other.
 fstests-report:
 	$(Q)python3 workflows/fstests/scripts/visualize_results.py \
-		workflows/fstests/results
+		workflows/fstests/results \
+		$(if $(HOST),--host $(HOST))
 
 PHONY += fstests-results-clean
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
