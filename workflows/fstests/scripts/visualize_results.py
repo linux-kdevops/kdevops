@@ -530,6 +530,50 @@ def _ab_section_block(
         "<th>Reason</th>"
         f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
     )
+
+    # Failure detail: any test that failed on at least one kernel.
+    # Show per-kernel .out.bad/.full/.dmesg artefacts side-by-side
+    # so a reviewer triaging an A/B regression sees both runs'
+    # diagnostics in the same block — including the case where A
+    # failed and B passed (the "fix" case), which is useful for
+    # the flaky-test diagnosis the user asked for.
+    failure_names = sorted([
+        n for n in all_names
+        if (tests_a.get(n, {}).get("status") == "fail")
+        or (tests_b.get(n, {}).get("status") == "fail")
+    ])
+    if failure_names:
+        parts.append("<h4>Failure detail</h4>")
+        for name in failure_names:
+            ta = tests_a.get(name)
+            tb = tests_b.get(name)
+            a_status = (ta["status"].upper() if ta else "—")
+            b_status = (tb["status"].upper() if tb else "—")
+            parts.append(
+                f'<details open><summary><strong class="failure">'
+                f'{escape(name)}</strong> — '
+                f'A · <code>{escape(a_status)}</code> · '
+                f'B · <code>{escape(b_status)}</code>'
+                '</summary>'
+            )
+            for label_kernel, t in (
+                (f"A · {kernels[0]}", ta),
+                (f"B · {kernels[1]}", tb),
+            ):
+                if not t or t["status"] != "fail":
+                    continue
+                parts.append(
+                    f'<h5 style="margin:8px 0 4px 0;">{escape(label_kernel)} '
+                    f'<span style="color:#718096;font-weight:normal;">— '
+                    f'{escape(t["status_msg"])}</span></h5>'
+                )
+                parts.append(_format_log_block(
+                    ".out.bad (diff)", t["out_bad"], ".out.bad"))
+                parts.append(_format_log_block(
+                    ".full (test execution log)", t["full"], ".full"))
+                parts.append(_format_log_block(
+                    ".dmesg (kernel messages)", t["dmesg"], ".dmesg"))
+            parts.append("</details>")
     return "\n".join(parts)
 
 
