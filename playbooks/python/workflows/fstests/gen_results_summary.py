@@ -18,7 +18,7 @@ import os
 import sys
 import time
 from datetime import datetime
-from junitparser import JUnitXml, Property, Properties, Failure, Error, Skipped
+from junitparser import JUnitXml, TestSuite, Property, Properties, Failure, Error, Skipped
 
 
 def get_results(dirroot, results_file):
@@ -257,7 +257,11 @@ def gen_results_summary(
     out_f = sys.stdout
 
     for filename in get_results(results_dir, results_file):
-        reports.append(JUnitXml.fromfile(filename))
+        parsed = JUnitXml.fromfile(filename)
+        if isinstance(parsed, TestSuite):
+            reports.append(parsed)
+        else:
+            reports.extend(parsed)
 
     if len(reports) == 0:
         return 0
