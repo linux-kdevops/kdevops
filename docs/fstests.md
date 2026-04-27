@@ -82,23 +82,18 @@ flags. Top-level `Makefile:110` exports `LIMIT_TESTS` from `TESTS=`;
 | Knob | Example | Effect | Backend support |
 | --- | --- | --- | --- |
 | `TESTS=` | `make fstests-baseline TESTS="generic/531 xfs/008 xfs/013"` | Forwarded as positional args to xfstests `./check`. Skips the in-tree expunge list, so listed tests run even if they are known to crash for a section. | libvirt + qsu |
-| `START_AFTER=` | `make fstests-baseline START_AFTER=generic/451` | Adds `--start-after generic/451` to oscheck.sh; xfstests skips every test until *after* the named one. Assumes the run is not in random order. Implementation: `playbooks/roles/fstests/tasks/run.yml:185`. | libvirt only |
-| `SKIP_TESTS=` | `make fstests-baseline SKIP_TESTS="generic/042 generic/091"` | Adds `-e <list>` to oscheck.sh's CHECK_ARGS so `./check -e ...` excludes those tests. Implementation: `playbooks/roles/fstests/tasks/run.yml:192`. | libvirt only |
+| `START_AFTER=` | `make fstests-baseline START_AFTER=generic/451` | Adds `--start-after generic/451` to oscheck.sh; xfstests skips every test until *after* the named one. Assumes the run is not in random order. Implementation: `playbooks/roles/fstests/tasks/run.yml:185` (libvirt), `run-qsu.yml` (qsu). | libvirt + qsu |
+| `SKIP_TESTS=` | `make fstests-baseline SKIP_TESTS="generic/042 generic/091"` | Adds `-e <list>` to oscheck.sh's CHECK_ARGS so `./check -e ...` excludes those tests. Implementation: `playbooks/roles/fstests/tasks/run.yml:192` (libvirt), `run-qsu.yml` (qsu). | libvirt + qsu |
 | `RUN_FAILURES=` | `make fstests-baseline RUN_FAILURES=1` | Replaces the test list with the output of `oscheck-get-failures.sh`, so only tests that failed in the previous run are re-executed. Implementation: `playbooks/roles/fstests/tasks/run.yml:332-362`. | libvirt only |
 | `INITIAL_BASELINE=` | `make fstests-baseline INITIAL_BASELINE=1` | Walks the prior run's `check.time` files and builds expunge args so already-passed tests are skipped from a fresh baseline. Implementation: `playbooks/roles/fstests/tasks/run.yml:170-180`. | libvirt only |
 | `COUNT=` | `make fstests-baseline COUNT=5` | Sets `oscheck_extra_args="-I 5"`. xfstests' `-I N` runs every selected test N times, useful for flake hunts. | libvirt + qsu |
-| `SKIP_RUN=` | `make fstests-baseline SKIP_RUN=1 TESTS="generic/001"` | After resolving `LIMIT_TESTS` the role calls `meta: end_play` instead of running. Lets you confirm what would be run without spending the time. Implementation: `playbooks/roles/fstests/tasks/run.yml` (search `fstests_skip_run`). | libvirt only |
+| `SKIP_RUN=` | `make fstests-baseline SKIP_RUN=1 TESTS="generic/001"` | After resolving `LIMIT_TESTS` the role calls `meta: end_play` instead of running. Lets you confirm what would be run without spending the time. Implementation: `playbooks/roles/fstests/tasks/run.yml` (search `fstests_skip_run`) and `run-qsu.yml`. | libvirt + qsu |
 
-The qsu split fork (`run-qsu.yml`, `results-qsu.yml`) consumes
-`fstests_initial_baseline_args` and `fstests_skip_tests_args` but does
-not set them — those facts are produced exclusively by `run.yml` tasks
-that the qsu path skips. As a result the qsu backend currently only
-honours `TESTS=` and `COUNT=` end to end. `START_AFTER`, `SKIP_TESTS`,
-`RUN_FAILURES`, `INITIAL_BASELINE`, and `SKIP_RUN` are accepted on the
-make command line and propagated through `FSTESTS_DYNAMIC_RUNTIME_VARS`
-but produce no behavioural change on qsu. Treat that as a known gap
-when running on qsu; on libvirt all seven knobs work as the table
-describes.
+`RUN_FAILURES=` and `INITIAL_BASELINE=` still trigger only on libvirt.
+The qsu side would need oscheck-get-failures.sh in the guest
+(currently absent from the kdevops-fstests virtiofs share's PATH) and
+qsu-aware paths to walk prior `check.time` files; left as a known gap
+with a clearly different shape from a simple set_fact port.
 
 ## Test ranges with `TESTS=`
 

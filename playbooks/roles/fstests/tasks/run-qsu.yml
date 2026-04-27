@@ -39,6 +39,36 @@
       }}
   tags: ["oscheck", "fstests", "run_tests"]
 
+# Build the args string oscheck.sh appends to ./check on START_AFTER=.
+# Mirrors playbooks/roles/fstests/tasks/run.yml:185 so kdevops users
+# get the same behaviour on qsu.
+- name: Build --start-after arg from START_AFTER=
+  ansible.builtin.set_fact:
+    fstests_initial_baseline_args: "--start-after {{ fstests_start_after_test }}"
+  when:
+    - fstests_start_after | default(false) | bool
+    - fstests_start_after_test | default('') | length > 0
+  tags: ["oscheck", "fstests", "run_tests"]
+
+# Build the args string oscheck.sh appends to ./check on SKIP_TESTS=.
+# Mirrors playbooks/roles/fstests/tasks/run.yml:192.
+- name: Build -e arg from SKIP_TESTS=
+  ansible.builtin.set_fact:
+    fstests_skip_tests_args: "-e {{ fstests_skip_tests }}"
+  when:
+    - fstests_skip_tests_enable | default(false) | bool
+    - fstests_skip_tests | default('') | length > 0
+  tags: ["oscheck", "fstests", "run_tests"]
+
+# SKIP_RUN= halts after the args resolution so a user can see what
+# would have been run without spending the time. Same end_play
+# meta task as the libvirt path at run.yml:375-379.
+- name: Stop early when SKIP_RUN= is set
+  ansible.builtin.meta: end_play
+  when:
+    - fstests_skip_run | default(false) | bool
+  tags: ["oscheck", "fstests", "run_tests"]
+
 # Start monitoring services on the guest right before oscheck.sh
 # kicks off so the time series brackets the actual test workload
 # rather than the surrounding ansible setup. Mirrors what the
