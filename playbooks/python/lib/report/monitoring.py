@@ -97,7 +97,13 @@ def first_sample_timestamp(host_dir: Path) -> Optional[datetime]:
         return None
 
 
-def _cpu_load_chart(host: str, samples: list[dict]) -> Optional[bytes]:
+def _cpu_load_chart(
+    host: str,
+    samples: list[dict],
+    *,
+    test_intervals=None,
+    chart_xlim=None,
+) -> Optional[bytes]:
     """%user, %system, %iowait, %idle over time for the 'all' CPU."""
     xs = _sample_index(samples)
     series: dict[str, list[tuple[float, float]]] = {
@@ -114,10 +120,18 @@ def _cpu_load_chart(host: str, samples: list[dict]) -> Optional[bytes]:
         title=f"CPU usage — {host}",
         xlabel="Seconds since start",
         ylabel="% of CPU time",
+        test_intervals=test_intervals,
+        chart_xlim=chart_xlim,
     )
 
 
-def _memory_chart(host: str, samples: list[dict]) -> Optional[bytes]:
+def _memory_chart(
+    host: str,
+    samples: list[dict],
+    *,
+    test_intervals=None,
+    chart_xlim=None,
+) -> Optional[bytes]:
     """kbmemused / kbcached / kbavail over time."""
     xs = _sample_index(samples)
     series: dict[str, list[tuple[float, float]]] = {
@@ -139,10 +153,18 @@ def _memory_chart(host: str, samples: list[dict]) -> Optional[bytes]:
         title=f"Memory — {host}",
         xlabel="Seconds since start",
         ylabel="MiB",
+        test_intervals=test_intervals,
+        chart_xlim=chart_xlim,
     )
 
 
-def _runqueue_chart(host: str, samples: list[dict]) -> Optional[bytes]:
+def _runqueue_chart(
+    host: str,
+    samples: list[dict],
+    *,
+    test_intervals=None,
+    chart_xlim=None,
+) -> Optional[bytes]:
     """Run queue length and load averages."""
     xs = _sample_index(samples)
     series: dict[str, list[tuple[float, float]]] = {
@@ -160,10 +182,18 @@ def _runqueue_chart(host: str, samples: list[dict]) -> Optional[bytes]:
         title=f"Run queue + load — {host}",
         xlabel="Seconds since start",
         ylabel="Tasks / load avg",
+        test_intervals=test_intervals,
+        chart_xlim=chart_xlim,
     )
 
 
-def _disk_io_chart(host: str, samples: list[dict]) -> Optional[bytes]:
+def _disk_io_chart(
+    host: str,
+    samples: list[dict],
+    *,
+    test_intervals=None,
+    chart_xlim=None,
+) -> Optional[bytes]:
     """Aggregate kB read/written per second across all disks."""
     xs = _sample_index(samples)
     series: dict[str, list[tuple[float, float]]] = {"read": [], "written": []}
@@ -180,6 +210,8 @@ def _disk_io_chart(host: str, samples: list[dict]) -> Optional[bytes]:
         title=f"Disk I/O (aggregate) — {host}",
         xlabel="Seconds since start",
         ylabel="kB/s",
+        test_intervals=test_intervals,
+        chart_xlim=chart_xlim,
     )
 
 
@@ -239,7 +271,11 @@ def render_host_section(
             (_runqueue_chart, "Run queue + load average"),
             (_disk_io_chart, "Disk I/O"),
         ):
-            png = plot_fn(host, samples)
+            png = plot_fn(
+                host, samples,
+                test_intervals=test_timeline,
+                chart_xlim=xlim,
+            )
             body_parts.append(f"<h4>{escape(label)}</h4>")
             body_parts.append(html.chart_block(
                 html.embed_png(png) if png else None,
