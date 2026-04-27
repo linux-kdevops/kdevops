@@ -11,6 +11,9 @@ nixos-qemu monitoring module:
     ├── cpu_governor/
     │   ├── start.json
     │   └── end.json
+    ├── blockdev/
+    │   ├── start.json           (sysfs-block + sysfs-class-nvme @ workflow start)
+    │   └── end.json             (same surfaces @ workflow end)
     ├── nvme_ocp_smart/
     │   └── nvme_ocp_smart_<dev>_stats.txt
     ├── folio_migration/
@@ -28,12 +31,41 @@ already ship per-monitor PNGs are simply embedded as-is.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Optional
 
 from . import charts, data, html
+
+
+# Mapping from kernel ABI document name (the top-level key the
+# monitor-blockdev collector emits) to the canonical sysfs path that
+# document covers and the URL of the document itself. Adding a new
+# surface to the collector only requires extending this dict — the
+# renderer iterates whatever keys are present in the JSON. Keeping
+# the path here (rather than embedding it in the JSON) means the
+# label and the kernel ABI document name always agree, which was a
+# specific reviewer ask: don't display "sysfs-class-nvme" next to
+# "/sys/class/block/<dev>/device/" since the doc covers a different
+# canonical path.
+_BLOCKDEV_ABI_SURFACES = {
+    "sysfs-block": {
+        "path": "/sys/class/block/<dev>/",
+        "doc": (
+            "https://www.kernel.org/doc/Documentation/ABI/stable/"
+            "sysfs-block"
+        ),
+    },
+    "sysfs-class-nvme": {
+        "path": "/sys/class/nvme/<ctrl>/",
+        "doc": (
+            "https://www.kernel.org/doc/Documentation/ABI/stable/"
+            "sysfs-class-nvme"
+        ),
+    },
+}
 
 
 def has_data(monitoring_dir: Path) -> bool:
@@ -215,6 +247,233 @@ def _disk_io_chart(
     )
 
 
+def _load_blockdev(host_dir: Path) -> dict:
+    """Read the workflow-start blockdev snapshot for one host.
+
+    monitor-blockdev writes both start.json and end.json. The report
+    cares about the configuration the workload ran *against*, so read
+    start.json and ignore end.json (its only purpose right now is
+    drift detection for cpu_governor-style "did anything change
+    mid-run" follow-ups; left as a future enhancement).
+    """
+    p = host_dir / "blockdev" / "start.json"
+    if not p.is_file():
+        return {}
+    try:
+        return json.loads(p.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _blockdev_flatten(dev: dict, prefix: str = "") -> dict[str, str]:
+    """Flatten a single device record into ``{full/path: value}``.
+
+    Subdirectories (queue/, device/, ...) become path-prefixed keys
+    (``queue/scheduler``) so the diff/common logic works on a flat
+    namespace and the rendered tables show the full sysfs-relative
+    name of each attribute.
+    """
+    out: dict[str, str] = {}
+    for k, v in dev.items():
+        if isinstance(v, str):
+            out[f"{prefix}{k}" if prefix else k] = v
+        elif isinstance(v, dict):
+            out.update(_blockdev_flatten(v, f"{prefix}{k}/"))
+    return out
+
+
+def _blockdev_split(devices: dict[str, dict]) -> tuple[dict, dict]:
+    """Partition flattened attributes into common-vs-differing.
+
+    A key is *common* only when every device reported it (so a missing
+    file on one device cannot silently inherit another device's value)
+    AND the reported byte-for-byte string is identical across every
+    device (the collector strips trailing whitespace once and we do
+    not normalise further, so a real ABI-level disagreement is never
+    masked). Anything failing either condition lands in *differing*.
+    """
+    n = len(devices)
+    by_key: dict[str, list[tuple[str, str]]] = {}
+    for dev_name, dev in devices.items():
+        for k, v in _blockdev_flatten(dev).items():
+            by_key.setdefault(k, []).append((dev_name, v))
+    common: dict[str, str] = {}
+    differing: dict[str, dict[str, str]] = {}
+    for key, observations in by_key.items():
+        if len(observations) == n and len({v for _, v in observations}) == 1:
+            common[key] = observations[0][1]
+        else:
+            differing[key] = {d: v for d, v in observations}
+    return common, differing
+
+
+def _blockdev_attr_table(attrs: dict[str, str]) -> str:
+    rows = "".join(
+        f'<tr><td><code>{escape(k)}</code></td>'
+        f'<td><code>{escape(v)}</code></td></tr>'
+        for k, v in sorted(attrs.items())
+    )
+    return (
+        '<table><thead><tr><th>Attribute</th><th>Value</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+    )
+
+
+def _blockdev_pivot_table(
+    differing: dict[str, dict[str, str]],
+    devices: list[str],
+) -> str:
+    """Pivot table — rows=attribute, cols=device, cells=value.
+
+    A "—" cell means the device did not report the attribute at all
+    (file missing or unreadable). That is a deliberately distinct
+    visual signal from a real differing value, so a reader can tell
+    "it varies" apart from "it's only present on some devices".
+    """
+    head_cells = "".join(f"<th>{escape(d)}</th>" for d in devices)
+    rows: list[str] = []
+    for key in sorted(differing):
+        per_dev = differing[key]
+        cells = []
+        for d in devices:
+            v = per_dev.get(d)
+            cells.append(
+                f'<td><code>{escape(v)}</code></td>' if v is not None
+                else '<td class="no-data">—</td>'
+            )
+        rows.append(
+            f'<tr><td><code>{escape(key)}</code></td>{"".join(cells)}</tr>'
+        )
+    return (
+        f'<table><thead><tr><th>Attribute</th>{head_cells}</tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table>'
+    )
+
+
+def _blockdev_device_summary(
+    name: str,
+    flat: dict[str, str],
+    differing: dict[str, dict[str, str]],
+) -> str:
+    """Reality-grounded one-line summary for a per-device <details>.
+
+    Lists the attributes that differ across the device set with the
+    value this device actually reported, so the summary is grounded
+    in real data rather than an editorial pick.
+
+    Multi-line attributes (``uevent``, ``stat`` etc.) and long
+    runtime counters are filtered out of the summary because they
+    make the one-liner unreadable; they still show up in full
+    inside the per-device table below. The cap of six short attrs
+    keeps the summary scannable on hosts where many things differ
+    (every NVMe namespace has its own dev/diskseq/wwid).
+    """
+    MAX_ATTRS = 6
+    MAX_VALUE_CHARS = 48
+    bits = [name]
+    for k in sorted(differing):
+        v = flat.get(k)
+        if v is None or "\n" in v or len(v) > MAX_VALUE_CHARS:
+            continue
+        bits.append(f"{k}={v}")
+        if len(bits) >= MAX_ATTRS + 1:  # +1 for the device name
+            bits.append("…")
+            break
+    return escape(" — ".join(bits))
+
+
+def _blockdev_surface(abi_name: str, devices: dict[str, dict]) -> str:
+    """Render one ABI-document worth of devices as Common+Differing+per-device."""
+    if not devices:
+        return ""
+    surface = _BLOCKDEV_ABI_SURFACES.get(abi_name) or {
+        "path": "(unknown surface)",
+        "doc": None,
+    }
+    common, differing = _blockdev_split(devices)
+    device_names = sorted(devices.keys())
+    n = len(device_names)
+
+    parts: list[str] = []
+    head = (
+        f'<h5><code>{escape(abi_name)}</code> '
+        f'<code style="font-weight:normal;color:#4a5568;">'
+        f'{escape(surface["path"])}</code>'
+    )
+    if surface.get("doc"):
+        head += (
+            f' <a class="ext-link" href="{surface["doc"]}" '
+            f'target="_blank" rel="noopener" '
+            f'style="font-size:0.85em;">[kernel ABI]</a>'
+        )
+    head += '</h5>'
+    parts.append(head)
+
+    if common:
+        parts.append(
+            '<details open><summary><strong>Common</strong> '
+            f'<span style="color:#718096;font-weight:normal;">'
+            f'(identical across all {n} device(s) in this surface)'
+            '</span></summary>'
+        )
+        parts.append(_blockdev_attr_table(common))
+        parts.append('</details>')
+    if differing:
+        parts.append(
+            '<details open><summary><strong>Differing</strong> '
+            f'<span style="color:#718096;font-weight:normal;">'
+            f'({len(differing)} attribute(s) vary across devices)'
+            '</span></summary>'
+        )
+        parts.append(_blockdev_pivot_table(differing, device_names))
+        parts.append('</details>')
+
+    # Per-device drill-down. Summary line shows the differing
+    # values for this specific device (so a reader scanning the
+    # collapsed list immediately sees what makes each one unique).
+    # The body shows the *full* flattened attribute set for that
+    # device, useful when troubleshooting a single device against
+    # the kernel ABI document linked above.
+    for dev_name in device_names:
+        flat = _blockdev_flatten(devices[dev_name])
+        summary = _blockdev_device_summary(dev_name, flat, differing)
+        parts.append(f'<details><summary>{summary}</summary>')
+        parts.append(_blockdev_attr_table(flat))
+        parts.append('</details>')
+    return "\n".join(parts)
+
+
+def render_blockdev_section(host_dir: Path) -> Optional[str]:
+    """Render this host's monitor-blockdev snapshot, or None if absent.
+
+    Returns one sub-section per ABI surface present in the JSON,
+    grouped by the kernel ABI document that defines its attributes.
+    The collector auto-discovers files under each surface, so kernel
+    additions show up without renderer changes.
+    """
+    data = _load_blockdev(host_dir)
+    if not data:
+        return None
+    parts: list[str] = []
+    parts.append(
+        '<p style="margin:4px 0 8px 0;color:#4a5568;font-size:0.9em;">'
+        'Snapshot taken when the workload started, grouped by the '
+        'kernel ABI surface that defines each attribute. <strong>'
+        'Common</strong> rows are identical across every device in '
+        'the surface; <strong>Differing</strong> rows are pivoted '
+        'per device (a "—" cell means the device did not report the '
+        'attribute at all). The collector auto-discovers files under '
+        'each surface, so kernel-added attributes appear without a '
+        'script change.'
+        '</p>'
+    )
+    for abi_name in sorted(data.keys()):
+        chunk = _blockdev_surface(abi_name, data[abi_name])
+        if chunk:
+            parts.append(chunk)
+    return "\n".join(parts) if len(parts) > 1 else None
+
+
 def _governor_section(host_dir: Path) -> str:
     """Render a small table of {start,end} CPU governors per CPU."""
     start = data.read_json(host_dir / "cpu_governor" / "start.json") or {}
@@ -298,6 +557,11 @@ def render_host_section(
     if governor_html:
         body_parts.append("<h4>CPU governor</h4>")
         body_parts.append(governor_html)
+
+    blockdev_html = render_blockdev_section(host_dir)
+    if blockdev_html:
+        body_parts.append("<h4>Storage device sysfs settings</h4>")
+        body_parts.append(blockdev_html)
 
     if not body_parts:
         return None

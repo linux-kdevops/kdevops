@@ -295,6 +295,12 @@ def _format_log_block(label: str, body: Optional[str], path_hint: str) -> str:
     )
 
 
+
+
+
+
+
+
 def _section_block(vm_name: str, section: str, sec: dict) -> str:
     parts: list[str] = []
     parts.append(f'<h3>{escape(vm_name)} / {escape(section)}</h3>')
