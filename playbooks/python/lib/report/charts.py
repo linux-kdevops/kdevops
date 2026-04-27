@@ -118,11 +118,17 @@ def timeline(
         return None
 
     fig, ax = plt.subplots(figsize=(14, 6))
+    plotted_any = False
     for label, points in series.items():
         if not points:
             continue
         xs, ys = zip(*points)
         ax.plot(xs, ys, label=label, marker="o", markersize=3, linewidth=1)
+        plotted_any = True
+
+    if not plotted_any:
+        plt.close(fig)
+        return None
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

@@ -177,7 +177,14 @@ def _governor_section(host_dir: Path) -> str:
 
 
 def render_host_section(host_dir: Path) -> Optional[str]:
-    """Render the per-host monitoring HTML section, or None if empty."""
+    """Render the per-host monitoring HTML, or None if empty.
+
+    Per-metric headings are <h4> so they nest under the per-host
+    <h3> the section renderer emits, which in turn nests under the
+    enclosing <h2 class="section-title">. This keeps the TOC tree
+    well-formed without collapsing chart titles into top-level
+    entries.
+    """
     host = host_dir.name
     body_parts: list[str] = []
 
@@ -190,7 +197,7 @@ def render_host_section(host_dir: Path) -> Optional[str]:
             (_disk_io_chart, "Disk I/O"),
         ):
             png = plot_fn(host, samples)
-            body_parts.append(f"<h3>{escape(label)}</h3>")
+            body_parts.append(f"<h4>{escape(label)}</h4>")
             body_parts.append(html.chart_block(
                 html.embed_png(png) if png else None,
                 no_data_msg=f"{label} chart unavailable",
@@ -198,7 +205,7 @@ def render_host_section(host_dir: Path) -> Optional[str]:
 
     governor_html = _governor_section(host_dir)
     if governor_html:
-        body_parts.append("<h3>CPU governor</h3>")
+        body_parts.append("<h4>CPU governor</h4>")
         body_parts.append(governor_html)
 
     if not body_parts:
@@ -217,6 +224,6 @@ def render_section(monitoring_dir: Path) -> Optional[str]:
         host_block = render_host_section(host_dir)
         if not host_block:
             continue
-        chunks.append(f'<h2>{escape(host_dir.name)}</h2>')
+        chunks.append(f'<h3>{escape(host_dir.name)}</h3>')
         chunks.append(host_block)
     return "\n".join(chunks) if chunks else None

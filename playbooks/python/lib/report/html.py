@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import dataclasses
+import re
 from datetime import datetime
 from html import escape
 from pathlib import Path
@@ -73,6 +74,30 @@ h1 {
     padding-bottom: 8px;
     border-bottom: 3px solid #667eea;
 }
+.toc {
+    margin: 24px 0;
+    padding: 18px 22px;
+    background: #f7fafc;
+    border-left: 4px solid #667eea;
+    border-radius: 6px;
+}
+.toc-title {
+    font-size: 1.1em;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.toc ul { list-style: none; padding-left: 0; margin: 0; }
+.toc > ul > li { margin: 6px 0; }
+.toc ul ul { padding-left: 18px; margin: 4px 0; }
+.toc ul ul ul { padding-left: 16px; }
+.toc a {
+    color: #4a5568;
+    text-decoration: none;
+    border-bottom: 1px dotted transparent;
+}
+.toc a:hover { color: #667eea; border-bottom-color: #667eea; }
+.toc-l1 { font-weight: 600; color: #2d3748; }
 .chart-container {
     margin: 20px 0;
     padding: 16px;
@@ -161,6 +186,114 @@ def chart_block(image_data_uri: Optional[str], no_data_msg: str = "Chart not ava
     )
 
 
+_SLUG_NON_WORD = re.compile(r"[^a-z0-9]+")
+
+
+def _slugify(text: str, used: set[str]) -> str:
+    """Lowercase ASCII slug; suffix with -2/-3/... when colliding."""
+    base = _SLUG_NON_WORD.sub("-", text.lower()).strip("-") or "section"
+    slug = base
+    n = 2
+    while slug in used:
+        slug = f"{base}-{n}"
+        n += 1
+    used.add(slug)
+    return slug
+
+
+_HEADING_RE = re.compile(
+    r"<(h[234])(\b[^>]*)>(.+?)</\1>",
+    re.DOTALL,
+)
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _inject_ids_and_collect(
+    body_html: str,
+    used_slugs: set[str],
+) -> tuple[str, list[tuple[int, str, str]]]:
+    """Add id="..." to every h2/h3/h4 in body_html that lacks one.
+
+    Returns (new_body, [(level, id, plain_text), ...]) for TOC building.
+    Headings that already have an id keep theirs.
+    """
+    entries: list[tuple[int, str, str]] = []
+
+    def replace(match: re.Match) -> str:
+        tag = match.group(1)
+        attrs = match.group(2) or ""
+        inner = match.group(3)
+        plain = _TAG_RE.sub("", inner).strip()
+        existing = re.search(r'\bid="([^"]+)"', attrs)
+        if existing:
+            heading_id = existing.group(1)
+            new_attrs = attrs
+        else:
+            heading_id = _slugify(plain, used_slugs)
+            new_attrs = f'{attrs} id="{heading_id}"'
+        entries.append((int(tag[1]), heading_id, plain))
+        return f"<{tag}{new_attrs}>{inner}</{tag}>"
+
+    new_body = _HEADING_RE.sub(replace, body_html)
+    return new_body, entries
+
+
+def _render_toc(entries: list[tuple[int, str, str]]) -> str:
+    """Render an HTML <nav class="toc"> from a flat heading list.
+
+    Headings are nested by level so the TOC reads like a tree. The
+    top of the list is treated as level 2 (h2 == top-level section).
+    """
+    if not entries:
+        return ""
+
+    parts: list[str] = []
+    parts.append('<nav class="toc">')
+    parts.append('<div class="toc-title">📋 Contents</div>')
+    parts.append("<ul>")
+
+    current_level = 2
+    open_lis = 0  # Track open <li>s at current_level
+
+    for level, slug, text in entries:
+        # Cap level for nesting (h2/h3/h4).
+        level = max(2, min(4, level))
+        cls = "toc-l1" if level == 2 else ""
+        link = f'<a href="#{slug}">{escape(text)}</a>'
+
+        if level > current_level:
+            # Open nested <ul>s for each step deeper.
+            for _ in range(level - current_level):
+                parts.append("<ul>")
+            current_level = level
+            parts.append(f'<li class="{cls}">{link}')
+            open_lis += 1
+        elif level < current_level:
+            # Close open <li> + nested <ul>s back to this level.
+            for _ in range(current_level - level):
+                parts.append("</li>")
+                parts.append("</ul>")
+            parts.append("</li>")  # close the previous sibling at this level
+            parts.append(f'<li class="{cls}">{link}')
+            current_level = level
+        else:
+            # Same level: close previous sibling, start new one.
+            if open_lis > 0:
+                parts.append("</li>")
+            parts.append(f'<li class="{cls}">{link}')
+            open_lis = max(open_lis, 1)
+
+    # Close any remaining open <li> + nested <ul>s.
+    while current_level > 2:
+        parts.append("</li>")
+        parts.append("</ul>")
+        current_level -= 1
+    parts.append("</li>")
+    parts.append("</ul>")
+    parts.append("</nav>")
+    return "\n".join(parts)
+
+
 def render(report: Report) -> str:
     """Render a Report to a complete self-contained HTML string."""
     ts = report.timestamp or datetime.now()
@@ -171,13 +304,25 @@ def render(report: Report) -> str:
         '</div>'
         for c in report.stat_cards
     )
-    sections_html = "\n".join(
-        '<div class="section">'
-        f'<h2 class="section-title">{escape(s.title)}</h2>'
-        f'{s.body_html}'
-        '</div>'
-        for s in report.sections
-    )
+
+    used_slugs: set[str] = set()
+    toc_entries: list[tuple[int, str, str]] = []
+    section_chunks: list[str] = []
+
+    for s in report.sections:
+        sec_slug = _slugify(s.title, used_slugs)
+        toc_entries.append((2, sec_slug, s.title))
+        new_body, sub_entries = _inject_ids_and_collect(s.body_html, used_slugs)
+        toc_entries.extend(sub_entries)
+        section_chunks.append(
+            f'<div class="section" id="{sec_slug}">'
+            f'<h2 class="section-title">{escape(s.title)}</h2>'
+            f'{new_body}'
+            '</div>'
+        )
+
+    sections_html = "\n".join(section_chunks)
+    toc_html = _render_toc(toc_entries)
 
     return (
         '<!DOCTYPE html>\n<html>\n<head>\n'
@@ -189,6 +334,7 @@ def render(report: Report) -> str:
         f'<h1>{escape(report.title)}</h1>\n'
         f'<div class="timestamp">Generated on {ts.strftime("%Y-%m-%d %H:%M:%S")}</div>\n'
         f'<div class="summary-grid">{cards_html}</div>\n'
+        f'{toc_html}\n'
         f'{sections_html}\n'
         '</div>\n'
         '</body>\n</html>\n'
