@@ -129,7 +129,15 @@ in {
 
       serviceConfig = {
         Type = "simple";
-        ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${cfg.outputDir}/sysstat";
+        # Each start wipes the previous binary recording so sa-current
+        # is always per-run. Without this sadc appends to the existing
+        # file and downstream sadf -j ends up emitting a series that
+        # spans every run since boot, breaking the test-timeline
+        # alignment that assumes sample 0 is recent.
+        ExecStartPre = [
+          "${pkgs.coreutils}/bin/mkdir -p ${cfg.outputDir}/sysstat"
+          "${pkgs.coreutils}/bin/rm -f ${cfg.outputDir}/sysstat/sa-current ${cfg.outputDir}/sysstat/sa-current.json"
+        ];
         ExecStart = "${pkgs.sysstat}/lib/sa/sadc -S ALL ${toString cfg.sysstat.interval} ${toString cfg.sysstat.maxSamples} ${cfg.outputDir}/sysstat/sa-current";
         ExecStopPost = "${sysstatJsonExport} ${cfg.outputDir}/sysstat";
 
