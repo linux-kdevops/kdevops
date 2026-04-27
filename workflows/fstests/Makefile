@@ -255,6 +255,21 @@ fstests-show-results:
 		| xargs $(XARGS_ARGS) \
 		| sed '$${/^$$/d;}'
 
+PHONY += fstests-results-clean
+ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
+fstests-results-clean:
+	@echo "Cleaning workflows/fstests/results/ ..."
+	$(Q)rm -f workflows/fstests/results/*.tar.xz
+	$(Q)rm -f workflows/fstests/results/last-kernel.txt
+	$(Q)find workflows/fstests/results/last-run/ -mindepth 2 -delete 2>/dev/null || true
+	$(Q)find workflows/fstests/results/last-run/ -maxdepth 1 -type f -delete 2>/dev/null || true
+	@echo "Done. Per-VM directories under last-run/ preserved as virtiofs share sources."
+else
+fstests-results-clean:
+	@echo "fstests-results-clean is qemu-system-units specific."
+	@echo "On libvirt, last-run/ is wiped at the start of every test run."
+endif
+
 fstests-help-menu:
 	@echo "fstests options:"
 	@echo "fstests                                 - Git clones fstests, builds and install it"
@@ -274,6 +289,7 @@ fstests-help-menu:
 	@echo "fstests-baseline-run-oscheck-only       - Only run oscheck"
 	@echo ""
 	@echo "monitor-results                          - Collect interim monitoring data without stopping monitoring"
+	@echo "fstests-results-clean                   - Wipe results contents and archives (qsu only); preserves per-VM virtiofs mount sources and per-kernel summary directories"
 	@echo ""
 
 HELP_TARGETS += fstests-help-menu
