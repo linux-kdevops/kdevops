@@ -1,0 +1,38 @@
+---
+# blockdev collect: run the same one-shot collector again at the end
+# of the workload window so a reviewer can compare start/end and
+# spot any block-layer setting that drifted (e.g. an I/O scheduler
+# change after a dm-flakey test, write_cache toggling).
+
+- name: Take end-of-run blockdev snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/blockdev_snapshot.py /data/monitor/blockdev/end.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_blockdev | default(false) | bool
+
+- name: Locate blockdev outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/blockdev"
+    patterns: "*.json"
+    file_type: file
+  register: blockdev_outputs
+  when:
+    - monitor_blockdev | default(false) | bool
+
+- name: Report blockdev collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      blockdev outputs for {{ inventory_hostname }}:
+      {% for f in blockdev_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_blockdev | default(false) | bool

@@ -28,6 +28,11 @@
   when:
     - monitor_cpu_governor|default(false)|bool
 
+# Import blockdev collection tasks (stop oneshot writes end.json)
+- ansible.builtin.include_tasks: monitors/blockdev/collect.yml
+  when:
+    - monitor_blockdev|default(false)|bool
+
 # Plot-fragmentation collection tasks
 - name: Check if fragmentation monitoring was started
   become: true

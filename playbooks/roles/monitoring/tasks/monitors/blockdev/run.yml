@@ -1,0 +1,17 @@
+---
+# blockdev monitor: snapshot the storage-related sysfs surfaces at
+# workflow start. The collector is a single one-shot Python script
+# (no daemon, no systemd unit) — ansible.builtin.script copies the
+# file into the guest's tmp dir, executes it once, and removes it.
+# Same mechanism the libvirt-side fstests run uses, so this works
+# uniformly across qsu and libvirt without any backend assertion.
+
+- name: Take start-of-run blockdev snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/blockdev_snapshot.py /data/monitor/blockdev/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_blockdev | default(false) | bool

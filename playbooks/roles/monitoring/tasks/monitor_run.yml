@@ -22,6 +22,14 @@
   when:
     - monitor_cpu_governor|default(false)|bool
 
+# Import blockdev monitoring tasks (sysfs-block + sysfs-class-nvme
+# snapshot at start). Same Type=oneshot RemainAfterExit=true unit
+# pattern as cpu_governor — start.json is written when the unit
+# becomes active here, end.json when monitor_collect.yml stops it.
+- ansible.builtin.include_tasks: monitors/blockdev/run.yml
+  when:
+    - monitor_blockdev|default(false)|bool
+
 # Fragmentation monitoring tasks
 - name: Create fragmentation scripts directory
   become: true

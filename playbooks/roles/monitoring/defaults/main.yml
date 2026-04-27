@@ -22,6 +22,9 @@ monitor_system_metrics_interval: 5
 # Enable cpu_governor snapshot at workflow start and end
 monitor_cpu_governor: false
 
+# Enable block-layer + NVMe sysfs snapshot at workflow start and end
+monitor_blockdev: false
+
 # Base path to store monitoring results on the control host
 # Workflows can override by setting monitoring_results_base_path
 monitoring_results_base_path: "{{ topdir_path }}/workflows/fstests/results/monitoring"

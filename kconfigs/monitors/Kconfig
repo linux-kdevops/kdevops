@@ -207,6 +207,26 @@ config MONITOR_CPU_GOVERNOR
 	  Useful to verify test conditions and detect governor
 	  changes mid-run that would skew comparisons.
 
+config MONITOR_BLOCKDEV
+	bool "Snapshot block-layer + NVMe sysfs at workflow start and end"
+	output yaml
+	default n
+	help
+	  Walk the storage-related sysfs surfaces governed by
+	  Documentation/ABI/stable/sysfs-block (/sys/class/block/<dev>/
+	  including queue/) and Documentation/ABI/stable/sysfs-class-nvme
+	  (/sys/class/nvme/<ctrl>/) at the start and end of the
+	  workload window and write the per-device attribute snapshots
+	  as JSON to /data/monitor/blockdev/{start,end}.json on the
+	  guest.
+
+	  The walker auto-discovers attributes — kernel-added files
+	  appear in future runs without a script change. The report
+	  pivots common-vs-differing attributes per ABI surface so a
+	  reviewer can confirm the storage configuration the workload
+	  ran against (queue depth, scheduler, write_cache, atomic-write
+	  limits, NVMe model/firmware) at a glance.
+
 # Future monitoring options can be added here
 # Examples:
 # - Memory pressure monitoring
