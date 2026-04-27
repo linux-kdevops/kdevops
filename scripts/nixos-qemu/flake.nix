@@ -35,6 +35,7 @@
       devel = ./modules/devel.nix;
       imageless = ./modules/imageless.nix;
       libvirt = ./modules/libvirt.nix;
+      monitoring = ./modules/monitoring.nix;
       shares = ./modules/shares.nix;
       storage = ./modules/storage.nix;
       user = ./modules/user.nix;
