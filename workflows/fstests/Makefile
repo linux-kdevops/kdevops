@@ -255,6 +255,11 @@ fstests-show-results:
 		| xargs $(XARGS_ARGS) \
 		| sed '$${/^$$/d;}'
 
+PHONY += fstests-report
+fstests-report:
+	$(Q)python3 workflows/fstests/scripts/visualize_results.py \
+		workflows/fstests/results
+
 PHONY += fstests-results-clean
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
 fstests-results-clean:
@@ -289,6 +294,7 @@ fstests-help-menu:
 	@echo "fstests-baseline-run-oscheck-only       - Only run oscheck"
 	@echo ""
 	@echo "monitor-results                          - Collect interim monitoring data without stopping monitoring"
+	@echo "fstests-report                          - Build a self-contained HTML report from workflows/fstests/results/ with per-test pass/fail, embedded .out.bad/.full/.dmesg for failures, and the system_metrics monitoring section"
 	@echo "fstests-results-clean                   - Wipe results contents and archives (qsu only); preserves per-VM virtiofs mount sources and per-kernel summary directories"
 	@echo ""
 
