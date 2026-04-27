@@ -99,6 +99,24 @@
   services.nfs.server.enable = lib.mkDefault true;
   services.rpcbind.enable = lib.mkDefault true;
 
+  # dm-flakey, dm-delay, dm-log-writes etc. (used by xfstests under
+  # generic/, and exercised heavily once CONFIG_DM_* are enabled) drive
+  # device-mapper through libdevmapper, which serializes operations via
+  # an SysV semaphore "udev cookie": dmsetup increments the semaphore
+  # before the ioctl and udevd is expected to decrement it once it has
+  # processed the resulting uevent. The decrement is performed by lvm2's
+  # /lib/udev/rules.d/{10-dm,13-dm-disk,95-dm-notify}.rules. Putting
+  # lvm2 on PATH (above) is not enough — the rules also need to land
+  # in the active udev ruleset, and on NixOS that is wired up by the
+  # upstream services.lvm module (which knows to grab lvm2's `out`
+  # output containing the rules and to ship its tmpfiles + systemd
+  # units). The imageless module disables services.lvm by default to
+  # keep the minimal closure small, so use mkForce here to override
+  # that default and opt the fstests workflow back in. Without this,
+  # dm-* tests like generic/034 hang indefinitely with dmsetup blocked
+  # in __do_semtimedop because the cookie semaphore is never released.
+  services.lvm.enable = lib.mkForce true;
+
   # xfstests ./check and the kdevops wrapper scripts that drive
   # it (oscheck.sh, gendisks.sh, naggy-check.sh) all start with
   # `#!/bin/bash`, and ld-version.sh uses `#!/usr/bin/awk -f`.
