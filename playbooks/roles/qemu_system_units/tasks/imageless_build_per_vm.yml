@@ -62,7 +62,13 @@
         if (kdevops_workflow_enable_fstests | default(false) | bool)
         else []
       }}
-    qsu_per_vm_dirs: "{{ qsu_per_vm_dirs_base + qsu_per_vm_dirs_fstests }}"
+    qsu_per_vm_dirs_monitor: >-
+      {{
+        [topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/monitoring/' ~ qsu_vm_name]
+        if (enable_monitoring | default(false) | bool)
+        else []
+      }}
+    qsu_per_vm_dirs: "{{ qsu_per_vm_dirs_base + qsu_per_vm_dirs_fstests + qsu_per_vm_dirs_monitor }}"
 
 - name: Create per-VM NVMe qcow2 backing files for {{ qsu_vm_name }}
   ansible.builtin.command:
@@ -108,9 +114,13 @@
 # kdevops-fstests (opt-in): the controller's workflows/fstests
 # tree exposed read-only at /usr/local/lib/kdevops/fstests so
 # the guest can exec oscheck.sh without copying scripts in.
+# data-monitor (opt-in): persistent per-monitor data tree in
+# the kdevops workflow dir; the guest's nixos-qemu.monitoring
+# systemd services write here, controller-side tooling reads
+# them live.
 - name: Compose per-VM virtiofs shares for {{ qsu_vm_name }}
   ansible.builtin.set_fact:
-    qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests }}"
+    qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests + qsu_shares_monitor }}"
   vars:
     qsu_shares_base:
       - tag: store
@@ -133,6 +143,16 @@
            'mount': '/usr/local/lib/kdevops/fstests'}
         ]
         if (kdevops_workflow_enable_fstests | default(false) | bool)
+        else []
+      }}
+    qsu_shares_monitor: >-
+      {{
+        [
+          {'tag': 'data-monitor',
+           'dir': topdir_path ~ '/workflows/' ~ (kdevops_workflow_name | default('unknown')) ~ '/results/monitoring/' ~ qsu_vm_name,
+           'mount': '/data/monitor'}
+        ]
+        if (enable_monitoring | default(false) | bool)
         else []
       }}
 

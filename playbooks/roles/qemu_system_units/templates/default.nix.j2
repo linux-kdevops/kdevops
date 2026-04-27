@@ -34,6 +34,9 @@
 {% if kdevops_workflow_enable_sysbench is defined and kdevops_workflow_enable_sysbench %}
     nixos-qemu.nixosModules.workflows.sysbench
 {% endif %}
+{% if enable_monitoring is defined and enable_monitoring %}
+    nixos-qemu.nixosModules.monitoring
+{% endif %}
   ];
 
   networking.hostName = "{{ vm_name }}";
@@ -88,5 +91,30 @@
     })
   ];
 {% endif %}
+{% endif %}
+
+{% if enable_monitoring is defined and enable_monitoring %}
+  # Workflow-bracketed system monitoring (sysstat, cpu_governor).
+  # The orchestrator on the controller starts and stops monitor-*
+  # systemd services; outputs land under /data/monitor and are
+  # written through to the controller via the data-monitor
+  # virtiofs share.
+  fileSystems."/data/monitor" = {
+    device = "data-monitor";
+    fsType = "virtiofs";
+  };
+
+  nixos-qemu.monitoring = {
+    enable = true;
+{% if monitor_system_metrics is defined %}
+    sysstat.enable = {{ 'true' if monitor_system_metrics else 'false' }};
+{% endif %}
+{% if monitor_system_metrics_interval is defined %}
+    sysstat.interval = {{ monitor_system_metrics_interval }};
+{% endif %}
+{% if monitor_cpu_governor is defined %}
+    cpuGovernor.enable = {{ 'true' if monitor_cpu_governor else 'false' }};
+{% endif %}
+  };
 {% endif %}
 }
