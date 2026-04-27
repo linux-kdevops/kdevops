@@ -152,13 +152,6 @@
   ansible.builtin.reboot:
     post_reboot_delay: 10
 
-# Start monitoring services before running tests
-- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
-  when:
-    - kdevops_run_blktests|bool
-    - enable_monitoring|default(false)|bool
-  tags: ["blktests", "run_tests", "monitoring", "monitor_run"]
-
 - name: Set the path to blktests workflow
   ansible.builtin.set_fact:
     blktests_workflow_target: "../workflows/blktests/"
