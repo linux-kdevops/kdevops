@@ -578,6 +578,220 @@ def render_host_section(
     return "\n".join(body_parts)
 
 
+# ---- A/B (two-kernel) per-host monitoring overlay ------------------------
+
+
+def _cpu_load_series(samples: list[dict]) -> dict[str, list[tuple[float, float]]]:
+    """Extract %user/%system/%iowait/%idle series for the 'all' CPU."""
+    xs = _sample_index(samples)
+    out: dict[str, list[tuple[float, float]]] = {
+        "user": [], "system": [], "iowait": [], "idle": [],
+    }
+    for x, sample in zip(xs, samples):
+        for entry in sample.get("cpu-load") or []:
+            if entry.get("cpu") != "all":
+                continue
+            for key in out:
+                out[key].append((x, float(entry.get(key, 0.0))))
+    return out
+
+
+def _memory_series(samples: list[dict]) -> dict[str, list[tuple[float, float]]]:
+    xs = _sample_index(samples)
+    out: dict[str, list[tuple[float, float]]] = {
+        "memused": [], "cached": [], "available": [],
+    }
+    for x, sample in zip(xs, samples):
+        mem = sample.get("memory") or {}
+        if isinstance(mem, list):
+            mem = mem[0] if mem else {}
+        if "memused" in mem:
+            out["memused"].append((x, float(mem["memused"]) / 1024.0))
+        if "cached" in mem:
+            out["cached"].append((x, float(mem["cached"]) / 1024.0))
+        if "avail" in mem:
+            out["available"].append((x, float(mem["avail"]) / 1024.0))
+    return out
+
+
+def _runqueue_series(samples: list[dict]) -> dict[str, list[tuple[float, float]]]:
+    xs = _sample_index(samples)
+    out: dict[str, list[tuple[float, float]]] = {
+        "runq-sz": [], "ldavg-1": [], "ldavg-5": [],
+    }
+    for x, sample in zip(xs, samples):
+        q = sample.get("queue") or {}
+        if isinstance(q, list):
+            q = q[0] if q else {}
+        for key in out:
+            if key in q:
+                out[key].append((x, float(q[key])))
+    return out
+
+
+def _disk_io_series(samples: list[dict]) -> dict[str, list[tuple[float, float]]]:
+    xs = _sample_index(samples)
+    out: dict[str, list[tuple[float, float]]] = {"read": [], "written": []}
+    for x, sample in zip(xs, samples):
+        disks = sample.get("disk") or []
+        if not isinstance(disks, list):
+            continue
+        rk = sum(float(d.get("rkB", 0.0)) for d in disks)
+        wk = sum(float(d.get("wkB", 0.0)) for d in disks)
+        out["read"].append((x, rk))
+        out["written"].append((x, wk))
+    return out
+
+
+def render_host_section_ab(
+    host_dirs: dict[str, Path],
+    *,
+    kernels: list[str],
+    test_timelines: Optional[
+        dict[str, list[tuple[str, float, float, str]]]
+    ] = None,
+) -> Optional[str]:
+    """Per-host A/B monitoring block — overlay metric charts for two kernels.
+
+    ``host_dirs`` maps each kernel name to that kernel's monitoring
+    directory for this host (typically
+    ``<results>/<vm>/<kernel>/monitoring/``). Both kernels' samples
+    are loaded, fed to the four metric extractors, and rendered as
+    overlay charts via charts.timeline_ab — the line colour identifies
+    the metric, the line style identifies the kernel.
+
+    Test execution timelines are rendered as separate strips (one per
+    kernel) underneath so the per-kernel test-name labels stay legible.
+    The CPU governor and blockdev sub-sections render once per kernel
+    sequentially below; their natural shape (key/value tables, not
+    time series) doesn't gain anything from overlay.
+    """
+    if not kernels or len(kernels) != 2:
+        return None
+
+    body_parts: list[str] = []
+    timelines = test_timelines or {}
+
+    samples_by_kernel = {k: _sysstat_samples(host_dirs[k]) for k in kernels}
+    # Use the longer sample set's xlim so neither kernel is clipped.
+    xlim_candidates = [
+        _sample_xlim(samples_by_kernel[k]) for k in kernels
+    ]
+    xlim = max(
+        (c for c in xlim_candidates if c is not None),
+        default=None,
+        key=lambda c: c[1],
+    )
+
+    if any(samples_by_kernel.values()):
+        # Pick the kernel-A timeline as the underlay anchor; if absent,
+        # fall back to kernel-B. Overlay timelines are rendered as
+        # separate strips below so the underlay only needs one anchor.
+        anchor_timeline = (
+            timelines.get(kernels[0]) or timelines.get(kernels[1])
+        )
+        for extractor, label, ylabel in (
+            (_cpu_load_series, "CPU usage",       "% of CPU time"),
+            (_memory_series,    "Memory",         "MiB"),
+            (_runqueue_series,  "Run queue + load average", "Tasks / load avg"),
+            (_disk_io_series,   "Disk I/O",       "kB/s"),
+        ):
+            series_by_kernel = {
+                k: extractor(samples_by_kernel[k]) for k in kernels
+            }
+            png = charts.timeline_ab(
+                series_by_kernel,
+                title=label,
+                kernels=kernels,
+                xlabel="Seconds since start",
+                ylabel=ylabel,
+                test_intervals=anchor_timeline,
+                chart_xlim=xlim,
+            )
+            body_parts.append(f"<h4>{escape(label)}</h4>")
+            body_parts.append(html.chart_block(
+                html.embed_png(png) if png else None,
+                no_data_msg=f"{label} chart unavailable",
+            ))
+
+    # Per-kernel test execution timeline strips.
+    for kernel in kernels:
+        intervals = timelines.get(kernel)
+        if not intervals:
+            continue
+        png = charts.test_timeline(
+            intervals,
+            title=f"Test execution timeline · {kernel}",
+            chart_xlim=xlim,
+        )
+        body_parts.append(f"<h4>Test execution timeline · {escape(kernel)}</h4>")
+        body_parts.append(html.chart_block(
+            html.embed_png(png) if png else None,
+            no_data_msg="Test timeline chart unavailable",
+        ))
+
+    # Per-kernel governor + blockdev (sequential, not overlaid — the
+    # data shape is key/value, comparison reads better as side-by-side
+    # tables than as a chart).
+    for kernel in kernels:
+        gov_html = _governor_section(host_dirs[kernel])
+        if gov_html:
+            body_parts.append(f"<h4>CPU governor · {escape(kernel)}</h4>")
+            body_parts.append(gov_html)
+        bd_html = render_blockdev_section(host_dirs[kernel])
+        if bd_html:
+            body_parts.append(
+                f"<h4>Storage device sysfs settings · {escape(kernel)}</h4>"
+            )
+            body_parts.append(bd_html)
+
+    if not body_parts:
+        return None
+    return "\n".join(body_parts)
+
+
+def render_section_ab(
+    host_kernel_dirs: dict[str, dict[str, Path]],
+    *,
+    kernels: list[str],
+    host_test_timelines_ab: Optional[
+        dict[str, dict[str, list[tuple[str, float, float, str]]]]
+    ] = None,
+    allowed_hosts: Optional[set[str]] = None,
+) -> Optional[str]:
+    """A/B monitoring section — one overlay block per host, two kernels.
+
+    ``host_kernel_dirs`` maps each host name to a per-kernel mapping
+    of monitoring directories. Hosts that don't have *both* kernels'
+    monitoring data are skipped — the chart only makes sense when
+    both lines have something to plot.
+
+    ``host_test_timelines_ab`` is an optional matching nested dict
+    mapping host → kernel → intervals so the test-execution underlays
+    align with the same x-axis as the metric overlay.
+    """
+    if not host_kernel_dirs:
+        return None
+    timelines_ab = host_test_timelines_ab or {}
+    chunks: list[str] = []
+    for host_name in sorted(host_kernel_dirs.keys()):
+        if allowed_hosts is not None and host_name not in allowed_hosts:
+            continue
+        host_dirs = host_kernel_dirs[host_name]
+        if not all(k in host_dirs and host_dirs[k].is_dir() for k in kernels):
+            continue
+        host_block = render_host_section_ab(
+            host_dirs,
+            kernels=kernels,
+            test_timelines=timelines_ab.get(host_name),
+        )
+        if not host_block:
+            continue
+        chunks.append(f'<h3>{escape(host_name)}</h3>')
+        chunks.append(host_block)
+    return "\n".join(chunks) if chunks else None
+
+
 def render_section(
     host_monitoring_dirs: dict[str, Path],
     host_test_timelines: Optional[

@@ -801,6 +801,36 @@ def build_ab_report(
         _ab_diff_section_html(diff, kernels),
     )
 
+    # Monitoring overlay: one chart per metric drawn with both
+    # kernels' lines on a shared axis (per-metric colour, per-kernel
+    # line style). Each VM contributes a per-kernel monitoring dir
+    # and a per-kernel test-timeline so the underlay shading and
+    # x-axis range stay consistent across both lines.
+    host_kernel_dirs: dict[str, dict[str, Path]] = {}
+    host_test_timelines_ab: dict[str, dict[str, list]] = {}
+    for vm_name in sorted(set(run_a["vms"]) | set(run_b["vms"])):
+        host_kernel_dirs[vm_name] = {
+            k: _host_monitoring_dir(results_dir, vm_name, kernel=k)
+            for k in kernels
+        }
+    timelines_a = _build_test_timelines(run_a, results_dir, kernel=kernels[0])
+    timelines_b = _build_test_timelines(run_b, results_dir, kernel=kernels[1])
+    for vm_name in host_kernel_dirs:
+        host_test_timelines_ab[vm_name] = {}
+        if vm_name in timelines_a:
+            host_test_timelines_ab[vm_name][kernels[0]] = timelines_a[vm_name]
+        if vm_name in timelines_b:
+            host_test_timelines_ab[vm_name][kernels[1]] = timelines_b[vm_name]
+
+    monitoring_html = monitoring.render_section_ab(
+        host_kernel_dirs,
+        kernels=kernels,
+        host_test_timelines_ab=host_test_timelines_ab,
+        allowed_hosts=hosts,
+    )
+    if monitoring_html:
+        report.add_section("System monitoring (A/B overlay)", monitoring_html)
+
     report.add_section(
         "Per-section detail",
         _ab_detail_section_html(run_a, run_b, kernels, hosts=hosts),

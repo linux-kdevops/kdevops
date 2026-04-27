@@ -223,6 +223,107 @@ def timeline(
     return _save_close(fig, tight=False)
 
 
+def timeline_ab(
+    series_by_kernel: dict[str, dict[str, list[tuple[float, float]]]],
+    *,
+    title: str,
+    kernels: list[str],
+    xlabel: str = "Sample",
+    ylabel: str = "Value",
+    test_intervals: Optional[list[tuple[str, float, float, str]]] = None,
+    chart_xlim: Optional[tuple[float, float]] = None,
+) -> Optional[bytes]:
+    """Two-kernel overlay of a multi-series line plot.
+
+    Same data shape as ``timeline()`` but each label is plotted twice
+    (once per kernel) with a shared per-label colour and the kernel
+    distinguished by line style: solid for A (kernels[0]), dashed
+    for B (kernels[1]). The legend collapses to one entry per metric
+    plus two key entries explaining the line-style convention so the
+    chart stays readable when each metric has both kernels' lines on
+    top of each other.
+
+    ``series_by_kernel`` maps kernel name → ``{label: [(x, y), ...]}``
+    just like the single-kernel ``timeline()`` series argument; passing
+    a kernel with empty data degrades gracefully (only the kernel that
+    has data shows up).
+    """
+    if not _AVAILABLE or not series_by_kernel or len(kernels) != 2:
+        return None
+
+    fig, ax = plt.subplots(figsize=(_TS_FIG_W, 6))
+
+    # Test-execution underlay for the union of intervals (if both
+    # kernels' timelines should be overlaid the caller can merge
+    # them ahead of time; for now we accept one set).
+    if test_intervals:
+        for _name, start, duration, status in test_intervals:
+            width = max(duration, 0.5)
+            if status == "fail":
+                ax.axvspan(start, start + width,
+                           alpha=0.20, color="#f56565",
+                           linewidth=0, zorder=0)
+            elif status == "skip":
+                ax.axvspan(start, start + width,
+                           alpha=0.35, facecolor="#a0aec0",
+                           hatch="///", edgecolor="#718096",
+                           linewidth=0, zorder=0)
+        for _name, start, _duration, _status in test_intervals:
+            ax.axvline(x=start, color="#cbd5e0", alpha=0.35,
+                       linewidth=0.4, zorder=0)
+
+    # Stable per-label colour across both kernels.
+    metric_color: dict[str, tuple] = {}
+    cmap = plt.get_cmap("tab10")
+    color_idx = 0
+    plotted_any = False
+    for kernel_idx, kernel in enumerate(kernels):
+        linestyle = ("-", "--")[kernel_idx]
+        marker = ("o", "s")[kernel_idx]
+        per_kernel = series_by_kernel.get(kernel) or {}
+        for label, points in per_kernel.items():
+            if label not in metric_color:
+                metric_color[label] = cmap(color_idx % 10)
+                color_idx += 1
+            if not points:
+                continue
+            xs, ys = zip(*points)
+            ax.plot(xs, ys, color=metric_color[label],
+                    linestyle=linestyle, marker=marker,
+                    markersize=3, linewidth=1.2, zorder=2)
+            plotted_any = True
+
+    if not plotted_any:
+        plt.close(fig)
+        return None
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3, zorder=1)
+
+    # Compose a two-part legend: metric → colour, kernel → linestyle.
+    from matplotlib.lines import Line2D
+    metric_handles = [
+        Line2D([0], [0], color=metric_color[m], linewidth=2, label=m)
+        for m in metric_color
+    ]
+    kernel_handles = [
+        Line2D([0], [0], color="black", linestyle="-",  marker="o",
+               markersize=3, label=f"A · {kernels[0]}"),
+        Line2D([0], [0], color="black", linestyle="--", marker="s",
+               markersize=3, label=f"B · {kernels[1]}"),
+    ]
+    ax.legend(handles=metric_handles + kernel_handles,
+              loc="best", fontsize=9, ncol=1)
+
+    if chart_xlim is not None:
+        ax.set_xlim(*chart_xlim)
+    fig.subplots_adjust(left=_TS_LEFT, right=_TS_RIGHT,
+                        bottom=0.10, top=0.92)
+    return _save_close(fig, tight=False)
+
+
 def test_timeline(
     intervals: list[tuple[str, float, float, str]],
     *,
