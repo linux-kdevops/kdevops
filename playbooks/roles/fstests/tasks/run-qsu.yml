@@ -39,6 +39,16 @@
       }}
   tags: ["oscheck", "fstests", "run_tests"]
 
+# Start monitoring services on the guest right before oscheck.sh
+# kicks off so the time series brackets the actual test workload
+# rather than the surrounding ansible setup. Mirrors what the
+# libvirt run.yml does at L382. Skipped when monitoring is off.
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_run.yml
+  when:
+    - kdevops_run_fstests | default(false) | bool
+    - enable_monitoring | default(false) | bool
+  tags: ["oscheck", "fstests", "run_tests", "monitoring", "monitor_run"]
+
 - name: Run fstests via oscheck.sh on {{ inventory_hostname }}
   vars:
     initial_baseline_expunges: "{{ fstests_initial_baseline_args | default('') | trim }}"
@@ -73,3 +83,12 @@
   ignore_errors: true
   when:
     - kdevops_run_fstests | default(false) | bool
+
+# Stop monitoring services and convert sa-current to JSON via the
+# unit's ExecStopPost. The data is already on the controller via
+# the data-monitor virtiofs share, so no fetch step is needed.
+- ansible.builtin.import_tasks: ../../monitoring/tasks/monitor_collect.yml
+  when:
+    - kdevops_run_fstests | default(false) | bool
+    - enable_monitoring | default(false) | bool
+  tags: ["oscheck", "fstests", "run_tests", "monitoring", "monitor_collect"]
