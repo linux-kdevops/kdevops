@@ -19,5 +19,10 @@ in {
     };
     # Newer xfstests needs pkg-config for autoconf macros.
     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ prev.pkg-config ];
+    # gdbm.dev provides gdbm-ndbm.h which xfstests' configure
+    # probes for to enable HAVE_DB; without it src/dbtest is not
+    # built and tests like generic/010 are skipped with the
+    # "src/dbtest not built" .notrun reason.
+    buildInputs = (old.buildInputs or []) ++ [ prev.gdbm ];
   });
 }
