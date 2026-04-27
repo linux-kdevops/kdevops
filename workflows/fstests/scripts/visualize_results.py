@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Optional
@@ -33,7 +33,7 @@ THIS_FILE = Path(__file__).resolve()
 KDEVOPS_TOP = THIS_FILE.parents[3]
 sys.path.insert(0, str(KDEVOPS_TOP / "playbooks" / "python" / "lib"))
 
-from report import charts, html, monitoring  # noqa: E402
+from report import charts, html, monitoring  # noqa: E402,F401
 
 try:
     from junitparser import Failure, JUnitXml, Skipped, TestSuite
@@ -108,6 +108,16 @@ def _section_property(testsuite, key: str) -> Optional[str]:
     return None
 
 
+def _parse_iso(stamp: Optional[str]) -> Optional[datetime]:
+    """Parse an ISO-8601 timestamp emitted by xfstests' xunit writer."""
+    if not stamp:
+        return None
+    try:
+        return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def _gather_run(last_run: Path) -> dict:
     """Walk last_run/<vm>/<section>/result.xml and collect everything.
 
@@ -123,6 +133,7 @@ def _gather_run(last_run: Path) -> dict:
                                        "fail_msg", "out_bad", "full",
                                        "dmesg"}, ...],
                             "totals": {"pass", "fail", "skip"},
+                            "section_start_ts": datetime | None,
                         }
                     }
                 }
@@ -161,6 +172,7 @@ def _gather_run(last_run: Path) -> dict:
                     "properties": {},
                     "tests": [],
                     "totals": {"pass": 0, "fail": 0, "skip": 0},
+                    "section_start_ts": None,
                 },
             )
 
@@ -173,6 +185,9 @@ def _gather_run(last_run: Path) -> dict:
                     props = ts.properties()
                     if props is not None:
                         sec_entry["properties"] = {p.name: p.value for p in props}
+                if sec_entry["section_start_ts"] is None:
+                    raw_start = getattr(ts, "_elem", ts).get("start_timestamp")
+                    sec_entry["section_start_ts"] = _parse_iso(raw_start)
 
                 for tc in ts:
                     status = _testcase_status(tc)
@@ -353,6 +368,44 @@ def _summary_text_section(results_dir: Path) -> Optional[str]:
     return None
 
 
+def _build_test_timelines(
+    run: dict, monitoring_dir: Path,
+) -> dict[str, list[tuple[str, float, float, str]]]:
+    """Compute per-host test intervals aligned to the sysstat x-axis.
+
+    For each (vm, section), reconstruct each test's run interval from
+    the xunit's section start_timestamp + cumulative testcase time.
+    Then offset that against the host's first sysstat sample so the
+    test timeline chart's x-axis matches the metric charts above it.
+    Returns a dict {host: [(test_name, x_start, duration, status), ...]}.
+    """
+    timelines: dict[str, list[tuple[str, float, float, str]]] = {}
+    for vm_name, vm in run["vms"].items():
+        host_dir = monitoring_dir / vm_name
+        first_sample = monitoring.first_sample_timestamp(host_dir)
+        if first_sample is None:
+            continue
+        intervals: list[tuple[str, float, float, str]] = []
+        for section, sec in sorted(vm["sections"].items()):
+            section_start = sec.get("section_start_ts")
+            if section_start is None:
+                continue
+            cum = 0.0
+            section_offset = (section_start - first_sample).total_seconds()
+            for t in sec["tests"]:
+                duration = float(t.get("duration", 0.0))
+                intervals.append((
+                    t["name"],
+                    section_offset + cum,
+                    duration,
+                    t["status"],
+                ))
+                cum += duration
+        if intervals:
+            timelines[vm_name] = intervals
+    return timelines
+
+
 def build_report(results_dir: Path) -> html.Report:
     last_run = results_dir / "last-run"
     monitoring_dir = results_dir / "monitoring"
@@ -371,7 +424,11 @@ def build_report(results_dir: Path) -> html.Report:
 
     report.add_section("Pass / fail by section", _pass_fail_chart_html(run))
 
-    monitoring_html = monitoring.render_section(monitoring_dir)
+    test_timelines = _build_test_timelines(run, monitoring_dir)
+    monitoring_html = monitoring.render_section(
+        monitoring_dir,
+        host_test_timelines=test_timelines,
+    )
     if monitoring_html:
         report.add_section("System monitoring", monitoring_html)
 

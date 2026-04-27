@@ -28,6 +28,7 @@ already ship per-monitor PNGs are simply embedded as-is.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Optional
@@ -62,6 +63,38 @@ def _sample_index(samples: list[dict]) -> list[float]:
         return []
     return [float(i * (samples[0]["timestamp"].get("interval", 1) or 1))
             for i in range(len(samples))]
+
+
+def _sample_xlim(samples: list[dict]) -> Optional[tuple[float, float]]:
+    """X-axis range for a sample series; None if no samples."""
+    if not samples:
+        return None
+    interval = float(samples[0]["timestamp"].get("interval", 1) or 1)
+    return (0.0, max(interval * (len(samples) - 1), interval))
+
+
+def first_sample_timestamp(host_dir: Path) -> Optional[datetime]:
+    """Wall-clock UTC timestamp of the first sysstat sample for a host.
+
+    Returns None if no sysstat data is recorded for this host. Adapters
+    use this to align test-run intervals with the sysstat chart x-axis,
+    so the test timeline lines up visually with the CPU/memory/IO
+    plots above it.
+    """
+    samples = _sysstat_samples(host_dir)
+    if not samples:
+        return None
+    ts = samples[0]["timestamp"]
+    date = ts.get("date")
+    time_ = ts.get("time")
+    if not date or not time_:
+        return None
+    try:
+        return datetime.strptime(
+            f"{date}T{time_}+0000", "%Y-%m-%dT%H:%M:%S%z",
+        )
+    except ValueError:
+        return None
 
 
 def _cpu_load_chart(host: str, samples: list[dict]) -> Optional[bytes]:
@@ -176,7 +209,10 @@ def _governor_section(host_dir: Path) -> str:
     )
 
 
-def render_host_section(host_dir: Path) -> Optional[str]:
+def render_host_section(
+    host_dir: Path,
+    test_timeline: Optional[list[tuple[str, float, float, str]]] = None,
+) -> Optional[str]:
     """Render the per-host monitoring HTML, or None if empty.
 
     Per-metric headings are <h4> so they nest under the per-host
@@ -184,11 +220,18 @@ def render_host_section(host_dir: Path) -> Optional[str]:
     enclosing <h2 class="section-title">. This keeps the TOC tree
     well-formed without collapsing chart titles into top-level
     entries.
+
+    ``test_timeline`` is an optional list of (test_name, x_start,
+    duration, status) tuples — when provided, an extra "Test
+    execution timeline" chart renders below the metric charts with
+    the same x-axis range so a reviewer can correlate test names
+    with monitoring spikes.
     """
     host = host_dir.name
     body_parts: list[str] = []
 
     samples = _sysstat_samples(host_dir)
+    xlim = _sample_xlim(samples)
     if samples:
         for plot_fn, label in (
             (_cpu_load_chart, "CPU usage"),
@@ -203,6 +246,18 @@ def render_host_section(host_dir: Path) -> Optional[str]:
                 no_data_msg=f"{label} chart unavailable",
             ))
 
+    if test_timeline:
+        png = charts.test_timeline(
+            test_timeline,
+            title=f"Test execution timeline — {host}",
+            chart_xlim=xlim,
+        )
+        body_parts.append("<h4>Test execution timeline</h4>")
+        body_parts.append(html.chart_block(
+            html.embed_png(png) if png else None,
+            no_data_msg="Test timeline chart unavailable",
+        ))
+
     governor_html = _governor_section(host_dir)
     if governor_html:
         body_parts.append("<h4>CPU governor</h4>")
@@ -213,15 +268,30 @@ def render_host_section(host_dir: Path) -> Optional[str]:
     return "\n".join(body_parts)
 
 
-def render_section(monitoring_dir: Path) -> Optional[str]:
-    """Render the whole monitoring section (per-host blocks). None if empty."""
+def render_section(
+    monitoring_dir: Path,
+    host_test_timelines: Optional[
+        dict[str, list[tuple[str, float, float, str]]]
+    ] = None,
+) -> Optional[str]:
+    """Render the whole monitoring section (per-host blocks). None if empty.
+
+    ``host_test_timelines`` is an optional mapping from host name to
+    test-interval tuples. Adapters that know the workflow's test
+    schedule (e.g. fstests parsing the xunit XML) build this and pass
+    it in so each per-host block gets a matching timeline chart.
+    """
     if not has_data(monitoring_dir):
         return None
+    timelines = host_test_timelines or {}
     chunks: list[str] = []
     for host_dir in sorted(monitoring_dir.iterdir()):
         if not host_dir.is_dir():
             continue
-        host_block = render_host_section(host_dir)
+        host_block = render_host_section(
+            host_dir,
+            test_timeline=timelines.get(host_dir.name),
+        )
         if not host_block:
             continue
         chunks.append(f'<h3>{escape(host_dir.name)}</h3>')

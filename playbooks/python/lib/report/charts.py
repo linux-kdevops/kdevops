@@ -139,6 +139,92 @@ def timeline(
     return _save_close(fig)
 
 
+def test_timeline(
+    intervals: list[tuple[str, float, float, str]],
+    *,
+    title: str,
+    xlabel: str = "Seconds since first sysstat sample",
+    label_every: int = 10,
+    chart_xlim: Optional[tuple[float, float]] = None,
+) -> Optional[bytes]:
+    """Horizontal carpet of test runs: name, start, duration, status.
+
+    ``intervals`` is a list of ``(test_name, x_start, duration, status)``
+    tuples; ``status`` is one of ``"pass"``, ``"fail"``, ``"skip"``.
+    Each test renders as a horizontal segment colored by status. Names
+    are labelled for every Nth test and always for failures so the
+    readout stays legible at 50+ tests.
+
+    When ``chart_xlim`` is provided the axis matches the sysstat
+    charts' (0, max-sample) range so visual correlation between the
+    timeline and the metric charts above it works at a glance.
+    """
+    if not _AVAILABLE or not intervals:
+        return None
+
+    fig, ax = plt.subplots(figsize=(14, 2.6))
+
+    color_map = {
+        "pass": "#48bb78",
+        "fail": "#f56565",
+        "skip": "#a0aec0",
+    }
+    for name, start, duration, status in intervals:
+        ax.barh(
+            0,
+            max(duration, 0.5),  # tiny floor so 0-second tests stay visible
+            left=start,
+            color=color_map.get(status, "#cbd5e0"),
+            edgecolor="white",
+            linewidth=0.4,
+        )
+
+    # Label every Nth test + always failures.
+    last_label_x = -1e9
+    min_label_gap = (intervals[-1][1] + intervals[-1][2]) / 30 or 1.0
+    for i, (name, start, duration, status) in enumerate(intervals):
+        is_failure = status == "fail"
+        is_periodic = (i % label_every == 0) or i == len(intervals) - 1
+        if not (is_failure or is_periodic):
+            continue
+        x_center = start + duration / 2
+        if (x_center - last_label_x) < min_label_gap and not is_failure:
+            continue
+        last_label_x = x_center
+        short = name.split("/", 1)[-1] if "/" in name else name
+        ax.text(
+            x_center, 0.55, short,
+            ha="center", va="bottom",
+            fontsize=7,
+            rotation=45,
+            color="#c53030" if is_failure else "#2d3748",
+            fontweight="bold" if is_failure else "normal",
+        )
+
+    ax.set_yticks([])
+    ax.set_ylim(-0.5, 1.5)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    if chart_xlim is not None:
+        ax.set_xlim(*chart_xlim)
+    else:
+        end = intervals[-1][1] + intervals[-1][2]
+        ax.set_xlim(0, max(end, 1.0))
+
+    # Legend
+    from matplotlib.patches import Patch
+    legend_handles = [
+        Patch(color="#48bb78", label="pass"),
+        Patch(color="#f56565", label="fail"),
+        Patch(color="#a0aec0", label="skip"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper right", fontsize=8,
+              framealpha=0.85)
+
+    plt.subplots_adjust(bottom=0.35, top=0.82, left=0.05, right=0.98)
+    return _save_close(fig)
+
+
 def stacked_pass_fail(
     labels: list[str],
     passed: list[int],
