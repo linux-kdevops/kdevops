@@ -125,21 +125,23 @@ def _parse_iso(stamp: Optional[str]) -> Optional[datetime]:
         return None
 
 
-def _gather_run(results_dir: Path) -> dict:
-    """Walk <results>/<vm>/last-run/<section>/result.xml.
+def _gather_run(results_dir: Path, kernel: Optional[str] = None) -> dict:
+    """Walk <results>/<vm>/{kernel|last-run}/<section>/result.xml.
 
-    The new (Phase B) layout puts each run under its kernel name
-    inside the per-VM directory, with a ``last-run`` symlink at
-    that VM's root pointing to the most recent kernel:
+    The Phase B layout puts each run under its kernel name inside
+    the per-VM directory, with a ``last-run`` symlink at that VM's
+    root pointing to the most recent kernel:
 
         results_dir/qsu-xfs-crc/last-run -> 7.0.0-gABCDE
         results_dir/qsu-xfs-crc/7.0.0-gABCDE/xfs_crc/result.xml
 
-    Walking ``<vm>/last-run/`` resolves the symlink so the gather
-    sees the most recent run for each VM; switching to a specific
-    kernel is just changing the symlink target (or pointing the
-    walker at ``<vm>/<kernel>/`` directly via the upcoming
-    ``--kernel`` flag).
+    With ``kernel=None`` the gather follows each VM's ``last-run``
+    symlink to read the most recent kernel; with ``kernel`` set to
+    a specific name the gather reads ``<vm>/<kernel>/`` directly,
+    so the report can be regenerated for an archived run without
+    flipping the symlink. A VM without that kernel directory is
+    skipped — the report reflects only the kernels that actually
+    exist on disk.
 
     Returns a dict shaped like:
         {
@@ -177,23 +179,26 @@ def _gather_run(results_dir: Path) -> dict:
         # Skip top-level files (last-kernel.txt at root, fstests-report*.html)
         # and any non-VM-named entries. A real VM dir has a last-run symlink
         # or at least one <kernel> subdir.
-        last_run_dir = vm_dir / "last-run"
-        if not last_run_dir.is_dir():
+        if kernel is not None:
+            run_dir = vm_dir / kernel
+            per_vm_kernel = kernel
+        else:
+            run_dir = vm_dir / "last-run"
+            # Per-VM kernel record (from <vm>/last-kernel.txt) so
+            # the report can show which kernel each VM used.
+            per_vm_kernel = None
+            last_kernel_file = vm_dir / "last-kernel.txt"
+            if last_kernel_file.is_file():
+                per_vm_kernel = last_kernel_file.read_text().strip() or None
+        if not run_dir.is_dir():
             continue
-
-        # Per-VM kernel record (from <vm>/last-kernel.txt) so the
-        # report can show which kernel each VM used.
-        per_vm_kernel = None
-        last_kernel_file = vm_dir / "last-kernel.txt"
-        if last_kernel_file.is_file():
-            per_vm_kernel = last_kernel_file.read_text().strip() or None
 
         vm_data = run["vms"].setdefault(
             vm_dir.name,
             {"kernel": per_vm_kernel, "sections": {}},
         )
 
-        for section_dir in sorted(last_run_dir.iterdir()):
+        for section_dir in sorted(run_dir.iterdir()):
             if not section_dir.is_dir():
                 continue
             # The monitoring/ subdir is a sibling of the section dirs
@@ -405,21 +410,23 @@ def _detail_section_html(run: dict) -> str:
     return "\n".join(chunks) if chunks else '<div class="no-data">No sections found</div>'
 
 
-def _summary_text_section(results_dir: Path) -> Optional[str]:
-    """Embed each VM's last-run xunit_results.txt if any are present.
+def _summary_text_section(
+    results_dir: Path, kernel: Optional[str] = None,
+) -> Optional[str]:
+    """Embed each VM's xunit_results.txt summary near the top of the report.
 
-    The Phase 4d summary pipeline (now per-(VM, kernel)) writes
-    xunit_results.txt at <vm>/<kernel>/. For default-mode reports
-    this lives at <vm>/last-run/xunit_results.txt thanks to the
-    symlink. Concatenate all VMs' summaries with a small heading
-    per VM so a reviewer scanning the top of the report sees what
-    each profile produced.
+    With ``kernel=None`` the path resolves through the per-VM
+    last-run symlink so the report shows the most recent run's
+    summary. With ``kernel`` set, the function reads
+    ``<vm>/<kernel>/xunit_results.txt`` directly so an archived
+    run can be inspected without changing any symlink.
     """
+    sub = kernel if kernel is not None else "last-run"
     chunks: list[str] = []
     for vm_dir in sorted(results_dir.iterdir()):
         if not vm_dir.is_dir():
             continue
-        path = vm_dir / "last-run" / "xunit_results.txt"
+        path = vm_dir / sub / "xunit_results.txt"
         if not path.is_file():
             continue
         content = _read_capped(path)
@@ -434,17 +441,23 @@ def _summary_text_section(results_dir: Path) -> Optional[str]:
     return "\n".join(chunks) if chunks else None
 
 
-def _host_monitoring_dir(results_dir: Path, vm_name: str) -> Path:
-    """Per-VM monitoring directory for the most recent run.
+def _host_monitoring_dir(
+    results_dir: Path, vm_name: str, kernel: Optional[str] = None,
+) -> Path:
+    """Per-VM monitoring directory for the requested run.
 
-    Resolves <results>/<vm>/last-run/monitoring/ via the symlink
-    that the qsu role keeps pointing at the current kernel's run.
+    With ``kernel=None`` the path resolves through the per-VM
+    last-run symlink (most recent run). With ``kernel`` set, the
+    path is ``<results>/<vm>/<kernel>/monitoring/`` directly, so
+    an archived run's monitoring data is reachable without
+    flipping any symlink.
     """
-    return results_dir / vm_name / "last-run" / "monitoring"
+    sub = kernel if kernel is not None else "last-run"
+    return results_dir / vm_name / sub / "monitoring"
 
 
 def _build_test_timelines(
-    run: dict, results_dir: Path,
+    run: dict, results_dir: Path, kernel: Optional[str] = None,
 ) -> dict[str, list[tuple[str, float, float, str]]]:
     """Compute per-host test intervals aligned to the sysstat x-axis.
 
@@ -456,7 +469,7 @@ def _build_test_timelines(
     """
     timelines: dict[str, list[tuple[str, float, float, str]]] = {}
     for vm_name, vm in run["vms"].items():
-        host_dir = _host_monitoring_dir(results_dir, vm_name)
+        host_dir = _host_monitoring_dir(results_dir, vm_name, kernel=kernel)
         first_sample = monitoring.first_sample_timestamp(host_dir)
         if first_sample is None:
             continue
@@ -484,6 +497,7 @@ def _build_test_timelines(
 def build_report(
     results_dir: Path,
     hosts: Optional[set[str]] = None,
+    kernel: Optional[str] = None,
 ) -> html.Report:
     """Build an HTML report from the fstests results tree.
 
@@ -495,8 +509,16 @@ def build_report(
     and a reviewer only cares about one (e.g. comparing the same
     workflow under two different mkfs/mount setups by rendering one
     report per host).
+
+    ``kernel`` selects which run to render per VM. ``None`` means
+    each VM's most recent run (resolved via the
+    ``<vm>/last-run -> <kernel>`` symlink). A specific kernel name
+    reads ``<vm>/<kernel>/...`` directly so archived runs can be
+    re-rendered without flipping any symlink. VMs that lack the
+    requested kernel are silently skipped — the report only
+    surfaces what actually exists on disk.
     """
-    run = _gather_run(results_dir)
+    run = _gather_run(results_dir, kernel=kernel)
 
     if hosts:
         run["vms"] = {k: v for k, v in run["vms"].items() if k in hosts}
@@ -512,23 +534,28 @@ def build_report(
         run["totals"] = totals
 
     report_title = "fstests Run Report"
+    title_bits: list[str] = []
+    if kernel:
+        title_bits.append(kernel)
     if hosts:
-        report_title += f" — {', '.join(sorted(hosts))}"
+        title_bits.append(", ".join(sorted(hosts)))
+    if title_bits:
+        report_title += " — " + " / ".join(title_bits)
     report = html.Report(
         title=report_title,
         timestamp=datetime.now(),
     )
     _stat_cards(report, run)
 
-    summary_html = _summary_text_section(results_dir)
+    summary_html = _summary_text_section(results_dir, kernel=kernel)
     if summary_html:
         report.add_section("Run summary", summary_html)
 
     report.add_section("Pass / fail by section", _pass_fail_chart_html(run))
 
-    test_timelines = _build_test_timelines(run, results_dir)
+    test_timelines = _build_test_timelines(run, results_dir, kernel=kernel)
     host_monitoring_dirs = {
-        vm_name: _host_monitoring_dir(results_dir, vm_name)
+        vm_name: _host_monitoring_dir(results_dir, vm_name, kernel=kernel)
         for vm_name in run["vms"].keys()
     }
     monitoring_html = monitoring.render_section(
@@ -568,6 +595,18 @@ def main() -> int:
             "When unset all hosts under last-run/ are rendered."
         ),
     )
+    parser.add_argument(
+        "--kernel",
+        default=None,
+        metavar="KERNEL",
+        help=(
+            "Render the run archived under <vm>/<KERNEL>/ instead "
+            "of following each VM's last-run symlink. Useful for "
+            "regenerating a report against an older run without "
+            "changing what last-run points at. VMs that don't have "
+            "the named kernel directory are silently skipped."
+        ),
+    )
     args = parser.parse_args()
 
     results_dir = Path(args.results_dir).resolve()
@@ -585,8 +624,15 @@ def main() -> int:
             if h:
                 hosts.add(h)
 
-    report = build_report(results_dir, hosts=hosts or None)
-    suffix = "-" + "_".join(sorted(hosts)) if hosts else ""
+    report = build_report(
+        results_dir, hosts=hosts or None, kernel=args.kernel,
+    )
+    suffix_parts: list[str] = []
+    if args.kernel:
+        suffix_parts.append(args.kernel)
+    if hosts:
+        suffix_parts.append("_".join(sorted(hosts)))
+    suffix = ("-" + "-".join(suffix_parts)) if suffix_parts else ""
     out_path = (
         Path(args.output) if args.output
         else (results_dir / f"fstests-report{suffix}.html")
