@@ -90,9 +90,16 @@ def _testcase_status(testcase) -> str:
     return "pass"
 
 
-def _testcase_failure_msg(testcase) -> str:
+def _testcase_status_msg(testcase) -> str:
+    """Return the message a Failure or Skipped result carries.
+
+    xfstests' xunit emits <skipped message="..."> with the reason
+    text from the test's .notrun file (e.g. missing test binary,
+    kernel feature not enabled), and <failure message="..."> for
+    fails. Either one is useful in the per-test table.
+    """
     for r in testcase.result:
-        if isinstance(r, Failure):
+        if isinstance(r, (Failure, Skipped)):
             return r.message or ""
     return ""
 
@@ -199,7 +206,12 @@ def _gather_run(last_run: Path) -> dict:
                         "name": tc.name,
                         "status": status,
                         "duration": float(getattr(tc, "time", 0) or 0),
-                        "fail_msg": _testcase_failure_msg(tc) if status == "fail" else "",
+                        # Pull the <failure message> for fails and
+                        # <skipped message> for skips so the table
+                        # tells the reviewer *why* a non-pass result
+                        # happened. .notrun files carry the same
+                        # text xfstests writes into xunit.
+                        "status_msg": _testcase_status_msg(tc),
                         "out_bad": None,
                         "full": None,
                         "dmesg": None,
@@ -318,13 +330,13 @@ def _section_block(vm_name: str, section: str, sec: dict) -> str:
             f"<td>{escape(t['name'])}</td>"
             f'<td class="{klass}">{escape(t["status"].upper())}</td>'
             f"<td>{t['duration']:.2f}s</td>"
-            f"<td>{escape(t['fail_msg'])}</td>"
+            f"<td>{escape(t['status_msg'])}</td>"
             "</tr>"
         )
     parts.append("<h4>Tests</h4>")
     parts.append(
         "<table><thead><tr>"
-        "<th>Test</th><th>Status</th><th>Duration</th><th>Failure message</th>"
+        "<th>Test</th><th>Status</th><th>Duration</th><th>Reason</th>"
         f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
     )
 
@@ -335,7 +347,7 @@ def _section_block(vm_name: str, section: str, sec: dict) -> str:
         for t in failures:
             parts.append(
                 f'<details open><summary><strong class="failure">'
-                f'{escape(t["name"])}</strong> — {escape(t["fail_msg"])}'
+                f'{escape(t["name"])}</strong> — {escape(t["status_msg"])}'
                 '</summary>'
             )
             parts.append(_format_log_block(".out.bad (diff)", t["out_bad"], ".out.bad"))
