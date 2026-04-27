@@ -71,17 +71,72 @@ Just run:
   * `make fstests-baseline`
   * `make fstests-results`
 
-# Running fstests against only a set of tests
+# Test selection knobs
 
-You can run tests only against a smaller subset of tests with something like;
+`make fstests-baseline` (and friends) accept a small set of environment-style
+knobs that map onto either xfstests `./check` arguments or oscheck.sh
+flags. Top-level `Makefile:110` exports `LIMIT_TESTS` from `TESTS=`;
+`workflows/fstests/Makefile:74-107` injects the rest into
+`FSTESTS_DYNAMIC_RUNTIME_VARS` which the role consumes at run time.
+
+| Knob | Example | Effect | Backend support |
+| --- | --- | --- | --- |
+| `TESTS=` | `make fstests-baseline TESTS="generic/531 xfs/008 xfs/013"` | Forwarded as positional args to xfstests `./check`. Skips the in-tree expunge list, so listed tests run even if they are known to crash for a section. | libvirt + qsu |
+| `START_AFTER=` | `make fstests-baseline START_AFTER=generic/451` | Adds `--start-after generic/451` to oscheck.sh; xfstests skips every test until *after* the named one. Assumes the run is not in random order. Implementation: `playbooks/roles/fstests/tasks/run.yml:185`. | libvirt only |
+| `SKIP_TESTS=` | `make fstests-baseline SKIP_TESTS="generic/042 generic/091"` | Adds `-e <list>` to oscheck.sh's CHECK_ARGS so `./check -e ...` excludes those tests. Implementation: `playbooks/roles/fstests/tasks/run.yml:192`. | libvirt only |
+| `RUN_FAILURES=` | `make fstests-baseline RUN_FAILURES=1` | Replaces the test list with the output of `oscheck-get-failures.sh`, so only tests that failed in the previous run are re-executed. Implementation: `playbooks/roles/fstests/tasks/run.yml:332-362`. | libvirt only |
+| `INITIAL_BASELINE=` | `make fstests-baseline INITIAL_BASELINE=1` | Walks the prior run's `check.time` files and builds expunge args so already-passed tests are skipped from a fresh baseline. Implementation: `playbooks/roles/fstests/tasks/run.yml:170-180`. | libvirt only |
+| `COUNT=` | `make fstests-baseline COUNT=5` | Sets `oscheck_extra_args="-I 5"`. xfstests' `-I N` runs every selected test N times, useful for flake hunts. | libvirt + qsu |
+| `SKIP_RUN=` | `make fstests-baseline SKIP_RUN=1 TESTS="generic/001"` | After resolving `LIMIT_TESTS` the role calls `meta: end_play` instead of running. Lets you confirm what would be run without spending the time. Implementation: `playbooks/roles/fstests/tasks/run.yml` (search `fstests_skip_run`). | libvirt only |
+
+The qsu split fork (`run-qsu.yml`, `results-qsu.yml`) consumes
+`fstests_initial_baseline_args` and `fstests_skip_tests_args` but does
+not set them — those facts are produced exclusively by `run.yml` tasks
+that the qsu path skips. As a result the qsu backend currently only
+honours `TESTS=` and `COUNT=` end to end. `START_AFTER`, `SKIP_TESTS`,
+`RUN_FAILURES`, `INITIAL_BASELINE`, and `SKIP_RUN` are accepted on the
+make command line and propagated through `FSTESTS_DYNAMIC_RUNTIME_VARS`
+but produce no behavioural change on qsu. Treat that as a known gap
+when running on qsu; on libvirt all seven knobs work as the table
+describes.
+
+## Test ranges with `TESTS=`
+
+xfstests' `./check` does **not** parse dash-ranges like
+`generic/001-050`. The argument parser at `xfstests/check`
+(`*) # Expand test pattern`) runs the value through
+`cd tests; echo $1`, which means it accepts only literal test names
+and shell globs (`xfs/???`, `generic/0??`). Anything else fails the
+group-file lookup with `... - unknown test, ignored` and the run is
+silently empty.
+
+For ranges, expand at the shell layer before `make` sees them:
 
 ```bash
-make fstests-baseline TESTS="generic/531 xfs/008 xfs/013"
+# bash brace expansion gives zero-padded names; the outer "$(...)"
+# keeps it as a single TESTS= value
+make fstests-baseline TESTS="$(echo generic/{001..050})"
+
+# POSIX equivalent without bash brace expansion
+make fstests-baseline TESTS="$(printf 'generic/%03d ' $(seq 1 50))"
 ```
 
-The expunge will will *not* be used if the TESTS argument is used and so
-running the above will *ensure* the tests are run even if they are known to
-crash on a system for a target section.
+Globs work directly when the boundaries align:
+
+```bash
+make fstests-baseline TESTS="generic/00?"          # 000..009
+make fstests-baseline TESTS="generic/0[0-4]?"      # 000..049
+```
+
+Composing knobs is supported on libvirt (only `TESTS=` survives on
+qsu):
+
+```bash
+make fstests-baseline \
+    TESTS="$(echo generic/{001..200})" \
+    SKIP_TESTS="generic/042 generic/091" \
+    COUNT=3
+```
 
 # A/B Testing with Different Kernels
 
