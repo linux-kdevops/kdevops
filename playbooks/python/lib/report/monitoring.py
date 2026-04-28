@@ -611,6 +611,7 @@ def _render_snapshot_section(
     *,
     parser=None,
     intro: Optional[str] = None,
+    title_suffix: str = "",
 ) -> Optional[str]:
     """Render a snapshot monitor's start/end pivot as an HTML section.
 
@@ -655,7 +656,7 @@ def _render_snapshot_section(
         else:
             drift[k] = (s, e)
 
-    parts: list[str] = [f"<h4>{escape(title)}</h4>"]
+    parts: list[str] = [f"<h4>{escape(title)}{escape(title_suffix)}</h4>"]
     if intro:
         parts.append(intro)
     if drift:
@@ -710,53 +711,74 @@ def _render_snapshot_section(
     return "\n".join(parts)
 
 
-def render_host_info_section(host_dir: Path) -> Optional[str]:
+def render_host_info_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """fastfetch — host identity (OS, CPU, BIOS, packages, ...)."""
     return _render_snapshot_section(
         host_dir, "host_info", "Host identity (fastfetch)",
         parser=_parse_fastfetch,
+        title_suffix=title_suffix,
     )
 
 
-def render_boot_params_section(host_dir: Path) -> Optional[str]:
+def render_boot_params_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """Kernel boot parameters (cmdline, version, taint, ASLR)."""
     return _render_snapshot_section(
         host_dir, "boot_params", "Kernel boot parameters",
+        title_suffix=title_suffix,
     )
 
 
-def render_cpu_features_section(host_dir: Path) -> Optional[str]:
+def render_cpu_features_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """CPU features and mitigations (vulnerabilities, smt, microcode)."""
     return _render_snapshot_section(
         host_dir, "cpu_features", "CPU features and mitigations",
+        title_suffix=title_suffix,
     )
 
 
-def render_clocksource_section(host_dir: Path) -> Optional[str]:
+def render_clocksource_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """Clocksource selection (current and available)."""
     return _render_snapshot_section(
         host_dir, "clocksource", "Clocksource",
+        title_suffix=title_suffix,
     )
 
 
-def render_vm_tuning_section(host_dir: Path) -> Optional[str]:
+def render_vm_tuning_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """Virtual-memory tuning (THP and /proc/sys/vm/* sysctls)."""
     return _render_snapshot_section(
         host_dir, "vm_tuning", "Virtual-memory tuning",
+        title_suffix=title_suffix,
     )
 
 
-def render_lsm_section(host_dir: Path) -> Optional[str]:
+def render_lsm_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """Linux Security Module status and EFI presence."""
     return _render_snapshot_section(
         host_dir, "lsm", "Linux Security Module status",
+        title_suffix=title_suffix,
     )
 
 
-def render_dmi_section(host_dir: Path) -> Optional[str]:
+def render_dmi_section(
+    host_dir: Path, *, title_suffix: str = "",
+) -> Optional[str]:
     """DMI/firmware identity tree."""
     return _render_snapshot_section(
         host_dir, "dmi", "DMI / firmware identity",
+        title_suffix=title_suffix,
     )
 
 
@@ -1036,6 +1058,28 @@ def render_host_section_ab(
                 f"<h4>Storage device sysfs settings · {escape(kernel)}</h4>"
             )
             body_parts.append(bd_html)
+
+    # Per-monitor snapshot sections — outer loop over monitors, inner
+    # loop over kernels, so each monitor's two kernels render adjacently
+    # and a reviewer can spot drift across kernels by eye. Each
+    # renderer's output is self-contained (its own <h4>); the
+    # title_suffix parameter lets us append " · <kernel>" so both
+    # kernels' instances of the same monitor are visually distinct.
+    # Order matches the Kconfig listing and the single-kernel loop in
+    # render_host_section.
+    for renderer in (
+        render_host_info_section,
+        render_boot_params_section,
+        render_cpu_features_section,
+        render_clocksource_section,
+        render_vm_tuning_section,
+        render_lsm_section,
+        render_dmi_section,
+    ):
+        for kernel in kernels:
+            chunk = renderer(host_dirs[kernel], title_suffix=f" · {kernel}")
+            if chunk:
+                body_parts.append(chunk)
 
     if not body_parts:
         return None
