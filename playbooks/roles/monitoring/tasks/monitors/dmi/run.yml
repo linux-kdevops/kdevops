@@ -1,0 +1,13 @@
+---
+# dmi monitor: snapshot the firmware DMI tree at the start of the workload
+# window. DMI/firmware identity tree under /sys/devices/virtual/dmi/id/. Captured via monitor_snapshot.py --profile dmi.
+
+- name: Take start-of-run dmi snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile dmi /data/monitor/dmi/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_dmi | default(false) | bool

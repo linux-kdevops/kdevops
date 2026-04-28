@@ -1,0 +1,36 @@
+---
+# cpu_features collect: snapshot again at workflow end so a reviewer
+# can spot any drift between start.json and end.json.
+
+- name: Take end-of-run cpu_features snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile cpu_features /data/monitor/cpu_features/end.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_cpu_features | default(false) | bool
+
+- name: Locate cpu_features outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/cpu_features"
+    patterns: "*.json"
+    file_type: file
+  register: cpu_features_outputs
+  when:
+    - monitor_cpu_features | default(false) | bool
+
+- name: Report cpu_features collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      cpu_features outputs for {{ inventory_hostname }}:
+      {% for f in cpu_features_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_cpu_features | default(false) | bool

@@ -1,0 +1,13 @@
+---
+# boot_params monitor: snapshot kernel boot-time invariants at the start of the workload
+# window. Kernel boot parameters (cmdline, version, taint, ASLR). Captured via monitor_snapshot.py --profile boot_params.
+
+- name: Take start-of-run boot_params snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile boot_params /data/monitor/boot_params/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_boot_params | default(false) | bool

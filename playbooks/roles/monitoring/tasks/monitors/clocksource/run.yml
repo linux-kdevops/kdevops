@@ -1,0 +1,13 @@
+---
+# clocksource monitor: snapshot the active clocksource at the start of the workload
+# window. Clocksource selection (current and available). Captured via monitor_snapshot.py --profile clocksource.
+
+- name: Take start-of-run clocksource snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile clocksource /data/monitor/clocksource/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_clocksource | default(false) | bool

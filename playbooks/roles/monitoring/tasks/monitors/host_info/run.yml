@@ -1,0 +1,31 @@
+---
+# host_info monitor: snapshot host identity (distro, OS, CPU, RAM,
+# BIOS, board, chassis, packages) via fastfetch at workflow start.
+# fastfetch is invoked directly — no Python wrapper — and writes a
+# JSON document to /data/monitor/host_info/start.json.
+#
+# fastfetch must be on the guest's PATH. The kdevops nixos-qemu
+# monitoring module adds it to environment.systemPackages; on
+# libvirt guests the binary is not yet installed automatically and
+# this task will fail until per-distro install support lands.
+#
+# fastfetch's module list deliberately covers OS + Kernel + CPU +
+# CPUCache + Memory + BIOS + Board + Chassis + Title + Uptime +
+# Loadavg + Packages + InitSystem + Locale. Disk identity is
+# omitted on purpose because the blockdev monitor already covers
+# /sys/class/block in greater detail.
+
+- name: Take start-of-run host_info snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: >
+    mkdir -p /data/monitor/host_info &&
+    fastfetch
+    --logo none
+    --pipe
+    -s os:kernel:cpu:cpucache:memory:bios:board:chassis:title:uptime:loadavg:packages:initsystem:locale
+    --format json
+    > /data/monitor/host_info/start.json
+  changed_when: true
+  when:
+    - monitor_host_info | default(false) | bool

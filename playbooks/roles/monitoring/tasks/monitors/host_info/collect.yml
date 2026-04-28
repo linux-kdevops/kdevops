@@ -1,0 +1,42 @@
+---
+# host_info collect: re-run fastfetch at workflow end so the report
+# can flag any host-identity drift mid-run (firmware update,
+# package install, hostname change). Output overwrites end.json.
+
+- name: Take end-of-run host_info snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.shell: >
+    mkdir -p /data/monitor/host_info &&
+    fastfetch
+    --logo none
+    --pipe
+    -s os:kernel:cpu:cpucache:memory:bios:board:chassis:title:uptime:loadavg:packages:initsystem:locale
+    --format json
+    > /data/monitor/host_info/end.json
+  changed_when: true
+  when:
+    - monitor_host_info | default(false) | bool
+
+- name: Locate host_info outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/host_info"
+    patterns: "*.json"
+    file_type: file
+  register: host_info_outputs
+  when:
+    - monitor_host_info | default(false) | bool
+
+- name: Report host_info collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      host_info outputs for {{ inventory_hostname }}:
+      {% for f in host_info_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_host_info | default(false) | bool

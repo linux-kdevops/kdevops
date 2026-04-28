@@ -1,0 +1,36 @@
+---
+# vm_tuning collect: snapshot again at workflow end so a reviewer
+# can spot any drift between start.json and end.json.
+
+- name: Take end-of-run vm_tuning snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile vm_tuning /data/monitor/vm_tuning/end.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_vm_tuning | default(false) | bool
+
+- name: Locate vm_tuning outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/vm_tuning"
+    patterns: "*.json"
+    file_type: file
+  register: vm_tuning_outputs
+  when:
+    - monitor_vm_tuning | default(false) | bool
+
+- name: Report vm_tuning collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      vm_tuning outputs for {{ inventory_hostname }}:
+      {% for f in vm_tuning_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_vm_tuning | default(false) | bool

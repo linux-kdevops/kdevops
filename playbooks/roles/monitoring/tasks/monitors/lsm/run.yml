@@ -1,0 +1,13 @@
+---
+# lsm monitor: snapshot active LSMs and lockdown level at the start of the workload
+# window. Linux Security Module status and EFI presence flag. Captured via monitor_snapshot.py --profile lsm.
+
+- name: Take start-of-run lsm snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile lsm /data/monitor/lsm/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_lsm | default(false) | bool

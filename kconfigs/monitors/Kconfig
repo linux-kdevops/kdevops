@@ -194,9 +194,36 @@ config MONITOR_SYSTEM_METRICS_INTERVAL
 	  is fine-grained enough to catch test transitions without
 	  bloating the .sa file on multi-hour runs.
 
+menu "Host snapshots (one-time captures, not continuous monitoring)"
+
+comment "These monitors take a snapshot of host/kernel state at the"
+comment "start of the workload window and another at the end. Output"
+comment "lands under /data/monitor/<monitor>/{start,end}.json on the"
+comment "guest. The report pivots start vs end to surface drift and"
+comment "common-vs-differing attributes across (vm, kernel) runs."
+
+config MONITOR_SNAPSHOTS_ALL
+	bool "Enable the default set of snapshot monitors"
+	output yaml
+	default n
+	help
+	  Convenience knob that turns on every snapshot-style monitor
+	  below with its default settings. Useful when you want the
+	  full host/kernel context for the report and don't want to
+	  flip each one individually.
+
+	  Time-series monitors (sysstat, fragmentation,
+	  folio_migration) above are NOT affected by this knob —
+	  they remain opt-in even when this is set.
+
+	  Individual snapshot monitors can still be set =n explicitly
+	  to override the auto-enable; this knob only changes their
+	  default, not their final value.
+
 config MONITOR_CPU_GOVERNOR
 	bool "Snapshot CPU governor at workflow start and end"
 	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
 	default n
 	help
 	  Read /sys/devices/system/cpu/cpuN/cpufreq/scaling_governor
@@ -210,6 +237,7 @@ config MONITOR_CPU_GOVERNOR
 config MONITOR_BLOCKDEV
 	bool "Snapshot block-layer + NVMe sysfs at workflow start and end"
 	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
 	default n
 	help
 	  Walk the storage-related sysfs surfaces governed by
@@ -226,6 +254,123 @@ config MONITOR_BLOCKDEV
 	  reviewer can confirm the storage configuration the workload
 	  ran against (queue depth, scheduler, write_cache, atomic-write
 	  limits, NVMe model/firmware) at a glance.
+
+config MONITOR_HOST_INFO
+	bool "Snapshot host identity (fastfetch) at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Run fastfetch with --format json and write the result to
+	  /data/monitor/host_info/{start,end}.json on the guest.
+	  Captures distro id and version, kernel name + release +
+	  build banner, CPU vendor + model + topology + cache sizes,
+	  RAM total, BIOS + board + chassis vendor and revision,
+	  package counts, init system, and locale.
+
+	  fastfetch must be present on the guest. The kdevops
+	  qemu-system-units backend ships it via the nixos-qemu
+	  monitoring module; on libvirt guests this monitor is a
+	  no-op until per-distro install support lands.
+
+config MONITOR_BOOT_PARAMS
+	bool "Snapshot kernel boot parameters at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture the kernel boot-time invariants:
+	    /proc/cmdline
+	    /proc/version             (build banner with compiler + date)
+	    /proc/sys/kernel/tainted  (taint mask)
+	    /proc/sys/kernel/randomize_va_space (ASLR)
+
+	  All four are set at boot and shouldn't change during a run;
+	  drift between start.json and end.json (especially a non-zero
+	  tainted) is the signal a reviewer needs.
+
+config MONITOR_CPU_FEATURES
+	bool "Snapshot CPU features and mitigations at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture static CPU state from sysfs:
+	    /sys/devices/system/cpu/vulnerabilities/* (every entry,
+	      auto-discovered: spectre_v1, spectre_v2, meltdown,
+	      mds, srbds, retbleed, gds, srso, vmscape, ...)
+	    /sys/devices/system/cpu/smt/{active,control}
+	    /sys/devices/system/cpu/{online,present,possible,offline}
+	    /sys/devices/system/cpu/cpu0/microcode/{version,processor_flags}
+
+	  Microcode files are absent on emulated guests where the
+	  hypervisor doesn't expose host microcode through the
+	  virtualized CPU; the collector records them as null
+	  gracefully.
+
+config MONITOR_CLOCKSOURCE
+	bool "Snapshot clocksource selection at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture the active and available clocksources:
+	    /sys/devices/system/clocksource/clocksource0/current_clocksource
+	    /sys/devices/system/clocksource/clocksource0/available_clocksource
+
+	  Useful to detect clocksource flips mid-run (kvm-clock falling
+	  back to tsc, hpet kicking in) which can dominate flaky-test
+	  variance under fstests.
+
+config MONITOR_VM_TUNING
+	bool "Snapshot virtual-memory tuning at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture VM (virtual memory) tuning state:
+	    /sys/kernel/mm/transparent_hugepage/{enabled,defrag,shmem_enabled}
+	    /proc/sys/vm/swappiness
+	    /proc/sys/vm/dirty_ratio
+	    /proc/sys/vm/dirty_background_ratio
+	    /proc/sys/vm/overcommit_memory
+	    /proc/sys/vm/overcommit_ratio
+
+	  THP and dirty-writeback policies materially change fs/io
+	  test outcomes; capturing them per-run lets the report flag
+	  unintended changes between A/B kernel comparisons.
+
+config MONITOR_LSM
+	bool "Snapshot Linux Security Module status at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture the security state from sysfs:
+	    /sys/kernel/security/lsm       (active LSM list)
+	    /sys/kernel/security/lockdown  (lockdown level)
+	    /sys/firmware/efi              (presence flag)
+
+	  Requires CONFIG_SECURITYFS=y and CONFIG_SECURITY_LOCKDOWN_LSM=y
+	  in the guest kernel (kdevops config-qsu enables both). On
+	  kernels without those, the collector records null gracefully.
+
+config MONITOR_DMI
+	bool "Snapshot DMI/firmware identity at workflow start and end"
+	output yaml
+	default y if MONITOR_SNAPSHOTS_ALL
+	default n
+	help
+	  Capture the full DMI tree under /sys/devices/virtual/dmi/id/.
+	  All readable scalar attributes are recorded — bios_*,
+	  board_*, chassis_*, product_*, sys_vendor, modalias.
+
+	  DMI is firmware-exposed (BIOS / UEFI), not kernel-emitted,
+	  so this is mostly invariant across runs of the same guest.
+	  The diff against start vs end is useful to flag a firmware
+	  update mid-run on bare-metal hosts.
+
+endmenu
 
 # Future monitoring options can be added here
 # Examples:

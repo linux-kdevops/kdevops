@@ -25,6 +25,19 @@ monitor_cpu_governor: false
 # Enable block-layer + NVMe sysfs snapshot at workflow start and end
 monitor_blockdev: false
 
+# Snapshot-style monitors. The MONITOR_SNAPSHOTS_ALL Kconfig knob
+# default-y's all of these via Kconfig's `default y if`, but the
+# corresponding ansible variables still need their own defaults so
+# extra_vars resolution doesn't trip on undefined references when
+# Kconfig hasn't been re-rendered.
+monitor_host_info: false
+monitor_boot_params: false
+monitor_cpu_features: false
+monitor_clocksource: false
+monitor_vm_tuning: false
+monitor_lsm: false
+monitor_dmi: false
+
 # Base path to store monitoring results on the control host
 # Workflows can override by setting monitoring_results_base_path
 monitoring_results_base_path: "{{ topdir_path }}/workflows/fstests/results/monitoring"

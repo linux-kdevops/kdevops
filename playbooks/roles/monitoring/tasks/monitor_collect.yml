@@ -33,6 +33,36 @@
   when:
     - monitor_blockdev|default(false)|bool
 
+# Snapshot-style host/kernel monitors — collect end.json. Order
+# matches the Kconfig listing.
+- ansible.builtin.include_tasks: monitors/host_info/collect.yml
+  when:
+    - monitor_host_info|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/boot_params/collect.yml
+  when:
+    - monitor_boot_params|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/cpu_features/collect.yml
+  when:
+    - monitor_cpu_features|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/clocksource/collect.yml
+  when:
+    - monitor_clocksource|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/vm_tuning/collect.yml
+  when:
+    - monitor_vm_tuning|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/lsm/collect.yml
+  when:
+    - monitor_lsm|default(false)|bool
+
+- ansible.builtin.include_tasks: monitors/dmi/collect.yml
+  when:
+    - monitor_dmi|default(false)|bool
+
 # Plot-fragmentation collection tasks
 - name: Check if fragmentation monitoring was started
   become: true

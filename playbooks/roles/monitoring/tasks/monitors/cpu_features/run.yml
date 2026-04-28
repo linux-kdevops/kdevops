@@ -1,0 +1,13 @@
+---
+# cpu_features monitor: snapshot static CPU state at the start of the workload
+# window. CPU features and mitigations (vulnerabilities, smt, microcode, topology). Captured via monitor_snapshot.py --profile cpu_features.
+
+- name: Take start-of-run cpu_features snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile cpu_features /data/monitor/cpu_features/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_cpu_features | default(false) | bool

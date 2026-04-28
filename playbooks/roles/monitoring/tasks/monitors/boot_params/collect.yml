@@ -1,0 +1,36 @@
+---
+# boot_params collect: snapshot again at workflow end so a reviewer
+# can spot any drift between start.json and end.json.
+
+- name: Take end-of-run boot_params snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile boot_params /data/monitor/boot_params/end.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_boot_params | default(false) | bool
+
+- name: Locate boot_params outputs for {{ inventory_hostname }}
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.find:
+    paths: "{{ topdir_path }}/workflows/{{ kdevops_workflow_name | default('unknown') }}/results/monitoring/{{ inventory_hostname }}/boot_params"
+    patterns: "*.json"
+    file_type: file
+  register: boot_params_outputs
+  when:
+    - monitor_boot_params | default(false) | bool
+
+- name: Report boot_params collection summary
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      boot_params outputs for {{ inventory_hostname }}:
+      {% for f in boot_params_outputs.files | default([]) %}
+        - {{ f.path }}
+      {% endfor %}
+  when:
+    - monitor_boot_params | default(false) | bool

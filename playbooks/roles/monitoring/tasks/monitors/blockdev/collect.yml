@@ -8,7 +8,7 @@
   become: true
   become_method: sudo
   ansible.builtin.script:
-    cmd: "{{ playbook_dir }}/roles/monitoring/files/blockdev_snapshot.py /data/monitor/blockdev/end.json"
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile blockdev /data/monitor/blockdev/end.json"
     executable: python3
   changed_when: true
   when:

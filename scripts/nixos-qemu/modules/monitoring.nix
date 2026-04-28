@@ -121,6 +121,12 @@ in {
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
       sysstat
+      # fastfetch is the host_info monitor's collector — invoked
+      # directly from the ansible host_info/{run,collect}.yml tasks
+      # with --format json and a fixed module list. The binary is
+      # ~1.7MB, depends only on libc + libyyjson; cheap addition
+      # for the host_info coverage even when the monitor is off.
+      fastfetch
     ];
 
     systemd.services.monitor-sysstat = lib.mkIf cfg.sysstat.enable {

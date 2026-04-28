@@ -1,0 +1,13 @@
+---
+# vm_tuning monitor: snapshot virtual-memory tuning state at the start of the workload
+# window. Virtual-memory tuning (THP and /proc/sys/vm/* sysctls). Captured via monitor_snapshot.py --profile vm_tuning.
+
+- name: Take start-of-run vm_tuning snapshot on {{ inventory_hostname }}
+  become: true
+  become_method: sudo
+  ansible.builtin.script:
+    cmd: "{{ playbook_dir }}/roles/monitoring/files/monitor_snapshot.py --profile vm_tuning /data/monitor/vm_tuning/start.json"
+    executable: python3
+  changed_when: true
+  when:
+    - monitor_vm_tuning | default(false) | bool
