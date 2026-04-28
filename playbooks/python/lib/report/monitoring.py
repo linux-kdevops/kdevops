@@ -518,6 +518,57 @@ def _flatten_snapshot(d, prefix: str = "") -> dict[str, str]:
     return out
 
 
+_BINARY_UNITS = (("GiB", 1024 ** 3), ("MiB", 1024 ** 2), ("KiB", 1024))
+
+
+def _fmt_bytes(n: int) -> str:
+    """Format an integer byte count as 1024-scaled IEC units.
+
+    Matches fastfetch's text-mode rendering (e.g. 65536 -> '64.00 KiB',
+    16777216 -> '16.00 MiB'). Falls back to a plain decimal string
+    for sub-KiB values.
+    """
+    for unit, scale in _BINARY_UNITS:
+        if n >= scale:
+            return f"{n / scale:.2f} {unit}"
+    return f"{n} B"
+
+
+def _fmt_cpucache_entry(entry: dict) -> str:
+    """One CPUCache entry: {size, num, type} -> '4x64.00 KiB (D)'.
+
+    fastfetch's text mode uses single-letter type codes (D, I, U) for
+    the cache type (data, instruction, unified); replicate that
+    convention so the report and a `fastfetch -s cpucache` invocation
+    show the same shape.
+    """
+    size = entry.get("size", 0)
+    num = entry.get("num", 1)
+    type_letter = {
+        "data": "D", "instruction": "I", "unified": "U",
+    }.get(entry.get("type", ""), entry.get("type", "?")[:1].upper())
+    return f"{num}x{_fmt_bytes(size)} ({type_letter})"
+
+
+def _format_cpucache(result):
+    """Reshape CPUCache result to human-readable per-level strings.
+
+    Replaces lists of cache-entry dicts with the joined human form so
+    flatten + pivot don't surface raw JSON arrays in the report.
+    """
+    if not isinstance(result, dict):
+        return result
+    out = {}
+    for level, entries in result.items():
+        if isinstance(entries, list):
+            out[level] = ", ".join(
+                _fmt_cpucache_entry(e) for e in entries if isinstance(e, dict)
+            )
+        else:
+            out[level] = entries
+    return out
+
+
 def _parse_fastfetch(data):
     """Convert fastfetch's array-of-objects output into a dict.
 
@@ -525,6 +576,11 @@ def _parse_fastfetch(data):
     the host_info renderer wants a top-level dict keyed by module
     name so the rest of the pipeline (flatten + pivot) works the
     same way as the other snapshot monitors.
+
+    Per-module post-processing converts list-typed results that the
+    generic flattener would JSON-stringify (CPUCache's per-level
+    arrays of cache entries) into human-readable strings, matching
+    fastfetch's own text-mode rendering.
     """
     if not isinstance(data, list):
         return {}
@@ -537,10 +593,14 @@ def _parse_fastfetch(data):
             continue
         if "error" in entry:
             out[t] = {"error": entry["error"]}
-        else:
-            r = entry.get("result")
-            if isinstance(r, (dict, list, str, int, float, bool)) or r is None:
-                out[t] = r if isinstance(r, dict) else {"value": r}
+            continue
+        r = entry.get("result")
+        if t == "CPUCache":
+            out[t] = _format_cpucache(r)
+        elif isinstance(r, dict):
+            out[t] = r
+        elif r is not None:
+            out[t] = {"value": r}
     return out
 
 

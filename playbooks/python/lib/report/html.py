@@ -52,7 +52,7 @@ h1 {
 }
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin: 30px 0;
 }
@@ -63,8 +63,23 @@ h1 {
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    /* Long single-line values (kernel id, hostnames, comma-joined
+       host filters) used to overflow the gradient box because the
+       2em stat-value was unbreakable. Allow it to wrap on any
+       character so a 7.0.0-gABCDE000000 stays inside the card. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.stat-value { font-size: 2em; font-weight: bold; margin: 10px 0; }
+/* clamp() shrinks the value when it would otherwise overflow the
+   card (long kernel id), while keeping the original 2em headroom
+   for short numeric values (test counts). The 0.95em floor keeps
+   it readable on narrow viewports. */
+.stat-value {
+    font-size: clamp(0.95em, 2.4vw, 2em);
+    font-weight: bold;
+    margin: 10px 0;
+    line-height: 1.2;
+}
 .stat-label { font-size: 0.9em; opacity: 0.9; }
 .section { margin: 40px 0; }
 .section-title {

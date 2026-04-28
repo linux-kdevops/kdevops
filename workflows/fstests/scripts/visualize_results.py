@@ -22,6 +22,8 @@ Default results_dir is workflows/fstests/results.
 from __future__ import annotations
 
 import argparse
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from html import escape
@@ -284,11 +286,17 @@ def _stat_cards(report: html.Report, run: dict) -> None:
     section_count = sum(
         len(vm["sections"]) for vm in run["vms"].values()
     )
+    # Pass/Fail/Skip share one card so the gradient header collapses
+    # from six tiles to four; the freed horizontal space lets the
+    # auto-LOCALVERSION kernel string stay on one line in the
+    # Kernel card without the clamp() font-size dropping further
+    # than necessary.
+    outcomes = (
+        f"{totals['pass']} / {totals['fail']} / {totals['skip']}"
+    )
     report.add_card("Kernel", run["kernel"] or "(unknown)")
-    report.add_card("Total Tests", str(totals["tests"]))
-    report.add_card("Passed", str(totals["pass"]))
-    report.add_card("Failed", str(totals["fail"]))
-    report.add_card("Skipped", str(totals["skip"]))
+    report.add_card("Total tests", str(totals["tests"]))
+    report.add_card("Pass / Fail / Skip", outcomes)
     report.add_card("Sections", str(section_count))
 
 
@@ -600,6 +608,180 @@ def _ab_detail_section_html(
     )
 
 
+def _git_log_lines(repo: Path, n: int = 20) -> Optional[list[str]]:
+    """Return the last ``n`` commits of a git repo as 'sha date subject'.
+
+    Falls back to None when the path isn't a git checkout, the git
+    binary is unavailable, or the call fails — the caller treats
+    None as "skip rendering this source's section".
+    """
+    if not repo.is_dir() or shutil.which("git") is None:
+        return None
+    try:
+        out = subprocess.check_output(
+            ["git", "-C", str(repo), "log",
+             f"-{n}", "--pretty=format:%h %ad %s", "--date=short"],
+            text=True, errors="replace", stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return [line for line in out.splitlines() if line.strip()]
+
+
+def _git_head(repo: Path) -> Optional[dict]:
+    """Return the HEAD commit's metadata + dirty-tree state.
+
+    Shape: ``{sha, author, date, subject, branch, dirty_files}``.
+    ``dirty_files`` is a list of porcelain entries like
+    ``" M tests/generic/042"``; an empty list means the working
+    tree is clean. The renderer surfaces a non-empty dirty_files
+    list as an explicit "this run was built from a modified source
+    tree" warning so a reviewer doesn't assume the HEAD subject
+    represents the actual code under test.
+    """
+    if not repo.is_dir() or shutil.which("git") is None:
+        return None
+    try:
+        out = subprocess.check_output(
+            ["git", "-C", str(repo), "log", "-1",
+             "--pretty=format:%H%n%an <%ae>%n%ad%n%s", "--date=iso-strict"],
+            text=True, errors="replace", stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    parts = out.split("\n", 3)
+    if len(parts) != 4:
+        return None
+    head: dict = {
+        "sha":     parts[0],
+        "author":  parts[1],
+        "date":    parts[2],
+        "subject": parts[3],
+        "branch":  None,
+        "dirty_files": [],
+    }
+    try:
+        head["branch"] = subprocess.check_output(
+            ["git", "-C", str(repo), "rev-parse", "--abbrev-ref", "HEAD"],
+            text=True, errors="replace", stderr=subprocess.DEVNULL,
+        ).strip() or None
+    except (subprocess.CalledProcessError, OSError):
+        pass
+    try:
+        status = subprocess.check_output(
+            ["git", "-C", str(repo), "status", "--porcelain=v1"],
+            text=True, errors="replace", stderr=subprocess.DEVNULL,
+        )
+        head["dirty_files"] = [
+            line for line in status.splitlines() if line.strip()
+        ]
+    except (subprocess.CalledProcessError, OSError):
+        pass
+    return head
+
+
+def _source_revisions_section(results_dir: Path) -> Optional[str]:
+    """Render git HEAD + recent log for the kernel and fstests sources.
+
+    The kdevops controller-mode bootlinux clone lives at
+    ``<kdevops>/data/linux/`` and the user's fstests checkout path
+    is recorded in ``extra_vars.yaml``. Both are accessible from
+    where the report is rendered, so we run ``git log`` directly
+    against them and embed the output.
+
+    Useful in two ways:
+      - confirms the *exact* source revision the kernel binary was
+        built from (the auto-LOCALVERSION suffix in uname -r is
+        only the short SHA; the subject line clarifies what the
+        commit was)
+      - lists the last N commits so a reader can scan whether the
+        run included recent fixes or not — useful when a regression
+        in the report could have been triaged by checking "did
+        commit X land in the build?"
+
+    Returns None if neither source is reachable.
+    """
+    # Resolve repo paths.
+    kdevops_top = results_dir.parent.parent.parent
+    kernel_repo = kdevops_top / "data" / "linux"
+    fstests_repo: Optional[Path] = None
+    extra_vars = kdevops_top / "extra_vars.yaml"
+    if extra_vars.is_file():
+        for line in extra_vars.read_text().splitlines():
+            line = line.strip()
+            if line.startswith("fstests_git:"):
+                value = line.split(":", 1)[1].strip().strip('"').strip("'")
+                if value and not value.startswith(("http", "git@", "git:")):
+                    fstests_repo = Path(value).expanduser()
+                break
+
+    sources = []
+    for label, repo in (
+        ("Linux kernel", kernel_repo),
+        ("xfstests",     fstests_repo),
+    ):
+        if repo is None:
+            continue
+        head = _git_head(repo)
+        log = _git_log_lines(repo, n=15)
+        if not head and not log:
+            continue
+        sources.append((label, repo, head, log))
+    if not sources:
+        return None
+
+    parts: list[str] = []
+    for label, repo, head, log in sources:
+        parts.append(
+            f'<h4>{escape(label)} '
+            f'<code style="font-weight:normal;color:#4a5568;'
+            f'font-size:0.9em;">{escape(str(repo))}</code></h4>'
+        )
+        if head and head["dirty_files"]:
+            n = len(head["dirty_files"])
+            files_block = "\n".join(
+                escape(line) for line in head["dirty_files"]
+            )
+            parts.append(
+                '<p class="failure" style="margin:4px 0 8px 0;">'
+                f'⚠ Working tree is dirty — {n} file(s) modified, '
+                'staged, or untracked. The HEAD commit below is '
+                '<strong>not</strong> the exact source the run was '
+                'built from.</p>'
+                '<details open><summary><strong class="failure">'
+                'git status --porcelain</strong></summary>'
+                '<pre style="background:#1a202c;color:#edf2f7;'
+                'padding:14px;border-radius:6px;overflow-x:auto;'
+                f'font-size:0.85em;">{files_block}</pre>'
+                '</details>'
+            )
+        if head:
+            branch_row = (
+                f'<tr><td>branch</td><td><code>{escape(head["branch"])}</code></td></tr>'
+                if head.get("branch") else ""
+            )
+            parts.append(
+                '<table><thead><tr><th>field</th><th>value</th></tr></thead>'
+                '<tbody>'
+                f'<tr><td>HEAD</td><td><code>{escape(head["sha"][:12])}</code></td></tr>'
+                f'{branch_row}'
+                f'<tr><td>subject</td><td>{escape(head["subject"])}</td></tr>'
+                f'<tr><td>author</td><td>{escape(head["author"])}</td></tr>'
+                f'<tr><td>date</td><td>{escape(head["date"])}</td></tr>'
+                '</tbody></table>'
+            )
+        if log:
+            entries = "\n".join(escape(line) for line in log)
+            parts.append(
+                f'<details><summary>Recent commits ({len(log)})</summary>'
+                '<pre style="background:#1a202c;color:#edf2f7;padding:14px;'
+                'border-radius:6px;overflow-x:auto;font-size:0.85em;">'
+                f'{entries}</pre>'
+                '</details>'
+            )
+    return "\n".join(parts)
+
+
 def _pass_fail_chart_html(run: dict) -> str:
     labels: list[str] = []
     passed: list[int] = []
@@ -840,6 +1022,10 @@ def build_ab_report(
     )
     _ab_stat_cards(report, run_a, run_b, kernels, diff)
 
+    sources_html = _source_revisions_section(results_dir)
+    if sources_html:
+        report.add_section("Source revisions", sources_html)
+
     report.add_section(
         f"A/B summary — {kernels[0]} vs {kernels[1]}",
         _ab_diff_section_html(diff, kernels),
@@ -938,6 +1124,10 @@ def build_report(
     summary_html = _summary_text_section(results_dir, kernel=kernel)
     if summary_html:
         report.add_section("Run summary", summary_html)
+
+    sources_html = _source_revisions_section(results_dir)
+    if sources_html:
+        report.add_section("Source revisions", sources_html)
 
     report.add_section("Pass / fail by section", _pass_fail_chart_html(run))
 
