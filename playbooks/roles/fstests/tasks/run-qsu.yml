@@ -21,22 +21,81 @@
 # check.* and stale end.json/sa-current from a previous run on
 # the same (VM, kernel) don't mingle with the new ones.
 #
+# The wipe target is the per-(VM, kernel) directory keyed off
+# the live guest's uname -r, not the per-VM last-run symlink.
+# last-run only points at the previous run's kernel, so on a
+# kernel-changed boot it would either be stale (pointing at the
+# old kernel after linux-deploy) or missing (first run). Reading
+# uname from the running guest pins the path to the kernel
+# actually about to be tested, which is the right invariant for
+# A/B testing where a re-run on the same kernel must reset state
+# while a new kernel must leave the previous kernel's tree alone.
+#
 # qsu virtiofsd has open share roots at <vm>/<kernel>/
 # (data-results) and <vm>/<kernel>/monitoring/ (data-monitor),
 # so we wipe the children of those roots but leave the roots
 # themselves intact. -mindepth 1 keeps the share root, -maxdepth 1
 # avoids descending (rm -rf does that).
+#
+# Before wiping, the role checks whether the per-(VM, kernel)
+# directory actually holds anything. If it does, the user is
+# prompted (per host) to confirm or abort so they can back up
+# first. Set kdevops_fstests_wipe_force=true to skip the prompt
+# for non-interactive use (CI). When the directory is empty or
+# absent (first run on a fresh kernel), the prompt is skipped
+# silently and the wipe is a no-op.
+
+- name: Detect target kernel release on {{ inventory_hostname }}
+  ansible.builtin.command: "uname -r"
+  register: qsu_uname
+  changed_when: false
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Resolve per-(VM, kernel) results root for {{ inventory_hostname }}
+  ansible.builtin.set_fact:
+    qsu_run_root: "{{ topdir_path }}/workflows/fstests/results/{{ inventory_hostname }}/{{ qsu_uname.stdout | trim }}"
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Discover existing per-(VM, kernel) artefacts on the controller
+  delegate_to: localhost
+  ansible.builtin.find:
+    paths: "{{ qsu_run_root }}"
+    file_type: any
+    recurse: false
+  register: qsu_existing
+  changed_when: false
+  failed_when: false
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Confirm before wiping existing results for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.pause:
+    prompt: |
+      About to wipe {{ qsu_existing.matched }} top-level entry(ies) under:
+        {{ qsu_run_root }}
+      This includes the {{ fstests_section }} section subtree (xfstests
+      .full/.dmesg/check.* output) and the monitoring subtree
+      (snapshot start.json/end.json plus sysstat sa-current).
+
+      Press Enter to wipe and continue, or Ctrl+C to abort and back up
+      the directory first. Set kdevops_fstests_wipe_force=true to skip
+      this prompt.
+  when:
+    - qsu_existing.matched | default(0) > 0
+    - not (kdevops_fstests_wipe_force | default(false) | bool)
+  tags: ["oscheck", "fstests", "run_tests"]
+
 - name: Clear stale results for section {{ fstests_section }}
   delegate_to: localhost
   ansible.builtin.file:
-    path: "{{ topdir_path }}/workflows/fstests/results/last-run/{{ inventory_hostname }}/{{ fstests_section }}"
+    path: "{{ qsu_run_root }}/{{ fstests_section }}"
     state: absent
   tags: ["oscheck", "fstests", "run_tests"]
 
 - name: Clear stale monitoring subtree before this run
   delegate_to: localhost
   ansible.builtin.shell: |
-    d="{{ topdir_path }}/workflows/fstests/results/last-run/{{ inventory_hostname }}/monitoring"
+    d="{{ qsu_run_root }}/monitoring"
     if [ -d "$d" ]; then
       find "$d" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
     fi
