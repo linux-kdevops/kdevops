@@ -13,15 +13,34 @@
     fstests_section: "{{ inventory_hostname | regex_replace(kdevops_host_prefix + '-') | regex_replace('-dev') | regex_replace('-', '_') }}"
   tags: ["oscheck", "fstests", "run_tests"]
 
-# data-results is mounted from the kdevops workflow tree and
-# persists across runs. Clear the section's subtree on the
+# data-results and data-monitor are mounted from the kdevops
+# workflow tree and persist across runs. Clear the section's
+# subtree (xfstests output) AND the monitoring subtree
+# (snapshot start/end.json plus sysstat sa-current) on the
 # controller before each invocation so stale .full/.dmesg/
-# check.* from a previous run don't mingle with the new one.
+# check.* and stale end.json/sa-current from a previous run on
+# the same (VM, kernel) don't mingle with the new ones.
+#
+# qsu virtiofsd has open share roots at <vm>/<kernel>/
+# (data-results) and <vm>/<kernel>/monitoring/ (data-monitor),
+# so we wipe the children of those roots but leave the roots
+# themselves intact. -mindepth 1 keeps the share root, -maxdepth 1
+# avoids descending (rm -rf does that).
 - name: Clear stale results for section {{ fstests_section }}
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ topdir_path }}/workflows/fstests/results/last-run/{{ inventory_hostname }}/{{ fstests_section }}"
     state: absent
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Clear stale monitoring subtree before this run
+  delegate_to: localhost
+  ansible.builtin.shell: |
+    d="{{ topdir_path }}/workflows/fstests/results/last-run/{{ inventory_hostname }}/monitoring"
+    if [ -d "$d" ]; then
+      find "$d" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+    fi
+  changed_when: true
   tags: ["oscheck", "fstests", "run_tests"]
 
 # Replicate the relevant bits of distro run.yml's LIMIT_TESTS
