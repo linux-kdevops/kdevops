@@ -198,7 +198,25 @@ journalctl --user-unit=qemu-system@test.service --follow
 
 # All VM-related units since last boot
 journalctl --user-unit='qemu-system@*' --user-unit='virtiofsd@*' --boot
+
+# Tail every VM with the unit name visible on each line
+journalctl --user-unit='qemu-system@*.service' --output=with-unit --follow
 ```
+
+The default `short` output prefixes each line with the executed
+binary name (`qemu-system-x86_64[PID]:`), which is uninformative when
+more than one VM runs. `--output=with-unit` swaps the prefix for the
+unit name including the templated `%i` argument
+(`user@UID.service/qemu-system@<vm>.service[PID]:`).
+`--output=cat` strips the prefix entirely for piping.
+`--output=json` emits one JSON record per line for machine parsing.
+See: `man journalctl`.
+
+This mirrors the systemd reference templates: neither
+`systemd-vmspawn@.service` nor `systemd-nspawn@.service` overrides
+`SyslogIdentifier=`, so journal records prefix with the binary name
+by default and unit identity is recovered through the journalctl
+output mode. See: `man systemd.exec` (`SyslogIdentifier=`).
 
 ## Stop
 
