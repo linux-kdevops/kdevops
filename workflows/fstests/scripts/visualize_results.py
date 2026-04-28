@@ -701,19 +701,36 @@ def _source_revisions_section(results_dir: Path) -> Optional[str]:
 
     Returns None if neither source is reachable.
     """
-    # Resolve repo paths.
+    # Resolve repo paths from extra_vars.yaml so the rendered
+    # section reflects the user's BOOTLINUX_CONTROLLER_TREE_PATH and
+    # FSTESTS_GIT settings rather than hardcoded data/linux. Both
+    # support pointing at a user-managed worktree (per Phase F's
+    # "skip clone when path exists" handling), so neither is
+    # guaranteed to live under <kdevops>/data/.
     kdevops_top = results_dir.parent.parent.parent
-    kernel_repo = kdevops_top / "data" / "linux"
+    kernel_repo: Optional[Path] = None
     fstests_repo: Optional[Path] = None
     extra_vars = kdevops_top / "extra_vars.yaml"
     if extra_vars.is_file():
         for line in extra_vars.read_text().splitlines():
             line = line.strip()
-            if line.startswith("fstests_git:"):
-                value = line.split(":", 1)[1].strip().strip('"').strip("'")
-                if value and not value.startswith(("http", "git@", "git:")):
-                    fstests_repo = Path(value).expanduser()
-                break
+            for prefix, slot in (
+                ("bootlinux_controller_tree_path:", "kernel"),
+                ("fstests_git:",                    "fstests"),
+            ):
+                if line.startswith(prefix):
+                    value = line[len(prefix):].strip().strip('"').strip("'")
+                    if value and not value.startswith(("http", "git@", "git:")):
+                        path = Path(value).expanduser()
+                        if slot == "kernel":
+                            kernel_repo = path
+                        else:
+                            fstests_repo = path
+                    break
+    # Fall back to the legacy <kdevops>/data/linux when extra_vars
+    # didn't surface a path (older runs, missing variable).
+    if kernel_repo is None:
+        kernel_repo = kdevops_top / "data" / "linux"
 
     sources = []
     for label, repo in (
