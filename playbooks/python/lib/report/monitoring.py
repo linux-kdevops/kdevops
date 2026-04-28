@@ -484,6 +484,222 @@ def render_blockdev_section(host_dir: Path) -> Optional[str]:
     return "\n".join(parts) if len(parts) > 1 else None
 
 
+# ---- Generic snapshot monitor rendering ----------------------------------
+#
+# Every snapshot-style monitor (boot_params, cpu_features,
+# clocksource, vm_tuning, lsm, dmi, host_info) writes a JSON
+# document to <host_dir>/<monitor>/{start,end}.json. The shapes
+# differ but the rendering pattern is the same: flatten to
+# {full/key: scalar}, pivot start vs end into Common (unchanged
+# during the run) and Drift (changed mid-run), surface drift at
+# the top so a reviewer notices it without expanding the section.
+
+
+def _flatten_snapshot(d, prefix: str = "") -> dict[str, str]:
+    """Flatten a snapshot JSON into ``{full/key: scalar}``.
+
+    Nested dicts become ``parent/child`` keys. Lists are passed
+    through as JSON-stringified values so they show up as a single
+    row rather than expanding into N indexed rows. Scalars (str,
+    int, float, bool, None) are kept as-is, stringified for HTML
+    rendering downstream.
+    """
+    out: dict[str, str] = {}
+    if not isinstance(d, dict):
+        return out
+    for k, v in d.items():
+        full = f"{prefix}{k}" if prefix else str(k)
+        if isinstance(v, dict):
+            out.update(_flatten_snapshot(v, prefix=f"{full}/"))
+        elif isinstance(v, list):
+            out[full] = json.dumps(v, sort_keys=True)
+        else:
+            out[full] = "" if v is None else str(v)
+    return out
+
+
+def _parse_fastfetch(data):
+    """Convert fastfetch's array-of-objects output into a dict.
+
+    fastfetch --format json emits ``[{"type": "OS", "result": {...}}, ...]``;
+    the host_info renderer wants a top-level dict keyed by module
+    name so the rest of the pipeline (flatten + pivot) works the
+    same way as the other snapshot monitors.
+    """
+    if not isinstance(data, list):
+        return {}
+    out: dict = {}
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        t = entry.get("type")
+        if not t:
+            continue
+        if "error" in entry:
+            out[t] = {"error": entry["error"]}
+        else:
+            r = entry.get("result")
+            if isinstance(r, (dict, list, str, int, float, bool)) or r is None:
+                out[t] = r if isinstance(r, dict) else {"value": r}
+    return out
+
+
+def _render_snapshot_section(
+    host_dir: Path,
+    monitor_name: str,
+    title: str,
+    *,
+    parser=None,
+    intro: Optional[str] = None,
+) -> Optional[str]:
+    """Render a snapshot monitor's start/end pivot as an HTML section.
+
+    Returns None when the monitor produced no start.json (the
+    monitor was disabled, the guest didn't have the data, or the
+    file is unreadable). When start.json exists but end.json does
+    not, the renderer treats the run as "still running" and only
+    shows the start data without drift detection.
+    """
+    p_start = host_dir / monitor_name / "start.json"
+    p_end = host_dir / monitor_name / "end.json"
+    if not p_start.is_file():
+        return None
+    try:
+        start_data = json.loads(p_start.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    end_data: object = {}
+    if p_end.is_file():
+        try:
+            end_data = json.loads(p_end.read_text())
+        except (OSError, json.JSONDecodeError):
+            end_data = {}
+
+    if parser is not None:
+        start_data = parser(start_data)
+        end_data = parser(end_data) if end_data else {}
+
+    flat_start = _flatten_snapshot(start_data)
+    flat_end = _flatten_snapshot(end_data)
+
+    keys = sorted(set(flat_start) | set(flat_end))
+    common: dict[str, str] = {}
+    drift: dict[str, tuple[str, str]] = {}
+    for k in keys:
+        s = flat_start.get(k, "")
+        e = flat_end.get(k, "")
+        if not flat_end:
+            common[k] = s  # no end snapshot yet — treat as common
+        elif s == e:
+            common[k] = s
+        else:
+            drift[k] = (s, e)
+
+    parts: list[str] = [f"<h4>{escape(title)}</h4>"]
+    if intro:
+        parts.append(intro)
+    if drift:
+        parts.append(
+            '<p class="failure" style="margin:4px 0 8px 0;">'
+            f'⚠ {len(drift)} attribute(s) drifted between start and end '
+            'of the run — expand the Drift block below to inspect.'
+            '</p>'
+        )
+
+    summary_bits = []
+    if common:
+        summary_bits.append(f"{len(common)} stable")
+    if drift:
+        summary_bits.append(f"{len(drift)} drift")
+    summary = ", ".join(summary_bits) or "no data"
+
+    parts.append(
+        f'<details><summary>Show <span style="color:#718096;'
+        f'font-weight:normal;">({escape(summary)})</span></summary>'
+    )
+
+    if drift:
+        rows = "".join(
+            f'<tr><td><code>{escape(k)}</code></td>'
+            f'<td><code>{escape(s)}</code></td>'
+            f'<td><code>{escape(e)}</code></td></tr>'
+            for k, (s, e) in sorted(drift.items())
+        )
+        parts.append(
+            '<details open><summary><strong class="failure">Drift</strong></summary>'
+            '<table><thead><tr><th>Attribute</th><th>start.json</th>'
+            '<th>end.json</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table>'
+            '</details>'
+        )
+
+    if common:
+        rows = "".join(
+            f'<tr><td><code>{escape(k)}</code></td>'
+            f'<td><code>{escape(v)}</code></td></tr>'
+            for k, v in sorted(common.items())
+        )
+        parts.append(
+            '<details><summary><strong>Stable</strong></summary>'
+            '<table><thead><tr><th>Attribute</th><th>Value</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table>'
+            '</details>'
+        )
+
+    parts.append('</details>')
+    return "\n".join(parts)
+
+
+def render_host_info_section(host_dir: Path) -> Optional[str]:
+    """fastfetch — host identity (OS, CPU, BIOS, packages, ...)."""
+    return _render_snapshot_section(
+        host_dir, "host_info", "Host identity (fastfetch)",
+        parser=_parse_fastfetch,
+    )
+
+
+def render_boot_params_section(host_dir: Path) -> Optional[str]:
+    """Kernel boot parameters (cmdline, version, taint, ASLR)."""
+    return _render_snapshot_section(
+        host_dir, "boot_params", "Kernel boot parameters",
+    )
+
+
+def render_cpu_features_section(host_dir: Path) -> Optional[str]:
+    """CPU features and mitigations (vulnerabilities, smt, microcode)."""
+    return _render_snapshot_section(
+        host_dir, "cpu_features", "CPU features and mitigations",
+    )
+
+
+def render_clocksource_section(host_dir: Path) -> Optional[str]:
+    """Clocksource selection (current and available)."""
+    return _render_snapshot_section(
+        host_dir, "clocksource", "Clocksource",
+    )
+
+
+def render_vm_tuning_section(host_dir: Path) -> Optional[str]:
+    """Virtual-memory tuning (THP and /proc/sys/vm/* sysctls)."""
+    return _render_snapshot_section(
+        host_dir, "vm_tuning", "Virtual-memory tuning",
+    )
+
+
+def render_lsm_section(host_dir: Path) -> Optional[str]:
+    """Linux Security Module status and EFI presence."""
+    return _render_snapshot_section(
+        host_dir, "lsm", "Linux Security Module status",
+    )
+
+
+def render_dmi_section(host_dir: Path) -> Optional[str]:
+    """DMI/firmware identity tree."""
+    return _render_snapshot_section(
+        host_dir, "dmi", "DMI / firmware identity",
+    )
+
+
 def _governor_section(host_dir: Path) -> str:
     """Render a small table of {start,end} CPU governors per CPU."""
     start = data.read_json(host_dir / "cpu_governor" / "start.json") or {}
@@ -572,6 +788,22 @@ def render_host_section(
     if blockdev_html:
         body_parts.append("<h4>Storage device sysfs settings</h4>")
         body_parts.append(blockdev_html)
+
+    # Per-monitor snapshot sections — one h4 per monitor, each
+    # rendered as a Common/Drift pivot between start.json and
+    # end.json. Order matches the Kconfig listing.
+    for renderer in (
+        render_host_info_section,
+        render_boot_params_section,
+        render_cpu_features_section,
+        render_clocksource_section,
+        render_vm_tuning_section,
+        render_lsm_section,
+        render_dmi_section,
+    ):
+        chunk = renderer(host_dir)
+        if chunk:
+            body_parts.append(chunk)
 
     if not body_parts:
         return None
