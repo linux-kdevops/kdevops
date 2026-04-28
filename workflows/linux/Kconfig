@@ -179,11 +179,26 @@ config BOOTLINUX_CONTROLLER_TREE_PATH
 	default "{{ kdevops_controller_data_path }}/linux"
 	help
 	  Absolute path on the control node where the Linux source
-	  tree is cloned and made available to make. Defaults to a
-	  linux/ subdirectory of KDEVOPS_CONTROLLER_DATA_PATH so it
-	  sits alongside the other controller-side artefacts
-	  kdevops produces (build/, destdir/, and future per-workflow
-	  scratch directories).
+	  tree lives. Defaults to a linux/ subdirectory of
+	  KDEVOPS_CONTROLLER_DATA_PATH so it sits alongside the other
+	  controller-side artefacts kdevops produces (build/,
+	  destdir/, and future per-workflow scratch directories).
+
+	  kdevops manages the tree only when this path is empty: the
+	  initial bringup clones BOOTLINUX_TREE at BOOTLINUX_TREE_REF
+	  into the path, sets it up, and from there leaves it alone.
+	  If the path already contains a git checkout — manually
+	  cloned, a git worktree (the worktree's .git is a file
+	  pointing at the parent's gitdir), a symlink to another
+	  checkout, or a previous kdevops bringup — kdevops detects
+	  it and skips clone, fetch, and checkout entirely. Subsequent
+	  invocations build against whatever HEAD the tree happens to
+	  be on. This is the supported way to point kdevops at your
+	  own kernel worktree without having kdevops switch branches
+	  or refs under you: set this to your worktree path and let
+	  CONFIG_LOCALVERSION_AUTO=y in your kernel .config tag every
+	  build with the current short SHA so per-(VM, kernel) result
+	  directories key off the actual revision built.
 
 config BOOTLINUX_CONTROLLER_BUILDDIR
 	string "Out-of-tree build directory"

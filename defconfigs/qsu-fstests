@@ -1,0 +1,123 @@
+CONFIG_QEMU_SYSTEM_UNITS=y
+CONFIG_KDEVOPS_HOSTS_PREFIX="qsu"
+
+# qsu has its own deps pipeline; skip the kdevops linux mirror.
+CONFIG_ENABLE_LOCAL_LINUX_MIRROR=n
+CONFIG_USE_LOCAL_LINUX_MIRROR=n
+CONFIG_INSTALL_LOCAL_LINUX_MIRROR=n
+CONFIG_MIRROR_INSTALL=n
+
+CONFIG_QEMU_SYSTEM_UNITS_RAM=4096
+CONFIG_QEMU_SYSTEM_UNITS_CPUS=4
+CONFIG_QEMU_SYSTEM_UNITS_MACHINE_TYPE="q35"
+CONFIG_QEMU_SYSTEM_UNITS_SSH_PORT_BASE=10022
+CONFIG_QEMU_SYSTEM_UNITS_VSOCK_CID_BASE=100
+
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CONTROLLER=y
+
+CONFIG_KDEVOPS_TRY_REFRESH_REPOS=y
+CONFIG_KDEVOPS_TRY_UPDATE_SYSTEMS=y
+CONFIG_KDEVOPS_TRY_INSTALL_KDEV_TOOLS=y
+
+# Lucid setup
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID=y
+CONFIG_ANSIBLE_CFG_LUCID_OUTPUT_MODE_AUTO=y
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS=y
+CONFIG_ANSIBLE_CFG_FORKS=30
+CONFIG_BOOTLINUX_CCACHE_SYSTEM_WIDE=y
+CONFIG_BOOTLINUX_CCACHE=y
+CONFIG_BOOTLINUX_CLEAN_BEFORE_BUILD=y
+CONFIG_BOOTLINUX_REPRODUCIBLE_BUILDS=y
+CONFIG_BOOTLINUX_SHALLOW_CLONE_DEPTH=1
+CONFIG_BOOTLINUX_SHALLOW_CLONE=y
+CONFIG_KDEVOPS_MAKE_VERBOSE=y
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS=n
+
+# fstests
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_FSTESTS=y
+CONFIG_KDEVOPS_WORKFLOW_ENABLE_FSTESTS=y
+CONFIG_FSTESTS_XFS=y
+CONFIG_FSTESTS_FSTYP="xfs"
+
+# Opt into manual section selection so the per-section symbols
+# below are the ones the kdevops Kconfig exposes a prompt on.
+# With MANUAL_COVERAGE=n, xfs/Kconfig auto-enables every section
+# through a second "default y" declaration under
+# `if !FSTESTS_XFS_MANUAL_COVERAGE`, and the `is not set` lines
+# below never land in .config.
+CONFIG_FSTESTS_XFS_MANUAL_COVERAGE=y
+
+CONFIG_FSTESTS_XFS_SECTION_CRC=y
+# CONFIG_FSTESTS_XFS_SECTION_NOCRC is not set
+# CONFIG_FSTESTS_XFS_SECTION_NOCRC_512 is not set
+
+# Reflink is not autoselected on most distros (the distro gate
+# HAVE_DISTRO_XFS_SUPPORTS_REFLINKS defaults to n), so enable
+# the reflink umbrella explicitly; then opt into only the base
+# reflink section and leave the 1024/NORMAPBT variants off.
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_ENABLED=y
+CONFIG_FSTESTS_XFS_SECTION_REFLINK=y
+# CONFIG_FSTESTS_XFS_SECTION_REFLINK_1024 is not set
+# CONFIG_FSTESTS_XFS_SECTION_REFLINK_NORMAPBT is not set
+
+# Pipe oscheck.sh output through systemd-cat on the guest so
+# a `journalctl --identifier=fstests --follow` tail on the
+# controller (or the guest itself) can watch the per-section
+# run live without scraping the ansible callback output.
+CONFIG_FSTESTS_ENABLE_JOURNAL=y
+
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_COUNT=9
+
+# Point kdevops at a kernel tree the user maintains themselves
+# (a git worktree, a manual clone, or a symlink). Whatever HEAD is
+# in that tree gets built; kdevops detects the existing checkout
+# in playbooks/roles/bootlinux/tasks/build/controller.yml and
+# skips clone / fetch / checkout entirely. Iteration loop becomes:
+#
+#     git checkout / git rebase / edit / git commit  (in the tree)
+#     make linux-install
+#     make linux-deploy
+#
+# With CONFIG_LOCALVERSION_AUTO=y in the kdevops config-qsu kernel
+# fragment (see playbooks/roles/bootlinux/templates/config-qsu),
+# every distinct source revision lands at a distinct
+# uname -r and a distinct workflows/fstests/results/<vm>/<kernel>/
+# directory, so A/B comparisons stay untangled.
+CONFIG_BOOTLINUX_CONTROLLER_TREE_PATH="/home/dagomez/src/kernel/wt/linux"
+
+# xfstests source tree the user maintains themselves. Same model
+# as the kernel tree: kdevops uses whatever HEAD is here without
+# touching git state.
+CONFIG_FSTESTS_GIT="/home/dagomez/src/xfstests-dev"
+CONFIG_FSTESTS_GIT_VERSION="HEAD"
+
+# Monitoring framework — turns the report's per-host monitoring
+# section into a usable triage view by capturing the host context
+# every fstests run actually depends on (kernel cmdline + taint,
+# CPU mitigations, microcode, clocksource, THP/VM tuning, LSM
+# state, DMI identity, BIOS revision, hostname/distro/CPU model).
+#
+# CONFIG_MONITOR_SNAPSHOTS_ALL is the convenience knob — flipping
+# it default-y's every snapshot-style monitor (cpu_governor,
+# blockdev, host_info, boot_params, cpu_features, clocksource,
+# vm_tuning, lsm, dmi). Individual monitors can still be disabled
+# explicitly when this is set.
+#
+# system_metrics is the only time-series monitor here; it is opted
+# in separately because its overhead and output-volume profile is
+# different from the start/end snapshot pattern. The 1s interval
+# matches the resolution the test-execution timeline overlay in
+# the fstests report aligns against.
+CONFIG_ENABLE_MONITORING=y
+CONFIG_MONITOR_SYSTEM_METRICS=y
+CONFIG_MONITOR_SYSTEM_METRICS_INTERVAL=1
+CONFIG_MONITOR_SNAPSHOTS_ALL=y

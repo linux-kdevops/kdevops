@@ -44,6 +44,41 @@
   tags:
     - always
 
+# Detect a tree the user populated already — manual git clone, a
+# git worktree (.git is a file pointing at the gitdir), a symlink
+# to another checkout, or a previous kdevops bringup. When such a
+# tree exists at bootlinux_controller_tree_path, kdevops uses it
+# in place: no fetch, no checkout, no ref switching. Build commands
+# (olddefconfig, syncconfig, make) run against whatever HEAD the
+# user has — which is the contract the user controls when they
+# point BOOTLINUX_CONTROLLER_TREE_PATH at their own kernel
+# worktree. The git clone task fires only when the path is empty,
+# i.e. on a clean bringup with kdevops's default tree URL.
+- name: Detect a pre-existing kernel tree under bootlinux_controller_tree_path
+  ansible.builtin.stat:
+    path: "{{ bootlinux_controller_tree_path }}/.git"
+  register: bootlinux_controller_tree_git
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - clone
+    - always
+
+- name: Note that the controller tree is user-managed (skip clone/checkout)
+  ansible.builtin.debug:
+    msg: |
+      {{ bootlinux_controller_tree_path }} already contains a git
+      checkout (.git {{ "is a file (worktree)" if bootlinux_controller_tree_git.stat.isreg | default(false) else "is a directory" }}).
+      kdevops will not clone, fetch, or checkout — building against
+      whatever HEAD is currently in that tree.
+  when:
+    - bootlinux_controller_tree_git.stat.exists | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - clone
+    - always
+
 - name: Git clone {{ target_linux_tree }} on the control node
   ansible.builtin.git:
     repo: "{{ target_linux_git }}"
@@ -51,6 +86,8 @@
     version: "{{ target_linux_ref }}"
     depth: "{{ target_linux_shallow_depth | default(omit) }}"
     force: "{{ target_linux_force_checkout | default(false) }}"
+  when:
+    - not bootlinux_controller_tree_git.stat.exists | default(false) | bool
   run_once: true
   delegate_to: localhost
   tags:
