@@ -62,6 +62,16 @@
     which
     util-linux
 
+    # Userland utilities individual tests reach for. Each one
+    # corresponds to a _require_command guard in xfstests'
+    # common/* helpers; absent the binary, the affected tests
+    # skip with "X utility required, skipped this test". Keeping
+    # the list scoped to this module so consumers that opt out of
+    # fstests don't pay closure size for them.
+    duperemove
+    indent
+    acct
+
     # Build toolchain that xfstests' ./check and the kdevops
     # oscheck.sh wrapper expect. oscheck.sh's check_reqs() bails
     # early on `which {gcc,make,git,automake}` coming up empty,
@@ -90,10 +100,41 @@
   # created if a service declares it, so declare it explicitly.
   users.groups.fsgqa = {};
   users.groups.sys = {};
+  users.groups.daemon = {};
   users.users.fsgqa = {
     isSystemUser = true;
     group = "fsgqa";
     description = "xfstests unprivileged test user";
+  };
+
+  # Additional accounts xfstests reaches for. fsgqa2 is the
+  # convention for the "second unprivileged user" that group
+  # ownership tests need (generic/596 and friends). 123456-fsgqa
+  # exercises the high-uid path in tools that don't truncate to
+  # 16 bits (generic/381 hardcodes the 123456 numeric uid in its
+  # check). daemon is the canonical "system service user" that
+  # quota and accounting tests target (generic/079 calls daemon
+  # explicitly). All three were created by the libvirt fstests
+  # role's useradd loop in playbooks/roles/fstests/tasks/install.yml
+  # but the qsu nixos closure had no equivalent, so qsu runs were
+  # skipping ~167 tests with "X user not defined" / "fsgqa cannot
+  # execute commands". Match the libvirt path's user list so the
+  # qsu skip pattern matches the libvirt one.
+  users.users.fsgqa2 = {
+    isSystemUser = true;
+    group = "fsgqa";
+    description = "xfstests secondary unprivileged test user";
+  };
+  users.users."123456-fsgqa" = {
+    isSystemUser = true;
+    uid = 123456;
+    group = "fsgqa";
+    description = "xfstests numeric-uid test user (generic/381)";
+  };
+  users.users.daemon = {
+    isSystemUser = true;
+    group = "daemon";
+    description = "xfstests system-service test user";
   };
 
   services.nfs.server.enable = lib.mkDefault true;
