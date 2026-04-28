@@ -6,6 +6,10 @@ graceful shutdown, machined registration over Varlink, service
 properties) lives in `scripts/qemu-system-units/docs/`. This
 document covers only what kdevops adds around it.
 
+For the workflow side — fstests results layout, the HTML report
+renderer, host/kernel filters, and A/B kernel comparison — see
+[`fstests-qsu-reports.md`](fstests-qsu-reports.md).
+
 ## Enabling the backend
 
 ```

@@ -7,6 +7,14 @@ Bugs found are tracked on each filesystem:
 
   * [xfs reported bugs](xfs-bugs.md)
 
+The HTML report renderer is documented separately:
+
+  * [Reading reports under qsu and A/B kernel comparison](fstests-qsu-reports.md)
+    — per-(VM, kernel) results layout, `make fstests-report` filters,
+    overlay charts, regression/fix diff cards. Applies to the
+    `QEMU_SYSTEM_UNITS` bringup; the libvirt path uses the existing
+    archive-and-summarise flow described in `viewing-fstests-results.md`.
+
 # kdevops fstests configuration
 
 Other than using Kconfig to let you configure your bring up environment and
