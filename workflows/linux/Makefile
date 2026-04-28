@@ -177,7 +177,7 @@ linux-deploy:
 	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--tags vars,build-linux,install-linux,manual-update-grub,saved,vars,reboot \
+		--tags vars,build-linux,install-linux,dev-tools,manual-update-grub,saved,vars,reboot \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 endif
 
@@ -186,7 +186,7 @@ linux-build:
 	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--tags vars,build-linux,saved,vars \
+		--tags vars,build-linux,dev-tools,saved,vars \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-install
@@ -194,7 +194,7 @@ linux-install:
 	$(Q)ansible-playbook \
 		--limit '$(BOOTLINUX_LIMIT)' \
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
-		--tags vars,build-linux,install-linux \
+		--tags vars,build-linux,install-linux,dev-tools \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
 	$(Q)ansible-playbook \
