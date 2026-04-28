@@ -118,6 +118,30 @@ call `sd_notify(READY=1)` after initialization. A patch adding
 not been merged. When QEMU gains `sd_notify()` support, this should
 change to `notify`. See: `man systemd.service`.
 
+**`SyslogIdentifier=`** — Set to `qemu-system@%i`. Default journal
+output (`journalctl --output=short`) prefixes each line with the
+syslog identifier, which falls back to the executed process name
+when this directive is unset (`man systemd.exec`). The systemd
+reference templates `systemd-vmspawn@.service` and
+`systemd-nspawn@.service` rely on that default because their
+binary names match their service names and are informative as a
+prefix. The QEMU template does not have that property: every
+`qemu-system@<vm>.service` instance runs the same
+`qemu-system-x86_64` binary, plus helper processes (`varlinkctl`,
+`socat`, `ssh`) for `ExecStartPost=` and `ExecStop=`. Without
+override, the default prefix is a mix of `qemu-system-x86_64[PID]`,
+`varlinkctl[PID]`, `socat[PID]`, and parens-wrapped variants for
+pre-exec failures, none of which carry the VM identity. Setting
+`SyslogIdentifier=qemu-system@%i` pulls every per-service journal
+record under one prefix that names both the service template and
+the instance, e.g. `qemu-system@xarray[PID]`. Manager messages
+(`systemd[PID]`) are emitted by systemd itself and remain
+unaffected. The architecture suffix lost from the prefix is still
+recoverable from the `_EXE` field (`journalctl --output=verbose`),
+from `systemctl status` showing the full `ExecStart=` line, and
+from QEMU's own self-identification in error messages
+(`qemu-system-x86_64: -drive file=...`). See: `man systemd.exec`.
+
 ## machined registration
 
 Each VM registers itself with machined at start-up via

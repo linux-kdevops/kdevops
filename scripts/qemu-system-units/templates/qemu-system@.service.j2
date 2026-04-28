@@ -24,6 +24,7 @@ After=network.target
 
 [Service]
 Type=simple
+SyslogIdentifier=qemu-system@%i
 ConfigurationDirectory=systemd/qemu-system
 RuntimeDirectory=qemu-system/%i
 StateDirectory=qemu-system/%i
