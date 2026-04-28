@@ -408,8 +408,17 @@ def test_timeline(
             unlabelled_run_s += duration
             continue
 
+        # Only failures bypass the min-label-gap check — skips and long
+        # tests respect it. A run with dozens of skips clustered close
+        # together (e.g. user-missing or kernel-config-missing skips
+        # firing in a row) would otherwise stack 30+ labels into the
+        # same horizontal slice and turn the strip into unreadable
+        # text overlap. The hatched bar already marks each skip's
+        # position visually, and the per-section detail block of the
+        # report enumerates every skip by name with its reason, so a
+        # skip that loses its label is still discoverable.
         x_center = start + duration / 2
-        if (x_center - last_label_x) < min_label_gap and not (is_failure or is_skip):
+        if (x_center - last_label_x) < min_label_gap and not is_failure:
             unlabelled_run_s += duration
             continue
 
