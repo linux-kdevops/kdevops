@@ -320,6 +320,25 @@ cannot handle. Not user-configurable. See:
 as FD 3 per the `sd_listen_fds` protocol. Not user-configurable.
 See: `man sd_listen_fds`.
 
+**`StopWhenUnneeded=yes`** — Set on `virtiofsd@.service`. Makes the
+service auto-stop when no QEMU instance pins it. The per-VM drop-in
+(`templates/qemu-system-override.conf.j2`) emits
+`BindsTo=virtiofsd@%i-<tag>.service` for every share, which creates an
+implicit reverse `BoundBy=` dependency on the virtiofsd unit. `BoundBy`
+carries the `UNIT_ATOM_PINS_STOP_WHEN_UNNEEDED` atom
+(`src/core/unit-dependency-atom.c:60`); the moment all pinning
+dependencies go inactive, `unit_is_unneeded()`
+(`src/core/unit.c:2173-2201`) returns true and systemd queues the
+service for stop. The listening socket is not pinned by QEMU's
+`BindsTo=`, so it stays active across stop/start cycles and
+re-activates virtiofsd on the next QEMU connection. The stop side is
+symmetric with the start side: socket activation handles start,
+`StopWhenUnneeded=` handles stop, with no explicit lifecycle plumbing
+between QEMU and virtiofsd in either direction. Without this directive,
+virtiofsd survives QEMU and keeps stale share-directory bindings alive,
+requiring an explicit `systemctl stop` of each per-share service to
+force re-binding on the next QEMU connection. See: `man systemd.unit`.
+
 ## Cloud-init
 
 ### Network configuration gap

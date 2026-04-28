@@ -284,6 +284,12 @@ systemctl --user daemon-reload
 
 Stop all VMs, remove all deployed units and configuration.
 
+`virtiofsd@<vm>-<tag>.service` instances auto-stop when no QEMU
+instance pins them (via `StopWhenUnneeded=yes` on `virtiofsd@.service`,
+pinned by the drop-in's `BindsTo=`). The listening sockets are not
+pinned by QEMU, so they keep socket-activating new virtiofsd
+processes until stopped explicitly:
+
 ```shell
 systemctl --user stop machines.target
 systemctl --user stop 'virtiofsd@*.socket'

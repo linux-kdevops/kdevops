@@ -20,9 +20,15 @@
 # This service is started by systemd socket activation when QEMU connects
 # to the virtiofsd socket. Do not start it directly; start the .socket
 # unit instead.
+#
+# StopWhenUnneeded=yes makes the service auto-stop when no QEMU instance
+# pins it (via the per-VM drop-in's BindsTo=virtiofsd@%i-<tag>.service).
+# Stop side mirrors the start side: socket activation handles start,
+# StopWhenUnneeded handles stop. See docs/design-decisions.md.
 
 [Unit]
 Description=virtiofsd for %i
+StopWhenUnneeded=yes
 
 [Service]
 Type=simple
