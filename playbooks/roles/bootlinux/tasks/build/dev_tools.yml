@@ -1,0 +1,83 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# bootlinux developer tooling outputs — populate the source tree
+# with the ancillary files that LSPs, GDB, and rust-analyzer
+# expect to see alongside the kernel sources after a build.
+#
+# Imported from controller.yml when bootlinux_dev_tools is true.
+# Each task is idempotent on its own. compile_commands.json is a
+# deterministic function of the build's .cmd files so re-running
+# against an unchanged build produces identical content; the
+# scripts_gdb make target is a no-op when its sources have not
+# changed (and a no-op at the kernel Makefile level when
+# CONFIG_GDB_SCRIPTS is not set, so no extra gating is needed
+# here); the rust-analyzer pair is gated on CONFIG_RUST=y in the
+# built .config and skipped silently when rust is not configured
+# into the kernel.
+#
+# All three outputs are listed in the kernel tree's top-level
+# .gitignore so writing them into a user-managed source tree
+# (a worktree, a manual clone, a symlink) does not perturb the
+# tree from git's perspective.
+
+- name: Generate compile_commands.json into the source tree
+  ansible.builtin.command:
+    cmd: >-
+      python3 scripts/clang-tools/gen_compile_commands.py
+      --directory {{ bootlinux_controller_builddir }}
+      --output {{ bootlinux_controller_tree_path }}/compile_commands.json
+    chdir: "{{ bootlinux_controller_tree_path }}"
+  changed_when: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - dev-tools
+
+- name: Build scripts_gdb (kernel GDB Python helpers and vmlinux-gdb.py)
+  community.general.make:
+    chdir: "{{ bootlinux_controller_tree_path }}"
+    target: scripts_gdb
+    jobs: "{{ nproc_controller.stdout }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_controller_builddir}) }}"
+  environment: "{{ bootlinux_controller_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - dev-tools
+
+- name: Detect CONFIG_RUST in the built kernel .config
+  ansible.builtin.command:
+    cmd: grep --quiet '^CONFIG_RUST=y$' {{ bootlinux_controller_builddir }}/.config
+  register: kconfig_rust
+  changed_when: false
+  failed_when: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - dev-tools
+
+- name: Generate rust-project.json via the rust-analyzer make target
+  community.general.make:
+    chdir: "{{ bootlinux_controller_tree_path }}"
+    target: rust-analyzer
+    jobs: "{{ nproc_controller.stdout }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_controller_builddir}) }}"
+  environment: "{{ bootlinux_controller_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  when: kconfig_rust.rc == 0
+  tags:
+    - dev-tools
+
+- name: Copy rust-project.json from build dir to source tree
+  ansible.builtin.copy:
+    src: "{{ bootlinux_controller_builddir }}/rust-project.json"
+    dest: "{{ bootlinux_controller_tree_path }}/rust-project.json"
+    remote_src: true
+    mode: '0644'
+  run_once: true
+  delegate_to: localhost
+  when: kconfig_rust.rc == 0
+  tags:
+    - dev-tools

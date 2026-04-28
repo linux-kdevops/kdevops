@@ -219,6 +219,41 @@ config BOOTLINUX_CONTROLLER_DESTDIR
 	  the kernel at <destdir>/boot/vmlinuz-<release> and the
 	  matching module tree at <destdir>/lib/modules/<release>.
 
+config BOOTLINUX_DEV_TOOLS
+	bool "Generate developer tooling outputs after the kernel build"
+	output yaml
+	default n
+	help
+	  After the kernel build completes, generate developer
+	  tooling outputs into the kernel source tree:
+
+	    - compile_commands.json (via
+	      scripts/clang-tools/gen_compile_commands.py) for clangd,
+	      ccls, and other LSP clients.
+	    - Python GDB helpers and the vmlinux-gdb.py symlink (via
+	      the scripts_gdb make target). The kernel's own Makefile
+	      gates the target on CONFIG_GDB_SCRIPTS, so it is a
+	      no-op when GDB scripts are not enabled in .config.
+	    - rust-project.json (via the rust-analyzer make target,
+	      copied from the build directory to the source tree)
+	      when CONFIG_RUST=y in the built kernel; silently
+	      skipped otherwise.
+
+	  All three outputs are listed in the kernel's top-level
+	  .gitignore so a user-managed source tree (a worktree, a
+	  manual clone, a symlink) is not perturbed from git's view.
+
+	  When CONFIG_BOOTLINUX_CCACHE is also set, the recorded
+	  compiler invocations in compile_commands.json reference
+	  the ccache wrapper path. Most LSP clients follow the
+	  wrapper to the real driver and behave correctly.
+
+	  The same KBUILD_BUILD_TIMESTAMP, KBUILD_BUILD_USER, and
+	  KBUILD_BUILD_HOST environment that the main build uses is
+	  reused for scripts_gdb and rust-analyzer so any embedded
+	  build identifiers remain stable across runs when
+	  CONFIG_BOOTLINUX_REPRODUCIBLE_BUILDS is also set.
+
 endif # BOOTLINUX_CONTROLLER
 
 choice

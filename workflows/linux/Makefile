@@ -100,6 +100,7 @@ linux-help-menu:
 	@echo "linux-deploy       - Builds, installs, updates GRUB and reboots - useful for rapid development"
 	@echo "linux-build        - Builds kernel"
 	@echo "linux-install      - Only builds and installs Linux"
+	@echo "linux-dev-tools    - Generate compile_commands.json, scripts_gdb, rust-project.json into the source tree (requires CONFIG_BOOTLINUX_DEV_TOOLS=y)"
 	@echo "linux-uninstall    - Remove a kernel you can pass arguments for the version such as KVER=6.5.0-rc7-next-20230825"
 	@echo "linux-clone        - Only clones Linux"
 	@echo "linux-grub-setup   - Ensures the appropriate target kernel is set to boot"
@@ -200,6 +201,14 @@ ifeq (y,$(CONFIG_KDEVOPS_ENABLE_QEMU_SYSTEM_UNITS))
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu_system_units.yml \
 		--tags rebuild-boot
 endif
+
+PHONY += linux-dev-tools
+linux-dev-tools:
+	$(Q)ansible-playbook \
+		--limit '$(BOOTLINUX_LIMIT)' \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--tags vars,build-linux,dev-tools \
+		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
 
 PHONY += linux-uninstall
 linux-uninstall:

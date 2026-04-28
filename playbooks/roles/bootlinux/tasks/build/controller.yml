@@ -203,3 +203,14 @@
   delegate_to: localhost
   tags:
     - install-linux
+
+# Developer tooling outputs (compile_commands.json, scripts_gdb,
+# rust-project.json). Gated by the umbrella bootlinux_dev_tools so
+# non-developer builds skip the step entirely. See dev_tools.yml
+# for per-task idempotency rationale.
+- name: Generate developer tooling outputs into the source tree
+  ansible.builtin.import_tasks: dev_tools.yml
+  when:
+    - bootlinux_dev_tools | default(false) | bool
+  tags:
+    - dev-tools
