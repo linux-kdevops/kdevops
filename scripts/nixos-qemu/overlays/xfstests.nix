@@ -23,6 +23,19 @@ in {
     # probes for to enable HAVE_DB; without it src/dbtest is not
     # built and tests like generic/010 are skipped with the
     # "src/dbtest not built" .notrun reason.
-    buildInputs = (old.buildInputs or []) ++ [ prev.gdbm ];
+    #
+    # liburing unlocks the io_uring probe in src/feature.c.
+    # Without HAVE_LIBURING defined at compile time,
+    # check_uring_support() returns 1 unconditionally and every
+    # _require_io_uring callsite skips with
+    # "kernel does not support IO_URING" — even when
+    # CONFIG_IO_URING=y and the syscall is fully functional.
+    # The nixpkgs xfstests recipe omits liburing from
+    # buildInputs, so xfstests winds up never probing the kernel
+    # regardless of the runtime configuration. Adding it here
+    # lets autoconf detect liburing.h, sets HAVE_LIBURING, and
+    # check_uring_support() actually calls io_uring_queue_init
+    # against the running kernel.
+    buildInputs = (old.buildInputs or []) ++ [ prev.gdbm prev.liburing ];
   });
 }
