@@ -37,13 +37,20 @@
 # themselves intact. -mindepth 1 keeps the share root, -maxdepth 1
 # avoids descending (rm -rf does that).
 #
-# Before wiping, the role checks whether the per-(VM, kernel)
-# directory actually holds anything. If it does, the user is
-# prompted (per host) to confirm or abort so they can back up
-# first. Set kdevops_fstests_wipe_force=true to skip the prompt
-# for non-interactive use (CI). When the directory is empty or
-# absent (first run on a fresh kernel), the prompt is skipped
-# silently and the wipe is a no-op.
+# Before wiping, the role checks whether each VM's per-(VM,
+# kernel) directory actually holds anything and aggregates the
+# answer across all VMs into a single prompt. Without aggregation
+# ansible's linear strategy + delegate_to: localhost on
+# ansible.builtin.pause renders one prompt for the play with
+# whichever host won the race interpolating the body — the user
+# only sees that VM's count, even though the per-host wipe tasks
+# below silently delete every VM's tree. The aggregated prompt
+# enumerates every VM whose tree is non-empty (and the path the
+# wipe will touch) so the user can verify the full scope before
+# pressing Enter. Set kdevops_fstests_wipe_force=true to skip the
+# prompt for non-interactive use (CI). When no VM has prior
+# results the prompt is skipped silently and the wipes below are
+# no-ops.
 
 - name: Detect target kernel release on {{ inventory_hostname }}
   ansible.builtin.command: "uname -r"
@@ -67,21 +74,54 @@
   failed_when: false
   tags: ["oscheck", "fstests", "run_tests"]
 
-- name: Confirm before wiping existing results for {{ inventory_hostname }}
+# Aggregate every VM's discovery result into a single list on the
+# controller. Walks groups['all'] minus localhost, pulls each
+# host's qsu_existing.matched from hostvars, and appends the host
+# to qsu_wipe_targets when matched > 0. run_once: true so the
+# walk happens once per play; delegate_to: localhost so the fact
+# lives on the controller where the pause runs. Two-step
+# init-then-accumulate avoids fragile nested filter chains
+# (selectattr 'a.b' is undefined behaviour on some ansible
+# versions) and keeps the per-host condition explicit and
+# inspectable.
+- name: Initialize qsu_wipe_targets accumulator
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    qsu_wipe_targets: []
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Aggregate wipe targets across all VMs
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    qsu_wipe_targets: "{{ qsu_wipe_targets + [item] }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  when:
+    - hostvars[item].qsu_existing is defined
+    - (hostvars[item].qsu_existing.matched | default(0) | int) > 0
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Confirm before wiping existing per-(VM, kernel) results
+  run_once: true
   delegate_to: localhost
   ansible.builtin.pause:
     prompt: |
-      About to wipe {{ qsu_existing.matched }} top-level entry(ies) under:
-        {{ qsu_run_root }}
-      This includes the {{ fstests_section }} section subtree (xfstests
-      .full/.dmesg/check.* output) and the monitoring subtree
-      (snapshot start.json/end.json plus sysstat sa-current).
+      About to wipe per-(VM, kernel) results on the controller:
 
-      Press Enter to wipe and continue, or Ctrl+C to abort and back up
-      the directory first. Set kdevops_fstests_wipe_force=true to skip
-      this prompt.
+      {% for h in qsu_wipe_targets %}
+        - {{ h }}: {{ hostvars[h].qsu_existing.matched }} top-level entry(ies)
+            {{ hostvars[h].qsu_run_root }}
+      {% endfor %}
+      Each VM's section subtree (xfstests .full/.dmesg/check.*
+      output) and monitoring subtree (snapshot start.json/end.json
+      plus sysstat sa-current) will be wiped.
+
+      Press Enter to wipe and continue, or Ctrl+C to abort and back
+      up first. Set kdevops_fstests_wipe_force=true to skip this
+      prompt.
   when:
-    - qsu_existing.matched | default(0) > 0
+    - qsu_wipe_targets | length > 0
     - not (kdevops_fstests_wipe_force | default(false) | bool)
   tags: ["oscheck", "fstests", "run_tests"]
 
