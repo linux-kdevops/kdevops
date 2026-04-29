@@ -38,6 +38,7 @@ CONFIG_BOOTLINUX_REPRODUCIBLE_BUILDS=y
 CONFIG_BOOTLINUX_SHALLOW_CLONE_DEPTH=1
 CONFIG_BOOTLINUX_SHALLOW_CLONE=y
 CONFIG_KDEVOPS_MAKE_VERBOSE=y
+CONFIG_BOOTLINUX_DEV_TOOLS=y
 
 CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS=n
 
@@ -68,6 +69,21 @@ CONFIG_FSTESTS_XFS_SECTION_REFLINK_ENABLED=y
 CONFIG_FSTESTS_XFS_SECTION_REFLINK=y
 # CONFIG_FSTESTS_XFS_SECTION_REFLINK_1024 is not set
 # CONFIG_FSTESTS_XFS_SECTION_REFLINK_NORMAPBT is not set
+
+# External log device (xfs_*_logdev sections) is also gated on a
+# distro autoselect (HAVE_DISTRO_XFS_SUPPORTS_EXTERNAL_LOG) that
+# defaults n on NixOS, so enable the umbrella explicitly. The
+# qsu config-qsu task already wires TEST_LOGDEV and SCRATCH_LOGDEV
+# from the per-VM NVMe drives when the disk count is >= 5
+# (CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_COUNT=9 above is
+# well above that), so the device foundation is ready. The
+# specific *_LOGDEV variants below are left off until a separate
+# decision is made about which logdev profile gets its own VM in
+# the matrix; the umbrella alone is inert without one of them.
+CONFIG_FSTESTS_XFS_SECTION_LOGDEV_ENABLED=y
+# CONFIG_FSTESTS_XFS_SECTION_CRC_LOGDEV is not set
+# CONFIG_FSTESTS_XFS_SECTION_CRC_LOGDEV_RTDEV is not set
+# CONFIG_FSTESTS_XFS_SECTION_REFLINK_LOGDEV is not set
 
 # Pipe oscheck.sh output through systemd-cat on the guest so
 # a `journalctl --identifier=fstests --follow` tail on the
