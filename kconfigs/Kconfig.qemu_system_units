@@ -127,29 +127,51 @@ config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_SIZE_GB
 	  cheap at rest.
 
 config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_LOGICAL_BLOCK_SIZE
-	int "NVMe logical block size (bytes)"
+	string "NVMe logical block size (bytes), per-drive list or global"
 	output yaml
-	default 0
+	default ""
 	help
-	  Logical block size (LBA size in bytes) advertised by the
-	  emulated NVMe namespace. Common values are 512 (legacy "512n"
-	  drive) and 4096 (modern "4Kn" or "Advanced Format Native").
-	  Zero leaves the value unset on the QEMU command line so QEMU's
-	  built-in default applies (512 bytes today). The same value is
-	  applied to every extra storage drive provisioned for the VM.
+	  Logical block size (LBA size in bytes) advertised by each
+	  emulated NVMe namespace. Empty string leaves the value unset
+	  on the QEMU command line so QEMU's built-in default applies
+	  (512 bytes today).
+
+	  Two input forms are accepted:
+	    - A single integer (e.g. "4096") applies the same value to
+	      every extra storage drive provisioned for the VM.
+	    - A comma-separated list of integers (e.g. "4096,512,512,
+	      512,512,512,512,512,4096") sets each drive by index. List
+	      entries left empty (",,") fall back to no override for
+	      that drive. Entries past the drive count are ignored;
+	      drives past the list length get no override.
+
+	  Common values: 512 (legacy "512n"), 4096 (modern "4Kn" /
+	  Advanced Format Native).
+
+	  Per-drive control lets a single VM mix shapes — e.g. TEST_DEV
+	  at 4Kn while the SCRATCH_DEV_POOL stays at 512n — without
+	  needing a separate VM per shape.
+
 	  See: <qemu_binary> -device nvme,help (logical_block_size)
 
 config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_PHYSICAL_BLOCK_SIZE
-	int "NVMe physical block size (bytes)"
+	string "NVMe physical block size (bytes), per-drive list or global"
 	output yaml
-	default 0
+	default ""
 	help
-	  Physical block size advertised by the emulated NVMe namespace,
-	  in bytes. Must be >= logical block size. Common pairings are
-	  512/4096 ("512e", classic Advanced Format with 512-byte
-	  emulation) and 4096/4096 ("4Kn", native 4 KiB everywhere).
-	  Zero leaves the value unset so QEMU defaults to logical block
-	  size. Applied uniformly across every extra storage drive.
+	  Physical block size advertised by each emulated NVMe namespace,
+	  in bytes. Must be >= logical block size on each drive. Empty
+	  string leaves the value unset so QEMU defaults to logical block
+	  size.
+
+	  Same input forms as the logical block size knob: a single
+	  integer applies globally, a comma-separated list of length N
+	  sets each drive by index.
+
+	  Common pairings (LBS / PBS): 512/4096 ("512e", classic
+	  Advanced Format with 512-byte emulation), 4096/4096 ("4Kn",
+	  native 4 KiB everywhere).
+
 	  See: <qemu_binary> -device nvme,help (physical_block_size)
 
 endif # QEMU_SYSTEM_UNITS
