@@ -104,9 +104,22 @@
   users.groups.fsgqa = {};
   users.groups.sys = {};
   users.groups.daemon = {};
+
+  # Each test-framework user gets a real shell via
+  # `useDefaultShell = true`. xfstests' `_require_user` helper at
+  # common/rc:2861 runs `echo /bin/true | _su <user>`, which in
+  # turn invokes `su - <user> -c /bin/true`. NixOS' default for
+  # isSystemUser=true is shell=nologin, which makes su fail and
+  # the test skips with "<user> cannot execute commands." On the
+  # qsu-xfs-crc baseline that pattern accounted for 50 skipped
+  # tests (plus more on the reflink/logdev sections) even after
+  # the users themselves were declared. The libvirt fstests
+  # role's useradd path leaves the shell at the system default
+  # (/bin/bash), so this restores parity.
   users.users.fsgqa = {
     isSystemUser = true;
     group = "fsgqa";
+    useDefaultShell = true;
     description = "xfstests unprivileged test user";
   };
 
@@ -126,17 +139,20 @@
   users.users.fsgqa2 = {
     isSystemUser = true;
     group = "fsgqa";
+    useDefaultShell = true;
     description = "xfstests secondary unprivileged test user";
   };
   users.users."123456-fsgqa" = {
     isSystemUser = true;
     uid = 123456;
     group = "fsgqa";
+    useDefaultShell = true;
     description = "xfstests numeric-uid test user (generic/381)";
   };
   users.users.daemon = {
     isSystemUser = true;
     group = "daemon";
+    useDefaultShell = true;
     description = "xfstests system-service test user";
   };
 
@@ -154,6 +170,7 @@
     isSystemUser = true;
     uid = 2;
     group = "bin";
+    useDefaultShell = true;
     description = "xfstests bin test user (system binaries owner)";
   };
 
