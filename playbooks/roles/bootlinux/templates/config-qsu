@@ -1551,10 +1551,10 @@ CONFIG_SCSI_DMA=y
 #
 # SCSI support type (disk, tape, CD-ROM)
 #
-# CONFIG_BLK_DEV_SD is not set
+CONFIG_BLK_DEV_SD=m
 # CONFIG_CHR_DEV_ST is not set
 # CONFIG_BLK_DEV_SR is not set
-# CONFIG_CHR_DEV_SG is not set
+CONFIG_CHR_DEV_SG=m
 CONFIG_BLK_DEV_BSG=y
 # CONFIG_CHR_DEV_SCH is not set
 # CONFIG_SCSI_CONSTANTS is not set
