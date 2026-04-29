@@ -227,20 +227,33 @@
 
   # Expose xfsprogs' bundled systemd units (xfs_scrub@.service,
   # xfs_scrub_all.service+.timer, xfs_scrub_media@.service, plus
-  # the matching _fail siblings) so xfstests can resolve them via
+  # the matching _fail siblings, and xfs_healer@.service /
+  # xfs_healer_start.service / system-xfs_healer.slice when the
+  # source carries them) so xfstests can resolve them via
   # `_require_systemd_unit_defined`. xfsprogs installs these to
-  # $out/lib/systemd/system/ but NixOS only forwards units from
-  # packages explicitly listed in systemd.packages — without this
-  # line the unit files exist on disk but `systemctl status
-  # xfs_scrub@.service` reports "Unit not found" because
-  # /run/systemd/system/ never receives a copy. xfs/802 (and any
-  # follow-up scrub-systemd test) skips with
-  # `systemd unit "xfs_scrub@.service" not found` until this
-  # forwarding is in place. xfs_healer@.service is intentionally
-  # absent: it is not in upstream xfsprogs as of v6.19.0, so the
-  # ~8 .notrun for xfs_healer in the qsu fstests baseline are
-  # waiting on upstream xfsprogs, not on the closure.
-  systemd.packages = [ pkgs.xfsprogs ];
+  # $out/lib/systemd/system/ — note the path is in the `out`
+  # output, not `bin`. NixOS only forwards units from packages
+  # explicitly listed in systemd.packages, and the path it walks
+  # is "<package>/lib/systemd/system/" against whichever output
+  # the user passes. `systemd.packages = [ pkgs.xfsprogs ]`
+  # resolves to the package's *default* output (bin), which has
+  # no lib/systemd/system/ — units silently never get forwarded
+  # and tests skip with `systemd unit "xfs_scrub@.service" not
+  # found`. Pass pkgs.xfsprogs.out explicitly to point the
+  # forwarder at the output that actually carries the units.
+  systemd.packages = [ pkgs.xfsprogs.out ];
+
+  # Force-load the xfs module at boot. The bug_on_assert sysfs
+  # write below targets /sys/fs/xfs/debug/bug_on_assert, which
+  # only exists once the xfs module is loaded. Without an
+  # explicit boot.kernelModules entry, xfs only loads on first
+  # mount — long after systemd-tmpfiles has already run during
+  # activation, so the `w+` rule fires against a missing file
+  # and silently fails. With xfs in boot.kernelModules, the
+  # module loads during stage-1 init, the sysfs hierarchy is
+  # populated by the time tmpfiles fires, and the bug_on_assert
+  # override actually lands.
+  boot.kernelModules = [ "xfs" ];
 
   # dm-flakey, dm-delay, dm-log-writes etc. (used by xfstests under
   # generic/, and exercised heavily once CONFIG_DM_* are enabled) drive
@@ -286,6 +299,18 @@
     # libexec→/usr/lib translation) and gives the consumer a
     # predictable path the kdevops oscheck.sh flow can use as CWD.
     "L+ /usr/lib/xfstests - - - - ${pkgs.xfstests}/lib/xfstests"
+
+    # Same FHS-symlink pattern for xfsprogs' libexec dir.
+    # xfstests' common/config probes
+    #   if [ ! -x "$XFS_HEALER_PROG" ] && \
+    #      [ -e /usr/libexec/xfsprogs/xfs_healer ]; then ...
+    # to find xfs_healer when `type -P` returns empty. xfsprogs
+    # installs xfs_healer + xfs_healer_start to
+    # <xfsprogs.out>/libexec/xfsprogs/ — outside PATH, since the
+    # `bin` and `out` outputs are split. Without this symlink,
+    # the fallback branch never resolves and ~9 tests
+    # (xfs/657-664, 667) skip with "xfs_healer utility required".
+    "L+ /usr/libexec/xfsprogs - - - - ${pkgs.xfsprogs.out}/libexec/xfsprogs"
 
     # Override the runtime default of XFS bug_on_assert from 1
     # (set by CONFIG_XFS_ASSERT_FATAL=y in the qsu kernel
