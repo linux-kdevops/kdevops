@@ -115,6 +115,15 @@
   users.groups.fsgqa = { gid = 500; };
   users.groups.sys = { gid = 501; };
   users.groups.daemon = { gid = 502; };
+  # fsgqa2 group is required by ~6 xfstests per section that gate
+  # on `_require_group fsgqa2` — generic/097, generic/132 and
+  # similar tests that swap effective gid to "the second user's
+  # primary group". The user already exists below; the libvirt
+  # fstests role's useradd path creates the group implicitly via
+  # `useradd -U fsgqa2`, but our nixos closure declares users
+  # individually so the group has to be declared too. Without
+  # this, the tests skip with "fsgqa2 group not defined."
+  users.groups.fsgqa2 = { gid = 504; };
 
   # Each test-framework user gets a real shell via
   # `useDefaultShell = true`. xfstests' `_require_user` helper at
@@ -149,7 +158,13 @@
   # qsu skip pattern matches the libvirt one.
   users.users.fsgqa2 = {
     isSystemUser = true;
-    group = "fsgqa";
+    # fsgqa2's primary group must be fsgqa2 (not fsgqa). The
+    # xfstests pattern is "two unprivileged users with their own
+    # primary groups so tests that swap egid get a distinct
+    # ownership context"; mapping fsgqa2 onto fsgqa breaks that
+    # split and confuses tests like generic/097 that compare egid
+    # before/after a setegid(fsgqa2's gid) call.
+    group = "fsgqa2";
     useDefaultShell = true;
     description = "xfstests secondary unprivileged test user";
   };
