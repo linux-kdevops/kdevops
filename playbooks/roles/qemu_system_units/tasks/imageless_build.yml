@@ -31,6 +31,44 @@
     state: directory
     mode: '0755'
 
+# `nix build path:<dir>` pins each input by narHash in flake.lock.
+# A leftover flake.lock from a previous bringup keeps that pin
+# pointed at the old nixos-qemu source tree, so subsequent builds
+# silently reuse a stale closure even after the in-tree subtree
+# (modules, overlays, packages) changes — including changes that
+# fix module-evaluation errors. `rebuild_boot.yml` already does
+# this refresh on the kernel-rebuild path; bringup needs the
+# same step for first-time and re-bringup runs after edits.
+- name: Refresh nixos-qemu flake input for each VM
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+      - nixos-qemu
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  changed_when: true
+
+- name: Refresh xfstests-src flake input for each VM
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+      - xfstests-src
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  when:
+    - fstests_git | default('') | length > 0
+  changed_when: true
+
 - name: Prepare qsu imageless artefacts per VM
   ansible.builtin.include_tasks: imageless_build_per_vm.yml
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
