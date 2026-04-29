@@ -128,16 +128,23 @@
 # QEMU_SYSTEM_UNITS.
 #
 # Per-drive BlockConf overrides (logical_block_size,
-# physical_block_size, ...) come in via Kconfig STRING knobs that
-# accept two forms: a single integer applies globally to every
+# physical_block_size, min_io_size, opt_io_size,
+# discard_granularity, ...) come in via Kconfig STRING knobs that
+# each accept two forms: a single value applies globally to every
 # drive, a comma-separated list of length N applies per-drive by
 # index (empty list entries fall back to no override). The vars
-# block below splits each knob, picks the entry for the current
-# drive index, and builds an overrides dict that gets merged into
-# the per-drive entry via combine(). The qsu nvme.env.j2 template
-# emits each property only when the key is present in the dict, so
-# unset values stay byte-identical to the previous output and QEMU
-# falls back to its built-in defaults (512/512) for unset shapes.
+# block below threads every knob through the same picker — split
+# the string, pick parts[0] for global mode, parts[item] for
+# per-drive mode — and accumulates the matching keys into a
+# per-drive overrides dict via the inline jinja loop. Adding a
+# new BlockConf or namespace property is a one-line edit to the
+# blockconf_knobs dict; the picker logic does not change.
+#
+# Values are stored as strings so QEMU SIZE32 suffixes ("4K",
+# "1M") pass through unmodified to the qsu nvme.env.j2 template,
+# which emits each property only when the key is present in the
+# per-drive dict. Unset values stay byte-identical to the previous
+# render and QEMU falls back to its built-in defaults.
 - name: Compose per-VM nvme drives for {{ qsu_vm_name }}
   ansible.builtin.set_fact:
     qsu_nvme_drives: "{{ qsu_nvme_drives + [base_drive | combine(drive_overrides)] }}"
@@ -146,24 +153,22 @@
       file: "nvme{{ item }}.qcow2"
       format: qcow2
       serial: "kdevops{{ item }}"
-    lbs_parts: "{{ (qemu_system_units_extra_storage_logical_block_size | default('') | string).split(',') }}"
-    pbs_parts: "{{ (qemu_system_units_extra_storage_physical_block_size | default('') | string).split(',') }}"
-    lbs_value: >-
-      {{
-        lbs_parts[0] if (lbs_parts | length == 1)
-        else (lbs_parts[item] if item < (lbs_parts | length) else '')
-      }}
-    pbs_value: >-
-      {{
-        pbs_parts[0] if (pbs_parts | length == 1)
-        else (pbs_parts[item] if item < (pbs_parts | length) else '')
-      }}
+    blockconf_knobs:
+      logical_block_size: "{{ qemu_system_units_extra_storage_logical_block_size | default('') | string }}"
+      physical_block_size: "{{ qemu_system_units_extra_storage_physical_block_size | default('') | string }}"
+      min_io_size: "{{ qemu_system_units_extra_storage_min_io_size | default('') | string }}"
+      opt_io_size: "{{ qemu_system_units_extra_storage_opt_io_size | default('') | string }}"
+      discard_granularity: "{{ qemu_system_units_extra_storage_discard_granularity | default('') | string }}"
     drive_overrides: >-
-      {{
-        ({'logical_block_size': lbs_value | int} if (lbs_value | string | length) > 0 else {})
-        | combine(
-          ({'physical_block_size': pbs_value | int} if (pbs_value | string | length) > 0 else {}))
-      }}
+      {%- set out = {} -%}
+      {%- for key, raw in blockconf_knobs.items() -%}
+        {%- set parts = raw.split(',') -%}
+        {%- set value = parts[0] if (parts | length == 1) else (parts[item] if item < (parts | length) else '') -%}
+        {%- if (value | string | length) > 0 -%}
+          {%- set _ = out.update({key: value}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ out }}
   loop: "{{ range(qemu_system_units_extra_storage_drive_count | int) | list }}"
   loop_control:
     label: "{{ qsu_vm_name }}-kdevops{{ item }}"

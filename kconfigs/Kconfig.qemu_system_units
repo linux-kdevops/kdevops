@@ -174,4 +174,63 @@ config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_PHYSICAL_BLOCK_SIZE
 
 	  See: <qemu_binary> -device nvme,help (physical_block_size)
 
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_MIN_IO_SIZE
+	string "NVMe min_io_size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Minimum I/O size hint advertised by each emulated NVMe
+	  namespace, in bytes. Surfaces in NVMe Identify Namespace as
+	  NPWG (Namespace Preferred Write Granularity) so the guest
+	  block layer can align write allocations. Accepts plain
+	  integers and QEMU SIZE32 suffixes ("4K", "1M"). Empty string
+	  leaves the value unset; QEMU's default is 0, which the device
+	  layer interprets as "fall back to logical_block_size".
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (min_io_size),
+	  hw/core/qdev-properties-system.c BlockConf.
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_OPT_IO_SIZE
+	string "NVMe opt_io_size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Optimal I/O size hint advertised by each emulated NVMe
+	  namespace, in bytes. Surfaces in NVMe Identify Namespace as
+	  NPWA (Namespace Preferred Write Alignment) so filesystem
+	  mkfs and the kernel block layer can pick stripe-aligned
+	  sizes for best throughput. Accepts plain integers and QEMU
+	  SIZE32 suffixes. Empty string leaves the value unset;
+	  QEMU's default is 0 which the device layer interprets as
+	  "fall back to logical_block_size".
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (opt_io_size),
+	  hw/core/qdev-properties-system.c BlockConf.
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DISCARD_GRANULARITY
+	string "NVMe discard_granularity (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Minimum size of a single TRIM/DSM deallocate request the
+	  emulated NVMe namespace advertises, in bytes. Surfaces in
+	  NVMe DSM range descriptor accounting and is honored by the
+	  guest block layer to coalesce small discards into the
+	  granularity boundary. Accepts plain integers and QEMU
+	  SIZE32 suffixes. Empty string leaves the value unset; QEMU
+	  defaults to -1 which the block layer interprets as "inherit
+	  from backend" (typically 4 KiB on qcow2).
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (discard_granularity),
+	  hw/core/qdev-properties-system.c BlockConf.
+
 endif # QEMU_SYSTEM_UNITS
