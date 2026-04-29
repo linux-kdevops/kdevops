@@ -472,6 +472,33 @@ oscheck_test_dev_setup()
 		return
 	fi
 
+	# When the active section uses external rt/log devices,
+	# oscheck.sh's sanity-mkfs/mount path is incompatible with
+	# the section's actual layout: _check_dev_setup runs
+	# `mkfs.$FSTYP $MKFS_OPTIONS $TEST_DEV` without xfstests'
+	# `_test_options mkfs` injection of -llogdev=$TEST_LOGDEV
+	# (or -rrtdev=$TEST_RTDEV), which produces a filesystem with
+	# an internal log on TEST_DEV, and the subsequent mount with
+	# -o logdev=$TEST_LOGDEV (from TEST_FS_MOUNT_OPTS in
+	# HOST_OPTIONS) is correctly rejected by the kernel with
+	# -EINVAL ("filesystem is marked as having an internal log;
+	# do not specify logdev on the mount command line").
+	#
+	# xfstests' check.sh handles the external-log/rt path
+	# correctly via _test_options mkfs combined with
+	# RECREATE_TEST_DEV=true, so skipping this sanity-mkfs is
+	# safe: check.sh will format the device with the proper
+	# MKFS_OPTIONS plus the auto-injected -llogdev / -rrtdev
+	# clauses when it enters its RECREATING branch.
+	#
+	# Without this guard, fresh kdevops bringups that include
+	# xfs_*_logdev or xfs_*_rtdev sections bail in ~2s at the
+	# oscheck.sh sanity step before xfstests' check.sh is ever
+	# invoked.
+	if [ "$USE_EXTERNAL" = "yes" ]; then
+		return
+	fi
+
 	if [ "$RUN_SECTION" = "all" ]; then
 		for i in $(oscheck_lib_all_fs_sections)
 		do
