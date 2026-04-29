@@ -144,6 +144,9 @@ CONFIG_BOOTLINUX_CONTROLLER_TREE_PATH="/home/dagomez/src/kernel/wt/linux"
 CONFIG_FSTESTS_GIT="/home/dagomez/src/xfstests-dev"
 CONFIG_FSTESTS_GIT_VERSION="HEAD"
 
+CONFIG_WORKFLOW_XFSPROGS_GIT="/home/dagomez/src/xfsprogs-dev"
+CONFIG_WORKFLOW_XFSPROGS_GIT_VERSION="HEAD"
+
 # Monitoring framework — turns the report's per-host monitoring
 # section into a usable triage view by capturing the host context
 # every fstests run actually depends on (kernel cmdline + taint,

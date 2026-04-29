@@ -84,7 +84,7 @@
   # overlay re-runs last and replaces our src.
   #
   # The same pattern applies to xfsprogs when
-  # CONFIG_FSTESTS_XFSPROGS_GIT is non-empty: rebuild the
+  # CONFIG_WORKFLOW_XFSPROGS_GIT is non-empty: rebuild the
   # nixpkgs xfsprogs derivation against the user-supplied
   # source tree so the xfs_io / xfs_healer / xfs_scrub binaries
   # the closure ships come from that tree, not from nixpkgs'
@@ -96,10 +96,37 @@
         src = inputs.xfstests-src;
         version = "kdevops-${inputs.xfstests-src.shortRev or "local"}";
       });
-{% if fstests_xfsprogs_git is defined and fstests_xfsprogs_git %}
-      xfsprogs = prev.xfsprogs.overrideAttrs (_: {
+{% if workflow_xfsprogs_git is defined and workflow_xfsprogs_git %}
+      xfsprogs = prev.xfsprogs.overrideAttrs (old: {
         src = inputs.xfsprogs-src;
         version = "kdevops-${inputs.xfsprogs-src.shortRev or "local"}";
+        # When building xfsprogs from a path: input (no pre-generated
+        # ./configure shipped), autoreconfHook walks AC_CONFIG_AUX_DIR
+        # (set to "." in xfsprogs' configure.ac), finds no ./install-sh
+        # at the top, and installs autoconf/automake's stock copy.
+        # That stock install-sh interprets -T as "error if dst is a
+        # directory" and treats positional args as SRCFILE DSTFILE,
+        # while xfsprogs' bundled include/install-sh interprets -T as
+        # "libtool-aware install: install lib using lt_install token
+        # (so_dot_version | old_lib | so_base | ...)". When libhandle/
+        # Makefile invokes `install -T so_dot_version libhandle.lai
+        # $PKG_LIB_DIR`, the stock install-sh tries to install a file
+        # named "so_dot_version" (which does not exist) and fails:
+        #   ../../install-sh: so_dot_version does not exist.
+        #   make[1]: *** [install] Error 1
+        # nixpkgs xfsprogs 6.17.0 builds from a tarball that ships a
+        # pre-generated ./configure and ./install-sh, so autoreconf
+        # sees the file present and skips the install step (the
+        # `--install` flag without `--force` is "copy missing files
+        # only"). The same derivation pointed at a path: input fails
+        # because the source tree has no ./install-sh at the top.
+        # Restore xfsprogs' bundled install-sh to the auxdir before
+        # autoreconf walks it; preAutoreconf runs after postPatch and
+        # before the autoreconfPhase, which is the right window for
+        # this kind of seeding.
+        preAutoreconf = (old.preAutoreconf or "") + ''
+          install -m 0755 include/install-sh ./install-sh
+        '';
       });
 {% endif %}
     })

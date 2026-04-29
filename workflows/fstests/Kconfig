@@ -348,52 +348,6 @@ config FSTESTS_GIT_VERSION
 	help
 	  The fstests git tree version.
 
-config FSTESTS_XFSPROGS_GIT
-	string "The xfsprogs git tree to clone (qsu only)"
-	output yaml
-	default ""
-	help
-	  Optional. When set on the qsu (qemu-system-units) backend,
-	  the in-guest xfstests package is rebuilt against this
-	  xfsprogs source tree instead of the version nixpkgs ships.
-	  Mirrors FSTESTS_GIT for xfstests itself. The value can be:
-
-	    * a local path  (e.g. /home/user/src/xfsprogs-dev)
-	    * an http(s) URL of a git tree
-	    * a git+ URL form
-
-	  Use this to pick up xfsprogs features that have not yet
-	  reached the nixpkgs release nixpkgs is pinned at — most
-	  notably the xfs_healer utility and its bundled
-	  xfs_healer@.service / xfs_healer_start.service systemd
-	  templates, which live in djwong's xfsprogs-dev for-next
-	  branch under healer/ but are not yet in any release tag.
-
-	  The Kconfig value flows through extra_vars.yaml as
-	  fstests_xfsprogs_git, gets rendered into the per-VM
-	  flake.nix as the xfsprogs-src flake input, and the per-VM
-	  default.nix overrides the nixpkgs xfsprogs derivation's
-	  src to that input. Same shape and refresh path as
-	  FSTESTS_GIT/FSTESTS_GIT_VERSION already use for xfstests.
-
-	  Leave empty to use whatever xfsprogs nixpkgs has.
-
-	  Has no effect on the libvirt fstests path — that backend
-	  installs xfsprogs from distro packages, not the closure.
-
-config FSTESTS_XFSPROGS_GIT_VERSION
-	string "The xfsprogs git tree version (qsu only)"
-	output yaml
-	default "HEAD"
-	help
-	  Branch, tag, or commit to check out from
-	  FSTESTS_XFSPROGS_GIT. Ignored when FSTESTS_XFSPROGS_GIT is
-	  empty (the nixpkgs default applies).
-
-	  For djwong's xfsprogs-dev for-next branch carrying
-	  xfs_healer the value to use is "for-next". Pin a specific
-	  commit hash for reproducibility.
-
 config FSTESTS_DATA_TARGET
 	string "The target fstests install directory"
 	output yaml

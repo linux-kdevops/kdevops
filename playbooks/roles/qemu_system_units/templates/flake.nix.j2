@@ -6,7 +6,7 @@
    enabled so CONFIG_FSTESTS_GIT/CONFIG_FSTESTS_GIT_VERSION
    override the xfstests source used to build the guest's
    xfstests package. xfsprogs-src is added on top of that when
-   CONFIG_FSTESTS_XFSPROGS_GIT is non-empty so the in-closure
+   CONFIG_WORKFLOW_XFSPROGS_GIT is non-empty so the in-closure
    xfsprogs (and the xfs_io / xfs_healer / xfs_scrub binaries it
    ships) can be rebuilt from a user-controlled tree. -#}
 {%- set fstests_enabled = kdevops_workflow_enable_fstests | default(false) -%}
@@ -18,8 +18,8 @@
 {%- else -%}
 {%- set xfstests_nix_url = fstests_git -%}
 {%- endif -%}
-{%- set xfsprogs_git = fstests_xfsprogs_git | default('') -%}
-{%- set xfsprogs_git_version = fstests_xfsprogs_git_version | default('HEAD') -%}
+{%- set xfsprogs_git = workflow_xfsprogs_git | default('') -%}
+{%- set xfsprogs_git_version = workflow_xfsprogs_git_version | default('HEAD') -%}
 {%- if xfsprogs_git -%}
 {%- if xfsprogs_git.startswith('/') or xfsprogs_git.startswith('file:') -%}
 {%- set xfsprogs_nix_url = 'path:' ~ (xfsprogs_git | regex_replace('^file://', '')) -%}

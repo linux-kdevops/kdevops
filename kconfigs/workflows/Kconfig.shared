@@ -30,6 +30,60 @@ config WORKFLOW_RESULTS_WIPE_NO_PROMPT
 	  not run the confirmation task at all, so the value is ignored
 	  there.
 
+config WORKFLOW_XFSPROGS_GIT
+	string "The xfsprogs git tree to clone (closure-using backends)"
+	output yaml
+	default ""
+	help
+	  Optional. When set on a closure-using backend (today: qsu /
+	  qemu-system-units; tomorrow: any backend that builds the
+	  guest userland from a Nix overlay), the in-guest xfsprogs
+	  package is rebuilt against this source tree instead of the
+	  version nixpkgs ships. Mirrors FSTESTS_GIT in shape but
+	  scoped at the workflow level because xfsprogs is system
+	  userland — every workflow that touches XFS reaches for it
+	  (fstests via xfs_io / xfs_repair / xfs_healer / xfs_scrub,
+	  blktests via xfs_io for setup, mmtests for mkfs.xfs flag
+	  experiments, and the guest itself for mkfs at bringup).
+
+	  Value forms:
+
+	    * a local path  (e.g. /home/user/src/xfsprogs-dev)
+	    * an http(s) URL of a git tree
+	    * a git+ URL form
+
+	  Use this to pick up xfsprogs features that have not yet
+	  reached the nixpkgs release nixpkgs is pinned at — most
+	  notably the xfs_healer utility and its bundled
+	  xfs_healer@.service / xfs_healer_start.service systemd
+	  templates, which live in djwong's xfsprogs-dev for-next
+	  branch under healer/ but are not yet in any release tag.
+
+	  The value flows through extra_vars.yaml as
+	  workflow_xfsprogs_git, gets rendered into the per-VM
+	  flake.nix as the xfsprogs-src flake input, and the per-VM
+	  default.nix overrides the nixpkgs xfsprogs derivation's
+	  src to that input. Same refresh path that FSTESTS_GIT uses
+	  for xfstests applies here for xfsprogs.
+
+	  Leave empty to use whatever xfsprogs nixpkgs has.
+
+	  Has no effect on the libvirt path — that backend installs
+	  xfsprogs from distro packages, not the closure.
+
+config WORKFLOW_XFSPROGS_GIT_VERSION
+	string "The xfsprogs git tree version (closure-using backends)"
+	output yaml
+	default "HEAD"
+	help
+	  Branch, tag, or commit to check out from
+	  WORKFLOW_XFSPROGS_GIT. Ignored when WORKFLOW_XFSPROGS_GIT
+	  is empty (the nixpkgs default applies).
+
+	  For djwong's xfsprogs-dev for-next branch carrying
+	  xfs_healer the value to use is "for-next". Pin a specific
+	  commit hash for reproducibility.
+
 config WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	bool
 	select HAVE_CUSTOM_KDEVOPS_GIT

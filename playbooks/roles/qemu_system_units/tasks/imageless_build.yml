@@ -82,7 +82,7 @@
     PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
   when:
-    - fstests_xfsprogs_git | default('') | length > 0
+    - workflow_xfsprogs_git | default('') | length > 0
   changed_when: true
 
 - name: Prepare qsu imageless artefacts per VM
