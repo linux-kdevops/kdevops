@@ -1,0 +1,192 @@
+CONFIG_QEMU_SYSTEM_UNITS=y
+CONFIG_KDEVOPS_HOSTS_PREFIX="qsu"
+
+# qsu has its own deps pipeline; skip the kdevops linux mirror.
+CONFIG_ENABLE_LOCAL_LINUX_MIRROR=n
+CONFIG_USE_LOCAL_LINUX_MIRROR=n
+CONFIG_INSTALL_LOCAL_LINUX_MIRROR=n
+CONFIG_MIRROR_INSTALL=n
+
+CONFIG_QEMU_SYSTEM_UNITS_RAM=4096
+CONFIG_QEMU_SYSTEM_UNITS_CPUS=4
+CONFIG_QEMU_SYSTEM_UNITS_MACHINE_TYPE="q35"
+CONFIG_QEMU_SYSTEM_UNITS_SSH_PORT_BASE=10022
+CONFIG_QEMU_SYSTEM_UNITS_VSOCK_CID_BASE=100
+
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CONTROLLER=y
+
+CONFIG_KDEVOPS_TRY_REFRESH_REPOS=y
+CONFIG_KDEVOPS_TRY_UPDATE_SYSTEMS=y
+CONFIG_KDEVOPS_TRY_INSTALL_KDEV_TOOLS=y
+
+# Lucid setup
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID=y
+CONFIG_ANSIBLE_CFG_LUCID_OUTPUT_MODE_AUTO=y
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS=y
+CONFIG_ANSIBLE_CFG_FORKS=30
+CONFIG_BOOTLINUX_CCACHE_SYSTEM_WIDE=y
+CONFIG_BOOTLINUX_CCACHE=y
+CONFIG_BOOTLINUX_CLEAN_BEFORE_BUILD=y
+CONFIG_BOOTLINUX_REPRODUCIBLE_BUILDS=y
+CONFIG_BOOTLINUX_SHALLOW_CLONE_DEPTH=1
+CONFIG_BOOTLINUX_SHALLOW_CLONE=y
+CONFIG_KDEVOPS_MAKE_VERBOSE=y
+CONFIG_BOOTLINUX_DEV_TOOLS=y
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_PROFILE_TASKS=n
+
+# fstests
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_FSTESTS=y
+CONFIG_KDEVOPS_WORKFLOW_ENABLE_FSTESTS=y
+CONFIG_FSTESTS_XFS=y
+CONFIG_FSTESTS_FSTYP="xfs"
+
+# This defconfig is the *complement* of qsu-fstests. qsu-fstests
+# already covers the Tier-1 baseline (xfs_crc, xfs_crc_logdev,
+# xfs_reflink, xfs_reflink_logdev) at default 4 KiB block size.
+# Run that one for "did the patches break anything obvious".
+#
+# This one targets the code paths the iomap-buf-writethrough
+# series (b4/wt-rfcv2: 64cb7f8, c6a39600, f8f6324, a6bd315,
+# c6bfe2b9) explicitly adds or modifies, with sections that
+# stress the bits Tier-1 doesn't reach:
+#
+#   xfs_reflink_normapbt
+#       reflink=1, rmapbt=0. CoW conversion fires
+#       (xfs_writethrough_submit takes the IOMAP_F_SHARED branch),
+#       but the rmapbt index isn't there to mask reflink CoW
+#       bugs. Catches CoW-handling regressions that the rmapbt
+#       path makes invisible on xfs_reflink.
+#
+#   xfs_reflink_8k_4ks  / xfs_reflink_16k_4ks
+#   xfs_reflink_32k_4ks / xfs_reflink_64k_4ks
+#       LBS-on-4KS variants: filesystem block size of
+#       8/16/32/64 KiB on a 4 KiB sector device. Stresses
+#       iomap_folio_prepare_writethrough's larger-folio code
+#       path and the IOMAP_F_NEW zeroing logic at folio
+#       boundaries that don't match the device sector size —
+#       precisely the area the patch's comments call out as the
+#       reason CoW conversion was deferred from iomap_begin to
+#       writethrough_submit (the IOMAP_F_NEW + IOMAP_F_STALE
+#       interaction at folio prep time). 4 KiB sector + larger
+#       folio is the configuration most likely to surface
+#       alignment bugs.
+#
+# What's NOT here:
+#
+#   xfs_crc_rtdev / xfs_crc_rtdev_extsize_*
+#       Realtime device sections need fstests_test_rtdev /
+#       fstests_scratch_rtdev wired up by the qsu config-qsu
+#       role, and that wiring isn't in place yet (config-qsu.yml
+#       only handles logdev today; the rtdev knobs are gated on
+#       FSTESTS_TESTDEV_SPARSEFILE_GENERATION which qsu does not
+#       use). Add when the qsu role gains rtdev support — the
+#       writethrough patches' xfs_writethrough_submit doesn't
+#       fire for rtdev (no CoW), but the iomap-side WT logic
+#       still applies and is worth a smoke test.
+#
+#   non-_4KS LBS sections (xfs_reflink_64k without _4KS, etc.)
+#       These need FSTESTS_XFS_ENABLE_LBS_REAL — the device
+#       must natively expose the larger logical block size as
+#       its sector size. Our QEMU NVMe drives are 4Kn (4 KiB
+#       LBS); to test "real" LBS we'd need separate drives
+#       configured with logical_block_size=8192/16384/etc., a
+#       second qsu defconfig, and a different mkfs path. The
+#       _4KS variants exercise the same kernel folio-handling
+#       code with the same MKFS_OPTIONS minus the -s sector
+#       hint, which is the more common production shape anyway.
+
+CONFIG_FSTESTS_XFS_MANUAL_COVERAGE=y
+
+# Disable the Tier-1 baseline sections — covered by qsu-fstests.
+# CONFIG_FSTESTS_XFS_SECTION_CRC is not set
+# CONFIG_FSTESTS_XFS_SECTION_NOCRC is not set
+# CONFIG_FSTESTS_XFS_SECTION_NOCRC_512 is not set
+
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_ENABLED=y
+# CONFIG_FSTESTS_XFS_SECTION_REFLINK is not set
+# CONFIG_FSTESTS_XFS_SECTION_REFLINK_1024 is not set
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_NORMAPBT=y
+
+# Enable LBS umbrella + 4KS variant (4K-sector device, larger
+# filesystem block size). Our NVMe drives are 4Kn, which is the
+# EXTRA_STORAGE_SUPPORTS_4K precondition the LBS_4KS Kconfig
+# gates on. Real LBS (FSTESTS_XFS_ENABLE_LBS_REAL) needs drives
+# configured with logical_block_size > 4 KiB and is left for a
+# separate defconfig.
+CONFIG_FSTESTS_XFS_ENABLE_LBS=y
+CONFIG_FSTESTS_XFS_ENABLE_LBS_4KS=y
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_8K_4KS=y
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_16K_4KS=y
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_32K_4KS=y
+CONFIG_FSTESTS_XFS_SECTION_REFLINK_64K_4KS=y
+
+# No external log devices in this matrix — qsu-fstests already
+# covers the logdev variants for the baseline reflink + crc
+# sections. Tier-2/3 of the writethrough coverage is about
+# block-size and reflink-feature-flag combinations, not log
+# placement.
+# CONFIG_FSTESTS_XFS_SECTION_LOGDEV_ENABLED is not set
+# CONFIG_FSTESTS_XFS_SECTION_RTDEV_ENABLED is not set
+
+# Pipe oscheck.sh output through systemd-cat on the guest so
+# `journalctl --identifier=fstests --follow` tails are clean.
+CONFIG_FSTESTS_ENABLE_JOURNAL=y
+
+# 9 NVMe drives per VM. Same shape as qsu-fstests for pool-size
+# parity (1 TEST_DEV + 6 SCRATCH_DEV_POOL members + 2 spare for
+# tests that need extra devices, e.g. dm-flakey, scsi_debug
+# alternates). With logdev disabled in this matrix, drives 1
+# and 2 are unused but the count stays at 9 so the per-VM
+# qcow2 layout matches qsu-fstests and the qsu config-qsu role
+# doesn't need a different NVMe pool template.
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_COUNT=9
+
+# 4Kn NVMe geometry (4 KiB LBS, 4 KiB physical block size, 4 KiB
+# preferred I/O hints, 4 KiB discard granularity). Identical to
+# qsu-fstests — this defconfig stays on the same device shape so
+# only the filesystem-side (mkfs) variation changes and the A/B
+# delta isolates writethrough behaviour, not device geometry.
+# The LBS_4KS sections build their larger filesystem block size
+# (8/16/32/64 KiB) on top of this 4 KiB sector device via
+# `mkfs.xfs -b size=<N> -s size=4k`.
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_LOGICAL_BLOCK_SIZE="4096"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_PHYSICAL_BLOCK_SIZE="4096"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_MIN_IO_SIZE="4096"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_OPT_IO_SIZE="4096"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DISCARD_GRANULARITY="4096"
+
+# Local kernel tree (the one carrying b4/wt-rfcv2). Whatever HEAD
+# is here gets built; rebase b4/wt-rfcv2 onto v7.1-rc1 for the
+# B leg, switch the worktree back to v7.1-rc1 for the A leg.
+# CONFIG_LOCALVERSION_AUTO=y in config-qsu gives each build a
+# distinct uname -r → distinct results dir, so A/B doesn't tangle.
+CONFIG_BOOTLINUX_CONTROLLER_TREE_PATH="/home/dagomez/src/kernel/wt/linux"
+
+# xfstests + xfsprogs, both pointed at user-maintained checkouts.
+# xfstests' iomap-buf-writethrough2 branch carries the
+# pwritev2(RWF_WRITETHROUGH) hooks for fsx and fsstress that this
+# defconfig is paired with — make sure the local checkout is on
+# (or rebased onto) that branch before bringup.
+CONFIG_FSTESTS_GIT="/home/dagomez/src/xfstests-dev"
+CONFIG_FSTESTS_GIT_VERSION="HEAD"
+
+CONFIG_WORKFLOW_XFSPROGS_GIT="/home/dagomez/src/xfsprogs-dev"
+CONFIG_WORKFLOW_XFSPROGS_GIT_VERSION="HEAD"
+
+# Monitoring framework — same coverage as qsu-fstests, so the
+# per-host monitoring section in the report keeps the same shape
+# (kernel cmdline + taint, CPU mitigations, microcode,
+# clocksource, THP/VM tuning, LSM, DMI, hostname, distro, CPU).
+CONFIG_ENABLE_MONITORING=y
+CONFIG_MONITOR_SYSTEM_METRICS=y
+CONFIG_MONITOR_SYSTEM_METRICS_INTERVAL=1
+CONFIG_MONITOR_SNAPSHOTS_ALL=y
