@@ -2,6 +2,34 @@ menu "Shared workflow data partition"
 source "kconfigs/workflows/Kconfig.data_partition"
 endmenu
 
+config WORKFLOW_RESULTS_WIPE_NO_PROMPT
+	bool "Skip the pre-baseline results-wipe confirmation prompt"
+	output yaml
+	default n
+	help
+	  Workflows that share their per-(VM, kernel) results back to
+	  the controller (currently fstests on the qsu backend; the
+	  same shape is planned for blktests and the other qsu-driven
+	  workflows) prompt once before wiping the prior contents of
+	  workflows/<workflow>/results/<vm>/<kernel>/ at the start of
+	  each baseline run. The prompt is a guard against losing
+	  un-archived results when re-running on the same kernel, but
+	  it also blocks unattended runs (CI loops, overnight A/B
+	  sweeps, scripted reruns).
+
+	  Setting this to y skips the prompt for every workflow that
+	  honors it; the wipe still runs, just without the confirmation
+	  step. Setting it to n keeps the prompt; one-shot bypasses
+	  remain available via
+	  `--extra-vars workflow_results_wipe_no_prompt=true` for cases
+	  where the .config default is n but a single invocation needs
+	  to be unattended.
+
+	  Has no effect on workflows that wipe silently today (libvirt
+	  fstests, blktests-on-libvirt, and similar) — those paths do
+	  not run the confirmation task at all, so the value is ignored
+	  there.
+
 config WORKFLOW_KDEVOPS_GIT_SET_BY_CLI
 	bool
 	select HAVE_CUSTOM_KDEVOPS_GIT
