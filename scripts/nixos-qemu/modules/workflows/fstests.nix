@@ -124,6 +124,12 @@
   # individually so the group has to be declared too. Without
   # this, the tests skip with "fsgqa2 group not defined."
   users.groups.fsgqa2 = { gid = 504; };
+  # Same convention applies to the high-uid 123456-fsgqa user
+  # used by generic/381 and a handful of xattr/quota tests:
+  # `_require_group 123456-fsgqa` checks the same-name group
+  # exists. The libvirt useradd path creates it implicitly via
+  # `useradd -U`; declare it here for the closure path.
+  users.groups."123456-fsgqa" = { gid = 505; };
 
   # Each test-framework user gets a real shell via
   # `useDefaultShell = true`. xfstests' `_require_user` helper at
@@ -171,7 +177,11 @@
   users.users."123456-fsgqa" = {
     isSystemUser = true;
     uid = 123456;
-    group = "fsgqa";
+    # Primary group must match the user's own name so
+    # `_require_group 123456-fsgqa` resolves and the per-user
+    # gid the test sets up via setegid is distinct from
+    # fsgqa's gid.
+    group = "123456-fsgqa";
     useDefaultShell = true;
     description = "xfstests numeric-uid test user (generic/381)";
   };
