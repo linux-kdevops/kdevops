@@ -319,6 +319,8 @@ mrproper:
 	$(Q)rm -f playbooks/secret.yml $(KDEVOPS_EXTRA_ADDON_DEST)
 	$(Q)rm -rf include
 	$(Q)rm -rf guestfs
+	$(Q)find scripts/qemu-system-units/vars -mindepth 1 -name 'qsu*.yaml' -delete 2>/dev/null || true
+	$(Q)find scripts/nixos-qemu/configurations -mindepth 1 -maxdepth 1 -type d -name 'qsu-*' -exec rm -rf {} + 2>/dev/null || true
 	$(Q)$(MAKE) -f scripts/gen-refs-default.Makefile _refs-default-clean
 
 kconfig-help-menu:
