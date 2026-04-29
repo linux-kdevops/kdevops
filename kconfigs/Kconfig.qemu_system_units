@@ -126,4 +126,30 @@ config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DRIVE_SIZE_GB
 	  allocates host space on write, so large virtual sizes are
 	  cheap at rest.
 
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_LOGICAL_BLOCK_SIZE
+	int "NVMe logical block size (bytes)"
+	output yaml
+	default 0
+	help
+	  Logical block size (LBA size in bytes) advertised by the
+	  emulated NVMe namespace. Common values are 512 (legacy "512n"
+	  drive) and 4096 (modern "4Kn" or "Advanced Format Native").
+	  Zero leaves the value unset on the QEMU command line so QEMU's
+	  built-in default applies (512 bytes today). The same value is
+	  applied to every extra storage drive provisioned for the VM.
+	  See: <qemu_binary> -device nvme,help (logical_block_size)
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_PHYSICAL_BLOCK_SIZE
+	int "NVMe physical block size (bytes)"
+	output yaml
+	default 0
+	help
+	  Physical block size advertised by the emulated NVMe namespace,
+	  in bytes. Must be >= logical block size. Common pairings are
+	  512/4096 ("512e", classic Advanced Format with 512-byte
+	  emulation) and 4096/4096 ("4Kn", native 4 KiB everywhere).
+	  Zero leaves the value unset so QEMU defaults to logical block
+	  size. Applied uniformly across every extra storage drive.
+	  See: <qemu_binary> -device nvme,help (physical_block_size)
+
 endif # QEMU_SYSTEM_UNITS

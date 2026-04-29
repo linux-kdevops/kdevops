@@ -126,14 +126,32 @@
 # resolve identically on both backends, letting fstests Kconfig
 # device knobs point at the same paths across LIBVIRT+NVME and
 # QEMU_SYSTEM_UNITS.
+#
+# logical_block_size and physical_block_size are spliced into the
+# per-drive dict only when the corresponding Kconfig knob is > 0,
+# so the rendered nvme.env stays byte-identical to the previous
+# behaviour for users who haven't opted in. The qsu nvme.env.j2
+# template emits each property as ",logical_block_size=N" /
+# ",physical_block_size=N" only when the key is present; when it
+# is absent QEMU falls back to its built-in default (512/512).
 - name: Compose per-VM nvme drives for {{ qsu_vm_name }}
   ansible.builtin.set_fact:
-    qsu_nvme_drives: "{{ qsu_nvme_drives + [new_drive] }}"
+    qsu_nvme_drives: "{{ qsu_nvme_drives + [new_drive | combine(blksize_overrides)] }}"
   vars:
     new_drive:
       file: "nvme{{ item }}.qcow2"
       format: qcow2
       serial: "kdevops{{ item }}"
+    blksize_overrides: >-
+      {{
+        ({'logical_block_size': qemu_system_units_extra_storage_logical_block_size | int}
+         if (qemu_system_units_extra_storage_logical_block_size | default(0) | int) > 0
+         else {})
+        | combine(
+          {'physical_block_size': qemu_system_units_extra_storage_physical_block_size | int}
+          if (qemu_system_units_extra_storage_physical_block_size | default(0) | int) > 0
+          else {})
+      }}
   loop: "{{ range(qemu_system_units_extra_storage_drive_count | int) | list }}"
   loop_control:
     label: "{{ qsu_vm_name }}-kdevops{{ item }}"
