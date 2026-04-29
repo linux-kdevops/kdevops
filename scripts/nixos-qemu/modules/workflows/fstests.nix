@@ -286,5 +286,26 @@
     # libexec→/usr/lib translation) and gives the consumer a
     # predictable path the kdevops oscheck.sh flow can use as CWD.
     "L+ /usr/lib/xfstests - - - - ${pkgs.xfstests}/lib/xfstests"
+
+    # Override the runtime default of XFS bug_on_assert from 1
+    # (set by CONFIG_XFS_ASSERT_FATAL=y in the qsu kernel
+    # fragment) to 0. CONFIG_XFS_ASSERT_FATAL=y makes ASSERT()
+    # call BUG() — instantly panicing the guest the moment any
+    # XFS internal invariant is violated. That is the right
+    # default for a developer's working kernel (catch bugs
+    # immediately, see the stack), but on a test-framework guest
+    # it bails xfstests mid-run on the first assertion and we
+    # lose every test that runs after the first ASSERT site is
+    # touched. xfstests itself flags this with the
+    # `_require_no_xfs_bug_on_assert` helper (~2 .notruns per
+    # section in the qsu baseline). Override to 0 so ASSERT()
+    # downgrades to WARN(); the assertion still fires into
+    # dmesg and the test continues, which is the exact policy
+    # xfstests assumes for its bug_on_assert-gated tests.
+    # Persistence: w+ writes the value, follows symlinks, and
+    # tolerates the file being missing (xfs may be unloaded).
+    # The setting reapplies on every boot via systemd-tmpfiles,
+    # which on NixOS runs as part of the activation phase.
+    "w+ /sys/fs/xfs/debug/bug_on_assert - - - - 0"
   ];
 }
