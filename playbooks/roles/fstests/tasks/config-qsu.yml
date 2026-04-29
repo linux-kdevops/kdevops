@@ -26,6 +26,23 @@
       `make destroy && make bringup`.
   when: qsu_kdevops_nvme_syms.files | length < 2
 
+# Disk role assignment, in order:
+#   nvme_paths[0]                     -> TEST_DEV
+#   nvme_paths[1] (if >= 5 drives)    -> TEST_LOGDEV    (xfs_*_logdev sections)
+#   nvme_paths[2] (if >= 5 drives)    -> SCRATCH_LOGDEV (xfs_*_logdev sections)
+#   nvme_paths[3:-1] (if >= 5 drives) -> SCRATCH_DEV_POOL
+#   nvme_paths[1:]   (if <  5 drives) -> SCRATCH_DEV_POOL (no logdev wiring)
+#   nvme_paths[-1]                    -> LOGWRITES_DEV (overlaps the last scratch
+#                                        device on small layouts; matches the
+#                                        libvirt path's behaviour for that case)
+#
+# The xfs.config template only references TEST_LOGDEV and SCRATCH_LOGDEV from
+# sections like [xfs_crc_logdev] and [xfs_reflink_logdev]; sections without
+# the _logdev suffix (e.g. [xfs_crc], [xfs_reflink]) ignore both vars. So the
+# wiring is inert for the current default matrix and lights up the moment a
+# logdev profile is enabled in defconfigs/qsu-fstests via
+# CONFIG_FSTESTS_XFS_SECTION_*_LOGDEV=y.
+
 - name: Ensure fstests mount points exist on the guest
   tags: ["oscheck", "fstests", "kdevops_fstests_setup", "install", "generate-fstests-config"]
   ansible.builtin.file:
@@ -48,7 +65,9 @@
   vars:
     nvme_paths: "{{ (qsu_kdevops_nvme_syms.files | map(attribute='path') | list) | sort }}"
     fstests_test_dev: "{{ nvme_paths[0] }}"
-    fstests_scratch_devpool: "{{ nvme_paths[1:] | join(' ') }}"
+    fstests_test_logdev: "{{ nvme_paths[1] if nvme_paths | length >= 5 else '' }}"
+    fstests_scratch_logdev: "{{ nvme_paths[2] if nvme_paths | length >= 5 else '' }}"
+    fstests_scratch_devpool: "{{ (nvme_paths[3:] if nvme_paths | length >= 5 else nvme_paths[1:]) | join(' ') }}"
     fstests_logwrites_dev: "{{ nvme_paths[-1] }}"
     fstests_result_base: "/data/results"
   ansible.builtin.template:
@@ -65,7 +84,9 @@
   vars:
     nvme_paths: "{{ (qsu_kdevops_nvme_syms.files | map(attribute='path') | list) | sort }}"
     fstests_test_dev: "{{ nvme_paths[0] }}"
-    fstests_scratch_devpool: "{{ nvme_paths[1:] | join(' ') }}"
+    fstests_test_logdev: "{{ nvme_paths[1] if nvme_paths | length >= 5 else '' }}"
+    fstests_scratch_logdev: "{{ nvme_paths[2] if nvme_paths | length >= 5 else '' }}"
+    fstests_scratch_devpool: "{{ (nvme_paths[3:] if nvme_paths | length >= 5 else nvme_paths[1:]) | join(' ') }}"
     fstests_logwrites_dev: "{{ nvme_paths[-1] }}"
     fstests_result_base: "/data/results"
   ansible.builtin.template:
