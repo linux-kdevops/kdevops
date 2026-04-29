@@ -148,6 +148,24 @@
     serviceConfig.SuccessExitStatus = "0 1";
   };
 
+  # Re-add the upstream-NixOS default kernelModules list that the
+  # same boot.kernel.enable gate skips. Both `loop` and `atkbd` are
+  # part of nixos/modules/system/boot/kernel.nix:455 — `loop`
+  # specifically because every fstests test that exercises
+  # snapshot/dm-flakey/loop-backed scratch (xfs/664, generic/097
+  # and friends) calls `losetup` against a freshly-created file
+  # under TEST_DIR. Without loop loaded, losetup fails with "No
+  # such file or directory" on /dev/loopN and the test falls into
+  # a confusing tail of cascading "extra arguments to mkfs" noise
+  # rather than skipping cleanly. atkbd is harmless on a VM but
+  # we keep the upstream pair intact so the lift is a faithful
+  # mirror — if a future kernel.nix change adjusts the default
+  # list, the same default applies here.
+  boot.kernelModules = lib.mkIf (!config.boot.kernel.enable) [
+    "loop"
+    "atkbd"
+  ];
+
   # Serial getty on hvc0 for interactive login via the console socket.
   # hvc0 is a virtio console, handled by systemd's serial-getty@ template
   # (the plain getty@ template is VT-only, gated on /dev/tty0).
