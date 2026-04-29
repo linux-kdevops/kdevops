@@ -233,4 +233,38 @@ config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DISCARD_GRANULARITY
 	  See: <qemu_binary> -device nvme,help (discard_granularity),
 	  hw/core/qdev-properties-system.c BlockConf.
 
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_WRITE_CACHE
+	string "NVMe write cache mode, per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Volatile-write-cache (VWC) mode advertised by each emulated
+	  NVMe namespace. Surfaces in NVMe Identify Controller VWC
+	  and changes the guest block layer's flush behaviour: with
+	  the cache reported present the kernel issues explicit FLUSH
+	  / fsync to drain it, with the cache reported absent the
+	  kernel skips the flush.
+
+	  Unlike the block-size knobs this is an ON_OFF_AUTO field
+	  (BlockConf.wce, hw/core/qdev-properties-system.c) so the
+	  values are "on", "off", or "auto" rather than integers:
+
+	    on    - writeback cache present; FLUSH commands semantic.
+	    off   - writethrough; the device claims to never buffer
+	            so the guest skips the explicit drain. Useful to
+	            stress the no-cache path xfstests' fsync tests
+	            poke at.
+	    auto  - inherit from the block backend (qcow2 typically
+	            defaults to writeback).
+
+	  Empty string leaves the value unset and QEMU's BlockConf
+	  defaults to auto. Same input forms as the block-size
+	  knobs: single value applied globally, or a comma-separated
+	  list of length N for per-drive control (e.g.
+	  "off,off,off,off,off,off,off,off,on" to force every
+	  scratch drive to writethrough while keeping the test
+	  device on writeback).
+
+	  See: <qemu_binary> -device nvme,help (write-cache).
+
 endif # QEMU_SYSTEM_UNITS

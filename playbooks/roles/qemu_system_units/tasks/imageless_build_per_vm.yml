@@ -159,6 +159,7 @@
       min_io_size: "{{ qemu_system_units_extra_storage_min_io_size | default('') | string }}"
       opt_io_size: "{{ qemu_system_units_extra_storage_opt_io_size | default('') | string }}"
       discard_granularity: "{{ qemu_system_units_extra_storage_discard_granularity | default('') | string }}"
+      write-cache: "{{ qemu_system_units_extra_storage_write_cache | default('') | string }}"
     drive_overrides: >-
       {%- set out = {} -%}
       {%- for key, raw in blockconf_knobs.items() -%}
