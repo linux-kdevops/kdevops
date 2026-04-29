@@ -243,16 +243,12 @@
   # forwarder at the output that actually carries the units.
   systemd.packages = [ pkgs.xfsprogs.out ];
 
-  # Force-load the xfs module at boot. The bug_on_assert sysfs
-  # write below targets /sys/fs/xfs/debug/bug_on_assert, which
-  # only exists once the xfs module is loaded. Without an
-  # explicit boot.kernelModules entry, xfs only loads on first
-  # mount — long after systemd-tmpfiles has already run during
-  # activation, so the `w+` rule fires against a missing file
-  # and silently fails. With xfs in boot.kernelModules, the
-  # module loads during stage-1 init, the sysfs hierarchy is
-  # populated by the time tmpfiles fires, and the bug_on_assert
-  # override actually lands.
+  # Force-load the xfs module early so /sys/fs/xfs/debug/bug_on_assert
+  # exists by the time the systemd-tmpfiles rule below fires. The
+  # imageless module restores the standard
+  # `boot.kernelModules → /etc/modules-load.d/nixos.conf` wiring that
+  # NixOS' kernel.nix gates off when boot.kernel.enable=false, so the
+  # natural option Just Works here.
   boot.kernelModules = [ "xfs" ];
 
   # dm-flakey, dm-delay, dm-log-writes etc. (used by xfstests under

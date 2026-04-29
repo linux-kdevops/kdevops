@@ -9,7 +9,7 @@
 # /lib/modules before switch-root.
 #
 # Key-only SSH. Root password is serial-console break-glass only.
-{ pkgs, lib, modulesPath, ... }: {
+{ config, pkgs, lib, modulesPath, ... }: {
   imports = [ (modulesPath + "/profiles/minimal.nix") ];
 
   system.stateVersion = "25.11";
@@ -82,6 +82,71 @@
   # virtiofs after switch-root.
   boot.initrd.availableKernelModules = lib.mkForce [];
   boot.initrd.kernelModules = lib.mkForce [];
+
+  # Restore the standard `boot.kernelModules → /etc/modules-load.d
+  # → systemd-modules-load.service` wiring that NixOS'
+  # nixos/modules/system/boot/kernel.nix gates off when
+  # boot.kernel.enable=false.
+  #
+  # The upstream `mkIf config.boot.kernel.enable` block in
+  # kernel.nix (around line 441) bundles eleven separate things
+  # under one gate. Five of them genuinely depend on NixOS
+  # having built the kernel itself — system.build.kernel,
+  # system.modulesTree, the system.systemBuilderCommands that
+  # symlink $out/kernel and $out/initrd, the kernel-side
+  # boot.kernelParams, hardware.firmware exposure. Two are
+  # default-module hints (loop, atkbd) that aren't useful in a
+  # VM. The remaining four are pure runtime mechanism and have
+  # no dependency on the kernel package whatsoever:
+  #
+  #   environment.etc."modules-load.d/nixos.conf"
+  #   systemd.services.systemd-modules-load.wantedBy
+  #   systemd.services.systemd-modules-load.serviceConfig
+  #   lib.kernelConfig (assertion helpers)
+  #
+  # The first three are needed for `boot.kernelModules` to
+  # actually load anything; the fourth is unused outside
+  # NixOS-built-kernel paths. Bundling all eleven under one gate
+  # was a reasonable simplification when "no kernel package =
+  # no modules" was the only no-NixOS-kernel use case the
+  # upstream module had to think about, but the assumption
+  # breaks on imageless guests: kdevops/bootlinux builds the
+  # kernel out-of-tree relative to nixpkgs, and the matching
+  # modules tree lives at /lib/modules served by virtiofs from
+  # the controller. The modules exist, modprobe works, the only
+  # thing missing is the standard /etc/modules-load.d wiring
+  # that systemd-modules-load.service consumes at stage-2 boot.
+  #
+  # Lifting `boot.kernel.enable = true` to use the upstream path
+  # is wrong for two reasons. First, it would re-engage every
+  # piece of the gate, including the system.build.kernel and
+  # system.systemBuilderCommands branches that emit symlinks
+  # ($out/kernel, $out/initrd) pointing at the nixpkgs kernel —
+  # we'd ship two kernels (nixpkgs + bootlinux) in the closure,
+  # only one of which actually runs. Second, even if we patched
+  # around the symlinks, downstream tooling that reads
+  # system.build.kernel (image generators, future kexec/snapshot
+  # paths, debug attestation) would silently report the
+  # wrong-but-built kernel rather than the actual one.
+  #
+  # The minimal fix is to lift only the four pure-runtime pieces
+  # at this layer, where the unbundling decision happens. The
+  # mkIf guard makes this a no-op if a future kernel.nix lifts
+  # the gating itself, or if a downstream module ever sets
+  # boot.kernel.enable=true on top of imageless (the natural
+  # path for someone who wants both nixpkgs and kdevops kernels
+  # available, even though that's not a path we use today). The
+  # config shape and SuccessExitStatus value mirror upstream so
+  # the runtime behavior is byte-identical to a kernel.enable=true
+  # closure for the modules-load surface.
+  environment.etc."modules-load.d/nixos.conf".source =
+    lib.mkIf (!config.boot.kernel.enable) (pkgs.writeText "nixos.conf" ''
+      ${lib.concatStringsSep "\n" config.boot.kernelModules}
+    '');
+  systemd.services.systemd-modules-load = lib.mkIf (!config.boot.kernel.enable) {
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig.SuccessExitStatus = "0 1";
+  };
 
   # Serial getty on hvc0 for interactive login via the console socket.
   # hvc0 is a virtio console, handled by systemd's serial-getty@ template
