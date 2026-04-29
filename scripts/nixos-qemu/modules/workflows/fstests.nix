@@ -161,14 +161,20 @@
   # subset of xfstests (~28 tests, including some generic/* and
   # xfs/* tests that chown to bin during setup) skip with "bin
   # user not defined" when it is absent. NixOS does not ship a
-  # bin user by default, so declare it here. Match the historical
-  # uid 2 / gid 2 pairing used by Debian, RHEL, and Slackware so
-  # tests that hardcode the numeric uid (rare but real, e.g. some
-  # quota tests) see the same identity across backends.
-  users.groups.bin = { gid = 2; };
+  # bin user by default, so declare it here.
+  #
+  # Note: do NOT pin uid/gid to 2. NixOS' default user database
+  # already declares the historical uid 2 / gid 2 slot for kmem
+  # (config.ids.uids.bin / config.ids.gids.bin map elsewhere on
+  # NixOS), so an explicit gid = 2 here triggers
+  # "Failed assertions: UIDs and GIDs must be unique!" at module
+  # evaluation time. xfstests' bin-using tests check user
+  # existence (_require_user_exists), not the numeric uid, so
+  # letting NixOS allocate is safe — the test's `chown bin file`
+  # resolves through name lookup regardless of the underlying id.
+  users.groups.bin = {};
   users.users.bin = {
     isSystemUser = true;
-    uid = 2;
     group = "bin";
     useDefaultShell = true;
     description = "xfstests bin test user (system binaries owner)";
