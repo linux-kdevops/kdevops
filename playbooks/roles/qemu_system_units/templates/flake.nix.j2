@@ -5,7 +5,10 @@
    shipped; xfstests-src is added when the fstests workflow is
    enabled so CONFIG_FSTESTS_GIT/CONFIG_FSTESTS_GIT_VERSION
    override the xfstests source used to build the guest's
-   xfstests package. -#}
+   xfstests package. xfsprogs-src is added on top of that when
+   CONFIG_FSTESTS_XFSPROGS_GIT is non-empty so the in-closure
+   xfsprogs (and the xfs_io / xfs_healer / xfs_scrub binaries it
+   ships) can be rebuilt from a user-controlled tree. -#}
 {%- set fstests_enabled = kdevops_workflow_enable_fstests | default(false) -%}
 {%- if fstests_enabled -%}
 {%- if fstests_git.startswith('/') or fstests_git.startswith('file:') -%}
@@ -14,6 +17,17 @@
 {%- set xfstests_nix_url = 'git+' ~ fstests_git -%}
 {%- else -%}
 {%- set xfstests_nix_url = fstests_git -%}
+{%- endif -%}
+{%- set xfsprogs_git = fstests_xfsprogs_git | default('') -%}
+{%- set xfsprogs_git_version = fstests_xfsprogs_git_version | default('HEAD') -%}
+{%- if xfsprogs_git -%}
+{%- if xfsprogs_git.startswith('/') or xfsprogs_git.startswith('file:') -%}
+{%- set xfsprogs_nix_url = 'path:' ~ (xfsprogs_git | regex_replace('^file://', '')) -%}
+{%- elif xfsprogs_git.startswith('http') -%}
+{%- set xfsprogs_nix_url = 'git+' ~ xfsprogs_git -%}
+{%- else -%}
+{%- set xfsprogs_nix_url = xfsprogs_git -%}
+{%- endif -%}
 {%- endif -%}
 {%- endif %}
 {
@@ -26,6 +40,13 @@
       url = "{{ xfstests_nix_url }}{% if not xfstests_nix_url.startswith('path:') %}?ref={{ fstests_git_version }}{% endif %}";
       flake = false;
     };
+{% if xfsprogs_git %}
+
+    xfsprogs-src = {
+      url = "{{ xfsprogs_nix_url }}{% if not xfsprogs_nix_url.startswith('path:') %}?ref={{ xfsprogs_git_version }}{% endif %}";
+      flake = false;
+    };
+{% endif %}
 {% endif %}
   };
 

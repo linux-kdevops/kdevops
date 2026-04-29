@@ -82,12 +82,26 @@
   # after nixos-qemu.overlays.default (which pins the nixpkgs
   # xfstests to a current snapshot) — otherwise the snapshot
   # overlay re-runs last and replaces our src.
+  #
+  # The same pattern applies to xfsprogs when
+  # CONFIG_FSTESTS_XFSPROGS_GIT is non-empty: rebuild the
+  # nixpkgs xfsprogs derivation against the user-supplied
+  # source tree so the xfs_io / xfs_healer / xfs_scrub binaries
+  # the closure ships come from that tree, not from nixpkgs'
+  # pinned xfsprogs release. Both overrides land in the same
+  # mkAfter list so neither stomps the other.
   nixpkgs.overlays = lib.mkAfter [
     (final: prev: {
       xfstests = prev.xfstests.overrideAttrs (_: {
         src = inputs.xfstests-src;
         version = "kdevops-${inputs.xfstests-src.shortRev or "local"}";
       });
+{% if fstests_xfsprogs_git is defined and fstests_xfsprogs_git %}
+      xfsprogs = prev.xfsprogs.overrideAttrs (_: {
+        src = inputs.xfsprogs-src;
+        version = "kdevops-${inputs.xfsprogs-src.shortRev or "local"}";
+      });
+{% endif %}
     })
   ];
 {% endif %}

@@ -69,6 +69,22 @@
     - fstests_git | default('') | length > 0
   changed_when: true
 
+- name: Refresh xfsprogs-src flake input for each VM
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ topdir_path }}/scripts/nixos-qemu/configurations/{{ item }}"
+      - xfsprogs-src
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ ansible_facts.env.PATH | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  when:
+    - fstests_xfsprogs_git | default('') | length > 0
+  changed_when: true
+
 - name: Prepare qsu imageless artefacts per VM
   ansible.builtin.include_tasks: imageless_build_per_vm.yml
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
