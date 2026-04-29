@@ -225,6 +225,23 @@
   services.nfs.server.enable = lib.mkDefault true;
   services.rpcbind.enable = lib.mkDefault true;
 
+  # Expose xfsprogs' bundled systemd units (xfs_scrub@.service,
+  # xfs_scrub_all.service+.timer, xfs_scrub_media@.service, plus
+  # the matching _fail siblings) so xfstests can resolve them via
+  # `_require_systemd_unit_defined`. xfsprogs installs these to
+  # $out/lib/systemd/system/ but NixOS only forwards units from
+  # packages explicitly listed in systemd.packages — without this
+  # line the unit files exist on disk but `systemctl status
+  # xfs_scrub@.service` reports "Unit not found" because
+  # /run/systemd/system/ never receives a copy. xfs/802 (and any
+  # follow-up scrub-systemd test) skips with
+  # `systemd unit "xfs_scrub@.service" not found` until this
+  # forwarding is in place. xfs_healer@.service is intentionally
+  # absent: it is not in upstream xfsprogs as of v6.19.0, so the
+  # ~8 .notrun for xfs_healer in the qsu fstests baseline are
+  # waiting on upstream xfsprogs, not on the closure.
+  systemd.packages = [ pkgs.xfsprogs ];
+
   # dm-flakey, dm-delay, dm-log-writes etc. (used by xfstests under
   # generic/, and exercised heavily once CONFIG_DM_* are enabled) drive
   # device-mapper through libdevmapper, which serializes operations via
