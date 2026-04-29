@@ -47,10 +47,11 @@
 # below silently delete every VM's tree. The aggregated prompt
 # enumerates every VM whose tree is non-empty (and the path the
 # wipe will touch) so the user can verify the full scope before
-# pressing Enter. Set kdevops_fstests_wipe_force=true to skip the
-# prompt for non-interactive use (CI). When no VM has prior
-# results the prompt is skipped silently and the wipes below are
-# no-ops.
+# pressing Enter. Set CONFIG_FSTESTS_WIPE_FORCE=y in .config (or
+# --extra-vars fstests_wipe_force=true on a single invocation) to
+# skip the prompt for non-interactive use (CI). When no VM has
+# prior results the prompt is skipped silently and the wipes
+# below are no-ops.
 
 - name: Detect target kernel release on {{ inventory_hostname }}
   ansible.builtin.command: "uname -r"
@@ -118,11 +119,12 @@
       plus sysstat sa-current) will be wiped.
 
       Press Enter to wipe and continue, or Ctrl+C to abort and back
-      up first. Set kdevops_fstests_wipe_force=true to skip this
-      prompt.
+      up first. Set CONFIG_FSTESTS_WIPE_FORCE=y in .config (or
+      --extra-vars fstests_wipe_force=true on a one-shot run) to
+      skip this prompt.
   when:
     - qsu_wipe_targets | length > 0
-    - not (kdevops_fstests_wipe_force | default(false) | bool)
+    - not (fstests_wipe_force | default(false) | bool)
   tags: ["oscheck", "fstests", "run_tests"]
 
 - name: Clear stale results for section {{ fstests_section }}

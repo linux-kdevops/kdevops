@@ -55,6 +55,31 @@ config FSTESTS_GENERATE_NVME_LIVE_CONFIG_ENABLE
 	bool
 	output yaml
 
+config FSTESTS_WIPE_FORCE
+	bool "Skip the per-(VM, kernel) results-wipe confirmation prompt"
+	output yaml
+	default n
+	help
+	  When the qsu (qemu-system-units) backend is used to drive
+	  fstests, the role checks every VM's
+	  workflows/fstests/results/<vm>/<kernel>/ directory before each
+	  baseline run and prompts once to confirm before wiping the
+	  prior contents. The prompt protects against losing
+	  unbacked-up results when re-running on the same kernel, but it
+	  also blocks unattended runs (CI, overnight loops, scripted
+	  A/B comparisons).
+
+	  Setting this to y skips the prompt entirely and the wipe runs
+	  silently. Setting it to n keeps the prompt; you can still
+	  override on a single invocation with
+	  `--extra-vars fstests_wipe_force=true` if you usually want
+	  the prompt but need to bypass it once.
+
+	  Has no effect on the libvirt fstests path, which does not
+	  share results back to the controller in the same per-(VM,
+	  kernel) layout and so does not run the wipe-confirmation
+	  task.
+
 choice
 	prompt "Target filesystem to test"
 	default FSTESTS_BTRFS
