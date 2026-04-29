@@ -71,6 +71,9 @@
     duperemove
     indent
     acct
+    fsverity-utils
+    man-db
+    thin-provisioning-tools
 
     # Build toolchain that xfstests' ./check and the kdevops
     # oscheck.sh wrapper expect. oscheck.sh's check_reqs() bails
@@ -135,6 +138,23 @@
     isSystemUser = true;
     group = "daemon";
     description = "xfstests system-service test user";
+  };
+
+  # `bin` is the traditional Unix system account for binary-owned
+  # files. The libvirt fstests path adds it via useradd, and a
+  # subset of xfstests (~28 tests, including some generic/* and
+  # xfs/* tests that chown to bin during setup) skip with "bin
+  # user not defined" when it is absent. NixOS does not ship a
+  # bin user by default, so declare it here. Match the historical
+  # uid 2 / gid 2 pairing used by Debian, RHEL, and Slackware so
+  # tests that hardcode the numeric uid (rare but real, e.g. some
+  # quota tests) see the same identity across backends.
+  users.groups.bin = { gid = 2; };
+  users.users.bin = {
+    isSystemUser = true;
+    uid = 2;
+    group = "bin";
+    description = "xfstests bin test user (system binaries owner)";
   };
 
   services.nfs.server.enable = lib.mkDefault true;
