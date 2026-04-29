@@ -75,6 +75,18 @@
     man-db
     thin-provisioning-tools
 
+    # python3 with dbus-python importable, so xfs/802 can talk to
+    # the xfs_scrub@ family of systemd units via D-Bus. The test's
+    # gate is literally `python3 -c 'import dbus'` (xfs/802:45) —
+    # absent the import succeeding, the test skips with
+    #   "test requires python3-dbus".
+    # Build a per-closure python3 wrapper that has dbus-python on
+    # its PYTHONPATH and place that wrapper on PATH; xfsprogs'
+    # xfs_scrub_all.py uses the same `python3` from /run/current-
+    # system/sw/bin so it picks up the same import surface
+    # automatically.
+    (python3.withPackages (ps: [ ps.dbus-python ]))
+
     # Build toolchain that xfstests' ./check and the kdevops
     # oscheck.sh wrapper expect. oscheck.sh's check_reqs() bails
     # early on `which {gcc,make,git,automake}` coming up empty,
