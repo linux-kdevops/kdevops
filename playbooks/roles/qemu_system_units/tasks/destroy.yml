@@ -5,13 +5,45 @@
 # QMP powerdown helper. Per-VM env files and override drop-ins
 # are cleaned in a later task file once those renderings exist.
 
-- name: Stop qemu-system@<vm> instances
+# Fire all qemu-system stops in parallel rather than serially
+# through the loop. Each stop uses qemu-system@.service's
+# graceful path (QMP system_powerdown via ExecStop, then
+# SIGKILL after TimeoutSec=2min if the guest does not
+# acknowledge), so a sequential loop costs ~2min worst case
+# per VM and stacks linearly with the matrix size — 4 VMs
+# means ~8min, 9 VMs would mean ~18min. Submitting each stop
+# with async + poll: 0 returns immediately; a single
+# async_status polling task then waits for all of them
+# concurrently. Wall time drops to roughly max(per-VM stop
+# time) + a few seconds of polling overhead, independent of
+# how many VMs the matrix carries. The async timeout is set
+# to 180s to give a small buffer past TimeoutSec=2min for
+# systemd's own teardown bookkeeping.
+- name: Stop qemu-system@<vm> instances (parallel)
   ansible.builtin.systemd_service:
     name: "qemu-system@{{ item }}.service"
     state: stopped
     scope: user
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    label: "qemu-system@{{ item }}"
+  async: 180
+  poll: 0
+  register: qsu_stop_jobs
   failed_when: false
+
+- name: Wait for qemu-system stops to complete
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  loop: "{{ qsu_stop_jobs.results }}"
+  loop_control:
+    label: "qemu-system@{{ item.item }}"
+  register: qsu_stop_wait
+  until: qsu_stop_wait.finished
+  retries: 60
+  delay: 3
+  failed_when: false
+  when: item.ansible_job_id is defined
 
 - name: Remove SSH config entries for qsu VMs
   ansible.builtin.command: |
@@ -48,7 +80,7 @@
   ansible.builtin.file:
     path: "{{ ansible_facts.env.HOME }}/.config/systemd/virtiofsd/{{ item.0 }}-{{ item.1 }}.env"
     state: absent
-  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(['store', 'modules', 'data-configs', 'data-results', 'kdevops-fstests']) | list }}"
+  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(['store', 'modules', 'data-configs', 'data-results', 'kdevops-fstests', 'data-monitor']) | list }}"
   loop_control:
     label: "{{ item.0 }}-{{ item.1 }}"
 
