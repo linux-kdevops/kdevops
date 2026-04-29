@@ -101,9 +101,20 @@
   # The `sys` group is a second xfstests convention (some tests
   # set group ownership to `sys`); nixpkgs' default `sys` is only
   # created if a service declares it, so declare it explicitly.
-  users.groups.fsgqa = {};
-  users.groups.sys = {};
-  users.groups.daemon = {};
+  # Explicit gids for the test-framework groups. Without an
+  # explicit `gid =`, NixOS' auto-allocator can land on a slot
+  # already reserved by the closure (e.g. gid 2 = kmem in
+  # nixos/modules/misc/ids.nix), which fails module evaluation
+  # with "Failed assertions: UIDs and GIDs must be unique!".
+  # NixOS' system gid reservations top out around 327; pinning
+  # to 500+ stays clear of every reserved slot in ids.nix and
+  # safely below the 1000 boundary that separates system from
+  # regular-user gids. xfstests checks group existence by name
+  # (not by numeric gid), so the specific values are arbitrary
+  # as long as they are stable and non-conflicting.
+  users.groups.fsgqa = { gid = 500; };
+  users.groups.sys = { gid = 501; };
+  users.groups.daemon = { gid = 502; };
 
   # Each test-framework user gets a real shell via
   # `useDefaultShell = true`. xfstests' `_require_user` helper at
@@ -168,11 +179,17 @@
   # (config.ids.uids.bin / config.ids.gids.bin map elsewhere on
   # NixOS), so an explicit gid = 2 here triggers
   # "Failed assertions: UIDs and GIDs must be unique!" at module
-  # evaluation time. xfstests' bin-using tests check user
+  # evaluation time. But leaving gid unpinned is also wrong:
+  # NixOS' auto-allocator scans from a low base and can land on
+  # gid 2 itself, hitting the same assertion. Pin to a safe slot
+  # in the same 500+ band as the other test-framework groups
+  # (well clear of NixOS' system gid reservations that top out
+  # around 327, and below the 1000 boundary that separates system
+  # from regular-user gids). xfstests' bin-using tests check user
   # existence (_require_user_exists), not the numeric uid, so
-  # letting NixOS allocate is safe — the test's `chown bin file`
-  # resolves through name lookup regardless of the underlying id.
-  users.groups.bin = {};
+  # the specific value is arbitrary as long as it is stable and
+  # non-conflicting.
+  users.groups.bin = { gid = 503; };
   users.users.bin = {
     isSystemUser = true;
     group = "bin";
