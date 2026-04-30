@@ -160,6 +160,26 @@
       opt_io_size: "{{ qemu_system_units_extra_storage_opt_io_size | default('') | string }}"
       discard_granularity: "{{ qemu_system_units_extra_storage_discard_granularity | default('') | string }}"
       write-cache: "{{ qemu_system_units_extra_storage_write_cache | default('') | string }}"
+      # NVMe atomic-write fields. Controller-level (atomic.dn,
+      # atomic.awun, atomic.awupf) and namespace-level
+      # (atomic.nawun, atomic.nawupf, atomic.nabsn, atomic.nabspf,
+      # atomic.nabo). The keys must match what nvme.env.j2 expects
+      # in d['atomic.<name>'] / ns['atomic.<name>']; the picker
+      # below handles them identically to the BlockConf knobs (the
+      # value just lands at a different key under the per-drive
+      # dict). Setting any of these flips xfstests'
+      # _require_scratch_write_atomic_multi_fsblock from notrun
+      # ("multi-block atomic writes not supported by this
+      # filesystem") to running, provided AWUN >= 2 LBAs at the
+      # filesystem block size.
+      "atomic.dn": "{{ qemu_system_units_extra_storage_atomic_dn | default('') | string }}"
+      "atomic.awun": "{{ qemu_system_units_extra_storage_atomic_awun | default('') | string }}"
+      "atomic.awupf": "{{ qemu_system_units_extra_storage_atomic_awupf | default('') | string }}"
+      "atomic.nawun": "{{ qemu_system_units_extra_storage_atomic_nawun | default('') | string }}"
+      "atomic.nawupf": "{{ qemu_system_units_extra_storage_atomic_nawupf | default('') | string }}"
+      "atomic.nabsn": "{{ qemu_system_units_extra_storage_atomic_nabsn | default('') | string }}"
+      "atomic.nabspf": "{{ qemu_system_units_extra_storage_atomic_nabspf | default('') | string }}"
+      "atomic.nabo": "{{ qemu_system_units_extra_storage_atomic_nabo | default('') | string }}"
     drive_overrides: >-
       {%- set out = {} -%}
       {%- for key, raw in blockconf_knobs.items() -%}

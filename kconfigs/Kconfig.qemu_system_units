@@ -267,4 +267,155 @@ config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_WRITE_CACHE
 
 	  See: <qemu_binary> -device nvme,help (write-cache).
 
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_DN
+	string "NVMe atomic-write 'disable normal' (atomic.dn), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  When set to "on", the controller reports
+	  AWUN == AWUPF (Atomic Write Unit Normal == ... Power Fail)
+	  via NVMe Identify Controller — i.e. the "normal" atomic-write
+	  unit is collapsed onto the power-fail value. This is the
+	  shape the Linux block layer expects when the device offers a
+	  single guaranteed-atomic write unit instead of separate
+	  best-effort and persisted units. xfstests' atomic-write tests
+	  read the resulting awu_min/awu_max from
+	  /sys/block/<dev>/queue/atomic_write_unit_{min,max}_bytes (and
+	  through statx via STATX_WRITE_ATOMIC).
+
+	  Values: "on" / "off" / "" (empty leaves the QEMU default).
+	  Unlike the integer knobs this is a bool — comma-separated
+	  per-drive lists are still accepted, but each entry must be
+	  on/off (or empty for "leave default"). A single value applies
+	  to every drive's controller.
+
+	  See: <qemu_binary> -device nvme,help (atomic.dn);
+	  hw/nvme/ctrl.c DEFINE_PROP_BOOL("atomic.dn", ..., atomic_dn).
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUN
+	string "NVMe Atomic Write Unit Normal (atomic.awun), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Controller-level Atomic Write Unit Normal (NVMe Identify
+	  Controller AWUN field). The 0-based count of LBAs the
+	  controller can write atomically under normal operation:
+	  awun=N means (N+1) LBAs. With LBS=4096 and awun=1, the
+	  device advertises an atomic write unit of 8 KiB — exactly
+	  the threshold xfstests' _require_scratch_write_atomic_multi_fsblock
+	  needs (awu_max_fs >= 2 * fs_block_size).
+
+	  Linux block layer reads AWUN/AWUPF from NVMe Identify and
+	  exposes them via:
+	    /sys/block/<dev>/queue/atomic_write_unit_min_bytes
+	    /sys/block/<dev>/queue/atomic_write_unit_max_bytes
+	    statx() STATX_WRITE_ATOMIC fields
+	  XFS reports atomic_write_unit_max per-file from the same
+	  source, masked by FS-level alignment requirements.
+
+	  Empty string leaves AWUN at QEMU's default (0, no atomic
+	  write capability advertised). Single value or comma-separated
+	  per-drive list. Together with atomic.awupf and atomic.dn,
+	  enough to make
+	  generic/767 and family flip from "multi-block atomic writes
+	  not supported" to actually running.
+
+	  See: <qemu_binary> -device nvme,help (atomic.awun);
+	  hw/nvme/ctrl.c DEFINE_PROP_UINT16("atomic.awun", ...);
+	  NVMe spec section "Identify Controller AWUN".
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUPF
+	string "NVMe Atomic Write Unit Power Fail (atomic.awupf), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Controller-level Atomic Write Unit Power Fail (NVMe Identify
+	  Controller AWUPF field). 0-based: awupf=N means (N+1) LBAs
+	  guaranteed atomic across power-fail. Must be <= AWUN. The
+	  Linux block layer uses AWUPF as the persisted-atomic unit;
+	  xfstests reads it through atomic_write_unit_min_bytes when
+	  the kernel decides a "minimum guaranteed atomic write" is
+	  needed.
+
+	  Same input forms as the block-size knobs.
+
+	  See: <qemu_binary> -device nvme,help (atomic.awupf);
+	  hw/nvme/ctrl.c DEFINE_PROP_UINT16("atomic.awupf", ...);
+	  NVMe spec section "Identify Controller AWUPF".
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_NAWUN
+	string "NVMe Namespace AWU Normal (atomic.nawun), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Per-namespace override of AWUN, exposed in NVMe Identify
+	  Namespace NAWUN. When set, the namespace reports its own
+	  atomic-write capability that supersedes the controller-level
+	  AWUN for I/O issued to this namespace. Same 0-based encoding:
+	  nawun=N means (N+1) LBAs.
+
+	  QEMU's hw/nvme/ns.c rejects NAWUN values smaller than the
+	  controller's AWUN, so set the controller's AWUN/AWUPF first
+	  if you want NAWUN to take effect (or leave AWUN unset and
+	  let NAWUN be the only source).
+
+	  Same input forms as the block-size knobs.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nawun);
+	  hw/nvme/ns.c nvme_ns_set_nsabp.
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_NAWUPF
+	string "NVMe Namespace AWU Power Fail (atomic.nawupf), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Per-namespace override of AWUPF (NVMe Identify Namespace
+	  NAWUPF). Must be <= NAWUN, and >= controller AWUPF (QEMU
+	  enforces both).
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nawupf).
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_NABSN
+	string "NVMe Namespace Atomic Boundary Size Normal (atomic.nabsn)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary size (NVMe Identify Namespace NABSN),
+	  in 0-based LBAs. Defines the granularity an atomic write
+	  cannot cross during normal operation. Must be >= NAWUN.
+
+	  Most kernels treat NABSN > 0 as "this device has an atomic
+	  boundary; align large atomic writes to it"; on cards that
+	  honor a hard boundary (e.g. NVMe SSDs whose firmware can
+	  only guarantee atomicity within a 16 KiB or 64 KiB stripe)
+	  this is the field that surfaces.
+
+	  Empty leaves NABSN at QEMU's default (0, no boundary). Same
+	  input forms as the other knobs.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabsn);
+	  hw/nvme/ns.c nvme_ns_atomic_configure_boundary.
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_NABSPF
+	string "NVMe Namespace Atomic Boundary Size Power Fail (atomic.nabspf)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary size for power-fail (NVMe Identify
+	  Namespace NABSPF). Must be >= NAWUPF.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabspf).
+
+config QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_NABO
+	string "NVMe Namespace Atomic Boundary Offset (atomic.nabo)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary offset (NVMe Identify Namespace NABO).
+	  Where the first atomic boundary starts in LBAs from LBA 0.
+	  Must be <= min(NABSN, NABSPF). 0 means boundary aligned at
+	  start of namespace.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabo).
+
 endif # QEMU_SYSTEM_UNITS
