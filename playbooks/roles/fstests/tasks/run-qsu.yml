@@ -38,14 +38,23 @@
 # A/B testing where a re-run on the same kernel must reset state
 # while a new kernel must leave the previous kernel's tree alone.
 #
-# qsu virtiofsd has its data-results share root open at
-# <vm>/<kernel>/ (with data-monitor at <vm>/<kernel>/monitoring/
-# pivoting under it), so we wipe every direct child of the
-# per-(VM, kernel) root but leave the root itself intact. The
-# qsu_existing find above already enumerates those children
-# non-recursively, so the wipe loops over qsu_existing.files and
-# removes each path with ansible.builtin.file — no shell, no
-# find -exec, just the canonical ansible primitive.
+# qsu virtiofsd has TWO open share roots that must survive
+# across runs: <vm>/<kernel>/ (data-results) and
+# <vm>/<kernel>/monitoring/ (data-monitor). The host's
+# virtiofsd@<vm>-data-results and virtiofsd@<vm>-data-monitor
+# services are bound to those exact inodes; deleting either
+# directory unlinks the share root and the guest's writes go
+# nowhere. The wipe must therefore preserve both roots while
+# clearing everything beneath them.
+#
+# Discovery splits into two non-recursive finds: qsu_existing_top
+# enumerates every direct child of <vm>/<kernel>/ except the
+# monitoring share root (excludes: "monitoring"), and
+# qsu_existing_mon enumerates every direct child of
+# <vm>/<kernel>/monitoring/. The two lists concatenate into
+# qsu_existing for the prompt's matched count and for the wipe
+# loop, which removes each path with ansible.builtin.file —
+# no shell, no find -exec, just the canonical ansible primitive.
 #
 # Before wiping, the role checks whether each VM's per-(VM,
 # kernel) directory actually holds anything and aggregates the
@@ -74,15 +83,34 @@
     qsu_run_root: "{{ topdir_path }}/workflows/fstests/results/{{ inventory_hostname }}/{{ qsu_uname.stdout | trim }}"
   tags: ["oscheck", "fstests", "run_tests"]
 
-- name: Discover existing per-(VM, kernel) artefacts on the controller
+- name: Discover top-level per-(VM, kernel) artefacts (excluding monitoring share root)
   delegate_to: localhost
   ansible.builtin.find:
     paths: "{{ qsu_run_root }}"
     file_type: any
+    excludes: "monitoring"
     recurse: false
-  register: qsu_existing
+  register: qsu_existing_top
   changed_when: false
   failed_when: false
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Discover monitoring artefacts under per-(VM, kernel) root
+  delegate_to: localhost
+  ansible.builtin.find:
+    paths: "{{ qsu_run_root }}/monitoring"
+    file_type: any
+    recurse: false
+  register: qsu_existing_mon
+  changed_when: false
+  failed_when: false
+  tags: ["oscheck", "fstests", "run_tests"]
+
+- name: Aggregate qsu_existing for prompt and wipe
+  ansible.builtin.set_fact:
+    qsu_existing:
+      matched: "{{ (qsu_existing_top.matched | default(0) | int) + (qsu_existing_mon.matched | default(0) | int) }}"
+      files: "{{ (qsu_existing_top.files | default([])) + (qsu_existing_mon.files | default([])) }}"
   tags: ["oscheck", "fstests", "run_tests"]
 
 # Aggregate every VM's discovery result into a single list on the
