@@ -67,7 +67,7 @@ def main():
             for line in all_lines:
                 line = line.strip()
                 m = re.match(
-                    r"^(?P<GROUP>\w+)/" "(?P<NUMBER>\d+)\s+" "(?P<TIME>\d+)$", line
+                    r"^(?P<GROUP>\w+)/(?P<NUMBER>\d+)\s+(?P<TIME>\d+)$", line
                 )
                 if not m:
                     continue
