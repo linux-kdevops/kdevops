@@ -23,3 +23,29 @@
     state: restarted
     scope: user
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+# After the restart QEMU re-execs and the guest goes through
+# stage-1 + stage-2 boot before sshd is reachable. Without
+# blocking on sshd-greeting, the next play (typically
+# fstests-baseline) hits the guest while the proxy dialer's
+# upstream socket is up but the guest hasn't bound port 22 yet,
+# producing
+#   Failed to connect to the host via ssh:
+#     mm_receive_fd: recvmsg: expected received 1 got 0
+#     proxy dialer did not pass back a connection
+# in the very first ssh task. Mirror the same wait_for that
+# bringup.yml runs after starting the qemu-system services so
+# the restart path enforces the same readiness contract: sshd
+# must answer before we declare the VM available.
+- name: Wait for sshd to greet on each VM's forwarded port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"
+    search_regex: "^SSH-2\\.0"
+    delay: 5
+    timeout: 300
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    loop_var: qsu_vm_name
+    index_var: qsu_vm_idx
+    label: "{{ qsu_vm_name }}:{{ qemu_system_units_ssh_port_base | int + qsu_vm_idx }}"

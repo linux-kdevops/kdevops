@@ -52,3 +52,36 @@ rebuild-switch:
 		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
 		--tags rebuild-boot,rebuild-test
 PHONY += rebuild-switch
+
+restart-vms:
+	$(Q)ansible-playbook \
+		playbooks/qemu_system_units.yml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
+		--tags restart-vms
+PHONY += restart-vms
+
+# rebuild-boot + restart-vms in one tag invocation. Use this
+# (not rebuild-switch + restart-vms) for any change that lands
+# in vm.env (kernel/initrd path, NVMe BlockConf knobs, NVMe
+# atomic-write knobs, virtiofs share list, etc.). The
+# rebuild-test step in rebuild-switch performs a
+# switch-to-configuration on the running guest, which is wasted
+# work when the very next step is a QEMU restart that boots the
+# guest fresh against the new closure anyway.
+rebuild-restart:
+	$(Q)ansible-playbook \
+		playbooks/qemu_system_units.yml \
+		$(if $(wildcard ./extra_vars.yaml),--extra-vars=@./extra_vars.yaml) \
+		--tags rebuild-boot,restart-vms
+PHONY += rebuild-restart
+
+qemu-system-units-help-menu:
+	@echo "qemu-system-units (qsu) targets:"
+	@echo "rebuild-boot       - re-render vm.env + build closure (queued for next QEMU restart)"
+	@echo "rebuild-test       - rebuild closure + switch-to-configuration on running guest (live)"
+	@echo "rebuild-switch     - rebuild-boot + rebuild-test (renders vm.env AND live-switches)"
+	@echo "restart-vms        - restart qemu-system@<vm> services + wait for sshd"
+	@echo "rebuild-restart    - rebuild-boot + restart-vms (use after vm.env changes)"
+	@echo ""
+
+HELP_TARGETS += qemu-system-units-help-menu
