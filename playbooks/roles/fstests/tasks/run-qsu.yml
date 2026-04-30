@@ -14,12 +14,19 @@
   tags: ["oscheck", "fstests", "run_tests"]
 
 # data-results and data-monitor are mounted from the kdevops
-# workflow tree and persist across runs. Clear the section's
-# subtree (xfstests output) AND the monitoring subtree
-# (snapshot start/end.json plus sysstat sa-current) on the
-# controller before each invocation so stale .full/.dmesg/
-# check.* and stale end.json/sa-current from a previous run on
-# the same (VM, kernel) don't mingle with the new ones.
+# workflow tree and persist across runs. Clear every artefact
+# beneath the per-(VM, kernel) root on the controller before
+# each invocation so nothing from a previous run lingers — the
+# section subtree (xfstests .full/.dmesg/check.*), the
+# monitoring subtree (snapshot start/end.json plus sysstat
+# sa-current), and the controller-generated summaries
+# (bad_results.txt, xunit_results.txt, check.log, check.full,
+# check.time, check.time.distribution, new_expunge_files.txt)
+# all start fresh. results-qsu.yml regenerates summaries
+# conditionally (e.g. bad_results.txt only when *.out.bad files
+# exist), so leaving stale ones in place would let a prior run's
+# failure summary survive a clean re-run that produces no
+# failures.
 #
 # The wipe target is the per-(VM, kernel) directory keyed off
 # the live guest's uname -r, not the per-VM last-run symlink.
@@ -31,11 +38,14 @@
 # A/B testing where a re-run on the same kernel must reset state
 # while a new kernel must leave the previous kernel's tree alone.
 #
-# qsu virtiofsd has open share roots at <vm>/<kernel>/
-# (data-results) and <vm>/<kernel>/monitoring/ (data-monitor),
-# so we wipe the children of those roots but leave the roots
-# themselves intact. -mindepth 1 keeps the share root, -maxdepth 1
-# avoids descending (rm -rf does that).
+# qsu virtiofsd has its data-results share root open at
+# <vm>/<kernel>/ (with data-monitor at <vm>/<kernel>/monitoring/
+# pivoting under it), so we wipe every direct child of the
+# per-(VM, kernel) root but leave the root itself intact. The
+# qsu_existing find above already enumerates those children
+# non-recursively, so the wipe loops over qsu_existing.files and
+# removes each path with ansible.builtin.file — no shell, no
+# find -exec, just the canonical ansible primitive.
 #
 # Before wiping, the role checks whether each VM's per-(VM,
 # kernel) directory actually holds anything and aggregates the
@@ -114,9 +124,12 @@
         - {{ h }}: {{ hostvars[h].qsu_existing.matched }} top-level entry(ies)
             {{ hostvars[h].qsu_run_root }}
       {% endfor %}
-      Each VM's section subtree (xfstests .full/.dmesg/check.*
-      output) and monitoring subtree (snapshot start.json/end.json
-      plus sysstat sa-current) will be wiped.
+      Every direct child of each per-(VM, kernel) root will be
+      wiped: section subtree (xfstests .full/.dmesg/check.*
+      output), monitoring subtree (snapshot start/end.json plus
+      sysstat sa-current), and controller-generated summaries
+      (bad_results.txt, xunit_results.txt, check.log, check.full,
+      check.time, check.time.distribution, new_expunge_files.txt).
 
       Press Enter to wipe and continue, or Ctrl+C to abort and back
       up first. Set CONFIG_WORKFLOW_RESULTS_WIPE_NO_PROMPT=y in
@@ -127,21 +140,14 @@
     - not (workflow_results_wipe_no_prompt | default(false) | bool)
   tags: ["oscheck", "fstests", "run_tests"]
 
-- name: Clear stale results for section {{ fstests_section }}
+- name: Clear every per-(VM, kernel) artefact on the controller
   delegate_to: localhost
   ansible.builtin.file:
-    path: "{{ qsu_run_root }}/{{ fstests_section }}"
+    path: "{{ item.path }}"
     state: absent
-  tags: ["oscheck", "fstests", "run_tests"]
-
-- name: Clear stale monitoring subtree before this run
-  delegate_to: localhost
-  ansible.builtin.shell: |
-    d="{{ qsu_run_root }}/monitoring"
-    if [ -d "$d" ]; then
-      find "$d" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-    fi
-  changed_when: true
+  loop: "{{ qsu_existing.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
   tags: ["oscheck", "fstests", "run_tests"]
 
 # Replicate the relevant bits of distro run.yml's LIMIT_TESTS
