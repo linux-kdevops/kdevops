@@ -19,6 +19,20 @@ import sys
 import time
 from datetime import datetime
 from junitparser import JUnitXml, TestSuite, Property, Properties, Failure, Error, Skipped
+from lxml import etree as _lxml_etree
+
+
+def _huge_tree_parse(file):
+    """Parse XML with lxml's CData size cap disabled.
+
+    Some fstests result.xml files exceed lxml's 10 MB CData safety
+    limit when tests emit large stdout (e.g. fsstress-style deep
+    directory traversals where each path component logs a line).
+    huge_tree=True keeps the parser permissive for those cases.
+    junitparser exposes parse_func= for exactly this kind of
+    override, so we don't have to monkey-patch its etree binding.
+    """
+    return _lxml_etree.parse(file, parser=_lxml_etree.XMLParser(huge_tree=True))
 
 
 def get_results(dirroot, results_file):
@@ -257,7 +271,7 @@ def gen_results_summary(
     out_f = sys.stdout
 
     for filename in get_results(results_dir, results_file):
-        parsed = JUnitXml.fromfile(filename)
+        parsed = JUnitXml.fromfile(filename, parse_func=_huge_tree_parse)
         if isinstance(parsed, TestSuite):
             reports.append(parsed)
         else:
