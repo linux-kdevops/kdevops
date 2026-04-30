@@ -87,6 +87,39 @@ CONFIG_FSTESTS_XFS_SECTION_CRC_LOGDEV=y
 # CONFIG_FSTESTS_XFS_SECTION_CRC_LOGDEV_RTDEV is not set
 CONFIG_FSTESTS_XFS_SECTION_REFLINK_LOGDEV=y
 
+# Cap the external-log device size at 64 MiB (override of the
+# kdevops default `-lsize=1g`).
+#
+# The default of 1 GiB is right for the steady-state journaling
+# behaviour the LOGDEV section is meant to exercise, but a
+# subset of xfstests (xfs/005, 263, 299, 304, 305 and similar
+# that bring up scsi_debug as an alternate SCRATCH device)
+# inherit the section's MKFS_OPTIONS verbatim through the
+# environment when calling _scratch_mkfs against the alternate
+# device. scsi_debug instances default to <= 600 MiB, and
+# XFS's log-must-be-<=1/8-of-data rule then caps the maximum
+# log at ~75 MiB. The inherited `-lsize=1g` blows past that
+# limit and mkfs fails with
+#     log size 5242880 blocks too large, maximum size is ...
+# leaving the affected tests notrun under
+#     _scratch_mkfs_xfs failed with (-m crc=1)
+#
+# 64 MiB still exercises external-log behaviour (still
+# noticeably larger than the default mkfs.xfs log auto-sizing
+# would pick for a 50 GiB drive, ~38-50 MiB) and stays well
+# inside the 1/8 cap of every scsi_debug size used by the
+# affected tests. Recovers ~5 tests per logdev VM.
+#
+# Keep this override scoped to the qsu defconfig rather than
+# changing the global FSTESTS_TEST_LOGDEV_MKFS_OPTS default —
+# the libvirt path is unaffected (no scsi_debug-as-alt-scratch
+# clash there) and a different consumer might prefer the bigger
+# log. The xfstests upstream long-form fix is for tests to
+# unset MKFS_OPTIONS when overriding SCRATCH_DEV with
+# scsi_debug; this works around the issue locally until that
+# lands.
+CONFIG_FSTESTS_TEST_LOGDEV_MKFS_OPTS="-lsize=64m"
+
 # Pipe oscheck.sh output through systemd-cat on the guest so
 # a `journalctl --identifier=fstests --follow` tail on the
 # controller (or the guest itself) can watch the per-section
