@@ -154,6 +154,24 @@ CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_MIN_IO_SIZE="4096"
 CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_OPT_IO_SIZE="4096"
 CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DISCARD_GRANULARITY="4096"
 
+# Advertise NVMe atomic-write capability on every drive at the
+# controller level: AWUN=1 (0-based, = 2 LBAs = 8 KiB on 4Kn),
+# AWUPF=1 (= 2 LBAs power-fail-atomic). Linux block layer reads
+# AWUN/AWUPF from NVMe Identify and exposes
+#   /sys/block/<dev>/queue/atomic_write_unit_min_bytes
+#   /sys/block/<dev>/queue/atomic_write_unit_max_bytes
+# plus the STATX_WRITE_ATOMIC fields, which xfstests'
+# _require_scratch_write_atomic gates on. With this set,
+# tests can exercise the HW-driven atomic-write path on every
+# section. The fs-level multi-block atomic gate
+# (_require_scratch_write_atomic_multi_fsblock) requires reflink
+# in addition (see fs/xfs/xfs_mount.h xfs_can_sw_atomic_write —
+# reflink-only), so xfs_crc-family sections still notrun for
+# multi-fsblock; that's by-design and not affected by these
+# device knobs.
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUN="1"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUPF="1"
+
 # Point kdevops at a kernel tree the user maintains themselves
 # (a git worktree, a manual clone, or a symlink). Whatever HEAD is
 # in that tree gets built; kdevops detects the existing checkout

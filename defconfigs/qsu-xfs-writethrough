@@ -164,6 +164,20 @@ CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_MIN_IO_SIZE="4096"
 CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_OPT_IO_SIZE="4096"
 CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_DISCARD_GRANULARITY="4096"
 
+# Advertise NVMe atomic-write capability — needed to clear
+# xfstests' _require_scratch_write_atomic and to run the
+# multi-fsblock subset on the (reflink-only) sections this
+# defconfig covers. AWUN=1 → 2 LBAs = 8 KiB on 4Kn, just over
+# the awu_max_fs >= 2 * fs_blocksize threshold. AWUPF=1 mirrors
+# AWUN as the persisted-atomic unit. Combined with the
+# section's reflink=1, XFS's xfs_get_atomic_write_max() returns
+# the per-AG awu_max via the SW path, which lets the multi-block
+# atomic write tests (generic/768-770,774,775,778; xfs/838-840)
+# actually exercise the path the iomap-buf-writethrough series
+# touches via REQ_FUA optimization.
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUN="1"
+CONFIG_QEMU_SYSTEM_UNITS_EXTRA_STORAGE_ATOMIC_AWUPF="1"
+
 # Local kernel tree (the one carrying b4/wt-rfcv2). Whatever HEAD
 # is here gets built; rebase b4/wt-rfcv2 onto v7.1-rc1 for the
 # B leg, switch the worktree back to v7.1-rc1 for the A leg.
