@@ -23,16 +23,16 @@
   ansible.builtin.command: "whoami"
   register: declared_host_user
   when:
-    - kdevops_use_declared_hosts
-    - workflow_infer_user_and_group
+    - kdevops_use_declared_hosts|bool
+    - workflow_infer_user_and_group|bool
   changed_when: false
 
 - name: Infer group on declared hosts
   ansible.builtin.command: "id -g -n"
   register: declared_host_group
   when:
-    - kdevops_use_declared_hosts
-    - workflow_infer_user_and_group
+    - kdevops_use_declared_hosts|bool
+    - workflow_infer_user_and_group|bool
   changed_when: false
 
 - name: Set inferred user and group for declared hosts
@@ -40,8 +40,8 @@
     data_user: "{{ declared_host_user.stdout | default(data_user) }}"
     data_group: "{{ declared_host_group.stdout | default(data_group) }}"
   when:
-    - kdevops_use_declared_hosts
-    - workflow_infer_user_and_group
+    - kdevops_use_declared_hosts|bool
+    - workflow_infer_user_and_group|bool
 
 # Update /etc/hostname first so the change gets picked up by the reboot
 # that occurs during the distro-specific tasks
@@ -437,7 +437,7 @@
   when:
     - grub2_config_file.stat.exists
     - devconfig_enable_console|bool
-    - not grub_timeout_grep
+    - not grub_timeout_grep.changed
   tags: ["console"]
 
 - name: Check to see if the GRUB serial command is defined
@@ -721,8 +721,8 @@
     sysctl_set: true
     reload: true
   when:
-    - devconfig_enable_sysctl_tuning
-    - devconfig_enable_sysctl_mm_overcommit_memory
+    - devconfig_enable_sysctl_tuning|bool
+    - devconfig_enable_sysctl_mm_overcommit_memory|bool
   tags: ["sysctl"]
 
 - name: Rev the kernel to the latest distribution kotd

@@ -38,7 +38,7 @@
 
 - name: Setup dedicated build filesystem
   when:
-    - build_linux_storage_enable
+    - build_linux_storage_enable|bool
   block:
     - name: Check if device is already mounted
       become: yes
@@ -150,7 +150,7 @@
     single_branch: yes
   when:
     - not linux_git_exists.stat.exists or git_repo_check.rc != 0
-    - shallow_clone
+    - shallow_clone|bool
 
 - name: Clone Linux kernel source (full)
   ansible.builtin.git:
@@ -158,7 +158,7 @@
     dest: "{{ linux_source_dir }}"
   when:
     - not linux_git_exists.stat.exists or git_repo_check.rc != 0
-    - not shallow_clone
+    - not shallow_clone|bool
   retries: 3
   delay: 10
   register: git_result
@@ -174,7 +174,7 @@
   args:
     chdir: "{{ linux_source_dir }}"
   when:
-    - build_linux_use_latest_tag
+    - build_linux_use_latest_tag|bool
     - linux_source_stat.stat.writeable
 
 - name: Ensure /data directory is writable

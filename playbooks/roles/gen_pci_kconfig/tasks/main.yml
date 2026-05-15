@@ -3,9 +3,9 @@
 - name: Dump pci output in machine-readible form
   ansible.builtin.shell: "lspci -Dvmmm > {{ topdir_path }}/.dynamic-kconfig.pci.txt"
   when:
-    - kdevops_pcie_dynamic_kconfig
+    - kdevops_pcie_dynamic_kconfig|bool
 
 - name: Generate libvirt PCI-E kcofig files
   ansible.builtin.shell: "./python/workflows/dynamic-kconfig/gen-dynamic-pci.py {{ topdir_path }}/.dynamic-kconfig.pci.txt > {{ topdir_path }}/Kconfig.passthrough_libvirt.generated"
   when:
-    - kdevops_pcie_dynamic_kconfig
+    - kdevops_pcie_dynamic_kconfig|bool

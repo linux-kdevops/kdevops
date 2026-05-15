@@ -20,7 +20,7 @@
     nfsd_packages: "{{ nfsd_packages + [fsprogs] }}"
   when:
     - fsprogs is defined
-    - fsprogs
+    - fsprogs | default('', true) | length > 0
 
 - name: Install nfsd dependencies
   become: true

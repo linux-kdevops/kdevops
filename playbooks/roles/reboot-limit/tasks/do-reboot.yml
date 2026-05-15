@@ -172,7 +172,7 @@
   ansible.builtin.shell: echo 1 > /proc/sys/kernel/sysrq
   tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
-    - reboot_limit_boot_count_crash_enable
+    - reboot_limit_boot_count_crash_enable|bool
     - ((reboot_limit_count | int % reboot_limit_boot_crash_count | int) == 0)
 
 - name: Force a crash if we were asked to
@@ -182,7 +182,7 @@
   ignore_errors: true
   tags: ["run_tests", "read_count", "vars", "crash-check"]
   when:
-    - reboot_limit_boot_count_crash_enable
+    - reboot_limit_boot_count_crash_enable|bool
     - ((reboot_limit_count | int % reboot_limit_boot_crash_count | int) == 0)
 
 - name: Write current updated boot count variable file to be {{ reboot_limit_count }}

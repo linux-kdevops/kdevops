@@ -378,7 +378,7 @@
     install_snmp: true
     install_kdump: true
   when:
-    - is_sle15|bool or is_tumbleweed
+    - is_sle15|bool or is_tumbleweed|bool
   tags: ["vars"]
 
 - name: Install snmp

@@ -37,14 +37,14 @@
   ansible.builtin.set_fact:
     generic_nodes: "{{ [kdevops_host_prefix] }}"
   when:
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Set generic nodes array on dual baseline and dev systems
   tags: vars
   ansible.builtin.set_fact:
     generic_nodes: "{{ [kdevops_host_prefix] + [kdevops_host_prefix + '-dev'] }}"
   when:
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Set builder nodes array
   tags: vars
@@ -52,7 +52,7 @@
     builder_nodes:
       - "{{ kdevops_host_prefix + '-builder' }}"
   when:
-    - bootlinux_builder
+    - bootlinux_builder|bool
 
 - name: Set iscsi_nodes list
   ansible.builtin.set_fact:
@@ -107,8 +107,8 @@
     is_fstests: true
     fs_config_path: "{{ kdevops_playbooks_dir_full_path }}/{{ fs_config_role_path }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fstests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fstests|bool
     - ansible_nodes_template.stat.exists
   tags: vars
 
@@ -147,8 +147,24 @@
     force: true
     mode: "0644"
   when:
-    - not kdevops_workflows_dedicated_workflow
+    - not kdevops_workflows_dedicated_workflow|bool
     - ansible_nodes_template.stat.exists
+    - not kdevops_enable_nixos|default(false)|bool
+
+- name: Generate the NixOS kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
+  tags: ['nodes']
+  vars:
+    node_template: "{{ kdevops_nodes_template | basename }}"
+    all_generic_nodes: "{{ generic_nodes }}"
+    nodes: "{{ all_generic_nodes }}"
+  ansible.builtin.template:
+    src: "{{ node_template }}"
+    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
+    force: true
+  when:
+    - not kdevops_workflows_dedicated_workflow|bool
+    - ansible_nodes_template.stat.exists
+    - kdevops_enable_nixos|default(false)|bool
 
 - name: Generate the builder kdevops nodes file using nodes file using template as jinja2 source template
   tags: ["nodes"]
@@ -161,7 +177,7 @@
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
     force: true
   when:
-    - bootlinux_builder
+    - bootlinux_builder|bool
     - ansible_nodes_template.stat.exists
 
 
@@ -177,8 +193,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_pynfs
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_pynfs|bool
 
 
 - name: Generate the cxl kdevops nodes file using nodes file using template as jinja2 source template
@@ -193,8 +209,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_cxl
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_cxl|bool
 
 
 - name: Generate a kdevops nodes file for the gitr workflow
@@ -203,8 +219,8 @@
     name: gen_nodes
     tasks_from: gitr
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_gitr
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_gitr|bool
     - ansible_nodes_template.stat.exists
 
 - name: Generate a kdevops nodes file for the ltp workflow
@@ -213,8 +229,8 @@
     name: gen_nodes
     tasks_from: ltp
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ltp
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ltp|bool
     - ansible_nodes_template.stat.exists
 
 - name: Generate a kdevops nodes file for the nfstest workflow
@@ -223,8 +239,8 @@
     name: gen_nodes
     tasks_from: nfstest
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_nfstest
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_nfstest|bool
     - ansible_nodes_template.stat.exists
 
 - name: Set empty enabled test types list for fstests
@@ -273,7 +289,7 @@
     - is_fstests|bool
     - ansible_nodes_template.stat.exists
     - item.changed
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Now expand the list of enabled fstests for valid configuration sections with dev hosts
   tags: ["nodes"]
@@ -289,7 +305,7 @@
     - is_fstests|bool
     - ansible_nodes_template.stat.exists
     - item.changed
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Add the nfs server if one was selected
   ansible.builtin.set_fact:
@@ -350,10 +366,10 @@
       }}
 
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Infer enabled blktests test section types with dev hosts
   vars:
@@ -365,18 +381,18 @@
   ansible.builtin.set_fact:
     blktests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Debug inferring block test types
   ansible.builtin.debug:
     var: blktests_enabled_test_types
   when:
     - false
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
     - ansible_nodes_template.stat.exists
 
 - name: Generate the blktests kdevops nodes file using nodes file using template as jinja2 source template
@@ -391,8 +407,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
 
 
 - name: Infer enabled selftests test section types
@@ -410,10 +426,10 @@
         | list
       }}
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_selftests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_selftests|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Infer enabled selftests test section types with dev hosts
   vars:
@@ -425,10 +441,10 @@
   ansible.builtin.set_fact:
     selftests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_selftests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_selftests|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Generate the selftests kdevops nodes file using nodes file using template as jinja2 source template
   tags: ["hosts"]
@@ -442,8 +458,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_selftests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_selftests|bool
 
 
 - name: Collect dynamically supported filesystems
@@ -459,8 +475,8 @@
     sysbench_enabled_filesystems: "{{ local_supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
 
 - name: Collect enabled sysbench target sections for dynamically supported filesystems
   loop: "{{ sysbench_enabled_filesystems }}"
@@ -477,8 +493,8 @@
   ansible.builtin.set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
 
 - name: Augment sysbench targets with dev nodes
   loop: "{{ sysbench_enabled_filesystems }}"
@@ -495,16 +511,16 @@
   ansible.builtin.set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
-    - kdevops_baseline_and_dev
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
+    - kdevops_baseline_and_dev|bool
 
 - name: Fail if no sysbench tests are enabled
   ansible.builtin.fail:
     msg: "No sysbench tests are enabled. You should enable at least one."
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
     - ansible_nodes_template.stat.exists
     - enabled_sysbench_tests | length == 0
 
@@ -520,8 +536,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
 
 
 - name: Generate the fio-tests kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
@@ -535,10 +551,10 @@
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
     force: yes
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - not fio_tests_multi_filesystem|default(false)|bool
 
 - name: Generate the fio-tests kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
@@ -552,10 +568,10 @@
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
     force: yes
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - not fio_tests_multi_filesystem|default(false)|bool
 
 - name: Infer enabled fio-tests multi-filesystem configurations (no dev)
@@ -575,11 +591,11 @@
   set_fact:
     fio_tests_enabled_section_types: "{{ [kdevops_host_prefix + '-fio-tests-'] | product(all_fs_configs) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Infer enabled fio-tests multi-filesystem configurations with dev
   vars:
@@ -598,11 +614,11 @@
   set_fact:
     fio_tests_expanded_configs: "{{ all_fs_configs }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Create fio-tests nodes for each filesystem configuration with dev hosts
   vars:
@@ -610,11 +626,11 @@
   set_fact:
     fio_tests_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - fio_tests_expanded_configs is defined
     - fio_tests_expanded_configs | length > 0
 
@@ -629,8 +645,8 @@
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
     force: yes
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - ansible_nodes_template.stat.exists
     - fio_tests_enabled_section_types is defined
@@ -651,10 +667,10 @@
         | list
       }}
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_mmtests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_mmtests|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Infer enabled mmtests test section types with dev hosts
   vars:
@@ -666,10 +682,10 @@
   ansible.builtin.set_fact:
     mmtests_enabled_test_types: "{{ all_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_mmtests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_mmtests|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 - name: Generate the mmtests kdevops nodes file using nodes file using template as jinja2 source template
   tags: ["hosts"]
@@ -683,8 +699,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_mmtests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_mmtests|bool
 
 
 - name: Generate the reboot-limit kdevops nodes file using nodes file using template as jinja2 source template
@@ -699,8 +715,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - workflows_reboot_limit
+    - kdevops_workflows_dedicated_workflow|bool
+    - workflows_reboot_limit|bool
     - ansible_nodes_template.stat.exists
 
 
@@ -716,8 +732,8 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - workflows_reboot_limit
+    - kdevops_workflows_dedicated_workflow|bool
+    - workflows_reboot_limit|bool
     - ansible_nodes_template.stat.exists
 
 
@@ -733,10 +749,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - not ai_enable_multifs_testing|default(false)|bool
 
 - name: Generate the AI kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
@@ -751,10 +767,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - not ai_enable_multifs_testing|default(false)|bool
 
 - name: Infer enabled AI multi-filesystem configurations
@@ -794,8 +810,8 @@
   set_fact:
     ai_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs) | unique }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
 
@@ -805,11 +821,11 @@
   set_fact:
     ai_enabled_section_types: "{{ filesystem_nodes }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - ai_multifs_enabled_configs is defined
     - ai_multifs_enabled_configs | length > 0
 
@@ -819,11 +835,11 @@
   set_fact:
     ai_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - ai_multifs_enabled_configs is defined
     - ai_multifs_enabled_configs | length > 0
 
@@ -838,8 +854,8 @@
     dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
     force: yes
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
     - ai_enabled_section_types is defined
@@ -859,10 +875,10 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_vllm
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_vllm|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
 
 - name: Generate the vLLM kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
   tags: ['hosts']
@@ -876,10 +892,10 @@
     force: true
     mode: "0644"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_vllm
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_vllm|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
 
 # MinIO S3 Storage Testing workflow nodes
 
@@ -908,7 +924,7 @@
   set_fact:
     minio_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs) | unique }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - minio_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
@@ -919,11 +935,11 @@
   set_fact:
     minio_enabled_section_types: "{{ filesystem_nodes }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - minio_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - minio_multifs_enabled_configs is defined
     - minio_multifs_enabled_configs | length > 0
 
@@ -933,11 +949,11 @@
   set_fact:
     minio_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - minio_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - minio_multifs_enabled_configs is defined
     - minio_multifs_enabled_configs | length > 0
 
@@ -953,7 +969,7 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - minio_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
@@ -973,10 +989,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - not minio_enable_multifs_testing|default(false)|bool
 
 - name: Generate the MinIO kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
@@ -991,10 +1007,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - not minio_enable_multifs_testing|default(false)|bool
 
 # Build-linux workflow nodes
@@ -1030,7 +1046,7 @@
   set_fact:
     build_linux_multifs_enabled_configs: "{{ (xfs_configs + ext4_configs + btrfs_configs + tmpfs_configs) | unique }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
@@ -1041,11 +1057,11 @@
   set_fact:
     build_linux_enabled_section_types: "{{ filesystem_nodes }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - build_linux_multifs_enabled_configs is defined
     - build_linux_multifs_enabled_configs | length > 0
 
@@ -1055,11 +1071,11 @@
   set_fact:
     build_linux_enabled_section_types: "{{ filesystem_nodes | product(['', '-dev']) | map('join') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - build_linux_multifs_enabled_configs is defined
     - build_linux_multifs_enabled_configs | length > 0
 
@@ -1075,7 +1091,7 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - ansible_nodes_template.stat.exists
@@ -1095,10 +1111,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - not kdevops_baseline_and_dev
+    - not kdevops_baseline_and_dev|bool
     - not build_linux_enable_multifs_testing|default(false)|bool
 
 - name: Generate the Build-linux kdevops nodes file with dev hosts using {{ kdevops_nodes_template }} as jinja2 source template
@@ -1113,10 +1129,10 @@
     force: true
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - ansible_nodes_template.stat.exists
-    - kdevops_baseline_and_dev
+    - kdevops_baseline_and_dev|bool
     - not build_linux_enable_multifs_testing|default(false)|bool
 
 - name: Get the control host's timezone
@@ -1134,7 +1150,7 @@
   ansible.builtin.fail:
     msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - ansible_nodes_template.stat.exists
     - not dedicated_nodes_template.stat.exists
 

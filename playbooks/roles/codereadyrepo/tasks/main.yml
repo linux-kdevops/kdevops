@@ -3,14 +3,14 @@
 - name: Enable a CodeReady Builder repo for this distribution
   when:
     - ansible_distribution != "Fedora"
-    - not devconfig_custom_yum_repofile
+    - devconfig_custom_yum_repofile | default('', true) | length == 0
   block:
     - name: Select the RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
         codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rpms"
       when:
         - ansible_distribution == 'RedHat'
-        - kdevops_enable_guestfs
+        - kdevops_enable_guestfs|bool
 
     - name: Select the Oracle Linux CodeReady Builder repo
       ansible.builtin.set_fact:
@@ -29,7 +29,7 @@
         codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-rhui-rpms"
       when:
         - ansible_distribution == 'RedHat'
-        - kdevops_enable_terraform
+        - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "aws"
 
     - name: Select the Azure RHEL CodeReady Builder repo
@@ -37,7 +37,7 @@
         codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rhui-rpms"
       when:
         - ansible_distribution == 'RedHat'
-        - kdevops_enable_terraform
+        - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "azure"
 
     - name: Select the Google Cloud RHEL CodeReady Builder repo
@@ -45,7 +45,7 @@
         codeready_repo: "rhui-codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rhui-rpms"
       when:
         - ansible_distribution == 'RedHat'
-        - kdevops_enable_terraform
+        - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "gce"
 
     - name: The distribution/provisioner combo isn't recognized

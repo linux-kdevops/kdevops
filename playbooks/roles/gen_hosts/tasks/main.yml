@@ -20,8 +20,7 @@
         {{ kdevops_declared_hosts }}
       {%- endif -%}
   when:
-    - kdevops_use_declared_hosts
-    - kdevops_declared_hosts is defined
+    - kdevops_use_declared_hosts|bool
   tags: vars
 
 - name: Get our user
@@ -58,8 +57,8 @@
     is_fstests: true
     fs_config_path: "{{ kdevops_playbooks_dir_full_path }}/{{ fs_config_role_path }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fstests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fstests|bool
     - ansible_hosts_template.stat.exists
   tags: vars
 
@@ -87,9 +86,9 @@
         | list
       }}
   when:
-    - is_fstests
+    - is_fstests|bool
     - ansible_hosts_template.stat.exists
-    - not kdevops_use_declared_hosts
+    - not kdevops_use_declared_hosts|bool
 
 - name: Infer enabled blktests test section types
   ansible.builtin.set_fact:
@@ -101,18 +100,18 @@
         | list
       }}
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
     - ansible_hosts_template.stat.exists
-    - not kdevops_use_declared_hosts
+    - not kdevops_use_declared_hosts|bool
 
 - name: Debug inferring block test types
   ansible.builtin.debug:
     var: blktests_enabled_test_types
   when:
     - false
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_blktests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_blktests|bool
     - ansible_hosts_template.stat.exists
 
 - name: Infer enabled selftests test section types
@@ -125,10 +124,10 @@
         | list
       }}
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_selftests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_selftests|bool
     - ansible_hosts_template.stat.exists
-    - not kdevops_use_declared_hosts
+    - not kdevops_use_declared_hosts|bool
 
 - name: Collect dynamically supported filesystems
   vars:
@@ -139,8 +138,8 @@
     sysbench_enabled_filesystems: "{{ local_supported_filesystems }}"
     enabled_sysbench_tests: "{{ [] }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
 
 - name: Collect enabled sysbench target sections for dynamically supported filesystems
   loop: "{{ sysbench_enabled_filesystems }}"
@@ -156,8 +155,8 @@
   ansible.builtin.set_fact:
     enabled_sysbench_tests: "{{ enabled_sysbench_tests + enabled_fs_node }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_sysbench
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_sysbench|bool
 
 - name: Infer enabled mmtests test types
   ansible.builtin.set_fact:
@@ -169,18 +168,18 @@
         | list
       }}
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_mmtests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_mmtests|bool
     - ansible_hosts_template.stat.exists
-    - not kdevops_use_declared_hosts
+    - not kdevops_use_declared_hosts|bool
 
 - name: Load AI nodes configuration for multi-filesystem setup
   include_vars:
     file: "{{ topdir_path }}/{{ kdevops_nodes }}"
     name: guestfs_nodes
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - ansible_hosts_template.stat.exists
 
@@ -188,8 +187,8 @@
   set_fact:
     all_generic_nodes: "{{ guestfs_nodes.guestfs_nodes | map(attribute='name') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_ai
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_ai|bool
     - ai_enable_multifs_testing|default(false)|bool
     - guestfs_nodes is defined
 
@@ -198,7 +197,7 @@
     file: "{{ topdir_path }}/{{ kdevops_nodes }}"
     name: build_linux_nodes
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - ansible_hosts_template.stat.exists
@@ -207,7 +206,7 @@
   set_fact:
     build_linux_enabled_section_types: "{{ build_linux_nodes.guestfs_nodes | map(attribute='name') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - build_linux_enable_multifs_testing|default(false)|bool
     - build_linux_nodes is defined
@@ -245,8 +244,8 @@
   include_vars:
     file: "{{ topdir_path }}/{{ kdevops_nodes }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - ansible_hosts_template.stat.exists
 
@@ -254,8 +253,8 @@
   set_fact:
     fio_tests_node_names: "{{ guestfs_nodes | map(attribute='name') | list }}"
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - fio_tests_multi_filesystem|default(false)|bool
     - guestfs_nodes is defined
     - ansible_hosts_template.stat.exists
@@ -264,8 +263,8 @@
   debug:
     var: fio_tests_node_names
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - ansible_hosts_template.stat.exists
 
 - name: Generate the Ansible hosts file for a dedicated fio-tests setup (single filesystem)
@@ -279,8 +278,8 @@
     trim_blocks: True
     lstrip_blocks: True
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - ansible_hosts_template.stat.exists
     - not fio_tests_multi_filesystem|default(false)|bool
 
@@ -295,8 +294,8 @@
     trim_blocks: True
     lstrip_blocks: True
   when:
-    - kdevops_workflows_dedicated_workflow
-    - kdevops_workflow_enable_fio_tests
+    - kdevops_workflows_dedicated_workflow|bool
+    - kdevops_workflow_enable_fio_tests|bool
     - ansible_hosts_template.stat.exists
     - fio_tests_multi_filesystem|default(false)|bool
     - fio_tests_node_names is defined
@@ -311,7 +310,7 @@
     lstrip_blocks: True
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_minio|default(false)|bool
     - ansible_hosts_template.stat.exists
     - not kdevops_use_declared_hosts|default(false)|bool
@@ -326,7 +325,7 @@
     lstrip_blocks: True
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_build_linux|default(false)|bool
     - ansible_hosts_template.stat.exists
     - not kdevops_use_declared_hosts|default(false)|bool
@@ -341,7 +340,7 @@
     lstrip_blocks: True
     mode: '0644'
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - kdevops_workflow_enable_vllm|default(false)|bool
     - ansible_hosts_template.stat.exists
     - not kdevops_use_declared_hosts|default(false)|bool
@@ -356,6 +355,6 @@
   ansible.builtin.fail:
     msg: "Your dedicated workflow lacks rules for what nodes to use, go work on allowed topologies to parallelize testing one per node"
   when:
-    - kdevops_workflows_dedicated_workflow
+    - kdevops_workflows_dedicated_workflow|bool
     - ansible_hosts_template.stat.exists
     - not final_hosts_file.stat.exists

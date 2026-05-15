@@ -802,8 +802,7 @@
   register: nfsmount_conf
   when:
     - fstests_fstyp == "nfs"
-    - fstests_nfs_auth_flavor is defined
-    - fstests_nfs_auth_flavor
+    - fstests_nfs_auth_flavor | default('', true) | length > 0
 
 - name: Create /etc/nfsmount.conf
   become: true
@@ -817,8 +816,7 @@
     mode: "0644"
   when:
     - fstests_fstyp == "nfs"
-    - fstests_nfs_auth_flavor is defined
-    - fstests_nfs_auth_flavor
+    - fstests_nfs_auth_flavor | default('', true) | length > 0
     - not nfsmount_conf.stat.exists
 
 - name: Set auth flavor for NFS
@@ -831,8 +829,7 @@
     line: "Sec={{ fstests_nfs_auth_flavor }}"
   when:
     - fstests_fstyp == "nfs"
-    - fstests_nfs_auth_flavor is defined
-    - fstests_nfs_auth_flavor
+    - fstests_nfs_auth_flavor | default('', true) | length > 0
 
 - name: Create SMB share for test vol
   ansible.builtin.include_role:

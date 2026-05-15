@@ -7,8 +7,7 @@
     name:
       - b4
   when:
-    - target_linux_install_b4 is defined
-    - target_linux_install_b4
+    - target_linux_install_b4 | default('', true) | length > 0
     - ansible_facts['os_family']|lower != 'debian'
 
 - name: Git clone {{ target_linux_tree }} on the target nodes

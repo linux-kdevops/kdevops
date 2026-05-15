@@ -15,28 +15,24 @@
   ansible.builtin.set_fact:
     by_id_pattern: "nvme-QEMU_NVMe_Ctrl_kdevops*"
   when:
-    - libvirt_extra_storage_drive_nvme is defined
     - libvirt_extra_storage_drive_nvme|bool
 
 - name: Set the virtio block device search pattern
   ansible.builtin.set_fact:
     by_id_pattern: "virtio-kdevops*"
   when:
-    - libvirt_extra_storage_drive_virtio is defined
     - libvirt_extra_storage_drive_virtio|bool
 
 - name: Set the IDE device search pattern
   ansible.builtin.set_fact:
     by_id_pattern: "ata-QEMU_HARDDISK_kdevops*"
   when:
-    - libvirt_extra_storage_drive_ide is defined
     - libvirt_extra_storage_drive_ide|bool
 
 - name: Set the SCSI device search pattern
   ansible.builtin.set_fact:
     by_id_pattern: "scsi-0QEMU_QEMU_HARDDISK_kdevops*"
   when:
-    - libvirt_extra_storage_drive_scsi is defined
     - libvirt_extra_storage_drive_scsi|bool
 
 - name: Verify there are block devices to search

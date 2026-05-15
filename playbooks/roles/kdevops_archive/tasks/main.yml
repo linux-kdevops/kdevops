@@ -229,7 +229,7 @@
   environment:
     GIT_LFS_SKIP_SMUDGE: "1"
   when:
-    - kdevops_archive_mirror_present
+    - kdevops_archive_mirror_present|bool
   register: git_clone_result
 
 - name: Remind user this is a demo

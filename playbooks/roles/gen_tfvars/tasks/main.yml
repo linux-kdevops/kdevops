@@ -35,7 +35,7 @@
     patterns: "Kconfig*.generated"
   register: provider_kconfig_files
   when:
-    - kdevops_enable_terraform
+    - kdevops_enable_terraform|bool
 
 - name: Check if any dynamic Kconfig files are empty
   ansible.builtin.fail:
@@ -53,7 +53,7 @@
       For more information, run 'make help' and see the cloud-config
       targets section.
   when:
-    - kdevops_enable_terraform
+    - kdevops_enable_terraform|bool
     - provider_kconfig_files.matched > 0
     - item.size == 0
   loop: "{{ provider_kconfig_files.files }}"
@@ -80,5 +80,5 @@
     dest: "{{ topdir_path }}/{{ kdevops_terraform_tfvars }}"
     force: true
   when:
-    - kdevops_enable_terraform
+    - kdevops_enable_terraform|bool
     - terraform_tfvars_template.stat.exists

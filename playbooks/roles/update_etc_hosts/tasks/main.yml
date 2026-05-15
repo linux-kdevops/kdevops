@@ -23,7 +23,7 @@
   ansible.builtin.set_fact:
     private_network: "{{ terraform_private_net_prefix }}/{{ terraform_private_net_mask }}"
   when:
-    - terraform_private_net_enabled
+    - terraform_private_net_enabled|bool
 
 - name: Build list of hosts
   ansible.builtin.set_fact:
@@ -57,7 +57,7 @@
     state: present
   with_items: "{{ ueh_hosts }}"
   when:
-    - terraform_private_net_enabled
+    - terraform_private_net_enabled|bool
     - not (kdevops_enable_nixos_flake | default(false))
 
 - name: Add IP address of all hosts to all hosts
@@ -70,7 +70,7 @@
     state: present
   with_items: "{{ ueh_hosts }}"
   when:
-    - not terraform_private_net_enabled
+    - not terraform_private_net_enabled|bool
     - not (kdevops_enable_nixos_flake | default(false))
 
 - name: Fix up hostname on Debian guestfs hosts

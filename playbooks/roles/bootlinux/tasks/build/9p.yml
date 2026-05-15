@@ -38,8 +38,7 @@
     name:
       - b4
   when:
-    - target_linux_install_b4 is defined
-    - target_linux_install_b4
+    - target_linux_install_b4 | default('', true) | length > 0
     - hostvars['localhost']['ansible_os_family'] != "Debian"
   run_once: true
   delegate_to: localhost
