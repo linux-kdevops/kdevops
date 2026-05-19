@@ -264,8 +264,9 @@ class CallbackModule(CallbackBase):
 
     def _get_task_command(self, result) -> Optional[str]:
         """
-        Extract the command from modules that execute shell commands.
+        Extract the resolved command from modules that execute shell commands.
         Returns None for modules that don't expose their commands.
+        Only returns fully resolved commands — never raw Jinja2 templates.
 
         Supported modules:
         - ansible.builtin.shell/command: returns cmd (string or list)
@@ -275,11 +276,10 @@ class CallbackModule(CallbackBase):
         - community.general.flatpak_remote: returns command (string)
         - community.general.terraform: returns command (string)
         """
-        task = result._task
-        action = task.action
         res = result._result
+        action = result._task.action
 
-        # Modules that return 'cmd' key
+        # Modules that return 'cmd' key in the result (already resolved)
         if action in (
             "ansible.builtin.shell",
             "ansible.builtin.command",
@@ -293,23 +293,9 @@ class CallbackModule(CallbackBase):
                 if isinstance(cmd, list):
                     return " ".join(cmd)
                 return cmd
-
-            # Fall back to task args for shell/command
-            if action in (
-                "ansible.builtin.shell",
-                "ansible.builtin.command",
-                "shell",
-                "command",
-            ):
-                args = task.args
-                if "_raw_params" in args:
-                    return args["_raw_params"]
-                if "cmd" in args:
-                    return args["cmd"]
-
             return None
 
-        # Modules that return 'command' key
+        # Modules that return 'command' key in the result
         if action in (
             "community.general.make",
             "community.general.flatpak",
