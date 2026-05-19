@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 LTP_REPO:=$(subst ",,$(CONFIG_LTP_REPO))
 LTP_ARGS += ltp_repo=$(LTP_REPO)

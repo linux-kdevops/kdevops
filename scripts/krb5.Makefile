@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_KRB5))
 
 KRB5_EXTRA_ARGS += krb5_realm='$(subst ",,$(CONFIG_KRB5_REALM))'

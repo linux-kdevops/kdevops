@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 MINIO_DATA_TARGET			:= minio
 MINIO_DATA_TARGET_INSTALL		:= minio-install
 MINIO_DATA_TARGET_UNINSTALL		:= minio-uninstall

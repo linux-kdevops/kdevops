@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 PYNFS_GIT:=$(subst ",,$(CONFIG_PYNFS_GIT))
 PYNFS_ARGS += pynfs_git=$(PYNFS_GIT)

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_SMBD))
 
 SMBD_EXTRA_ARGS += smbd_share_fstype='$(subst ",,$(CONFIG_SMBD_SHARE_FSTYPE))'

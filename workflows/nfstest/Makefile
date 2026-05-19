@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 ifeq (y,$(CONFIG_NFSTEST_USE_KDEVOPS_NFSD))
 NFSTEST_ARGS += nfstest_nfs_server_host='$(subst ",,$(CONFIG_KDEVOPS_HOSTS_PREFIX))-nfsd'

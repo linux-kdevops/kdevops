@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ANSIBLE_EXTRA_ARGS += devconfig_enable_kotd=True
 ifeq (y,$(CONFIG_HAVE_DISTRO_CUSTOM_KOTD_REPO))
 KOTD_REPO:=$(subst ",,$(CONFIG_CUSTOM_DISTRO_KOTD_REPO))

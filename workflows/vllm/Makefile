@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # vLLM Production Stack workflow
 
 HELP_TARGETS += vllm-help-menu

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 RCLOUD_WORKFLOW := workflows/rcloud
 
 # Check if rcloud is enabled

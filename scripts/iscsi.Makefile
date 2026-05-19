@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_KDEVOPS_ENABLE_ISCSI))
 
 ISCSI_EXTRA_ARGS += iscsi_target_wwn='$(subst ",,$(CONFIG_ISCSI_TARGET_WWN))'

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Reboot-limit demo Makefile
 #
 # This serves a both the reboot-limit workflow Makefile but also documentation

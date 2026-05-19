@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_FSTESTS_XFS_BUILD_CUSTOM_XFSPROGS))
 FSTESTS_ARGS += fstests_xfs_build_custom_xfsprogs=True
 FSTESTS_ARGS += fstests_xfs_xfsprogs_git='$(CONFIG_FSTESTS_XFS_XFSPROGS_GIT)'

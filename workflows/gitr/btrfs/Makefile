@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 GITR_ARGS += gitr_fstype=btrfs
 GITR_ARGS += gitr_uses_no_devices='False'
 GITR_ARGS += gitr_device=$(subst ",,$(CONFIG_GITR_BTRFS_DEVICE))

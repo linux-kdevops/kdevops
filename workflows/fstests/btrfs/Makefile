@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_FSTESTS_BTRFS_ENABLES_RAID56))
 FSTESTS_ARGS += fstests_btrfs_enables_raid56=True
 endif

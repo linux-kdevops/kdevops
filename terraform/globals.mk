@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Global makefile variables
 UNAME_PREFIX=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 YAML_PLUGIN_URL_DOWNLOAD=https://github.com/ashald/terraform-provider-yaml/releases/download

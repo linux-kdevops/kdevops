@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 fio-tests:
 	$(Q)ansible-playbook \
 		--extra-vars=@$(KDEVOPS_EXTRA_VARS) \

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 PHONY += build-linux build-linux-baseline build-linux-dev
 PHONY += build-linux-results build-linux-visualize build-linux-help-menu
 PHONY += monitor-results monitor-kill

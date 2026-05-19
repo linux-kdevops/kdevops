@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 FSTESTS_ARGS += fstests_cifs_enable='True'
 FSTESTS_SMB_SERVER_HOST:=$(subst ",,$(CONFIG_FSTESTS_SMB_SERVER_HOST))
 ifeq (y,$(CONFIG_FSTESTS_USE_KDEVOPS_SMBD))

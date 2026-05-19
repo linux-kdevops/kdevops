@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Perhaps you use a different location for these. These helpers
 # allow your project to define these and just include this file.
 KDEVOPS_TERRAFORM_DIR ?=	terraform

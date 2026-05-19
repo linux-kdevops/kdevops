@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 PHONY += fix-whitespace-last-commit
 fix-whitespace-last-commit:
 	$(Q)git diff --name-only --diff-filter=M HEAD~1..HEAD | xargs -r python3 scripts/fix_whitespace_issues.py

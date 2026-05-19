@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_KDEVOPS_SETUP_NFSD))
 
 ifeq (y,$(CONFIG_NFSD_EXPORT_STORAGE_LOCAL))

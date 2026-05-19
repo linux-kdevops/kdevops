@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 GITR_MNT:=$(subst ",,$(CONFIG_GITR_MNT))
 GITR_ARGS += gitr_mnt=$(GITR_MNT)

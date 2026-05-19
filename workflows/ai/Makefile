@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 PHONY += ai ai-baseline ai-dev ai-results ai-results-baseline ai-results-dev
 PHONY += ai-setup ai-uninstall ai-destroy ai-help-menu
 PHONY += ai-tests ai-tests-baseline ai-tests-dev

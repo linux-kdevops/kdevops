@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 FSTESTS_ARGS += fstests_nfs_enable='True'
 FSTESTS_NFS_SERVER_HOST:=$(subst ",,$(CONFIG_FSTESTS_NFS_SERVER_HOST))
 ifeq (y,$(CONFIG_FSTESTS_USE_KDEVOPS_NFSD))

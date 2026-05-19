@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # We can later remove kconfig options which match their respective ansible
 # name once kconfig gets extra_vars.yaml output support. That means this
 # Makfile can become empty :) in the future !

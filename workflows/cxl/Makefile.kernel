@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ifeq (y,$(CONFIG_BOOTLINUX))
 cxl-help-linux:
 	@echo "cxl-linux           - Builds cxl_test kernel module and installs it"

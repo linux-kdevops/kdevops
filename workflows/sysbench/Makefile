@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 PHONY += sysbench sysbench-test sysbench-telemetry sysbench-help-menu monitor-results
 
 
