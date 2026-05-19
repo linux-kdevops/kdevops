@@ -98,6 +98,7 @@ class CallbackModule(CallbackBase):
         self.current_task_name: str = ""
         self.current_task_hosts: list[str] = []
         self.play_hosts: list[str] = []  # All hosts in current play
+        self.pending_play_header: Optional[str] = None  # Deferred play banner
         self.current_play_name: str = ""  # Current play name for dynamic display
 
         # Dynamic display state
@@ -421,11 +422,19 @@ class CallbackModule(CallbackBase):
 
         msg = f"\nPLAY: {name} [{hosts_str}]"
         self.current_play_name = f"PLAY: {name} [{hosts_str}]"
-        self._display_message(msg, C.COLOR_HIGHLIGHT)
+        self.pending_play_header = msg
         self._write_to_log(msg)
+
+    def _flush_play_header(self):
+        """Print deferred play header on first task of the play"""
+        if self.pending_play_header:
+            if not self.dynamic_mode:
+                self._display_message(self.pending_play_header, C.COLOR_HIGHLIGHT)
+            self.pending_play_header = None
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         """Task started"""
+        self._flush_play_header()
         self.current_task_name = task.get_name().strip()
         # Initialize with play hosts so display is stable from the start
         self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
