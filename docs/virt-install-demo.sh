@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # custom virt-install script demo
 
 ISO_URL="http://example.com/linux-release.iso"

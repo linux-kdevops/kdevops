@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Tries to infer your preferred libvirt storage pool path.
 # If you are using kdevops in a directory like say /data1/next/kdevops
 # this will look to see if /data1/ is in the path of a storage pool

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # oscheck kdevops cloud-init script.
 #
 # This script accepts the following variables set and passed:

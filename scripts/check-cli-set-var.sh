@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 if [[ $# -ne 1 ]]; then
 	echo n

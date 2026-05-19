@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Script to generate HTML report with embedded graphs using compare-kernels.sh
 
 set -e

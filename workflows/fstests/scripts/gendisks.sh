@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 # Creates a 11 sparse files files we'll use as our disks for testing.
 # A loopback device is used for each of them. This allows us to save space

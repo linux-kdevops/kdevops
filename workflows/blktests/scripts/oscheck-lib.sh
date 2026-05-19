@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Generic oscheck library
 
 oscheck_lib_init_vars()

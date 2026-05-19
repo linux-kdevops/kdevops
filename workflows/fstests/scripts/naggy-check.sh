@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Runs xfstests check.sh in a loop until a failure occurs, tells you
 # how many runs are needed before a failure occurs.
 #

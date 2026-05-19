@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Script to generate mmtests graphs with proper error handling
 
 set -e

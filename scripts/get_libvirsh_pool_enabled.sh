@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Tries to infer if you should be using your existing storage pool paths.
 # If you are using kdevops in a directory like say /data1/next/kdevops
 # this will look to see if /data1/ is the path of any storage pool and if

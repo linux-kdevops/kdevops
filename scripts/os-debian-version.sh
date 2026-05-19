@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 DEBIAN_VERSION_FILE="/etc/debian_version"
 
 if [[ ! -f $DEBIAN_VERSION_FILE ]]; then

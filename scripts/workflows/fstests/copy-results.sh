@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 VARS="extra_vars.yaml"
 LAST_KERNEL_FILE="workflows/fstests/results/last-kernel.txt"

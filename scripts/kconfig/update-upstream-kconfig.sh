@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 
 # This is what we use on the kconfig tree to sync to the latest linux-next
 # kconfig from the Linux kernel.

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Gets the the list of known failed tests.
 
 TEST_ARG_SECTION=""

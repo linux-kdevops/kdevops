@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Visualize NFS test results
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Quick test script for vLLM deployment
 # Tests both baseline and dev nodes, measures response time, and validates output
 

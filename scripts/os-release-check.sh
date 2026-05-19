@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: copyleft-next-0.3.1
 OS_FILE="/etc/os-release"
 
 if [[ ! -f $OS_FILE ]]; then
