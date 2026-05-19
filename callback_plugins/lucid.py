@@ -25,6 +25,7 @@ from collections import deque
 
 from ansible.plugins.callback import CallbackBase
 from ansible import constants as C
+from ansible import context
 
 DOCUMENTATION = """
     name: lucid
@@ -133,6 +134,14 @@ class CallbackModule(CallbackBase):
 
         # Load configuration
         self.output_mode = self.get_option("output_mode")
+
+        # Cache standard stdout-callback options from the default_callback
+        # fragment so we pay the lookup cost once, not per-result.
+        self.display_ok_hosts = self.get_option("display_ok_hosts")
+        self.display_skipped_hosts = self.get_option("display_skipped_hosts")
+        self.display_failed_stderr = self.get_option("display_failed_stderr")
+        self.check_mode_markers = self.get_option("check_mode_markers")
+        self.show_custom_stats = self.get_option("show_custom_stats")
 
         # Determine display mode based on configuration
         is_interactive = self._detect_interactive()
@@ -258,15 +267,20 @@ class CallbackModule(CallbackBase):
         - Changed tasks: ALWAYS show
         - Failed tasks: ALWAYS show
         - OK tasks: Show if current_verbosity >= task's output_verbosity
-        - Skipped tasks: Only at -v or higher
+          and display_ok_hosts is enabled
+        - Skipped tasks: Only at -v or higher and display_skipped_hosts enabled
         """
         # Changed and failed always show
         if status == "changed" or status == "failed" or status == "unreachable":
             return True
 
-        # Skipped only at -v
+        # Skipped only at -v, and only when the user wants to see skipped hosts
         if status == "skipped":
-            return self._display.verbosity >= 1
+            return self._display.verbosity >= 1 and self.display_skipped_hosts
+
+        # Suppress OK output entirely when the user has disabled ok-host display
+        if status == "ok" and not self.display_ok_hosts:
+            return False
 
         # Get task verbosity setting (default is 1)
         task_verbosity = self._get_task_verbosity(result)
@@ -389,13 +403,13 @@ class CallbackModule(CallbackBase):
             return duration.rjust(width)
         return duration
 
-    def _display_message(self, message: str, color=None):
-        """Display message with optional color"""
+    def _display_message(self, message: str, color=None, stderr: bool = False):
+        """Display message with optional color, optionally to stderr"""
         with self.output_lock:
             if color:
-                self._display.display(message, color=color)
+                self._display.display(message, color=color, stderr=stderr)
             else:
-                self._display.display(message)
+                self._display.display(message, stderr=stderr)
 
     # ========================================================================
     # Ansible v2 Callback Methods
@@ -416,6 +430,11 @@ class CallbackModule(CallbackBase):
         if self.log_file_path:
             with self.output_lock:
                 self._display.display(f"Log: {self.log_file_path}")
+
+        # Emit the standard DRY RUN banner at the start of check-mode runs
+        # when the user has opted into check_mode_markers.
+        if self.check_mode_markers and context.CLIARGS.get("check"):
+            self._display_message("DRY RUN", C.COLOR_HIGHLIGHT)
 
     def v2_playbook_on_play_start(self, play):
         """Play started"""
@@ -445,9 +464,16 @@ class CallbackModule(CallbackBase):
         else:
             hosts_str = str(hosts)
 
-        msg = f"\nPLAY: {name} [{hosts_str}]"
+        # Suffix check-mode plays with [CHECK MODE] when the option is on.
+        check_suffix = (
+            " [CHECK MODE]"
+            if (self.check_mode_markers and getattr(play, "check_mode", False))
+            else ""
+        )
+
+        msg = f"\nPLAY: {name} [{hosts_str}]{check_suffix}"
         with self.task_lock:
-            self.current_play_name = f"PLAY: {name} [{hosts_str}]"
+            self.current_play_name = f"PLAY: {name} [{hosts_str}]{check_suffix}"
             self.pending_play_header = msg
         self._write_to_log(msg)
 
@@ -472,18 +498,27 @@ class CallbackModule(CallbackBase):
             return
 
         self._flush_play_header()
+
+        # Suffix check-mode tasks with [CHECK MODE] when enabled.
+        check_suffix = (
+            " [CHECK MODE]"
+            if (self.check_mode_markers and getattr(task, "check_mode", False))
+            else ""
+        )
+        display_name = f"{task_name}{check_suffix}"
+
         with self.task_lock:
-            self.current_task_name = task_name
+            self.current_task_name = display_name
             self.failed_items = []
             # Initialize with play hosts so display is stable from the start
             self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
 
         # In static mode, print immediately (compact - no leading newline)
         if not self.dynamic_mode:
-            msg = f"TASK: {task_name}"
+            msg = f"TASK: {display_name}"
             self._display_message(msg, C.COLOR_HIGHLIGHT)
 
-        self._write_to_log(f"TASK: {task_name}")
+        self._write_to_log(f"TASK: {display_name}")
 
     def v2_runner_on_start(self, host, task):
         """Task started on a host (for dynamic tracking)"""
@@ -677,6 +712,15 @@ class CallbackModule(CallbackBase):
         if self._display.verbosity < 1 and status in ("ok", "skipped"):
             return
 
+        # Respect the standard default_callback options: users who set
+        # display_ok_hosts=False or display_skipped_hosts=False want those
+        # classes of results hidden even when verbosity would otherwise
+        # reveal them.
+        if status == "ok" and not self.display_ok_hosts:
+            return
+        if status == "skipped" and not self.display_skipped_hosts:
+            return
+
         # Determine if we should show output (for tasks that pass visibility check)
         show_output = self._should_display_output(result, status)
 
@@ -695,9 +739,16 @@ class CallbackModule(CallbackBase):
         # Format time (always shown for all statuses)
         time_str = f" ({self._format_duration(duration)})"
 
+        # Route failed / unreachable task output to stderr when the user has
+        # set display_failed_stderr. This matches the ansible default callback.
+        use_stderr = self.display_failed_stderr and status in (
+            "failed",
+            "unreachable",
+        )
+
         # Status line with unicode spacing (using regular spaces, not braille)
         status_line = f"  {symbol} [{host_display}]{time_str}"
-        self._display_message(status_line, color)
+        self._display_message(status_line, color, stderr=use_stderr)
 
         # Show command for supported modules when running with -v or higher
         if self._display.verbosity >= 1:
@@ -707,13 +758,17 @@ class CallbackModule(CallbackBase):
                 if len(command) > 200:
                     command = command[:197] + "..."
                 with self.output_lock:
-                    self._display.display(f"    $ {command}", color=C.COLOR_VERBOSE)
+                    self._display.display(
+                        f"    $ {command}",
+                        color=C.COLOR_VERBOSE,
+                        stderr=use_stderr,
+                    )
 
         # Show output if conditions met
         if show_output:
-            self._display_output(result)
+            self._display_output(result, stderr=use_stderr)
 
-    def _display_output(self, result):
+    def _display_output(self, result, stderr: bool = False):
         """Display stdout/stderr/msg from task result"""
         output = []
         res = result._result
@@ -740,7 +795,7 @@ class CallbackModule(CallbackBase):
 
         if output:
             with self.output_lock:
-                self._display.display("".join(output))
+                self._display.display("".join(output), stderr=stderr)
 
     def _log_result(self, result, status: str, duration: float):
         """Write result to log file (always max verbosity)"""
@@ -810,6 +865,22 @@ class CallbackModule(CallbackBase):
                 color = C.COLOR_OK
 
             self._display_message(msg, color)
+
+        # Render custom set_stats aggregation when the user has opted in.
+        custom = getattr(stats, "custom", None)
+        if self.show_custom_stats and custom:
+            self._display_message("\nCUSTOM STATS:", C.COLOR_HIGHLIGHT)
+            for key in sorted(k for k in custom.keys() if k != "_run"):
+                value = json.dumps(custom[key], indent=1).replace("\n", "")
+                self._display_message(f"\t{key}: {value}")
+            if "_run" in custom:
+                run_value = json.dumps(custom["_run"], indent=1).replace("\n", "")
+                self._display_message(f"\tRUN: {run_value}")
+
+        # Mirror the default callback's closing DRY RUN banner when markers
+        # are enabled and the playbook was invoked with --check.
+        if self.check_mode_markers and context.CLIARGS.get("check"):
+            self._display_message("\nDRY RUN", C.COLOR_HIGHLIGHT)
 
     # ========================================================================
     # Dynamic Mode Display
@@ -950,17 +1021,33 @@ class CallbackModule(CallbackBase):
 
     def _display_failed_items(self):
         """Display collected per-item failures and clear the list"""
+        use_stderr = self.display_failed_stderr
         with self.output_lock:
             for fi in self.failed_items:
                 label = fi["item"]
                 if fi["cmd"]:
-                    self._display.display(f"  [{label}] $ {fi['cmd']}", color=C.COLOR_VERBOSE)
+                    self._display.display(
+                        f"  [{label}] $ {fi['cmd']}",
+                        color=C.COLOR_VERBOSE,
+                        stderr=use_stderr,
+                    )
                 if fi["stderr"]:
-                    self._display.display(f"  [{label}] stderr: {fi['stderr']}", color=C.COLOR_ERROR)
+                    self._display.display(
+                        f"  [{label}] stderr: {fi['stderr']}",
+                        color=C.COLOR_ERROR,
+                        stderr=use_stderr,
+                    )
                 if fi["stdout"]:
-                    self._display.display(f"  [{label}] stdout: {fi['stdout']}")
+                    self._display.display(
+                        f"  [{label}] stdout: {fi['stdout']}",
+                        stderr=use_stderr,
+                    )
                 if fi["msg"] and not fi["stdout"]:
-                    self._display.display(f"  [{label}] msg: {fi['msg']}", color=C.COLOR_ERROR)
+                    self._display.display(
+                        f"  [{label}] msg: {fi['msg']}",
+                        color=C.COLOR_ERROR,
+                        stderr=use_stderr,
+                    )
         with self.task_lock:
             self.failed_items = []
 
