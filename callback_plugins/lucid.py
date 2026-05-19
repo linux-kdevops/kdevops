@@ -827,7 +827,19 @@ class CallbackModule(CallbackBase):
         host = result._host.name
         res = result._result
 
-        # Get delegation info for logging
+        # Produce a cleaned copy of the result for the log body. We copy first
+        # because CallbackBase._clean_results mutates in place, and we must
+        # not touch the original result dict (other callbacks and downstream
+        # code may still observe it). _clean_results handles debug-module
+        # specific redaction; for the full dump below we rely on
+        # _dump_results, which strips every _ansible_* bookkeeping key and
+        # honors no_log redaction through strip_internal_keys.
+        cleaned = res.copy()
+        self._clean_results(cleaned, result._task.action)
+
+        # Get delegation info for logging (read from raw res — this is the
+        # public _ansible_delegated_vars contract surface, not sensitive user
+        # content).
         delegated_vars = res.get("_ansible_delegated_vars", {})
         delegate_to = delegated_vars.get("ansible_delegated_host")
         if delegate_to:
@@ -847,21 +859,25 @@ class CallbackModule(CallbackBase):
             if command:
                 self._write_to_log(f"\n$ {command}")
 
-        # Always log full output
-        if "stdout" in res and res["stdout"]:
-            self._write_to_log(f"\nSTDOUT:\n{res['stdout']}\n")
+        # Always log full output. Read from the cleaned dict so tasks marked
+        # no_log have their stdout/stderr/msg already censored by the task
+        # runner (ansible replaces the result body with a censored placeholder
+        # before dispatching to callbacks) and so debug-module results are
+        # trimmed to the keys _clean_results allows.
+        if "stdout" in cleaned and cleaned["stdout"]:
+            self._write_to_log(f"\nSTDOUT:\n{cleaned['stdout']}\n")
 
-        if "stderr" in res and res["stderr"]:
-            self._write_to_log(f"\nSTDERR:\n{res['stderr']}\n")
+        if "stderr" in cleaned and cleaned["stderr"]:
+            self._write_to_log(f"\nSTDERR:\n{cleaned['stderr']}\n")
 
-        if "msg" in res and res["msg"]:
-            msg_text = res["msg"]
+        if "msg" in cleaned and cleaned["msg"]:
+            msg_text = cleaned["msg"]
             if isinstance(msg_text, (list, dict)):
                 msg_text = json.dumps(msg_text, indent=2)
             self._write_to_log(f"\nMSG:\n{msg_text}\n")
 
-        if status == "failed" and "exception" in res:
-            self._write_to_log(f"\nEXCEPTION:\n{res['exception']}\n")
+        if status == "failed" and "exception" in cleaned:
+            self._write_to_log(f"\nEXCEPTION:\n{cleaned['exception']}\n")
 
         # Always record the failing task's source path in the log, regardless
         # of the show_task_path_on_failure option or verbosity, so the log
@@ -873,6 +889,16 @@ class CallbackModule(CallbackBase):
                 task_path = None
             if task_path:
                 self._write_to_log(f"task path: {task_path}")
+
+        # Append a full structured dump so the log carries the complete result
+        # for post-hoc debugging. _dump_results runs strip_internal_keys on a
+        # deep copy, which drops every _ansible_* bookkeeping key and yields a
+        # redaction-safe serialization even when higher verbosity is not in
+        # effect. indent=4 keeps the dump readable regardless of the user's
+        # result_format / pretty_results choices for on-screen output; the log
+        # is a stable audit trail, not user-facing display.
+        full_dump = self._dump_results(cleaned, indent=4, keep_invocation=False)
+        self._write_to_log(f"FULL RESULT:\n{full_dump}")
 
     def _display_recap(self, stats):
         """Display final statistics"""
