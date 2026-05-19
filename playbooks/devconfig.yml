@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Configure developer environment on target systems
   hosts: all:!localhost
   gather_facts: false

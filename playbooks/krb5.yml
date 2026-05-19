@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Setup MIT Kerberos V5 KDC and configure NFS clients for Kerberos authentication
   hosts: krb5
   roles:

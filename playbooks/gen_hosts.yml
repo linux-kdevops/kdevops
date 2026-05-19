@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Generate Ansible inventory for guests (hosts)
   hosts: localhost
   roles:

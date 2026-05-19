@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Kill all monitoring processes and clean up monitoring data
   hosts: baseline:dev
   become: true

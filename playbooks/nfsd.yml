@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Set up and start the NFS server with configurable exports
   hosts: nfsd
   roles:
