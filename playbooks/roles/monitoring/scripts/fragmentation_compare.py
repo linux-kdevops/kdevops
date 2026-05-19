@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Compare memory fragmentation statistics across different filesystem configurations.
 Generates comparison plots showing fragmentation patterns over time.

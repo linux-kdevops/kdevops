@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Generate comprehensive A/B comparison plots for memory fragmentation analysis.
 Creates multi-panel visualizations showing migration patterns and extfrag events.

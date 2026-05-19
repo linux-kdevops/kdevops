@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 #
 # update_ssh_config_guestfs
 #

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 import os
 import re
 from pathlib import Path

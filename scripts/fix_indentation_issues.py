@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Fix indentation issues in files - convert between tabs and spaces as appropriate
 """

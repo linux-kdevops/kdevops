@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Visualize build results with matplotlib graphs and generate HTML reports.
 """

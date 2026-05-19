@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Simplified vLLM deployment status summary.
 Parses verbose ansible output and presents a clean status overview.

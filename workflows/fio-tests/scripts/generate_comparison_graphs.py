@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Multi-filesystem performance comparison graph generator for fio-tests
 Generates comparative visualizations across XFS, ext4, and btrfs filesystems

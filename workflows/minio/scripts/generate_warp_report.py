@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: copyleft-next-0.3.1
 """
 Generate graphs and HTML report from MinIO Warp benchmark results
 """
