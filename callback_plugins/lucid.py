@@ -637,6 +637,9 @@ class CallbackModule(CallbackBase):
             if status in ("failed", "unreachable") and not ignore_errors:
                 self._freeze_and_show_output(result_data)
         else:
+            # Show per-item failures before the aggregate result
+            if self.failed_items and status == "failed":
+                self._display_failed_items()
             # Static mode - display immediately
             self._display_result_static(result, status, duration)
 
@@ -915,6 +918,20 @@ class CallbackModule(CallbackBase):
             sys.stdout.flush()
             self.display_lines = 0
 
+    def _display_failed_items(self):
+        """Display collected per-item failures and clear the list"""
+        for fi in self.failed_items:
+            label = fi["item"]
+            if fi["cmd"]:
+                self._display.display(f"  [{label}] $ {fi['cmd']}", color=C.COLOR_VERBOSE)
+            if fi["stderr"]:
+                self._display.display(f"  [{label}] stderr: {fi['stderr']}", color=C.COLOR_ERROR)
+            if fi["stdout"]:
+                self._display.display(f"  [{label}] stdout: {fi['stdout']}")
+            if fi["msg"] and not fi["stdout"]:
+                self._display.display(f"  [{label}] msg: {fi['msg']}", color=C.COLOR_ERROR)
+        self.failed_items = []
+
     def _freeze_and_show_output(self, result_data):
         """
         Freeze display and show task output in dynamic mode for failures.
@@ -932,6 +949,10 @@ class CallbackModule(CallbackBase):
         # Print task name
         msg = f"TASK: {self.current_task_name}"
         self._display_message(msg, C.COLOR_HIGHLIGHT)
+
+        # Show per-item failures before the aggregate result
+        if self.failed_items:
+            self._display_failed_items()
 
         # Show result with output
         self._display_result_static(result, status, duration)
