@@ -98,6 +98,7 @@ class CallbackModule(CallbackBase):
         self.current_task_name: str = ""
         self.current_task_hosts: list[str] = []
         self.play_hosts: list[str] = []  # All hosts in current play
+        self.current_play_name: str = ""  # Current play name for dynamic display
 
         # Dynamic display state
         self.display_lines = 0
@@ -419,6 +420,7 @@ class CallbackModule(CallbackBase):
             hosts_str = str(hosts)
 
         msg = f"\nPLAY: {name} [{hosts_str}]"
+        self.current_play_name = f"PLAY: {name} [{hosts_str}]"
         self._display_message(msg, C.COLOR_HIGHLIGHT)
         self._write_to_log(msg)
 
@@ -729,6 +731,10 @@ class CallbackModule(CallbackBase):
 
         # Build new display
         lines = []
+
+        # Play header
+        if self.current_play_name:
+            lines.append(self._truncate_line(self.current_play_name, term_width))
 
         # Task header - truncate to terminal width
         if self.current_task_name:
