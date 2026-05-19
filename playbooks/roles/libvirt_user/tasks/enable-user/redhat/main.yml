@@ -4,7 +4,7 @@
   become: true
   become_method: sudo
   ansible.builtin.user:
-    name: "{{ ansible_env.USER }}"
+    name: "{{ ansible_facts['env'].USER }}"
     groups: libvirt,kvm,qemu
     append: true
   when:

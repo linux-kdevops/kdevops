@@ -73,7 +73,7 @@
     privatekey_path: "/etc/pki/tls/private/ktls.key"
     subject_alt_name:
       - "DNS:{{ ansible_host }}"
-      - "IP:{{ ansible_default_ipv4.address }}"
+      - "IP:{{ ansible_facts['default_ipv4'].address }}"
   register: csr
   become: true
 

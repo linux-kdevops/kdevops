@@ -85,7 +85,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: /root/monitoring/folio_migration_stats.txt
-    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt"
+    dest: "{{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_stats.txt"
     flat: true
     validate_checksum: false
   when: folio_migration_data_file.stat.exists|default(false)
@@ -102,7 +102,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: /root/monitoring/folio_migration_plot.png
-    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png"
+    dest: "{{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_plot.png"
     flat: true
     validate_checksum: false
   when: folio_migration_plot_file.stat.exists|default(false)
@@ -111,9 +111,9 @@
   ansible.builtin.debug:
     msg: |
       Folio migration monitoring collection complete.
-      Data saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt
+      Data saved to: {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_stats.txt
       {% if folio_migration_plot_file.stat.exists | default(false) %}
-      Plot saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
+      Plot saved to: {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_plot.png
       {% endif %}
   when: folio_migration_data_file.stat.exists|default(false)
 
@@ -128,8 +128,8 @@
 - name: Generate folio migration plots on localhost
   ansible.builtin.command: |
     python3 {{ playbook_dir }}/roles/monitoring/files/plot_migration_stats.py
-      -o {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
-      {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats.txt
+      -o {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_plot.png
+      {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_stats.txt
   delegate_to: localhost
   register: localhost_plot_generation
   ignore_errors: true
@@ -143,6 +143,6 @@
       {% if folio_localhost_matplotlib_check.rc != 0 %}
       Skipping plot generation - matplotlib not available on localhost
       {% else %}
-      Plot generated: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_plot.png
+      Plot generated: {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_plot.png
       {% endif %}
   when: folio_migration_data_file.stat.exists|default(false)

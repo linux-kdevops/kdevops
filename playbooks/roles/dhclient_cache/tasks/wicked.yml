@@ -5,7 +5,7 @@
 
 - name: Detect primary network interface
   ansible.builtin.set_fact:
-    primary_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+    primary_interface: "{{ ansible_facts['default_ipv4'].interface | default('eth0') }}"
 
 - name: Create wicked extension for DHCP cache save
   become: true

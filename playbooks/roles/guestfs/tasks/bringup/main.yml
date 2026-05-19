@@ -94,7 +94,7 @@
               if ansible_cfg_ssh_port | int != 22 else []
             ) + (
               ["--no-selinux-relabel"]
-              if (guestfs_fedora is defined and guestfs_fedora|bool and ansible_distribution|lower in ['debian', 'ubuntu'])
+              if (guestfs_fedora is defined and guestfs_fedora|bool and ansible_facts['distribution']|lower in ['debian', 'ubuntu'])
               else []
             )
           }}

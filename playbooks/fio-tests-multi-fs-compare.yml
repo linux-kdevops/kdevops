@@ -123,7 +123,7 @@
         dest: "{{ output_dir }}/multi-filesystem-comparison-summary.html"
         mode: '0644'
       vars:
-        timestamp: "{{ ansible_date_time.iso8601 }}"
+        timestamp: "{{ ansible_facts['date_time'].iso8601 }}"
         total_configs: "{{ filesystem_configs | length }}"
         total_files: "{{ json_files.files | length }}"
       when: generated_files.files | length > 0

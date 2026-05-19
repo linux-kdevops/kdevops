@@ -2,49 +2,49 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Enable a CodeReady Builder repo for this distribution
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
     - devconfig_custom_yum_repofile | default('', true) | length == 0
   block:
     - name: Select the RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rpms"
+        codeready_repo: "codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms"
       when:
-        - ansible_distribution == 'RedHat'
+        - ansible_facts['distribution'] == 'RedHat'
         - kdevops_enable_guestfs|bool
 
     - name: Select the Oracle Linux CodeReady Builder repo
       ansible.builtin.set_fact:
         codeready_repo: "ol9_codeready_builder"
       when:
-        - ansible_distribution == 'OracleLinux'
+        - ansible_facts['distribution'] == 'OracleLinux'
 
     - name: Select the CentOS CodeReady Builder repo
       ansible.builtin.set_fact:
         codeready_repo: "crb"
       when:
-        - ansible_distribution == 'CentOS'
+        - ansible_facts['distribution'] == 'CentOS'
 
     - name: Select the AWS RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-rhui-rpms"
+        codeready_repo: "codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-rhui-rpms"
       when:
-        - ansible_distribution == 'RedHat'
+        - ansible_facts['distribution'] == 'RedHat'
         - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "aws"
 
     - name: Select the Azure RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rhui-rpms"
+        codeready_repo: "codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rhui-rpms"
       when:
-        - ansible_distribution == 'RedHat'
+        - ansible_facts['distribution'] == 'RedHat'
         - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "azure"
 
     - name: Select the Google Cloud RHEL CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "rhui-codeready-builder-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}-rhui-rpms"
+        codeready_repo: "rhui-codeready-builder-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rhui-rpms"
       when:
-        - ansible_distribution == 'RedHat'
+        - ansible_facts['distribution'] == 'RedHat'
         - kdevops_enable_terraform|bool
         - kdevops_terraform_provider == "gce"
 

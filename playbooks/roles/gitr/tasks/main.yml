@@ -27,7 +27,7 @@
   ansible.builtin.set_fact:
     gitr_results_full_path: "{{ topdir_path }}/workflows/gitr/results"
     gitr_results_target: "../workflows/gitr/results/last-run"
-    gitr_run_uniqifier: "{{ ansible_date_time.iso8601_basic_short }}"
+    gitr_run_uniqifier: "{{ ansible_facts['date_time'].iso8601_basic_short }}"
 
 - name: Clean up our localhost results/last-run directory
   ansible.builtin.file:
@@ -230,7 +230,7 @@
   tags: ["gitr", "build"]
   community.general.make:
     chdir: "{{ gitr_mnt }}/git"
-    jobs: "{{ ansible_processor_nproc }}"
+    jobs: "{{ ansible_facts['processor_nproc'] }}"
 
 - name: Set the test thread count (single)
   tags: run_tests
@@ -242,14 +242,14 @@
 - name: Set the test thread count (fast)
   tags: run_tests
   ansible.builtin.set_fact:
-    gitr_test_thread_count: "{{ ansible_processor_nproc }}"
+    gitr_test_thread_count: "{{ ansible_facts['processor_nproc'] }}"
   when:
     - gitr_thread_fast|bool
 
 - name: Set the test thread count (stress)
   tags: run_tests
   ansible.builtin.set_fact:
-    gitr_test_thread_count: "{{ ansible_processor_nproc * 2 }}"
+    gitr_test_thread_count: "{{ ansible_facts['processor_nproc'] * 2 }}"
   when:
     - gitr_thread_stress|bool
 
@@ -286,7 +286,7 @@
   register: rpc_results
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
   changed_when: false
 
 - name: Capture RPC transport statistics
@@ -295,7 +295,7 @@
   register: xprt_results
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
   changed_when: false
 
 - name: Save test summary output to a file
@@ -321,7 +321,7 @@
     mode: "u=rw,g=r,o=r"
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
 
 - name: Save RPC transport statistics to a file
   tags: copy_results
@@ -331,7 +331,7 @@
     mode: "u=rw,g=r,o=r"
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
 
 - name: Copy the TAP archive to the control node
   tags: copy_results
@@ -367,7 +367,7 @@
     validate_checksum: false
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
 
 - name: Copy RPC transport statistics to the control node
   tags: copy_results
@@ -378,7 +378,7 @@
     validate_checksum: false
   when:
     - gitr_fstype == "nfs"
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
 
 - name: Verify last-run kernel directory exists
   tags: ["copy_results"]

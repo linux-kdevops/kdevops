@@ -41,7 +41,7 @@
       - "virt-builder"
       - "{{ base_image_os_version }}"
       - "--arch"
-      - "{{ ansible_machine }}"
+      - "{{ ansible_facts['machine'] }}"
       - "-o"
       - "{{ base_image_pathname }}"
       - "--size"
@@ -61,7 +61,7 @@
       - "virt-builder"
       - "{{ base_image_os_version }}"
       - "--arch"
-      - "{{ ansible_machine }}"
+      - "{{ ansible_facts['machine'] }}"
       - "-o"
       - "{{ base_image_pathname }}"
       - "--size"
@@ -89,7 +89,7 @@
     - libvirt_uri_system|bool
     - guestfs_fedora is defined
     - guestfs_fedora|bool
-    - ansible_distribution|lower in ['debian', 'ubuntu']
+    - ansible_facts['distribution']|lower in ['debian', 'ubuntu']
     - virt_builder_result_system is changed
 
 - name: Set SELinux to permissive mode for Fedora images on non-SELinux hosts (user libvirt)
@@ -104,7 +104,7 @@
     - not libvirt_uri_system|bool
     - guestfs_fedora is defined
     - guestfs_fedora|bool
-    - ansible_distribution|lower in ['debian', 'ubuntu']
+    - ansible_facts['distribution']|lower in ['debian', 'ubuntu']
     - virt_builder_result_user is changed
 
 - name: Set proper ownership on base image for rcloud access (system libvirt)

@@ -394,8 +394,8 @@
   vars:
     benchmark_name: "{{ mmtests_test_type }}"
     test_description: "Performance Benchmark"
-    analysis_date: "{{ ansible_date_time.date }}"
-    analysis_time: "{{ ansible_date_time.time }}"
+    analysis_date: "{{ ansible_facts['date_time'].date }}"
+    analysis_time: "{{ ansible_facts['date_time'].time }}"
     baseline_hostname: "{{ baseline_hostname }}"
     baseline_kernel: "{{ baseline_kernel }}"
     dev_hostname: "{{ dev_hostname }}"

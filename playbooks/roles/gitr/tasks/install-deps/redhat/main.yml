@@ -4,19 +4,19 @@
   ansible.builtin.include_role:
     name: epel-release
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
 
 - name: Update gitr dependencies for RHEL/Centos
   ansible.builtin.set_fact:
     gitr_packages: "{{ gitr_packages + ['perl-App-cpanminus'] }}"
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
 
 - name: Update gitr dependencies for Fedora
   ansible.builtin.set_fact:
     gitr_packages: "{{ gitr_packages + ['cvsps', 'perl-TAP-Harness-Archive'] }}"
   when:
-    - ansible_distribution == "Fedora"
+    - ansible_facts['distribution'] == "Fedora"
 
 - name: Install dependencies for gitr
   become: true
@@ -35,10 +35,10 @@
     mode: new
   with_items: "{{ gitr_cpan_modules }}"
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
 
 - name: Download and install cvsps
-  when: ansible_distribution != "Fedora"
+  when: ansible_facts['distribution'] != "Fedora"
   block:
     - name: Clone the cvsps source code
       ansible.builtin.git:
@@ -53,7 +53,7 @@
     - name: Build cvsps
       community.general.make:
         chdir: "{{ cvsps_data }}"
-        jobs: "{{ ansible_processor_nproc }}"
+        jobs: "{{ ansible_facts['processor_nproc'] }}"
 
     - name: Install cvsps
       become: true

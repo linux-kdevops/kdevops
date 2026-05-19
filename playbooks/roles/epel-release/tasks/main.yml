@@ -3,8 +3,8 @@
 - name: Set epel-release package name for RHEL
   ansible.builtin.set_fact:
     epel_package:
-      - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
-  when: ansible_distribution == "RedHat"
+      - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+  when: ansible_facts['distribution'] == "RedHat"
 
 - name: Install the distribution's epel-release package
   become: true
@@ -25,8 +25,8 @@
       - "/usr/bin/dnf"
       - "config-manager"
       - "--enable"
-      - "{{ 'ol' + ansible_distribution_major_version + '_developer_EPEL' }}"
+      - "{{ 'ol' + ansible_facts['distribution_major_version'] + '_developer_EPEL' }}"
   register: enable
   changed_when: enable is succeeded
   when:
-    - ansible_distribution == "OracleLinux"
+    - ansible_facts['distribution'] == "OracleLinux"

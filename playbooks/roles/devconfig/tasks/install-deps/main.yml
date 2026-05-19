@@ -4,7 +4,7 @@
   ansible.builtin.setup:
     gather_subset:
       - "os_family"
-  when: ansible_os_family is not defined
+  when: ansible_facts['os_family'] is not defined
   tags: vars_simple
 
 - name: Import optional user secret specific variables
@@ -29,20 +29,20 @@
 - name: Debian-specific setup
   ansible.builtin.include_tasks: debian/main.yml
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts['os_family'] == "Debian"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
   tags: vars_simple
 
 - name: SuSE-specific setup
   ansible.builtin.include_tasks: suse/main.yml
   when:
-    - ansible_os_family == "Suse"
+    - ansible_facts['os_family'] == "Suse"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
   tags: vars_simple
 
 - name: Red Hat-specific setup
   ansible.builtin.include_tasks: redhat/main.yml
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_facts['os_family'] == "RedHat"
     - devconfig_try_refresh_repos|bool or devconfig_try_install_kdevtools|bool or kdevops_cli_install|bool
   tags: vars_simple

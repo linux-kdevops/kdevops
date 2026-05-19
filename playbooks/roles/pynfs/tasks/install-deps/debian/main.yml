@@ -28,4 +28,4 @@
     state: present
   tags: ["pynfs", "deps"]
   when:
-    - ansible_distribution_major_version | int >= 13
+    - ansible_facts['distribution_major_version'] | int >= 13

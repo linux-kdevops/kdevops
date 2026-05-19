@@ -18,21 +18,21 @@
     - name: Set filesystem type based on node name
       set_fact:
         node_fstype: >-
-          {%- if 'xfs' in ansible_hostname -%}xfs
-          {%- elif 'ext4' in ansible_hostname -%}ext4
-          {%- elif 'btrfs' in ansible_hostname -%}btrfs
-          {%- elif 'tmpfs' in ansible_hostname -%}tmpfs
+          {%- if 'xfs' in ansible_facts['hostname'] -%}xfs
+          {%- elif 'ext4' in ansible_facts['hostname'] -%}ext4
+          {%- elif 'btrfs' in ansible_facts['hostname'] -%}btrfs
+          {%- elif 'tmpfs' in ansible_facts['hostname'] -%}tmpfs
           {%- else -%}{{ build_linux_fstype|default('xfs') }}{%- endif -%}
 
     - name: Set XFS block and sector sizes from node name
       when: node_fstype == 'xfs'
       set_fact:
         node_xfs_blocksize: >-
-          {%- if 'xfs-4k' in ansible_hostname -%}4096
-          {%- elif 'xfs-8k' in ansible_hostname -%}8192
-          {%- elif 'xfs-16k' in ansible_hostname -%}16384
-          {%- elif 'xfs-32k' in ansible_hostname -%}32768
-          {%- elif 'xfs-64k' in ansible_hostname -%}65536
+          {%- if 'xfs-4k' in ansible_facts['hostname'] -%}4096
+          {%- elif 'xfs-8k' in ansible_facts['hostname'] -%}8192
+          {%- elif 'xfs-16k' in ansible_facts['hostname'] -%}16384
+          {%- elif 'xfs-32k' in ansible_facts['hostname'] -%}32768
+          {%- elif 'xfs-64k' in ansible_facts['hostname'] -%}65536
           {%- else -%}4096{%- endif -%}
         node_xfs_sectorsize: "4096"
 
@@ -216,7 +216,7 @@
 
 - name: Check for build results
   ansible.builtin.stat:
-    path: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+    path: "{{ data_path }}/build-results/summary_{{ ansible_facts['hostname'] }}.json"
   register: summary_file
 
 - name: Read and display summary
@@ -224,7 +224,7 @@
   block:
     - name: Read summary file
       ansible.builtin.slurp:
-        src: "{{ data_path }}/build-results/summary_{{ ansible_hostname }}.json"
+        src: "{{ data_path }}/build-results/summary_{{ ansible_facts['hostname'] }}.json"
       register: summary_content
 
     - name: Parse summary

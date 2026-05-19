@@ -267,7 +267,7 @@
 - name: Print uname for each host
   tags: ["selftests", "run_tests"]
   ansible.builtin.debug:
-    var: ansible_kernel
+    var: ansible_facts['kernel']
 - name: Load configfs module
   tags: ["selftests", "run_tests", "configfs"]
   become: true

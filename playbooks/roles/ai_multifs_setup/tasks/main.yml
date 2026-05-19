@@ -55,7 +55,7 @@
   copy:
     content: |
       # AI Multi-Filesystem Testing Configuration
-      Generated: {{ ansible_date_time.iso8601 }}
+      Generated: {{ ansible_facts['date_time'].iso8601 }}
       Device: {{ ai_multifs_device }}
       Mount Point: {{ ai_multifs_mount_point }}
       Results Directory: {{ ai_multifs_results_dir }}

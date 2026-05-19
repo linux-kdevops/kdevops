@@ -172,7 +172,7 @@
 - name: Print uname for each host
   tags: ["blktests", "run_tests"]
   ansible.builtin.debug:
-    var: ansible_kernel
+    var: ansible_facts['kernel']
 - name: Get used target kernel version
   tags: ["blktests", "copy_results", "augment_expunge_list"]
   ansible.builtin.command: "uname -r"

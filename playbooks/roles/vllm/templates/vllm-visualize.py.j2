@@ -175,7 +175,7 @@ def generate_html_report(results):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vLLM Benchmark Results - {{ ansible_date_time.date }}</title>
+    <title>vLLM Benchmark Results - {{ ansible_facts['date_time'].date }}</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;

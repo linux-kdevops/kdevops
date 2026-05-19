@@ -63,7 +63,7 @@
 
 - name: Set bootlinux_b4_am_this_host as a fact for dev hosts only
   ansible.builtin.set_fact:
-    bootlinux_b4_am_this_host: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
+    bootlinux_b4_am_this_host: "{{ ansible_facts['hostname'] | regex_search('^.*-dev$') is not none }}"
   when:
     - kdevops_baseline_and_dev|bool
     - not workflow_linux_packaged|bool
@@ -77,7 +77,7 @@
 
 - name: Determine if this is a dev node for A/B testing
   ansible.builtin.set_fact:
-    bootlinux_is_dev_node: "{{ ansible_hostname | regex_search('^.*-dev$') is not none }}"
+    bootlinux_is_dev_node: "{{ ansible_facts['hostname'] | regex_search('^.*-dev$') is not none }}"
   when:
     - kdevops_baseline_and_dev|bool
     - bootlinux_ab_different_ref|bool
@@ -213,7 +213,7 @@
   ansible.builtin.debug:
     msg: |
       === KERNEL BUILD COMMAND DEBUG ===
-      build_jobs: {{ ansible_processor_vcpus }}
+      build_jobs: {{ ansible_facts['processor_vcpus'] }}
       bootlinux_make_params: {{ bootlinux_make_params }}
       bootlinux_build_environment: {{ bootlinux_build_environment }}
       bootlinux_compiler_clang: {{ bootlinux_compiler_clang|default(false) }}

@@ -31,4 +31,4 @@
   ansible.builtin.pip:
     name: xdrlib3
   when:
-    - ansible_distribution == "Fedora" or ansible_distribution_major_version | int > 8
+    - ansible_facts['distribution'] == "Fedora" or ansible_facts['distribution_major_version'] | int > 8

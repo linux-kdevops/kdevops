@@ -10,4 +10,4 @@
       - dhcpcd
     state: present
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"

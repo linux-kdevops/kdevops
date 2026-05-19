@@ -145,7 +145,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: "{{ item.path }}"
-    dest: "{{ monitoring_results_path }}/fragmentation/{{ ansible_hostname }}_{{ item.path | basename }}"
+    dest: "{{ monitoring_results_path }}/fragmentation/{{ ansible_facts['hostname'] }}_{{ item.path | basename }}"
     flat: true
     validate_checksum: false
   loop: "{{ fragmentation_output_files.files | default([]) }}"
@@ -163,7 +163,7 @@
       Data saved to: {{ monitoring_results_path }}/fragmentation/
       Files collected:
       {% for file in fragmentation_output_files.files %}
-        - {{ ansible_hostname }}_{{ file.path | basename }}
+        - {{ ansible_facts['hostname'] }}_{{ file.path | basename }}
       {% endfor %}
       {% else %}
       No fragmentation data was collected.

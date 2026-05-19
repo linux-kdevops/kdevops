@@ -8,7 +8,7 @@
   ansible.builtin.include_role:
     name: epel-release
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
 
 - name: Install docker
   become: true

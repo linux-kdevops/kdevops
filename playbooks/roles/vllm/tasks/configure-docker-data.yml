@@ -40,9 +40,9 @@
 - name: Auto-detect Docker mirror registry endpoint via 9P mount
   set_fact:
     docker_registry_mirrors:
-      - "http://{{ ansible_default_ipv4.gateway }}:5000"
+      - "http://{{ ansible_facts['default_ipv4'].gateway }}:5000"
     docker_insecure_registries:
-      - "{{ ansible_default_ipv4.gateway }}:5000"
+      - "{{ ansible_facts['default_ipv4'].gateway }}:5000"
     docker_mirror_type: "9p_mount"
   when:
     - docker_mirror_check.stat.exists
@@ -50,7 +50,7 @@
 
 - name: Auto-detect Docker mirror registry endpoint via IP
   ansible.builtin.uri:
-    url: "http://{{ ansible_default_ipv4.gateway }}:5000/v2/_catalog"
+    url: "http://{{ ansible_facts['default_ipv4'].gateway }}:5000/v2/_catalog"
     method: GET
     timeout: 5
   register: mirror_registry_check
@@ -62,9 +62,9 @@
 - name: Set Docker registry mirror configuration via IP
   set_fact:
     docker_registry_mirrors:
-      - "http://{{ ansible_default_ipv4.gateway }}:5000"
+      - "http://{{ ansible_facts['default_ipv4'].gateway }}:5000"
     docker_insecure_registries:
-      - "{{ ansible_default_ipv4.gateway }}:5000"
+      - "{{ ansible_facts['default_ipv4'].gateway }}:5000"
     docker_mirror_type: "ip_gateway"
   when:
     - not docker_mirror_check.stat.exists

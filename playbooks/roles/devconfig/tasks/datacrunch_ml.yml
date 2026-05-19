@@ -45,7 +45,7 @@
     - name: Execute uv installer
       ansible.builtin.command:
         cmd: sh /tmp/uv-installer.sh
-        creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+        creates: "{{ ansible_facts['env'].HOME }}/.local/bin/uv"
     - name: Remove uv installer script
       ansible.builtin.file:
         path: /tmp/uv-installer.sh
@@ -53,13 +53,13 @@
 
 - name: Create Python virtual environment
   ansible.builtin.command:
-    cmd: python3 -m venv {{ ansible_env.HOME }}/.venv
-    creates: "{{ ansible_env.HOME }}/.venv/bin/activate"
+    cmd: python3 -m venv {{ ansible_facts['env'].HOME }}/.venv
+    creates: "{{ ansible_facts['env'].HOME }}/.venv/bin/activate"
 
 - name: Install PyTorch in virtual environment
   ansible.builtin.pip:
     name: torch
-    virtualenv: "{{ ansible_env.HOME }}/.venv"
+    virtualenv: "{{ ansible_facts['env'].HOME }}/.venv"
 
 - name: Unload NVIDIA kernel modules to avoid PyTorch/driver mismatch
   become: true
@@ -105,7 +105,7 @@
 
 - name: Auto-activate Python virtualenv on login
   ansible.builtin.lineinfile:
-    path: "{{ ansible_env.HOME }}/.bashrc"
+    path: "{{ ansible_facts['env'].HOME }}/.bashrc"
     line: "test -s ~/.venv/bin/activate && source ~/.venv/bin/activate"
     create: yes
     mode: '0644'

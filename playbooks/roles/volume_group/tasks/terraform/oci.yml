@@ -36,4 +36,4 @@
     - item.key != instance_data_device
   loop_control:
     label: "Adding block device: /dev/{{ item.key }}"
-  with_dict: "{{ ansible_devices }}"
+  with_dict: "{{ ansible_facts['devices'] }}"

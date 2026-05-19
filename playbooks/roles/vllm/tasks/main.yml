@@ -147,15 +147,15 @@
         content: |
           {
             "hostname": "{{ inventory_hostname }}",
-            "distribution": "{{ ansible_distribution }}",
-            "distribution_version": "{{ ansible_distribution_version }}",
-            "kernel": "{{ ansible_kernel }}",
-            "processor_count": {{ ansible_processor_count }},
-            "processor_cores": {{ ansible_processor_cores }},
-            "memtotal_mb": {{ ansible_memtotal_mb }},
-            "virtualization_type": "{{ ansible_virtualization_type | default('bare-metal') }}",
-            "virtualization_role": "{{ ansible_virtualization_role | default('host') }}",
-            "date": "{{ ansible_date_time.iso8601 }}"
+            "distribution": "{{ ansible_facts['distribution'] }}",
+            "distribution_version": "{{ ansible_facts['distribution_version'] }}",
+            "kernel": "{{ ansible_facts['kernel'] }}",
+            "processor_count": {{ ansible_facts['processor_count'] }},
+            "processor_cores": {{ ansible_facts['processor_cores'] }},
+            "memtotal_mb": {{ ansible_facts['memtotal_mb'] }},
+            "virtualization_type": "{{ ansible_facts['virtualization_type'] | default('bare-metal') }}",
+            "virtualization_role": "{{ ansible_facts['virtualization_role'] | default('host') }}",
+            "date": "{{ ansible_facts['date_time'].iso8601 }}"
           }
         dest: "{{ vllm_results_dir }}/system_info.json"
         mode: '0644'

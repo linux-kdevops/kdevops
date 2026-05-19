@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Install the built kernel RPMs on the target nodes
   when:
-    - ansible_os_family != "Debian"
+    - ansible_facts['os_family'] != "Debian"
   block:
     - name: Find the kernel build artifacts on the control host
       delegate_to: localhost
@@ -44,7 +44,7 @@
 
 - name: Install the built kernel debs on the target nodes
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts['os_family'] == "Debian"
   block:
     - name: Find the kernel build artifacts on the control host
       delegate_to: localhost

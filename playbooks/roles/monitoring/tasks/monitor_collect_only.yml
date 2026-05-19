@@ -124,7 +124,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: /root/monitoring/folio_migration_stats_snapshot.txt
-    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt"
+    dest: "{{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_stats_interim.txt"
     flat: true
     validate_checksum: false
   when:
@@ -147,7 +147,7 @@
   become_method: sudo
   ansible.builtin.fetch:
     src: "{{ monitor_fragmentation_output_dir|default('/root/monitoring/fragmentation') }}/fragmentation_snapshot.json"
-    dest: "{{ monitoring_results_path }}/{{ ansible_hostname }}_fragmentation_data_interim.json"
+    dest: "{{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_fragmentation_data_interim.json"
     flat: true
     validate_checksum: false
   when:
@@ -161,7 +161,7 @@
   ansible.builtin.debug:
     msg: |
       Interim folio migration monitoring data collected (monitoring still running).
-      Data saved to: {{ monitoring_results_path }}/{{ ansible_hostname }}_folio_migration_stats_interim.txt
+      Data saved to: {{ monitoring_results_path }}/{{ ansible_facts['hostname'] }}_folio_migration_stats_interim.txt
   when:
     - monitor_developmental_stats|default(false)|bool
     - monitor_folio_migration|default(false)|bool

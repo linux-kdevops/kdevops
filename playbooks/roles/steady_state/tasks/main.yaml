@@ -151,7 +151,7 @@
       {% else %}
         {{ device_physical_block_size | trim | int }}
       {% endif %}
-    effective_jobs: "{{ ssd_steady_state_numjobs | default(ansible_processor_vcpus, true) | int }}"
+    effective_jobs: "{{ ssd_steady_state_numjobs | default(ansible_facts['processor_vcpus'], true) | int }}"
   when: kdevops_run_ssd_steady_state|bool
   tags: ["prefill"]
 

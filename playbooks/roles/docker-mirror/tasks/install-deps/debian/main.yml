@@ -17,13 +17,13 @@
 - name: Add Docker GPG key
   become: true
   ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    url: https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg
     state: present
 
 - name: Add Docker repository
   become: true
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ ansible_architecture }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    repo: "deb [arch={{ ansible_facts['architecture'] }}] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_facts['distribution_release'] }} stable"
     state: present
 
 - name: Install Docker

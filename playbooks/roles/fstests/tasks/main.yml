@@ -1079,7 +1079,7 @@
 - name: Print uname for each host
   tags: ["oscheck", "fstests", "run_tests"]
   ansible.builtin.debug:
-    var: ansible_kernel
+    var: ansible_facts['kernel']
 - name: Clean up our localhost results/last-run directory
   ansible.builtin.file:
     path: "{{ fstests_results_target }}/"

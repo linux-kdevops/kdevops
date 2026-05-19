@@ -75,7 +75,7 @@
       Mount Point: {{ ai_multifs_mount_point }}
       Data Directory: {{ current_fs_benchmark_dir }}
       Results Directory: {{ current_fs_results_dir }}
-      Test Start Time: {{ ansible_date_time.iso8601 }}
+      Test Start Time: {{ ansible_facts['date_time'].iso8601 }}
 
       mkfs Output:
       {{ mkfs_result.stdout }}

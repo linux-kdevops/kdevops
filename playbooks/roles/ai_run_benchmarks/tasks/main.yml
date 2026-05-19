@@ -44,7 +44,7 @@
 
 - name: Check if lock file is stale (older than 5 minutes)
   ansible.builtin.set_fact:
-    lock_is_stale: "{{ (ansible_date_time.epoch | int - lock_file.stat.mtime | default(0) | int) > 300 }}"
+    lock_is_stale: "{{ (ansible_facts['date_time'].epoch | int - lock_file.stat.mtime | default(0) | int) > 300 }}"
   when: lock_file.stat.exists
 
 - name: Remove stale lock file
@@ -60,7 +60,7 @@
     msg: |
       ERROR: Benchmark lock file exists at {{ ai_benchmark_results_dir }}/.benchmark.lock
       This indicates a benchmark may be in progress or was terminated abnormally.
-      Lock file age: {{ (ansible_date_time.epoch | int - lock_file.stat.mtime | default(0) | int) }} seconds
+      Lock file age: {{ (ansible_facts['date_time'].epoch | int - lock_file.stat.mtime | default(0) | int) }} seconds
       If you're sure no benchmark is running, remove the lock file manually.
   when:
     - lock_file.stat.exists
@@ -158,7 +158,7 @@
         {{ ai_benchmark_results_dir }}/venv/bin/python
         {{ ai_benchmark_results_dir }}/workdir/milvus_benchmark.py
         --config {{ ai_benchmark_results_dir }}/workdir/benchmark_config.json
-        --output {{ ai_benchmark_results_dir }}/results_{{ ansible_hostname }}_{{ item }}.json
+        --output {{ ai_benchmark_results_dir }}/results_{{ ansible_facts['hostname'] }}_{{ item }}.json
       register: benchmark_result
       with_sequence: start=1 end={{ ai_benchmark_iterations }}
       tags: run_benchmark

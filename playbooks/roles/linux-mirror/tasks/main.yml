@@ -14,7 +14,7 @@
 - name: Install dependencies for the linux-mirror role
   ansible.builtin.include_tasks: install-deps/fedora/main.yml
   when:
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
   tags: ["mirror"]
 
 - name: Fail if linux_mirror_nfs is enabled but user is not root
@@ -283,7 +283,7 @@
   ansible.builtin.set_fact:
     nfs_server_service: nfs-kernel-server
   when:
-    - ansible_os_family == 'Debian'
+    - ansible_facts['os_family'] == 'Debian'
     - linux_mirror_nfs | bool
   tags: ["mirror"]
 
@@ -291,7 +291,7 @@
   ansible.builtin.set_fact:
     nfs_server_service: nfs-server
   when:
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
     - linux_mirror_nfs | bool
   tags: ["mirror"]
 
@@ -299,7 +299,7 @@
   ansible.builtin.set_fact:
     nfs_server_service: nfsserver
   when:
-    - ansible_os_family == 'Suse'
+    - ansible_facts['os_family'] == 'Suse'
     - linux_mirror_nfs | bool
   tags: ["mirror"]
 

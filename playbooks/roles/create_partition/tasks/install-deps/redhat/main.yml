@@ -24,4 +24,4 @@
   vars:
     packages:
       - btrfs-progs
-  when: ansible_distribution == 'Fedora'
+  when: ansible_facts['distribution'] == 'Fedora'

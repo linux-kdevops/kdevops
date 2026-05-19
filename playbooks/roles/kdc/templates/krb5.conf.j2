@@ -20,8 +20,8 @@ includedir /etc/krb5.conf.d/
 
 [realms]
 {{ krb5_realm }} = {
-    kdc = {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:88
-    admin_server = {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:749
+    kdc = {{ hostvars[inventory_hostname]['ansible_facts['default_ipv4']']['address'] }}:88
+    admin_server = {{ hostvars[inventory_hostname]['ansible_facts['default_ipv4']']['address'] }}:749
 }
 
 [domain_realm]

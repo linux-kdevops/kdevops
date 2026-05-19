@@ -30,7 +30,7 @@
     - name: Fetch build results
       ansible.builtin.fetch:
         src: "{{ item.path }}"
-        dest: "{{ topdir_path }}/{{ build_linux_results_dir }}/{{ ansible_hostname }}_{{ item.path | basename }}"
+        dest: "{{ topdir_path }}/{{ build_linux_results_dir }}/{{ ansible_facts['hostname'] }}_{{ item.path | basename }}"
         flat: true
       loop: "{{ result_files.files }}"
       when:

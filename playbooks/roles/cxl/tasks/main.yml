@@ -99,7 +99,7 @@
 - name: Print uname for each host
   tags: ["ndctl", "cxl-test-prep", "copy_results"]
   ansible.builtin.debug:
-    var: ansible_kernel
+    var: ansible_facts['kernel']
 - name: Clear out old meson results directory on target hosts
   become: true
   become_flags: "su - -c"

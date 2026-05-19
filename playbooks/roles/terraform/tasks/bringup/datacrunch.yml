@@ -5,7 +5,7 @@
 
 - name: Set DataCrunch provider architecture
   ansible.builtin.set_fact:
-    datacrunch_provider_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+    datacrunch_provider_arch: "{{ 'amd64' if ansible_facts['architecture'] == 'x86_64' else ansible_facts['architecture'] }}"
   tags:
     - bringup
     - destroy
@@ -15,7 +15,7 @@
   ansible.builtin.stat:
     path: >-
       ~/.terraform.d/plugins/registry.terraform.io/linux-kdevops/datacrunch/0.0.3/{{
-      ansible_system | lower }}_{{ datacrunch_provider_arch }}/terraform-provider-datacrunch_v0.0.3
+      ansible_facts['system'] | lower }}_{{ datacrunch_provider_arch }}/terraform-provider-datacrunch_v0.0.3
   register: datacrunch_provider_installed
   tags:
     - bringup
@@ -26,7 +26,7 @@
   ansible.builtin.shell:
     cmd: |
       PROVIDER_VERSION="0.0.3"
-      PROVIDER_OS="{{ ansible_system | lower }}"
+      PROVIDER_OS="{{ ansible_facts['system'] | lower }}"
       PROVIDER_ARCH="{{ datacrunch_provider_arch }}"
       PROVIDER_DIR="$HOME/.terraform.d/plugins/registry.terraform.io/linux-kdevops/datacrunch"
       PROVIDER_DIR="${PROVIDER_DIR}/${PROVIDER_VERSION}/${PROVIDER_OS}_${PROVIDER_ARCH}"

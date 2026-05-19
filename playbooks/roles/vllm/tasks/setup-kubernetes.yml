@@ -132,7 +132,7 @@
               Current status:
                 Kernel configuration: {{ veth_check.stdout }}
                 veth module status: {{ veth_loaded.stdout }}
-                Kernel version: {{ ansible_kernel }}
+                Kernel version: {{ ansible_facts['kernel'] }}
 
               REQUIRED: Rebuild your kernel with CONFIG_VETH enabled:
                 CONFIG_VETH=y  (built-in, recommended)
@@ -239,8 +239,8 @@
               minikube start
               --driver=docker
               --force
-              --cpus={{ [ansible_processor_vcpus | default(4), 32] | min }}
-              --memory={{ [(ansible_memtotal_mb * 0.75) | int, 49152] | min }}
+              --cpus={{ [ansible_facts['processor_vcpus'] | default(4), 32] | min }}
+              --memory={{ [(ansible_facts['memtotal_mb'] * 0.75) | int, 49152] | min }}
               --disk-size=50g
               --delete-on-failure=true
               {{ '--gpus all' if not vllm_use_cpu_inference|default(false) else '' }}

@@ -261,7 +261,7 @@
 
           Service: {{ vllm_bare_metal_service_name | default('vllm') }}
           Status: Active
-          API Endpoint: http://{{ ansible_default_ipv4.address }}:{{ vllm_api_port | default(8000) }}
+          API Endpoint: http://{{ ansible_facts['default_ipv4'].address }}:{{ vllm_api_port | default(8000) }}
 
           Available Models:
           {% for model in models_response.json.data %}

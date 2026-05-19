@@ -5,8 +5,8 @@
   vars:
     params:
       files:
-        - "{{ ansible_distribution }}.yml"
-        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_facts['distribution'] }}.yml"
+        - "{{ ansible_facts['os_family'] }}.yml"
         - default.yml
       paths:
         - "vars"
@@ -14,14 +14,14 @@
 - name: Debian-specific setup
   ansible.builtin.include_tasks: debian/main.yml
   when:
-    - ansible_os_family == "Debian"
+    - ansible_facts['os_family'] == "Debian"
 
 - name: SuSE-specific setup
   ansible.builtin.include_tasks: suse/main.yml
   when:
-    - ansible_os_family == "Suse"
+    - ansible_facts['os_family'] == "Suse"
 
 - name: Red Hat-specific setup
   ansible.builtin.include_tasks: redhat/main.yml
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_facts['os_family'] == "RedHat"

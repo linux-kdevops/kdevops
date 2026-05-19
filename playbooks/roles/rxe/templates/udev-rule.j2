@@ -1,2 +1,2 @@
-SUBSYSTEM=="net", KERNEL=="{{ ansible_default_ipv4.interface }}", \
-   PROGRAM="/usr/sbin/rdma link add rxe0 type rxe netdev {{ ansible_default_ipv4.interface }}"
+SUBSYSTEM=="net", KERNEL=="{{ ansible_facts['default_ipv4'].interface }}", \
+   PROGRAM="/usr/sbin/rdma link add rxe0 type rxe netdev {{ ansible_facts['default_ipv4'].interface }}"

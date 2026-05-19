@@ -141,7 +141,7 @@
 
 - name: Set timestamp for consistent filename
   set_fact:
-    warp_timestamp: "{{ ansible_date_time.epoch }}"
+    warp_timestamp: "{{ ansible_facts['date_time'].epoch }}"
   when: not (minio_warp_run_comprehensive_suite | default(false))
 
 - name: Run MinIO Warp single benchmark with JSON output
@@ -149,7 +149,7 @@
     echo "=== Starting single benchmark ==="
     echo "Duration: {{ minio_warp_duration }}"
     echo "Full command:"
-    OUTPUT_FILE="/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
+    OUTPUT_FILE="/tmp/warp-results/warp_benchmark_{{ ansible_facts['hostname'] }}_{{ warp_timestamp }}.json"
 
     # Show the actual command being run
     set -x
@@ -163,7 +163,7 @@
       --duration="{{ minio_warp_duration }}" \
       --concurrent="{{ minio_warp_concurrent_requests }}" \
       --obj.size="{{ minio_warp_object_size }}" \
-      {% if minio_warp_enable_web_ui|default(false) %}--warp-client="{{ ansible_default_ipv4.address }}:{{ minio_warp_web_ui_port|default(7762) }}"{% endif %} \
+      {% if minio_warp_enable_web_ui|default(false) %}--warp-client="{{ ansible_facts['default_ipv4'].address }}:{{ minio_warp_web_ui_port|default(7762) }}"{% endif %} \
       --noclear \
       --json > "$OUTPUT_FILE" 2>&1
     RESULT=$?
@@ -192,12 +192,12 @@
 
 - name: Display benchmark completion
   debug:
-    msg: "MinIO Warp benchmark completed on {{ ansible_hostname }}"
+    msg: "MinIO Warp benchmark completed on {{ ansible_facts['hostname'] }}"
   when: (warp_output is defined and warp_output.rc | default(1) == 0) or (suite_output is defined and suite_output.rc | default(1) == 0)
 
 - name: Check if results file exists
   stat:
-    path: "/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
+    path: "/tmp/warp-results/warp_benchmark_{{ ansible_facts['hostname'] }}_{{ warp_timestamp }}.json"
   register: results_file
   when: warp_timestamp is defined
 
@@ -208,7 +208,7 @@
 
 - name: Copy results to local system
   fetch:
-    src: "/tmp/warp-results/warp_benchmark_{{ ansible_hostname }}_{{ warp_timestamp }}.json"
+    src: "/tmp/warp-results/warp_benchmark_{{ ansible_facts['hostname'] }}_{{ warp_timestamp }}.json"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
     flat: yes
   become: no
@@ -227,7 +227,7 @@
     content: |
       MinIO Warp Benchmark Results
       ============================
-      Host: {{ ansible_hostname }}
+      Host: {{ ansible_facts['hostname'] }}
       Timestamp: {{ warp_timestamp | default('unknown') }}
 
       Debug Output:
@@ -239,12 +239,12 @@
 
       Error Output (if any):
       {{ warp_output.stderr | default('No errors') }}
-    dest: "/tmp/warp-results/warp_fallback_{{ ansible_hostname }}_{{ warp_timestamp | default(ansible_date_time.epoch) }}.txt"
+    dest: "/tmp/warp-results/warp_fallback_{{ ansible_facts['hostname'] }}_{{ warp_timestamp | default(ansible_facts['date_time'].epoch) }}.txt"
   when: warp_debug is defined
 
 - name: Copy fallback results
   fetch:
-    src: "/tmp/warp-results/warp_fallback_{{ ansible_hostname }}_{{ warp_timestamp | default(ansible_date_time.epoch) }}.txt"
+    src: "/tmp/warp-results/warp_fallback_{{ ansible_facts['hostname'] }}_{{ warp_timestamp | default(ansible_facts['date_time'].epoch) }}.txt"
     dest: "{{ playbook_dir }}/../workflows/minio/results/"
     flat: yes
   when: warp_debug is defined and not (results_file is defined and not results_file.skipped | default(false) and results_file.stat.exists | default(false))

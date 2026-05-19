@@ -12,7 +12,7 @@
   failed_when: false
   tags: vars
 
-- name: Install NFS client administrative tools for {{ ansible_os_family }}
+- name: Install NFS client administrative tools for {{ ansible_facts['os_family'] }}
   tags: deps
   vars:
     packages:
@@ -26,7 +26,7 @@
   become_flags: "su - -c"
   become_method: ansible.builtin.sudo
   ansible.builtin.package:
-    name: "{{ packages[ansible_os_family] }}"
+    name: "{{ packages[ansible_facts['os_family']] }}"
     state: present
 
 - name: Inspect {{ nfs_mounted_on }}

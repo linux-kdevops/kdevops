@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Set SUSE distribution facts
   ansible.builtin.set_fact:
-    qemu_is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_distribution }}'
-
+    qemu_is_tumbleweed: '{{ "openSUSE Tumbleweed" == ansible_facts["distribution"] }}'
 - name: Install QEMU build dependencies
   become: true
   become_method: ansible.builtin.sudo

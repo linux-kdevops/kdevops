@@ -79,8 +79,8 @@
   vars:
     params:
       files:
-        - "{{ ansible_distribution }}.yml"
-        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_facts['distribution'] }}.yml"
+        - "{{ ansible_facts['os_family'] }}.yml"
         - default.yml
       paths:
         - "vars"
@@ -89,7 +89,7 @@
   ansible.builtin.include_role:
     name: codereadyrepo
   when:
-    - ansible_os_family == "RedHat"
+    - ansible_facts['os_family'] == "RedHat"
 
 - name: Install dependencies for ltp
   tags: ["build", "ltp"]
@@ -161,7 +161,7 @@
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: all
-    jobs: "{{ ansible_processor_nproc }}"
+    jobs: "{{ ansible_facts['processor_nproc'] }}"
 
 - name: Set the pathname of the install directory
   tags: ["build", "ltp"]
@@ -215,7 +215,7 @@
   community.general.make:
     chdir: "{{ ltp_build_dir }}"
     target: install
-    jobs: "{{ ansible_processor_nproc }}"
+    jobs: "{{ ansible_facts['processor_nproc'] }}"
 
 - name: Start the rpcbind service
   tags: ["ltp"]

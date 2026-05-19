@@ -80,7 +80,7 @@
   ansible.builtin.include_role:
     name: epel-release
   when:
-    - ansible_distribution != "Fedora"
+    - ansible_facts['distribution'] != "Fedora"
 
 - name: Build install package list
   ansible.builtin.set_fact:
@@ -117,7 +117,7 @@
     packages: "{{ packages + ['btrfs-progs'] }}"
   when:
     - devconfig_try_install_kdevtools|bool
-    - ansible_distribution == 'Fedora'
+    - ansible_facts['distribution'] == 'Fedora'
 
 - name: Add GNU screen to install package list
   ansible.builtin.set_fact:
