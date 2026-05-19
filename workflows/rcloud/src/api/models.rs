@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use serde::{Deserialize, Serialize};
 
 /// Request to create a new VM

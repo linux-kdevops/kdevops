@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;

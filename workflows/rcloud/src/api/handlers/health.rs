@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 use tracing::info;

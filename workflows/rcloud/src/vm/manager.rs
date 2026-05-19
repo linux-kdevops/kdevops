@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use anyhow::{Context, Result};
 use tracing::{info, warn};
 use uuid::Uuid;

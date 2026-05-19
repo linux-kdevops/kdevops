@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use actix_web::web;
 
 use super::handlers::{health, images, metrics, vms};

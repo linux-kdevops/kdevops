@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: copyleft-next-0.3.1
 use actix_web::{middleware, web, App, HttpServer};
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
