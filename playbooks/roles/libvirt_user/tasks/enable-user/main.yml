@@ -8,14 +8,6 @@
   ansible.builtin.include_tasks: enable-user/suse/main.yml
   when: ansible_os_family == 'Suse'
 
-- name: Red Hat user enablement
+- name: Red Hat family user enablement
   ansible.builtin.include_tasks: enable-user/redhat/main.yml
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_facts['distribution'] != "Fedora"
-
-- name: Fedora user enablement
-  ansible.builtin.include_tasks: enable-user/fedora/main.yml
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_facts['distribution'] == "Fedora"
+  when: ansible_os_family == 'RedHat'
