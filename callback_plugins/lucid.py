@@ -566,6 +566,11 @@ class CallbackModule(CallbackBase):
     def v2_runner_item_on_failed(self, result):
         """Loop item failed — log per-item command and output"""
         self._log_item_result(result)
+        # Read label-related fields from the raw result: the _ansible_item_label
+        # and ansible_loop_var keys are Ansible bookkeeping that identify the
+        # item and are not user-content subject to no_log redaction. The
+        # rendered stdout/stderr/msg, however, come from the cleaned copy so
+        # the per-item failure buffer never carries unredacted payload.
         res = result._result
         item = res.get("_ansible_item_label")
         if item is None:
@@ -573,11 +578,12 @@ class CallbackModule(CallbackBase):
             item = res.get(loop_var, "")
         if isinstance(item, dict):
             item = item.get("name", item.get("group", str(item)))
+        cleaned = self._cleaned_result(result)
         self.failed_items.append({
             "item": item,
-            "stderr": res.get("stderr", ""),
-            "stdout": res.get("stdout", ""),
-            "msg": res.get("msg", ""),
+            "stderr": cleaned.get("stderr", ""),
+            "stdout": cleaned.get("stdout", ""),
+            "msg": cleaned.get("msg", ""),
             "cmd": self._get_task_command(result),
         })
 
@@ -788,30 +794,58 @@ class CallbackModule(CallbackBase):
                 f"task path: {task_path}", color=C.COLOR_VERBOSE, stderr=use_stderr
             )
 
+    def _cleaned_result(self, result):
+        """Return a cleaned copy of result._result suitable for display.
+
+        CallbackBase._clean_results mutates in place, so we copy first to
+        preserve the original for other observers. The returned dict has
+        debug-module specific redaction applied; the _ansible_* bookkeeping
+        keys are only stripped when we subsequently pass through
+        _dump_results (which calls strip_internal_keys on its own deep copy).
+        For the ad-hoc stdout/stderr/msg reads the lucid compact format does
+        at verbosity 0–1, reading cleaned[...] is safe because no_log results
+        arrive at callbacks with their payload already replaced by a
+        'censored' placeholder at the executor level.
+        """
+        cleaned = result._result.copy()
+        self._clean_results(cleaned, result._task.action)
+        return cleaned
+
     def _display_output(self, result, stderr: bool = False, task_path: str = ""):
         """Display stdout/stderr/msg from task result"""
         output = []
-        res = result._result
+        cleaned = self._cleaned_result(result)
 
         # stdout
-        if "stdout" in res and res["stdout"]:
-            output.append(f"\nSTDOUT:\n{res['stdout']}")
+        if "stdout" in cleaned and cleaned["stdout"]:
+            output.append(f"\nSTDOUT:\n{cleaned['stdout']}")
 
         # stderr
-        if "stderr" in res and res["stderr"]:
-            output.append(f"\nSTDERR:\n{res['stderr']}")
+        if "stderr" in cleaned and cleaned["stderr"]:
+            output.append(f"\nSTDERR:\n{cleaned['stderr']}")
 
         # msg (only if no stdout content)
-        if "msg" in res and res["msg"] and not res.get("stdout"):
-            msg_text = res["msg"]
+        if "msg" in cleaned and cleaned["msg"] and not cleaned.get("stdout"):
+            msg_text = cleaned["msg"]
             # Handle lists/dicts in msg
             if isinstance(msg_text, (list, dict)):
                 msg_text = json.dumps(msg_text, indent=2)
             output.append(f"\nMSG:\n{msg_text}")
 
         # exception (Python traceback from module failures)
-        if "exception" in res and res["exception"]:
-            output.append(f"\nEXCEPTION:\n{res['exception']}")
+        if "exception" in cleaned and cleaned["exception"]:
+            output.append(f"\nEXCEPTION:\n{cleaned['exception']}")
+
+        # At -vvv or higher the user explicitly asked for the full structured
+        # result. Delegate serialization to _dump_results so the user's
+        # result_format, pretty_results, result_yaml_line_width, and
+        # result_indentation options (declared via the result_format_callback
+        # doc fragment) actually take effect. _dump_results strips _ansible_*
+        # keys internally, so secrets and bookkeeping are not leaked even at
+        # the highest verbosity.
+        if self._display.verbosity >= 3:
+            dump = self._dump_results(cleaned, keep_invocation=False)
+            output.append(f"\n{dump}")
 
         # Task source path for failures, mirroring the default callback's
         # show_task_path_on_failure behavior.
