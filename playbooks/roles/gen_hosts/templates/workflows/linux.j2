@@ -1,12 +1,17 @@
-{# Template for the kernel builder workflow #}
+{# Template for the bootlinux workflow #}
+{% if bootlinux_builder | default(false) %}
+{% set node_name = kdevops_host_prefix + '-builder' %}
+{% else %}
+{% set node_name = kdevops_host_prefix %}
+{% endif %}
 [all]
 localhost ansible_connection=local
-{{ kdevops_host_prefix }}-builder
+{{ node_name }}
 [all:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
 [baseline]
-{{ kdevops_host_prefix }}-builder
+{{ node_name }}
 [baseline:vars]
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 
