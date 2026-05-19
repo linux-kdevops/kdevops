@@ -1,10 +1,35 @@
 ---
 # SPDX-License-Identifier: copyleft-next-0.3.1
-- name: Install dependencies to build the Linux kernel
+# install-deps must run on the controller (delegate_to: localhost) and
+# dispatch by the controller's distribution. A `delegate_to: localhost`
+# task that consults ansible_os_family evaluates the play target's
+# facts (the guest), not the delegate's, so on a Debian controller
+# with a Fedora guest the redhat dispatcher would run dnf on the
+# Debian host. Gather localhost's facts via delegate_facts: true and
+# dispatch off hostvars['localhost'].
+- name: Gather controller facts for 9p install-deps dispatch
+  ansible.builtin.setup:
+  delegate_to: localhost
+  delegate_facts: true
+  run_once: true
+
+- name: Install kernel build dependencies on the controller (Debian)
+  ansible.builtin.import_tasks: install-deps/debian/main.yml
   delegate_to: localhost
   run_once: true
-  ansible.builtin.import_tasks:
-    file: install-deps/main.yml
+  when: hostvars['localhost']['ansible_os_family'] == "Debian"
+
+- name: Install kernel build dependencies on the controller (SUSE)
+  ansible.builtin.import_tasks: install-deps/suse/main.yml
+  delegate_to: localhost
+  run_once: true
+  when: hostvars['localhost']['ansible_os_family'] == "Suse"
+
+- name: Install kernel build dependencies on the controller (Red Hat)
+  ansible.builtin.import_tasks: install-deps/redhat/main.yml
+  delegate_to: localhost
+  run_once: true
+  when: hostvars['localhost']['ansible_os_family'] == "RedHat"
 
 - name: Install b4 on host
   become: true
@@ -15,7 +40,7 @@
   when:
     - target_linux_install_b4 is defined
     - target_linux_install_b4
-    - ansible_facts['os_family']|lower != 'debian'
+    - hostvars['localhost']['ansible_os_family'] != "Debian"
   run_once: true
   delegate_to: localhost
 
