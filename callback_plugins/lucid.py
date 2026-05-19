@@ -427,16 +427,18 @@ class CallbackModule(CallbackBase):
             hosts_str = str(hosts)
 
         msg = f"\nPLAY: {name} [{hosts_str}]"
-        self.current_play_name = f"PLAY: {name} [{hosts_str}]"
-        self.pending_play_header = msg
+        with self.task_lock:
+            self.current_play_name = f"PLAY: {name} [{hosts_str}]"
+            self.pending_play_header = msg
         self._write_to_log(msg)
 
     def _flush_play_header(self):
         """Print deferred play header on first task of the play"""
-        if self.pending_play_header:
-            if not self.dynamic_mode:
-                self._display_message(self.pending_play_header, C.COLOR_HIGHLIGHT)
+        with self.task_lock:
+            header = self.pending_play_header
             self.pending_play_header = None
+        if header and not self.dynamic_mode:
+            self._display_message(header, C.COLOR_HIGHLIGHT)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         """Task started"""
@@ -451,17 +453,18 @@ class CallbackModule(CallbackBase):
             return
 
         self._flush_play_header()
-        self.current_task_name = task_name
-        self.failed_items = []
-        # Initialize with play hosts so display is stable from the start
-        self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
+        with self.task_lock:
+            self.current_task_name = task_name
+            self.failed_items = []
+            # Initialize with play hosts so display is stable from the start
+            self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
 
         # In static mode, print immediately (compact - no leading newline)
         if not self.dynamic_mode:
-            msg = f"TASK: {self.current_task_name}"
+            msg = f"TASK: {task_name}"
             self._display_message(msg, C.COLOR_HIGHLIGHT)
 
-        self._write_to_log(f"TASK: {self.current_task_name}")
+        self._write_to_log(f"TASK: {task_name}")
 
     def v2_runner_on_start(self, host, task):
         """Task started on a host (for dynamic tracking)"""
@@ -477,9 +480,8 @@ class CallbackModule(CallbackBase):
                 "delegate_to": delegate_to,
                 "task_name": task.get_name().strip(),
             }
-
-        if host.name not in self.current_task_hosts:
-            self.current_task_hosts.append(host.name)
+            if host.name not in self.current_task_hosts:
+                self.current_task_hosts.append(host.name)
 
         if self.dynamic_mode:
             self._redraw_display()
@@ -628,7 +630,8 @@ class CallbackModule(CallbackBase):
         }
 
         # Add to completed tasks (last 3 for dynamic mode)
-        self.completed_tasks.append(result_data)
+        with self.task_lock:
+            self.completed_tasks.append(result_data)
 
         # Log everything (max verbosity)
         self._log_result(result, status, duration)
@@ -795,14 +798,23 @@ class CallbackModule(CallbackBase):
 
     def _redraw_display(self):
         """Redraw entire display in dynamic mode"""
-        # Throttle updates (max once per 0.1s)
-        now = time.time()
-        if now - self.last_update < 0.1:
-            return
-        self.last_update = now
+        # Snapshot all shared state under task_lock for a consistent frame
+        with self.task_lock:
+            now = time.time()
+            if now - self.last_update < 0.1:
+                return
+            self.last_update = now
 
-        # Increment spinner
-        self.spinner_index = (self.spinner_index + 1) % len(self.SPINNER_FRAMES)
+            self.spinner_index = (self.spinner_index + 1) % len(self.SPINNER_FRAMES)
+            spinner_idx = self.spinner_index
+
+            task_name = self.current_task_name
+            task_hosts = list(self.current_task_hosts)
+            completed = list(self.completed_tasks)
+            play_name = self.current_play_name
+            running_hosts = {
+                host: dict(info) for (host, _), info in self.running_tasks.items()
+            }
 
         # Clear previous display
         self._clear_display()
@@ -814,35 +826,29 @@ class CallbackModule(CallbackBase):
         lines = []
 
         # Play header
-        if self.current_play_name:
-            lines.append(self._truncate_line(self.current_play_name, term_width))
+        if play_name:
+            lines.append(self._truncate_line(play_name, term_width))
 
         # Task header - truncate to terminal width
-        if self.current_task_name:
-            task_line = f"TASK: {self.current_task_name}"
+        if task_name:
+            task_line = f"TASK: {task_name}"
             lines.append(self._truncate_line(task_line, term_width))
             lines.append("")
 
         # Host status - show ALL hosts in task, running ones get spinner
-        # Create snapshot of running tasks under lock
-        with self.task_lock:
-            running_hosts = {
-                host: info for (host, _), info in self.running_tasks.items()
-            }
-
-        if self.current_task_hosts:
+        if task_hosts:
             running_count = len(running_hosts)
-            total_hosts = len(self.current_task_hosts)
+            total_hosts = len(task_hosts)
             lines.append(f"Hosts: {running_count}/{total_hosts} running")
 
-            spinner = self.SPINNER_FRAMES[self.spinner_index]
+            spinner = self.SPINNER_FRAMES[spinner_idx]
 
             # Show all hosts in stable order, running ones with spinner
             # Format: [spinner] <time> <hostname> - time is fixed width (8 chars)
             # This keeps spinner and time columns stable, hostname varies at end
             time_width = 8  # Enough for "1m 30s", "10h 5m", or "99d 23h"
 
-            for host in self.current_task_hosts:
+            for host in task_hosts:
                 if host in running_hosts:
                     # Running - show spinner, time, then hostname
                     task_info = running_hosts[host]
@@ -877,9 +883,9 @@ class CallbackModule(CallbackBase):
             lines.append("")
 
         # Recently completed (after running tasks)
-        if self.completed_tasks:
+        if completed:
             lines.append("Recent:")
-            for task_data in self.completed_tasks:
+            for task_data in completed:
                 status = task_data["status"]
                 host = task_data["host"]
                 duration = task_data["duration"]
@@ -936,7 +942,8 @@ class CallbackModule(CallbackBase):
                     self._display.display(f"  [{label}] stdout: {fi['stdout']}")
                 if fi["msg"] and not fi["stdout"]:
                     self._display.display(f"  [{label}] msg: {fi['msg']}", color=C.COLOR_ERROR)
-        self.failed_items = []
+        with self.task_lock:
+            self.failed_items = []
 
     def _freeze_and_show_output(self, result_data):
         """
