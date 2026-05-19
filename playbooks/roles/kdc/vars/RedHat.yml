@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 kdc_conf_dir: /var/kerberos/krb5kdc
 kdc_data_dir: /var/kerberos/krb5kdc
 kdc_master_key_type: aes256-cts-hmac-sha384-192

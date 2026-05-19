@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Defaults for build_linux role
 
 build_linux_repeat_count: 100

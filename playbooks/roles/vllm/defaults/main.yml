@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # vLLM role default variables
 vllm_production_stack_repo: https://github.com/vllm-project/production-stack.git
 vllm_production_stack_version: main

@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # mmtests compare role defaults
 mmtests_data_dir: "{{ data_path }}/mmtests"
 mmtests_results_dir: "{{ mmtests_data_dir }}/work/log/{{ inventory_hostname }}-{{ kernel_version.stdout }}"

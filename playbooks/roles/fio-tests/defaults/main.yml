@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # fio-tests role defaults
 
 fio_tests_results_dir: "/data/fio-tests"

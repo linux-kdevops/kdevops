@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # mmtests default configuration
 mmtests_data_dir: "{{ data_path }}/mmtests"
 mmtests_results_dir_basename: "{{ mmtests_data_dir }}/work/"

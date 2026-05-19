@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Default variables for dhclient_cache role
 dhclient_cache_enabled: true
 dhclient_cache_timeout: 3600
