@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Terraform status reporting
 # Common to all terraform providers
 

@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # tasks to install update-grub
 - name: Distro specific update of your GRUB boot file
   ansible.builtin.import_tasks: debian.yml

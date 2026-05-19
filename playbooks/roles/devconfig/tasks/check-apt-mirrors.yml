@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Only run mirror checks for Debian testing (trixie) where mirror issues are common
 - name: Check hop count on control host
   delegate_to: localhost

@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Install dependencies to build and test Linux for Debian and Ubuntu systems
   ansible.builtin.import_tasks: debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'

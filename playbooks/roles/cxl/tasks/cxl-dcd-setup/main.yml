@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Add DC extents to the hosts
   ansible.builtin.shell: " qmp_port_str={{ qmp_port_str }}; qmp_port=`echo $qmp_port_str | awk -F'[^0-9]+' '{ print $2 }'`;qmp_str=' { \"execute\": \"qmp_capabilities\"\
     \ } { \"execute\": \"cxl-add-dynamic-capacity\", \"arguments\": { \"path\": \"/machine/peripheral/kdevops-cxl-dcd0\", \"region-id\": 0, \"extents\": [ { \"offset\"\

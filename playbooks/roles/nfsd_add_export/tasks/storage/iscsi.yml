@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Create an iSCSI LUN for the new export
   vars:
     iscsi_add_devname: "{{ export_volname }}"

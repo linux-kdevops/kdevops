@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Install guestfs dependencies for Suse
   become: true
   become_method: ansible.builtin.sudo

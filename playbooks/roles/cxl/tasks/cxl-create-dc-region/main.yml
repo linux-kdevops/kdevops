@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Create a DC region before DC extents can be added
   become: true
   become_method: sudo

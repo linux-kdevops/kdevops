@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # ISC dhclient persistent DHCP caching implementation
 # Used by: Debian, Ubuntu, older RHEL/CentOS/Fedora
 

@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Install minimal dependencies needed for kernel installation on SUSE
 # This is used when bootlinux_9p is enabled and the build happens on the host
 

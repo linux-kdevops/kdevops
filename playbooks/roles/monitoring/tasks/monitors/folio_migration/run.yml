@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Folio migration monitoring startup tasks
 # Conditions are checked at import level in monitor_run.yml
 

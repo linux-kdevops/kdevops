@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Get the user who invoked Ansible
   ansible.builtin.command:
     cmd: "id -Gn"

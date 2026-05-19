@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Create a region from cxl memory
   become: true
   ansible.builtin.command: "cxl create-region -m -d decoder0.0 -w 1 mem0 -s 256M"

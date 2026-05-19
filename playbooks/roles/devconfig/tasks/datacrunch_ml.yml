@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # DataCrunch-specific ML environment setup tasks
 - name: Update all packages to latest versions on DataCrunch instances
   become: true

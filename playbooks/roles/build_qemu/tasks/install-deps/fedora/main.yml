@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Verify local build QEMU installation
   ansible.builtin.command: "which qemu-system-x86_64"
   register: qemu_present

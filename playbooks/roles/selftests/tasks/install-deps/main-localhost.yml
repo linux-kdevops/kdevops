@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # tasks to install dependencies for selftests on localhost (for 9P builds)
 # Uses Kconfig distro variables instead of ansible_facts to detect control host OS
 - name: Debian-specific setup for localhost

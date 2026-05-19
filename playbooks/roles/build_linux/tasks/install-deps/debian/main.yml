@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Dependencies for build-linux workflow timing and statistics
 - name: Install build-linux timing dependencies
   become: true

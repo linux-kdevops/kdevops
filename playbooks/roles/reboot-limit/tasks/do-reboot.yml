@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Print uname for each host
   tags: ["run_tests"]
   ansible.builtin.debug:

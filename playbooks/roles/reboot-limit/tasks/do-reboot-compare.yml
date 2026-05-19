@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # This task performs both regular and kexec reboots sequentially for comparison
 - name: Print uname for each host
   tags: ["run_tests"]

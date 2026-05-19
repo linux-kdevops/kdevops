@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Verify Terraform installation
   ansible.builtin.command: "which terraform"
   register: terraform_present

@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Main task file for installing Docker dependencies
 
 - name: Install Docker dependencies on Debian

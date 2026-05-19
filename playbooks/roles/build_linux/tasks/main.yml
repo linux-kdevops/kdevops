@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Main tasks for build_linux role
 
 - name: Install build-linux dependencies

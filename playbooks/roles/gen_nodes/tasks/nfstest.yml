@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Initialize the enabled nodes list for nfstest
   ansible.builtin.set_fact:
     nfstest_enabled_nodes: "{{ nfstest_enabled_test_groups | ansible.builtin.split }}"

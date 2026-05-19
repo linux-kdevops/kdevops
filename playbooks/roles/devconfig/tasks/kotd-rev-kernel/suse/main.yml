@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Set generic SUSE specific distro facts
   ansible.builtin.set_fact:
     is_sle: '{{ (ansible_distribution == "SLES") or (ansible_distribution == "SLED") }}'

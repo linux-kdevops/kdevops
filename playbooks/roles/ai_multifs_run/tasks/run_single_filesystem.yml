@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Display current filesystem configuration
   debug:
     msg: "Testing filesystem configuration {{ fs_index + 1 }}/{{ enabled_fs_configs | length }}: {{ fs_config.name }}"

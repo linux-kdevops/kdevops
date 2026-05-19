@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Check if Docker packages are installed (Debian)
   ansible.builtin.command: dpkg -l docker.io docker-compose
   register: docker_packages_check

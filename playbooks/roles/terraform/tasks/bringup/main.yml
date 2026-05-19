@@ -1,4 +1,5 @@
 ---
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Terraform bringup orchestration
 # Includes provider-specific tasks based on kdevops_terraform_provider
 
