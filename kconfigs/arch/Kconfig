@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 choice
 	prompt "Target architecture"
 	default $(shell,scripts/get_target_arch.sh)

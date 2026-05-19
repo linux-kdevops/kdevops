@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Configuration for declared hosts that skip bringup process
 
 config KDEVOPS_USE_DECLARED_HOSTS

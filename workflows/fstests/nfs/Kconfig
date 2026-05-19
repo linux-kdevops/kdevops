@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config FSTESTS_USE_KDEVOPS_NFSD
 	bool "Test against the kdevops NFS server"
 	select KDEVOPS_SETUP_NFSD

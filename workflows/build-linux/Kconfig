@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 if KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX
 
 config BUILD_LINUX_RESULTS_DIR

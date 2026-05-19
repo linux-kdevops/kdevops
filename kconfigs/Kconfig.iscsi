@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # FIXME: need defaults for terraform hosts
 menuconfig KDEVOPS_ENABLE_ISCSI
 	bool "Set up an iSCSI target host"

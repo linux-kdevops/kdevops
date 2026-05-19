@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Distributions actively maintaining XFS support should select this and then
 # any be careful to select any of the other HAVE_DISTRO_XFS_* below so that
 # testers can know what to test for.

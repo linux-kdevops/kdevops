@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config SETUP_POSTFIX_EMAIL_RELAY
 	bool "Set postfix relayhost localy to send emails reports"
 	default n if !HAVE_KDEVOPS_CUSTOM_DEFAULTS

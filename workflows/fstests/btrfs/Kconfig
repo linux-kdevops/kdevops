@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 # Distributions actively maintaining BTRFS support should select this and then
 # be careful to select any of the other HAVE_DISTRO_BTRFS_* below so that
 # testers can know what to test for.

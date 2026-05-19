@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config KDEVOPS_SETUP_KRB5
 	bool "Set up KRB5"
 	depends on KDEVOPS_WORKFLOW_ENABLE_FSTESTS

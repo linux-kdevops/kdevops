@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 if KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 
 config SELFTESTS_KMOD_TIMEOUT_SET_BY_CLI

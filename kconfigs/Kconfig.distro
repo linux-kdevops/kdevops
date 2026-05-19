@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config DISTRO_DEBIAN_BASED
 	bool
 	output yaml

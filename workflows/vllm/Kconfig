@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 if KDEVOPS_WORKFLOW_ENABLE_VLLM
 
 comment "vLLM Production Stack requires at least 64 GiB RAM per guest for stable operation"

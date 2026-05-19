@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config ANSIBLE_CFG_CALLBACK_PLUGIN_SET_BY_CLI
 	bool
 	default $(shell, scripts/check-cli-set-var.sh ANSIBLE_CFG_CALLBACK_PLUGIN)

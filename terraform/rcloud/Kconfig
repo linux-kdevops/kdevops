@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 if TERRAFORM_RCLOUD
 
 config TERRAFORM_RCLOUD_API_URL

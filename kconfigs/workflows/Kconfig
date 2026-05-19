@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config HAVE_SUPPORTS_PURE_IOMAP
 	bool
 

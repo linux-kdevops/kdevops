@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
 config FIO_TESTS_RUNTIME_SET_BY_CLI
 	bool
 	output yaml
