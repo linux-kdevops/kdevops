@@ -1,4 +1,4 @@
-# SPDX-License-Identifier GPL-2.0+
+# SPDX-License-Identifier: GPL-2.0+
 ---
 kdevops_terraform_ssh_config_update: false
 kdevops_terraform_ssh_config_update_strict: false

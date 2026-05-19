@@ -1,4 +1,4 @@
-# SPDX-License-Identifier GPL-2.0+
+# SPDX-License-Identifier: GPL-2.0+
 ---
 # Our sensible defaults for the nfsd role.
 nfsd_export_label: "export"

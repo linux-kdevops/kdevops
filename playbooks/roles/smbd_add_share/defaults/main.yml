@@ -1,4 +1,4 @@
-# SPDX-License-Identifier GPL-2.0+
+# SPDX-License-Identifier: GPL-2.0+
 ---
 share_user: "root"
 share_group: "root"

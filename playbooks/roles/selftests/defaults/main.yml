@@ -1,4 +1,4 @@
-# SPDX-License-Identifier copyleft-next-0.3.1
+# SPDX-License-Identifier: copyleft-next-0.3.1
 ---
 # There are from other roles but we must define hese here for correctness
 # They will be overridden by generated extra_vars.yaml in kdevops

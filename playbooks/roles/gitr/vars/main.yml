@@ -1,4 +1,4 @@
-# SPDX-License-Identifier GPL-2.0+
+# SPDX-License-Identifier: GPL-2.0+
 ---
 # "test host" to "NFS version" mapping
 gitr_nfs_vers_dict:
