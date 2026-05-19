@@ -110,6 +110,9 @@ class CallbackModule(CallbackBase):
         self.update_thread_stop: Optional[threading.Event] = None
         self.task_lock = threading.Lock()
 
+        # Failed loop items for display on task failure
+        self.failed_items: list[dict] = []
+
         # Will be set in set_options()
         self.output_mode = "auto"
         self.log_file_path: Optional[str] = None
@@ -446,6 +449,7 @@ class CallbackModule(CallbackBase):
 
         self._flush_play_header()
         self.current_task_name = task_name
+        self.failed_items = []
         # Initialize with play hosts so display is stable from the start
         self.current_task_hosts = list(self.play_hosts) if self.play_hosts else []
 
@@ -494,6 +498,56 @@ class CallbackModule(CallbackBase):
     def v2_runner_on_unreachable(self, result):
         """Host unreachable"""
         self._handle_result(result, "unreachable")
+
+    def v2_runner_item_on_ok(self, result):
+        """Loop item succeeded — log per-item command and output"""
+        self._log_item_result(result)
+
+    def v2_runner_item_on_failed(self, result):
+        """Loop item failed — log per-item command and output"""
+        self._log_item_result(result)
+        res = result._result
+        item = res.get("_ansible_item_label")
+        if item is None:
+            loop_var = res.get("ansible_loop_var", "item")
+            item = res.get(loop_var, "")
+        if isinstance(item, dict):
+            item = item.get("name", item.get("group", str(item)))
+        self.failed_items.append({
+            "item": item,
+            "stderr": res.get("stderr", ""),
+            "stdout": res.get("stdout", ""),
+            "msg": res.get("msg", ""),
+            "cmd": self._get_task_command(result),
+        })
+
+    def v2_runner_item_on_skipped(self, result):
+        """Loop item skipped"""
+        pass
+
+    def _log_item_result(self, result):
+        """Log per-item command and output for loop tasks"""
+        res = result._result
+        item = res.get("_ansible_item_label")
+        if item is None:
+            loop_var = res.get("ansible_loop_var", "item")
+            item = res.get(loop_var, "")
+        if isinstance(item, dict):
+            item = item.get("name", item.get("group", str(item)))
+
+        command = self._get_task_command(result)
+        if command:
+            self._write_to_log(f"  [{item}] $ {command}")
+
+        if res.get("stdout"):
+            self._write_to_log(f"  [{item}] stdout: {res['stdout']}")
+        if res.get("stderr"):
+            self._write_to_log(f"  [{item}] stderr: {res['stderr']}")
+        if res.get("msg") and not res.get("stdout"):
+            msg = res["msg"]
+            if isinstance(msg, (list, dict)):
+                msg = json.dumps(msg, indent=2)
+            self._write_to_log(f"  [{item}] msg: {msg}")
 
     def v2_runner_retry(self, result):
         """Task is being retried after failure"""
