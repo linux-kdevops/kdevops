@@ -76,10 +76,6 @@ ifeq (y,$(CONFIG_GUESTFS))
 include scripts/guestfs.Makefile
 endif
 
-ifeq (y,$(CONFIG_NIXOS))
-include scripts/nixos.Makefile
-endif
-
 ifeq (y,$(CONFIG_NIXOSFL))
 include scripts/nixosfl.Makefile
 endif

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 #
 # Per-node NixOS configuration generation. Creates one directory per
-# guest under $NIXOS_CONFIG_DIR, seeds the SSH key, copies the
-# selected backend's template flake (libvirt today, imageless later),
+# guest under $NIXOSFL_CONFIG_DIR, seeds the SSH key, copies the
+# libvirt flake template,
 # rewrites the nixos-flake.url input to resolve at the checked-in
 # subtree, and renders the per-node default.nix.
 

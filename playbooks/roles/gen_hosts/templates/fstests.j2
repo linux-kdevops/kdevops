@@ -1,13 +1,13 @@
 [all]
 localhost ansible_connection=local
 {% for s in fstests_enabled_test_types %}
-{% if kdevops_enable_nixos|default(false) %}
+{% if kdevops_enable_nixos_flake|default(false) %}
 {{ kdevops_host_prefix }}-{{ s }} ansible_python_interpreter=/run/current-system/sw/bin/python3
 {% else %}
 {{ kdevops_host_prefix }}-{{ s }}
 {% endif %}
 {% if kdevops_baseline_and_dev %}
-{% if kdevops_enable_nixos|default(false) %}
+{% if kdevops_enable_nixos_flake|default(false) %}
 {{ kdevops_host_prefix }}-{{ s }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
 {% else %}
 {{ kdevops_host_prefix }}-{{ s }}-dev
@@ -23,7 +23,7 @@ localhost ansible_connection=local
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [baseline]
 {% for s in fstests_enabled_test_types %}
-{% if kdevops_enable_nixos|default(false) %}
+{% if kdevops_enable_nixos_flake|default(false) %}
 {{ kdevops_host_prefix }}-{{ s }} ansible_python_interpreter=/run/current-system/sw/bin/python3
 {% else %}
 {{ kdevops_host_prefix }}-{{ s }}
@@ -39,7 +39,7 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [dev]
 {% if kdevops_baseline_and_dev %}
   {% for s in fstests_enabled_test_types %}
-{% if kdevops_enable_nixos|default(false) %}
+{% if kdevops_enable_nixos_flake|default(false) %}
 {{ kdevops_host_prefix }}-{{ s }}-dev ansible_python_interpreter=/run/current-system/sw/bin/python3
 {% else %}
 {{ kdevops_host_prefix }}-{{ s }}-dev
@@ -78,7 +78,7 @@ ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 ansible_python_interpreter =  "{{ kdevops_python_interpreter }}"
 [krb5]
 {% for s in fstests_enabled_test_types %}
-{% if kdevops_enable_nixos|default(false) %}
+{% if kdevops_enable_nixos_flake|default(false) %}
 {{ kdevops_host_prefix }}-{{ s }} ansible_python_interpreter=/run/current-system/sw/bin/python3
 {% else %}
 {{ kdevops_host_prefix }}-{{ s }}

@@ -14,10 +14,6 @@ config KDEVOPS_ENABLE_NIXOSFL
 	bool
 	output yaml
 
-config KDEVOPS_ENABLE_NIXOS
-	bool
-	output yaml
-
 config CLOUD_INITIALIZED
 	bool
 	default $(shell, test -f .cloud.initialized && echo y || echo n) = "y"
@@ -80,21 +76,6 @@ config NIXOSFL
 	  to produce a qcow2 disk image; kdevops stages it into the libvirt
 	  storage pool, defines and starts the domain, and waits for SSH.
 
-config NIXOS
-	bool "NixOS declarative configuration with libvirt"
-	select KDEVOPS_ENABLE_NIXOS
-	select EXTRA_STORAGE_SUPPORTS_512
-	select EXTRA_STORAGE_SUPPORTS_1K
-	select EXTRA_STORAGE_SUPPORTS_2K
-	select EXTRA_STORAGE_SUPPORTS_4K
-	select EXTRA_STORAGE_SUPPORTS_LARGEIO
-	help
-	  Use NixOS declarative configuration system to provision VMs with
-	  libvirt. This provides a purely functional approach to VM management
-	  with automatic dependency resolution based on enabled workflows.
-	  NixOS will automatically infer the libvirt session type (system vs
-	  user) based on your distribution's defaults, similar to guestfs.
-
 config SKIP_BRINGUP
 	bool "Skip bring up - bare metal or existing nodes"
 	select EXTRA_STORAGE_SUPPORTS_512
@@ -111,11 +92,10 @@ endchoice
 
 config LIBVIRT
 	bool
-	depends on GUESTFS || NIXOS || NIXOSFL
+	depends on GUESTFS || NIXOSFL
 	default y
 
 source "kconfigs/Kconfig.guestfs"
-source "kconfigs/Kconfig.nixos"
 source "kconfigs/Kconfig.nixos_flake"
 source "terraform/Kconfig"
 source "kconfigs/Kconfig.declared_hosts"
