@@ -1,0 +1,207 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Out-of-tree kernel build into a controller-side destdir for QEMU's
+# -kernel direct boot path. See linuxboot.rst in QEMU's tree.
+
+- name: Compose the direct-boot build environment
+  ansible.builtin.set_fact:
+    bootlinux_direct_boot_build_environment: "{{ bootlinux_build_environment | combine({'LOCALVERSION': target_linux_localversion | default('', true)}) }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [always]
+
+- name: Install kernel build dependencies on the controller
+  ansible.builtin.import_tasks: "{{ role_path }}/tasks/install-deps/main.yml"
+  run_once: true
+  delegate_to: localhost
+
+- name: Wipe the controller build directory when a clean build was requested
+  ansible.builtin.file:
+    path: "{{ bootlinux_direct_boot_builddir }}"
+    state: absent
+  when:
+    - bootlinux_clean_before_build | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Ensure the controller build and install directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ bootlinux_direct_boot_builddir }}"
+    - "{{ bootlinux_direct_boot_destdir }}"
+    - "{{ bootlinux_direct_boot_destdir }}/boot"
+  run_once: true
+  delegate_to: localhost
+  tags: [always]
+
+# If the tree exists (manual clone, worktree, symlink, prior bringup),
+# build against its current HEAD. No fetch, no checkout.
+- name: Detect a pre-existing kernel tree under bootlinux_direct_boot_tree_path
+  ansible.builtin.stat:
+    path: "{{ bootlinux_direct_boot_tree_path }}/.git"
+  register: bootlinux_direct_boot_tree_git
+  run_once: true
+  delegate_to: localhost
+  tags: [clone, always]
+
+- name: Note that the controller tree is user-managed (skip clone/checkout)
+  ansible.builtin.debug:
+    msg: |
+      {{ bootlinux_direct_boot_tree_path }} already contains a git
+      checkout. kdevops will not clone, fetch, or checkout — building
+      against whatever HEAD is currently in that tree.
+  when:
+    - bootlinux_direct_boot_tree_git.stat.exists | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [clone, always]
+
+- name: Git clone kernel on the controller
+  ansible.builtin.git:
+    repo: "{{ target_linux_git }}"
+    dest: "{{ bootlinux_direct_boot_tree_path }}"
+    version: "{{ target_linux_ref }}"
+    depth: "{{ target_linux_shallow_depth | default(omit) }}"
+  when:
+    - not bootlinux_direct_boot_tree_git.stat.exists | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [clone]
+
+- name: Select the .config for the controller build
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/config.yml"
+  tags: [build-linux]
+
+- name: Stage the resolved .config into the out-of-tree build directory
+  ansible.builtin.copy:
+    src: "{{ role_path }}/templates/{{ linux_config }}"
+    dest: "{{ bootlinux_direct_boot_builddir }}/.config"
+    mode: "0644"
+    force: false
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Resolve .config against the tree with olddefconfig
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: olddefconfig
+    params:
+      O: "{{ bootlinux_direct_boot_builddir }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Sync include/config/auto.conf to the refreshed .config
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: syncconfig
+    params:
+      O: "{{ bootlinux_direct_boot_builddir }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Compute the expected kernel release from the resolved build tree
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: kernelrelease
+    params:
+      O: "{{ bootlinux_direct_boot_builddir }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  register: bootlinux_direct_boot_kernelrelease_make
+  changed_when: false
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Record the expected kernel release
+  ansible.builtin.set_fact:
+    bootlinux_direct_boot_kernel_release: "{{ bootlinux_direct_boot_kernelrelease_make.stdout_lines[-1] }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Get nproc on the controller
+  ansible.builtin.command: nproc
+  register: bootlinux_direct_boot_nproc
+  changed_when: false
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Build kernel on the controller
+  community.general.make:
+    jobs: "{{ bootlinux_direct_boot_nproc.stdout }}"
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_direct_boot_builddir}) }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+# `make install` runs /sbin/installkernel against the controller's
+# /boot and may need root. Copy the image into the destdir by hand.
+- name: Resolve the built kernel image path
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: image_name
+    params:
+      O: "{{ bootlinux_direct_boot_builddir }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  register: bootlinux_direct_boot_image_name_make
+  changed_when: false
+  run_once: true
+  delegate_to: localhost
+  tags: [install-linux]
+
+- name: Install the kernel image into <destdir>/boot
+  ansible.builtin.copy:
+    src: "{{ bootlinux_direct_boot_builddir }}/{{ bootlinux_direct_boot_image_name_make.stdout_lines[-1] | trim }}"
+    dest: "{{ bootlinux_direct_boot_destdir }}/boot/vmlinuz-{{ bootlinux_direct_boot_kernel_release }}"
+    mode: "0644"
+    remote_src: true
+  run_once: true
+  delegate_to: localhost
+  tags: [install-linux]
+
+- name: Install kernel modules into <destdir>/lib/modules
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: modules_install
+    params:
+      O: "{{ bootlinux_direct_boot_builddir }}"
+      INSTALL_MOD_PATH: "{{ bootlinux_direct_boot_destdir }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [install-linux]
+
+# modules_install creates build/ but not source/. Tools that chase
+# include/linux/kconfig.h (bpftrace, perf probe, libbpf-tools, any
+# kbuild module build) need source/. Dangling if the tree isn't
+# reachable from the guest is no worse than the prior state.
+- name: Add canonical "source" symlink alongside "build" in <destdir>/lib/modules/<ver>/
+  ansible.builtin.file:
+    src: "{{ bootlinux_direct_boot_tree_path }}"
+    dest: "{{ bootlinux_direct_boot_destdir }}/lib/modules/{{ bootlinux_direct_boot_kernel_release }}/source"
+    state: link
+    force: true
+  run_once: true
+  delegate_to: localhost
+  tags: [install-linux]
+
+- name: Publish controller-install facts for downstream roles
+  ansible.builtin.set_fact:
+    bootlinux_direct_boot_kernel_image: "{{ bootlinux_direct_boot_destdir }}/boot/vmlinuz-{{ bootlinux_direct_boot_kernel_release }}"
+    bootlinux_direct_boot_modules_dir: "{{ bootlinux_direct_boot_destdir }}/lib/modules/{{ bootlinux_direct_boot_kernel_release }}"
+  run_once: true
+  delegate_to: localhost
+  tags: [install-linux]

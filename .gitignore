@@ -111,6 +111,11 @@ archive/
 # NixOS generated files
 nixos/generated/
 
+# Controller-side data path (KDEVOPS_CONTROLLER_DATA_PATH default).
+# Local kernel checkouts, out-of-tree build trees, install destdirs,
+# workflow scratch space.
+data/
+
 # Dyanmic cloud kconfig files
 terraform/datacrunch/kconfigs/Kconfig.compute.generated
 terraform/datacrunch/kconfigs/Kconfig.images.generated

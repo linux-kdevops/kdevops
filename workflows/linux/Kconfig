@@ -92,7 +92,76 @@ config BOOTLINUX_BUILDER
 	  This choice is best when the test runners are resource-
 	  limited or vastly different than the controller host.
 
+config BOOTLINUX_DIRECT_BOOT
+	bool "Direct kernel boot (destdir, no in-guest install)"
+	output yaml
+	help
+	  Choosing this option builds the test kernel out-of-tree on
+	  the Ansible controller and installs the image plus modules
+	  into a local destdir. Nothing is copied onto any guest
+	  filesystem; a consumer feeds the kernel to QEMU via the
+	  -kernel direct boot path (QEMU's term, see
+	  docs/system/linuxboot.rst upstream) and virtiofs-shares
+	  the modules tree at boot.
+
+	  The wired consumer today is kdevops's nixosfi backend (imageless NixOS): its
+	  systemd template units run each guest as a systemd-machined
+	  machine and invoke qemu-system-* with -kernel pointing at
+	  this destdir.
+	  Pairs with the nixos-flake backends.imageless module,
+	  which describes a NixOS closure that boots without a disk
+	  image and expects the kernel to arrive via QEMU's direct
+	  boot path.
+
+	  No playbook-side cache: Make's source-level dependency
+	  tracking is the cache. A no-op rebuild walks the dep graph
+	  and exits in seconds; a real source change rebuilds only
+	  what actually changed.
+
 endchoice
+
+if BOOTLINUX_DIRECT_BOOT
+
+config BOOTLINUX_DIRECT_BOOT_TREE_PATH
+	string "Linux source tree path on the controller"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux"
+	help
+	  Absolute path on the controller where the Linux source
+	  tree lives. Defaults to a linux/ subdirectory of
+	  KDEVOPS_CONTROLLER_DATA_PATH so it sits alongside the
+	  other controller-side artefacts kdevops produces.
+
+	  kdevops manages the tree only when this path is empty: the
+	  initial bringup clones the configured tree at the configured
+	  ref into the path, then leaves it alone. If the path
+	  already contains a git checkout — manually cloned, a git
+	  worktree, a symlink to another checkout, or a previous
+	  kdevops bringup — kdevops detects it and skips clone,
+	  fetch, and checkout entirely.
+
+config BOOTLINUX_DIRECT_BOOT_BUILDDIR
+	string "Out-of-tree controller-side kernel build directory"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux-build"
+	help
+	  Absolute path on the controller for the out-of-tree kernel
+	  build (passed to make as O=...). Kept separate from
+	  BOOTLINUX_DIRECT_BOOT_TREE_PATH so the source tree stays clean.
+
+config BOOTLINUX_DIRECT_BOOT_DESTDIR
+	string "Controller-side kernel install destdir"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/linux-destdir"
+	help
+	  Absolute path on the controller that receives the kernel
+	  image (under boot/) and modules tree (under lib/modules/)
+	  from make install + make modules_install. The nixosfi backend reads
+	  vmlinuz-* from boot/ for its QEMU -kernel argv and
+	  virtiofs-shares lib/modules into the imageless nixos-flake
+	  closure at runtime.
+
+endif # BOOTLINUX_DIRECT_BOOT
 
 if BOOTLINUX_9P
 
