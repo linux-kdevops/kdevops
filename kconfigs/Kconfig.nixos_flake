@@ -169,6 +169,199 @@ config NIXOS_FLAKE_TESTSUITE_SYSBENCH
 
 endmenu  # Test suites
 
+menu "Source overrides"
+
+# Per-package source overrides. Each <PKG> exposes a bool gate;
+# enabling it surfaces SRC (local path or git URL) and REF
+# (branch/tag/commit). When enabled and SRC is non-empty the
+# closure rebuilds the package from that source instead of the
+# nixpkgs / nixos-flake-overlay default. REF is ignored for
+# local paths. All bools off is a no-op.
+
+config NIXOS_FLAKE_OVERRIDE_FIO
+	bool "Override fio source"
+	output yaml
+	default n
+	help
+	  Rebuild fio from a user-supplied tree instead of the
+	  nixos-flake fio overlay (nixpkgs fio + liburing patches).
+if NIXOS_FLAKE_OVERRIDE_FIO
+config NIXOS_FLAKE_OVERRIDE_FIO_SRC
+	string "fio source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_FIO_REF
+	string "fio ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_FIO
+
+config NIXOS_FLAKE_OVERRIDE_XFSTESTS
+	bool "Override xfstests source"
+	output yaml
+	default n
+	help
+	  Rebuild xfstests from a user-supplied tree instead of the
+	  nixos-flake xfstests overlay (xfstests 2026.03.20 with
+	  gdbm/liburing/file_attr patches).
+if NIXOS_FLAKE_OVERRIDE_XFSTESTS
+config NIXOS_FLAKE_OVERRIDE_XFSTESTS_SRC
+	string "xfstests source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_XFSTESTS_REF
+	string "xfstests ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_XFSTESTS
+
+config NIXOS_FLAKE_OVERRIDE_XFSPROGS
+	bool "Override xfsprogs source"
+	output yaml
+	default n
+	help
+	  Rebuild xfsprogs from a user-supplied tree instead of the
+	  nixpkgs default. Use this to pick up xfs_healer or other
+	  for-next changes ahead of nixpkgs.
+if NIXOS_FLAKE_OVERRIDE_XFSPROGS
+config NIXOS_FLAKE_OVERRIDE_XFSPROGS_SRC
+	string "xfsprogs source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_XFSPROGS_REF
+	string "xfsprogs ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_XFSPROGS
+
+config NIXOS_FLAKE_OVERRIDE_LIBBPF
+	bool "Override libbpf source"
+	output yaml
+	default n
+	help
+	  Rebuild libbpf from a user-supplied tree instead of the
+	  nixpkgs default.
+if NIXOS_FLAKE_OVERRIDE_LIBBPF
+config NIXOS_FLAKE_OVERRIDE_LIBBPF_SRC
+	string "libbpf source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_LIBBPF_REF
+	string "libbpf ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_LIBBPF
+
+config NIXOS_FLAKE_OVERRIDE_LIBBPF_TOOLS
+	bool "Override libbpf-tools source"
+	output yaml
+	default n
+	help
+	  Rebuild libbpf-tools from a user-supplied BCC tree instead
+	  of the release pinned by nixos-flake/pkgs/libbpf-tools.nix.
+if NIXOS_FLAKE_OVERRIDE_LIBBPF_TOOLS
+config NIXOS_FLAKE_OVERRIDE_LIBBPF_TOOLS_SRC
+	string "libbpf-tools source (local path or BCC git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_LIBBPF_TOOLS_REF
+	string "libbpf-tools ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_LIBBPF_TOOLS
+
+config NIXOS_FLAKE_OVERRIDE_DAMO
+	bool "Override damo source"
+	output yaml
+	default n
+	help
+	  Rebuild damo from a user-supplied tree instead of
+	  nixos-flake/pkgs/damo.nix.
+if NIXOS_FLAKE_OVERRIDE_DAMO
+config NIXOS_FLAKE_OVERRIDE_DAMO_SRC
+	string "damo source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_DAMO_REF
+	string "damo ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_DAMO
+
+config NIXOS_FLAKE_OVERRIDE_NFSTEST
+	bool "Override nfstest source"
+	output yaml
+	default n
+	help
+	  Rebuild nfstest from a user-supplied tree instead of
+	  nixos-flake/pkgs/nfstest.nix.
+if NIXOS_FLAKE_OVERRIDE_NFSTEST
+config NIXOS_FLAKE_OVERRIDE_NFSTEST_SRC
+	string "nfstest source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_NFSTEST_REF
+	string "nfstest ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_NFSTEST
+
+config NIXOS_FLAKE_OVERRIDE_PYNFS
+	bool "Override pynfs source"
+	output yaml
+	default n
+	help
+	  Rebuild pynfs from a user-supplied tree instead of
+	  nixos-flake/pkgs/pynfs.nix.
+if NIXOS_FLAKE_OVERRIDE_PYNFS
+config NIXOS_FLAKE_OVERRIDE_PYNFS_SRC
+	string "pynfs source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_PYNFS_REF
+	string "pynfs ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_PYNFS
+
+config NIXOS_FLAKE_OVERRIDE_XNVME
+	bool "Override xnvme source"
+	output yaml
+	default n
+	help
+	  Rebuild xnvme from a user-supplied tree instead of
+	  nixos-flake/pkgs/xnvme.nix.
+if NIXOS_FLAKE_OVERRIDE_XNVME
+config NIXOS_FLAKE_OVERRIDE_XNVME_SRC
+	string "xnvme source (local path or git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_XNVME_REF
+	string "xnvme ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_XNVME
+
+config NIXOS_FLAKE_OVERRIDE_CPUPOWER
+	bool "Override cpupower source"
+	output yaml
+	default n
+	help
+	  Rebuild cpupower from a user-supplied Linux tree
+	  (tools/power/cpupower) instead of nixos-flake/pkgs/cpupower.nix.
+if NIXOS_FLAKE_OVERRIDE_CPUPOWER
+config NIXOS_FLAKE_OVERRIDE_CPUPOWER_SRC
+	string "cpupower source (local path or Linux git URL)"
+	output yaml
+	default ""
+config NIXOS_FLAKE_OVERRIDE_CPUPOWER_REF
+	string "cpupower ref"
+	output yaml
+	default ""
+endif # NIXOS_FLAKE_OVERRIDE_CPUPOWER
+
+endmenu  # Source overrides
+
 endmenu  # NixOS Flake
 
 endif # KDEVOPS_ENABLE_NIXOS_FLAKE

@@ -53,6 +53,11 @@
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
   changed_when: true
 
+- name: Refresh per-package source-override flake inputs
+  ansible.builtin.import_tasks: refresh-source-overrides.yml
+  vars:
+    refresh_target_vms: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
 - name: Prepare qsu imageless artefacts per VM
   ansible.builtin.include_tasks: imageless-build-per-vm.yml
   loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"

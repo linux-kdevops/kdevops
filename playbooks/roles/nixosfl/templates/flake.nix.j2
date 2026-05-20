@@ -4,12 +4,48 @@
   Per-VM libvirt flake rendered by kdevops. Mirrors upstream's starter
   at scripts/nixos-flake/templates/libvirt/flake.nix and resolves the
   nixos-flake input at the vendored subtree. Builds a qcow2 disk image
-  (packages.<system>.image) that libvirtd runs.
+  (packages.<system>.image) that libvirtd runs. Conditionally adds one
+  `<pkg>-src` flake input per package whose NIXOS_FLAKE_OVERRIDE_<PKG>
+  bool is set; the matching overlay in default.nix consumes them.
+
+  Refresh a source override after a Kconfig change:
+    nix flake update --update-input <pkg>-src
 #}
+{%- macro nixstr(value) -%}
+{{ value | replace('\\', '\\\\') | replace('"', '\\"') | replace('${', '\\${') }}
+{%- endmacro -%}
+{%- set override_pkgs = [
+  ('fio',          nixos_flake_override_fio          | default(false), nixos_flake_override_fio_src          | default(''), nixos_flake_override_fio_ref          | default('')),
+  ('xfstests',     nixos_flake_override_xfstests     | default(false), nixos_flake_override_xfstests_src     | default(''), nixos_flake_override_xfstests_ref     | default('')),
+  ('xfsprogs',     nixos_flake_override_xfsprogs     | default(false), nixos_flake_override_xfsprogs_src     | default(''), nixos_flake_override_xfsprogs_ref     | default('')),
+  ('libbpf',       nixos_flake_override_libbpf       | default(false), nixos_flake_override_libbpf_src       | default(''), nixos_flake_override_libbpf_ref       | default('')),
+  ('libbpf-tools', nixos_flake_override_libbpf_tools | default(false), nixos_flake_override_libbpf_tools_src | default(''), nixos_flake_override_libbpf_tools_ref | default('')),
+  ('damo',         nixos_flake_override_damo         | default(false), nixos_flake_override_damo_src         | default(''), nixos_flake_override_damo_ref         | default('')),
+  ('nfstest',      nixos_flake_override_nfstest      | default(false), nixos_flake_override_nfstest_src      | default(''), nixos_flake_override_nfstest_ref      | default('')),
+  ('pynfs',        nixos_flake_override_pynfs        | default(false), nixos_flake_override_pynfs_src        | default(''), nixos_flake_override_pynfs_ref        | default('')),
+  ('xnvme',        nixos_flake_override_xnvme        | default(false), nixos_flake_override_xnvme_src        | default(''), nixos_flake_override_xnvme_ref        | default('')),
+  ('cpupower',     nixos_flake_override_cpupower     | default(false), nixos_flake_override_cpupower_src     | default(''), nixos_flake_override_cpupower_ref     | default('')),
+] -%}
 {
   inputs = {
     nixos-flake.url = "path:{{ topdir_path }}/scripts/nixos-flake";
     nixpkgs.follows = "nixos-flake/nixpkgs";
+{% for pkg, enabled, src, ref in override_pkgs %}{% if enabled and src %}
+
+    {{ pkg }}-src = {
+{% if src.startswith('/') %}
+      type = "path";
+      path = "{{ nixstr(src) }}";
+{% else %}
+      type = "git";
+      url = "{{ nixstr(src) }}";
+{% if ref %}
+      ref = "{{ nixstr(ref) }}";
+{% endif %}
+{% endif %}
+      flake = false;
+    };
+{% endif %}{% endfor %}
   };
 
   outputs =

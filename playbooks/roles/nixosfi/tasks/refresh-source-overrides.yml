@@ -1,0 +1,41 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Nix path: inputs are pinned by narHash, so edits under SRC are not
+# picked up until the lock is re-pinned. Callers pass refresh_target_vms
+# to scope the work to all guests or a single one.
+
+- name: Refresh per-package source-override flake inputs
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ nixosfi_config_dir }}/{{ item.0 }}"
+      - "{{ item.1 }}-src"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  vars:
+    enabled_overrides: >-
+      {{
+        ([{'name': 'fio',          'gate': nixos_flake_override_fio          | default(false), 'src': nixos_flake_override_fio_src          | default('')}]
+       + [{'name': 'xfstests',     'gate': nixos_flake_override_xfstests     | default(false), 'src': nixos_flake_override_xfstests_src     | default('')}]
+       + [{'name': 'xfsprogs',     'gate': nixos_flake_override_xfsprogs     | default(false), 'src': nixos_flake_override_xfsprogs_src     | default('')}]
+       + [{'name': 'libbpf',       'gate': nixos_flake_override_libbpf       | default(false), 'src': nixos_flake_override_libbpf_src       | default('')}]
+       + [{'name': 'libbpf-tools', 'gate': nixos_flake_override_libbpf_tools | default(false), 'src': nixos_flake_override_libbpf_tools_src | default('')}]
+       + [{'name': 'damo',         'gate': nixos_flake_override_damo         | default(false), 'src': nixos_flake_override_damo_src         | default('')}]
+       + [{'name': 'nfstest',      'gate': nixos_flake_override_nfstest      | default(false), 'src': nixos_flake_override_nfstest_src      | default('')}]
+       + [{'name': 'pynfs',        'gate': nixos_flake_override_pynfs        | default(false), 'src': nixos_flake_override_pynfs_src        | default('')}]
+       + [{'name': 'xnvme',        'gate': nixos_flake_override_xnvme        | default(false), 'src': nixos_flake_override_xnvme_src        | default('')}]
+       + [{'name': 'cpupower',     'gate': nixos_flake_override_cpupower     | default(false), 'src': nixos_flake_override_cpupower_src     | default('')}])
+        | selectattr('gate')
+        | selectattr('src')
+        | map(attribute='name')
+        | list
+      }}
+  loop: "{{ refresh_target_vms | product(enabled_overrides) | list }}"
+  loop_control:
+    label: "{{ item.0 }} -> {{ item.1 }}-src"
+  changed_when: true

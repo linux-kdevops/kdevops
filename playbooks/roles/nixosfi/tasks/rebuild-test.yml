@@ -4,6 +4,15 @@
 # Rebuild the per-VM imageless NixOS closure on the controller
 # and activate it on the running guest. See README.md.
 
+# Pick up Kconfig overrides toggled since bringup, like rebuild-boot.yml.
+- name: Re-render per-node imageless configs for rebuild-test
+  ansible.builtin.import_tasks: generate-configs.yml
+
+- name: Refresh per-package source-override flake inputs for {{ inventory_hostname }}
+  ansible.builtin.import_tasks: refresh-source-overrides.yml
+  vars:
+    refresh_target_vms: "{{ [inventory_hostname] }}"
+
 - name: Rebuild imageless NixOS toplevel on the controller for {{ inventory_hostname }}
   delegate_to: localhost
   ansible.builtin.command:
