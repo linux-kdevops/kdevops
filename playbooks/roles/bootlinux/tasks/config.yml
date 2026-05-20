@@ -6,6 +6,13 @@
       - "{{ role_path }}/templates/config-kdevops"
       - "{{ role_path }}/templates/{{ target_linux_config }}"
 
+- name: Prefer the imageless preset under direct-boot + qsu
+  ansible.builtin.set_fact:
+    search_list: "{{ [role_path ~ '/templates/config-imageless'] + search_list }}"
+  when:
+    - bootlinux_direct_boot | default(false) | bool
+    - kdevops_enable_nixosfi | default(false) | bool
+
 - name: Find all linux-next kernel config files
   delegate_to: localhost
   run_once: true

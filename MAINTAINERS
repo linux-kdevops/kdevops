@@ -149,6 +149,7 @@ L:	kdevops@lists.linux.dev
 S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
 F:	kconfigs/Kconfig.nixos_flake
+F:	docs/nixos-flake-backends.md
 F:	docs/nixosfl.md
 F:	playbooks/nixosfl.yml
 F:	playbooks/roles/nixosfl/
@@ -166,6 +167,31 @@ S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
 F:	workflows/pynfs/
 F:	playbooks/roles/pynfs/
+
+NIXOSFI
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	defconfigs/nixosfi-*
+F:	docs/nixosfi.md
+F:	playbooks/nixosfi.yml
+F:	playbooks/roles/nixosfi/
+F:	scripts/nixosfi.Makefile
+F:	scripts/nixosfi_ssh_key_name.py
+F:	scripts/update_ssh_config_nixosfi.py
+N:	nixosfi
+
+QEMU SYSTEM UNITS (QSU)
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	docs/qsu.md
+F:	kconfigs/Kconfig.qsu
+F:	playbooks/roles/qsu/
+F:	scripts/qemu-system-units/
+N:	qsu|QSU
 
 KDEVOPS
 M:	Luis Chamberlain <mcgrof@kernel.org>

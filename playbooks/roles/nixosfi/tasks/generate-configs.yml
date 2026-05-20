@@ -1,0 +1,71 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-node imageless configuration generation. Creates one directory
+# per guest under $NIXOSFI_CONFIG_DIR, seeds the SSH key,
+# copies the upstream nixos-flake imageless template flake into it,
+# rewrites the nixos-flake.url input to resolve at the checked-in
+# subtree, and renders the per-node default.nix using the shared
+# nixos-flake/templates/default.nix.j2 with the imageless backend
+# fact set.
+
+- name: Localhost generate-configs
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Create top-level qsu config directory
+      ansible.builtin.file:
+        path: "{{ nixosfi_config_dir }}"
+        state: directory
+        mode: "0755"
+      tags: do_install
+
+    - name: Create per-node configuration directories
+      ansible.builtin.file:
+        path: "{{ nixosfi_config_dir }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      tags: do_install
+
+    - name: Determine SSH key path
+      ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixosfi_ssh_key_name.py --path
+      register: nixosfi_ssh_key_path_result
+      changed_when: false
+
+    - name: Set SSH key path fact
+      ansible.builtin.set_fact:
+        nixosfi_ssh_key_path: "{{ nixosfi_ssh_key_path_result.stdout | trim }}"
+
+    - name: Generate SSH key for imageless VMs if not exists
+      community.crypto.openssh_keypair:
+        path: "{{ nixosfi_ssh_key_path }}"
+        type: rsa
+        size: 2048
+        comment: "kdevops@qsu"
+        force: false
+      tags: do_install
+
+    - name: Read SSH public key
+      ansible.builtin.slurp:
+        src: "{{ nixosfi_ssh_key_path }}.pub"
+      register: nixosfi_ssh_public_key
+
+    - name: Render per-node imageless flake.nix
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/roles/nixosfi/templates/flake.nix.j2"
+        dest: "{{ nixosfi_config_dir }}/{{ item }}/flake.nix"
+        mode: "0644"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      tags: do_install
+
+    - name: Render per-node imageless default.nix
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/roles/nixosfi/templates/default.nix.j2"
+        dest: "{{ nixosfi_config_dir }}/{{ item }}/default.nix"
+        mode: "0644"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      vars:
+        vm_name: "{{ item }}"
+        nixosfi_ssh_authorized_key: "{{ nixosfi_ssh_public_key['content'] | b64decode | trim }}"
+      tags: do_install

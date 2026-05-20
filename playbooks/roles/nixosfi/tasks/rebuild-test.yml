@@ -1,0 +1,35 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Rebuild the per-VM imageless NixOS closure on the controller
+# and activate it on the running guest. See README.md.
+
+- name: Rebuild imageless NixOS toplevel on the controller for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ nixosfi_config_dir }}/{{ inventory_hostname }}#toplevel"
+      - --out-link
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
+
+- name: Resolve new toplevel store path for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - readlink
+      - -f
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  register: nixosfi_new_toplevel
+  changed_when: false
+
+- name: Activate new toplevel on the running guest {{ inventory_hostname }}
+  ansible.builtin.command:
+    cmd: "{{ nixosfi_new_toplevel.stdout }}/bin/switch-to-configuration test"
+  register: nixosfi_activate_result
+  failed_when: nixosfi_activate_result.rc not in [0, 4, 100]
+  changed_when: nixosfi_activate_result.rc in [0, 4, 100]

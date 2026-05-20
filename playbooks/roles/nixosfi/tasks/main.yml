@@ -1,0 +1,87 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# nixosfi role entry point: the imageless NixOS backend. It owns the
+# nix work (per-node flakes, closure build, kernel rebuild) and drives
+# the qsu runtime (dependency install, systemd units, VM lifecycle)
+# through include_role ... tasks_from. Each phase is tag-gated; the
+# nixosfi Make targets pass the matching tag.
+
+- name: Install the qsu runtime dependencies
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: install-deps
+    apply:
+      tags: [install-deps]
+  tags: [install-deps]
+
+- name: Render the shared qsu systemd units
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: render-units
+    apply:
+      tags: [generate-configs]
+  tags: [generate-configs]
+
+- name: Generate the per-node imageless flakes
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/generate-configs.yml"
+  tags: [generate-configs]
+
+- name: Build the imageless closures and render per-VM qsu artefacts
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/imageless-build.yml"
+  tags: [build-vms]
+
+- name: Bring up the qsu machines
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: bringup
+    apply:
+      tags: [bringup]
+  tags: [bringup]
+
+- name: Show the console access banner
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: console
+    apply:
+      tags: [console]
+  tags: [console]
+
+- name: Stop the qsu machines
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: stop-vms
+    apply:
+      tags: [stop-vms]
+  tags: [stop-vms]
+
+- name: Rebuild and reboot guests onto a freshly built kernel
+  ansible.builtin.import_tasks:
+    file: "{{ role_path }}/tasks/rebuild-boot.yml"
+  tags: [rebuild-boot]
+
+- name: Restart the qsu machines
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: restart-vms
+    apply:
+      tags: [restart-vms]
+  tags: [restart-vms]
+
+- name: Start the qsu machines
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: start-vms
+    apply:
+      tags: [start-vms]
+  tags: [start-vms]
+
+- name: Destroy the qsu machines
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: destroy
+    apply:
+      tags: [destroy]
+  tags: [destroy, never]

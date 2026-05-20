@@ -14,6 +14,10 @@ config KDEVOPS_ENABLE_NIXOSFL
 	bool
 	output yaml
 
+config KDEVOPS_ENABLE_NIXOSFI
+	bool
+	output yaml
+
 config CLOUD_INITIALIZED
 	bool
 	default $(shell, test -f .cloud.initialized && echo y || echo n) = "y"
@@ -76,6 +80,27 @@ config NIXOSFL
 	  to produce a qcow2 disk image; kdevops stages it into the libvirt
 	  storage pool, defines and starts the domain, and waits for SSH.
 
+config NIXOSFI
+	bool "qsu systemd-unit toolkit for QEMU VMs (nixos-flake imageless guests)"
+	select KDEVOPS_ENABLE_NIXOSFI
+	select KDEVOPS_ENABLE_NIXOS_FLAKE
+	select HAVE_CUSTOM_DISTRO_HOST_PREFIX
+	select HAVE_DISTRO_PREFERS_CUSTOM_HOST_PREFIX
+	select EXTRA_STORAGE_SUPPORTS_512
+	select EXTRA_STORAGE_SUPPORTS_1K
+	select EXTRA_STORAGE_SUPPORTS_2K
+	select EXTRA_STORAGE_SUPPORTS_4K
+	help
+	  Run each guest as a systemd machine: a qemu-system@<vm>
+	  service registered with systemd-machined (visible in
+	  machinectl, placed in machine.slice), the model
+	  systemd-vmspawn uses, from the templates in
+	  scripts/qemu-system-units/. The guest closure is the
+	  nixos-flake backends.imageless NixOS module (tmpfs root,
+	  /nix/store and /lib/modules shared in via virtiofs); the
+	  kernel comes from BOOTLINUX_DIRECT_BOOT via qemu-system-*
+	  -kernel. No libvirt daemon, no qcow2.
+
 config SKIP_BRINGUP
 	bool "Skip bring up - bare metal or existing nodes"
 	select EXTRA_STORAGE_SUPPORTS_512
@@ -97,6 +122,7 @@ config LIBVIRT
 
 source "kconfigs/Kconfig.guestfs"
 source "kconfigs/Kconfig.nixos_flake"
+source "kconfigs/Kconfig.qsu"
 source "terraform/Kconfig"
 source "kconfigs/Kconfig.declared_hosts"
 if LIBVIRT

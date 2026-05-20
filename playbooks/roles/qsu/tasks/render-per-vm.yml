@@ -1,0 +1,347 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Render one VM's qsu runtime artefacts: systemd state dirs, NVMe
+# qcow2 backing files, virtiofs shares, vm.env, the debug-vars
+# snapshot, and the qemu-system@/virtiofsd@ drop-ins. The nixosfi
+# backend includes this (tasks_from: render-per-vm) once per guest,
+# passing the boot artefacts (qsu_kernel_release, qsu_kernel_image,
+# qsu_modules_dir, qsu_init, qsu_initrd) alongside the loop vars
+# (qsu_vm_name, qsu_vm_idx); the QSU_* knobs supply the rest.
+
+# Match qemu-system@.service StateDirectory=qemu-system/%i. In
+# user mode %S resolves to $XDG_STATE_HOME (default
+# $HOME/.local/state), so compute the absolute path and create
+# it before service start. vm.env entries relative to the
+# service's WorkingDirectory (nvme.drives[].file, shares.dir)
+# resolve under this directory at run time.
+- name: Compute per-VM systemd state directory for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    qsu_state_dir: "{{ lookup('env', 'XDG_STATE_HOME') | default(lookup('env', 'HOME') ~ '/.local/state', true) }}/qemu-system/{{ qsu_vm_name }}"
+
+- name: Ensure qsu per-VM directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ qsu_per_vm_dirs }}"
+  vars:
+    qsu_per_vm_dirs_base:
+      - "{{ lookup('env', 'HOME') }}/.config/systemd/qemu-system"
+      - "{{ lookup('env', 'HOME') }}/.config/systemd/virtiofsd"
+      - "{{ lookup('env', 'HOME') }}/.config/systemd/user/qemu-system@{{ qsu_vm_name }}.service.d"
+      - "{{ qsu_state_dir }}"
+      - "{{ qsu_state_dir }}/data"
+      - "{{ qsu_state_dir }}/data/configs"
+    # data-configs stays ephemeral under the VM StateDirectory
+    # (wiped by `make destroy`).
+    #
+    # Per-(VM, kernel) results layout: the data-results virtiofs
+    # share for qsu-xfs-crc on kernel 7.0.0-gABCDE backs onto
+    # workflows/fstests/results/qsu-xfs-crc/7.0.0-gABCDE/. A new
+    # kernel from linux-deploy gets a new directory next to the
+    # old one, so two builds (A vs B) don't clobber each other and
+    # the report tooling can index runs by (vm, kernel) without an
+    # archive step. The current run is also reachable via the
+    # qsu-xfs-crc/last-run -> 7.0.0-gABCDE symlink updated below.
+    qsu_per_vm_dirs_fstests: >-
+      {{
+        [topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name,
+         topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release]
+        if (kdevops_workflow_enable_fstests | default(false) | bool)
+        else []
+      }}
+    qsu_per_vm_dirs: "{{ qsu_per_vm_dirs_base + qsu_per_vm_dirs_fstests }}"
+
+# The <vm>/last-run symlink always points at the kernel that
+# qsu vm.env is currently rendered for. It is the discoverable
+# "current run" anchor: tooling that reads
+# workflows/fstests/results/<vm>/last-run/ resolves to the
+# directory virtiofsd is right now sharing into the guest. The
+# linux-deploy chain re-renders this VM's vm.env after a kernel
+# install; that re-render lands in this same task during the
+# rebuild-boot tag, so the symlink follows the new kernel
+# without a separate update step.
+- name: Update last-run symlink for {{ qsu_vm_name }}
+  ansible.builtin.file:
+    src: "{{ qsu_kernel_release }}"
+    dest: "{{ topdir_path }}/workflows/fstests/results/{{ qsu_vm_name }}/last-run"
+    state: link
+    force: true
+  when:
+    - kdevops_workflow_enable_fstests | default(false) | bool
+
+- name: Update last-kernel.txt for {{ qsu_vm_name }}
+  ansible.builtin.copy:
+    content: "{{ qsu_kernel_release }}\n"
+    dest: "{{ topdir_path }}/workflows/fstests/results/{{ qsu_vm_name }}/last-kernel.txt"
+    mode: "0644"
+  when:
+    - kdevops_workflow_enable_fstests | default(false) | bool
+
+- name: Create per-VM NVMe qcow2 backing files for {{ qsu_vm_name }}
+  ansible.builtin.command:
+    argv:
+      - qemu-img
+      - create
+      - -f
+      - qcow2
+      - "{{ qsu_state_dir }}/nvme{{ item }}.qcow2"
+      - "{{ qsu_nvme_drive_size_gb }}G"
+    creates: "{{ qsu_state_dir }}/nvme{{ item }}.qcow2"
+  loop: "{{ range(qsu_nvme_drive_count | int) | list }}"
+  loop_control:
+    label: "{{ qsu_vm_name }}-nvme{{ item }}"
+
+- name: Reset per-VM nvme drives accumulator for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    qsu_nvme_drives: []
+
+# Serial `kdevops<N>` matches the libvirt kdevops bringup so the
+# guest /dev/disk/by-id symlinks resolve identically on both
+# backends.
+#
+# Each BlockConf knob accepts either a single value (global) or a
+# comma-separated list of length N (per-drive by index, empty
+# entries fall back to no override). Values stay as strings so
+# QEMU SIZE32 suffixes ("4K", "1M") pass through to nvme.env.j2,
+# which emits each property only when present.
+- name: Compose per-VM nvme drives for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    qsu_nvme_drives: "{{ qsu_nvme_drives + [composed_drive] }}"
+  vars:
+    base_drive:
+      file: "nvme{{ item }}.qcow2"
+      format: qcow2
+      serial: "kdevops{{ item }}"
+    blockconf_knobs:
+      logical_block_size: "{{ qsu_nvme_logical_block_size | default('') | string }}"
+      physical_block_size: "{{ qsu_nvme_physical_block_size | default('') | string }}"
+      min_io_size: "{{ qsu_nvme_min_io_size | default('') | string }}"
+      opt_io_size: "{{ qsu_nvme_opt_io_size | default('') | string }}"
+      discard_granularity: "{{ qsu_nvme_discard_granularity | default('') | string }}"
+      write-cache: "{{ qsu_nvme_write_cache | default('') | string }}"
+      # Controller-level NVMe MDTS (Maximum Data Transfer Size,
+      # NVMe Identify Controller offset 77). Encoded as the log2
+      # multiplier above CAP.MPSMIN (4 KiB by default), so
+      # mdts=N -> (1 << N) * 4 KiB. The Linux nvme driver feeds
+      # this into max_hw_sectors_kb. Same picker logic as the
+      # BlockConf knobs; the value lands at d.mdts in the
+      # per-drive dict and nvme.env.j2 emits "mdts=<v>" inside
+      # the -device nvme,... arg when present. Leave empty to
+      # use QEMU's default of 7 (= 512 KiB).
+      mdts: "{{ qsu_nvme_mdts | default('') | string }}"
+      # NVMe atomic-write fields, split between controller and
+      # namespace per the QEMU device model. atomic.dn, atomic.awun
+      # and atomic.awupf are NvmeCtrl properties (hw/nvme/ctrl.c
+      # lines 9408-9410). atomic.nawun, atomic.nawupf, atomic.nabsn,
+      # atomic.nabspf and atomic.nabo are NvmeNamespace properties
+      # (hw/nvme/ns.c lines 924-925 and surrounding). Both shapes
+      # flow through the same picker below; the partition step
+      # downstream routes each key to its rightful device line.
+      # drivers/nvme/host/core.c's nvme_atomic_bs only consumes
+      # per-namespace NAWUPF, so the namespace-level fields are
+      # what actually drive
+      # /sys/block/<dev>/queue/atomic_write_unit_max_bytes.
+      "atomic.dn": "{{ qsu_nvme_atomic_dn | default('') | string }}"
+      "atomic.awun": "{{ qsu_nvme_atomic_awun | default('') | string }}"
+      "atomic.awupf": "{{ qsu_nvme_atomic_awupf | default('') | string }}"
+      "atomic.nawun": "{{ qsu_nvme_atomic_nawun | default('') | string }}"
+      "atomic.nawupf": "{{ qsu_nvme_atomic_nawupf | default('') | string }}"
+      "atomic.nabsn": "{{ qsu_nvme_atomic_nabsn | default('') | string }}"
+      "atomic.nabspf": "{{ qsu_nvme_atomic_nabspf | default('') | string }}"
+      "atomic.nabo": "{{ qsu_nvme_atomic_nabo | default('') | string }}"
+    drive_overrides: >-
+      {%- set out = {} -%}
+      {%- for key, raw in blockconf_knobs.items() -%}
+        {%- set parts = raw.split(',') -%}
+        {%- set value = parts[0] if (parts | length == 1) else (parts[item] if item < (parts | length) else '') -%}
+        {%- if (value | string | length) > 0 -%}
+          {%- set _ = out.update({key: value}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ out }}
+    # Partition the per-drive override dict by which QEMU device
+    # accepts each property. NvmeCtrl carries mdts and the
+    # controller-level atomic.* fields. NvmeNamespace carries the
+    # namespace-level atomic.* fields (which the controller refuses
+    # outright). BlockConf properties (logical_block_size and
+    # friends) are set on whichever device owns the drive backend
+    # — the controller in simple mode, the namespace in explicit
+    # mode — and are routed at composition time below.
+    nvme_ctrl_keys: ["mdts", "atomic.dn", "atomic.awun", "atomic.awupf"]
+    nvme_ns_keys: ["atomic.nawun", "atomic.nawupf", "atomic.nabsn", "atomic.nabspf", "atomic.nabo"]
+    nvme_blockconf_keys: ["logical_block_size", "physical_block_size", "min_io_size", "opt_io_size", "discard_granularity", "write-cache"]
+    ctrl_overrides: >-
+      {%- set out = {} -%}
+      {%- for k in nvme_ctrl_keys -%}
+        {%- if k in drive_overrides -%}{%- set _ = out.update({k: drive_overrides[k]}) -%}{%- endif -%}
+      {%- endfor -%}
+      {{ out }}
+    ns_overrides: >-
+      {%- set out = {} -%}
+      {%- for k in nvme_ns_keys -%}
+        {%- if k in drive_overrides -%}{%- set _ = out.update({k: drive_overrides[k]}) -%}{%- endif -%}
+      {%- endfor -%}
+      {{ out }}
+    blockconf_overrides: >-
+      {%- set out = {} -%}
+      {%- for k in nvme_blockconf_keys -%}
+        {%- if k in drive_overrides -%}{%- set _ = out.update({k: drive_overrides[k]}) -%}{%- endif -%}
+      {%- endfor -%}
+      {{ out }}
+    # nvme.env.j2 picks between simple-mode and explicit-namespace
+    # mode by inspecting drive.namespaces. Pivot to explicit mode
+    # whenever any per-namespace atomic.* key is set, since QEMU
+    # only accepts those on -device nvme-ns. In simple mode the
+    # one drive line carries serial, BlockConf, and controller
+    # atomics; in explicit mode the controller line drops drive=,
+    # the BlockConf moves with the backend onto the namespace
+    # line, and the per-namespace atomics ride alongside.
+    composed_drive: >-
+      {%- if (nvme_ns_keys | select('in', drive_overrides) | list | length) > 0 -%}
+        {%- set ns0 = {'file': base_drive.file, 'format': base_drive.format} | combine(blockconf_overrides) | combine(ns_overrides) -%}
+        {{ {'serial': base_drive.serial} | combine(ctrl_overrides) | combine({'namespaces': [ns0]}) }}
+      {%- else -%}
+        {{ base_drive | combine(ctrl_overrides) | combine(blockconf_overrides) }}
+      {%- endif -%}
+  loop: "{{ range(qsu_nvme_drive_count | int) | list }}"
+  loop_control:
+    label: "{{ qsu_vm_name }}-kdevops{{ item }}"
+
+# store/modules: read-only bytes from the controller.
+# data-configs: ephemeral per-host config under StateDirectory.
+# data-results: per-(VM, kernel) results tree that survives
+# `make destroy`; new kernel deploys render to a new subpath.
+# kdevops-fstests: workflows/fstests/ read-only on the guest so
+# oscheck.sh runs without copying scripts in.
+# Monitor data piggybacks on data-results under
+# runs/<run-id>/monitoring/.
+- name: Compose per-VM virtiofs shares for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests }}"
+  vars:
+    qsu_shares_base:
+      - tag: store
+        dir: /nix/store
+        mount: /nix/store
+      - tag: modules
+        dir: "{{ qsu_modules_dir }}"
+        mount: /lib/modules
+    qsu_shares_fstests: >-
+      {{
+        [
+          {'tag': 'data-configs',
+           'dir': qsu_state_dir ~ '/data/configs',
+           'mount': '/data/configs'},
+          {'tag': 'data-results',
+           'dir': topdir_path ~ '/workflows/fstests/results/' ~ qsu_vm_name ~ '/' ~ qsu_kernel_release,
+           'mount': '/data/results'},
+          {'tag': 'kdevops-fstests',
+           'dir': topdir_path ~ '/workflows/fstests',
+           'mount': '/usr/local/lib/kdevops/fstests'}
+        ]
+        if (kdevops_workflow_enable_fstests | default(false) | bool)
+        else []
+      }}
+
+- name: Render vm.env for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/vm.env.j2"
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/qemu-system/{{ qsu_vm_name }}.env"
+    mode: "0644"
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    qemu_binary: "{{ qsu_qemu_binary }}"
+    cpu: "{{ qsu_cpu }}"
+    accel: "{{ qsu_accel }}"
+    ram: "{{ qsu_ram }}"
+    cpus: "{{ qsu_cpus }}"
+    machine_type: "{{ qsu_machine_type }}"
+    ssh_port: "{{ qsu_ssh_port_base | int + qsu_vm_idx }}"
+    vsock_cid: "{{ qsu_vsock_cid_base | int + qsu_vm_idx }}"
+    kernel:
+      image: "{{ qsu_kernel_image }}"
+      initrd: "{{ qsu_initrd }}"
+      append: "root=tmpfs console=ttyS0,115200 console=hvc0 init={{ qsu_init }}"
+    shares: "{{ qsu_shares }}"
+    nvme:
+      drives: "{{ qsu_nvme_drives }}"
+
+- name: Render qsu debug vars snapshot for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: debug-vars.yaml.j2
+    dest: "{{ qsu_vars_dir }}/{{ qsu_vm_name }}.yaml"
+    mode: "0644"
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    service_scope: user
+    qemu_binary: "{{ qsu_qemu_binary }}"
+    cpu: "{{ qsu_cpu }}"
+    accel: "{{ qsu_accel }}"
+    ram: "{{ qsu_ram }}"
+    cpus: "{{ qsu_cpus }}"
+    machine_type: "{{ qsu_machine_type }}"
+    ssh_port: "{{ qsu_ssh_port_base | int + qsu_vm_idx }}"
+    vsock_cid: "{{ qsu_vsock_cid_base | int + qsu_vm_idx }}"
+    kernel:
+      image: "{{ qsu_kernel_image }}"
+      initrd: "{{ qsu_initrd }}"
+      append: "root=tmpfs console=ttyS0,115200 console=hvc0 init={{ qsu_init }}"
+    shares: "{{ qsu_shares }}"
+    nvme:
+      drives: "{{ qsu_nvme_drives }}"
+
+- name: Render per-VM service drop-in override.conf for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/qemu-system-override.conf.j2"
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/qemu-system@{{ qsu_vm_name }}.service.d/override.conf"
+    mode: "0644"
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    service_scope: user
+    qemu_binary: "{{ qsu_qemu_binary }}"
+    ram: "{{ qsu_ram }}"
+    machine_type: "{{ qsu_machine_type }}"
+    vsock_cid: "{{ qsu_vsock_cid_base | int + qsu_vm_idx }}"
+    shares: "{{ qsu_shares }}"
+
+# Per-(VM, share) drop-in adding Before=qemu-system@<vm>.service so
+# virtiofsd outlives qemu's ExecStop= graceful shutdown. Without it,
+# virtiofsd tears down concurrently with the guest's poweroff and
+# qemu hits TimeoutStopSec -> SIGKILL waiting on missing virtiofs
+# responses.
+- name: Ensure per-(VM, share) virtiofsd drop-in dirs exist for {{ qsu_vm_name }}
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/systemd/user/virtiofsd@{{ qsu_vm_name }}-{{ item.tag }}.service.d"
+    state: directory
+    mode: "0755"
+  loop: "{{ qsu_shares }}"
+  loop_control:
+    label: "virtiofsd@{{ qsu_vm_name }}-{{ item.tag }}.service.d"
+
+- name: Render per-(VM, share) virtiofsd drop-in for {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/virtiofsd-override.conf.j2"
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/user/virtiofsd@{{ qsu_vm_name }}-{{ item.tag }}.service.d/override.conf"
+    mode: "0644"
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+  loop: "{{ qsu_shares }}"
+  loop_control:
+    label: "virtiofsd@{{ qsu_vm_name }}-{{ item.tag }}.service.d/override.conf"
+
+- name: Render virtiofsd env files for the imageless shares of {{ qsu_vm_name }}
+  ansible.builtin.template:
+    src: "{{ topdir_path }}/scripts/qemu-system-units/templates/virtiofsd.env.j2"
+    dest: "{{ lookup('env', 'HOME') }}/.config/systemd/virtiofsd/{{ qsu_vm_name }}-{{ item.tag }}.env"
+    mode: "0644"
+  vars:
+    vm_name: "{{ qsu_vm_name }}"
+    share_tag: "{{ item.tag }}"
+    shares:
+      - tag: "{{ item.tag }}"
+        dir: "{{ item.dir }}"
+  loop: "{{ qsu_shares }}"
+  loop_control:
+    label: "{{ qsu_vm_name }}-{{ item.tag }}"

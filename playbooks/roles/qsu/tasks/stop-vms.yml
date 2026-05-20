@@ -1,0 +1,25 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Synchronous stop of every qemu-system@<vm>.service in the
+# inventory. Used by `make stop-vms` and as a building block
+# for higher-level lifecycle paths.
+#
+# state=stopped blocks until the qemu-system@<vm>.service unit
+# itself reaches inactive. The per-VM drop-in's
+# Requires=virtiofsd@%i-<tag>.service propagates the stop to
+# virtiofsd via RequiredBy.PROPAGATE_STOP; the per-instance
+# Before=qemu-system@<vm>.service drop-in on
+# virtiofsd@<vm>-<tag>.service orders virtiofsd's stop AFTER
+# qemu's ExecStop= completes, so the guest's ssh-driven
+# poweroff has working virtiofs throughout. See
+# scripts/qemu-system-units/docs/design-decisions.md
+# ("virtiofsd dependency: Requires=, not BindsTo=") for the
+# rationale and tradeoff.
+
+- name: Stop qemu-system@<vm> instances
+  ansible.builtin.systemd_service:
+    name: "qemu-system@{{ item }}.service"
+    state: stopped
+    scope: user
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
