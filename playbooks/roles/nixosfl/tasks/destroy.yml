@@ -1,0 +1,80 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Tear everything down: libvirt domains, SSH config entries, disk
+# images, per-node generated configurations, and the cached NixOS
+# disk images in the Nix store.
+
+- name: Localhost destroy
+  delegate_to: localhost
+  run_once: true
+  tags: do_clean
+  block:
+    - name: Shut down VMs via libvirt
+      ansible.builtin.command: virsh destroy "{{ item }}"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      register: nixosfl_virsh_destroy
+      failed_when: false
+      changed_when: nixosfl_virsh_destroy.rc == 0
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+
+    - name: Remove VM definitions from libvirt
+      ansible.builtin.command: virsh undefine "{{ item }}"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      register: nixosfl_virsh_undefine
+      failed_when: false
+      changed_when: nixosfl_virsh_undefine.rc == 0
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+
+    - name: Remove SSH config entries for NixOS VMs
+      ansible.builtin.command:
+        argv:
+          - python3
+          - "{{ playbook_dir }}/../scripts/update_ssh_config_nixosfl.py"
+          - remove
+          - "{{ item }}"
+          - ""
+          - ""
+          - ""
+          - "{{ nixosfl_ssh_config_file | default(lookup('env', 'HOME') ~ '/.ssh/config') }}"
+          - ""
+          - NixOS VM
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      when: nixosfl_update_ssh_config | default(true) | bool
+      register: nixosfl_ssh_config_remove
+      failed_when: false
+      changed_when: nixosfl_ssh_config_remove.rc == 0
+
+    - name: Remove VM disk images
+      ansible.builtin.file:
+        path: "{{ nixosfl_storage_dir }}/{{ item }}.qcow2"
+        state: absent
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Clean up per-node generated NixOS configurations
+      ansible.builtin.file:
+        path: "{{ nixosfl_config_dir }}/{{ item }}"
+        state: absent
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+    - name: Garbage collect cached NixOS disk images from Nix store
+      ansible.builtin.shell: |
+        set -o pipefail
+        if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix.sh ]; then
+          . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+        fi
+
+        NIX_COLLECT_GARBAGE=$(command -v nix-collect-garbage 2>/dev/null \
+          || find /nix -name "nix-collect-garbage" -type f 2>/dev/null | head -1)
+
+        if [ -n "$NIX_COLLECT_GARBAGE" ]; then
+          echo "Running Nix garbage collection to remove cached disk images..."
+          sudo "$NIX_COLLECT_GARBAGE" -d 2>&1 | grep -E "(deleting|freed|store paths)" || true
+        else
+          echo "Warning: nix-collect-garbage not found, cached images may remain"
+        fi
+      register: nixosfl_gc_result
+      failed_when: false
+      changed_when: "'freed' in nixosfl_gc_result.stdout"

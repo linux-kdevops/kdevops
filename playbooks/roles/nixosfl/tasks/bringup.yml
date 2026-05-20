@@ -1,0 +1,27 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Provision the per-node libvirt guest from a freshly built
+# nixos_flake image. Six phases run in order: generate the per-node
+# Nix flake, build the image and stage it into the storage pool,
+# ensure the default network is active, define and start the libvirt
+# domain, wait for DHCP and SSH and update the controller's ssh
+# config, and print a closing access banner.
+
+- name: Generate per-node NixOS configurations
+  ansible.builtin.import_tasks: generate-configs.yml
+
+- name: Build per-node disk images and stage into the storage pool
+  ansible.builtin.import_tasks: libvirt-build.yml
+
+- name: Ensure the libvirt default network is active
+  ansible.builtin.import_tasks: libvirt-network.yml
+
+- name: Define and start the per-node libvirt domain
+  ansible.builtin.import_tasks: libvirt-provision.yml
+
+- name: Wait for SSH and update the controller's ~/.ssh/config
+  ansible.builtin.import_tasks: ssh-access.yml
+
+- name: Print SSH and virsh access guidance
+  ansible.builtin.import_tasks: console.yml

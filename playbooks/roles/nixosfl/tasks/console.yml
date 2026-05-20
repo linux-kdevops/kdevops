@@ -1,0 +1,28 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Print SSH and virsh access guidance for the provisioned guests.
+# Imported at the tail of bringup.yml so a successful bringup ends
+# with the access banner, and reachable on its own via the
+# nixosfl_console tag for re-display.
+
+- name: Display VM access information
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.debug:
+    msg: |
+      NixOS VMs are running and accessible via libvirt.
+
+      SSH Access:
+      {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+      - {{ vm }}: ssh {{ vm }}
+      {% endfor %}
+
+      VM Management:
+      {% for vm in groups['all'] | reject('equalto', 'localhost') | list %}
+      - {{ vm }}: virsh {start|shutdown|destroy} {{ vm }}
+      {% endfor %}
+
+      VM Status:
+      - Check status: virsh list --all
+      - Get IP: virsh domifaddr <vm_name>

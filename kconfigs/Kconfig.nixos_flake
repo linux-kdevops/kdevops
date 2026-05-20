@@ -1,0 +1,167 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# nixos_flake -- shared infrastructure feature for the Nix flake at
+# scripts/nixos-flake/. Consumed by the NIXOSFL bringup
+# choice today and by the imageless backend (QSU) later.
+
+if KDEVOPS_ENABLE_NIXOS_FLAKE
+
+menu "NixOS Flake"
+
+config NIXOS_FLAKE_PATH
+	string
+	output yaml
+	default "$(TOPDIR_PATH)/scripts/nixos-flake"
+	help
+	  Absolute path to the vendored nixos-flake on the controller.
+	  Per-VM flakes import this path via `nixos-flake.url = "path:..."`
+	  so a `git subtree pull` against scripts/nixos-flake picks up
+	  automatically.
+
+config NIXOS_CONFIG_DIR
+	string
+	output yaml
+	default "$(TOPDIR_PATH)/nixos"
+	help
+	  Directory where gen_nodes writes the kdevops_nodes.yaml
+	  inventory file for the nixos_flake backends. Reuses the same
+	  on-disk path as the legacy nixos workflow so a single nodes
+	  template (nixos_nodes.j2) serves both.
+
+if NIXOSFL
+
+config NIXOSFL_CONFIG_DIR
+	string
+	output yaml
+	default "$(TOPDIR_PATH)/nixos/generated"
+	help
+	  Controller-side directory where the nixos_flake role writes
+	  one subdirectory per guest holding the rendered flake.nix and
+	  default.nix. Defaults to nixos/generated/ at the kdevops
+	  topdir, which is gitignored.
+
+config NIXOSFL_STORAGE_DIR
+	string
+	output yaml
+	default "{{ kdevops_storage_pool_path }}/nixos"
+	help
+	  Libvirt storage-pool subdirectory where built qcow2 images and
+	  run-<vm>-wrapper.sh scripts are staged. Resolved at task time
+	  from the libvirt storage pool path so it tracks the libvirt
+	  configuration.
+
+endif # NIXOSFL
+
+menu "Profiles"
+
+config NIXOS_FLAKE_PROFILE_DEVEL
+	bool "Development profile (kernel testing tools)"
+	output yaml
+	default y
+	help
+	  Imports nixos-flake.nixosModules.profiles.devel into every
+	  guest. Adds kernel testing utilities expected by kdevops
+	  workflows.
+
+config NIXOS_FLAKE_PROFILE_BUILD_TOOLS
+	bool "Build tools profile (autotools + headers)"
+	output yaml
+	default n
+	help
+	  Imports nixos-flake.nixosModules.profiles.build-tools. Pulls in
+	  the Autotools build environment when guest-side compilation is
+	  expected.
+
+config NIXOS_FLAKE_PROFILE_MONITORING
+	bool "Monitoring profile (workflow-bracketed monitor units)"
+	output yaml
+	default n
+	help
+	  Imports nixos-flake.nixosModules.profiles.monitoring. Brings in
+	  sysstat / cpu-governor / blkalgn / biolatency systemd template
+	  units instantiated per workload run-id.
+
+	  Independent of the kdevops ENABLE_MONITORING knob -- the two
+	  monitor stacks cover different ground (kdevops monitoring
+	  focuses on developmental kernel-research stats like folio
+	  migration debugfs; this profile is system-wide perf monitoring
+	  via sadc + libbpf-tools). Enabling this just bakes the systemd
+	  template units into the guest image; nothing in kdevops drives
+	  them today.
+
+endmenu  # Profiles
+
+menu "Mounts"
+
+config NIXOS_FLAKE_MOUNT_SHARES
+	bool "Enable virtiofs shares (mounts/shares.nix)"
+	output yaml
+	default n
+	help
+	  Imports nixos-flake.nixosModules.mounts.shares. Mounts named
+	  virtiofs shares inside the guest. qsu pairs this with the
+	  nixos-flake backends.imageless closure for /nix/store +
+	  /lib/modules + data-* shares.
+
+config NIXOS_FLAKE_MOUNT_STORAGE
+	bool "Enable block-device storage mounts (mounts/storage.nix)"
+	output yaml
+	default n
+	help
+	  Imports nixos-flake.nixosModules.mounts.storage. Mounts named
+	  block devices inside the guest, optionally running mkfs first.
+
+endmenu  # Mounts
+
+menu "Test suites"
+
+config NIXOS_FLAKE_TESTSUITE_FSTESTS
+	bool "fstests"
+	output yaml
+	default n
+	help
+	  Imports nixos-flake.nixosModules.testSuites.fstests. Pulls in
+	  the xfstests toolchain + binaries on the guest. The kdevops
+	  fstests workflow's role glue (running tests, harvesting results)
+	  is a separate follow-up.
+
+config NIXOS_FLAKE_TESTSUITE_BLKTESTS
+	bool "blktests"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_LTP
+	bool "ltp"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_MMTESTS
+	bool "mmtests"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_PYNFS
+	bool "pynfs"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_GITR
+	bool "gitr"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_SELFTESTS
+	bool "selftests"
+	output yaml
+	default n
+
+config NIXOS_FLAKE_TESTSUITE_SYSBENCH
+	bool "sysbench"
+	output yaml
+	default n
+
+endmenu  # Test suites
+
+endmenu  # NixOS Flake
+
+endif # KDEVOPS_ENABLE_NIXOS_FLAKE

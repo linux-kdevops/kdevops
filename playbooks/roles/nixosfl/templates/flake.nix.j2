@@ -1,0 +1,48 @@
+{#
+  SPDX-License-Identifier: copyleft-next-0.3.1
+
+  Per-VM libvirt flake rendered by kdevops. Mirrors upstream's starter
+  at scripts/nixos-flake/templates/libvirt/flake.nix and resolves the
+  nixos-flake input at the vendored subtree. Builds a qcow2 disk image
+  (packages.<system>.image) that libvirtd runs.
+#}
+{
+  inputs = {
+    nixos-flake.url = "path:{{ topdir_path }}/scripts/nixos-flake";
+    nixpkgs.follows = "nixos-flake/nixpkgs";
+  };
+
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixos-flake,
+      ...
+    }@inputs:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+    in
+    {
+      nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs nixos-flake; };
+        modules = [
+          nixos-flake.nixosModules.backends.libvirt
+          nixos-flake.nixosModules.user
+          { nixpkgs.overlays = [ nixos-flake.overlays.default ]; }
+          ./default.nix
+        ];
+      };
+
+      packages.${system}.image = import "${nixpkgs}/nixos/lib/make-disk-image.nix" {
+        inherit pkgs;
+        inherit (pkgs) lib;
+        config = self.nixosConfigurations.vm.config;
+        diskSize = 20480;
+        format = "qcow2";
+        partitionTableType = "legacy";
+        installBootLoader = true;
+      };
+    };
+}

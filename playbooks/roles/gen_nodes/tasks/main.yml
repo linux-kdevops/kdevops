@@ -21,12 +21,11 @@
   register: my_group
   changed_when: false
 
-- name: Create guestfs directory
+- name: Create the parent directory the nodes template writes into
   ansible.builtin.file:
-    path: "{{ guestfs_path }}"
+    path: "{{ topdir_path }}/{{ kdevops_nodes | dirname }}"
     state: directory
     mode: "0755"
-  when: kdevops_enable_guestfs|bool
 
 - name: Create nixos directory
   ansible.builtin.file:

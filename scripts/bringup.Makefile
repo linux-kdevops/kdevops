@@ -22,11 +22,23 @@ status: $(KDEVOPS_STATUS_DEPS)
 
 destroy: $(KDEVOPS_DESTROY_DEPS)
 
+console: $(KDEVOPS_CONSOLE_DEPS)
+PHONY += console
+
+rebuild-boot: $(KDEVOPS_REBUILD_BOOT_DEPS)
+PHONY += rebuild-boot
+
+rebuild-test: $(KDEVOPS_REBUILD_TEST_DEPS)
+PHONY += rebuild-test
+
 bringup-help-menu:
 	@echo "Bringup targets:"
 	@echo "bringup            - Brings up target hosts"
 	@echo "status             - Reports the status of target hosts"
 	@echo "destroy            - Destroy all target hosts"
+	@echo "console            - Attach to a guest serial console (where the backend supports it)"
+	@echo "rebuild-boot       - Rebuild guest closure and restart (imageless / qsu only)"
+	@echo "rebuild-test       - nixos-rebuild test on running guests (imageless / qsu only)"
 	@echo "cleancache	  - Remove all cached images"
 	@echo ""
 

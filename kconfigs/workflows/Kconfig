@@ -21,6 +21,7 @@ endmenu
 
 choice
 	prompt "Target Linux kernel to use"
+	default WORKFLOW_LINUX_DISTRO if NIXOSFL
 	default WORKFLOW_LINUX_DISTRO if !QEMU_ENABLE_EXTRA_DRIVE_LARGEIO
 	default WORKFLOW_LINUX_CUSTOM if QEMU_ENABLE_EXTRA_DRIVE_LARGEIO
 
@@ -32,15 +33,24 @@ config WORKFLOW_LINUX_DISTRO
 
 config WORKFLOW_LINUX_CUSTOM
 	bool "Upstream Linux or custom kernel"
+	depends on !NIXOSFL
 	select BOOTLINUX
 	help
 	  If you are targeting a workflow to run on a vanilla upstream
 	  linux, linux-stable, linux-next, or a custom kernel you want to
 	  build and install enable this.
 
+	  Not available under NIXOSFL. The flake-built qcow2
+	  bakes its own kernel and modules; swapping in a custom kernel
+	  needs a Nix overlay/package that rebuilds the image, plus a
+	  shutdown-and-switch boot cycle. That workflow is not wired up
+	  yet -- for now the guest runs whatever kernel the NixOS module
+	  pin in scripts/nixos-flake/ produces.
+
 config WORKFLOW_LINUX_PACKAGED
 	bool "Install pre-built kernel package"
 	output yaml
+	depends on !KDEVOPS_ENABLE_NIXOS_FLAKE
 	help
 	  Choose this option to install a pre-built kernel package on each
 	  target node.
@@ -49,6 +59,9 @@ config WORKFLOW_LINUX_PACKAGED
 	  workflows/linux/artifacts. Later we can introduce a Kconfig
 	  option that lets kdevops pull the packages from other
 	  locations.
+
+	  Not available under nixos_flake guests: the rootfs is built
+	  from a Nix expression with no apt/dnf to consume a .deb/.rpm.
 
 endchoice
 
@@ -126,7 +139,7 @@ choice
 config KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 	bool "fstests"
 	select KDEVOPS_WORKFLOW_ENABLE_FSTESTS
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	help
 	  This will dedicate your configuration only to fstests.
 
@@ -142,14 +155,14 @@ config KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_BLKTESTS
 	bool "blktests"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_BLKTESTS
 	help
 	  This will dedicate your configuration only to blktests.
 
 config KDEVOPS_WORKFLOW_DEDICATE_CXL
 	bool "cxl"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_CXL
 	help
 	  This will dedicate your configuration only to cxl work.
@@ -164,7 +177,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_CXL
 
 config KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 	bool "pynfs"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_PYNFS
 	help
 	  This will dedicate your configuration only to running pynfs
@@ -172,7 +185,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 
 config KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 	bool "Linux kernel selftests"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_SELFTESTS
 	help
 	  This will dedicate your configuration only to Linux kernel
@@ -181,7 +194,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_GITR
 	bool "gitr"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_GITR
 	help
 	  This will dedicate your configuration to running only the
@@ -189,7 +202,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_GITR
 
 config KDEVOPS_WORKFLOW_DEDICATE_LTP
 	bool "ltp"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_LTP
 	help
 	  This will dedicate your configuration to running only the
@@ -197,7 +210,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_LTP
 
 config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 	bool "nfstest"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_NFSTEST
 	help
 	  This will dedicate your configuration to running only the
@@ -205,7 +218,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_NFSTEST
 
 config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 	bool "sysbench"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_SYSBENCH
 	help
 	  This will dedicate your configuration to running only the
@@ -213,7 +226,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_SYSBENCH
 
 config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 	bool "mmtests"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_MMTESTS
 	help
 	  This will dedicate your configuration to running only the
@@ -221,7 +234,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_MMTESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 	bool "fio-tests"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_FIO_TESTS
 	help
 	  This will dedicate your configuration to running only the
@@ -229,7 +242,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_FIO_TESTS
 
 config KDEVOPS_WORKFLOW_DEDICATE_AI
 	bool "ai"
-	depends on !KDEVOPS_USE_DECLARED_HOSTS
+	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_AI
 	help
 	  This will dedicate your configuration to running only the
@@ -237,6 +250,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_AI
 
 config KDEVOPS_WORKFLOW_DEDICATE_VLLM
 	bool "vllm"
+	depends on !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_VLLM
 	help
 	  This will dedicate your configuration to running only the
@@ -245,6 +259,7 @@ config KDEVOPS_WORKFLOW_DEDICATE_VLLM
 
 config KDEVOPS_WORKFLOW_DEDICATE_MINIO
 	bool "minio"
+	depends on !KDEVOPS_ENABLE_NIXOS_FLAKE
 	select KDEVOPS_WORKFLOW_ENABLE_MINIO
 	help
 	  This will dedicate your configuration to running only the

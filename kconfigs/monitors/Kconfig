@@ -4,6 +4,7 @@ config ENABLE_MONITORING
 	bool "Enable monitoring services during workflow execution"
 	output yaml
 	default n
+	depends on !NIXOSFL
 	help
 	  Enable monitoring services to collect statistics during workflow
 	  execution. This allows collection of various system metrics while
@@ -17,6 +18,14 @@ config ENABLE_MONITORING
 	  Individual workflows must add support for monitoring integration.
 	  Currently supported workflows:
 	  - fstests
+
+	  Not available under NIXOSFL: the kdevops monitoring
+	  role's install-deps step uses apt/dnf without a NixOS branch, and
+	  every consumer workflow (fstests, mmtests, sysbench, ai, minio) is
+	  gated out under that backend anyway. The nixos-flake guest-side
+	  monitoring profile (NIXOS_FLAKE_PROFILE_MONITORING) is the
+	  Nix-native equivalent; the kdevops side needs an orchestrator that
+	  drives those systemd template units, which is unscoped work.
 
 if ENABLE_MONITORING
 

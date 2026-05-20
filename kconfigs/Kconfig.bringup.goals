@@ -13,6 +13,7 @@ config HAVE_DISTRO_PREFERS_INSTALL_KDEVTOOLS
 
 config KDEVOPS_TRY_REFRESH_REPOS
 	bool "Try to refresh repositories on bringup?"
+	depends on !NIXOSFL
 	default n if !HAVE_DISTRO_PREFERS_REFRESH
 	default y if HAVE_DISTRO_PREFERS_REFRESH
 	help
@@ -30,6 +31,7 @@ config KDEVOPS_TRY_REFRESH_REPOS
 
 config RHEL_REGISTER
 	bool "Register the guests with Red Hat?"
+	depends on !NIXOSFL
 	default n
 	help
 	  Official RHEL installations require a subscription before you can download
@@ -52,6 +54,7 @@ config RHEL_ACTIVATION_KEY
 
 config KDEVOPS_CUSTOM_YUM_REPOFILE
 	string "Custom yum repo file"
+	depends on !NIXOSFL
 	default ""
 	help
 	  Add a custom yum repo file to /etc/yum.repos.d before updating? Leave blank to

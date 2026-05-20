@@ -1,0 +1,28 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Ensure the libvirt default network is active before trying to
+# start any NixOS VM. Only used by the libvirt backend path.
+
+- name: Localhost libvirt network
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Check if default network exists and is active
+      ansible.builtin.command: virsh net-info default
+      register: nixosfl_default_network_info
+      failed_when: false
+      changed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+
+    - name: Start default network if not active
+      ansible.builtin.command: virsh net-start default
+      when: nixosfl_default_network_info.rc != 0 or 'Active:' not in nixosfl_default_network_info.stdout or 'yes' not in
+        nixosfl_default_network_info.stdout.split('Active:')[1].split('\n')[0]
+      register: nixosfl_net_start
+      failed_when: false
+      changed_when: nixosfl_net_start.rc == 0
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+      tags: do_deploy

@@ -6,6 +6,14 @@ config KDEVOPS_ENABLE_GUESTFS
 	bool
 	output yaml
 
+config KDEVOPS_ENABLE_NIXOS_FLAKE
+	bool
+	output yaml
+
+config KDEVOPS_ENABLE_NIXOSFL
+	bool
+	output yaml
+
 config KDEVOPS_ENABLE_NIXOS
 	bool
 	output yaml
@@ -55,6 +63,23 @@ config TERRAFORM
 
 	  If you are not using a cloud environment just disable this.
 
+config NIXOSFL
+	bool "NixOS declarative configuration with libvirt"
+	select KDEVOPS_ENABLE_NIXOSFL
+	select KDEVOPS_ENABLE_NIXOS_FLAKE
+	select HAVE_CUSTOM_DISTRO_HOST_PREFIX
+	select HAVE_DISTRO_PREFERS_CUSTOM_HOST_PREFIX
+	select EXTRA_STORAGE_SUPPORTS_512
+	select EXTRA_STORAGE_SUPPORTS_1K
+	select EXTRA_STORAGE_SUPPORTS_2K
+	select EXTRA_STORAGE_SUPPORTS_4K
+	select EXTRA_STORAGE_SUPPORTS_LARGEIO
+	help
+	  Use the nixos-flake library to provision VMs with libvirt.
+	  Per-node Nix flakes import nixos-flake.nixosModules.backends.libvirt
+	  to produce a qcow2 disk image; kdevops stages it into the libvirt
+	  storage pool, defines and starts the domain, and waits for SSH.
+
 config NIXOS
 	bool "NixOS declarative configuration with libvirt"
 	select KDEVOPS_ENABLE_NIXOS
@@ -86,11 +111,12 @@ endchoice
 
 config LIBVIRT
 	bool
-	depends on GUESTFS || NIXOS
+	depends on GUESTFS || NIXOS || NIXOSFL
 	default y
 
 source "kconfigs/Kconfig.guestfs"
 source "kconfigs/Kconfig.nixos"
+source "kconfigs/Kconfig.nixos_flake"
 source "terraform/Kconfig"
 source "kconfigs/Kconfig.declared_hosts"
 if LIBVIRT
