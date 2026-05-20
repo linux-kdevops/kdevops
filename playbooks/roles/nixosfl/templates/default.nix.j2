@@ -82,4 +82,35 @@
     options = [ "trans=virtio" "version=9p2000.L" "cache=loose" ];
   };
 {% endif %}
+{% set override_pkgs = [
+  ('fio',          nixos_flake_override_fio          | default(false), nixos_flake_override_fio_src          | default('')),
+  ('xfstests',     nixos_flake_override_xfstests     | default(false), nixos_flake_override_xfstests_src     | default('')),
+  ('xfsprogs',     nixos_flake_override_xfsprogs     | default(false), nixos_flake_override_xfsprogs_src     | default('')),
+  ('libbpf',       nixos_flake_override_libbpf       | default(false), nixos_flake_override_libbpf_src       | default('')),
+  ('libbpf-tools', nixos_flake_override_libbpf_tools | default(false), nixos_flake_override_libbpf_tools_src | default('')),
+  ('damo',         nixos_flake_override_damo         | default(false), nixos_flake_override_damo_src         | default('')),
+  ('nfstest',      nixos_flake_override_nfstest      | default(false), nixos_flake_override_nfstest_src      | default('')),
+  ('pynfs',        nixos_flake_override_pynfs        | default(false), nixos_flake_override_pynfs_src        | default('')),
+  ('xnvme',        nixos_flake_override_xnvme        | default(false), nixos_flake_override_xnvme_src        | default('')),
+  ('cpupower',     nixos_flake_override_cpupower     | default(false), nixos_flake_override_cpupower_src     | default('')),
+] %}
+{% set has_overrides = override_pkgs | selectattr(1) | selectattr(2) | list | length > 0 %}
+{% if has_overrides %}
+
+  # Per-package src overrides driven by Kconfig NIXOS_FLAKE_OVERRIDE_<PKG>.
+  # Each entry consumes the matching <pkg>-src flake input declared in
+  # flake.nix and rebuilds the package against that source. lib.mkAfter
+  # ensures kdevops overrides run after nixos-flake.overlays.default so
+  # they win when both target the same package.
+  nixpkgs.overlays = lib.mkAfter [
+    (final: prev: {
+{% for pkg, enabled, src in override_pkgs %}{% if enabled and src %}
+      {{ pkg }} = prev.{{ pkg }}.overrideAttrs (_: {
+        src = inputs.{{ pkg }}-src;
+        version = "kdevops-${inputs.{{ pkg }}-src.shortRev or "local"}";
+      });
+{% endif %}{% endfor %}
+    })
+  ];
+{% endif %}
 }
