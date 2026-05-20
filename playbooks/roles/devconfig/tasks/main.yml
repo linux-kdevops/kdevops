@@ -211,7 +211,7 @@
       chmod 755 {{ dev_bash_config }}
     fi
   args:
-    executable: "{{ '/run/current-system/sw/bin/bash' if (kdevops_enable_nixos | default(false)) else '/bin/bash' }}"
+    executable: "{{ '/run/current-system/sw/bin/bash' if (kdevops_enable_nixos_flake | default(false)) else '/bin/bash' }}"
   when: dev_bash_config_file_copied is success
 
 - name: Copy the developer's favorite bash hacks over for root *if* it exists
@@ -238,7 +238,7 @@
       chmod 755 {{ dev_bash_config_root }}
     fi
   args:
-    executable: "{{ '/run/current-system/sw/bin/bash' if (kdevops_enable_nixos | default(false)) else '/bin/bash' }}"
+    executable: "{{ '/run/current-system/sw/bin/bash' if (kdevops_enable_nixos_flake | default(false)) else '/bin/bash' }}"
   when: dev_bash_config_file_copied_root is success
 
 - name: Check to see if system has GRUB2

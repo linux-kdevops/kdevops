@@ -27,12 +27,6 @@
     state: directory
     mode: "0755"
 
-- name: Create nixos directory
-  ansible.builtin.file:
-    path: "{{ nixos_config_dir }}"
-    state: directory
-  when: kdevops_enable_nixos | default(false) | bool
-
 - name: Verify Ansible nodes template file exists {{ kdevops_nodes_template_full_path }}
   ansible.builtin.stat:
     path: "{{ kdevops_nodes_template_full_path }}"
@@ -155,23 +149,6 @@
   when:
     - not kdevops_workflows_dedicated_workflow
     - ansible_nodes_template.stat.exists
-    - not kdevops_enable_nixos|default(false)|bool
-
-- name: Generate the NixOS kdevops nodes file using {{ kdevops_nodes_template }} as jinja2 source template
-  tags: ['nodes']
-  vars:
-    node_template: "{{ kdevops_nodes_template | basename }}"
-    all_generic_nodes: "{{ generic_nodes }}"
-    nodes: "{{ all_generic_nodes }}"
-  ansible.builtin.template:
-    src: "{{ node_template }}"
-    dest: "{{ topdir_path }}/{{ kdevops_nodes }}"
-    force: true
-  when:
-    - not kdevops_workflows_dedicated_workflow
-    - ansible_nodes_template.stat.exists
-    - kdevops_enable_nixos|default(false)|bool
-
 
 - name: Generate the builder kdevops nodes file using nodes file using template as jinja2 source template
   tags: ["nodes"]

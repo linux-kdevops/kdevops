@@ -18,16 +18,6 @@ config NIXOS_FLAKE_PATH
 	  so a `git subtree pull` against scripts/nixos-flake picks up
 	  automatically.
 
-config NIXOS_CONFIG_DIR
-	string
-	output yaml
-	default "$(TOPDIR_PATH)/nixos"
-	help
-	  Directory where gen_nodes writes the kdevops_nodes.yaml
-	  inventory file for the nixos_flake backends. Reuses the same
-	  on-disk path as the legacy nixos workflow so a single nodes
-	  template (nixos_nodes.j2) serves both.
-
 if NIXOSFL
 
 config NIXOSFL_CONFIG_DIR
