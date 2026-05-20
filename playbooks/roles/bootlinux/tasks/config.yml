@@ -39,6 +39,7 @@
   when:
     - bootlinux_clean_before_build|default(false)|bool
     - not bootlinux_9p|bool
+    - not bootlinux_direct_boot|default(false)|bool
 
 - name: Set the .config file for building the test kernel
   ansible.builtin.set_fact:

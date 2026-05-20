@@ -106,7 +106,9 @@ linux-help-end:
 LINUX_HELP_EXTRA :=
 
 PHONY += linux
-ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
+ifeq (y,$(CONFIG_BOOTLINUX_DIRECT_BOOT))
+linux: linux-direct-boot
+else ifeq (y,$(CONFIG_KDEVOPS_BASELINE_AND_DEV))
 ifeq (y,$(CONFIG_BOOTLINUX_AB_DIFFERENT_REF))
 linux: linux-baseline linux-dev
 else
@@ -157,6 +159,14 @@ linux-mount:
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags vars,9p_mount \
 		--extra-vars="$(BOOTLINUX_ARGS)" $(LIMIT_HOSTS)
+
+PHONY += linux-direct-boot
+linux-direct-boot:
+	$(Q)ansible-playbook \
+		--connection=local --inventory localhost, \
+		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
+		--tags bootlinux_direct_boot_build \
+		--extra-vars="$(BOOTLINUX_ARGS)"
 
 PHONY += linux-deploy
 linux-deploy:

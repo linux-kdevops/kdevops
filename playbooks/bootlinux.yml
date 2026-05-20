@@ -1,5 +1,30 @@
 ---
 # SPDX-License-Identifier: copyleft-next-0.3.1
+- name: Bootlinux — controller-side preparation
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Import optional extra_args file
+      ansible.builtin.include_vars: "{{ item }}"
+      failed_when: false
+      with_first_found:
+        - files:
+            - "../extra_vars.yml"
+            - "../extra_vars.yaml"
+            - "../extra_vars.json"
+          skip: true
+      tags: [always]
+
+    - name: Build the kernel on the controller into a destdir
+      ansible.builtin.include_role:
+        name: bootlinux
+        tasks_from: build/direct-boot.yml
+        apply:
+          tags: [bootlinux_direct_boot_build]
+      tags: [never, bootlinux_direct_boot_build]
+      when: bootlinux_direct_boot | default(false) | bool
+
 - name: Bootlinux
   hosts: all
   roles:

@@ -79,6 +79,14 @@ F:	playbooks/roles/ansible_cfg
 F:	scripts/ansible_av.py
 F:	scripts/ansible.Makefile
 
+BOOTLINUX DIRECT BOOT
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	playbooks/roles/bootlinux/tasks/build/direct-boot.yml
+N:	BOOTLINUX_DIRECT_BOOT
+
 KDEVOPS CI
 M:	Daniel Gomez <da.gomez@samsung.com>
 L:	kdevops@lists.linux.dev
