@@ -50,6 +50,7 @@ config BOOTLINUX_TREE_LINUS_URL
 	default DEFAULT_TORVALDS_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR
 	default $(shell, scripts/append-makefile-vars.sh git:// $(KDEVOPS_DEFAULT_BRIDGE_IP_GUESTFS) /mirror/linux.git) if USE_LIBVIRT_MIRROR && !BOOTLINUX_9P && GUESTFS
 	default "/mirror/linux.git" if USE_LIBVIRT_MIRROR && BOOTLINUX_9P
+	default DEFAULT_TORVALDS_HTTPS_URL
 
 endif # BOOTLINUX_TREE_LINUS
 
