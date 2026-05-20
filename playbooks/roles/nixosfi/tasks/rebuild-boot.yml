@@ -1,0 +1,27 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Re-render per-VM artefacts so the next start of
+# qemu-system@<vm>.service boots from the latest closure. No
+# hot activation. See README.md.
+#
+# Renders per-node default.nix first, in case the role's template
+# vars (workflow toggles, monitoring opt-in, ssh key) changed
+# since bringup. Without this step the closure built by
+# imageless-build.yml would still reflect the bringup-time
+# default.nix and skip new module imports or removed options.
+
+# Re-render per-node flake.nix and default.nix in case Kconfig
+# toggles or template content changed since bringup. Imports
+# generate-configs.yml because the default.nix template depends on
+# the SSH key fact which generate-configs.yml sets — duplicating
+# the fact resolution here would drift out of sync.
+- name: Re-render per-node imageless configs for rebuild-boot
+  ansible.builtin.import_tasks: generate-configs.yml
+
+# The flake-input refreshes (nixos-flake plus any active
+# per-package source-override) and the closure rebuild itself live
+# in imageless-build.yml; both the bringup and rebuild-boot paths
+# import it.
+- name: Rebuild imageless toplevel closure for rebuild-boot
+  ansible.builtin.import_tasks: imageless-build.yml

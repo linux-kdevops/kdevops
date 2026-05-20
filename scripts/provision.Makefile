@@ -80,6 +80,10 @@ ifeq (y,$(CONFIG_NIXOSFL))
 include scripts/nixosfl.Makefile
 endif
 
+ifeq (y,$(CONFIG_NIXOSFI))
+include scripts/nixosfi.Makefile
+endif
+
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_DEVCONFIG)
 

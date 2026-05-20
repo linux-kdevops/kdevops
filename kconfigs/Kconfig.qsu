@@ -1,0 +1,498 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+
+if NIXOSFI
+
+config QSU_VARS_DIR
+	string
+	output yaml
+	default "{{ topdir_path }}/scripts/qemu-system-units/vars"
+	help
+	  Where kdevops renders per-VM qemu-system-units vars files.
+	  qemu-system-units' own .gitignore already excludes everything
+	  under vars/ except the upstream example, so kdevops-generated
+	  artefacts there never leak back upstream through a subtree
+	  push.
+
+config QSU_QEMU_BINARY
+	string "QEMU system emulator binary"
+	output yaml
+	default QEMU_BUILD_BIN_PATH if QEMU_BUILD
+	default "/usr/bin/qemu-system-x86_64"
+	help
+	  Absolute path to the QEMU system emulator binary for the
+	  guest architecture. The qsu templates invoke this as the
+	  ExecStart= binary path.
+
+	  When QEMU_BUILD=y, this defaults to QEMU_BUILD_BIN_PATH so
+	  the qsu service exec'd by systemd is the binary the
+	  build_qemu role just installed under
+	  KDEVOPS_CONTROLLER_DATA_PATH/qemu-destdir/bin/, with no
+	  manual override needed in the defconfig. The Jinja2
+	  template resolves at Ansible-use time so changing the
+	  controller data path or destdir path higher up propagates
+	  here transitively.
+
+config QSU_CPU
+	string "Guest CPU model"
+	output yaml
+	default "host"
+	help
+	  Passed to QEMU as -cpu. "host" passes host CPU features
+	  through to the guest and requires KVM. Use "max" with TCG.
+
+config QSU_ACCEL
+	string "QEMU accelerator"
+	output yaml
+	default "kvm"
+	help
+	  Passed to QEMU as -accel. "kvm" on Linux hosts with hardware
+	  virtualization, "tcg" for pure software emulation.
+
+config QSU_RAM
+	int "Guest RAM (MB)"
+	output yaml
+	default 4096
+
+config QSU_CPUS
+	int "Guest vCPU count"
+	output yaml
+	default 4
+
+config QSU_MACHINE_TYPE
+	string "QEMU machine type"
+	output yaml
+	default "q35"
+	help
+	  Passed to QEMU as -machine type=. q35 for modern x86 guests,
+	  microvm for minimal boot, virt for aarch64.
+
+menu "SSH access"
+
+config QSU_SSH_PORT_BASE
+	int "SSH host port forwarding base"
+	output yaml
+	default 10022
+	help
+	  qsu uses QEMU user-mode networking, so each guest's port 22
+	  is forwarded to a unique host port. The role computes guest N's
+	  host port as ssh_port_base + N from the inventory index.
+
+config QSU_VSOCK_CID_BASE
+	int "VSOCK Context ID base"
+	output yaml
+	default 100
+	help
+	  Each guest's vsock_cid is vsock_cid_base + N from the inventory
+	  index. Valid range is 3 to 4294967295 (0 is the hypervisor, 1
+	  is local, 2 is the host). Used by qsu's graceful shutdown
+	  ExecStop= which targets root@vsock/<cid>.
+
+choice
+	prompt "Default SSH transport for `ssh <vm>` alias"
+	default QSU_SSH_DEFAULT_VSOCK
+	help
+	  kdevops renders three ssh_config stanzas per qsu VM:
+	  <name>-vsock via systemd-ssh-proxy over AF_VSOCK,
+	  <name>-net via TCP SLIRP hostfwd, and the bare <name>
+	  which groups with one of them. This knob picks which.
+
+	  vsock has zero TCP/SLIRP overhead and uses the guest's
+	  sshd-vsock.socket that systemd-ssh-generator emits when
+	  CONFIG_VIRTIO_VSOCKETS is built in.
+
+	  tcp is the legacy path; prefer it when the host lacks
+	  vhost-vsock, runs in a container that cannot create
+	  AF_VSOCK, or when systemd-ssh-proxy's machine/* resolver
+	  behaves poorly on the installed systemd version.
+
+config QSU_SSH_DEFAULT_VSOCK
+	bool "vsock"
+	output yaml
+
+config QSU_SSH_DEFAULT_TCP
+	bool "tcp"
+	output yaml
+
+endchoice
+
+endmenu  # SSH access
+
+
+menu "NVMe storage"
+
+config QSU_NVME_DRIVE_COUNT
+	int "Extra NVMe drives per guest"
+	output yaml
+	default 4
+	help
+	  Number of qemu-img qcow2 backing files to create per VM, each
+	  attached as a separate NVMe controller with one namespace.
+	  Guest device paths are /dev/nvme0n1 .. /dev/nvme<N-1>n1;
+	  stable symlinks live under
+	  /dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_nvme<N-1>_1. Set to 0 to
+	  skip extra drive creation. The fstests workflow uses one
+	  TEST_DEV plus eight SCRATCH_DEV_POOL devices by default, so
+	  fstests defconfigs override this to 9.
+
+config QSU_NVME_DRIVE_SIZE_GB
+	int "Extra NVMe drive size (GB)"
+	output yaml
+	default 20
+	help
+	  Size in GiB passed to `qemu-img create -f qcow2`. qcow2 only
+	  allocates host space on write, so large virtual sizes are
+	  cheap at rest.
+
+config QSU_NVME_LOGICAL_BLOCK_SIZE
+	string "NVMe logical block size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Logical block size (LBA size in bytes) advertised by each
+	  emulated NVMe namespace. Empty string leaves the value unset
+	  on the QEMU command line so QEMU's built-in default applies
+	  (512 bytes today).
+
+	  Two input forms are accepted:
+	    - A single integer (e.g. "4096") applies the same value to
+	      every extra storage drive provisioned for the VM.
+	    - A comma-separated list of integers (e.g. "4096,512,512,
+	      512,512,512,512,512,4096") sets each drive by index. List
+	      entries left empty (",,") fall back to no override for
+	      that drive. Entries past the drive count are ignored;
+	      drives past the list length get no override.
+
+	  Common values: 512 (legacy "512n"), 4096 (modern "4Kn" /
+	  Advanced Format Native).
+
+	  Per-drive control lets a single VM mix shapes — e.g. TEST_DEV
+	  at 4Kn while the SCRATCH_DEV_POOL stays at 512n — without
+	  needing a separate VM per shape.
+
+	  See: <qemu_binary> -device nvme,help (logical_block_size)
+
+config QSU_NVME_PHYSICAL_BLOCK_SIZE
+	string "NVMe physical block size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Physical block size advertised by each emulated NVMe namespace,
+	  in bytes. Must be >= logical block size on each drive. Empty
+	  string leaves the value unset so QEMU defaults to logical block
+	  size.
+
+	  Same input forms as the logical block size knob: a single
+	  integer applies globally, a comma-separated list of length N
+	  sets each drive by index.
+
+	  Common pairings (LBS / PBS): 512/4096 ("512e", classic
+	  Advanced Format with 512-byte emulation), 4096/4096 ("4Kn",
+	  native 4 KiB everywhere).
+
+	  See: <qemu_binary> -device nvme,help (physical_block_size)
+
+config QSU_NVME_MIN_IO_SIZE
+	string "NVMe min_io_size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Minimum I/O size hint advertised by each emulated NVMe
+	  namespace, in bytes. Surfaces in NVMe Identify Namespace as
+	  NPWG (Namespace Preferred Write Granularity) so the guest
+	  block layer can align write allocations. Accepts plain
+	  integers and QEMU SIZE32 suffixes ("4K", "1M"). Empty string
+	  leaves the value unset; QEMU's default is 0, which the device
+	  layer interprets as "fall back to logical_block_size".
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (min_io_size),
+	  hw/core/qdev-properties-system.c BlockConf.
+
+config QSU_NVME_OPT_IO_SIZE
+	string "NVMe opt_io_size (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Optimal I/O size hint advertised by each emulated NVMe
+	  namespace, in bytes. Surfaces in NVMe Identify Namespace as
+	  NPWA (Namespace Preferred Write Alignment) so filesystem
+	  mkfs and the kernel block layer can pick stripe-aligned
+	  sizes for best throughput. Accepts plain integers and QEMU
+	  SIZE32 suffixes. Empty string leaves the value unset;
+	  QEMU's default is 0 which the device layer interprets as
+	  "fall back to logical_block_size".
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (opt_io_size),
+	  hw/core/qdev-properties-system.c BlockConf.
+
+config QSU_NVME_DISCARD_GRANULARITY
+	string "NVMe discard_granularity (bytes), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Minimum size of a single TRIM/DSM deallocate request the
+	  emulated NVMe namespace advertises, in bytes. Surfaces in
+	  NVMe DSM range descriptor accounting and is honored by the
+	  guest block layer to coalesce small discards into the
+	  granularity boundary. Accepts plain integers and QEMU
+	  SIZE32 suffixes. Empty string leaves the value unset; QEMU
+	  defaults to -1 which the block layer interprets as "inherit
+	  from backend" (typically 4 KiB on qcow2).
+
+	  Same input forms as the block-size knobs: single value or
+	  comma-separated list of length N.
+
+	  See: <qemu_binary> -device nvme,help (discard_granularity),
+	  hw/core/qdev-properties-system.c BlockConf.
+
+config QSU_NVME_WRITE_CACHE
+	string "NVMe write cache mode, per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Volatile-write-cache (VWC) mode advertised by each emulated
+	  NVMe namespace. Surfaces in NVMe Identify Controller VWC
+	  and changes the guest block layer's flush behaviour: with
+	  the cache reported present the kernel issues explicit FLUSH
+	  / fsync to drain it, with the cache reported absent the
+	  kernel skips the flush.
+
+	  Unlike the block-size knobs this is an ON_OFF_AUTO field
+	  (BlockConf.wce, hw/core/qdev-properties-system.c) so the
+	  values are "on", "off", or "auto" rather than integers:
+
+	    on    - writeback cache present; FLUSH commands semantic.
+	    off   - writethrough; the device claims to never buffer
+	            so the guest skips the explicit drain. Useful to
+	            stress the no-cache path xfstests' fsync tests
+	            poke at.
+	    auto  - inherit from the block backend (qcow2 typically
+	            defaults to writeback).
+
+	  Empty string leaves the value unset and QEMU's BlockConf
+	  defaults to auto. Same input forms as the block-size
+	  knobs: single value applied globally, or a comma-separated
+	  list of length N for per-drive control (e.g.
+	  "off,off,off,off,off,off,off,off,on" to force every
+	  scratch drive to writethrough while keeping the test
+	  device on writeback).
+
+	  See: <qemu_binary> -device nvme,help (write-cache).
+
+config QSU_NVME_MDTS
+	string "NVMe Maximum Data Transfer Size (mdts), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Controller-level Maximum Data Transfer Size (NVMe Identify
+	  Controller MDTS field, offset 77). Encoded as a log2
+	  multiplier above the controller's minimum memory page size
+	  (CAP.MPSMIN, 4 KiB on standard configurations), so mdts=N
+	  means max transfer = (1 << N) * 4 KiB. The Linux nvme driver
+	  reads this and surfaces it as
+	    /sys/block/<dev>/queue/max_hw_sectors_kb
+	  via nvme_mps_to_sectors (drivers/nvme/host/core.c
+	  nvme_init_identify path), which the block layer caps every
+	  request against. Useful for exercising small-MDTS paths
+	  (where the kernel must split larger I/O into MDTS-sized
+	  chunks) without changing real hardware, or for matching the
+	  MDTS a particular SSD model advertises.
+
+	  Examples (with the default 4 KiB MPSMIN):
+	    mdts=1 -> 8 KiB max transfer
+	    mdts=4 -> 64 KiB
+	    mdts=7 -> 512 KiB (QEMU default)
+	    mdts=10 -> 4 MiB
+
+	  QEMU rejects mdts=0 (hw/nvme/ctrl.c:8628-8631:
+	  "mdts exceeds IOV_MAX") and any value where
+	  (1 << mdts) + 1 > IOV_MAX, so leave the knob empty for the
+	  default 7 rather than setting 0. zoned.zasl, when set,
+	  must be <= mdts (hw/nvme/ctrl.c:8634).
+
+	  Empty string leaves MDTS at QEMU's default. Same input
+	  forms as the block-size knobs: a single value applied to
+	  every drive, or a comma-separated list of length N for
+	  per-drive control (e.g. "7,7,7,7,7,7,7,7,1" to keep the
+	  first eight drives at 512 KiB and pin the last to 8 KiB
+	  for a small-MDTS section).
+
+	  See: <qemu_binary> -device nvme,help (mdts);
+	  hw/nvme/ctrl.c DEFINE_PROP_UINT8("mdts", ..., 7) at line 9383
+	  and id->mdts = n->params.mdts at line 9123;
+	  NVMe Base Specification, Identify Controller Data Structure
+	  (MDTS field).
+
+menu "Atomic writes"
+
+config QSU_NVME_ATOMIC_DN
+	string "NVMe atomic-write 'disable normal' (atomic.dn), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  When set to "on", the controller reports
+	  AWUN == AWUPF (Atomic Write Unit Normal == ... Power Fail)
+	  via NVMe Identify Controller — i.e. the "normal" atomic-write
+	  unit is collapsed onto the power-fail value. This is the
+	  shape the Linux block layer expects when the device offers a
+	  single guaranteed-atomic write unit instead of separate
+	  best-effort and persisted units. xfstests' atomic-write tests
+	  read the resulting awu_min/awu_max from
+	  /sys/block/<dev>/queue/atomic_write_unit_{min,max}_bytes (and
+	  through statx via STATX_WRITE_ATOMIC).
+
+	  Values: "on" / "off" / "" (empty leaves the QEMU default).
+	  Unlike the integer knobs this is a bool — comma-separated
+	  per-drive lists are still accepted, but each entry must be
+	  on/off (or empty for "leave default"). A single value applies
+	  to every drive's controller.
+
+	  See: <qemu_binary> -device nvme,help (atomic.dn);
+	  hw/nvme/ctrl.c DEFINE_PROP_BOOL("atomic.dn", ..., atomic_dn).
+
+config QSU_NVME_ATOMIC_AWUN
+	string "NVMe Atomic Write Unit Normal (atomic.awun), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Controller-level Atomic Write Unit Normal (NVMe Identify
+	  Controller AWUN field). The 0-based count of LBAs the
+	  controller can write atomically under normal operation:
+	  awun=N means (N+1) LBAs. With LBS=4096 and awun=63, the
+	  controller advertises a 256 KiB atomic write unit at the
+	  controller level.
+
+	  This knob alone does NOT make the kernel report a non-default
+	  atomic_write_unit_max. drivers/nvme/host/core.c
+	  (nvme_atomic_bs, ~line 2027) consumes only the per-namespace
+	  NAWUPF when the namespace's NSFEAT_NSABP bit is set; absent
+	  that, the kernel logs "AWUPF ignored, only NAWUPF accepted"
+	  once and uses the logical block size as the atomic write unit.
+	  To actually drive
+	    /sys/block/<dev>/queue/atomic_write_unit_max_bytes
+	    statx() STATX_WRITE_ATOMIC fields
+	  to a non-trivial value, also set ATOMIC_NAWUN/ATOMIC_NAWUPF
+	  (which QEMU's hw/nvme/ns.c sets NSABP for and writes to the
+	  per-namespace NAWUN/NAWUPF). XFS bounds the per-file
+	  atomic_write_unit_min by the filesystem block size, so
+	  large-fsbs profiles (8/16/32/64 KiB) only satisfy tests whose
+	  min gate is >= fsblock; the device-side capability is still
+	  advertised for the kernel paths that read it directly.
+
+	  Empty string leaves AWUN at QEMU's default (0, no atomic
+	  write capability advertised). Single value or comma-separated
+	  per-drive list.
+
+	  See: <qemu_binary> -device nvme,help (atomic.awun);
+	  hw/nvme/ctrl.c DEFINE_PROP_UINT16("atomic.awun", ...);
+	  NVMe Base Specification, Identify Controller AWUN.
+
+config QSU_NVME_ATOMIC_AWUPF
+	string "NVMe Atomic Write Unit Power Fail (atomic.awupf), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Controller-level Atomic Write Unit Power Fail (NVMe Identify
+	  Controller AWUPF field). 0-based: awupf=N means (N+1) LBAs
+	  guaranteed atomic across power-fail. Must be <= AWUN, and
+	  per QEMU's hw/nvme/ns.c the per-namespace NAWUPF must be
+	  >= AWUPF.
+
+	  Same caveat as ATOMIC_AWUN: the kernel does not derive
+	  atomic_write_unit_max from controller-level AWUPF — it logs
+	  "AWUPF ignored, only NAWUPF accepted" when only the
+	  controller value is set. To actually drive the kernel's
+	  per-namespace atomic write reporting set ATOMIC_NAWUPF
+	  alongside this knob.
+
+	  Same input forms as the block-size knobs.
+
+	  See: <qemu_binary> -device nvme,help (atomic.awupf);
+	  hw/nvme/ctrl.c DEFINE_PROP_UINT16("atomic.awupf", ...);
+	  NVMe Base Specification, Identify Controller AWUPF.
+
+config QSU_NVME_ATOMIC_NAWUN
+	string "NVMe Namespace AWU Normal (atomic.nawun), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Per-namespace override of AWUN, exposed in NVMe Identify
+	  Namespace NAWUN. When set, the namespace reports its own
+	  atomic-write capability that supersedes the controller-level
+	  AWUN for I/O issued to this namespace. Same 0-based encoding:
+	  nawun=N means (N+1) LBAs.
+
+	  QEMU's hw/nvme/ns.c rejects NAWUN values smaller than the
+	  controller's AWUN, so set the controller's AWUN/AWUPF first
+	  if you want NAWUN to take effect (or leave AWUN unset and
+	  let NAWUN be the only source).
+
+	  Same input forms as the block-size knobs.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nawun);
+	  hw/nvme/ns.c nvme_ns_set_nsabp.
+
+config QSU_NVME_ATOMIC_NAWUPF
+	string "NVMe Namespace AWU Power Fail (atomic.nawupf), per-drive list or global"
+	output yaml
+	default ""
+	help
+	  Per-namespace override of AWUPF (NVMe Identify Namespace
+	  NAWUPF). Must be <= NAWUN, and >= controller AWUPF (QEMU
+	  enforces both).
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nawupf).
+
+config QSU_NVME_ATOMIC_NABSN
+	string "NVMe Namespace Atomic Boundary Size Normal (atomic.nabsn)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary size (NVMe Identify Namespace NABSN),
+	  in 0-based LBAs. Defines the granularity an atomic write
+	  cannot cross during normal operation. Must be >= NAWUN.
+
+	  Most kernels treat NABSN > 0 as "this device has an atomic
+	  boundary; align large atomic writes to it"; on cards that
+	  honor a hard boundary (e.g. NVMe SSDs whose firmware can
+	  only guarantee atomicity within a 16 KiB or 64 KiB stripe)
+	  this is the field that surfaces.
+
+	  Empty leaves NABSN at QEMU's default (0, no boundary). Same
+	  input forms as the other knobs.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabsn);
+	  hw/nvme/ns.c nvme_ns_atomic_configure_boundary.
+
+config QSU_NVME_ATOMIC_NABSPF
+	string "NVMe Namespace Atomic Boundary Size Power Fail (atomic.nabspf)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary size for power-fail (NVMe Identify
+	  Namespace NABSPF). Must be >= NAWUPF.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabspf).
+
+config QSU_NVME_ATOMIC_NABO
+	string "NVMe Namespace Atomic Boundary Offset (atomic.nabo)"
+	output yaml
+	default ""
+	help
+	  Atomic-write boundary offset (NVMe Identify Namespace NABO).
+	  Where the first atomic boundary starts in LBAs from LBA 0.
+	  Must be <= min(NABSN, NABSPF). 0 means boundary aligned at
+	  start of namespace.
+
+	  See: <qemu_binary> -device nvme-ns,help (atomic.nabo).
+
+endmenu  # Atomic writes
+
+endmenu  # NVMe storage
+
+endif # NIXOSFI

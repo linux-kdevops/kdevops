@@ -1,0 +1,23 @@
+---
+- name: Manage imageless NixOS VMs with qemu-system-units
+  hosts: localhost
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  roles:
+    - role: nixosfi
+
+- name: Run nixos-rebuild test on running nixosfi guests
+  hosts: baseline:dev
+  gather_facts: false
+  vars_files:
+    - "{{ playbook_dir }}/../extra_vars.yaml"
+  tasks:
+    - name: Include nixosfi rebuild-test tasks
+      ansible.builtin.include_role:
+        name: nixosfi
+        tasks_from: rebuild-test
+        apply:
+          tags:
+            - rebuild-test
+      tags:
+        - rebuild-test

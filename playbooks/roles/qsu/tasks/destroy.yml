@@ -1,0 +1,134 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Stop any running qsu VMs and remove the shared units plus
+# the QMP powerdown helper.
+
+# Each qemu-system stop uses QMP system_powerdown via ExecStop,
+# falling back to SIGKILL after TimeoutStopSec=2min. Run all
+# stops in parallel via async so wall time is max(per-VM) and
+# not N * 2min worst-case. The 180s async cap leaves a small
+# buffer past TimeoutStopSec for systemd's own teardown.
+#
+# systemctl(1) is used instead of the systemd_service module
+# so a partially-cleaned tree (missing unit file, live cgroup)
+# still stops cleanly; the module errors on LOAD=not-found
+# even when ACTIVE=running.
+- name: Stop qemu-system@<vm> instances (parallel)
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - --user
+      - stop
+      - "qemu-system@{{ item }}.service"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    label: "qemu-system@{{ item }}"
+  async: 180
+  poll: 0
+  register: qsu_stop_jobs
+  changed_when: true
+  failed_when: false
+
+- name: Wait for qemu-system stops to complete
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  loop: "{{ qsu_stop_jobs.results }}"
+  loop_control:
+    label: "qemu-system@{{ item.item }}"
+  register: qsu_stop_wait
+  until: qsu_stop_wait.finished
+  retries: 60
+  delay: 3
+  failed_when: false
+  when: item.ansible_job_id is defined
+
+- name: Remove SSH config entries for qsu VMs
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ playbook_dir }}/../scripts/update_ssh_config_nixosfi.py"
+      - remove
+      - "{{ item }}"
+      - ""
+      - ""
+      - ""
+      - "{{ lookup('env', 'HOME') }}/.ssh/config"
+      - ""
+      - qsu imageless NixOS
+  register: qsu_ssh_config_remove
+  changed_when: qsu_ssh_config_remove.rc == 0
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+
+- name: Clean up per-node generated imageless configurations
+  ansible.builtin.file:
+    path: "{{ nixosfi_config_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-VM vm.env files
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/systemd/qemu-system/{{ item }}.env"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-VM service drop-in directories
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/systemd/user/qemu-system@{{ item }}.service.d"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove per-share virtiofsd env files
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/systemd/virtiofsd/{{ item.0 }}-{{ item.1 }}.env"
+    state: absent
+  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(qsu_canonical_share_tags) | list }}"
+  loop_control:
+    label: "{{ item.0 }}-{{ item.1 }}"
+
+- name: Remove per-(VM, share) virtiofsd drop-in directories
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.config/systemd/user/virtiofsd@{{ item.0 }}-{{ item.1 }}.service.d"
+    state: absent
+  loop: "{{ (groups['all'] | reject('equalto', 'localhost') | list) | product(qsu_canonical_share_tags) | list }}"
+  loop_control:
+    label: "virtiofsd@{{ item.0 }}-{{ item.1 }}.service.d"
+
+# `true` as the third default() arg so an empty XDG_STATE_HOME
+# falls through to $HOME/.local/state rather than producing a
+# bogus "/qemu-system/<vm>" path.
+- name: Resolve systemd state root for destroy
+  ansible.builtin.set_fact:
+    qsu_state_root: "{{ lookup('env', 'XDG_STATE_HOME') | default(lookup('env', 'HOME') ~ '/.local/state', true) }}/qemu-system"
+
+# Workloads may leave entries with restrictive modes inside the
+# per-VM /data tree. Restore owner traversal so the following
+# state: absent task can finish.
+- name: Make per-VM state directories traversable before removal
+  ansible.builtin.command:
+    cmd: "chmod -R u+rwX {{ qsu_state_root }}/{{ item }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  failed_when: false
+  changed_when: false
+
+- name: Remove per-VM systemd state directories
+  ansible.builtin.file:
+    path: "{{ qsu_state_root }}/{{ item }}"
+    state: absent
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+
+- name: Remove qsu shared units and helper
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ lookup('env', 'HOME') }}/.config/systemd/user/qemu-system@.service"
+    - "{{ lookup('env', 'HOME') }}/.config/systemd/user/virtiofsd@.service"
+    - "{{ lookup('env', 'HOME') }}/.config/systemd/user/virtiofsd@.socket"
+    - "{{ lookup('env', 'HOME') }}/.config/systemd/qemu-system/qmp-powerdown"
+
+- name: Reload user systemd after removal
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user

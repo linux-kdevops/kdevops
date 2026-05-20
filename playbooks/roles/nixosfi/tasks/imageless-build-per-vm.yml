@@ -1,0 +1,40 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-VM imageless closure build: nix-build the toplevel, read the
+# bootspec for init/initrd, then hand the boot artefacts to the qsu
+# runtime to render this guest's env and unit drop-ins. Looped from
+# imageless-build.yml with qsu_vm_name / qsu_vm_idx.
+
+- name: Build the imageless NixOS closure for {{ qsu_vm_name }}
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ nixosfi_config_dir }}/{{ qsu_vm_name }}#toplevel"
+      - --out-link
+      - "{{ nixosfi_config_dir }}/{{ qsu_vm_name }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
+
+- name: Read bootspec from the built closure for {{ qsu_vm_name }}
+  ansible.builtin.slurp:
+    src: "{{ nixosfi_config_dir }}/{{ qsu_vm_name }}/result/boot.json"
+  register: nixosfi_bootspec_raw
+
+- name: Extract init and initrd paths from bootspec for {{ qsu_vm_name }}
+  ansible.builtin.set_fact:
+    nixosfi_init: "{{ (nixosfi_bootspec_raw.content | b64decode | from_json)['org.nixos.bootspec.v1'].init }}"
+    nixosfi_initrd: "{{ (nixosfi_bootspec_raw.content | b64decode | from_json)['org.nixos.bootspec.v1'].initrd }}"
+
+- name: Render qsu runtime artefacts for {{ qsu_vm_name }}
+  ansible.builtin.include_role:
+    name: qsu
+    tasks_from: render-per-vm
+  vars:
+    qsu_kernel_release: "{{ nixosfi_kernel_release }}"
+    qsu_kernel_image: "{{ nixosfi_kernel_image }}"
+    qsu_modules_dir: "{{ nixosfi_modules_dir }}"
+    qsu_init: "{{ nixosfi_init }}"
+    qsu_initrd: "{{ nixosfi_initrd }}"

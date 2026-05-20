@@ -1,0 +1,41 @@
+{#
+  SPDX-License-Identifier: copyleft-next-0.3.1
+
+  Per-VM imageless flake rendered by kdevops. Mirrors upstream's
+  starter at scripts/nixos-flake/templates/imageless/flake.nix and
+  resolves the nixos-flake input at the vendored subtree. Builds the
+  system toplevel closure (packages.<system>.toplevel) that qsu boots
+  imagelessly: tmpfs root with /nix/store and /lib/modules over
+  virtiofs, no disk image.
+#}
+{
+  inputs = {
+    nixos-flake.url = "path:{{ topdir_path }}/scripts/nixos-flake";
+    nixpkgs.follows = "nixos-flake/nixpkgs";
+  };
+
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixos-flake,
+      ...
+    }@inputs:
+    let
+      system = "x86_64-linux";
+    in
+    {
+      nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit inputs nixos-flake; };
+        modules = [
+          nixos-flake.nixosModules.backends.imageless
+          nixos-flake.nixosModules.user
+          { nixpkgs.overlays = [ nixos-flake.overlays.default ]; }
+          ./default.nix
+        ];
+      };
+
+      packages.${system}.toplevel = self.nixosConfigurations.vm.config.system.build.toplevel;
+    };
+}

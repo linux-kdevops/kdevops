@@ -2,7 +2,7 @@
 #
 # nixos_flake -- shared infrastructure feature for the Nix flake at
 # scripts/nixos-flake/. Consumed by the NIXOSFL bringup
-# choice today and by the imageless backend (QSU) later.
+# choice today and by the imageless backend (NIXOSFI) later.
 
 if KDEVOPS_ENABLE_NIXOS_FLAKE
 
@@ -41,6 +41,22 @@ config NIXOSFL_STORAGE_DIR
 	  configuration.
 
 endif # NIXOSFL
+
+if NIXOSFI
+
+config NIXOSFI_CONFIG_DIR
+	string
+	output yaml
+	default "$(TOPDIR_PATH)/nixos/generated"
+	help
+	  Controller-side directory where the qsu role writes one
+	  subdirectory per guest holding the rendered flake.nix and
+	  default.nix for the imageless backend. Defaults to
+	  nixos/generated/ at the kdevops topdir (same path the libvirt
+	  backend uses; they're mutually exclusive bringup choices),
+	  which is gitignored.
+
+endif # NIXOSFI
 
 menu "Profiles"
 
@@ -86,12 +102,13 @@ menu "Mounts"
 config NIXOS_FLAKE_MOUNT_SHARES
 	bool "Enable virtiofs shares (mounts/shares.nix)"
 	output yaml
+	default y if NIXOSFI
 	default n
 	help
 	  Imports nixos-flake.nixosModules.mounts.shares. Mounts named
-	  virtiofs shares inside the guest. qsu pairs this with the
-	  nixos-flake backends.imageless closure for /nix/store +
-	  /lib/modules + data-* shares.
+	  virtiofs shares inside the guest. The imageless backend
+	  requires this (it sources /nix/store and /lib/modules over
+	  virtiofs), so the knob auto-enables under NIXOSFI.
 
 config NIXOS_FLAKE_MOUNT_STORAGE
 	bool "Enable block-device storage mounts (mounts/storage.nix)"

@@ -1,0 +1,62 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Build the per-node imageless NixOS closure and render qsu's
+# per-VM env files using its own upstream templates, so systemd
+# can start each VM against a freshly built closure and the
+# controller-installed kernel from bootlinux.
+
+- name: Resolve controller-built kernel release from the linux build tree
+  ansible.builtin.command:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    argv:
+      - make
+      - --silent
+      - O={{ bootlinux_direct_boot_builddir }}
+      - kernelrelease
+  environment:
+    LOCALVERSION: "{{ target_linux_localversion | default('', true) }}"
+  register: nixosfi_kernelrelease_make
+  changed_when: false
+
+- name: Derive the controller-built kernel artefact paths
+  ansible.builtin.set_fact:
+    nixosfi_kernel_release: "{{ nixosfi_kernelrelease_make.stdout | trim }}"
+    nixosfi_kernel_image: "{{ bootlinux_direct_boot_destdir }}/boot/vmlinuz-{{ nixosfi_kernelrelease_make.stdout | trim }}"
+    nixosfi_modules_dir: "{{ bootlinux_direct_boot_destdir }}/lib/modules"
+
+- name: Ensure the qsu vars directory exists for debug snapshots
+  ansible.builtin.file:
+    path: "{{ qsu_vars_dir }}"
+    state: directory
+    mode: "0755"
+
+# `nix build path:<dir>` pins each input by narHash in flake.lock.
+# A leftover flake.lock from a previous bringup keeps that pin
+# pointed at the old nixos-flake source tree, so subsequent builds
+# silently reuse a stale closure even after the in-tree subtree
+# (modules, overlays, packages) changes — including changes that
+# fix module-evaluation errors. `rebuild-boot.yml` already does
+# this refresh on the kernel-rebuild path; bringup needs the
+# same step for first-time and re-bringup runs after edits.
+- name: Refresh nixos-flake flake input for each VM
+  ansible.builtin.command:
+    argv:
+      - nix
+      - flake
+      - update
+      - --flake
+      - "path:{{ nixosfi_config_dir }}/{{ item }}"
+      - nixos-flake
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  changed_when: true
+
+- name: Prepare qsu imageless artefacts per VM
+  ansible.builtin.include_tasks: imageless-build-per-vm.yml
+  loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+  loop_control:
+    loop_var: qsu_vm_name
+    index_var: qsu_vm_idx
+    label: "{{ qsu_vm_name }}"
