@@ -1,0 +1,36 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+- name: Verify the nixos_flake controller-side setup is complete
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Import optional extra_args file
+      ansible.builtin.include_vars: "{{ item }}"
+      failed_when: false
+      with_first_found:
+        - files:
+            - "../extra_vars.yml"
+            - "../extra_vars.yaml"
+            - "../extra_vars.json"
+          skip: true
+      tags: [always]
+
+    - name: Run the non-sudo nixos_flake runtime_deps verify path
+      ansible.builtin.include_role:
+        name: nixos_flake
+        tasks_from: runtime-deps/verify.yml
+
+    - name: Run the runtime_deps sudo opt-in (only with --tags nixos_flake_runtime_deps_setup)
+      ansible.builtin.include_role:
+        name: nixos_flake
+        tasks_from: runtime-deps/setup.yml
+        apply:
+          tags: [nixos_flake_runtime_deps_setup]
+      tags: [never, nixos_flake_runtime_deps_setup]
+
+- name: Run the nixos_flake role on all guests
+  hosts: all:!localhost
+  gather_facts: false
+  roles:
+    - role: nixosfl

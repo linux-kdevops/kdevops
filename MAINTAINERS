@@ -143,6 +143,22 @@ T:	git https://github.com/linux-kdevops/kdevops.git
 F:	workflows/nfstest/
 F:	playbooks/roles/nfstest/
 
+NIXOS FLAKE
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	kconfigs/Kconfig.nixos_flake
+F:	docs/nixosfl.md
+F:	playbooks/nixosfl.yml
+F:	playbooks/roles/nixosfl/
+F:	playbooks/roles/nixos_flake/
+F:	scripts/nixosfl.Makefile
+F:	scripts/nixosfl_ssh_key_name.py
+F:	scripts/update_ssh_config_nixosfl.py
+F:	scripts/nixos-flake/
+N:	nixos[-_]flake
+
 PYNFS WORKFLOW
 M:	Chuck Lever <cel@kernel.org>
 L:	kdevops@lists.linux.dev

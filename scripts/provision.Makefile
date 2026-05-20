@@ -12,6 +12,22 @@ KDEVOPS_PROVISION_STATUS_METHOD :=
 # the systems will be removed after this
 KDEVOPS_PROVISION_DESTROY_METHOD :=
 
+# Provisioning methods that expose a guest serial console set this to a
+# target that attaches to one. Optional: a backend that has no console
+# concept leaves it empty and `make console` is a no-op.
+KDEVOPS_PROVISION_CONSOLE_METHOD :=
+
+# Provisioning methods that boot an externally-built kernel can rebuild the
+# guest closure (and restart VMs) under a single target. Imageless / qsu
+# sets this; libvirt-flake leaves it empty because the kernel is baked into
+# the qcow2 at image-build time.
+KDEVOPS_PROVISION_REBUILD_BOOT_METHOD :=
+
+# Same shape but for `nixos-rebuild test`-style switches that do not
+# require a reboot. Imageless / qsu sets this; libvirt-flake leaves it
+# empty.
+KDEVOPS_PROVISION_REBUILD_TEST_METHOD :=
+
 # The default guard for ssh provisioning. Provisioning methods can set the
 # KDEVOPS_PROVISIONED_SSH to this if they are OK with the default guard.
 KDEVOPS_PROVISIONED_SSH_DEFAULT_GUARD := .provisioned_once_ssh
@@ -64,6 +80,10 @@ ifeq (y,$(CONFIG_NIXOS))
 include scripts/nixos.Makefile
 endif
 
+ifeq (y,$(CONFIG_NIXOSFL))
+include scripts/nixosfl.Makefile
+endif
+
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_MRPROPER += $(KDEVOPS_PROVISIONED_DEVCONFIG)
 
@@ -93,3 +113,7 @@ KDEVOPS_BRING_UP_DEPS += $(KDEVOPS_PROVISIONED_SSH)
 KDEVOPS_STATUS_DEPS += $(KDEVOPS_PROVISION_STATUS_METHOD)
 
 KDEVOPS_DESTROY_DEPS += $(KDEVOPS_PROVISION_DESTROY_METHOD)
+
+KDEVOPS_CONSOLE_DEPS := $(KDEVOPS_PROVISION_CONSOLE_METHOD)
+KDEVOPS_REBUILD_BOOT_DEPS := $(KDEVOPS_PROVISION_REBUILD_BOOT_METHOD)
+KDEVOPS_REBUILD_TEST_DEPS := $(KDEVOPS_PROVISION_REBUILD_TEST_METHOD)

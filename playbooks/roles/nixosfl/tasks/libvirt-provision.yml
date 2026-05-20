@@ -1,0 +1,60 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Define and start the per-node libvirt domain. Runs against each
+# guest host in the baseline/dev inventory groups, but every task
+# delegates to localhost because libvirt lives on the control node.
+# Only used by the libvirt backend path.
+
+- name: Check if VM already exists
+  ansible.builtin.command: virsh domstate "{{ inventory_hostname }}"
+  register: nixosfl_vm_status
+  failed_when: false
+  changed_when: false
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+
+- name: Provision VM with libvirt
+  when: nixosfl_vm_status.rc != 0 or 'shut off' in nixosfl_vm_status.stdout
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+  block:
+    - name: Generate libvirt XML for VM
+      ansible.builtin.template:
+        src: vm-libvirt.xml.j2
+        dest: "{{ nixosfl_storage_dir }}/{{ inventory_hostname }}.xml"
+        mode: "0644"
+      vars:
+        vm_name: "{{ inventory_hostname }}"
+        vm_memory: "{{ nixosfl_vm_memory_mb | default(4096) }}"
+        vm_vcpus: "{{ nixosfl_vm_vcpus | default(4) }}"
+        vm_disk: "{{ nixosfl_storage_dir }}/{{ inventory_hostname }}.qcow2"
+      tags: do_install
+
+    - name: Define VM in libvirt
+      ansible.builtin.command: virsh define "{{ nixosfl_storage_dir }}/{{ inventory_hostname }}.xml"
+      register: nixosfl_virsh_define
+      failed_when: false
+      changed_when: nixosfl_virsh_define.rc == 0
+      tags: do_deploy
+
+    - name: Start VM
+      ansible.builtin.command: virsh start "{{ inventory_hostname }}"
+      register: nixosfl_virsh_start
+      failed_when: false
+      changed_when: nixosfl_virsh_start.rc == 0
+      tags: do_deploy
+
+- name: Ensure VM is running
+  ansible.builtin.command: virsh start "{{ inventory_hostname }}"
+  register: nixosfl_start_result
+  failed_when:
+    - nixosfl_start_result.rc != 0
+    - "'already active' not in nixosfl_start_result.stderr"
+  changed_when: nixosfl_start_result.rc == 0
+  delegate_to: localhost
+  environment:
+    LIBVIRT_DEFAULT_URI: "{{ libvirt_uri | default('qemu:///system') }}"
+  tags: do_deploy

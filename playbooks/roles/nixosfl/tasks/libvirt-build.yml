@@ -1,0 +1,50 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Build the per-node qcow2 through the libvirt backend flake and
+# stage it into the libvirt storage pool. Libvirt-path only; the
+# imageless backend will have a sibling imageless_build.yml that
+# produces a closure plus kernel and initrd instead of a qcow2.
+
+- name: Localhost libvirt build
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Build per-node NixOS disk image via the flake
+      ansible.builtin.command:
+        argv:
+          - nix
+          - build
+          - "path:{{ nixosfl_config_dir }}/{{ item }}#image"
+          - --out-link
+          - "{{ nixosfl_config_dir }}/{{ item }}/result"
+        creates: "{{ nixosfl_config_dir }}/{{ item }}/result"
+      environment:
+        PATH: "/nix/var/nix/profiles/default/bin:{{ nixosfl_path_fallback }}"
+        NIX_CONFIG: "{{ nixosfl_nix_config }}"
+      vars:
+        nixosfl_path_fallback: >-
+          {{ lookup('env', 'PATH')
+             | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', true) }}
+        nixosfl_use_mirror: >-
+          {{ nixosfl_use_local_mirror | default(false) | bool
+             and (nixosfl_mirror_url | default('') | length > 0) }}
+        nixosfl_nix_config: >-
+          {{ ('substituters = ' ~ nixosfl_mirror_url ~ ' https://cache.nixos.org')
+             if nixosfl_use_mirror else omit }}
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        label: "{{ item }}"
+      tags: do_compile
+
+    - name: Stage per-node NixOS disk image into libvirt storage
+      ansible.builtin.copy:
+        src: "{{ nixosfl_config_dir }}/{{ item }}/result/nixos.qcow2"
+        dest: "{{ nixosfl_storage_dir }}/{{ item }}.qcow2"
+        mode: "0644"
+        remote_src: true
+        force: true
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      loop_control:
+        label: "{{ item }}"
+      tags: do_install

@@ -1,0 +1,96 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-node NixOS configuration generation. Creates one directory per
+# guest under $NIXOS_CONFIG_DIR, seeds the SSH key, copies the
+# selected backend's template flake (libvirt today, imageless later),
+# rewrites the nixos-flake.url input to resolve at the checked-in
+# subtree, and renders the per-node default.nix.
+
+- name: Localhost generate-configs
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Create top-level NixOS directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ nixosfl_config_dir }}"
+        - "{{ nixosfl_storage_dir }}"
+      tags: do_install
+
+    - name: Create per-node configuration directories
+      ansible.builtin.file:
+        path: "{{ nixosfl_config_dir }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      tags: do_install
+
+    - name: Determine SSH key path based on directory
+      ansible.builtin.command: python3 {{ playbook_dir }}/../scripts/nixosfl_ssh_key_name.py --path
+      register: nixosfl_ssh_key_path_result
+      changed_when: false
+
+    - name: Set SSH key path
+      ansible.builtin.set_fact:
+        nixosfl_ssh_key_path: "{{ nixosfl_ssh_key_path_result.stdout | trim }}"
+
+    - name: Generate SSH key for NixOS VMs if not exists
+      community.crypto.openssh_keypair:
+        path: "{{ nixosfl_ssh_key_path }}"
+        type: rsa
+        size: 2048
+        comment: "kdevops@nixos"
+        force: false
+      tags: do_install
+
+    - name: Read SSH public key
+      ansible.builtin.slurp:
+        src: "{{ nixosfl_ssh_key_path }}.pub"
+      register: nixosfl_ssh_public_key
+
+    - name: Set SSH key in fact
+      ansible.builtin.set_fact:
+        nixosfl_ssh_authorized_key: "{{ nixosfl_ssh_public_key['content'] | b64decode | trim }}"
+
+    - name: Detect local Nix cache mirror URL if enabled
+      ansible.builtin.shell: |
+        bash {{ playbook_dir }}/../scripts/check_nix_mirror.sh NIX_CACHE_MIRROR_URL
+      register: nixosfl_detected_mirror_url
+      when:
+        - nixosfl_use_local_mirror | default(false) | bool
+        - nixosfl_mirror_url is not defined or nixosfl_mirror_url == ""
+      changed_when: false
+
+    - name: Set detected mirror URL
+      ansible.builtin.set_fact:
+        nixosfl_mirror_url: "{{ nixosfl_detected_mirror_url.stdout | trim }}"
+      when:
+        - nixosfl_detected_mirror_url is defined
+        - nixosfl_detected_mirror_url.stdout is defined
+        - nixosfl_detected_mirror_url.stdout | trim != ""
+
+    - name: Debug SSH key path
+      ansible.builtin.debug:
+        msg: "Using SSH key: {{ nixosfl_ssh_key_path | default('NOT SET') }}"
+
+    - name: Render per-node flake.nix
+      ansible.builtin.template:
+        src: flake.nix.j2
+        dest: "{{ nixosfl_config_dir }}/{{ item }}/flake.nix"
+        mode: "0644"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      tags: do_install
+
+    - name: Render per-node default.nix
+      ansible.builtin.template:
+        src: default.nix.j2
+        dest: "{{ nixosfl_config_dir }}/{{ item }}/default.nix"
+        mode: "0644"
+      loop: "{{ groups['all'] | reject('equalto', 'localhost') | list }}"
+      vars:
+        vm_name: "{{ item }}"
+      tags: do_install

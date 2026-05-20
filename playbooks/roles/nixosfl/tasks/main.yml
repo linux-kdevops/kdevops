@@ -1,0 +1,34 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Per-host entry point for the nixos_flake role. The runtime_deps
+# task group runs from playbooks/nixosfl.yml's first play
+# (hosts: localhost); this entry point covers backend-specific phases
+# that need the guest inventory available. Each phase is tagged with
+# `never` plus its per-phase tag and is reached only via the
+# dedicated Make targets:
+#
+#   make nixosfl-bringup
+#   make nixosfl-destroy
+#   make nixosfl-console
+
+- name: Run nixos_flake libvirt bringup (only with --tags nixosfl_bringup)
+  ansible.builtin.include_tasks:
+    file: bringup.yml
+    apply:
+      tags: [nixosfl_bringup]
+  tags: [never, nixosfl_bringup]
+
+- name: Run nixos_flake libvirt destroy (only with --tags nixosfl_destroy)
+  ansible.builtin.include_tasks:
+    file: destroy.yml
+    apply:
+      tags: [nixosfl_destroy]
+  tags: [never, nixosfl_destroy]
+
+- name: Run nixos_flake libvirt console (only with --tags nixosfl_console)
+  ansible.builtin.include_tasks:
+    file: console.yml
+    apply:
+      tags: [nixosfl_console]
+  tags: [never, nixosfl_console]

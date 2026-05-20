@@ -1,0 +1,50 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Controller-side sudo work to install the Nix package manager via
+# the official multi-user installer from nixos.org. Invoked via
+# `make nixos-flake-runtime-deps-setup`
+# (--tags nixos_flake_runtime_deps_setup). No-op when the controller
+# is already NixOS (nix ships with the base system).
+
+- name: Gather facts for the NixOS check
+  ansible.builtin.setup:
+    gather_subset: ["min"]
+
+- name: Skip when controller is already NixOS
+  ansible.builtin.debug:
+    msg: "Controller is NixOS; nix is part of the base system, nothing to install."
+  when: ansible_facts['distribution']|lower == 'nixos'
+
+- name: Create a private directory for the Nix installer
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: nix-install
+  register: nixos_flake_nix_installer_tmp
+  when: ansible_facts['distribution']|lower != 'nixos'
+
+# Set nixos_flake_nix_installer_checksum (for example
+# "sha256:<hex>") to verify the download on untrusted networks; the
+# upstream URL is unversioned, so no checksum is pinned by default.
+- name: Download the official Nix installer
+  ansible.builtin.get_url:
+    url: "{{ nixos_flake_nix_installer_url | default('https://nixos.org/nix/install') }}"
+    dest: "{{ nixos_flake_nix_installer_tmp.path }}/install-nix.sh"
+    mode: "0700"
+    checksum: "{{ nixos_flake_nix_installer_checksum | default(omit) }}"
+  when: ansible_facts['distribution']|lower != 'nixos'
+
+- name: Run the Nix installer (multi-user, non-interactive)
+  become: true
+  become_method: ansible.builtin.sudo
+  ansible.builtin.command:
+    cmd: sh {{ nixos_flake_nix_installer_tmp.path }}/install-nix.sh --daemon --yes
+    creates: /nix
+  when: ansible_facts['distribution']|lower != 'nixos'
+  tags: do_install
+
+- name: Remove the Nix installer directory
+  ansible.builtin.file:
+    path: "{{ nixos_flake_nix_installer_tmp.path }}"
+    state: absent
+  when: ansible_facts['distribution']|lower != 'nixos'

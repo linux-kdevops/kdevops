@@ -1,0 +1,29 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Non-sudo precheck for the nixos_flake controller-side dependency:
+# the Nix package manager. Fails with an actionable diagnostic when
+# nix is missing from PATH.
+
+- name: Check whether the nix binary is on PATH
+  ansible.builtin.shell:
+    cmd: set -o pipefail && command -v nix
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: nixos_flake_runtime_deps_nix
+
+- name: Fail with actionable diagnostic when nix is missing
+  ansible.builtin.fail:
+    msg: |
+      The nix package manager is not installed on the controller:
+      the `nix` binary is not on PATH. nixos_flake cannot build NixOS
+      closures or disk images without it.
+
+      Two ways to fix this:
+        1. Run the opt-in sudo target:
+               make nixos-flake-runtime-deps-setup
+        2. Install nix manually following
+           nixos-flake/runtime-deps/README.md, then re-run the
+           original make target.
+  when: nixos_flake_runtime_deps_nix.rc != 0
