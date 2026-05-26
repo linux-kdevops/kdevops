@@ -11,4 +11,5 @@ digits_only=$(echo $base_md5sum | tr -cd '0-9')
 # extract the last 4 digits from md5sum
 
 base_port=${digits_only: -4}
-echo $base_port
+# Strip leading zeros so the Kconfig `int` type accepts the value.
+echo $((10#$base_port))
