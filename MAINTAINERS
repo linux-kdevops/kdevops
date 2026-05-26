@@ -150,6 +150,7 @@ S:	Maintained
 T:	git https://github.com/linux-kdevops/kdevops.git
 F:	kconfigs/Kconfig.nixos_flake
 F:	docs/nixos-flake-backends.md
+F:	docs/nixos-flake-manual.md
 F:	docs/nixosfl.md
 F:	playbooks/nixosfl.yml
 F:	playbooks/roles/nixosfl/
