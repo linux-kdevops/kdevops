@@ -14,12 +14,6 @@ Run a supported OS/distribution:
   * Red Hat / Fedora
   * Debian / Ubuntu
 
-Role Variables
---------------
-
-  * qemu_force_install_if_present: set to False by default, set this to True to
-    force building even if you have /usr/local/bin/qemu-system-x86_64
-
 Dependencies
 ------------
 

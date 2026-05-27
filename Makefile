@@ -138,6 +138,8 @@ endif # CONFIG_NEEDS_LOCAL_DEVELOPMENT_PATH
 # make with no arguments.
 LOCALHOST_SETUP_WORK :=
 
+CONTROLLER_SETUP_WORK :=
+
 ANSIBLE_EXTRA_ARGS += $(LOCAL_DEVELOPMENT_ARGS)
 
 # We may not need the extra_args.yaml file all the time.  If this file is empty
@@ -284,6 +286,9 @@ $(KDEVOPS_NODES): .config $(ANSIBLE_CFG_FILE) $(KDEVOPS_NODES_TEMPLATE) $(KDEVOP
 		--extra-vars=@./extra_vars.yaml
 
 DEFAULT_DEPS += $(LOCALHOST_SETUP_WORK)
+
+PHONY += controller-setup
+controller-setup: $(CONTROLLER_SETUP_WORK)
 
 include scripts/tests.Makefile
 include scripts/linux-ab-testing.Makefile
