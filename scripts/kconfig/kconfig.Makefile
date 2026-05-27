@@ -61,7 +61,9 @@ $(simple-targets): $(KCONFIG_DIR)/conf Kconfig
 # Usage: make defconfig-<base>+<fragment>
 # Example: make defconfig-datacrunch-b200-or-less+myworkflow
 #
-# The fragment is looked up in defconfigs/configs/<fragment>.config
+# Fragments are looked up in order:
+#   1. ~/.config/kdevops/defconfigs/configs/<fragment>.config (user-private)
+#   2. defconfigs/configs/<fragment>.config (repository)
 # Multiple fragments can be chained: make defconfig-base+frag1+frag2
 defconfig-%:: $(KCONFIG_DIR)/conf include/config/project.release Kconfig
 	@STEM="$(@:defconfig-%=%)"; \
@@ -69,8 +71,16 @@ defconfig-%:: $(KCONFIG_DIR)/conf include/config/project.release Kconfig
 		BASE=$$(echo "$$STEM" | cut -d'+' -f1); \
 		FRAGS=$$(echo "$$STEM" | cut -d'+' -f2- | tr '+' ' '); \
 		FRAG_FILES=""; \
+		USER_CFG_DIR="$$HOME/.config/kdevops"; \
 		for f in $$FRAGS; do \
-			FRAG_FILES="$$FRAG_FILES defconfigs/configs/$$f.config"; \
+			if [ -f "$$USER_CFG_DIR/defconfigs/configs/$$f.config" ]; then \
+				FRAG_FILES="$$FRAG_FILES $$USER_CFG_DIR/defconfigs/configs/$$f.config"; \
+			elif [ -f "defconfigs/configs/$$f.config" ]; then \
+				FRAG_FILES="$$FRAG_FILES defconfigs/configs/$$f.config"; \
+			else \
+				echo "Error: Fragment '$$f' not found in user or repo configs" >&2; \
+				exit 1; \
+			fi; \
 		done; \
 		$(KCONFIG_DIR)/merge_config.sh -m -Q defconfigs/$$BASE $$FRAG_FILES && \
 		$< --defconfig=.config Kconfig; \

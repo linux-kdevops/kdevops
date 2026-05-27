@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Stub file for when no kdevops plugins are installed.
+#
+# This file is sourced when ~/.config/kdevops/Kconfig.plugins does not exist.
+# Install plugins using: make kdevops-plugin-add URL=<git-url>
+
+# No plugins installed - this is a placeholder
