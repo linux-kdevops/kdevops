@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Update apt cache
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     update_cache: true
   tags: ["qemu", "update-cache"]
 
 - name: Install QEMU build dependencies
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.apt:
     name:
       - debhelper-compat

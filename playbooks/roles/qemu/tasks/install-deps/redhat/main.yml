@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Install QEMU build dependencies
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.dnf:
     name:
       - glusterfs-common

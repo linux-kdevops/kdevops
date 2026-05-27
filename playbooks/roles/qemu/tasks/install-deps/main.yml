@@ -2,21 +2,27 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 - name: Import optional distribution specific variables
   ansible.builtin.include_vars: "{{ item }}"
-  ignore_errors: true
+  failed_when: false
   with_first_found:
     - files:
         - "{{ ansible_facts['os_family'] | lower }}.yml"
       skip: true
   tags: vars
 
-- name: Distribution specific setup
+- name: Install QEMU build dependencies on Debian
   ansible.builtin.import_tasks: debian/main.yml
   when: ansible_facts['os_family']|lower == 'debian'
-- ansible.builtin.import_tasks: suse/main.yml
+
+- name: Install QEMU build dependencies on SUSE
+  ansible.builtin.import_tasks: suse/main.yml
   when: ansible_facts['os_family']|lower == 'suse'
-- ansible.builtin.import_tasks: redhat/main.yml
+
+- name: Install QEMU build dependencies on Red Hat
+  ansible.builtin.import_tasks: redhat/main.yml
   when:
     - ansible_facts['os_family']|lower == 'redhat'
     - ansible_facts['distribution']|lower != "fedora"
-- ansible.builtin.import_tasks: fedora/main.yml
+
+- name: Install QEMU build dependencies on Fedora
+  ansible.builtin.import_tasks: fedora/main.yml
   when: ansible_facts['distribution']|lower == "fedora"
