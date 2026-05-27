@@ -1,0 +1,398 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1050">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e14;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1f2e;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b35" />
+      <stop offset="50%" style="stop-color:#f7931a" />
+      <stop offset="100%" style="stop-color:#ffcc00" />
+    </linearGradient>
+    
+    <linearGradient id="infraGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6" />
+      <stop offset="100%" style="stop-color:#1d4ed8" />
+    </linearGradient>
+    
+    <linearGradient id="neocloudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899" />
+      <stop offset="100%" style="stop-color:#be185d" />
+    </linearGradient>
+    
+    <linearGradient id="kernelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e" />
+      <stop offset="100%" style="stop-color:#16a34a" />
+    </linearGradient>
+    
+    <linearGradient id="storageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7" />
+      <stop offset="100%" style="stop-color:#7c3aed" />
+    </linearGradient>
+    
+    <linearGradient id="perfGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4" />
+      <stop offset="100%" style="stop-color:#0891b2" />
+    </linearGradient>
+    
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f43f5e" />
+      <stop offset="100%" style="stop-color:#e11d48" />
+    </linearGradient>
+    
+    <linearGradient id="customGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6" />
+      <stop offset="100%" style="stop-color:#6d28d9" />
+    </linearGradient>
+    
+    <linearGradient id="ciGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b" />
+      <stop offset="100%" style="stop-color:#d97706" />
+    </linearGradient>
+    
+    <!-- Glow filters -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Pattern for subtle texture -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.05"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGrad)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  
+  <!-- Title -->
+  <text x="600" y="50" text-anchor="middle" fill="url(#headerGrad)" font-family="'Segoe UI', system-ui, sans-serif" font-size="42" font-weight="700" filter="url(#glow)">kdevops</text>
+  <text x="600" y="78" text-anchor="middle" fill="#94a3b8" font-family="'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400">Linux Kernel Development &amp; AI/ML Infrastructure Automation</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="100" text-anchor="middle" fill="#64748b" font-family="'Segoe UI', system-ui, sans-serif" font-size="12" font-style="italic">Software 3.0 Enabler • Kconfig Variability • Ansible Automation • GenAI Ready</text>
+
+  <!-- ==================== INFRASTRUCTURE TARGETS (Top Left) ==================== -->
+  <g transform="translate(30, 125)">
+    <rect x="0" y="0" width="270" height="175" rx="12" fill="#0f172a" stroke="#3b82f6" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="270" height="38" rx="12" fill="url(#infraGrad)" opacity="0.9"/>
+    <rect x="0" y="26" width="270" height="12" fill="url(#infraGrad)" opacity="0.9"/>
+    
+    <text x="135" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">🖥️ Traditional Infrastructure</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="60"><tspan fill="#60a5fa">▸</tspan> Bare Metal Hosts</text>
+      <text x="18" y="82"><tspan fill="#60a5fa">▸</tspan> libguestfs / libvirt VMs</text>
+      <text x="18" y="104"><tspan fill="#60a5fa">▸</tspan> AWS / GCP / Azure</text>
+      <text x="18" y="126"><tspan fill="#60a5fa">▸</tspan> Oracle Cloud (OCI)</text>
+      <text x="18" y="148"><tspan fill="#60a5fa">▸</tspan> OpenStack</text>
+      <text x="18" y="170"><tspan fill="#60a5fa">▸</tspan> PCIe Passthrough</text>
+    </g>
+  </g>
+
+  <!-- ==================== NEOCLOUDS (Top Left-Center) ==================== -->
+  <g transform="translate(320, 125)">
+    <rect x="-2" y="-2" width="204" height="179" rx="13" fill="none" stroke="#ec4899" stroke-width="1" opacity="0.3"/>
+    <rect x="0" y="0" width="200" height="175" rx="12" fill="#0f172a" stroke="#ec4899" stroke-width="2" opacity="0.95"/>
+    <rect x="0" y="0" width="200" height="38" rx="12" fill="url(#neocloudGrad)" opacity="0.95"/>
+    <rect x="0" y="26" width="200" height="12" fill="url(#neocloudGrad)" opacity="0.95"/>
+    
+    <text x="185" y="26" text-anchor="end" fill="#fef3c7" font-family="'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="600">NEW</text>
+    
+    <text x="90" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">🚀 Neoclouds</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="60"><tspan fill="#f472b6">▸</tspan> Lambda Labs</text>
+      <text x="18" y="82"><tspan fill="#f472b6">▸</tspan> DataCrunch</text>
+      <text x="18" y="104" fill="#a1a1aa" font-size="11">(more coming...)</text>
+    </g>
+    
+    <g transform="translate(15, 115)">
+      <rect x="0" y="0" width="170" height="50" rx="6" fill="#1e1b2e" stroke="#ec4899" stroke-width="1" opacity="0.7"/>
+      <text x="85" y="16" text-anchor="middle" fill="#f9a8d4" font-family="'Segoe UI', system-ui, sans-serif" font-size="9" font-weight="500">GPU-Ready Instances</text>
+      <text x="85" y="32" text-anchor="middle" fill="#d1d5db" font-family="monospace" font-size="8">H100 • A100 • GH200</text>
+      <text x="85" y="45" text-anchor="middle" fill="#d1d5db" font-family="monospace" font-size="8">B200 • B300 • RTX 4090</text>
+    </g>
+  </g>
+
+  <!-- ==================== KERNEL TESTING (Top Center) ==================== -->
+  <g transform="translate(540, 125)">
+    <rect x="0" y="0" width="210" height="175" rx="12" fill="#0f172a" stroke="#22c55e" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="210" height="38" rx="12" fill="url(#kernelGrad)" opacity="0.9"/>
+    <rect x="0" y="26" width="210" height="12" fill="url(#kernelGrad)" opacity="0.9"/>
+    
+    <text x="105" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">🐧 Kernel Testing</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="60"><tspan fill="#4ade80">▸</tspan> Linux Build &amp; Deploy</text>
+      <text x="18" y="82"><tspan fill="#4ade80">▸</tspan> selftests (parallel)</text>
+      <text x="18" y="104"><tspan fill="#4ade80">▸</tspan> LTP Suite</text>
+      <text x="18" y="126"><tspan fill="#4ade80">▸</tspan> mmtests (A/B)</text>
+      <text x="18" y="148"><tspan fill="#4ade80">▸</tspan> reboot-limit</text>
+      <text x="18" y="170"><tspan fill="#4ade80">▸</tspan> gitr</text>
+    </g>
+  </g>
+
+  <!-- ==================== FILESYSTEM TESTING (Top Center-Right) ==================== -->
+  <g transform="translate(770, 125)">
+    <rect x="0" y="0" width="200" height="175" rx="12" fill="#0f172a" stroke="#a855f7" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="200" height="38" rx="12" fill="url(#storageGrad)" opacity="0.9"/>
+    <rect x="0" y="26" width="200" height="12" fill="url(#storageGrad)" opacity="0.9"/>
+    
+    <text x="100" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">📁 Storage Testing</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="60"><tspan fill="#c084fc">▸</tspan> fstests</text>
+      <text x="18" y="82"><tspan fill="#c084fc">▸</tspan> blktests</text>
+      <text x="18" y="104"><tspan fill="#c084fc">▸</tspan> NFS / pynfs</text>
+      <text x="18" y="126"><tspan fill="#c084fc">▸</tspan> LBS / CXL</text>
+      <text x="18" y="148"><tspan fill="#c084fc">▸</tspan> Zoned Storage</text>
+      <text x="18" y="170"><tspan fill="#c084fc">▸</tspan> MinIO Warp</text>
+    </g>
+  </g>
+
+  <!-- ==================== PERFORMANCE (Top Right) ==================== -->
+  <g transform="translate(990, 125)">
+    <rect x="0" y="0" width="180" height="175" rx="12" fill="#0f172a" stroke="#06b6d4" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="180" height="38" rx="12" fill="url(#perfGrad)" opacity="0.9"/>
+    <rect x="0" y="26" width="180" height="12" fill="url(#perfGrad)" opacity="0.9"/>
+    
+    <text x="90" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">⚡ Performance</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="60"><tspan fill="#22d3ee">▸</tspan> fio-tests (blk/fs)</text>
+      <text x="18" y="82"><tspan fill="#22d3ee">▸</tspan> sysbench</text>
+      <text x="18" y="104"><tspan fill="#22d3ee">▸</tspan> mmtests</text>
+      <text x="18" y="126"><tspan fill="#22d3ee">▸</tspan> A/B Comparison</text>
+      <text x="18" y="148"><tspan fill="#22d3ee">▸</tspan> HTML Reports</text>
+      <text x="18" y="170"><tspan fill="#22d3ee">▸</tspan> Statistics</text>
+    </g>
+  </g>
+
+  <!-- ==================== CENTRAL kdevops CORE ==================== -->
+  <g transform="translate(400, 330)">
+    <path d="M200,0 L380,50 L380,150 L200,200 L20,150 L20,50 Z" 
+          fill="#1e293b" stroke="url(#headerGrad)" stroke-width="3" opacity="0.95"/>
+    
+    <text x="200" y="45" text-anchor="middle" fill="url(#headerGrad)" font-family="'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" filter="url(#softGlow)">kdevops Core</text>
+    
+    <!-- Console-style command box -->
+    <g transform="translate(40, 60)">
+      <rect x="0" y="0" width="320" height="40" rx="4" fill="#000000" stroke="#333333" stroke-width="1"/>
+      <text x="8" y="16" fill="#4ade80" font-family="'Courier New', monospace" font-size="9">$</text>
+      <text x="20" y="16" fill="#e2e8f0" font-family="'Courier New', monospace" font-size="9">make menuconfig; make; make bringup</text>
+      <text x="8" y="32" fill="#4ade80" font-family="'Courier New', monospace" font-size="9">$</text>
+      <text x="20" y="32" fill="#e2e8f0" font-family="'Courier New', monospace" font-size="9">make linux; make fstests</text>
+    </g>
+    
+    <g fill="#cbd5e1" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" text-anchor="middle">
+      <text x="200" y="120" fill="#94a3b8">─────────────────────────</text>
+      <text x="200" y="140" fill="#f8fafc" font-size="12">Kconfig • Ansible • Terraform/OpenTofu</text>
+      <text x="200" y="160" fill="#f8fafc" font-size="12">libguestfs • YAML Variables</text>
+    </g>
+  </g>
+
+  <!-- ==================== CUSTOM WORKFLOWS (Middle Right) ==================== -->
+  <g transform="translate(820, 340)">
+    <rect x="-2" y="-2" width="354" height="194" rx="13" fill="none" stroke="#8b5cf6" stroke-width="1" opacity="0.3"/>
+    <rect x="0" y="0" width="350" height="190" rx="12" fill="#0f172a" stroke="#8b5cf6" stroke-width="2" opacity="0.95"/>
+    <rect x="0" y="0" width="350" height="40" rx="12" fill="url(#customGrad)" opacity="0.95"/>
+    <rect x="0" y="28" width="350" height="12" fill="url(#customGrad)" opacity="0.95"/>
+    
+    <text x="335" y="28" text-anchor="end" fill="#fef3c7" font-family="'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="600">NEW</text>
+    
+    <text x="165" y="28" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">🔧 Workflow Merging with +</text>
+    
+    <!-- Two columns: Supported vs Private -->
+    <g transform="translate(15, 50)">
+      <!-- Supported workflows -->
+      <rect x="0" y="0" width="155" height="75" rx="6" fill="#1e1b2e" stroke="#4ade80" stroke-width="1"/>
+      <g fill="#cbd5e1" font-family="'Segoe UI', system-ui, sans-serif" font-size="10">
+        <text x="10" y="20"><tspan fill="#4ade80">+</tspan>vllm-production-stack</text>
+        <text x="10" y="40"><tspan fill="#4ade80">+</tspan>fstests</text>
+        <text x="10" y="60"><tspan fill="#4ade80">+</tspan>blktests</text>
+      </g>
+      
+      <!-- Private workflows -->
+      <rect x="165" y="0" width="155" height="75" rx="6" fill="#1e1b2e" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2"/>
+      <g fill="#9ca3af" font-family="'Segoe UI', system-ui, sans-serif" font-size="10">
+        <text x="175" y="20"><tspan fill="#a78bfa">+</tspan>myresearch</text>
+        <text x="175" y="40"><tspan fill="#a78bfa">+</tspan>proprietary-ml</text>
+        <text x="175" y="60"><tspan fill="#a78bfa">+</tspan>internal-tests</text>
+      </g>
+    </g>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="11">
+      <text x="18" y="145"><tspan fill="#a78bfa">▸</tspan> No upstream requirement for private</text>
+      <text x="18" y="163"><tspan fill="#a78bfa">▸</tspan> Custom host prefixes</text>
+      <text x="18" y="181"><tspan fill="#a78bfa">▸</tspan> Mix and match freely</text>
+    </g>
+  </g>
+
+  <!-- ==================== AI/ML WORKFLOWS (Bottom Center, Prominent) ==================== -->
+  <g transform="translate(30, 565)">
+    <rect x="-3" y="-3" width="766" height="201" rx="15" fill="none" stroke="#f43f5e" stroke-width="1" opacity="0.25"/>
+    
+    <rect x="0" y="0" width="760" height="195" rx="14" fill="#0f172a" stroke="#f43f5e" stroke-width="2" opacity="0.95"/>
+    <rect x="0" y="0" width="760" height="44" rx="14" fill="url(#aiGrad)" opacity="0.95"/>
+    <rect x="0" y="32" width="760" height="12" fill="url(#aiGrad)" opacity="0.95"/>
+    
+    <text x="740" y="30" text-anchor="end" fill="#fef3c7" font-family="'Segoe UI', system-ui, sans-serif" font-size="8" font-weight="600">NEW</text>
+    
+    <text x="380" y="30" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="600">🧠 AI/ML Infrastructure Workflows</text>
+    
+    <!-- vLLM -->
+    <g transform="translate(20, 55)">
+      <rect x="0" y="0" width="170" height="125" rx="8" fill="#1e1b2e" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="85" y="22" text-anchor="middle" fill="#a5b4fc" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600">vLLM</text>
+      <g fill="#cbd5e1" font-family="'Segoe UI', system-ui, sans-serif" font-size="11">
+        <text x="12" y="44"><tspan fill="#fb7185">•</tspan> LLM inference server</text>
+        <text x="12" y="62"><tspan fill="#fb7185">•</tspan> PagedAttention</text>
+        <text x="12" y="80"><tspan fill="#fb7185">•</tspan> Continuous batching</text>
+        <text x="12" y="98"><tspan fill="#fb7185">•</tspan> OpenAI-compatible</text>
+        <text x="12" y="116"><tspan fill="#fb7185">•</tspan> Multi-GPU support</text>
+      </g>
+    </g>
+    
+    <!-- vLLM Production Stack -->
+    <g transform="translate(205, 55)">
+      <rect x="0" y="0" width="170" height="125" rx="8" fill="#1e1b2e" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="85" y="22" text-anchor="middle" fill="#a5b4fc" font-family="'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600">vLLM Production Stack</text>
+      <g fill="#cbd5e1" font-family="'Segoe UI', system-ui, sans-serif" font-size="11">
+        <text x="12" y="44"><tspan fill="#fb7185">•</tspan> Kubernetes + Helm</text>
+        <text x="12" y="62"><tspan fill="#fb7185">•</tspan> Request routing</text>
+        <text x="12" y="80"><tspan fill="#fb7185">•</tspan> Prometheus metrics</text>
+        <text x="12" y="98"><tspan fill="#fb7185">•</tspan> Grafana dashboards</text>
+        <text x="12" y="116"><tspan fill="#fb7185">•</tspan> KV cache offload</text>
+      </g>
+    </g>
+    
+    <!-- Milvus -->
+    <g transform="translate(390, 55)">
+      <rect x="0" y="0" width="170" height="125" rx="8" fill="#1e1b2e" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="85" y="22" text-anchor="middle" fill="#a5b4fc" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600">Milvus Vector DB</text>
+      <g fill="#cbd5e1" font-family="'Segoe UI', system-ui, sans-serif" font-size="11">
+        <text x="12" y="44"><tspan fill="#fb7185">•</tspan> Vector benchmarks</text>
+        <text x="12" y="62"><tspan fill="#fb7185">•</tspan> A/B FS comparison</text>
+        <text x="12" y="80"><tspan fill="#fb7185">•</tspan> HTML visualizations</text>
+        <text x="12" y="98"><tspan fill="#fb7185">•</tspan> Real workload tests</text>
+        <text x="12" y="116"><tspan fill="#fb7185">•</tspan> Docker / K8s deploy</text>
+      </g>
+    </g>
+    
+    <!-- Your Custom AI Workflow -->
+    <g transform="translate(575, 55)">
+      <rect x="0" y="0" width="170" height="125" rx="8" fill="#1e1b2e" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="85" y="22" text-anchor="middle" fill="#c4b5fd" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600">Your Workflow</text>
+      <g fill="#9ca3af" font-family="'Segoe UI', system-ui, sans-serif" font-size="11">
+        <text x="12" y="44"><tspan fill="#a78bfa">+</tspan> PyTorch / JAX</text>
+        <text x="12" y="62"><tspan fill="#a78bfa">+</tspan> Custom training</text>
+        <text x="12" y="80"><tspan fill="#a78bfa">+</tspan> Private experiments</text>
+        <text x="12" y="98"><tspan fill="#a78bfa">+</tspan> Proprietary models</text>
+        <text x="12" y="116"><tspan fill="#a78bfa">+</tspan> Research R&amp;D</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== EXAMPLE COMMANDS (Console Style) ==================== -->
+  <g transform="translate(30, 780)">
+    <rect x="0" y="0" width="760" height="95" rx="8" fill="#000000" stroke="#333333" stroke-width="2"/>
+    
+    <text x="20" y="20" fill="#6b7280" font-family="'Segoe UI', system-ui, sans-serif" font-size="10"># Merge supported workflow with neocloud tiering</text>
+    <text x="20" y="38" fill="#4ade80" font-family="'Courier New', monospace" font-size="11">$</text>
+    <text x="35" y="38" fill="#e2e8f0" font-family="'Courier New', monospace" font-size="11">make defconfig-lambdalabs-h100-or-less<tspan fill="#fbbf24">+vllm-production-stack-gpu</tspan></text>
+    
+    <text x="20" y="58" fill="#6b7280" font-family="'Segoe UI', system-ui, sans-serif" font-size="10"># Or DataCrunch with private workflow</text>
+    <text x="20" y="76" fill="#4ade80" font-family="'Courier New', monospace" font-size="11">$</text>
+    <text x="35" y="76" fill="#e2e8f0" font-family="'Courier New', monospace" font-size="11">make defconfig-datacrunch-h100-or-less<tspan fill="#a78bfa">+myresearch</tspan> KDEVOPS_HOSTS_PREFIX=<tspan fill="#22d3ee">"dev"</tspan></text>
+    
+    <text x="740" y="88" text-anchor="end" fill="#6b7280" font-family="'Segoe UI', system-ui, sans-serif" font-size="9">→ dev-myresearch</text>
+  </g>
+
+  <!-- ==================== CI/CD (Bottom Right Upper) ==================== -->
+  <g transform="translate(820, 565)">
+    <rect x="-2" y="-2" width="354" height="154" rx="13" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.3"/>
+    <rect x="0" y="0" width="350" height="150" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="350" height="38" rx="12" fill="url(#ciGrad)" opacity="0.9"/>
+    <rect x="0" y="26" width="350" height="12" fill="url(#ciGrad)" opacity="0.9"/>
+    
+    <text x="175" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">🔄 CI/CD Integration</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="58"><tspan fill="#fbbf24">▸</tspan> GitHub Actions / GitLab Pipelines</text>
+      <text x="18" y="80"><tspan fill="#fbbf24">▸</tspan> kpd (kernel patches daemon)</text>
+      <text x="18" y="102"><tspan fill="#fbbf24">▸</tspan> Baseline Regression Detection</text>
+      <text x="18" y="124"><tspan fill="#fbbf24">▸</tspan> Web UI: test any kernel tag <tspan fill="#fbbf24" font-size="8">NEW</tspan></text>
+      <text x="18" y="146"><tspan fill="#fbbf24">▸</tspan> kdevops.org Auto-Dashboard</text>
+    </g>
+  </g>
+
+  <!-- ==================== Reproducibility callout ==================== -->
+  <g transform="translate(820, 735)">
+    <rect x="0" y="0" width="350" height="140" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="2" opacity="0.9"/>
+    <rect x="0" y="0" width="350" height="38" rx="12" fill="#10b981" opacity="0.9"/>
+    <rect x="0" y="26" width="350" height="12" fill="#10b981" opacity="0.9"/>
+    
+    <text x="175" y="26" text-anchor="middle" fill="#ffffff" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">🔬 Reproducibility</text>
+    
+    <g fill="#e2e8f0" font-family="'Segoe UI', system-ui, sans-serif" font-size="12">
+      <text x="18" y="58"><tspan fill="#34d399">▸</tspan> Identical environments every time</text>
+      <text x="18" y="80"><tspan fill="#34d399">▸</tspan> Share defconfigs with team</text>
+      <text x="18" y="102"><tspan fill="#34d399">▸</tspan> Version-controlled workflows</text>
+      <text x="18" y="124"><tspan fill="#34d399">▸</tspan> Archive results to git</text>
+    </g>
+  </g>
+
+  <!-- ==================== CONNECTION LINES ==================== -->
+  <g stroke="#475569" stroke-width="1.5" fill="none" opacity="0.5">
+    <!-- Top boxes to center -->
+    <path d="M165,300 Q200,340 400,380" stroke-dasharray="5,3"/>
+    <path d="M420,300 Q450,330 480,350" stroke-dasharray="5,3"/>
+    <path d="M645,300 Q620,340 600,360" stroke-dasharray="5,3"/>
+    <path d="M870,300 Q800,340 780,380" stroke-dasharray="5,3"/>
+    
+    <!-- Center to bottom sections -->
+    <path d="M500,530 Q400,550 400,565" stroke-dasharray="5,3"/>
+    <path d="M700,530 Q750,545 820,565" stroke-dasharray="5,3"/>
+    
+    <!-- Custom workflows connection -->
+    <path d="M820,440 Q790,460 780,490" stroke-dasharray="5,3"/>
+  </g>
+
+  <!-- ==================== SUPPORTED DISTROS (Footer) ==================== -->
+  <g transform="translate(0, 900)">
+    <rect x="0" y="0" width="1200" height="150" fill="#0f172a" opacity="0.8"/>
+    
+    <text x="600" y="30" text-anchor="middle" fill="#64748b" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500">SUPPORTED DISTRIBUTIONS</text>
+    <g fill="#94a3b8" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" text-anchor="middle">
+      <text x="600" y="55">Debian • Ubuntu • Fedora • openSUSE • RHEL • Oracle Linux • Amazon Linux</text>
+    </g>
+    
+    <line x1="200" y1="75" x2="1000" y2="75" stroke="#334155" stroke-width="1"/>
+    
+    <text x="600" y="100" text-anchor="middle" fill="#64748b" font-family="'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500">LINKS</text>
+    <g fill="#60a5fa" font-family="'Segoe UI', system-ui, sans-serif" font-size="12" text-anchor="middle">
+      <text x="600" y="125">github.com/linux-kdevops/kdevops • kdevops.org • Discord • IRC #kdevops</text>
+    </g>
+  </g>
+
+  <!-- Decorative corner accents -->
+  <path d="M0,0 L60,0 L0,60 Z" fill="url(#headerGrad)" opacity="0.15"/>
+  <path d="M1200,0 L1140,0 L1200,60 Z" fill="url(#headerGrad)" opacity="0.15"/>
+  <path d="M0,1050 L60,1050 L0,990 Z" fill="url(#headerGrad)" opacity="0.15"/>
+  <path d="M1200,1050 L1140,1050 L1200,990 Z" fill="url(#headerGrad)" opacity="0.15"/>
+</svg>
