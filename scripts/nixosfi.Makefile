@@ -20,6 +20,10 @@ ifeq (y,$(CONFIG_BOOTLINUX_DIRECT_BOOT))
 NIXOSFI_BRINGUP_DEPS += linux-direct-boot
 endif
 
+ifeq (y,$(CONFIG_QEMU))
+NIXOSFI_BRINGUP_DEPS += qemu
+endif
+
 KDEVOPS_PROVISION_METHOD		:= bringup_nixosfi
 KDEVOPS_PROVISION_DESTROY_METHOD	:= destroy_nixosfi
 KDEVOPS_PROVISION_STATUS_METHOD		:= nixosfi-status
