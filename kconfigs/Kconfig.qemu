@@ -7,19 +7,6 @@ config QEMU
 	  relying on technology is still under development or if you have
 	  a custom QEMU git URL.
 
-if !QEMU
-
-config QEMU_USE_DEVELOPMENT_VERSION
-	bool "Should we look for a development version of QEMU?"
-	help
-	  You want to enable this option if for example the currently
-	  available version of QEMU does not yet have support for the feature
-	  you are going to be working on.
-
-	  Say yes here if you are compiling your own version of QEMU.
-
-endif # !QEMU
-
 if QEMU
 
 choice
@@ -76,10 +63,6 @@ config QEMU_GIT_VERSION
 	  /mirror/qemu.git mirror by scripts/infer_last_stable_qemu.sh, with a
 	  recent release as the fallback when no mirror is present. Override it
 	  to pin a specific tag or branch.
-
-config QEMU_USE_DEVELOPMENT_VERSION
-	bool
-	default y
 
 config QEMU_TARGET
 	string

@@ -4,7 +4,7 @@ config QEMU_ENABLE_CXL
 	depends on LIBVIRT
 	depends on LIBVIRT_MACHINE_TYPE_Q35
 	depends on BRINGUP_SUPPORTS_CXL
-	depends on QEMU_USE_DEVELOPMENT_VERSION
+	depends on QEMU
 	default n
 	help
 	  If this option is enabled then you can enable different types of
