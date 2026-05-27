@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# kdevops plugin management targets
+#
+# Supports positional arguments by passing all args to the script:
+#   make kdevops-plugin-add https://github.com/mcgrof/knlp
+#   make kdevops-plugin-add https://github.com/mcgrof/knlp v1.0.0
+
+KDEVOPS_PLUGIN_SCRIPT := $(CURDIR)/scripts/kdevops-plugin.sh
+
+# Detect if running a plugin command and extract positional arguments
+# We filter out the plugin command itself to get just the arguments
+KDEVOPS_PLUGIN_CMDS := kdevops-plugin-list kdevops-plugin-evaluate kdevops-plugin-add \
+                       kdevops-plugin-remove kdevops-plugin-update kdevops-plugin-help
+KDEVOPS_PLUGIN_RUNNING := $(filter $(KDEVOPS_PLUGIN_CMDS),$(MAKECMDGOALS))
+
+ifneq ($(KDEVOPS_PLUGIN_RUNNING),)
+PLUGIN_ARGS := $(filter-out $(KDEVOPS_PLUGIN_CMDS),$(MAKECMDGOALS))
+endif
+
+# Plugin management targets - always available (don't require .config)
+PHONY += kdevops-plugin-list
+kdevops-plugin-list:
+	$(Q)$(KDEVOPS_PLUGIN_SCRIPT) list
+
+PHONY += kdevops-plugin-evaluate
+kdevops-plugin-evaluate:
+	$(Q)$(KDEVOPS_PLUGIN_SCRIPT) evaluate $(if $(URL),$(URL),$(PLUGIN_ARGS))
+
+PHONY += kdevops-plugin-add
+kdevops-plugin-add:
+	$(Q)$(KDEVOPS_PLUGIN_SCRIPT) add $(if $(URL),$(URL) $(REF),$(PLUGIN_ARGS))
+
+PHONY += kdevops-plugin-remove
+kdevops-plugin-remove:
+	$(Q)$(KDEVOPS_PLUGIN_SCRIPT) remove $(if $(NAME),$(NAME),$(PLUGIN_ARGS))
+
+PHONY += kdevops-plugin-update
+kdevops-plugin-update:
+	$(Q)$(KDEVOPS_PLUGIN_SCRIPT) update $(if $(NAME),$(NAME),$(PLUGIN_ARGS))
+
+PHONY += kdevops-plugin-help
+kdevops-plugin-help:
+	@echo "kdevops plugin management:"
+	@echo "  kdevops-plugin-list                     - List installed plugins"
+	@echo "  kdevops-plugin-evaluate <url>           - Show available versions"
+	@echo "  kdevops-plugin-add <url> [version]      - Install a plugin"
+	@echo "  kdevops-plugin-remove <name>            - Uninstall a plugin"
+	@echo "  kdevops-plugin-update <name>            - Update a plugin"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make kdevops-plugin-add https://github.com/mcgrof/knlp"
+	@echo "  make kdevops-plugin-add https://github.com/mcgrof/knlp v1.0.0"
+	@echo "  make kdevops-plugin-remove knlp"
+
+HELP_TARGETS += kdevops-plugin-help
+
+# Match-anything terminal rule to handle positional arguments (URLs, versions)
+# This prevents Make from failing when it sees arguments like URLs as targets.
+# Only active when a plugin command is being run to avoid interfering with
+# normal build targets. The double-colon makes it a terminal match-anything
+# rule that doesn't override other pattern rules.
+ifneq ($(KDEVOPS_PLUGIN_RUNNING),)
+%::
+	@:
+endif

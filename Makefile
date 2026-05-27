@@ -101,6 +101,7 @@ ANSIBLE_EXTRA_ARGS_DIRECT :=
 include Makefile.extra_vars
 
 include scripts/ansible.Makefile
+include Makefile.plugins
 
 LIMIT_HOSTS :=
 ifneq (,$(HOSTS))

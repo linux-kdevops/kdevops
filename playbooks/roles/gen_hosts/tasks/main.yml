@@ -345,6 +345,25 @@
     - ansible_hosts_template.stat.exists
     - not kdevops_use_declared_hosts|default(false)|bool
 
+# User-private workflow hosts
+# Allows users to define custom host generation tasks in their private config directory
+
+- name: Check for user-private gen_hosts tasks
+  ansible.builtin.stat:
+    path: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/gen_hosts/tasks/main.yml"
+  register: user_gen_hosts_tasks
+  when:
+    - kdevops_user_config_enable|default(false)|bool
+    - kdevops_user_config_dir_expanded is defined
+
+- name: Include user-private gen_hosts tasks
+  ansible.builtin.include_tasks:
+    file: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/gen_hosts/tasks/main.yml"
+  when:
+    - kdevops_user_config_enable|default(false)|bool
+    - kdevops_user_config_dir_expanded is defined
+    - user_gen_hosts_tasks.stat.exists|default(false)
+
 - name: Verify if final host file exists
   ansible.builtin.stat:
     path: "{{ ansible_cfg_inventory }}"
