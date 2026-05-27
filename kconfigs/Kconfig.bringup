@@ -125,6 +125,7 @@ source "kconfigs/Kconfig.nixos_flake"
 source "kconfigs/Kconfig.qsu"
 source "terraform/Kconfig"
 source "kconfigs/Kconfig.declared_hosts"
+source "kconfigs/Kconfig.qemu"
 if LIBVIRT
 source "kconfigs/Kconfig.libvirt"
 endif
