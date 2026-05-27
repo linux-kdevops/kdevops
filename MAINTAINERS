@@ -183,6 +183,15 @@ F:	scripts/nixosfi_ssh_key_name.py
 F:	scripts/update_ssh_config_nixosfi.py
 N:	nixosfi
 
+QEMU
+M:	Daniel Gomez <da.gomez@samsung.com>
+L:	kdevops@lists.linux.dev
+S:	Maintained
+T:	git https://github.com/linux-kdevops/kdevops.git
+F:	playbooks/qemu.yml
+F:	playbooks/roles/qemu/
+F:	scripts/qemu.Makefile
+
 QEMU SYSTEM UNITS (QSU)
 M:	Daniel Gomez <da.gomez@samsung.com>
 L:	kdevops@lists.linux.dev

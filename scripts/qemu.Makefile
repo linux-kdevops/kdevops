@@ -21,25 +21,25 @@ endif
 
 qemu: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
-		$(KDEVOPS_PLAYBOOKS_DIR)/build_qemu.yml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
 		--extra-vars=@./extra_vars.yaml
 PHONY += qemu
 
 qemu-install: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
-		$(KDEVOPS_PLAYBOOKS_DIR)/build_qemu.yml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
 		--extra-vars=@./extra_vars.yaml --tags vars,install
 PHONY += qemu-install
 
 qemu-configure: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
-		$(KDEVOPS_PLAYBOOKS_DIR)/build_qemu.yml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
 		--extra-vars=@./extra_vars.yaml --tags vars,configure
 PHONY += qemu-configure
 
 qemu-build: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
-		$(KDEVOPS_PLAYBOOKS_DIR)/build_qemu.yml \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
 		--extra-vars=@./extra_vars.yaml --tags vars,build
 PHONY += qemu-build
 
