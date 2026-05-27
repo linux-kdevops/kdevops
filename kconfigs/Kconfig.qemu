@@ -24,7 +24,7 @@ if QEMU
 
 choice
 	prompt "QEMU git URL to use"
-	default QEMU_JIC23
+	default QEMU_UPSTREAM
 
 config QEMU_UPSTREAM
 	bool "https://gitlab.com/qemu-project/qemu.git"
