@@ -87,6 +87,8 @@
   tags: ["qemu_build"]
   register: qemu_nproc
 
+# ninja re-execs after regenerating its manifest, losing the main build's
+# stdout to Ansible's pipe capture (log stops at [1/18]); redirect to a file.
 - name: Build QEMU
   community.general.make:
     chdir: "{{ qemu_build_dir }}"
