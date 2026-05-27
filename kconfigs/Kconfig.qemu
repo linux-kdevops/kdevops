@@ -58,11 +58,12 @@ config QEMU_GIT
 config QEMU_GIT_DATA_PATH
 	string "The destination directory where to fetch the QEMU git tree"
 	output yaml
-	default "{{local_dev_path}}/qemu"
+	default "{{ kdevops_controller_data_path }}/qemu"
 	help
 	  This is the target location of where to fetch the above git tree.
-	  Note that {{local_dev_path}} corresponds to the location set by the
-	  configuration option CONFIG_NEEDS_LOCAL_DEVELOPMENT_PATH.
+	  Defaults to a qemu/ directory under KDEVOPS_CONTROLLER_DATA_PATH,
+	  the controller-side data path, alongside the out-of-tree build
+	  directory (qemu-build/) and the install destdir (qemu-destdir/).
 
 config QEMU_GIT_VERSION
 	string "The version of QEMU to build"
@@ -89,18 +90,44 @@ config QEMU_TARGET
 	  QEMU --target-list value derived from the target architecture.
 	  Consumed by the qemu role to configure the build.
 
+config QEMU_INSTALL_DIR
+	string
+	output yaml
+	default "/usr/local" if LIBVIRT
+	default "{{ kdevops_controller_data_path }}/qemu-destdir"
+	help
+	  The install prefix passed to QEMU's configure (--prefix). The
+	  libvirt backend installs into /usr/local so the system QEMU under
+	  libvirtd's AppArmor/SELinux confinement can execute it. Every other
+	  backend installs into a qemu-destdir/ under the controller data
+	  path, which the invoking user owns, so the install needs no sudo
+	  and the binary stays out of confined system locations.
+
+config QEMU_INSTALL_NEEDS_SUDO
+	bool
+	output yaml
+	default y if LIBVIRT
+	default n
+	help
+	  Whether installing the built QEMU needs root. The /usr/local prefix
+	  used by the libvirt backend does; the per-user qemu-destdir prefix
+	  used by the other backends does not.
+
 endif # QEMU
 
 config QEMU_BIN_PATH
 	string
 	output yaml
+	default "{{ qemu_install_dir }}/bin/qemu-system-x86_64" if QEMU && TARGET_ARCH_X86_64
+	default "{{ qemu_install_dir }}/bin/qemu-system-aarch64" if QEMU && TARGET_ARCH_ARM64
+	default "{{ qemu_install_dir }}/bin/qemu-system-ppc64" if QEMU && TARGET_ARCH_PPC64LE
 	default QEMU_BIN_PATH_LIBVIRT if LIBVIRT
-	default "/usr/local/bin/qemu-system-aarch64" if TARGET_ARCH_ARM64
-	default "/usr/local/bin/qemu-system-ppc64" if TARGET_ARCH_PPC64LE
-	default "/usr/local/bin/qemu-system-x86_64"
+	default "/usr/bin/qemu-system-x86_64"
 	help
-	  Absolute path to the QEMU system emulator binary. The libvirt
-	  backend resolves this from QEMU_BIN_PATH_LIBVIRT. Every other
-	  backend uses the binary installed by the qemu role under its
-	  install prefix. This single source of truth feeds gen_nodes for
-	  the libvirt domain emulator and qsu for the systemd unit ExecStart.
+	  Absolute path to the QEMU system emulator binary. When QEMU=y this
+	  derives from QEMU_INSTALL_DIR so the install prefix and the consumed
+	  binary path share one source of truth; both Jinja2 references
+	  resolve at Ansible-use time, so the qemu role and qsu render a
+	  fully-expanded path. The plain-libvirt case with no QEMU build
+	  resolves it from QEMU_BIN_PATH_LIBVIRT for the gen_nodes domain
+	  emulator.

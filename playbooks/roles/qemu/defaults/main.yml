@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 ---
 
+qemu_install_dir: "{{ qemu_install_dir | default('/usr/local') }}"
+qemu_install_needs_sudo: false
+
 # Forces to build and install even if the binary is already present
 qemu_force_install_if_present: false
-qemu_bin_path: "{{ qemu_bin_path | default('/usr/local/bin/qemu-system-x86_64') }}"
-qemu_data: "{{ qemu_git_data_path | default(local_dev_path + '/qemu') }}"
+qemu_bin_path: "{{ qemu_bin_path | default(qemu_install_dir + '/bin/qemu-system-x86_64') }}"
+qemu_data: "{{ qemu_git_data_path | default(kdevops_controller_data_path + '/qemu') }}"
 qemu_git: "{{ qemu_git | default('https://github.com/qemu/qemu.git') }}"
 qemu_version: "{{ qemu_git_version | default('v7.2.0-rc4') }}"
-qemu_build_dir: "{{ qemu_data }}/build"
+qemu_build_dir: "{{ kdevops_controller_data_path }}/qemu-build"
 qemu_target: "{{ qemu_target | default('x86_64-softmmu') }}"
