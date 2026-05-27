@@ -192,6 +192,7 @@ F:	docs/qemu.md
 F:	kconfigs/Kconfig.qemu
 F:	playbooks/qemu.yml
 F:	playbooks/roles/qemu/
+F:	scripts/infer_last_stable_qemu.sh
 F:	scripts/qemu.Makefile
 
 QEMU SYSTEM UNITS (QSU)

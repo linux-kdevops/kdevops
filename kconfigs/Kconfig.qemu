@@ -69,11 +69,13 @@ config QEMU_GIT_VERSION
 	string "The version of QEMU to build"
 	output yaml
 	default "cxl-2023-05-19" if QEMU_JIC23
-	default "v8.0.0-rc1" if QEMU_UPSTREAM
+	default $(shell, scripts/infer_last_stable_qemu.sh) if QEMU_UPSTREAM
 	help
-	  This is the target build version of QEMU to build. Please use
-	  at least v7.2.0 for CXL support. v8.0.0-rc1 has some build fixes
-	  for newer compilers so it is the default now.
+	  This is the target build version of QEMU to build. For the upstream
+	  tree this defaults to the latest stable release inferred from the
+	  /mirror/qemu.git mirror by scripts/infer_last_stable_qemu.sh, with a
+	  recent release as the fallback when no mirror is present. Override it
+	  to pin a specific tag or branch.
 
 config QEMU_USE_DEVELOPMENT_VERSION
 	bool
