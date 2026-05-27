@@ -86,6 +86,20 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX))
 include workflows/build-linux/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_BUILD_LINUX == y
 
+# User-private workflows support
+ifeq (y,$(CONFIG_KDEVOPS_USER_CONFIG_ENABLE))
+USER_MAKEFILE := $(CONFIG_KDEVOPS_USER_CONFIG_DIR_EXPANDED)/Makefile
+ifneq ($(wildcard $(USER_MAKEFILE)),)
+include $(USER_MAKEFILE)
+endif
+endif # CONFIG_KDEVOPS_USER_CONFIG_ENABLE == y
+
+# Plugin system support - include plugin Makefiles if available
+PLUGINS_MAKEFILE := $(HOME)/.config/kdevops/Makefile.plugins
+ifneq ($(wildcard $(PLUGINS_MAKEFILE)),)
+include $(PLUGINS_MAKEFILE)
+endif
+
 ANSIBLE_EXTRA_ARGS += $(WORKFLOW_ARGS)
 ANSIBLE_EXTRA_ARGS_SEPARATED += $(WORKFLOW_ARGS_SEPARATED)
 ANSIBLE_EXTRA_ARGS_DIRECT += $(WORKFLOW_ARGS_DIRECT)

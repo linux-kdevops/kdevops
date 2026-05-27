@@ -1,0 +1,8 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private KNLP role defaults
+
+knlp_git_url: "https://github.com/mcgrof/knlp.git"
+knlp_git_ref: "main"
+knlp_data_path: "/data/knlp"

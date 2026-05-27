@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private KNLP workflow Kconfig
+
+config KDEVOPS_USER_WORKFLOW_KNLP
+	bool "Enable the knlp ML research workflow"
+	default y
+	output yaml
+	help
+	  This enables the knlp (Kernel Natural Language Processing) workflow.
+	  knlp is a collaborative transformer architecture research project that
+	  applies Linux kernel development methodologies to machine learning
+	  experimentation and reproducibility.
+
+	  Repository: https://github.com/mcgrof/knlp
+
+if KDEVOPS_USER_WORKFLOW_KNLP
+
+menu "knlp ML research workflow configuration"
+
+config WORKFLOW_KNLP_GIT_URL
+	string "knlp git repository URL"
+	default "https://github.com/mcgrof/knlp.git"
+	output yaml
+	help
+	  The git repository URL for knlp.
+
+config WORKFLOW_KNLP_GIT_REF
+	string "knlp git reference (branch, tag, or commit)"
+	default "main"
+	output yaml
+	help
+	  The git reference to checkout.
+
+config WORKFLOW_KNLP_DATA_PATH
+	string "Path to install knlp"
+	default "/data/knlp"
+	output yaml
+	help
+	  The directory where knlp will be cloned and installed.
+
+endmenu
+
+endif # KDEVOPS_USER_WORKFLOW_KNLP

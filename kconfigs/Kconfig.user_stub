@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Stub file for user Kconfig when no user configuration exists.
+# This file is intentionally empty and is only sourced when the
+# user's ~/.config/kdevops/Kconfig does not exist.

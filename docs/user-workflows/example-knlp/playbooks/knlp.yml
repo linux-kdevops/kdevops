@@ -1,0 +1,10 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# User-private KNLP playbook
+
+- name: Setup knlp ML research workflow
+  hosts: all
+  gather_facts: yes
+  roles:
+    - role: "{{ kdevops_user_config_dir_expanded }}/playbooks/roles/knlp"
