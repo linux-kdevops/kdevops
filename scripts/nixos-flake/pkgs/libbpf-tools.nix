@@ -16,10 +16,13 @@
 {
   lib,
   stdenv,
+  stdenvNoCC,
   fetchFromGitHub,
+  cacert,
   cargo,
   rustc,
   rustPlatform,
+  gitMinimal,
   clang,
   llvmPackages,
   elfutils,
@@ -29,6 +32,56 @@
   pkg-config,
   gnumake,
 }:
+
+let
+  # crates.io's WAF 403s both per-crate `curl` fetches (importCargoLock)
+  # and `python-requests` fetches (rustPlatform.fetchCargoVendor) when a
+  # crate is missing from cache.nixos.org. `cargo` itself sends a UA the
+  # WAF accepts, so vendor through cargo in one FOD. cargoSetupHook reads
+  # the produced layout (a directory of <crate>-<version>/ subdirs) and
+  # writes the default .cargo/config.toml that points at it.
+  cargoVendorViaCargo =
+    {
+      src,
+      cargoRoot,
+      name,
+      hash,
+    }:
+    stdenvNoCC.mkDerivation {
+      inherit src;
+      name = "${name}-vendor";
+      nativeBuildInputs = [
+        cacert
+        cargo
+        gitMinimal
+      ];
+      impureEnvVars = lib.fetchers.proxyImpureEnvVars;
+      dontConfigure = true;
+      dontInstall = true;
+      dontFixup = true;
+      buildPhase = ''
+        runHook preBuild
+        cd "${cargoRoot}"
+        export HOME="$NIX_BUILD_TOP/.home"
+        mkdir -p "$HOME"
+        config_tmp=$(mktemp)
+        cargo vendor --locked "$out" > "$config_tmp"
+        mkdir -p "$out/.cargo"
+        # cargo vendor emits source redirections for crates-io plus any
+        # git sources, pinned at the absolute $out path. Replace it with
+        # @vendor@ so cargoSetupHook can substitute the build-time copy
+        # path; the hook's default config only redirects crates-io, so
+        # without ours the git source stays unconfigured and cargo falls
+        # back to /homeless-shelter/.cargo which is read-only.
+        sed "s|$out|@vendor@|g" "$config_tmp" > "$out/.cargo/config.toml"
+        cp Cargo.lock "$out/Cargo.lock"
+        runHook postBuild
+      '';
+      outputHash = hash;
+      outputHashAlgo = if hash == "" then "sha256" else null;
+      outputHashMode = "recursive";
+    };
+in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libbpf-tools";
@@ -50,41 +103,12 @@ stdenv.mkDerivation (finalAttrs: {
   # that point src at a bcc fork).
   postUnpack = "sourceRoot=$sourceRoot/libbpf-tools";
 
-  # USE_BLAZESYM=1 pulls in the blazesym Rust crate that ships as a
-  # bcc submodule under libbpf-tools/blazesym. blkalgn (and a few
-  # other tools — futexctn, memleak, opensnoop) #include
-  # blazesym.h unconditionally and link against libblazesym_c.a,
-  # which the Makefile builds via `cargo build --release` inside
-  # libbpf-tools/blazesym. The cargo invocation runs in the nix
-  # sandbox with no network, so its dependencies must be vendored
-  # ahead of time.
-  #
-  # importCargoLock + finalAttrs.src reads the lockfile that
-  # determines the dependency closure from whatever src is
-  # currently in play. When the per-VM flake overlay overrides src
-  # (via overrideAttrs pointing at a bcc fork), finalAttrs.src
-  # updates and cargoDeps re-derives from that fork's pinned
-  # blazesym submodule SHA — no separate cargoHash to chase when
-  # the bcc tag (or fork branch) bumps the blazesym submodule.
-  #
-  # outputHashes pins blazesym's one git-only dependency (vmlinux,
-  # not on crates.io). The pinned rev is stable across recent BCC
-  # tags and the forks that carry blkalgn, so a single hash covers
-  # both src cases. Update this hash if a future blazesym bump
-  # moves to a different vmlinux.h rev — nix prints the expected
-  # hash on mismatch.
-  #
-  # cargoRoot is relative to the source root the build cd's into
-  # (sourceRoot above), which is .../libbpf-tools, so cargoRoot is
-  # just "blazesym". The lockFile path used by importCargoLock is
-  # rooted at finalAttrs.src and walks the fully-laid-out source
-  # tree, so it carries the full prefix.
   cargoRoot = "blazesym";
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = "${finalAttrs.src}/libbpf-tools/blazesym/Cargo.lock";
-    outputHashes = {
-      "vmlinux-0.0.0" = "sha256-a2q2AuTpqCU7gD0oZmjA+UbGwh4kVazaK6xKgK2L/Nk=";
-    };
+  cargoDeps = cargoVendorViaCargo {
+    inherit (finalAttrs) src;
+    cargoRoot = "libbpf-tools/blazesym";
+    name = "libbpf-tools-blazesym";
+    hash = "sha256-0jnrwSQODRWFBSdCULMYi/BFq3npPKDA+CZKEU627L4=";
   };
 
   nativeBuildInputs = [
