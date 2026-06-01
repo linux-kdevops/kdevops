@@ -118,6 +118,95 @@ endchoice
 endmenu  # SSH access
 
 
+menu "Virtiofs shares"
+
+# qsu's vars schema accepts a list of shares (see
+# scripts/qemu-system-units/docs/vars.md). The imageless backend's
+# /nix/store + /lib/modules entries and the fstests workflow's
+# data-configs/data-results/kdevops-fstests entries are appended to
+# qsu_shares by playbooks/roles/qsu/tasks/render-per-vm.yml. This
+# menu exposes one operator-defined entry on top of those.
+
+config QSU_SHARES_S0
+	bool "Mount a controller directory into the guest via virtiofs"
+	depends on NIXOS_FLAKE_MOUNT_SHARES
+	output yaml
+	default n
+	help
+	  Append one operator-defined entry to qsu_shares that
+	  exposes an arbitrary controller directory to the guest at
+	  bringup. The imageless backend already shares /nix/store
+	  with the guest, so a binary built on the controller with
+	  `nix build` (which produces a `result -> /nix/store/<hash>`
+	  symlink) becomes immediately runnable inside the guest once
+	  the directory holding that symlink is shared too.
+
+	  The canonical use case is mirroring $HOME so per-project
+	  `result` symlinks resolve at the same absolute path on both
+	  the controller and the guest. Useful for iterating on a tool
+	  under ~/src/<project> and exercising it inside the VM
+	  without going through the system-closure rebuild loop.
+
+	  Developer convenience knob. Production VM configurations
+	  that want permanent shares should add them directly to qsu's
+	  vars schema (host side) and the per-VM default.nix via
+	  nixos-flake.nixosModules.mounts.shares (guest side).
+
+	  Takes effect at `make bringup` or `make nixosfi-rebuild-boot`
+	  because the matching virtiofsd daemon is only spun up when
+	  the qsu render path runs. `make nixosfi-rebuild-test` alone
+	  is not enough; the guest would fail to mount a tag that no
+	  virtiofsd is serving.
+
+if QSU_SHARES_S0
+
+config QSU_SHARES_S0_DIR
+	string "Controller directory to share"
+	output yaml
+	default "$(HOME)"
+	help
+	  Absolute path on the controller to expose to the guest.
+	  Default is $HOME so per-project `result -> /nix/store/<hash>`
+	  symlinks under ~/src/* resolve at the same path in the guest.
+
+config QSU_SHARES_S0_MOUNT
+	string "Guest mount point"
+	output yaml
+	default "$(HOME)"
+	help
+	  Path at which the share appears inside the guest. Default
+	  mirrors the controller path so absolute paths (including
+	  /nix/store/<hash> symlink chains rooted under the shared
+	  directory) resolve identically on both sides.
+
+config QSU_SHARES_S0_TAG
+	string "virtiofs tag"
+	output yaml
+	default "share-s0"
+	help
+	  Tag the controller's virtiofsd announces for this share.
+	  Must be unique across the guest's shares; the imageless
+	  backend reserves `store` and `modules`, and the fstests
+	  workflow reserves `data-configs`, `data-results`, and
+	  `kdevops-fstests`.
+
+config QSU_SHARES_S0_READWRITE
+	bool "Mount the share read-write"
+	output yaml
+	default n
+	help
+	  Default is read-only at the guest mount: the guest reads
+	  controller files at the mount point but cannot modify them,
+	  preventing operator typos in the guest from clobbering
+	  controller source trees. Enable this only when the in-guest
+	  workload must write back to the controller (forensics
+	  capture, log shipping, result harvest).
+
+endif # QSU_SHARES_S0
+
+endmenu  # Virtiofs shares
+
+
 menu "NVMe storage"
 
 config QSU_NVME_DRIVE_COUNT

@@ -7,20 +7,21 @@
 
 # Superset of every virtiofsd share tag the role can render an
 # env file for. Active subset per inventory VM is computed in
-# tasks/imageless-build-per-vm.yml as
-#   qsu_shares = qsu_shares_base + qsu_shares_fstests
-# under the kdevops_workflow_enable_fstests gate. bringup.yml uses
-# this list to validate that an env file
+# tasks/render-per-vm.yml as
+#   qsu_shares = qsu_shares_base + qsu_shares_fstests + qsu_shares_s0_entries
+# under the kdevops_workflow_enable_fstests and qsu_shares_s0
+# gates. bringup.yml uses this list to validate that an env file
 # in the host-shared ~/.config/systemd/virtiofsd/ directory really
 # belongs to the role (i.e. matches `<inventory-vm>-<tag>.env`)
 # before restarting its socket — without this filter, a global
 # *.env glob touches sockets owned by VMs in other kdevops trees
 # on the host. destroy.yml uses it to enumerate exactly which
 # per-share env files to remove. Keep in sync with the shares
-# block in imageless-build-per-vm.yml whenever a share is added.
+# block in render-per-vm.yml whenever a share is added.
 qsu_canonical_share_tags:
   - store
   - modules
   - data-configs
   - data-results
   - kdevops-fstests
+  - "{{ qsu_shares_s0_tag | default('share-s0') }}"
