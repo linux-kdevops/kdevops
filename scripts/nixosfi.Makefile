@@ -112,6 +112,16 @@ nixosfi-rebuild-test: $(KDEVOPS_EXTRA_VARS)
 		--tags rebuild-test \
 		--extra-vars=@./extra_vars.yaml
 
+# nixosfi-test: like nixosfi-rebuild-test but does NOT regenerate the
+# per-VM flake.nix / default.nix from kdevops templates first. Use
+# when hand-edits to nixos/generated/<vm>/*.nix must survive. See
+# playbooks/roles/nixosfi/tasks/test.yml.
+PHONY += nixosfi-test
+nixosfi-test: $(KDEVOPS_EXTRA_VARS)
+	$(Q)ansible-playbook $(KDEVOPS_PLAYBOOKS_DIR)/nixosfi.yml \
+		--tags nixosfi-test \
+		--extra-vars=@./extra_vars.yaml
+
 PHONY += nixosfi-stop
 nixosfi-stop: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook $(KDEVOPS_PLAYBOOKS_DIR)/nixosfi.yml \

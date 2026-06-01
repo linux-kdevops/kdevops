@@ -1,0 +1,83 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Build the per-VM imageless flake AS IT CURRENTLY EXISTS ON DISK and
+# activate the resulting closure on the running guest via
+# switch-to-configuration test. Unlike rebuild-test.yml, this path
+# does NOT re-render the per-VM flake.nix and default.nix from kdevops
+# Jinja templates first, so any operator edits to
+# nixos/generated/<vm>/{flake,default}.nix survive. Use this when the
+# operator has hand-added a flake input or systemPackages entry that
+# the kdevops template does not (yet) emit; the rebuild-test path
+# would clobber such edits.
+#
+# Nix-vocabulary parallel:
+#   nixosfi-rebuild-test - regenerate the per-VM flake from kdevops
+#       templates, then `nix build` + `switch-to-configuration test`.
+#       The rebuild applies to BOTH the kdevops-rendered flake and
+#       the nixos system closure.
+#   nixosfi-test - `nix build` the current per-VM flake (no
+#       regeneration), then `switch-to-configuration test`. Mirrors
+#       `nixos-rebuild test` against a hand-managed flake.
+#
+# Idempotency: every step is safe to re-run.
+#   `nix flake update <pkg>-src`  re-pins narHash only if the source
+#       on disk changed; otherwise it is a no-op.
+#   `nix build`                   nix caches by drv; if no input
+#       changed, the existing out-link is reused and no derivation is
+#       rebuilt.
+#   `switch-to-configuration test` re-runs activation scripts; when
+#       invoked on the same closure it converges to the same system
+#       state. Activation chatter (reload-units etc.) repeats but is
+#       harmless.
+#
+# Note for operator-added inputs: refresh-source-overrides.yml below
+# only refreshes the 10 hardcoded NIXOS_FLAKE_OVERRIDE_<PKG> inputs.
+# Inputs added by hand (for example a dev-local `lbs-repro` flake
+# input declared directly in nixos/generated/<vm>/flake.nix) are not
+# in that set; if the source of such an input changes, the operator
+# must re-pin its narHash manually before invoking this target:
+#
+#   nix flake update --flake "path:<config_dir>/<vm>" <input-name>
+#
+# The build + readlink + activate task sequence below is intentionally
+# duplicated from rebuild-test.yml rather than factored into a shared
+# helper. Both paths have been validated independently; introducing a
+# shared task file would create a refactor-risk surface without a
+# second consumer to justify it. If a third caller appears, factor
+# at that point.
+
+- name: Refresh per-package source-override flake inputs for {{ inventory_hostname }}
+  ansible.builtin.import_tasks: refresh-source-overrides.yml
+  vars:
+    refresh_target_vms: "{{ [inventory_hostname] }}"
+
+- name: Build imageless NixOS toplevel from current per-VM flake for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ nixosfi_config_dir }}/{{ inventory_hostname }}#toplevel"
+      - --out-link
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
+
+- name: Resolve new toplevel store path for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - readlink
+      - -f
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  register: nixosfi_new_toplevel
+  changed_when: false
+
+- name: Activate new toplevel on the running guest {{ inventory_hostname }}
+  ansible.builtin.command:
+    cmd: "{{ nixosfi_new_toplevel.stdout }}/bin/switch-to-configuration test"
+  register: nixosfi_activate_result
+  failed_when: nixosfi_activate_result.rc not in [0, 4, 100]
+  changed_when: nixosfi_activate_result.rc in [0, 4, 100]
