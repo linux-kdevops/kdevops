@@ -219,7 +219,7 @@
 # runs/<run-id>/monitoring/.
 - name: Compose per-VM virtiofs shares for {{ qsu_vm_name }}
   ansible.builtin.set_fact:
-    qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests }}"
+    qsu_shares: "{{ qsu_shares_base + qsu_shares_fstests + qsu_shares_s0_entries }}"
   vars:
     qsu_shares_base:
       - tag: store
@@ -242,6 +242,18 @@
            'mount': '/usr/local/lib/kdevops/fstests'}
         ]
         if (kdevops_workflow_enable_fstests | default(false) | bool)
+        else []
+      }}
+    # CONFIG_QSU_SHARES_S0: opt-in single operator-defined
+    # share. Pairs with the nixos-flake.shares."<guest_mount>" entry
+    # nixosfi's default.nix.j2 emits from the same extra_vars. Read-only
+    # vs read-write is the guest's concern (mount option in default.nix.j2).
+    qsu_shares_s0_entries: >-
+      {{
+        [{'tag': qsu_shares_s0_tag,
+          'dir': qsu_shares_s0_dir,
+          'mount': qsu_shares_s0_mount}]
+        if (qsu_shares_s0 | default(false) | bool)
         else []
       }}
 

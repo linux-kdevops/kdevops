@@ -72,6 +72,10 @@
     options = [ "trans=virtio" "version=9p2000.L" "cache=loose" ];
   };
 {% endif %}
+{% if qsu_shares_s0 is defined and qsu_shares_s0 %}
+  # CONFIG_QSU_SHARES_S0 — see nixos-flake docs/usage.md.
+  nixos-flake.shares."{{ qsu_shares_s0_mount }}" = { tag = "{{ qsu_shares_s0_tag }}";{% if not (qsu_shares_s0_readwrite | default(false)) %} options = [ "ro" ];{% endif %} };
+{% endif %}
 {% set override_pkgs = [
   ('fio',          nixos_flake_override_fio          | default(false), nixos_flake_override_fio_src          | default('')),
   ('xfstests',     nixos_flake_override_xfstests     | default(false), nixos_flake_override_xfstests_src     | default('')),

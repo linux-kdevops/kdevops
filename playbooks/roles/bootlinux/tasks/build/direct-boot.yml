@@ -214,7 +214,7 @@
 # source tree (bootlinux_direct_boot_tree_path), the same directory
 # that out-of-tree builds use as srctree. Imageless / virtiofs guests
 # that mount /lib/modules from this destdir AND reach the source tree
-# through another share (typically the QSU controller-share covering
+# through another share (typically the QSU SHARES_S0 entry covering
 # the operator's $HOME) resolve the symlink end-to-end and headers
 # work. Guests that don't have the source tree reachable get a
 # dangling symlink, which is no worse than the prior state.
