@@ -1,0 +1,44 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# Build the per-VM flake as it sits on disk and activate it on the
+# guest. Unlike rebuild-test.yml, no re-render from kdevops templates,
+# so operator edits to nixos/generated/<vm>/{flake,default}.nix
+# survive. Hand-added flake inputs outside NIXOS_FLAKE_OVERRIDE_<PKG>
+# must be re-pinned manually before invoking this target:
+#   nix flake update --flake "path:<config_dir>/<vm>" <input-name>
+
+- name: Refresh per-package source-override flake inputs for {{ inventory_hostname }}
+  ansible.builtin.import_tasks: refresh-source-overrides.yml
+  vars:
+    refresh_target_vms: "{{ [inventory_hostname] }}"
+
+- name: Build imageless NixOS toplevel from current per-VM flake for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - nix
+      - build
+      - "path:{{ nixosfi_config_dir }}/{{ inventory_hostname }}#toplevel"
+      - --out-link
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  environment:
+    PATH: "/nix/var/nix/profiles/default/bin:{{ lookup('env', 'PATH') | default('/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin') }}"
+  changed_when: true
+
+- name: Resolve new toplevel store path for {{ inventory_hostname }}
+  delegate_to: localhost
+  ansible.builtin.command:
+    argv:
+      - readlink
+      - -f
+      - "{{ nixosfi_config_dir }}/{{ inventory_hostname }}/result"
+  register: nixosfi_new_toplevel
+  changed_when: false
+
+- name: Activate new toplevel on the running guest {{ inventory_hostname }}
+  ansible.builtin.command:
+    cmd: "{{ nixosfi_new_toplevel.stdout }}/bin/switch-to-configuration test"
+  register: nixosfi_activate_result
+  failed_when: nixosfi_activate_result.rc not in [0, 4, 100]
+  changed_when: nixosfi_activate_result.rc in [0, 4, 100]

@@ -12,6 +12,16 @@
   vars_files:
     - "{{ playbook_dir }}/../extra_vars.yaml"
   tasks:
+    # Two activation paths, selected by tag. Pick one; running both
+    # together first regenerates then activates from the regenerated
+    # config (rebuild-test behaviour with extra cost).
+    #
+    #   --tags rebuild-test  regenerate per-VM flake from kdevops
+    #                        templates then build + switch-to-config test.
+    #   --tags nixosfi-test  keep per-VM flake on disk; build +
+    #                        switch-to-config test. Use when operator
+    #                        edits to nixos/generated/<vm>/*.nix must
+    #                        survive.
     - name: Include nixosfi rebuild-test tasks
       ansible.builtin.include_role:
         name: nixosfi
@@ -21,3 +31,13 @@
             - rebuild-test
       tags:
         - rebuild-test
+
+    - name: Include nixosfi test (keep-on-disk-flake) tasks
+      ansible.builtin.include_role:
+        name: nixosfi
+        tasks_from: test
+        apply:
+          tags:
+            - nixosfi-test
+      tags:
+        - nixosfi-test
