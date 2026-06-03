@@ -195,6 +195,33 @@
   delegate_to: localhost
   tags: [build-linux]
 
+# `make rust-analyzer` writes rust-project.json to the build dir;
+# rust-analyzer LSP expects it at the source root, so copy it there.
+- name: Generate rust-project.json in the build directory
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: rust-analyzer
+    jobs: "{{ bootlinux_direct_boot_nproc.stdout }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_direct_boot_builddir}) }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  when:
+    - bootlinux_direct_boot_rust_analyzer | default(true) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
+- name: Copy rust-project.json into the kernel source tree
+  ansible.builtin.copy:
+    src: "{{ bootlinux_direct_boot_builddir }}/rust-project.json"
+    dest: "{{ bootlinux_direct_boot_tree_path }}/rust-project.json"
+    mode: "0644"
+    remote_src: true
+  when:
+    - bootlinux_direct_boot_rust_analyzer | default(false) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
 # Avoid `make install`: on most arches it execs the distro's
 # /sbin/installkernel hook, which pulls in initramfs and bootloader
 # work against the controller's own /boot and can need root. Copy
