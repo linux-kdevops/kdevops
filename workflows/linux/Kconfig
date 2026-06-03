@@ -177,6 +177,22 @@ config BOOTLINUX_DIRECT_BOOT_COMPILE_COMMANDS
 	  .cmd contents. Disable to skip (a few seconds on a large
 	  build).
 
+config BOOTLINUX_DIRECT_BOOT_SCRIPTS_GDB
+	bool "Build the kernel's GDB Python helpers (scripts_gdb)"
+	output yaml
+	default y
+	help
+	  After the kernel build, run `make scripts_gdb` against the
+	  out-of-tree build directory to materialize
+	  scripts/gdb/vmlinux-gdb.py and its helpers next to vmlinux.
+	  Lets a developer attach gdb to the running kernel (or a
+	  vmlinux core) and use lx-* commands (lx-dmesg, lx-ps,
+	  lx-mounts, ...) without a separate setup pass. The script
+	  collection is independent of CONFIG_GDB_SCRIPTS in the
+	  resolved .config; that knob only affects whether the
+	  scripts are installed into a distro package, not whether
+	  the build can produce them.
+
 endif # BOOTLINUX_DIRECT_BOOT
 
 if BOOTLINUX_9P

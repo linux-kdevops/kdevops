@@ -178,6 +178,23 @@
   delegate_to: localhost
   tags: [build-linux]
 
+# Materialize scripts/gdb/vmlinux-gdb.py + the lx-* command set in
+# the build dir so an attached gdb can `source vmlinux-gdb.py` and
+# call lx-dmesg, lx-ps, lx-mounts, etc. The make target works against
+# any config (the helpers are pure Python around vmlinux symbols).
+- name: Generate kernel GDB helpers (scripts_gdb) in the build directory
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: scripts_gdb
+    jobs: "{{ bootlinux_direct_boot_nproc.stdout }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_direct_boot_builddir}) }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  when:
+    - bootlinux_direct_boot_scripts_gdb | default(true) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
 # Avoid `make install`: on most arches it execs the distro's
 # /sbin/installkernel hook, which pulls in initramfs and bootloader
 # work against the controller's own /boot and can need root. Copy
