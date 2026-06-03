@@ -156,6 +156,28 @@
   delegate_to: localhost
   tags: [build-linux]
 
+# Walk the out-of-tree build's .cmd files and write the JSON index
+# clangd/cscope/IDEs read from the source tree root. Invoked as the
+# kernel's gen_compile_commands.py documents: --directory points at
+# the build dir, --output at the source-tree path the consumers
+# expect. chdir is the source tree because the script's imports are
+# relative.
+- name: Generate compile_commands.json in the kernel source tree
+  ansible.builtin.command:
+    argv:
+      - ./scripts/clang-tools/gen_compile_commands.py
+      - --directory
+      - "{{ bootlinux_direct_boot_builddir }}"
+      - --output
+      - "{{ bootlinux_direct_boot_tree_path }}/compile_commands.json"
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+  changed_when: true
+  when:
+    - bootlinux_direct_boot_compile_commands | default(true) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
 # Avoid `make install`: on most arches it execs the distro's
 # /sbin/installkernel hook, which pulls in initramfs and bootloader
 # work against the controller's own /boot and can need root. Copy

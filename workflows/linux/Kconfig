@@ -162,6 +162,21 @@ config BOOTLINUX_DIRECT_BOOT_DESTDIR
 	  virtiofs-shares lib/modules into the imageless nixos-flake
 	  closure at runtime.
 
+config BOOTLINUX_DIRECT_BOOT_COMPILE_COMMANDS
+	bool "Generate compile_commands.json into the kernel source tree"
+	output yaml
+	default y
+	help
+	  After the kernel build, run
+	  scripts/clang-tools/gen_compile_commands.py against the
+	  out-of-tree build directory and write the resulting JSON
+	  index to BOOTLINUX_DIRECT_BOOT_TREE_PATH/compile_commands.json.
+	  Lets clangd, cscope, and IDEs pick up the build's
+	  translation-unit set without further setup. The step is
+	  idempotent; rerunning rewrites the file from the current
+	  .cmd contents. Disable to skip (a few seconds on a large
+	  build).
+
 endif # BOOTLINUX_DIRECT_BOOT
 
 if BOOTLINUX_9P
