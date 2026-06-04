@@ -90,6 +90,10 @@ linux-help-menu:
 	@if [[ "$(CONFIG_BOOTLINUX_9P)" == "y" ]]; then \
 		echo "linux-mount        - Mounts 9p path on targets" ;\
 	fi
+	@if [[ "$(CONFIG_BOOTLINUX_DIRECT_BOOT)" == "y" ]]; then \
+		echo "linux-direct-boot              - Build the kernel into the direct-boot destdir" ;\
+		echo "linux-direct-boot-menuconfig   - Open menuconfig against the direct-boot build dir" ;\
+	fi
 	@echo "linux-deploy       - Builds, installs, updates GRUB and reboots - useful for rapid development"
 	@echo "linux-build        - Builds kernel"
 	@echo "linux-install      - Only builds and installs Linux"
@@ -167,6 +171,37 @@ linux-direct-boot:
 		$(KDEVOPS_PLAYBOOKS_DIR)/bootlinux.yml \
 		--tags bootlinux_direct_boot_build \
 		--extra-vars="$(BOOTLINUX_ARGS)"
+
+DIRECT_BOOT_DATA := $(subst ",,$(CONFIG_KDEVOPS_CONTROLLER_DATA_PATH))
+DIRECT_BOOT_TREE := $(subst {{ kdevops_controller_data_path }},$(DIRECT_BOOT_DATA),$(subst ",,$(CONFIG_BOOTLINUX_DIRECT_BOOT_TREE_PATH)))
+DIRECT_BOOT_BUILDDIR := $(subst {{ kdevops_controller_data_path }},$(DIRECT_BOOT_DATA),$(subst ",,$(CONFIG_BOOTLINUX_DIRECT_BOOT_BUILDDIR)))
+DIRECT_BOOT_LOCALVERSION := $(subst ",,$(CONFIG_BOOTLINUX_TREE_LOCALVERSION))
+
+DIRECT_BOOT_MAKE_VARS :=
+ifeq (y,$(CONFIG_BOOTLINUX_CCACHE))
+ifeq (y,$(CONFIG_BOOTLINUX_COMPILER_CLANG))
+DIRECT_BOOT_MAKE_VARS += CC='ccache clang'
+else
+DIRECT_BOOT_MAKE_VARS += CC='ccache gcc'
+endif
+endif
+
+ifeq (y,$(CONFIG_BOOTLINUX_REPRODUCIBLE_BUILDS))
+DIRECT_BOOT_MAKE_VARS += KBUILD_BUILD_TIMESTAMP=''
+DIRECT_BOOT_MAKE_VARS += KBUILD_BUILD_USER=kdevops
+DIRECT_BOOT_MAKE_VARS += KBUILD_BUILD_HOST=kdevops
+endif
+
+# mrproper clears stale in-tree state (.config, include/config, ...)
+# the kernel's outputmakefile check refuses to start an O= build with.
+PHONY += linux-direct-boot-menuconfig
+linux-direct-boot-menuconfig:
+	$(Q)make -C '$(DIRECT_BOOT_TREE)' mrproper
+	$(Q)LOCALVERSION='$(DIRECT_BOOT_LOCALVERSION)' \
+	make --directory='$(DIRECT_BOOT_TREE)' \
+		O='$(DIRECT_BOOT_BUILDDIR)' \
+		$(DIRECT_BOOT_MAKE_VARS) \
+		menuconfig
 
 PHONY += linux-deploy
 linux-deploy:
