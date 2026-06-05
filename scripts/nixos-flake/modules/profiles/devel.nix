@@ -54,6 +54,7 @@
     # BPF and tracing
     bcc
     blktrace
+    bpftools
     bpftrace
     libbpf-tools
     trace-cmd
