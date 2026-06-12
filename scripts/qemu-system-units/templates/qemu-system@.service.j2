@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+#
+# QEMU VM template service
+# Rendered from: templates/qemu-system@.service.j2
+#
+# Scope: {{ service_scope | default('user') }}
+{% if service_scope | default('user') == 'system' %}
+# Deploy:   sudo cp <rendered> /etc/systemd/system/qemu-system@.service
+# Usage:    sudo systemctl start qemu-system@<name>
+# Logs:     journalctl --unit=qemu-system@<name>.service
+{% else %}
+# Deploy:   mkdir --parents ~/.config/systemd/user && cp <rendered> ~/.config/systemd/user/qemu-system@.service
+# Usage:    systemctl --user start qemu-system@<name>
+# Logs:     journalctl --user-unit=qemu-system@<name>.service
+{% endif %}
+
+[Unit]
+Description=QEMU System Virtual Machine %i
+Documentation=man:qemu-system(1) man:systemd.service(5) man:systemd.kill(5)
+PartOf=machines.target
+Before=machines.target
+{% if service_scope | default('user') == 'system' %}
+After=network.target
+{% endif %}
+
+[Service]
+Type=simple
+SyslogIdentifier=qemu-system@%i
+ConfigurationDirectory=systemd/qemu-system
+RuntimeDirectory=qemu-system/%i
+StateDirectory=qemu-system/%i
+WorkingDirectory=%S/qemu-system/%i
+EnvironmentFile=%E/systemd/qemu-system/%i.env
+Environment=QEMU_EXTRA_ARGS=
+ExecStart={{ qemu_binary }} $QEMU_ARGS $QEMU_EXTRA_ARGS \
+    $KERNEL_ARGS \
+    -qmp unix:%t/qemu-system/%i/qmp.sock,server=on,wait=off
+{# Register with machined over Varlink. See docs/design-decisions.md
+   "machined registration" for why Varlink (and not busctl). The
+   shared template registers without vSockCid because it does not
+   know per-VM values; the per-VM drop-in in
+   templates/qemu-system-override.conf.j2 overrides this when
+   vsock_cid is set in the vars file. #}
+{% if service_scope | default("user") == "user" %}
+{% set varlink_socket = "/run/user/%U/systemd/machine/io.systemd.Machine" %}
+{% else %}
+{% set varlink_socket = "/run/systemd/machine/io.systemd.Machine" %}
+{% endif %}
+ExecStartPost=-varlinkctl call \
+    {{ varlink_socket }} \
+    io.systemd.Machine.Register \
+    "{\"name\":\"%i\",\"class\":\"vm\",\"service\":\"qemu-system\",\"leader\":${MAINPID}}"
+ExecStop=-socat OPEN:%E/systemd/qemu-system/qmp-powerdown!!OPEN:/dev/null,wronly UNIX-CONNECT:%t/qemu-system/%i/qmp.sock
+KillSignal=SIGCONT
+KillMode=mixed
+TimeoutStopSec=2min
+Slice=machine.slice
+
+# Device access restricted to what the QEMU command line opens,
+# mirroring systemd-vmspawn@.service. /dev/kvm backs -accel kvm;
+# /dev/vhost-vsock backs the vhost-vsock-pci device; virtio-rng's
+# /dev/urandom is permitted by the closed policy's defaults. PCIe
+# passthrough also needs /dev/vfio -- the per-VM drop-in adds it.
+# See: man systemd.resource-control, design-decisions.md
+# "Security hardening".
+DevicePolicy=closed
+DeviceAllow=/dev/kvm rw
+DeviceAllow=/dev/vhost-vsock rw
+
+[Install]
+WantedBy=machines.target

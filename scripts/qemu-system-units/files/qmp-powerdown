@@ -1,0 +1,2 @@
+{"execute":"qmp_capabilities"}
+{"execute":"system_powerdown"}
