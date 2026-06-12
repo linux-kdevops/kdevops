@@ -35,8 +35,11 @@ directory `qemu-build/` and the install destdir `qemu-destdir/`.
 
 ## Version (`QEMU_GIT_VERSION`)
 
-The git ref (tag or branch) to check out and build. Use at least v7.2.0 for CXL
-support.
+The git ref (tag or branch) to check out and build. For the upstream tree this
+defaults to the latest stable release, inferred from the `/mirror/qemu.git`
+mirror by `scripts/infer_last_stable_qemu.sh`; when no mirror is present it
+falls back to a recent release. Override it to pin a specific tag, and use at
+least v7.2.0 for CXL support.
 
 ## Build target (`QEMU_TARGET`)
 
