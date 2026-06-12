@@ -67,10 +67,14 @@ it for the systemd unit `ExecStart`.
 
 ## Make targets
 
-QEMU is built as part of the localhost setup performed during `make` and
-`make bringup`. The build can also be driven explicitly:
+QEMU builds only when you run its targets, never during `make` or
+`make bringup`. The build targets form a chain; each pulls in the ones
+before it, and `make qemu` runs the whole chain:
 
-- `make qemu` — fetch, build, and install QEMU on localhost
-- `make qemu-configure` — run QEMU's configure step
+- `make qemu-controller-setup` — install the build and runtime dependencies (may sudo)
+- `make qemu-verify` — verify the build toolchain is present (read-only)
+- `make qemu-fetch` — fetch the QEMU git tree
+- `make qemu-configure` — configure the QEMU build
 - `make qemu-build` — build QEMU
-- `make qemu-install` — install the built QEMU on localhost
+- `make qemu-install` — install QEMU on localhost
+- `make qemu` — verify, fetch, configure, build, and install QEMU

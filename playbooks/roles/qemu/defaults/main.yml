@@ -4,8 +4,6 @@
 qemu_install_dir: "{{ qemu_install_dir | default('/usr/local') }}"
 qemu_install_needs_sudo: false
 
-# Forces to build and install even if the binary is already present
-qemu_force_install_if_present: false
 qemu_bin_path: "{{ qemu_bin_path | default(qemu_install_dir + '/bin/qemu-system-x86_64') }}"
 qemu_data: "{{ qemu_git_data_path | default(kdevops_controller_data_path + '/qemu') }}"
 qemu_git: "{{ qemu_git | default('https://github.com/qemu/qemu.git') }}"

@@ -11,39 +11,40 @@
       skip: true
   tags: vars
 
-- name: Verify local build QEMU installation
-  ansible.builtin.stat:
-    path: "{{ qemu_bin_path }}"
-  register: qemu_present
+- name: Check the QEMU build toolchain is present
+  ansible.builtin.shell: |
+    missing=
+    for tool in git meson ninja cc; do
+      command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
+    done
+    [ -z "$missing" ] || { echo "$missing"; exit 1; }
+  register: qemu_toolchain
   changed_when: false
-  failed_when: qemu_present.stat.exists and not qemu_present.stat.executable
-  tags: ["qemu", "verify"]
+  failed_when: false
+  tags: ["qemu_verify"]
 
-- name: Install build-deps for QEMU as per each Linux distribution
+- name: Fail when the QEMU build toolchain is missing
+  ansible.builtin.fail:
+    msg: |
+      Missing QEMU build tools:{{ qemu_toolchain.stdout }}.
+      Run make qemu-controller-setup to install the build and runtime
+      dependencies, then retry.
+  when:
+    - qemu_toolchain.rc != 0
+  tags: ["qemu_verify"]
+
+- name: Install build and runtime deps for QEMU per Linux distribution
   ansible.builtin.include_tasks: install-deps/main.yml
   when:
-    - qemu_force_install_if_present|bool or not qemu_present.stat.exists
-
-- name: Assume we won't build QEMU first
-  ansible.builtin.set_fact:
-    qemu_build_now: false
-  tags: vars
-
-- name: Annotate when we are building QEMU
-  ansible.builtin.set_fact:
-    qemu_build_now: true
-  when:
-    - qemu_force_install_if_present|bool or not qemu_present.stat.exists
-  tags: vars
+    - "'qemu_controller_setup' in ansible_run_tags"
+  tags: ["qemu_controller_setup"]
 
 - name: Ensure the controller data path exists
   ansible.builtin.file:
     path: "{{ kdevops_controller_data_path }}"
     state: directory
     mode: "0755"
-  tags: ["qemu", "build-deps"]
-  when:
-    - qemu_build_now|bool
+  tags: ["qemu_fetch"]
 
 - name: Fetch the QEMU git tree
   environment:
@@ -52,34 +53,21 @@
     repo: "{{ qemu_git }}"
     dest: "{{ qemu_data }}"
     version: "{{ qemu_version }}"
-  when:
-    - qemu_build_now|bool
-
-- name: Nuke old build directory
-  ansible.builtin.file:
-    path: "{{ qemu_build_dir }}"
-    state: absent
-  tags: ["qemu", "build-deps"]
-  when:
-    - qemu_build_now|bool
+  tags: ["qemu_fetch"]
 
 - name: Create the out-of-tree build directory
   ansible.builtin.file:
     path: "{{ qemu_build_dir }}"
     state: directory
     mode: "0755"
-  tags: ["qemu", "build-deps"]
-  when:
-    - qemu_build_now|bool
+  tags: ["qemu_configure"]
 
 - name: Pre-fetch QEMU subprojects so configure can disable downloads
   ansible.builtin.command: "meson subprojects download"
   changed_when: true
-  tags: ["qemu", "configure"]
+  tags: ["qemu_configure"]
   args:
     chdir: "{{ qemu_data }}"
-  when:
-    - qemu_build_now|bool
 
 - name: Run configure for QEMU
   ansible.builtin.command: >-
@@ -88,27 +76,21 @@
     --prefix={{ qemu_install_dir }}
     --disable-download
   changed_when: true
-  tags: ["qemu", "configure"]
+  tags: ["qemu_configure"]
   args:
     chdir: "{{ qemu_build_dir }}"
-  when:
-    - qemu_build_now|bool
 
 - name: Get the number of build jobs
   ansible.builtin.command: "{{ num_jobs }}"
   changed_when: false
-  tags: ["qemu", "configure", "build"]
+  tags: ["qemu_build"]
   register: qemu_nproc
-  when:
-    - qemu_build_now|bool
 
 - name: Build QEMU
   community.general.make:
     chdir: "{{ qemu_build_dir }}"
     jobs: "{{ qemu_nproc.stdout }}"
-  tags: ["qemu", "build"]
-  when:
-    - qemu_build_now|bool
+  tags: ["qemu_build"]
 
 - name: Install QEMU
   become: "{{ qemu_install_needs_sudo | bool }}"
@@ -117,6 +99,6 @@
   changed_when: true
   args:
     chdir: "{{ qemu_build_dir }}"
-  tags: ["qemu", "install"]
   when:
-    - qemu_build_now|bool
+    - "'qemu_install' in ansible_run_tags"
+  tags: ["qemu_install"]

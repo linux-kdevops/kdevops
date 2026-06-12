@@ -1,38 +1,56 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-qemu: $(KDEVOPS_EXTRA_VARS)
+qemu-controller-setup: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
-		--extra-vars=@./extra_vars.yaml
-PHONY += qemu
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_controller_setup
+PHONY += qemu-controller-setup
 
-qemu-install: $(KDEVOPS_EXTRA_VARS)
+qemu-verify: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
-		--extra-vars=@./extra_vars.yaml --tags vars,install
-PHONY += qemu-install
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_verify
+PHONY += qemu-verify
 
-qemu-configure: $(KDEVOPS_EXTRA_VARS)
+qemu-fetch: qemu-verify
 	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
-		--extra-vars=@./extra_vars.yaml --tags vars,configure
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_fetch
+PHONY += qemu-fetch
+
+qemu-configure: qemu-fetch
+	$(Q)ansible-playbook \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_configure
 PHONY += qemu-configure
 
-qemu-build: $(KDEVOPS_EXTRA_VARS)
+qemu-build: qemu-configure
 	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
-		--extra-vars=@./extra_vars.yaml --tags vars,build
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_build
 PHONY += qemu-build
 
+qemu-install: qemu-build
+	$(Q)ansible-playbook \
+		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
+		--extra-vars=@./extra_vars.yaml --tags vars,qemu_install
+PHONY += qemu-install
+
+qemu: qemu-install
+PHONY += qemu
 
 qemu-help-menu:
 	@echo "qemu options:"
-	@echo "qemu                                 - Git fetches QEMU, builds and install it on localhost"
-	@echo "qemu-configure                       - Configure QEMU build"
-	@echo "qemu-build                           - Build QEMU"
-	@echo "qemu-install                         - Do the install of the QEMU build on localhost"
+	@echo "qemu-controller-setup                - Install QEMU build and runtime deps (controller setup, may sudo)"
+	@echo "qemu                                 - Verify, fetch, configure, build and install QEMU"
+	@echo "qemu-verify                          - Verify the build toolchain is present (read-only)"
+	@echo "qemu-fetch                           - Fetch the QEMU git tree (after verify)"
+	@echo "qemu-configure                       - Configure the QEMU build (after fetch)"
+	@echo "qemu-build                           - Build QEMU (after configure)"
+	@echo "qemu-install                         - Install QEMU (after build)"
+	@echo "controller-setup                     - Runs qemu-controller-setup as part of opt-in controller setup"
 	@echo ""
 
 HELP_TARGETS += qemu-help-menu
 
-LOCALHOST_SETUP_WORK += qemu
+CONTROLLER_SETUP_WORK += qemu-controller-setup
