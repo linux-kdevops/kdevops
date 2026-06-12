@@ -193,6 +193,16 @@ config BOOTLINUX_DIRECT_BOOT_SCRIPTS_GDB
 	  scripts are installed into a distro package, not whether
 	  the build can produce them.
 
+config BOOTLINUX_DIRECT_BOOT_RUST_ANALYZER
+	bool "Generate rust-project.json into the kernel source tree"
+	output yaml
+	default n
+	help
+	  After the kernel build, run `make rust-analyzer` against
+	  the out-of-tree build directory and copy the resulting
+	  rust-project.json to the kernel source tree root for
+	  LSPs to pick up.
+
 endif # BOOTLINUX_DIRECT_BOOT
 
 if BOOTLINUX_9P
