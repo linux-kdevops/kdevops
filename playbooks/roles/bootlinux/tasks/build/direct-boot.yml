@@ -163,6 +163,19 @@
   delegate_to: localhost
   tags: [build-linux]
 
+- name: Generate kernel GDB helpers (scripts_gdb) in the build directory
+  community.general.make:
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+    target: scripts_gdb
+    jobs: "{{ bootlinux_direct_boot_nproc.stdout }}"
+    params: "{{ bootlinux_make_params | combine({'O': bootlinux_direct_boot_builddir}) }}"
+  environment: "{{ bootlinux_direct_boot_build_environment }}"
+  when:
+    - bootlinux_direct_boot_scripts_gdb | default(true) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
 # `make install` runs /sbin/installkernel against the controller's
 # /boot and may need root. Copy the image into the destdir by hand.
 - name: Resolve the built kernel image path
