@@ -1,24 +1,5 @@
 # SPDX-License-Identifier: copyleft-next-0.3.1
 
-QEMU_BUILD_SETUP_ARGS :=
-QEMU_BUILD_SETUP_ARGS += qemu_build=True
-
-QEMU_GIT:=$(subst ",,$(CONFIG_QEMU_BUILD_GIT))
-QEMU_GIT_VERSION:=$(subst ",,$(CONFIG_QEMU_BUILD_GIT_VERSION))
-QEMU_DATA:=$(subst ",,$(CONFIG_QEMU_BUILD_GIT_DATA_PATH))
-
-QEMU_BUILD_SETUP_ARGS += qemu_git=$(QEMU_GIT)
-QEMU_BUILD_SETUP_ARGS += qemu_data=\"$(QEMU_DATA)\"
-QEMU_BUILD_SETUP_ARGS += qemu_version='$(QEMU_GIT_VERSION)'
-
-ifeq (y,$(CONFIG_TARGET_ARCH_X86_64))
-QEMU_BUILD_SETUP_ARGS += qemu_target="x86_64-softmmu"
-endif
-
-ifeq (y,$(CONFIG_TARGET_ARCH_PPC64LE))
-QEMU_BUILD_SETUP_ARGS += qemu_target="ppc64-softmmu"
-endif
-
 qemu: $(KDEVOPS_EXTRA_VARS)
 	$(Q)ansible-playbook \
 		$(KDEVOPS_PLAYBOOKS_DIR)/qemu.yml \
@@ -46,13 +27,12 @@ PHONY += qemu-build
 
 qemu-help-menu:
 	@echo "qemu options:"
-	@echo "qemu                                 - Git clones qemu, builds and install it on localhost"
-	@echo "qemu-configure                       - Configure qemu build"
-	@echo "qemu-build                           - Build qemu"
-	@echo "qemu-install                         - Do the install of the qemu build on localhost"
+	@echo "qemu                                 - Git fetches QEMU, builds and install it on localhost"
+	@echo "qemu-configure                       - Configure QEMU build"
+	@echo "qemu-build                           - Build QEMU"
+	@echo "qemu-install                         - Do the install of the QEMU build on localhost"
 	@echo ""
 
 HELP_TARGETS += qemu-help-menu
 
-ANSIBLE_EXTRA_ARGS += $(QEMU_BUILD_SETUP_ARGS)
 LOCALHOST_SETUP_WORK += qemu

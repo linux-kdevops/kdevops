@@ -16,21 +16,19 @@ config QSU_VARS_DIR
 config QSU_QEMU_BINARY
 	string "QEMU system emulator binary"
 	output yaml
-	default QEMU_BUILD_BIN_PATH if QEMU_BUILD
+	default QEMU_BIN_PATH if QEMU
 	default "/usr/bin/qemu-system-x86_64"
 	help
 	  Absolute path to the QEMU system emulator binary for the
 	  guest architecture. The qsu templates invoke this as the
 	  ExecStart= binary path.
 
-	  When QEMU_BUILD=y, this defaults to QEMU_BUILD_BIN_PATH so
-	  the qsu service exec'd by systemd is the binary the
-	  build_qemu role just installed under
-	  KDEVOPS_CONTROLLER_DATA_PATH/qemu-destdir/bin/, with no
-	  manual override needed in the defconfig. The Jinja2
-	  template resolves at Ansible-use time so changing the
-	  controller data path or destdir path higher up propagates
-	  here transitively.
+	  When QEMU=y, this defaults to QEMU_BIN_PATH so the qsu
+	  service exec'd by systemd is the binary the qemu role just
+	  built and installed, with no manual override needed in the
+	  defconfig. The Jinja2 template resolves at Ansible-use time
+	  so changing the install prefix higher up propagates here
+	  transitively.
 
 config QSU_CPU
 	string "Guest CPU model"

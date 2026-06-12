@@ -1,0 +1,106 @@
+config QEMU
+	bool "Should we build QEMU for you?"
+	help
+	  You only want to enable this option if your distribution package
+	  of QEMU does not have support for the features you need. For
+	  example this may be useful if you are a QEMU developer or are
+	  relying on technology is still under development or if you have
+	  a custom QEMU git URL.
+
+if !QEMU
+
+config QEMU_USE_DEVELOPMENT_VERSION
+	bool "Should we look for a development version of QEMU?"
+	help
+	  You want to enable this option if for example the currently
+	  available version of QEMU does not yet have support for the feature
+	  you are going to be working on.
+
+	  Say yes here if you are compiling your own version of QEMU.
+
+endif # !QEMU
+
+if QEMU
+
+choice
+	prompt "QEMU git URL to use"
+	default QEMU_JIC23
+
+config QEMU_UPSTREAM
+	bool "https://gitlab.com/qemu-project/qemu.git"
+	help
+	  Select this option if you want to use the upstream QEMU git repo.
+
+config QEMU_JIC23
+	bool "https://gitlab.com/jic23/qemu.git"
+	help
+	  Select this option if you want to use Cameron's QEMU git repo.
+	  This has a few CXL bells and whistles which are not yet upstream.
+
+config QEMU_MANUAL
+	bool "Custom QEMU git URL"
+	help
+	  Select this option if you want to specify your own git URL.
+
+endchoice
+
+config QEMU_GIT
+	string "Git tree for QEMU to fetch on localhost"
+	output yaml
+	default "/mirror/qemu.git" if USE_LOCAL_LINUX_MIRROR && QEMU_UPSTREAM || QEMU_MANUAL
+	default "/mirror/qemu-jic23.git" if USE_LOCAL_LINUX_MIRROR && QEMU_JIC23
+	default DEFAULT_QEMU_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_UPSTREAM || QEMU_MANUAL
+	default DEFAULT_QEMU_JIC23_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_JIC23
+	help
+	  This is the git URL to use to fetch and then build QEMU for you on
+	  your localhost.
+
+config QEMU_GIT_DATA_PATH
+	string "The destination directory where to fetch the QEMU git tree"
+	output yaml
+	default "{{local_dev_path}}/qemu"
+	help
+	  This is the target location of where to fetch the above git tree.
+	  Note that {{local_dev_path}} corresponds to the location set by the
+	  configuration option CONFIG_NEEDS_LOCAL_DEVELOPMENT_PATH.
+
+config QEMU_GIT_VERSION
+	string "The version of QEMU to build"
+	output yaml
+	default "cxl-2023-05-19" if QEMU_JIC23
+	default "v8.0.0-rc1" if QEMU_UPSTREAM
+	help
+	  This is the target build version of QEMU to build. Please use
+	  at least v7.2.0 for CXL support. v8.0.0-rc1 has some build fixes
+	  for newer compilers so it is the default now.
+
+config QEMU_USE_DEVELOPMENT_VERSION
+	bool
+	default y
+
+config QEMU_TARGET
+	string
+	output yaml
+	default "x86_64-softmmu" if TARGET_ARCH_X86_64
+	default "aarch64-softmmu" if TARGET_ARCH_ARM64
+	default "ppc64-softmmu" if TARGET_ARCH_PPC64LE
+	default "x86_64-softmmu"
+	help
+	  QEMU --target-list value derived from the target architecture.
+	  Consumed by the qemu role to configure the build.
+
+endif # QEMU
+
+config QEMU_BIN_PATH
+	string
+	output yaml
+	default QEMU_BIN_PATH_LIBVIRT if LIBVIRT
+	default "/usr/local/bin/qemu-system-aarch64" if TARGET_ARCH_ARM64
+	default "/usr/local/bin/qemu-system-ppc64" if TARGET_ARCH_PPC64LE
+	default "/usr/local/bin/qemu-system-x86_64"
+	help
+	  Absolute path to the QEMU system emulator binary. The libvirt
+	  backend resolves this from QEMU_BIN_PATH_LIBVIRT. Every other
+	  backend uses the binary installed by the qemu role under its
+	  install prefix. This single source of truth feeds gen_nodes for
+	  the libvirt domain emulator and qsu for the systemd unit ExecStart.
