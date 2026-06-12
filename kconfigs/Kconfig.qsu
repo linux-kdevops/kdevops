@@ -14,21 +14,14 @@ config QSU_VARS_DIR
 	  push.
 
 config QSU_QEMU_BINARY
-	string "QEMU system emulator binary"
+	string "QEMU system emulator binary" if !QEMU
 	output yaml
 	default QEMU_BIN_PATH if QEMU
 	default "/usr/bin/qemu-system-x86_64"
 	help
-	  Absolute path to the QEMU system emulator binary for the
-	  guest architecture. The qsu templates invoke this as the
-	  ExecStart= binary path.
-
-	  When QEMU=y, this defaults to QEMU_BIN_PATH so the qsu
-	  service exec'd by systemd is the binary the qemu role just
-	  built and installed, with no manual override needed in the
-	  defconfig. The Jinja2 template resolves at Ansible-use time
-	  so changing the install prefix higher up propagates here
-	  transitively.
+	  Absolute path to the QEMU system emulator binary the qsu unit
+	  execs. When QEMU=y this follows QEMU_BIN_PATH, the binary the qemu
+	  role builds and installs. Otherwise set it to the system QEMU to use.
 
 config QSU_CPU
 	string "Guest CPU model"
