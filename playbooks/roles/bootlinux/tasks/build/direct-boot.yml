@@ -147,6 +147,22 @@
   delegate_to: localhost
   tags: [build-linux]
 
+- name: Generate compile_commands.json in the kernel source tree
+  ansible.builtin.command:
+    argv:
+      - ./scripts/clang-tools/gen_compile_commands.py
+      - --directory
+      - "{{ bootlinux_direct_boot_builddir }}"
+      - --output
+      - "{{ bootlinux_direct_boot_tree_path }}/compile_commands.json"
+    chdir: "{{ bootlinux_direct_boot_tree_path }}"
+  changed_when: true
+  when:
+    - bootlinux_direct_boot_compile_commands | default(true) | bool
+  run_once: true
+  delegate_to: localhost
+  tags: [build-linux]
+
 # `make install` runs /sbin/installkernel against the controller's
 # /boot and may need root. Copy the image into the destdir by hand.
 - name: Resolve the built kernel image path
