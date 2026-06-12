@@ -204,12 +204,12 @@ config USE_LIBVIRT_MIRROR
 
 config QEMU_BIN_PATH_LIBVIRT
 	string "QEMU binary path to use"
-	default "/usr/local/bin/qemu-system-x86_64" if QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_X86_64
-	default "/usr/local/bin/qemu-system-aarch64" if QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_ARM64
-	default "/usr/local/bin/qemu-system-ppc64le" if QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_PPC64LE
-	default "/usr/bin/qemu-system-x86_64" if !QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_X86_64
-	default "/usr/bin/qemu-system-aarch64" if !QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_ARM64
-	default "/usr/bin/qemu-system-ppc64le" if !QEMU_USE_DEVELOPMENT_VERSION && TARGET_ARCH_PPC64LE
+	default "/usr/local/bin/qemu-system-x86_64" if QEMU && TARGET_ARCH_X86_64
+	default "/usr/local/bin/qemu-system-aarch64" if QEMU && TARGET_ARCH_ARM64
+	default "/usr/local/bin/qemu-system-ppc64le" if QEMU && TARGET_ARCH_PPC64LE
+	default "/usr/bin/qemu-system-x86_64" if !QEMU && TARGET_ARCH_X86_64
+	default "/usr/bin/qemu-system-aarch64" if !QEMU && TARGET_ARCH_ARM64
+	default "/usr/bin/qemu-system-ppc64le" if !QEMU && TARGET_ARCH_PPC64LE
 
 config QEMU_VIRSH_CAN_SUDO
 	bool
