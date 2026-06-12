@@ -41,6 +41,12 @@ mirror by `scripts/infer_last_stable_qemu.sh`; when no mirror is present it
 falls back to a recent release. Override it to pin a specific tag, and use at
 least v7.2.0 for CXL support.
 
+This ref applies on the initial clone only. Once `QEMU_GIT_DATA_PATH` exists
+the qemu role leaves it alone, so a developer can switch branches, make local
+commits and rebuild without losing work. To move to a new ref, check it out in
+the tree by hand, or remove the tree and rerun `make qemu-fetch` to clone
+fresh at `QEMU_GIT_VERSION`.
+
 ## Build target (`QEMU_TARGET`)
 
 The QEMU `--target-list` value, derived from the target architecture:
