@@ -3,4 +3,4 @@
 - name: Build and install QEMU
   hosts: localhost
   roles:
-    - role: build_qemu
+    - role: qemu

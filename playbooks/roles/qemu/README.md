@@ -1,7 +1,7 @@
-build_qemu
-==========
+qemu
+====
 
-The Ansible build-qemu role lets you get and build QEMU from source.
+The Ansible qemu role lets you get and build QEMU from source.
 This may be desirable if QEMU offers a feature which is not yet upstream,
 which is typically the case for new hardware features.
 
@@ -34,7 +34,7 @@ Below is an example playbook, say a bootlinux.yml file:
 ---
 - hosts: localhost
   roles:
-    - role: build_qemu
+    - role: qemu
 ```
 
 License
