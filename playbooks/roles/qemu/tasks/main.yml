@@ -36,9 +36,9 @@
     - qemu_force_install_if_present|bool or not qemu_present.stat.exists
   tags: vars
 
-- name: Ensure the local development path exists
+- name: Ensure the controller data path exists
   ansible.builtin.file:
-    path: "{{ local_dev_path }}"
+    path: "{{ kdevops_controller_data_path }}"
     state: directory
     mode: "0755"
   tags: ["qemu", "build-deps"]
@@ -63,6 +63,15 @@
   when:
     - qemu_build_now|bool
 
+- name: Create the out-of-tree build directory
+  ansible.builtin.file:
+    path: "{{ qemu_build_dir }}"
+    state: directory
+    mode: "0755"
+  tags: ["qemu", "build-deps"]
+  when:
+    - qemu_build_now|bool
+
 - name: Pre-fetch QEMU subprojects so configure can disable downloads
   ansible.builtin.command: "meson subprojects download"
   changed_when: true
@@ -73,11 +82,15 @@
     - qemu_build_now|bool
 
 - name: Run configure for QEMU
-  ansible.builtin.command: "./configure --target-list={{ qemu_target }} --disable-download"
+  ansible.builtin.command: >-
+    {{ qemu_data }}/configure
+    --target-list={{ qemu_target }}
+    --prefix={{ qemu_install_dir }}
+    --disable-download
   changed_when: true
   tags: ["qemu", "configure"]
   args:
-    chdir: "{{ qemu_data }}"
+    chdir: "{{ qemu_build_dir }}"
   when:
     - qemu_build_now|bool
 
@@ -91,19 +104,19 @@
 
 - name: Build QEMU
   community.general.make:
-    chdir: "{{ qemu_data }}"
+    chdir: "{{ qemu_build_dir }}"
     jobs: "{{ qemu_nproc.stdout }}"
   tags: ["qemu", "build"]
   when:
     - qemu_build_now|bool
 
 - name: Install QEMU
-  become: true
+  become: "{{ qemu_install_needs_sudo | bool }}"
   become_method: ansible.builtin.sudo
   ansible.builtin.command: "{{ make }} install"
   changed_when: true
   args:
-    chdir: "{{ qemu_data }}"
+    chdir: "{{ qemu_build_dir }}"
   tags: ["qemu", "install"]
   when:
     - qemu_build_now|bool
