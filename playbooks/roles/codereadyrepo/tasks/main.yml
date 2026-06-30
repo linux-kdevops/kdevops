@@ -35,11 +35,11 @@
 
     - name: Select the discovered RHUI CodeReady Builder repo
       ansible.builtin.set_fact:
-        codeready_repo: "{{ codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*rhui') | first }}"
+        codeready_repo: "{{ codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*-rhui-rpms$') | first }}"
       when:
         - codeready_discovery is defined
         - codeready_discovery is not skipped
-        - codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*rhui') | list | length > 0
+        - codeready_discovery.stdout_lines | map('split') | map('first') | select('match', 'codeready-builder.*-rhui-rpms$') | list | length > 0
 
     - name: The distribution/provisioner combo isn't recognized
       ansible.builtin.fail:
