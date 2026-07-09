@@ -8,9 +8,18 @@
 # path (distinct from run_sweep.sh's io_uring fixed buffers and run_iomap.sh's
 # iomap DIO bounce).
 #
-# Run once per boot state (pool on vs. booted blk_iobuf.iobuf_pool_max_order=0),
-# passing a matching LABEL. Captures per-model store/load latency + the
-# iobuf_pool_allocs delta (engagement) so the A/B is attributable.
+# Pool creation is gated by nvme_core.iobuf_pool={0 off,1 auto,2 force} AND by
+# blk_iobuf_choose_order(): a pool is only created when device geometry supplies
+# a reason (io_min>PAGE, seg_geom>PAGE, or io_opt>=PAGE with prefer_io_opt on).
+# "force" only warns-on-failure -- it does NOT bypass a zero-order decision, so
+# on a plain 4 KiB-IU drive force alone still creates nothing. To engage the pool
+# on a regular drive (the "large folios in general" flavor) boot with:
+#   nvme_core.iobuf_pool=1 blk_iobuf.iobuf_pool_prefer_io_opt=1
+# and confirm the drive advertises optimal_io_size>=4096 (IO_OPT reason 0x4).
+#
+# Run once per boot state (pool on vs. nvme_core.iobuf_pool=0), passing a
+# matching LABEL. Captures per-model store/load latency + the iobuf_pool_allocs
+# delta (engagement) so the A/B is attributable.
 #
 # Prereqs in the guest (built by the kvio setup step, not here):
 #   - LMCache `kvio` branch at $KVIO_SRC with the rust raw_block ext built
@@ -47,6 +56,9 @@ q=/sys/block/$blk/queue
   echo "pool_order=$(cat $q/iobuf_pool_order 2>/dev/null)"
   echo "pool_folio_size=$(cat $q/iobuf_pool_folio_size 2>/dev/null)"
   echo "pool_reasons=$(cat $q/iobuf_pool_reasons 2>/dev/null)"
+  echo "optimal_io_size=$(cat $q/optimal_io_size 2>/dev/null)"
+  echo "nvme_iobuf_pool_mode=$(cat /sys/module/nvme_core/parameters/iobuf_pool 2>/dev/null)"
+  echo "prefer_io_opt=$(cat /sys/module/blk_iobuf/parameters/iobuf_pool_prefer_io_opt 2>/dev/null)"
   echo "max_order=$(cat /sys/module/blk_iobuf/parameters/iobuf_pool_max_order 2>/dev/null)"
   echo "nproc=$(nproc)"
 } > "$HDR"
