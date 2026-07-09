@@ -1,0 +1,35 @@
+#
+# blk_iobuf_pool on BARE METAL via declared hosts (real NVMe, no libvirt).
+#
+# Unlike defconfigs/iobuf-nvme (a libvirt guest with an emulated 16K-LBS NVMe),
+# this targets a pre-provisioned bare-metal host you already have SSH access to
+# -- e.g. a Latitude m4-metal-small with real datacenter NVMe. Pass the host at
+# make time:
+#
+#   make defconfig-iobuf-baremetal DECLARED_HOSTS=<ip-or-hostname>
+#   make -j$(nproc)
+#   make linux        # clone + build + install + boot blk-iobuf-pool-v2 ON the box
+#
+# Real drive geometry decides pool engagement (no emulated 16K LBS here): check
+# /sys/block/<dev>/queue/{minimum_io_size,optimal_io_size,iobuf_pool_reasons}.
+# On real NVMe the pool typically fires via SEG_GEOM (max_hw_bytes/max_segments
+# > PAGE) or IO_OPT (optimal_io_size >= 4096 with blk_iobuf.iobuf_pool_prefer_io_opt=1).
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+# Bare metal: use the pre-provisioned host, skip all bringup/teardown.
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+# Build and boot the blk-iobuf-pool kernel on the target (no 9p; not a guest).
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="blk-iobuf-pool"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="blk-iobuf-pool-v2"
+CONFIG_BOOTLINUX_TREE_NAME="blk-iobuf-pool"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="blk-iobuf-pool-v2"
+
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y
