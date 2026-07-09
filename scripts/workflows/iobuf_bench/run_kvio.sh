@@ -1,6 +1,10 @@
 #!/bin/bash
 # blk_iobuf_pool A/B for the kvio KV-cache-offload passthrough workload.
 #
+# Test setup, findings, and the matched op-38 A/B: see kvio-results.md in this
+# directory. kvio docs (how it works / deps / how to run):
+#   https://htmlpreview.github.io/?https://github.com/SamsungDS/ebpf-syscall/blob/ebpf-fixes/docs/kvio.html
+#
 # kvio issues LLM KV-cache-offload store/load I/O through LMCache's raw_block
 # io_uring_cmd NVMe passthrough engine, sized from REAL model geometry (fake KV
 # bytes -- storage geometry is content-independent). Passthrough bios bounce
