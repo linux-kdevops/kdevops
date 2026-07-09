@@ -541,6 +541,24 @@ blk_iobuf.iobuf_pool_max_order=<span class="s">4</span></code></pre>
   <code>run_sweep.sh</code> / <code>run_generic.sh</code> (qd×bs×rw sweep), <code>run_multicore.sh</code>
   (per-core aggregate), <code>run_iomap.sh</code> (iomap fio A/B + pool-counter deltas), <code>analyze.py</code>
   (Welch t-test + tables). Boot <code>blk_iobuf.iobuf_pool_max_order=0</code> to force the pool-off baseline.</p>
+
+  <h3>4 · Real workload — LMCache KV-cache offload (kvio)</h3>
+  <p>A concrete consumer study: does an LLM KV-cache-offload workload actually engage the pool? kvio drives
+  LMCache's <code>raw_block</code> io_uring_cmd NVMe passthrough from real model geometry (fake, content-free
+  KV bytes — storage geometry is independent of tensor values). Finding: that path submits
+  <code>IORING_OP_URING_CMD</code> with page-aligned <em>user</em> buffers that map zero-copy, so
+  <code>iobuf_pool_allocs</code> stays <strong>0</strong> under <code>nvme_core.iobuf_pool</code>
+  off/auto/force alike — confirmed by a live ftrace (1028 URING submits, <em>zero</em> op-38 registers). The
+  pool is fed only by opcode&nbsp;38. A small opt-in (<code>iobuf_pool_bench</code>) adds a matched A/B on the
+  same block-device <code>ReadFixed</code> engine:</p>
+  <pre><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;guest</div><code><span class="c"># arm A: ordinary user buffer (op 0)   arm B: op-38 pool folios — same loop, same device</span>
+<span class="k">python</span> examples/kv_cache_offload_io/iobuf_pool_bench.py <span class="p">--blkdev /dev/nvme1n1</span> --buffer-size <span class="s">131072</span> --nr-ops <span class="s">128</span></code></pre>
+  <p class="muted">Result (16&nbsp;KiB-LBS, order&nbsp;2): arm&nbsp;A <code>iobuf_pool_allocs +0</code>, arm&nbsp;B
+  <code>+8</code> (128&nbsp;KiB ÷ 16&nbsp;KiB folios) — the pool engages only via op&nbsp;38, never via kvio's
+  passthrough path. Full test setup, findings and the A/B table:
+  <a href="../scripts/workflows/iobuf_bench/kvio-results.md">scripts/workflows/iobuf_bench/kvio-results.md</a>.
+  How kvio works, its dependencies and how to run it:
+  <a href="https://htmlpreview.github.io/?https://github.com/SamsungDS/ebpf-syscall/blob/ebpf-fixes/docs/kvio.html">kvio documentation page</a>.</p>
 </section>
 
 <!-- ============ CORRECTNESS ============ -->
