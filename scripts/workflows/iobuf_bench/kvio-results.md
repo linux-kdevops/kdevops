@@ -76,10 +76,74 @@ does **not** require kdevops inside the guest.
   a real bare-metal LBS NVMe (the plausible mechanism is large folios → fewer
   bio segments).
 
+## Real bare-metal 4 KiB NVMe (`force_order`, the operator knob)
+
+The QEMU result above needed a 16 KiB-LBS device to get a pool at all (IO_MIN
+fired). The more interesting case is a **plain 4 KiB-IU datacenter NVMe** that
+advertises *nothing* optimal — the drives everyone actually has — where we still
+want the io_uring command to pull deterministic large folios. On such a drive
+`blk_iobuf_choose_order()` legitimately returns 0: `io_min = 4096` (not
+`> PAGE_SIZE`), `io_opt = 0` (the device advertises **no** optimal I/O size —
+`0` means *unspecified*, not 4096; nvme only sets `io_opt` when `id->nows` is
+non-zero), and the segment-geometry reason lands at order 0 too. Neither `auto`
+nor `force` creates a pool, because `force` only warns on a *failed* creation —
+it does not override a legitimate order-0 decision.
+
+The fix is an explicit operator knob — the same shape Linux already uses for
+`max_sectors_kb`, `read_ahead_kb`, `nr_requests`: **`blk_iobuf.iobuf_pool_force_order`**
+(`-1` = auto/geometry, `0` = disabled, `>0` = force that order regardless of
+geometry). It sets `reasons = 0x8 (FORCE)` so the origin is auditable, and is
+clamped to `iobuf_pool_max_order`. This does **not** fake `io_min`/`io_opt`
+(those are visible to the FS and stacking drivers and get rounded/cleared by
+`blk-settings.c`) — it only sizes the pool.
+
+Validated on a **Latitude `m4-metal-small`** bare-metal box (real 960 GB Micron
+`MTFDKCC960TGP`, reformatted to a 4 KiB LBA, unmounted spare namespace), booting
+the `blk-iobuf-pool-v2` kernel with `nvme_core.iobuf_pool=1
+blk_iobuf.iobuf_pool_force_order=3`. On a drive with `io_min=4096 io_opt=0` the
+pool comes up `pool_enabled=1 order=3 folio_size=32768 reasons=0x8 (FORCE)` —
+32 KiB folios on a drive that asked for none. The A/B here uses `iobuf_ab.c` (a
+self-contained liburing program — no rust/Python/LMCache stack needed on the
+target):
+
+```
+gcc -O2 -o iobuf_ab iobuf_ab.c -luring
+./iobuf_ab /dev/nvme1n1 <buffer_size> <nr_ops> <0=user-buf | 1=pool>
+```
+
+| arm | buffer source | `iobuf_pool_allocs` delta | throughput (128 KiB × 256, QD1) |
+|---|---|---|---|
+| **A** pool-OFF | user buffer (op 0) | **+0** | 22,259 ops/s |
+| **B** pool-ON | op-38 pool folios | **+4** (128 KiB ÷ 32 KiB) | 21,922 ops/s |
+
+The engagement is **exactly deterministic** — `allocs` delta = `buffer_size ÷
+folio_size` on every size:
+
+| buffer | expected folios | `allocs` delta |
+|---|---|---|
+| 32 KiB | 1 | 1 |
+| 64 KiB | 2 | 2 |
+| 128 KiB | 4 | 4 |
+| 256 KiB | 8 | 8 |
+| 512 KiB | 16 | 16 |
+
+Throughput is **flat** between the arms (~22k ops/s either way) — as expected: at
+QD1 with 128 KiB reads on a datacenter NVMe the path is device-bound, and the
+buffer's *origin* doesn't change bandwidth. The value `force_order` delivers is
+not a QD1 speedup but **deterministic kernel-side large-folio provisioning** on a
+drive that advertises nothing: every registered buffer is backed by contiguous
+order-3 folios from a pre-sized pool, so the passthrough/DIO path builds fewer,
+larger bio segments instead of depending on whatever the page allocator hands
+back. That determinism — "more large IOs available, predictably" — is the goal,
+independent of device geometry.
+
 ## Bottom line
 
 For the workload LMCache actually issues today (aligned io_uring_cmd
 passthrough), `blk_iobuf_pool` is a no-op regardless of the module knob — the
 data never bounces and never registers pool buffers. The pool's beneficiaries
 are the op-38 registered-buffer path (the opt-in here), the iomap DIO bounce
-(`run_iomap.sh`), and misaligned/vectored maps — not this one.
+(`run_iomap.sh`), and misaligned/vectored maps — not this one. On a plain 4 KiB
+drive the pool only exists at all once the operator asks for it via
+`iobuf_pool_force_order`; once it does, the op-38 path pulls large folios from it
+deterministically (proven on real Micron bare metal above).
