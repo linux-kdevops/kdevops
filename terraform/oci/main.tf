@@ -44,13 +44,6 @@ resource "oci_core_instance" "kdevops_instance" {
     }))
   }
 
-  preemptible_instance_config {
-    preemption_action {
-      type                 = "TERMINATE"
-      preserve_boot_volume = false
-    }
-  }
-
   preserve_boot_volume = false
 }
 
