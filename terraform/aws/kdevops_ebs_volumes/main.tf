@@ -18,8 +18,9 @@ resource "aws_ebs_volume" "kdevops_volume" {
 }
 
 resource "aws_volume_attachment" "kdevops_attachment" {
-  count       = var.vol_count
-  device_name = format("/dev/sd%s", element(local.device_name_suffixes, count.index))
-  instance_id = var.vol_instance_id
-  volume_id   = element(aws_ebs_volume.kdevops_volume.*.id, count.index)
+  count        = var.vol_count
+  device_name  = format("/dev/sd%s", element(local.device_name_suffixes, count.index))
+  force_detach = true
+  instance_id  = var.vol_instance_id
+  volume_id    = element(aws_ebs_volume.kdevops_volume.*.id, count.index)
 }
