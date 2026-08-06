@@ -1,0 +1,46 @@
+#
+# PCIe Unordered I/O (UIO) control-plane tests -- davidlohr's uio-tests
+# under his UIO-enumeration QEMU, on his pcie-uio-rfc kernel branch.
+# This is PCI-SIG Unordered I/O, not the Linux userspace-I/O framework.
+#
+# Everything runs on the controller (localhost): the harness boots its
+# eight emulated CXL/PCIe topologies itself, so there is no bringup and
+# no target node. kdevops builds the pinned QEMU (into the user-owned
+# qemu-destdir -- /usr/local is not touched), builds the pinned kernel
+# bzImage, prepares a Debian cloud guest image, and runs the suites:
+#
+#   make defconfig-pcie-uio
+#   make pcie-uio-deps    # one-time: kernel-build + libguestfs deps (sudo)
+#   make qemu-controller-setup   # one-time: QEMU build deps (sudo)
+#   make pcie-uio         # qemu + fetch + kernel + image + check + run
+#   make pcie-uio-results # per-suite TAP summary
+#
+# Results land in workflows/pcie-uio/results/ -- one .tap and .dmesg
+# per suite plus run-all.log. A green run validates the Linux route,
+# policy and revocation CONTROL PLANE only; QEMU has no UIO wire data
+# path, so these results are never data-path or performance evidence.
+#
+# All three trees are pinned to the heads validated on 2026-08-06;
+# clear the refs back to branch names to track the RFC as it evolves.
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_DISTRO=y
+
+# No bringup: the only "node" is the controller itself.
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+# Build davidlohr's UIO-enumeration QEMU (branch uio-work-rfc, pinned).
+CONFIG_QEMU=y
+CONFIG_QEMU_DAVIDLOHR_UIO=y
+CONFIG_QEMU_GIT="https://github.com/davidlohr/qemu.git"
+CONFIG_QEMU_GIT_VERSION="9c7b5ccac5080b2f9d7549aaccf9f5e84772d200"
+
+CONFIG_WORKFLOWS_TESTS=y
+CONFIG_WORKFLOWS_LINUX_TESTS=y
+CONFIG_WORKFLOWS_DEDICATED_WORKFLOW=y
+CONFIG_KDEVOPS_WORKFLOW_DEDICATE_PCIE_UIO=y
+
+# Pin the kernel (branch pcie-uio-rfc) and harness (branch main).
+CONFIG_PCIE_UIO_LINUX_REF="4726547f45a612b2d953f5f4e13ab6fe34672c7c"
+CONFIG_PCIE_UIO_TESTS_REF="150ee00960beceb75186131fdb46a51aa56485e5"
