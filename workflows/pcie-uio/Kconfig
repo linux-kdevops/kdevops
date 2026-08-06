@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+if KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
+
+config PCIE_UIO_DATA
+	string "Directory for the PCIe UIO trees and artifacts"
+	output yaml
+	default "{{ kdevops_controller_data_path }}/pcie-uio"
+	help
+	  Controller-side directory holding everything this workflow fetches
+	  or builds: the kernel tree carrying the PCIe Unordered I/O series,
+	  its out-of-tree build directory, the uio-tests harness, the guest
+	  qcow2 image and the generated guest ssh key.
+
+config PCIE_UIO_LINUX_GIT
+	string "The kernel git tree carrying the PCIe UIO series"
+	output yaml
+	default "https://github.com/davidlohr/linux.git"
+	help
+	  The kernel git tree to clone and build. The default is Davidlohr
+	  Bueso's tree; its pcie-uio-rfc branch carries the nine-patch PCIe
+	  Unordered I/O control-plane series (PCI/UIO core, DMA_ATTR_UIO,
+	  typed P2PDMA providers, CXL UIO provisioning) on top of the CXL
+	  Back-Invalidate series.
+
+config PCIE_UIO_LINUX_REF
+	string "The kernel branch, tag or commit to build"
+	output yaml
+	default "pcie-uio-rfc"
+	help
+	  The git reference of the PCIe UIO kernel to build. This tracks
+	  the branch tip by default; pin a commit for reproducible runs
+	  (the tip validated when this workflow was added was
+	  4726547f45a612b2d953f5f4e13ab6fe34672c7c, 2026-08-06).
+
+config PCIE_UIO_TESTS_GIT
+	string "The uio-tests harness git tree"
+	output yaml
+	default "https://github.com/davidlohr/uio-tests.git"
+	help
+	  The uio-tests harness to clone. It boots each of the eight
+	  emulated topologies under the UIO-enabled QEMU, pushes the guest
+	  test driver, runs the suite and collects TAP plus dmesg.
+
+config PCIE_UIO_TESTS_REF
+	string "The uio-tests branch, tag or commit to run"
+	output yaml
+	default "main"
+	help
+	  The git reference of the uio-tests harness to run. Pin a commit
+	  for reproducible runs (the tip validated when this workflow was
+	  added was 150ee00960beceb75186131fdb46a51aa56485e5, 2026-08-06).
+
+config PCIE_UIO_GUEST_IMG_URL
+	string "URL of the guest cloud image"
+	output yaml
+	default "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+	help
+	  The harness boots the built bzImage directly with -kernel, so the
+	  guest image is only a root filesystem and userland; any small
+	  Debian or Ubuntu cloud qcow2 works. The image is customized once
+	  with virt-customize: sshd accepting the generated key as root,
+	  DHCP on the first NIC (enp0s2) and pciutils installed.
+
+config PCIE_UIO_GUEST_ROOTDEV
+	string "Guest root partition device"
+	output yaml
+	default "/dev/sda1"
+	help
+	  The root= device passed on the guest kernel command line. Debian
+	  genericcloud lands root on /dev/sda1 with the q35 SATA default;
+	  adjust if you point PCIE_UIO_GUEST_IMG_URL at an image whose root
+	  lands elsewhere (for instance /dev/vda1 for virtio-blk).
+
+config PCIE_UIO_SSH_PORT
+	string "Host port forwarded to the guest ssh port"
+	output yaml
+	default "27110"
+	help
+	  The harness forwards this localhost TCP port to the guest's ssh
+	  port; one QEMU runs at a time. Change it if the default collides
+	  with something else on the controller.
+
+config PCIE_UIO_SUITES
+	string "Suites to run (empty runs all eight)"
+	output yaml
+	default ""
+	help
+	  Space-separated subset of the eight suites to run, for instance
+	  "t2" or "t4 t8". Leave empty to run everything: t1 direct attach,
+	  t2 switched happy path (plus completer hot-remove), t3 non-FLIT
+	  link, t4 missing SVC, t5 endpoint without the UIO capability,
+	  t6 four-way interleave, t7 requester without ATS and t8 cross
+	  root port.
+
+config PCIE_UIO_RESULTS
+	string "Directory to collect TAP and dmesg results into"
+	output yaml
+	default "{{ topdir_path }}/workflows/pcie-uio/results"
+	help
+	  Where run-all.sh output lands: one .tap and one .dmesg per suite
+	  plus the run-all.log transcript. These results validate the Linux
+	  control plane only -- QEMU emulates UIO enumeration and route
+	  state, it moves no unordered bytes on any wire.
+
+endif # KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO

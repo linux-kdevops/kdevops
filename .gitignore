@@ -63,6 +63,8 @@ workflows/blktests/hosts_generated.in
 workflows/blktests/.begin
 workflows/blktests/results/
 
+workflows/pcie-uio/results/
+
 workflows/demos/reboot-limit/results/
 
 workflows/gitr/results/

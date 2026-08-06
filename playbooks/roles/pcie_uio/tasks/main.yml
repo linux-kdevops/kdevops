@@ -1,0 +1,258 @@
+---
+# SPDX-License-Identifier: copyleft-next-0.3.1
+- name: Import optional extra_args file
+  ansible.builtin.include_vars: "{{ item }}"
+  failed_when: false
+  with_first_found:
+    - files:
+        - "../extra_vars.yml"
+        - "../extra_vars.yaml"
+        - "../extra_vars.json"
+      skip: true
+  tags: vars
+
+- name: Install kernel-build and guest-image dependencies
+  become: true
+  become_method: sudo
+  ansible.builtin.package:
+    name: "{{ lookup('vars', 'pcie_uio_packages_' + ansible_facts['os_family'] | lower, default=pcie_uio_packages_debian) }}"
+    state: present
+  tags: ["pcie_uio_deps"]
+
+- name: Ensure the workflow data directory exists
+  ansible.builtin.file:
+    path: "{{ pcie_uio_data }}"
+    state: directory
+    mode: "0755"
+  tags: ["pcie_uio_fetch", "pcie_uio_image"]
+
+- name: Fetch the PCIe UIO kernel tree
+  environment:
+    GIT_SSL_NO_VERIFY: "true"
+  ansible.builtin.git:
+    repo: "{{ pcie_uio_linux_git }}"
+    dest: "{{ pcie_uio_linux_dir }}"
+    version: "{{ pcie_uio_linux_ref }}"
+    update: false
+  tags: ["pcie_uio_fetch"]
+
+- name: Fetch the uio-tests harness
+  environment:
+    GIT_SSL_NO_VERIFY: "true"
+  ansible.builtin.git:
+    repo: "{{ pcie_uio_tests_git }}"
+    dest: "{{ pcie_uio_tests_dir }}"
+    version: "{{ pcie_uio_tests_ref }}"
+    update: false
+  tags: ["pcie_uio_fetch"]
+
+- name: Check the kernel build toolchain is present
+  ansible.builtin.shell: |
+    missing=
+    for tool in git make gcc bison flex bc; do
+      command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
+    done
+    [ -z "$missing" ] || { echo "$missing"; exit 1; }
+  register: pcie_uio_toolchain
+  changed_when: false
+  failed_when: false
+  tags: ["pcie_uio_kernel"]
+
+- name: Fail when the kernel build toolchain is missing
+  ansible.builtin.fail:
+    msg: |
+      Missing kernel build tools:{{ pcie_uio_toolchain.stdout }}.
+      Run make pcie-uio-deps to install the dependencies, then retry.
+  when:
+    - pcie_uio_toolchain.rc != 0
+  tags: ["pcie_uio_kernel"]
+
+- name: Create the out-of-tree kernel build directory
+  ansible.builtin.file:
+    path: "{{ pcie_uio_kbuild_dir }}"
+    state: directory
+    mode: "0755"
+  tags: ["pcie_uio_kernel"]
+
+- name: Seed the kernel configuration from the x86_64 defconfig
+  ansible.builtin.command: >-
+    make -C {{ pcie_uio_linux_dir }} O={{ pcie_uio_kbuild_dir }} defconfig
+  changed_when: true
+  tags: ["pcie_uio_kernel"]
+
+- name: Merge the PCIe UIO kernel config fragment
+  ansible.builtin.command: >-
+    {{ pcie_uio_linux_dir }}/scripts/kconfig/merge_config.sh
+    -m -O {{ pcie_uio_kbuild_dir }}
+    {{ pcie_uio_kbuild_dir }}/.config
+    {{ role_path }}/files/pcie-uio-kernel.config
+  changed_when: true
+  tags: ["pcie_uio_kernel"]
+
+- name: Resolve the merged kernel configuration
+  ansible.builtin.command: >-
+    make -C {{ pcie_uio_linux_dir }} O={{ pcie_uio_kbuild_dir }} olddefconfig
+  changed_when: true
+  tags: ["pcie_uio_kernel"]
+
+- name: Verify no required kernel config option was silently dropped
+  ansible.builtin.shell: |
+    missing=
+    for opt in {{ pcie_uio_required_kconfigs | join(' ') }}; do
+      grep -q "^CONFIG_${opt}=y" {{ pcie_uio_kbuild_dir }}/.config || \
+        missing="$missing CONFIG_${opt}"
+    done
+    [ -z "$missing" ] || { echo "$missing"; exit 1; }
+  register: pcie_uio_kconfig_check
+  changed_when: false
+  failed_when: false
+  tags: ["pcie_uio_kernel"]
+
+- name: Fail when required kernel config options are missing
+  ansible.builtin.fail:
+    msg: |
+      olddefconfig dropped:{{ pcie_uio_kconfig_check.stdout }}.
+      The tree at {{ pcie_uio_linux_dir }} (ref {{ pcie_uio_linux_ref }})
+      likely lacks the PCIe UIO series -- CONFIG_PCI_UIO and
+      CONFIG_CXL_UIO_TEST only exist on a tree carrying it.
+  when:
+    - pcie_uio_kconfig_check.rc != 0
+  tags: ["pcie_uio_kernel"]
+
+- name: Build the PCIe UIO bzImage
+  ansible.builtin.command: >-
+    make -C {{ pcie_uio_linux_dir }} O={{ pcie_uio_kbuild_dir }}
+    -j{{ ansible_processor_vcpus }} bzImage
+  changed_when: true
+  tags: ["pcie_uio_kernel"]
+
+- name: Download the guest cloud image
+  ansible.builtin.get_url:
+    url: "{{ pcie_uio_guest_img_url }}"
+    dest: "{{ pcie_uio_img }}"
+    mode: "0644"
+  tags: ["pcie_uio_image"]
+
+- name: Generate the guest ssh key
+  ansible.builtin.command: >-
+    ssh-keygen -t ed25519 -N "" -C uio-tests-guest
+    -f {{ pcie_uio_guest_key }}
+  args:
+    creates: "{{ pcie_uio_guest_key }}"
+  tags: ["pcie_uio_image"]
+
+- name: Write the guest netplan matching the enp0s2 NIC
+  ansible.builtin.copy:
+    dest: "{{ pcie_uio_data }}/50-enp0s2.yaml"
+    mode: "0600"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          enp0s2:
+            dhcp4: true
+  tags: ["pcie_uio_image"]
+
+- name: Customize the guest image (sshd, root key, DHCP, pciutils)
+  environment:
+    LIBGUESTFS_BACKEND: direct
+  ansible.builtin.shell: |
+    set -e
+    virt-customize -a {{ pcie_uio_img }} \
+      --root-password password:root \
+      --install openssh-server,pciutils \
+      --ssh-inject root:file:{{ pcie_uio_guest_key }}.pub \
+      --run-command 'systemctl enable ssh' \
+      --upload {{ pcie_uio_data }}/50-enp0s2.yaml:/etc/netplan/50-enp0s2.yaml \
+      --run-command 'chmod 600 /etc/netplan/50-enp0s2.yaml'
+    touch {{ pcie_uio_data }}/.guest-image-ready
+  args:
+    creates: "{{ pcie_uio_data }}/.guest-image-ready"
+  tags: ["pcie_uio_image"]
+
+- name: Check KVM is usable
+  ansible.builtin.shell: |
+    [ -r /dev/kvm ] && [ -w /dev/kvm ]
+  register: pcie_uio_kvm
+  changed_when: false
+  failed_when: false
+  tags: ["pcie_uio_check"]
+
+- name: Fail when KVM is not usable
+  ansible.builtin.fail:
+    msg: |
+      /dev/kvm is not accessible. The topology launcher uses
+      -cpu host -enable-kvm; add yourself to the kvm group (and re-login)
+      or enable virtualization in firmware. Running under TCG requires
+      editing launch_qemu in uio-tests/topo-lib.sh and is much slower.
+  when:
+    - pcie_uio_kvm.rc != 0
+  tags: ["pcie_uio_check"]
+
+- name: Check the QEMU binary carries the UIO enumeration knobs
+  ansible.builtin.shell: |
+    [ -x {{ qemu_bin_path }} ] || { echo "no-binary"; exit 1; }
+    {{ qemu_bin_path }} -device cxl-type3,help 2>&1 | \
+      grep -Eq 'x-uio|x-ats' || { echo "no-type3-knobs"; exit 1; }
+    {{ qemu_bin_path }} -device pcie-root-port,help 2>&1 | \
+      grep -Eq 'x-uio-svc|x-256b-flit' || { echo "no-port-knobs"; exit 1; }
+  register: pcie_uio_qemu_check
+  changed_when: false
+  failed_when: false
+  tags: ["pcie_uio_check"]
+
+- name: Fail when QEMU lacks the UIO enumeration knobs
+  ansible.builtin.fail:
+    msg: |
+      {{ qemu_bin_path }} failed the UIO device probe
+      ({{ pcie_uio_qemu_check.stdout }}). Enable CONFIG_QEMU with
+      CONFIG_QEMU_DAVIDLOHR_UIO (branch uio-work-rfc) and run
+      make qemu -- a stock QEMU has no UIO enumeration support.
+  when:
+    - pcie_uio_qemu_check.rc != 0
+  tags: ["pcie_uio_check"]
+
+- name: Ensure the results directory exists
+  ansible.builtin.file:
+    path: "{{ pcie_uio_results }}"
+    state: directory
+    mode: "0755"
+  tags: ["pcie_uio_run", "pcie_uio_results"]
+
+- name: Run the uio-tests suites
+  environment:
+    QEMU: "{{ qemu_bin_path }}"
+    KERNEL: "{{ pcie_uio_bzimage }}"
+    IMG: "{{ pcie_uio_img }}"
+    SSH_KEY: "{{ pcie_uio_guest_key }}"
+    ROOTDEV: "{{ pcie_uio_guest_rootdev }}"
+    SSHPORT: "{{ pcie_uio_ssh_port }}"
+    RUNDIR: "{{ pcie_uio_rundir }}"
+    OUT: "{{ pcie_uio_results }}"
+  ansible.builtin.shell: |
+    set -o pipefail
+    ./run-all.sh {{ pcie_uio_suites }} 2>&1 | \
+      tee {{ pcie_uio_results }}/run-all.log
+  args:
+    chdir: "{{ pcie_uio_tests_dir }}"
+    executable: /bin/bash
+  register: pcie_uio_run
+  changed_when: true
+  tags: ["pcie_uio_run"]
+
+- name: Summarize per-suite TAP results
+  ansible.builtin.shell: |
+    cd {{ pcie_uio_results }} 2>/dev/null || { echo "no results"; exit 0; }
+    ls ./*.tap >/dev/null 2>&1 || { echo "no results"; exit 0; }
+    for t in ./*.tap; do
+      printf '%-20s ok %-4s not-ok %s\n' "$(basename "$t")" \
+        "$(grep -c '^ok' "$t")" "$(grep -c '^not ok' "$t")"
+    done
+  register: pcie_uio_summary
+  changed_when: false
+  tags: ["pcie_uio_run", "pcie_uio_results"]
+
+- name: Show the TAP summary
+  ansible.builtin.debug:
+    msg: "{{ pcie_uio_summary.stdout_lines }}"
+  tags: ["pcie_uio_run", "pcie_uio_results"]

@@ -26,6 +26,10 @@ ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL))
 include workflows/cxl/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_CXL == y
 
+ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO))
+include workflows/pcie-uio/Makefile
+endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO == y
+
 ifeq (y,$(CONFIG_KDEVOPS_WORKFLOW_ENABLE_PYNFS))
 include workflows/pynfs/Makefile
 endif # CONFIG_KDEVOPS_WORKFLOW_ENABLE_PYNFS == y

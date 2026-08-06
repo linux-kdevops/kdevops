@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: copyleft-next-0.3.1
+---
+
+pcie_uio_data: "{{ pcie_uio_data | default(kdevops_controller_data_path + '/pcie-uio') }}"
+pcie_uio_linux_git: "{{ pcie_uio_linux_git | default('https://github.com/davidlohr/linux.git') }}"
+pcie_uio_linux_ref: "{{ pcie_uio_linux_ref | default('pcie-uio-rfc') }}"
+pcie_uio_tests_git: "{{ pcie_uio_tests_git | default('https://github.com/davidlohr/uio-tests.git') }}"
+pcie_uio_tests_ref: "{{ pcie_uio_tests_ref | default('main') }}"
+pcie_uio_guest_img_url: "{{ pcie_uio_guest_img_url | default('https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2') }}"
+pcie_uio_guest_rootdev: "{{ pcie_uio_guest_rootdev | default('/dev/sda1') }}"
+pcie_uio_ssh_port: "{{ pcie_uio_ssh_port | default('27110') }}"
+pcie_uio_suites: "{{ pcie_uio_suites | default('') }}"
+pcie_uio_results: "{{ pcie_uio_results | default(topdir_path + '/workflows/pcie-uio/results') }}"
+
+# Derived paths under the workflow data directory.
+pcie_uio_linux_dir: "{{ pcie_uio_data }}/linux"
+pcie_uio_kbuild_dir: "{{ pcie_uio_data }}/linux-build"
+pcie_uio_tests_dir: "{{ pcie_uio_data }}/uio-tests"
+pcie_uio_img: "{{ pcie_uio_data }}/cxl-test.qcow2"
+pcie_uio_guest_key: "{{ pcie_uio_data }}/uio-guest-key"
+pcie_uio_rundir: "{{ pcie_uio_data }}/run"
+pcie_uio_bzimage: "{{ pcie_uio_kbuild_dir }}/arch/x86/boot/bzImage"
+
+# The QEMU binary the harness boots topologies with. When CONFIG_QEMU=y
+# this resolves from the qemu role's install prefix; a distro QEMU will
+# fail the pcie_uio_check UIO-knob probe with a clear message.
+qemu_bin_path: "{{ qemu_bin_path | default('/usr/bin/qemu-system-x86_64') }}"
+
+# Kernel config options that must survive olddefconfig; the check task
+# fails loudly when any is missing so a silently dropped option never
+# turns into a mysterious in-guest test failure.
+pcie_uio_required_kconfigs:
+  - CXL_BUS
+  - CXL_PCI
+  - CXL_ACPI
+  - CXL_MEM
+  - CXL_REGION
+  - PCI_P2PDMA
+  - PCI_UIO
+  - CXL_UIO_TEST
+  - HOTPLUG_PCI_PCIE
+  - DYNAMIC_DEBUG
+  - DMA_API_DEBUG
+
+pcie_uio_packages_debian:
+  - build-essential
+  - bison
+  - flex
+  - bc
+  - libelf-dev
+  - libssl-dev
+  - libguestfs-tools
+  - openssh-client
+  - python3
+  - iproute2
+pcie_uio_packages_redhat:
+  - gcc
+  - make
+  - bison
+  - flex
+  - bc
+  - elfutils-libelf-devel
+  - openssl-devel
+  - guestfs-tools
+  - openssh-clients
+  - python3
+  - iproute
+pcie_uio_packages_suse:
+  - gcc
+  - make
+  - bison
+  - flex
+  - bc
+  - libelf-devel
+  - libopenssl-devel
+  - guestfs-tools
+  - openssh-clients
+  - python3
+  - iproute2

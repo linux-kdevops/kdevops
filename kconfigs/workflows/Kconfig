@@ -176,6 +176,24 @@ config KDEVOPS_WORKFLOW_DEDICATE_CXL
 	  If you are using libvirt you will want to enable in kdevops
 	  the symbol CONFIG_QEMU_ENABLE_CXL.
 
+config KDEVOPS_WORKFLOW_DEDICATE_PCIE_UIO
+	bool "pcie-uio"
+	depends on !KDEVOPS_ENABLE_NIXOS_FLAKE
+	select KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
+	help
+	  This will dedicate your configuration only to the PCIe Unordered
+	  I/O (UIO) control-plane tests. This is PCI-SIG Unordered I/O, not
+	  the Linux userspace-I/O framework.
+
+	  The workflow runs entirely on the controller (localhost) and
+	  brings up no target nodes of its own: the uio-tests harness boots
+	  its eight emulated topologies itself under a UIO-enumeration
+	  QEMU, so all kdevops provisions is the pinned kernel build, the
+	  QEMU build (see CONFIG_QEMU and CONFIG_QEMU_DAVIDLOHR_UIO) and a
+	  guest userland image. A green run validates the Linux route,
+	  policy and revocation control plane only -- QEMU has no UIO wire
+	  data path.
+
 config KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 	bool "pynfs"
 	depends on !KDEVOPS_USE_DECLARED_HOSTS && !KDEVOPS_ENABLE_NIXOS_FLAKE
@@ -282,6 +300,7 @@ config KDEVOPS_WORKFLOW_NAME
 	default "fstests" if KDEVOPS_WORKFLOW_DEDICATE_FSTESTS
 	default "blktests" if KDEVOPS_WORKFLOW_DEDICATE_BLKTESTS
 	default "cxl" if KDEVOPS_WORKFLOW_DEDICATE_CXL
+	default "pcie-uio" if KDEVOPS_WORKFLOW_DEDICATE_PCIE_UIO
 	default "pynfs" if KDEVOPS_WORKFLOW_DEDICATE_PYNFS
 	default "selftests" if KDEVOPS_WORKFLOW_DEDICATE_SELFTESTS
 	default "gitr" if KDEVOPS_WORKFLOW_DEDICATE_GITR
@@ -340,6 +359,15 @@ config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_CXL
 	  emulated, that will depend on the type of node you are using.
 	  If you are using libvirt you will want to enable in kdevops
 	  the symbol CONFIG_QEMU_ENABLE_CXL.
+
+config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_PCIE_UIO
+	bool "pcie-uio"
+	select KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
+	help
+	  Select this option to enable the PCIe Unordered I/O (UIO)
+	  control-plane tests alongside other workflows. The workflow runs
+	  entirely on the controller (localhost): the uio-tests harness
+	  boots its own emulated topologies under a UIO-enumeration QEMU.
 
 config KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_PYNFS
 	bool "pynfs"
@@ -464,6 +492,17 @@ menu "Enable cxl development"
 source "workflows/cxl/Kconfig"
 endmenu
 endif # KDEVOPS_WORKFLOW_ENABLE_CXL
+
+config KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
+	bool
+	output yaml
+	default y if KDEVOPS_WORKFLOW_NOT_DEDICATED_ENABLE_PCIE_UIO || KDEVOPS_WORKFLOW_DEDICATE_PCIE_UIO
+
+if KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
+menu "Configure the PCIe Unordered I/O (UIO) control-plane tests"
+source "workflows/pcie-uio/Kconfig"
+endmenu
+endif # KDEVOPS_WORKFLOW_ENABLE_PCIE_UIO
 
 config KDEVOPS_WORKFLOW_ENABLE_PYNFS
 	bool
