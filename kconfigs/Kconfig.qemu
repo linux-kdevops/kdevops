@@ -24,6 +24,16 @@ config QEMU_JIC23
 	  Select this option if you want to use Cameron's QEMU git repo.
 	  This has a few CXL bells and whistles which are not yet upstream.
 
+config QEMU_DAVIDLOHR_UIO
+	bool "https://github.com/davidlohr/qemu.git"
+	help
+	  Select this option if you want to use Davidlohr Bueso's QEMU git
+	  repo. Its uio-work-rfc branch carries the PCIe Unordered I/O (UIO)
+	  enumeration support the pcie-uio workflow needs: the cxl-type3
+	  x-uio requester/completer/ATS knobs and the port-level
+	  x-uio-svc3/x-uio-svc4 and x-256b-flit properties. Emulation is
+	  control plane only -- there is no UIO wire data path.
+
 config QEMU_MANUAL
 	bool "Custom QEMU git URL"
 	help
@@ -38,6 +48,7 @@ config QEMU_GIT
 	default "/mirror/qemu-jic23.git" if USE_LOCAL_LINUX_MIRROR && QEMU_JIC23
 	default DEFAULT_QEMU_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_UPSTREAM || QEMU_MANUAL
 	default DEFAULT_QEMU_JIC23_GITHUB_HTTPS_URL if !USE_LOCAL_LINUX_MIRROR && QEMU_JIC23
+	default DEFAULT_QEMU_DAVIDLOHR_GITHUB_HTTPS_URL if QEMU_DAVIDLOHR_UIO
 	help
 	  This is the git URL to use to fetch and then build QEMU for you on
 	  your localhost.
@@ -56,6 +67,7 @@ config QEMU_GIT_VERSION
 	string "The version of QEMU to build"
 	output yaml
 	default "cxl-2023-05-19" if QEMU_JIC23
+	default "uio-work-rfc" if QEMU_DAVIDLOHR_UIO
 	default $(shell, scripts/infer_last_stable_qemu.sh) if QEMU_UPSTREAM
 	help
 	  This is the target build version of QEMU to build. For the upstream

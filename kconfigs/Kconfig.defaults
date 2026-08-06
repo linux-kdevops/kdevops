@@ -93,6 +93,14 @@ config DEFAULT_QEMU_JIC23_GITLAB_SSH_URL
 	string
 	default "ssh://git@gitlab.com:jic23/qemu.git"
 
+config DEFAULT_QEMU_DAVIDLOHR_GITHUB_HTTPS_URL
+	string
+	default "https://github.com/davidlohr/qemu.git"
+
+config DEFAULT_QEMU_DAVIDLOHR_GITHUB_SSH_URL
+	string
+	default "ssh://git@github.com:davidlohr/qemu.git"
+
 config DEFAULT_LINUX_NEXT_GIT_URL
 	string
 	default "git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
