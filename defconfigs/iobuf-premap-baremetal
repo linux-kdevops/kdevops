@@ -1,0 +1,46 @@
+#
+# blk_iobuf_pool PREMAP on BARE METAL, for a host with a LARGE-MDTS NVMe drive.
+#
+# Boots blk-iobuf-pool-v5-premap-iova on a pre-provisioned host you already have
+# SSH access to (or the host itself), so the premapped io_uring fixed-buffer path
+# can issue a single NVMe command up to the drive's real MDTS -- past the 128 KiB
+# dma_opt clamp -- with ZERO per-I/O IOVA allocation. A large-MDTS drive is the
+# whole point: the premapped command ceiling is min(device MDTS, 8 MiB), so the
+# bigger the MDTS the larger the single command this proves (a real or
+# QEMU-emulated large-MDTS device both work; what matters is the MDTS).
+#
+#   make defconfig-iobuf-premap-baremetal DECLARE_HOSTS=<ip-or-hostname>
+#   make -j$(nproc)
+#   make linux            # clone + build + install + boot the premap kernel
+#
+# Then follow scripts/workflows/iobuf_bench/PREMAP-README.md to (1) add the pool +
+# IOMMU kernel cmdline, reboot, and (2) run the bench and collect the results tarball.
+#
+# Requirements for the premap path (the bench verifies them and fails loudly if not):
+#   - CONFIG_BLK_IOBUF_POOL=y  (this branch needs it explicitly)
+#   - a TRANSLATING IOMMU, not passthrough (iommu.passthrough=0; intel_iommu=on or
+#     amd_iommu=on if your box does not already bring the IOMMU up translating)
+#   - coherent DMA (true on x86-64 datacenter NVMe)
+#   - the pool provisioned on the cmdline:
+#       nvme_core.iobuf_pool=1 nvme_core.iobuf_pool_order=10 nvme_core.iobuf_pool_folios=32
+#     (order 10 = 4 MiB folios; premap links folios into one contiguous IOVA, so an
+#      8 MiB command = 2 folios; 32 folios = 128 MiB pool, ample headroom)
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+# Bare metal: use the pre-provisioned host, skip all bringup/teardown.
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+# Build and boot the premap kernel on the target.
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="blk-iobuf-pool-premap"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="blk-iobuf-pool-v5-premap-iova"
+CONFIG_BOOTLINUX_TREE_NAME="blk-iobuf-pool-premap"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="blk-iobuf-pool-v5-premap-iova"
+
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y
