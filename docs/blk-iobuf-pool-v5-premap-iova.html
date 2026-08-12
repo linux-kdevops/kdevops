@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>blk-iobuf-pool-v5-premap-iova — premapped pool buffers: NVMe commands past the dma_opt clamp</title>
+<style>
+:root{--bg:#0b0d12;--bg2:#0e1117;--surface:#12161f;--surface2:#161b26;--border:#1f2733;
+--text:#c7d0db;--head:#e8eef5;--muted:#7e8a99;--faint:#5b6675;--cyan:#22d3ee;--sky:#38bdf8;
+--green:#4ade80;--red:#f87171;--amber:#fbbf24;--violet:#a78bfa;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--sans)}
+a{color:var(--sky);text-decoration:none}a:hover{color:var(--cyan);text-decoration:underline}
+code,pre{font-family:var(--mono)}.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+.hero{background:linear-gradient(180deg,var(--bg2),var(--bg));border-bottom:1px solid var(--border);padding:44px 0 30px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+h1{font-size:2rem;line-height:1.15;margin:.4em 0 .3em;color:var(--head)}h1 .mono{font-family:var(--mono);color:var(--cyan)}
+.sub{font-size:1.12rem;color:var(--muted);max-width:72ch}
+.meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:var(--mono);font-size:12.5px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
+h2{color:var(--head);font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border)}
+h2 .n{font-family:var(--mono);color:var(--faint);font-size:1rem;margin-right:10px}
+h3{color:var(--head);font-size:1.08rem;margin:1.4em 0 .3em}
+.lead{font-size:1.08rem}strong{color:var(--head)}
+code:not(pre code){background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:.88em;color:var(--sky)}
+pre{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.55;color:#cbd5e1}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.93rem}
+th,td{border:1px solid var(--border);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+.note{border-left:3px solid var(--border);background:var(--surface);border-radius:8px;padding:12px 16px;margin:1.2em 0}
+.note.win{border-left-color:var(--green);background:rgba(74,222,128,.05)}
+.note.info{border-left-color:var(--sky);background:rgba(56,189,248,.05)}
+.note.warn{border-left-color:var(--amber);background:rgba(251,191,36,.05)}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.win .tag{color:var(--green)}.info .tag{color:var(--sky)}.warn .tag{color:var(--amber)}
+.g{color:var(--green)}.a{color:var(--amber)}.m{color:var(--muted)}
+footer{color:var(--faint);font-size:13px;border-top:1px solid var(--border);margin-top:3em;padding:2em 0}
+</style></head><body>
+
+<header class="hero"><div class="wrap">
+  <span class="eyebrow">◆ kernel · blk_iobuf_pool · premap</span>
+  <h1><span class="mono">blk-iobuf-pool-v5-premap-iova</span><br>NVMe commands past the 128&nbsp;KiB dma_opt clamp, with no per-I/O IOVA allocation</h1>
+  <p class="sub">A pool-backed io_uring fixed buffer, DMA-mapped <strong>once</strong> at registration and reused for
+    every command, issues NVMe commands far larger than the 128&nbsp;KiB <code>dma_opt_mapping_size()</code> clamp —
+    proven at a single <strong>8&nbsp;MiB</strong> command — by allocating <strong>zero</strong> per-I/O IOVA. This is
+    SPDK's map-once mechanism, inside the kernel driver, with IOMMU isolation retained.</p>
+  <div class="meta">
+    <span class="pill"><b>base:</b> linux.git v7.2-rc1</span>
+    <span class="pill"><b>branch:</b> <a href="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=blk-iobuf-pool-v5-premap-iova">blk-iobuf-pool-v5-premap-iova</a></span>
+    <span class="pill"><b>commits:</b> 8 (over the pool substrate)</span>
+    <span class="pill"><b>mechanism:</b> <span class="g">8 MiB command proven</span></span>
+    <span class="pill"><b>perf eval:</b> <span class="a">in flight (SPDK parity)</span></span>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+<h2><span class="n">01</span>What it does</h2>
+<p class="lead">On a translating-IOMMU host, nvme-pci folds <code>dma_opt_mapping_size()</code> — the IOVA rcache
+bound, <strong>128&nbsp;KiB</strong> — into <code>max_hw_sectors</code> (commit <code>3710e2b056cb</code>), because a
+per-command DMA mapping allocates and frees an IOVA and large IOVA allocations were thought not to scale under
+<code>iova_rbtree_lock</code>. Every NVMe command on such a host is therefore capped at 128&nbsp;KiB.</p>
+<p>This branch escapes the cap the way SPDK does — by <strong>not allocating a per-I/O IOVA at all</strong>. A
+pool-backed buffer is DMA-mapped <em>once</em> at io_uring registration and reused for every command, so the clamp
+need not apply. nvme publishes a second limit, <code>max_hw_premapped_sectors</code> (= <code>NVME_MAX_BYTES</code>
+with the dma_opt clamp removed, MDTS folded in); premapped requests split at it, while ordinary I/O keeps the
+dma_opt-clamped <code>max_hw_sectors</code>. Unchanged, safe defaults; opt-in large commands.</p>
+
+<h2><span class="n">02</span>Mechanism (iova-native)</h2>
+<p>At registration the pool reserves <strong>one contiguous IOVA</strong> for the whole buffer with
+<code>dma_iova_try_alloc()</code> + <code>dma_iova_link()</code> per folio; <code>struct blk_dma_premap</code> holds
+it and is handed to a request via <code>blk_iobuf_fixed_buf_premap()</code>. The consumer is the nvme
+<code>io_uring_cmd</code> passthrough path (<code>/dev/ngXnY</code>); completion <strong>skips the unmap</strong>.
+Two design gates, both load-bearing:</p>
+<ul>
+<li><strong>Coherent-only</strong> (<code>dev_is_dma_coherent()</code>): a persistent reused mapping does no
+per-command cache maintenance, correct only on coherent DMA. A per-folio <code>dma_sync_single</code> on iova
+addresses trips <code>DMA_API_DEBUG</code> and is deliberately absent.</li>
+<li><strong>Needs a translating IOMMU</strong>: <code>dma_iova_try_alloc()</code> returns false otherwise and the
+buffer falls back to ordinary (nothing to beat).</li>
+</ul>
+
+<h2><span class="n">03</span>The series (8 commits over the pool substrate)</h2>
+<pre>912328a  nvme: do not premap a pool buffer allocated via the multipath head
+77b944e  nvme: issue premapped commands past the dma_opt clamp
+ca011e6  block, io_uring: premap a pool buffer to exceed the dma_opt clamp
+73445a3  Documentation: block: describe the premapped pool-buffer design
+2378d78  block: iobuf: retain a persistent DMA mapping for pool-backed buffers
+de80bac  selftests: blk-iobuf: verify pool-backed fixed buffers end to end
+7b61092  nvme: allocate pool-backed fixed buffers through namespace char devices
+7ab85f3  nvme: provision namespace iobuf pools on explicit opt-in</pre>
+
+<h2><span class="n">04</span>What is proven today</h2>
+<table>
+<thead><tr><th>Claim</th><th>Evidence</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td><strong>8 MiB single NVMe command</strong> (64× the 128 KiB clamp, the full <code>min(MDTS, NVME_MAX_BYTES)</code>)</td>
+<td class="g">proven — trace shows <code>nvme_cmd_read … len=16383</code> (8 MiB) vs ordinary <code>len=255</code> (128 KiB); 4/4 tests, IOMMU active, coherent-only, no per-command <code>dma_map</code></td>
+<td>kdevops <code>iobuf-nvme-8m</code> VM (QEMU MDTS-lift patches + vIOMMU emulating a large MDTS)</td></tr>
+<tr><td><strong>Substrate does not regress I/O</strong></td>
+<td class="g">proven — <code>7.2.0-rc1-premap</code> booted; pool selftest 3/3 PASS on <code>/dev/ng0n1</code> (pool → fixed-buf → NVMe DIO round-trip); patches 1–5 don't regress</td>
+<td>real bare-metal (Latitude m4, AMD IOMMU)</td></tr>
+<tr><td><strong>512 KiB = SPDK bandwidth, isolation retained</strong> (sibling rung, <em>rcache bump</em>, not premap)</td>
+<td class="g">proven — kernel 512 KiB single commands, 3,565 MiB/s reads, group=DMA-FQ (translated); matches SPDK/vfio exactly</td>
+<td>Latitude m4, Micron 7450 — see <code>blk-iobuf-pool-v5-iova-512k</code></td></tr>
+<tr><td><strong>Premapped fast-path throughput / CPU vs SPDK</strong></td>
+<td class="a">measuring now — see §05</td>
+<td>Latitude m4-metal (EPYC 4244P, this run)</td></tr>
+</tbody>
+</table>
+
+<h3>Results at a glance</h3>
+<p class="m">The premapped fast-path throughput/CPU graph fills in from the three-arm eval (§05). These are the
+established results the branch builds on — the command-size motivation, the 512&nbsp;KiB SPDK parity (sibling
+rcache rung), and the pool's pin-once CPU win — all on a Micron 7450 behind an AMD-Vi translating IOMMU.</p>
+
+<div style="margin:1.2em 0">
+<b style="color:var(--head)">1 · Reads scale with command size — until the drive saturates</b>
+<span class="m"> (Micron 7450, QD16, held)</span>
+<svg viewBox="0 0 520 232" style="width:100%;max-width:600px;height:auto" role="img" aria-label="Read bandwidth vs command size">
+  <g stroke="#1f2733" stroke-width="1"><line x1="62" y1="190" x2="500" y2="190"/><line x1="62" y1="148" x2="500" y2="148"/><line x1="62" y1="106" x2="500" y2="106"/><line x1="62" y1="64" x2="500" y2="64"/></g>
+  <g fill="#5b6675" font-family="ui-monospace,monospace" font-size="11" text-anchor="end"><text x="56" y="194">0</text><text x="56" y="152">1000</text><text x="56" y="110">2000</text><text x="56" y="68">3000</text></g>
+  <g fill="#4ade80"><rect x="92" y="85" width="62" height="105" rx="3"/><rect x="192" y="77" width="62" height="113" rx="3"/><rect x="292" y="58" width="62" height="132" rx="3"/><rect x="392" y="33" width="62" height="157" rx="3"/></g>
+  <g fill="#e8eef5" font-family="ui-monospace,monospace" font-size="12" font-weight="600" text-anchor="middle"><text x="123" y="80">2502</text><text x="223" y="72">2676</text><text x="323" y="53">3144</text><text x="423" y="28">3727</text></g>
+  <g fill="#7e8a99" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle"><text x="123" y="208">16K</text><text x="223" y="208">32K</text><text x="323" y="208">64K</text><text x="423" y="208">128K</text></g>
+  <text x="281" y="226" fill="#5b6675" font-size="11" text-anchor="middle">command size&nbsp;·&nbsp;read MB/s (≥128&nbsp;KiB saturates ~3.7&nbsp;GB/s)</text>
+</svg>
+</div>
+
+<div style="margin:1.2em 0">
+<b style="color:var(--head)">2 · At 512&nbsp;KiB the kernel matches SPDK exactly — isolation retained</b>
+<svg viewBox="0 0 520 232" style="width:100%;max-width:600px;height:auto" role="img" aria-label="Kernel vs SPDK bandwidth at 512 KiB">
+  <g stroke="#1f2733" stroke-width="1"><line x1="62" y1="190" x2="500" y2="190"/><line x1="62" y1="148" x2="500" y2="148"/><line x1="62" y1="106" x2="500" y2="106"/><line x1="62" y1="64" x2="500" y2="64"/></g>
+  <g fill="#5b6675" font-family="ui-monospace,monospace" font-size="11" text-anchor="end"><text x="56" y="194">0</text><text x="56" y="152">1000</text><text x="56" y="110">2000</text><text x="56" y="68">3000</text></g>
+  <rect x="120" y="40" width="110" height="150" rx="3" fill="#38bdf8"/>
+  <rect x="300" y="40" width="110" height="150" rx="3" fill="#4ade80"/>
+  <g fill="#e8eef5" font-family="ui-monospace,monospace" font-size="13" font-weight="600" text-anchor="middle"><text x="175" y="34">3565</text><text x="355" y="34">3565</text></g>
+  <g fill="#7e8a99" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle"><text x="175" y="208">kernel (rcache 512K)</text><text x="355" y="208">SPDK / vfio (512K)</text></g>
+  <text x="281" y="226" fill="#5b6675" font-size="11" text-anchor="middle">read MB/s at 512&nbsp;KiB commands · stock kernel can't exceed 128&nbsp;KiB</text>
+</svg>
+</div>
+
+<div style="margin:1.2em 0">
+<b style="color:var(--head)">3 · Pool buffer: same throughput, ~40% less host CPU</b>
+<span class="m"> (64&nbsp;KiB QD16, ~56.4k IOPS both, run3-iommu)</span>
+<svg viewBox="0 0 520 232" style="width:100%;max-width:600px;height:auto" role="img" aria-label="Host CPU: per-IO malloc buffer vs pool buffer">
+  <g stroke="#1f2733" stroke-width="1"><line x1="62" y1="190" x2="500" y2="190"/><line x1="62" y1="150" x2="500" y2="150"/><line x1="62" y1="110" x2="500" y2="110"/><line x1="62" y1="70" x2="500" y2="70"/></g>
+  <g fill="#5b6675" font-family="ui-monospace,monospace" font-size="11" text-anchor="end"><text x="56" y="194">0%</text><text x="56" y="154">10%</text><text x="56" y="114">20%</text><text x="56" y="74">30%</text></g>
+  <rect x="120" y="58" width="110" height="132" rx="3" fill="#fbbf24"/>
+  <rect x="300" y="111" width="110" height="79" rx="3" fill="#4ade80"/>
+  <g fill="#e8eef5" font-family="ui-monospace,monospace" font-size="13" font-weight="600" text-anchor="middle"><text x="175" y="52">32.9%</text><text x="355" y="105">19.7%</text></g>
+  <g fill="#7e8a99" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle"><text x="175" y="208">per-IO malloc buffer</text><text x="355" y="208">pool buffer (pin-once)</text></g>
+  <text x="355" y="90" fill="#4ade80" font-family="ui-monospace,monospace" font-size="12" font-weight="600" text-anchor="middle">−40%</text>
+  <text x="281" y="226" fill="#5b6675" font-size="11" text-anchor="middle">host CPU% to drive the same IOPS — lower is better</text>
+</svg>
+</div>
+
+<h2><span class="n">05</span>The performance question: does map-once still matter after the clamp is simply lifted?</h2>
+<p class="lead">David Lohr Bueso's <a href="https://github.com/davidlohr/dma-opt-clamp-report">dma-opt-clamp-report</a>
+argues the clamp is <strong>obsolete</strong>: since the scatterlist-less DMA helpers (<code>858299dc6160</code>) and
+nvme-pci's conversion (<code>7ce3c1dd78fc</code>), a request takes a <strong>single IOVA allocation for the whole
+transfer</strong>, so larger requests <em>reduce</em> allocator work. His fix is far simpler than premap — lift
+<code>max_hw_sectors</code> to the true ceiling and opt in per-device with the existing
+<code>max_sectors_kb</code> sysfs knob. If that is all it takes, does premap's map-once buy anything?</p>
+<div class="note info"><span class="tag">the hypothesis</span> David's lift removes the <em>ceiling</em> but keeps
+two per-I/O taxes premap removes: a per-command <strong>IOVA allocation</strong> (fast now, but not free) and a
+per-command <strong>page pinning</strong> (<code>get_user_pages</code>). At a <em>matched large command size</em>,
+those are amortized away by the smaller command count — so David wins the big-transfer case cleanly. The premap edge,
+if any, is at <strong>high IOPS / high core count</strong>, where command count stays high and the per-I/O tax caps
+kernel scaling below SPDK. Premap is the same map-once mechanism SPDK uses; the test is whether it closes the last
+CPU-per-GB / saturation-IOPS gap that per-I/O allocation leaves open. The two are complementary: lift the ceiling
+(David) <em>and</em> remove the per-command tax (premap).</div>
+
+<h3>The arms — a factorial that separates the two per-I/O taxes</h3>
+<p>Premap removes <em>two different</em> per-I/O costs, so the eval must separate them.
+<strong>get_user_pages</strong> (page pinning) is removed by <em>any registered buffer</em> — the pool, op-38 — not
+by premap specifically; the <strong>per-I/O IOVA allocation</strong> is removed only by <em>map-once</em>
+(premap / SPDK). The baseline that lifts the ceiling to the true device MDTS via the ordinary per-I/O path is
+<strong>David Lohr's patches</strong> — the upstream-representative control (our <code>iova-512k</code> rcache
+proxy was limited to 512&nbsp;KiB; David's reaches the full MDTS, so B-vs-A is apples-to-apples at any size).</p>
+<table>
+<thead><tr><th>Arm</th><th>Ceiling</th><th>Buffer / pinning</th><th>Per-I/O IOVA</th></tr></thead>
+<tbody>
+<tr><td><strong>A1 · clamped baseline</strong></td><td>128 KiB (stock)</td><td>user (per-I/O gup)</td><td>per-I/O alloc</td></tr>
+<tr><td><strong>A2 · David ceiling-lift</strong></td><td>MDTS (David's patches)</td><td>user (per-I/O gup)</td><td>per-I/O alloc</td></tr>
+<tr><td><strong>A3 · David + pool buffer</strong></td><td>MDTS</td><td>registered pool (gup once)</td><td>per-I/O alloc</td></tr>
+<tr><td><strong>B · premap (this branch)</strong></td><td>MDTS</td><td>pool, mapped once (gup once)</td><td><strong>none</strong></td></tr>
+<tr><td><strong>C · SPDK / vfio</strong></td><td>MDTS</td><td>hugepages, mapped once</td><td>none — the gold standard</td></tr>
+</tbody>
+</table>
+<p><strong>Each contrast isolates one variable:</strong>
+<strong>A2 → A3</strong> the <code>get_user_pages</code> (pin-once) win on a lifted ceiling;
+<strong>A3 → B</strong> the per-I/O IOVA-allocation cost — <em>what premap adds beyond the pool</em>;
+<strong>B vs C</strong> premap-vs-SPDK parity.
+<strong>Sweep</strong> matched command sizes (128&nbsp;KiB, 512&nbsp;KiB, and up to the real MDTS on a large-MDTS
+drive), QD {1, 16, 64, 128}, cores {1, 4, 8, 12}, dedicated namespace. <strong>Measure</strong> IOPS &amp; GB/s at
+saturation, host CPU% (mpstat) → <strong>CPU-per-GB</strong>, p99/p99.9, and confirmed on-wire size.
+<strong>Prediction:</strong> at large command size all converge on bandwidth (David's point); as cores rise at fixed
+size, A2/A3's CPU-per-GB climbs while B and C stay flat — and the load-bearing test is <strong>A3 → B</strong>: if B
+tracks C and separates from A3, map-once earns its place beyond the pool.</p>
+<div class="note info"><span class="tag">one kernel, all arms</span> A1–B run on a <strong>single binary</strong> =
+<code>blk-iobuf-pool-v5-premap-iova</code> <strong>+ David Lohr's two patches</strong> applied on top (his ceiling-lift
+keeps the default at 128&nbsp;KiB, so it is opt-in and never disturbs A1). Arms are selected at <em>runtime</em>, no
+reboots and no kernel-version confound: <strong>A1</strong> = default (<code>max_sectors_kb=128</code>);
+<strong>A2</strong> = <code>echo &lt;MDTS&gt; &gt; max_sectors_kb</code> (David's opt-in, ordinary path);
+<strong>A3</strong> = A2 with an op-38 pool fixed buffer (removes <code>get_user_pages</code>); <strong>B</strong> = the
+premapped fixed buffer (additionally removes the per-I/O <code>dma_map</code>/IOVA). Only <strong>C</strong> (SPDK) is
+a separate user-space stack.</div>
+<div class="note warn"><span class="tag">honest framing</span> If arm B does <em>not</em> separate from arm A at
+high concurrency, then on modern kernels David's one-liner-scale change is sufficient and premap's added complexity
+(dma_iova plumbing, coherent-only gate, io_uring fixed-buffer path) is not justified for the command-size problem
+alone. The pool's separately-measured <strong>~40% pin-once host-CPU</strong> saving is a different axis
+(<code>get_user_pages</code>) and stands regardless.</div>
+
+<h2><span class="n">06</span>Reproduce</h2>
+<pre>git clone -b blk-iobuf-pool-v5-premap-iova \
+  https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git
+# CONFIG_BLK_IOBUF_POOL=y ; boot with nvme_core.iobuf_pool_order=9 iobuf_pool_folios=8
+# translating IOMMU required (amd_iommu / intel_iommu on); coherent DMA only
+# opt in a namespace's pool, register a pool-backed io_uring fixed buffer, issue via /dev/ngXnY</pre>
+<p class="m">The 8 MiB reproduction uses an <strong>emulated</strong> MDTS (the kdevops <code>iobuf-nvme-8m</code> defconfig
++ QEMU MDTS-lift patches) — no physical drive here advertises an 8 MiB MDTS, so the multi-MiB single command remains a
+QEMU-emulated result until a large-MDTS device (physical or emulated) is run through the test above. The Latitude
+performance eval runs on bare metal, but its Micron MDTS (~512 KiB) bounds the premapped command there.</p>
+
+<footer><div>blk_iobuf_pool premap — results page · tree
+<a href="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/">mcgrof/linux.git</a> · companion to the
+<a href="rfc-20260630-v1-blk-iobuf-pool.html">v1 RFC</a>. Performance numbers are filled in as the three-arm eval
+completes.</div></footer>
+</main></body></html>
