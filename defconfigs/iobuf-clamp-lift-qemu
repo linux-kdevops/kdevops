@@ -1,0 +1,44 @@
+#
+# dma_opt clamp-lift A/B on an EMULATED 8 MiB-MDTS NVMe (any host, no hardware).
+#
+# The clamp lift matters most on a drive whose MDTS is far above the 128 KiB
+# dma_opt clamp. No cheap real drive has an 8 MiB MDTS, so emulate one: QEMU's
+# NVMe controller takes an mdts= (CONFIG_QSU_NVME_MDTS, log2 above 4 KiB), so
+# mdts=11 -> 2^11 * 4 KiB = 8 MiB. This is the reproduction anyone can run:
+# data-free, hardware-agnostic, on a translating vIOMMU.
+#
+#   make defconfig-iobuf-clamp-lift-qemu
+#   make -j$(nproc)
+#   make bringup && make linux
+#   # in the guest:
+#   scripts/workflows/iobuf_bench/run_clamp_ab.sh   # A: 128 KiB vs B: 8 MiB, cmds+IRQs/GiB
+#
+# The kernel is blk-iobuf-pool-v5-premap-iova-clamp-kconfig; build it with
+# CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y so max_hw_sectors is the emulated 8 MiB MDTS
+# rather than the 128 KiB clamp. run_clamp_ab.sh selects the two arms at runtime
+# via max_sectors_kb (128 vs 8192), so one kernel serves both.
+#
+CONFIG_NIXOSFI=y
+
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_DIRECT_BOOT=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="blk-iobuf-pool-clamp-kconfig"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="blk-iobuf-pool-v5-premap-iova-clamp-kconfig"
+CONFIG_BOOTLINUX_TREE_NAME="blk-iobuf-pool-clamp-kconfig"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="blk-iobuf-pool-v5-premap-iova-clamp-kconfig"
+
+# Emulated NVMe: two 20 GiB namespaces, 8 MiB MDTS (mdts=11), 4 KiB blocks.
+CONFIG_QSU_NVME_DRIVE_COUNT=2
+CONFIG_QSU_NVME_DRIVE_SIZE_GB=20
+CONFIG_QSU_NVME_LOGICAL_BLOCK_SIZE="4096"
+CONFIG_QSU_NVME_PHYSICAL_BLOCK_SIZE="4096"
+CONFIG_QSU_NVME_MIN_IO_SIZE="4096"
+CONFIG_QSU_NVME_OPT_IO_SIZE="4096"
+CONFIG_QSU_NVME_MDTS="11"
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID=y
