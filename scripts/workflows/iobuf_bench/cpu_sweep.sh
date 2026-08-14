@@ -11,7 +11,7 @@
 #
 # Requires: fio, perf (linux-tools), python3, and (for >1 MiB) reserved huge
 # pages: echo 6144 | sudo tee /proc/sys/vm/nr_hugepages
-# The kernel must be built with CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y (the
+# The kernel must be booted with nvme.lift_dma_opt_clamp=1 (the
 # iobuf-clamp-lift-* defconfig) or max_sectors_kb cannot exceed 128.
 #
 # Usage: cpu_sweep.sh <blockdev> [drive-label] [out.csv]

@@ -13,10 +13,11 @@
 #   # in the guest:
 #   scripts/workflows/iobuf_bench/run_clamp_ab.sh   # A: 128 KiB vs B: 8 MiB, cmds+IRQs/GiB
 #
-# The kernel is blk-iobuf-pool-v5-premap-iova-clamp-kconfig; build it with
-# CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y so max_hw_sectors is the emulated 8 MiB MDTS
-# rather than the 128 KiB clamp. run_clamp_ab.sh selects the two arms at runtime
-# via max_sectors_kb (128 vs 8192), so one kernel serves both.
+# The kernel is blk-iobuf-pool-v5-premap-iova-clamp-kconfig; boot it with
+# nvme.lift_dma_opt_clamp=1 on the kernel command line (a module parameter, not
+# a Kconfig) so max_hw_sectors is the emulated 8 MiB MDTS rather than the 128 KiB
+# clamp. run_clamp_ab.sh selects the two arms at runtime via max_sectors_kb
+# (128 vs 8192), so one kernel serves both.
 #
 CONFIG_NIXOSFI=y
 

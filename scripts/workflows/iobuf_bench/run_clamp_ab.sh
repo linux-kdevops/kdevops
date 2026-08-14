@@ -1,12 +1,12 @@
 #!/bin/bash
-# run_clamp_ab.sh -- A/B for the dma_opt max-transfer clamp (CONFIG_NVME_LIFT_DMA_OPT_CLAMP).
+# run_clamp_ab.sh -- A/B for the dma_opt max-transfer clamp (nvme.lift_dma_opt_clamp=1).
 #
 # Shows the effect the clamp lift buys: at a fixed data rate, how many device
 # commands and NVMe interrupts it takes to move a GiB when the request size is
 # capped at the 128 KiB dma_opt clamp (A) vs lifted to the drive's MDTS (B).
 # The two arms are selected at runtime on ONE kernel via max_sectors_kb, so this
-# works whether the clamp was lifted at build time (option on, max_hw_sectors is
-# the true MDTS) or you are simply comparing 128 KiB vs a larger request size.
+# works whether the clamp was lifted (nvme.lift_dma_opt_clamp=1, max_hw_sectors
+# is the true MDTS) or you are simply comparing 128 KiB vs a larger request size.
 #
 # Hardware-agnostic: the achievable large command is the drive's MDTS, which the
 # script decodes and prints -- 512 KiB on a Micron 7450, 2 MiB on a Samsung
@@ -43,7 +43,7 @@ echo "device=$DEV  mdts=$MDTS_RAW  max_hw_sectors_kb=$MAXHW  logical_block_size=
 echo "large command under test: ${BIG_KB} KiB (vs the 128 KiB clamp)"
 if [ "$MAXHW" -le 128 ]; then
 	echo "WARNING: max_hw_sectors_kb=$MAXHW -- the clamp is NOT lifted on this kernel"
-	echo "         (build with CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y, or this is a 128 KiB-MDTS drive)."
+	echo "         (boot nvme.lift_dma_opt_clamp=1, or this is a 128 KiB-MDTS drive)."
 fi
 
 nvme_irq(){ awk '/nvme/{for(k=2;k<=NF-2;k++)s+=$k} END{print s+0}' /proc/interrupts; }

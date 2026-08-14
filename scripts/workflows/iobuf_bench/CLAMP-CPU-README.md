@@ -7,14 +7,17 @@ PNGs; interpret them yourself.
 
 ## 0. Kernel
 
-Build and boot a kernel with `CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y` so
-`max_sectors_kb` can exceed 128 KiB:
+Build the iobuf-clamp-lift-* kernel and boot it with the
+`nvme.lift_dma_opt_clamp=1` kernel command-line parameter (a module parameter,
+not a Kconfig; read when the controller is probed) so `max_sectors_kb` can
+exceed 128 KiB:
 
 ```sh
 # emulated large-MDTS NVMe, any host, no special hardware:
 make defconfig-iobuf-clamp-lift-qemu && make -j$(nproc) && make bringup && make linux
 # or on a real host you have SSH to:
 make defconfig-iobuf-clamp-lift-baremetal DECLARE_HOSTS=<host> && make -j$(nproc) && make linux
+# then add nvme.lift_dma_opt_clamp=1 to the kernel cmdline (grub) and reboot.
 ```
 
 Verify the lift is live (should exceed 128) and note the IOMMU is translating:

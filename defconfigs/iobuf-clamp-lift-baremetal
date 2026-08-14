@@ -1,10 +1,11 @@
 #
-# dma_opt clamp-lift A/B on BARE METAL (CONFIG_NVME_LIFT_DMA_OPT_CLAMP).
+# dma_opt clamp-lift A/B on BARE METAL (nvme.lift_dma_opt_clamp=1).
 #
 # Boots blk-iobuf-pool-v5-premap-iova-clamp-kconfig on a host you already have
-# SSH access to, with the clamp lift built in, so max_hw_sectors is the drive's
-# true MDTS instead of the 128 KiB dma_opt clamp. The A/B is then selected at
-# runtime with max_sectors_kb -- no rebuild between arms:
+# SSH access to; boot it with nvme.lift_dma_opt_clamp=1 on the kernel command
+# line and max_hw_sectors becomes the drive's true MDTS instead of the 128 KiB
+# dma_opt clamp. The A/B is then selected at runtime with max_sectors_kb -- no
+# rebuild between arms:
 #
 #   make defconfig-iobuf-clamp-lift-baremetal DECLARE_HOSTS=<ip-or-hostname>
 #   make -j$(nproc)
@@ -18,9 +19,10 @@
 #
 # The lift only bites on a TRANSLATING IOMMU (iommu.passthrough=0; intel_iommu=on
 # or amd_iommu=on if the box does not already bring the IOMMU up translating) --
-# on passthrough there is no dma_opt clamp to lift. The kernel needs
-# CONFIG_NVME_LIFT_DMA_OPT_CLAMP=y (and CONFIG_BLK_IOBUF_POOL=y if you also want
-# the premap arm); enable them in the bootlinux kernel config for this build.
+# on passthrough there is no dma_opt clamp to lift. The lift is a module
+# parameter, not a Kconfig: boot with nvme.lift_dma_opt_clamp=1 on the kernel
+# command line (read when the controller is probed). CONFIG_BLK_IOBUF_POOL=y is
+# still needed in the kernel config if you also want the premap arm.
 #
 CONFIG_WORKFLOWS=y
 CONFIG_WORKFLOW_LINUX_CUSTOM=y
