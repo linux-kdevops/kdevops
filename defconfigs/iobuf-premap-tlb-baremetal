@@ -1,0 +1,45 @@
+#
+# premap IOMMU-leaf / TLB campaign on BARE METAL (needs a translating IOMMU).
+#
+# Boots blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test on a host you
+# already have SSH access to. That branch carries the premap map-once path, the
+# strict minimum-page-size DMA-IOVA API + the iommu:iommu_map_leaf tracepoint +
+# the dma-iova-pgsize selftest, and the lift_dma_opt_clamp module parameter.
+#
+#   make defconfig-iobuf-premap-tlb-baremetal DECLARE_HOSTS=<ip-or-hostname>
+#   make -j$(nproc)
+#   make linux            # clone + build + boot the kernel
+#
+# Kernel config it needs (enable in the bootlinux kernel config):
+#   CONFIG_BLK_IOBUF_POOL=y
+#   CONFIG_DMA_IOVA_PGSIZE_SELFTEST=m
+# The iommu:iommu_map_leaf tracepoint is built in with the IOMMU tracepoints.
+#
+# Boot cmdline -- two arms, differing only by the last token:
+#   huge-on  : nvme_core.multipath=N nvme_core.iobuf_pool_order=9 \
+#              nvme_core.iobuf_pool_folios=256 nvme.lift_dma_opt_clamp=1
+#   huge-off : ... same ... amd_iommu=pgtbl_v1,nohugepages
+# order=9 = 2 MiB folios (one 2 MiB IOMMU leaf each). multipath=N so premap is
+# not refused on the /dev/ng head. nvme.lift_dma_opt_clamp=1 raises
+# max_hw_sectors to the drive MDTS (it is a module parameter, not a Kconfig).
+#
+# Then run the campaign per scripts/workflows/iobuf_bench/PREMAP-TLB-README.md.
+# Use a FREE Samsung PM9A3 namespace (2 MiB MDTS); the Micron 7450 members are
+# usually the OS RAID-1 mirror and are read-only.
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="blk-iobuf-pool-premap-tlb"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test"
+CONFIG_BOOTLINUX_TREE_NAME="blk-iobuf-pool-premap-tlb"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test"
+
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y
