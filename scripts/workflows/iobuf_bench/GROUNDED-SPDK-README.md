@@ -24,3 +24,12 @@ Needs `nvme.poll_queues>=cores` on the cmdline (one reboot, stock kernel).
 `plot_frontier.py` renders GB/s-per-core vs block size — SPDK saturates the
 drives with one core at every size; the kernel poll path converges to it only at
 2M. Result and full writeup: `knlp-key-results/spdk-vs-linux-grounded-20260819`.
+
+## 3. The premap arm (kernel's large-object win, on the crossover axis)
+
+`premap_frontier.sh` adds the `io_uring_cmd --premap` (map-once) arm to the
+local crossover, driven by the smoke tool at QD ≤ pool folios. Run it on the
+premap kernel (pool + clamp lift), then merge its CSV with `frontier_local.sh`'s
+and render with `plot_crossover3.py`. Result: premap crosses above SPDK around
+40–64K block size and runs ~6× past it at 512K (interrupt-driven vs SPDK's
+mandatory busy-poll when the drive is bandwidth-bound). SPDK still wins 4–16K.
