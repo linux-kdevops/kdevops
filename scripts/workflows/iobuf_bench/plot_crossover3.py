@@ -16,10 +16,14 @@ for path in csvs:
         bc = float(r["busy_cores"])
         if bc <= 0: continue
         rows[r["arm"]][r["bs"]] = (float(r["bw_mbps"])/1024) / bc
-BSORD = ["4k","16k","128k","512k"]; BSX = {"4k":4,"16k":16,"128k":128,"512k":512}
+BSORD = ["4k","16k","64k","128k","512k","2m"]
+BSX = {"4k":4,"16k":16,"64k":64,"128k":128,"512k":512,"2m":2048}
 STYLE = {
+    # accept both the ad-hoc names and run_crossover.sh's names
     "spdk_nvme_perf": ("SPDK spdk_nvme_perf (VFIO poller)",       "#d62728", "^"),
+    "spdk":           ("SPDK spdk_nvme_perf (VFIO poller)",       "#d62728", "^"),
     "kernel_iopoll":  ("kernel io_uring + IOPOLL (block, poll)",  "#1f77b4", "o"),
+    "kernel_poll":    ("kernel io_uring + IOPOLL (block, poll)",  "#1f77b4", "o"),
     "kernel_premap":  ("kernel io_uring_cmd + premap (map-once)", "#2ca02c", "s"),
 }
 fig, ax = plt.subplots(figsize=(9, 5.6))

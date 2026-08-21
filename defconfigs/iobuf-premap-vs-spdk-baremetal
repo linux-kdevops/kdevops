@@ -1,0 +1,48 @@
+#
+# premap vs SPDK crossover on BARE METAL (needs a translating IOMMU).
+#
+# Boots blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test on a host you
+# already have SSH access to, then reproduces the result that premap's map-once
+# io_uring_cmd path crosses above spdk_nvme_perf in GB/s-per-core at large
+# objects (~64K and up).
+#
+#   make defconfig-iobuf-premap-vs-spdk-baremetal DECLARE_HOSTS=<ip-or-hostname>
+#   make -j$(nproc)
+#   make linux            # clone + build + boot the kernel
+#   # then, on the host:
+#   bash scripts/workflows/iobuf_bench/spdk/provision.sh     # build SPDK + smoke
+#   CORE=4 QD=64 bash scripts/workflows/iobuf_bench/spdk/run_crossover.sh
+#
+# Kernel config it needs (enable in the bootlinux kernel config):
+#   CONFIG_BLK_IOBUF_POOL=y
+#
+# Boot cmdline (all one line) -- the crossover needs all of these:
+#   nvme.lift_dma_opt_clamp=1     raise max_hw_sectors to the drive MDTS
+#                                 (module parameter, not a Kconfig)
+#   nvme_core.multipath=0         so premap is not refused on the /dev/ng head
+#   nvme_core.iobuf_pool_order=9  2 MiB pool folios (one 2 MiB IOMMU leaf each)
+#   nvme_core.iobuf_pool_folios=80  >= QD used by the smoke premap arm (QD64)
+#   nvme.poll_queues=8            so the kernel_poll (fio --hipri IOPOLL) arm works
+#
+# Use FREE NVMe namespaces (the OS RAID-1 mirror members are read-only). The
+# crossover tops out at the drive MDTS: Micron 7450 = 512K, Samsung PM9A3 = 2M.
+#
+# Full method + the "beat SPDK below 64K" open problem:
+#   scripts/workflows/iobuf_bench/spdk/README.md
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="blk-iobuf-pool-premap-vs-spdk"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test"
+CONFIG_BOOTLINUX_TREE_NAME="blk-iobuf-pool-premap-vs-spdk"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="blk-iobuf-pool-v5-premap-iova-pgsize-clamp-param-test"
+
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y
