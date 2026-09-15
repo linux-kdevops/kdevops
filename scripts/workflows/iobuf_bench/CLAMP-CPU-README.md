@@ -89,3 +89,38 @@ needs at least the 2 MiB (and ideally 4 MiB) points in `sweep.csv`.
 `CNT`, `REP`, `LBA` for `premap_bench.sh`. CPU is reported in CPU cycles, not
 wall-clock %, because `perf` counters are precise where a busy-time % on a
 many-core idle box is dominated by noise.
+
+## Does the dma-buf system heap still get 2 MiB chunks under fragmentation?
+
+`heap_frag_eval.sh` answers whether a map-once staging buffer taken from
+`/dev/dma_heap/system` (with the 2 MB allocation order) keeps its 2 MiB
+chunks on a host whose free memory is fragmented, which is the case a
+pre-provisioned pool (blk_iobuf_pool, hugetlbfs) exists to avoid. It records
+`/proc/buddyinfo`, allocates a staging area from the heap while tracing
+`kmem:mm_page_alloc` for the allocating process (orders 4 and up, so the
+ring buffer never drops an event; the order-0 remainder is derived), and
+reports the achieved chunk-order distribution, the failed order-9 attempts
+and the share of bytes in 2 MiB chunks. It runs once on the host as it is,
+then again after `fragmenter` pins most of free memory and punches 4 KiB
+holes into every other page.
+
+    make -C scripts/workflows/iobuf_bench fragmenter   # or: gcc -O2 -o fragmenter fragmenter.c
+    sudo scripts/workflows/iobuf_bench/heap_frag_eval.sh [total_bytes] [chunk_bytes] [pin_percent]
+
+Measured on the iobuf8m guest (4 GiB, kernel 7.3.0-rc3 with the dma-buf
+series and the 2 MB heap order), 1 GiB in 32 MiB chunks:
+
+| state | 2 MiB share | achieved orders | order-9 failures | time |
+|---|---|---|---|---|
+| fresh | 100% | 512 x order 9 | 0 | 33 ms |
+| 95% of free memory pinned, 4 KiB holes | 28% | 145 x order 9, 7 x 8, 318 x 4, 707 MiB of order 0 | 24 | 59 ms |
+
+Two things to read from that. First, fragmentation is silent: the
+allocation succeeds and the caller only finds out from the chunk sizes it
+got, which on an `iommu=pt` host become 1 MiB NVMe commands. Second, the
+heap lowers its maximum order for the rest of a buffer after one fallback
+(`max_order` follows the last successful order in `system_heap_allocate()`),
+so a single miss costs the remainder of that buffer, not one chunk. That
+is what a pool or hugetlb reservation buys: the chunk size is decided when
+memory is unfragmented and never changes. Run this on the real target after
+it has been up for a while before trusting a heap-backed configuration.
