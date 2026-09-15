@@ -8,9 +8,12 @@
 # 4 KiB holes into it (movable memory, but the heap allocates with
 # __GFP_NORETRY and no reclaim, so it does not compact its way out).
 #
-# usage: sudo ./heap_frag_eval.sh [heap_total_bytes] [heap_chunk_bytes] [frag_fraction]
+# usage: sudo [HEAP=/dev/dma_heap/reserved] ./heap_frag_eval.sh [heap_total_bytes] [heap_chunk_bytes] [frag_fraction]
+#   HEAP selects the heap: /dev/dma_heap/system (default) or the CMA heap
+#   over the boot-time cma= area, /dev/dma_heap/reserved.
 set -u
 TOTAL=${1:-$((1<<30))}; CHUNK=${2:-$((32<<20))}; FRAC=${3:-70}
+HEAP=${HEAP:-/dev/dma_heap/system}
 T=/sys/kernel/tracing
 here=$(dirname "$(readlink -f "$0")")
 
@@ -25,10 +28,10 @@ heap_alloc() { # allocate and hold TOTAL bytes of heap memory in CHUNK pieces, t
   echo > $T/trace
   echo 'comm == "python3" && order >= 4' > $ev/filter
   echo 1 > $ev/enable; echo 1 > $T/tracing_on
-  python3 - "$TOTAL" "$CHUNK" <<'EOF2'
+  python3 - "$TOTAL" "$CHUNK" "$HEAP" <<'EOF2'
 import fcntl, os, struct, sys, time
-total, chunk = int(sys.argv[1]), int(sys.argv[2])
-heap = os.open("/dev/dma_heap/system", os.O_RDONLY | os.O_CLOEXEC)
+total, chunk, path = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+heap = os.open(path, os.O_RDONLY | os.O_CLOEXEC)
 fds = []
 t0 = time.perf_counter()
 for i in range(total // chunk):
@@ -47,13 +50,14 @@ EOF2
     END { printf "  achieved:"; bytes = 0;
       for (o = 10; o >= 4; o--) if (ok[o]) { printf " order%d x%d (%d MiB)", o, ok[o], ok[o]*4096*2^o/1048576; bytes += ok[o]*4096*2^o }
       rem = total - bytes; if (rem < 0) rem = 0;
-      printf " order<4 remainder %d MiB\n", rem/1048576
-      printf "  failed order-9 attempts: %d (order-8: %d)\n", fail[9]+0, fail[8]+0
+      if (bytes == 0) printf " none through the page allocator (a CMA heap allocates contiguous ranges, not pages)";
+      else printf " order<4 remainder %d MiB", rem/1048576;
+      printf "\n  failed order-9 attempts: %d (order-8: %d)\n", fail[9]+0, fail[8]+0
       printf "  share of bytes in 2 MiB chunks: %.1f%%\n", (ok[9]*4096*512) * 100 / total }' $T/trace
   echo 0 > $ev/filter
 }
 
-echo "== kernel $(uname -r), MemFree $(awk '/MemFree/ {print int($2/1024)" MiB"}' /proc/meminfo)"
+echo "== kernel $(uname -r), heap $HEAP, MemFree $(awk '/MemFree/ {print int($2/1024)" MiB"}' /proc/meminfo), CmaTotal/CmaFree $(awk '/CmaTotal/ {t=$2} /CmaFree/ {f=$2} END {print int(t/1024)"/"int(f/1024)" MiB"}' /proc/meminfo)"
 echo "-- buddyinfo before (free blocks per order)"; buddy
 echo "-- heap allocation on the host as it is"
 heap_alloc

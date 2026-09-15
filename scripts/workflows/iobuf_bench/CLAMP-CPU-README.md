@@ -124,3 +124,11 @@ so a single miss costs the remainder of that buffer, not one chunk. That
 is what a pool or hugetlb reservation buys: the chunk size is decided when
 memory is unfragmented and never changes. Run this on the real target after
 it has been up for a while before trusting a heap-backed configuration.
+
+The same script compares the CMA heap: boot with `cma=1G` (or `numa_cma=`
+for per-node areas) on a kernel with `CONFIG_DMABUF_HEAPS_CMA`, then run it
+with `HEAP=/dev/dma_heap/reserved`. A CMA allocation is one contiguous
+range obtained by migrating movable pages out of the way, so it does not
+go through the page allocator's orders at all; the achieved line says so,
+and the comparison is the allocation time and whether it succeeded under
+the same fragmentation that degrades the system heap.
