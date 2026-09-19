@@ -1,0 +1,48 @@
+#
+# dma-buf Maximum Data Transfer Size (MDTS) evaluation on bare metal.
+#
+# This builds the public dma-buf-size-ceiling-v7.3-rc3 kernel and leaves
+# target selection to the caller.  After boot, replay recorded I/O intent
+# with matched normal and DMA-buf ceilings.  Retain the command trace and
+# replay manifests with the report.
+#
+#   make defconfig-dmabuf-size-ceiling-mdts-baremetal \
+#     DECLARE_HOSTS=<ip-or-hostname>
+#   make -j$(nproc)
+#   make linux
+#
+# Select the namespace outside this configuration using a stable identifier.
+# Do not use a mounted or otherwise in-service block device.  The experiment
+# should record the target queue limits before each arm and preserve the
+# trace drop count, completion status, and replay manifests.
+#
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+
+# Bare metal: use a pre-provisioned target and skip lifecycle management.
+CONFIG_SKIP_BRINGUP=y
+CONFIG_KDEVOPS_USE_DECLARED_HOSTS=y
+
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="dmabuf-size-ceiling"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="dmabuf-size-ceiling-v7.3-rc3"
+CONFIG_BOOTLINUX_TREE_NAME="dmabuf-size-ceiling"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="dmabuf-size-ceiling-v7.3-rc3"
+
+# Build the trace-capable kernel configuration, including module BTF for
+# function-entry and typed-tracepoint BPF programs.
+CONFIG_BOOTLINUX_USE_CONFIG_FRAGMENTS=y
+CONFIG_BOOTLINUX_FRAGMENT_64BIT=y
+CONFIG_BOOTLINUX_FRAGMENT_SYSTEMD=y
+CONFIG_BOOTLINUX_FRAGMENT_DISTRO=y
+CONFIG_BOOTLINUX_FRAGMENT_STORAGE=y
+CONFIG_BOOTLINUX_FRAGMENT_INITRAMFS=y
+CONFIG_BOOTLINUX_FRAGMENT_LOCALAUTO=y
+CONFIG_BOOTLINUX_FRAGMENT_MODULES=y
+CONFIG_BOOTLINUX_FRAGMENT_MODULES_BLK=y
+CONFIG_BOOTLINUX_FRAGMENT_EBPF=y
+
+CONFIG_DEVCONFIG_ENABLE_SYSTEMD_JOURNAL_REMOTE=y

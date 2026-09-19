@@ -1,0 +1,54 @@
+#
+# dma-buf Maximum Data Transfer Size (MDTS) evaluation on emulated NVMe.
+#
+# This provides a portable reproduction of the ceiling sweep.  mdts=13 is
+# 32 MiB with 4 KiB logical blocks, matching the selected DMA-buf ceiling.
+# The intent replay compares matched normal and DMA-buf arms and saves the
+# command trace and manifests with the report.
+#
+#   make defconfig-dmabuf-size-ceiling-mdts-qemu
+#   make -j$(nproc)
+#   make bringup && make linux
+#
+# The QEMU namespace is experimental only.  Do not substitute an in-service
+# block device when reproducing the bare-metal configuration.
+#
+CONFIG_NIXOSFI=y
+
+CONFIG_WORKFLOWS=y
+CONFIG_WORKFLOW_LINUX_CUSTOM=y
+CONFIG_BOOTLINUX=y
+CONFIG_BOOTLINUX_DIRECT_BOOT=y
+CONFIG_BOOTLINUX_CUSTOM=y
+CONFIG_BOOTLINUX_TREE_CUSTOM_NAME="dmabuf-size-ceiling"
+CONFIG_BOOTLINUX_TREE_CUSTOM_URL="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_CUSTOM_REF="dmabuf-size-ceiling-v7.3-rc3"
+CONFIG_BOOTLINUX_TREE_NAME="dmabuf-size-ceiling"
+CONFIG_BOOTLINUX_TREE="https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git"
+CONFIG_BOOTLINUX_TREE_REF="dmabuf-size-ceiling-v7.3-rc3"
+
+# Build the trace-capable kernel configuration, including module BTF for
+# function-entry and typed-tracepoint BPF programs.
+CONFIG_BOOTLINUX_USE_CONFIG_FRAGMENTS=y
+CONFIG_BOOTLINUX_FRAGMENT_64BIT=y
+CONFIG_BOOTLINUX_FRAGMENT_KVM_GUEST=y
+CONFIG_BOOTLINUX_FRAGMENT_VIRTIO_FS=y
+CONFIG_BOOTLINUX_FRAGMENT_SYSTEMD=y
+CONFIG_BOOTLINUX_FRAGMENT_DISTRO=y
+CONFIG_BOOTLINUX_FRAGMENT_STORAGE=y
+CONFIG_BOOTLINUX_FRAGMENT_INITRAMFS=y
+CONFIG_BOOTLINUX_FRAGMENT_LOCALAUTO=y
+CONFIG_BOOTLINUX_FRAGMENT_MODULES=y
+CONFIG_BOOTLINUX_FRAGMENT_MODULES_BLK=y
+CONFIG_BOOTLINUX_FRAGMENT_EBPF=y
+
+# Emulated NVMe: two 20 GiB namespaces, 4 KiB blocks, and 32 MiB MDTS.
+CONFIG_QSU_NVME_DRIVE_COUNT=2
+CONFIG_QSU_NVME_DRIVE_SIZE_GB=20
+CONFIG_QSU_NVME_LOGICAL_BLOCK_SIZE="4096"
+CONFIG_QSU_NVME_PHYSICAL_BLOCK_SIZE="4096"
+CONFIG_QSU_NVME_MIN_IO_SIZE="4096"
+CONFIG_QSU_NVME_OPT_IO_SIZE="4096"
+CONFIG_QSU_NVME_MDTS="13"
+
+CONFIG_ANSIBLE_CFG_CALLBACK_PLUGIN_LUCID=y
